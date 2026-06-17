@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.komponenter.type.Periode
@@ -21,5 +21,5 @@ data class MeldepliktOverstyringVurderingResponse(
     val vurdertIBehandling: BehandlingReferanse,
     val fraDato: LocalDate,
     val tilDato: LocalDate,
-    val vurdertAv: VurdertAvResponse?
+    val vurderingerMeta: VurderingerMetaResponse,
 )

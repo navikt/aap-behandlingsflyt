@@ -8,12 +8,15 @@ metadata:
     sub: behandlingsflyt
 spec:
   image: {{image}}
+  replicas:
+    min: 2
+    max: 4
   resources:
     limits:
-      memory: 1024Mi
+      memory: 1536Mi
     requests:
-      cpu: 500m
-      memory: 750Mi
+      cpu: 1000m
+      memory: 1024Mi
   observability:
     autoInstrumentation:
       enabled: true
@@ -28,7 +31,7 @@ spec:
   gcp:
     sqlInstances:
       - type: POSTGRES_16
-        tier: db-custom-1-3840
+        tier: db-custom-2-7680
         diskAutoresize: true
         highAvailability: true
         pointInTimeRecovery: true
@@ -104,6 +107,7 @@ spec:
         - host: pensjon-pen.prod-fss-pub.nais.io
         - host: tp-api.prod-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
+        - host: dokarkiv.prod-fss-pub.nais.io
       rules:
         - application: brev
         - application: tilgang
@@ -130,6 +134,7 @@ spec:
           namespace: team-rocket
         - application: logging
           namespace: nais-system
+        - application: saksbehandling-pdfgen
         - application: dp-datadeling
           namespace: teamdagpenger
         - application: tiltakspenger-datadeling
@@ -258,3 +263,11 @@ spec:
       value: http://tiltakspenger-datadeling.tpts
     - name: INTEGRASJON_TILTAKSPENGER_SCOPE
       value: api://prod-gcp.tpts.tiltakspenger-datadeling/.default
+    - name: INTEGRASJON_DOKARKIV_URL
+      value: https://dokarkiv.prod-fss-pub.nais.io
+    - name: INTEGRASJON_DOKARKIV_SCOPE
+      value: api://prod-fss.teamdokumenthandtering.dokarkiv/.default
+    - name: INTEGRASJON_PDFGEN_URL
+      value: http://saksbehandling-pdfgen
+    - name: INTEGRASJON_PDFGEN_SCOPE
+      value: api://prod-gcp.aap.saksbehandling-pdfgen/.default

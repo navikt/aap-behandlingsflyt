@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
@@ -19,7 +20,6 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -48,8 +47,7 @@ import java.time.LocalDate
 
 class BistandsvilkåretTest {
     companion object {
-        private val now = LocalDate.now()
-        private val periode = Periode(now, LocalDate.now().plusYears(3))
+        private val søknadsdato = LocalDate.now()
 
         private lateinit var dataSource: TestDataSource
 
@@ -133,11 +131,11 @@ class BistandsvilkåretTest {
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
             val bistandRepo = BistandRepositoryImpl(connection)
-            val sak = sak(connection, periode)
+            val sak = sak(connection, søknadsdato)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
             val bistandsvurdering1 = Bistandsvurdering(
-                vurdertIBehandling = BehandlingId(1),
+                vurdertIBehandling = førstegangsbehandling.id,
                 begrunnelse = "Begrunnelse",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
@@ -194,7 +192,7 @@ class BistandsvilkåretTest {
         dataSource.transaction { connection ->
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
             val sykdomsvurdering = sykdomsvurdering(
-                vurderingenGjelderFra = now.plusDays(10),
+                vurderingenGjelderFra = søknadsdato.plusDays(10),
                 behandlingId = revurdering.id
             )
             postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
@@ -214,12 +212,7 @@ class BistandsvilkåretTest {
             AvklarBistandLøser(postgresRepositoryRegistry.provider(connection)).løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
-                    kontekst = FlytKontekst(
-                        behandlingId = revurdering.id,
-                        forrigeBehandlingId = revurdering.forrigeBehandlingId,
-                        sakId = sak.id,
-                        behandlingType = TypeBehandling.Revurdering
-                    ),
+                    kontekst = revurdering.flytKontekst(),
                 ), løsning = AvklarBistandsbehovLøsning(løsningerForPerioder = listOf(bistandsvurdering2))
             )
         }
@@ -250,18 +243,75 @@ class BistandsvilkåretTest {
 
         val segment1 = vilkåret.vilkårsperioder().first()
         val segment2 = vilkåret.vilkårsperioder().last()
-        assertThat(segment1.periode).isEqualTo(Periode(now, now.plusDays(9)))
+        assertThat(segment1.periode).isEqualTo(Periode(søknadsdato, søknadsdato.plusDays(9)))
         assertThat(segment1.utfall).isEqualTo(Utfall.OPPFYLT)
         assertThat(segment2.periode).isEqualTo(
             Periode(
-                now.plusDays(10),
+                søknadsdato.plusDays(10),
                 sak.rettighetsperiode.tom
             )
         )
         assertThat(segment2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
 
     }
+    
+    
 
+
+    @Test
+    fun `to vurderinger med ulike utfall gir riktig tidslinje`() {
+        val vilkårsresultat = Vilkårsresultat()
+        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
+
+        val vurdering1 = Bistandsvurdering(
+            begrunnelse = "Begrunnelse 1",
+            erBehovForAktivBehandling = false,
+            erBehovForArbeidsrettetTiltak = true,
+            erBehovForAnnenOppfølging = null,
+            overgangBegrunnelse = null,
+            skalVurdereAapIOvergangTilArbeid = null,
+            vurdertAv = "O146060",
+            vurderingenGjelderFra = LocalDate.of(2025, 11, 25),
+            tom = null,
+            opprettet = Instant.parse("2025-11-20T10:23:52.051Z"),
+            vurdertIBehandling = BehandlingId(5441)
+        )
+
+        val vurdering2 = Bistandsvurdering(
+            begrunnelse = "Begrunnelse 2",
+            erBehovForAktivBehandling = false,
+            erBehovForArbeidsrettetTiltak = false,
+            erBehovForAnnenOppfølging = false,
+            overgangBegrunnelse = null,
+            skalVurdereAapIOvergangTilArbeid = false,
+            vurdertAv = "S108601",
+            vurderingenGjelderFra = LocalDate.of(2026, 4, 21),
+            tom = null,
+            opprettet = Instant.parse("2026-05-20T10:23:52.051Z"),
+            vurdertIBehandling = BehandlingId(70608)
+        )
+
+        Bistandsvilkåret(vilkårsresultat).vurder(
+            BistandFaktagrunnlag(
+                sisteDagMedMuligYtelse = LocalDate.of(2999, 1, 1),
+                bistandGrunnlag = BistandGrunnlag(listOf(vurdering2, vurdering1)),
+            )
+        )
+
+        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+        assertThat(vilkår.vilkårsperioder()).hasSize(2)
+
+        val periode1 = vilkår.vilkårsperioder().first()
+        val periode2 = vilkår.vilkårsperioder().last()
+
+        assertThat(periode1.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(periode1.periode).isEqualTo(Periode(LocalDate.of(2025, 11, 25), LocalDate.of(2026, 4, 20)))
+
+        assertThat(periode2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(periode2.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
+        assertThat(periode2.periode).isEqualTo(Periode(LocalDate.of(2026, 4, 21), LocalDate.of(2999, 1, 1)))
+    }
 
     private fun bistandvurdering(
         begrunnelse: String = "",
@@ -299,22 +349,19 @@ class BistandsvilkåretTest {
         harSkadeSykdomEllerLyte: Boolean = true,
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
-        erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
-        erArbeidsevnenNedsatt: Boolean = true,
+        harNedsattArbeidsevne: ArbeidsevneNedsattValg = ArbeidsevneNedsattValg.JA,
         vurderingenGjelderFra: LocalDate = 1 januar 2020,
         vurderingenGjelderTil: LocalDate? = null,
         opprettet: Instant = Instant.now(),
         behandlingId: BehandlingId
     ) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+        harNedsattArbeidsevne = harNedsattArbeidsevne,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
         vurderingenGjelderTil = vurderingenGjelderTil,

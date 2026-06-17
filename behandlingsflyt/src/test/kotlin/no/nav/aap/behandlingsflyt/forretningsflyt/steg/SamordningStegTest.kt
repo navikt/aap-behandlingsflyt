@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -51,6 +51,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.time.Instant
 import java.time.LocalDate
 import java.util.stream.Stream
+import java.time.LocalDateTime
 
 class SamordningStegTest {
     companion object {
@@ -111,7 +112,7 @@ class SamordningStegTest {
     fun `om det finnes tilfeller av samordning med Sykepenger, Svangerskapspenger, Pleiepenger, skal det opprettes et avklaringsbehov`(
         ytelse: Ytelse
     ) {
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val steg = settOppRessurser(ytelse, behandling.id)
 
         steg.utfør(flytKontekstMedPerioder(behandling))
@@ -133,7 +134,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
         løsBehovet(behandling)
@@ -149,7 +151,7 @@ class SamordningStegTest {
     @ParameterizedTest
     @MethodSource("automatiskBehandledeYtelserProvider")
     fun `foreldrepenger, omsorgspenger, opplæringspenger avklares automatisk`(ytelse: Ytelse) {
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val steg = settOppRessurser(ytelse, behandling.id)
 
         val res = steg.utfør(
@@ -161,7 +163,7 @@ class SamordningStegTest {
 
     @Test
     fun `en fra register og en manuell, ikke overlappende perioder`() {
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val periodeMedSykepenger = Periode(LocalDate.now().minusYears(1), LocalDate.now())
 
         val pleiepengerPeriode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusWeeks(2))
@@ -190,7 +192,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -214,7 +217,7 @@ class SamordningStegTest {
 
     @Test
     fun `tilbakeføring skal slette vurderinger`() {
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -232,7 +235,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -275,7 +279,7 @@ class SamordningStegTest {
 
     @Test
     fun `saksbehandler kan lagre flere perioder enn det vi får fra registre`() {
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -293,7 +297,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -317,7 +322,7 @@ class SamordningStegTest {
 
     @Test
     fun `om det kommer ny informasjon, avklaringsbehov opprettes igjen`() {
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
         val kontekst = flytKontekstMedPerioder(behandling)
 
@@ -340,7 +345,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
         løsBehovet(behandling)
@@ -366,7 +372,7 @@ class SamordningStegTest {
 
     @Test
     fun `skal kunne regne ut samordninggrad også uten registeropplysninger, kun vurderinger`() {
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -384,7 +390,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -407,7 +414,7 @@ class SamordningStegTest {
 
     @Test
     fun `skal ikke gjøre noe spesielt dersom maksdato (deprekert) ikke er bekreftet`() {
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val sykepengePeriode = Periode(LocalDate.now().minusWeeks(2), LocalDate.now().plusWeeks(2))
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -425,7 +432,8 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -493,18 +501,4 @@ class SamordningStegTest {
         )
     }
 
-    private fun nySak(): Sak {
-        return opprettInMemorySak(LocalDate.now())
-    }
-
-    private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemoryBehandlingService
-            .finnEllerOpprettOrdinærBehandling(
-                sak.id,
-                VurderingsbehovOgÅrsak(
-                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                    ÅrsakTilOpprettelse.SØKNAD
-                )
-            )
-    }
 }

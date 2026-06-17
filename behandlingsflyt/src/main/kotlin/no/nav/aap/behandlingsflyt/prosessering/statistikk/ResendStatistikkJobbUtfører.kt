@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.sortererteAvklaringsbehov
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -16,6 +17,7 @@ import java.time.LocalDateTime
 
 class ResendStatistikkJobbUtfører(
     private val behandlingRepository: BehandlingRepository,
+    private val behandlingService: BehandlingService,
     private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val statistikkGateway: StatistikkGateway,
@@ -33,7 +35,7 @@ class ResendStatistikkJobbUtfører(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
             referanse = behandling.referanse,
-            behandlingType = behandling.typeBehandling(),
+            behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling),
             status = behandling.status(),
             avklaringsbehov = sortererteAvklaringsbehov(behandling, avklaringsbehovene.alle()),
             opprettetTidspunkt = behandling.opprettetTidspunkt,
@@ -56,8 +58,9 @@ class ResendStatistikkJobbUtfører(
                 behandlingRepository = repositoryProvider.provide(),
                 sakService = SakService(repositoryProvider, gatewayProvider),
                 avklaringsbehovRepository = repositoryProvider.provide(),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 statistikkGateway = gatewayProvider.provide(),
-                statistikkMetoder = StatistikkMetoder(repositoryProvider)
+                statistikkMetoder = StatistikkMetoder(repositoryProvider, gatewayProvider)
             )
         }
 

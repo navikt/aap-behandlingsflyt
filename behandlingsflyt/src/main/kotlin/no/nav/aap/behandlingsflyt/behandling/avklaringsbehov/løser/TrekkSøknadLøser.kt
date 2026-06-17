@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.time.Instant
 
@@ -24,14 +25,12 @@ class TrekkSøknadLøser(
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val trekkSøknadRepository: TrukketSøknadRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway,
 ) : AvklaringsbehovsLøser<TrekkSøknadLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         mottattDokumentRepository = repositoryProvider.provide(),
         trekkSøknadRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -56,31 +55,11 @@ class TrekkSøknadLøser(
         )
 
         if (søknader.isEmpty()) {
-            if (unleashGateway.isEnabled(
-                    BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering,
-                    kontekst.bruker.ident
-                )
-            ) {
-                forsøkTrekkLegeerklæring(kontekst, løsning, behandling)
-            } else {
-                log.error(
-                    "Prøver å trekke søknad, men det finnes ingen søknad knyttet til behandlingen. " +
-                            "Sak=${kontekst.sakId()}, behandling=${kontekst.behandlingId()}"
-                )
-            }
+            forsøkTrekkLegeerklæring(kontekst, løsning, behandling)
         } else {
             søknader.forEach { søknad ->
                 log.info("Trekker søknad (sakId=${søknad.sakId}, behandlingId=${søknad.behandlingId})")
-                trekkSøknadRepository.lagreTrukketSøknadVurdering(
-                    kontekst.behandlingId(),
-                    TrukketSøknadVurdering(
-                        journalpostId = søknad.referanse.asJournalpostId,
-                        begrunnelse = løsning.begrunnelse,
-                        vurdertAv = kontekst.bruker,
-                        skalTrekkes = løsning.skalTrekkes,
-                        vurdert = Instant.now(),
-                    )
-                )
+                trekkVurdering(søknad.referanse.asJournalpostId, kontekst, løsning)
             }
         }
         return LøsningsResultat(løsning.begrunnelse)
@@ -97,7 +76,10 @@ class TrekkSøknadLøser(
         log.info("Ingen søknad funnet for sak ${kontekst.kontekst.sakId.id}. Forsøker å trekke legeerklæring i stedet for søknad.")
 
         val kanTrekkeLegeerklæring =
-            behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.HELSEOPPLYSNINGER
+            behandling.årsakTilOpprettelse in listOf(
+                ÅrsakTilOpprettelse.HELSEOPPLYSNINGER,
+                ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT
+            )
                     && Vurderingsbehov.MOTTATT_LEGEERKLÆRING in behandling.vurderingsbehov().map { it.type }
 
         if (!kanTrekkeLegeerklæring) {
@@ -108,28 +90,36 @@ class TrekkSøknadLøser(
             return
         }
 
-        val legeerklæring =
+        val legeerklæringer =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.LEGEERKLÆRING)
 
-        if (legeerklæring.isEmpty()) {
+        if (legeerklæringer.isEmpty()) {
             log.error("Ingen legeerklæring funnet for søknad som skal trekkes (${kontekst.sakId()}, ${kontekst.behandlingId()})")
             return
-        } else if (legeerklæring.size == 1) {
-            val dokument = legeerklæring.single()
-
-            trekkSøknadRepository.lagreTrukketSøknadVurdering(
-                kontekst.behandlingId(),
-                TrukketSøknadVurdering(
-                    journalpostId = dokument.referanse.asJournalpostId,
-                    begrunnelse = løsning.begrunnelse,
-                    vurdertAv = kontekst.bruker,
-                    skalTrekkes = løsning.skalTrekkes,
-                    vurdert = Instant.now(),
-                )
-            )
         } else {
-            log.error("Flere legeerklæringer funnet for søknad som skal trekkes. Kan ikke bestemme hvilken som skal trekkes. Sak=${kontekst.kontekst.sakId.id}, behandling=${kontekst.behandlingId().id}")
+            // Plukker første mottatte legeerklæring for å trekke søknad
+            val legeerklæring = legeerklæringer.minByOrNull { it.opprettetTid }!!
+
+            log.info("Trekker søknad/legeerklæring (sakId=${legeerklæring.sakId}, behandlingId=${legeerklæring.behandlingId})")
+            trekkVurdering(legeerklæring.referanse.asJournalpostId, kontekst, løsning)
         }
+    }
+
+    private fun trekkVurdering(
+        journalpostId: JournalpostId,
+        kontekst: AvklaringsbehovKontekst,
+        løsning: TrekkSøknadLøsning,
+    ) {
+        trekkSøknadRepository.lagreTrukketSøknadVurdering(
+            kontekst.behandlingId(),
+            TrukketSøknadVurdering(
+                journalpostId = journalpostId,
+                begrunnelse = løsning.begrunnelse,
+                vurdertAv = kontekst.bruker,
+                skalTrekkes = løsning.skalTrekkes,
+                vurdert = Instant.now(),
+            )
+        )
     }
 
     override fun forBehov(): Definisjon {

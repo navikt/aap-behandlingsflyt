@@ -1,6 +1,12 @@
 package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.prometheus
@@ -12,13 +18,13 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import java.net.URI
 
 class AARegisterGateway : ArbeidsforholdGateway {
     private val url =
-        URI.create(requiredConfigForKey("integrasjon.aareg.url") + "/api/v2/arbeidstaker/arbeidsforholdoversikt")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.aareg.scope"))
+        URI.create(requiredConfigForKey("INTEGRASJON_AAREG_URL") + "/api/v2/arbeidstaker/arbeidsforhold")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_AAREG_SCOPE"))
 
     companion object : Factory<ArbeidsforholdGateway> {
         override fun konstruer(): ArbeidsforholdGateway {
@@ -28,7 +34,7 @@ class AARegisterGateway : ArbeidsforholdGateway {
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
@@ -39,16 +45,33 @@ class AARegisterGateway : ArbeidsforholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        val response: ArbeidsforholdoversiktResponse = requireNotNull(client.post(uri = url, request = httpRequest))
+        val response: List<ArbeidsforholdResponse> = requireNotNull(client.post(uri = url, request = httpRequest))
 
-        return response.arbeidsforholdoversikter.filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }.map { arbeidsforhold ->
-            ArbeidINorgeGrunnlag(
-                identifikator = arbeidsforhold.arbeidssted.identer.first().ident,
-                arbeidsforholdKode = arbeidsforhold.type.kode,
-                startdato = arbeidsforhold.startdato,
-                sluttdato = arbeidsforhold.sluttdato
-            )
-        }
+        return response
+            .filter { it.arbeidssted.type.uppercase() == "UNDERENHET" }
+            .mapNotNull { arbeidsforhold ->
+                val startdato = arbeidsforhold.ansettelsesperiode?.startdato ?: return@mapNotNull null
+                ArbeidINorgeGrunnlag(
+                    identifikator = arbeidsforhold.arbeidssted.identer.first().ident,
+                    arbeidsforholdKode = Arbeidsforholdtype.fraKode(arbeidsforhold.type.kode),
+                    startdato = startdato,
+                    sluttdato = arbeidsforhold.ansettelsesperiode.sluttdato,
+                    ansettelsesdetaljer = arbeidsforhold.ansettelsesdetaljer.map { detalj ->
+                        ArbeidAnsettelsesdetaljGrunnlag(
+                            skipsregister = detalj.skipsregister?.kode?.let { kode ->
+                                Skipsregister.fraKode(kode)
+                            },
+                            skipstype = detalj.fartoeystype?.kode?.let { kode ->
+                                Skipstype.fraKode(kode)
+                            },
+                            fartsomraade = detalj.fartsomraade?.kode?.let { kode ->
+                                Fartsomraade.fraKode(kode)
+                            },
+                            yrke = detalj.yrke?.kode?.let { kode -> Yrke(kode, detalj.yrke.beskrivelse) },
+                        )
+                    }
+                )
+            }
     }
 
     override fun hentAARegisterData(request: ArbeidsforholdRequest): List<ArbeidINorgeGrunnlag> {

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMeta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -12,6 +13,9 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -19,19 +23,23 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderSykdomSteg(
     private val sykdomRepository: SykdomRepository,
+    private val overgangArbeidRepository: OvergangArbeidRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
+        overgangArbeidRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.AVKLAR_SYKDOM,
-            tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
+            tvingerAvklaringsbehov = tvingerAvklaringsbehov(kontekst),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
             kontekst,
@@ -44,6 +52,29 @@ class VurderSykdomSteg(
             },
         )
         return Fullført
+    }
+
+    private fun tvingerAvklaringsbehov(kontekst: FlytKontekstMedPerioder): Set<Vurderingsbehov> {
+        val forrigeOvergangArbeidGrunnlag = kontekst.forrigeBehandlingId?.let {
+            overgangArbeidRepository.hentHvisEksisterer(it)
+        }
+
+        val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId?.let {
+            sykdomRepository.hentHvisEksisterer(it)?.sykdomsvurderinger ?: emptyList()
+        }
+
+        val skalTriggesVedRevurderingOvergangArbeid = forrigeOvergangArbeidGrunnlag?.vurderinger.isNullOrEmpty()
+        val skalTriggesVedRevurderingStudent =
+            vedtatteSykdomsvurderinger?.none { it.potensieltOppfyltStudent() } == true && unleashGateway.isEnabled(
+                BehandlingsflytFeature.StudentV2
+            )
+
+        val irrelevanteVurderingsbehov = buildSet {
+            if (!skalTriggesVedRevurderingStudent) add(Vurderingsbehov.REVURDER_STUDENT)
+            if (!skalTriggesVedRevurderingOvergangArbeid) add(Vurderingsbehov.OVERGANG_ARBEID)
+        }
+        return kontekst.vurderingsbehovRelevanteForSteg - irrelevanteVurderingsbehov
+
     }
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {

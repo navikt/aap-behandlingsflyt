@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -11,7 +13,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 data class InnhentetSykdomsOpplysninger(
-    val oppgittYrkesskadeISøknad: Boolean,
+    val oppgittYrkesskadeISøknad: Boolean? = null,
     val innhentedeYrkesskader: List<RegistrertYrkesskade>,
 )
 
@@ -20,26 +22,34 @@ data class RegistrertYrkesskade(
     val saksnummer: Int?,
     val skadedato: LocalDate?,
     val kilde: String,
+    val vedtaksdato: LocalDate? = null,
+    val skadeart: String? = null,
+    val diagnose: String? = null,
+    val skadekombinasjoner: List<SkadekombinasjonRegister>? = null,
+    val skadekombinasjonerTekst: String? = null,
 ) {
     constructor(yrkesskade: Yrkesskade) : this(
-        yrkesskade.ref,
-        yrkesskade.saksnummer,
-        yrkesskade.skadedato,
-        yrkesskade.kildesystem
+        ref = yrkesskade.ref,
+        saksnummer = yrkesskade.saksnummer,
+        skadedato = yrkesskade.skadedato,
+        kilde = yrkesskade.kildesystem,
+        vedtaksdato = yrkesskade.vedtaksdato,
+        skadeart = yrkesskade.skadeart,
+        diagnose = yrkesskade.diagnose,
+        skadekombinasjoner = yrkesskade.skadekombinasjoner,
+        skadekombinasjonerTekst = yrkesskade.skadekombinasjonerTekst,
     )
 }
 
 data class SykdomsvurderingLøsningDto(
     override val begrunnelse: String,
 
-    /** Hvis null, så gjelder den fra starten. */
     override val fom: LocalDate,
     override val tom: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
-    val erArbeidsevnenNedsatt: Boolean?,
     val harSkadeSykdomEllerLyte: Boolean,
+    val harNedsattArbeidsevne: ArbeidsevneNedsattValg? = null,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
-    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
     val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
     val yrkesskadeBegrunnelse: String?,
@@ -55,12 +65,10 @@ data class SykdomsvurderingLøsningDto(
             begrunnelse = begrunnelse,
             vurderingenGjelderFra = fom,
             vurderingenGjelderTil = tom,
-            dokumenterBruktIVurdering = dokumenterBruktIVurdering,
-            erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+            harNedsattArbeidsevne = harNedsattArbeidsevne,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
             erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
             yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
             diagnose = kodeverk?.let { Diagnose(kodeverk, hoveddiagnose, bidiagnoser) },
@@ -70,6 +78,3 @@ data class SykdomsvurderingLøsningDto(
         )
     }
 }
-
-
-

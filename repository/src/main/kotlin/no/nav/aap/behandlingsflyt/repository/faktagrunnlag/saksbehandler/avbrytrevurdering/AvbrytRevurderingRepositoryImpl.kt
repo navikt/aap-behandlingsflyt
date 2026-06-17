@@ -26,7 +26,7 @@ class AvbrytRevurderingRepositoryImpl(
             """
                 select *
                 from avbryt_revurdering_grunnlag as grunnlag
-                left join avbryt_revurdering_vurdering as vurdering on grunnlag.id = vurdering.id
+                left join avbryt_revurdering_vurdering as vurdering on grunnlag.vurdering_id = vurdering.id
                 where grunnlag.aktiv = true and grunnlag.behandling_id = ?
             """.trimIndent()
         ) {

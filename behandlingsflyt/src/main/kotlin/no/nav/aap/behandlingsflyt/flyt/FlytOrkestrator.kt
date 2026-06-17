@@ -8,13 +8,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravGrunnlagImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
-import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraBeslutter
-import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeførtFraKvalitetssikrer
 import no.nav.aap.behandlingsflyt.flyt.steg.Transisjon
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererService
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
-import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
@@ -28,8 +26,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -59,12 +57,15 @@ class FlytOrkestrator(
     private val ventebehovEvaluererService: VentebehovEvaluererService,
     private val stegOrkestrator: StegOrkestrator,
     private val stoppNårStatus: Set<Status> = emptySet(),
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider,
         stoppNårStatus: Set<Status> = emptySet(),
         markSavepointAt: Set<StegStatus>? = null,
+        behandlingHendelseService: BehandlingHendelseService = gatewayProvider.provide<BehandlingHendelseServiceProvider>()
+            .create(repositoryProvider, gatewayProvider),
     ) : this(
         ventebehovEvaluererService = VentebehovEvaluererServiceImpl(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
@@ -73,27 +74,13 @@ class FlytOrkestrator(
         sakRepository = repositoryProvider.provide(),
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-        behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider),
+        behandlingHendelseService = behandlingHendelseService,
         stegOrkestrator = StegOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt),
         stoppNårStatus = stoppNårStatus,
+        unleashGateway = gatewayProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
-
-    fun opprettKontekst(behandling: Behandling): FlytKontekst {
-        return opprettKontekst(behandling.sakId, behandling.id)
-    }
-
-    fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
-        val behandling = behandlingRepository.hent(behandlingId)
-
-        return FlytKontekst(
-            sakId = sakId,
-            behandlingId = behandlingId,
-            behandlingType = behandling.typeBehandling(),
-            forrigeBehandlingId = behandling.forrigeBehandlingId
-        )
-    }
 
     fun tilbakeførEtterAtomærBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
@@ -111,13 +98,22 @@ class FlytOrkestrator(
         )
     }
 
-
     fun forberedOgProsesserBehandling(
-        kontekst: FlytKontekst,
+        behandlingId: BehandlingId,
         triggere: List<Vurderingsbehov> = emptyList()
     ) {
-        this.forberedBehandling(kontekst, triggere)
-        this.prosesserBehandling(kontekst)
+        forberedOgProsesserBehandling(
+            behandlingRepository.hent(behandlingId),
+            triggere,
+        )
+    }
+
+    fun forberedOgProsesserBehandling(
+        behandling: Behandling,
+        triggere: List<Vurderingsbehov> = emptyList()
+    ) {
+        this.forberedBehandling(behandling.flytKontekst(), triggere)
+        this.prosesserBehandling(behandling.flytKontekst())
     }
 
     private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<Vurderingsbehov>) {
@@ -201,10 +197,10 @@ class FlytOrkestrator(
                         en endring i rekkefølgen av stegene, så er dette en bug.
                         """.trimIndent().replace("\n", " ")
                     )
-
-                    val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
-                    tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
                 }
+
+                val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
+                tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
             }
         }
     }
@@ -235,20 +231,6 @@ class FlytOrkestrator(
                 behandling,
                 behandlingFlyt.faktagrunnlagForGjeldendeSteg()
             )
-
-            if (result.erTilbakeføring()) {
-                val tilbakeføringsflyt = when (result) {
-                    is TilbakeførtFraBeslutter -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraBeslutter())
-                    is TilbakeførtFraKvalitetssikrer -> behandlingFlyt.tilbakeflyt(avklaringsbehovene.tilbakeførtFraKvalitetssikrer())
-                    else -> {
-                        throw IllegalStateException("Uhåndtert transisjon ved tilbakeføring. Faktisk type: ${result.javaClass}.")
-                    }
-                }
-                log.info(
-                    "Tilbakeført fra '${gjeldendeSteg.type()}' til '${tilbakeføringsflyt.stegene().last()}'"
-                )
-                tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
-            }
 
             validerPlassering(behandlingFlyt, avklaringsbehovene.åpne())
 
@@ -314,7 +296,7 @@ class FlytOrkestrator(
         result: Transisjon,
         behandlingFlyt: BehandlingFlyt
     ): FlytSteg? {
-        val neste = if (result.erTilbakeføring() || !result.kanFortsette()) {
+        val neste = if (!result.kanFortsette()) {
             behandlingFlyt.aktivtSteg()
         } else {
             behandlingFlyt.neste()
@@ -369,7 +351,9 @@ class FlytOrkestrator(
         }
 
         log.info(
-            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${behandling.vurderingsbehov().map { it.type }}."
+            "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${
+                behandling.vurderingsbehov().map { it.type }
+            }."
         )
         var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {

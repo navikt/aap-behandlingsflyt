@@ -23,15 +23,6 @@ object InMemorySakRepository : SakRepository {
         person: Person,
         søknadsdato: LocalDate
     ): Sak {
-        @Suppress("DEPRECATION") // inline og forenkl når deperecated metode slettes
-        return finnEllerOpprett(person, Periode(søknadsdato, Tid.MAKS))
-    }
-
-    @Deprecated("Sluttdato for rettighetsperiode er alltid Tid.MAKS for nye/migrerte saker. Send kun med søknadsdato, med mindre du tester koden din for ikke-migrerte saker.")
-    override fun finnEllerOpprett(
-        person: Person,
-        periode: Periode
-    ): Sak {
         synchronized(lock) {
             val eksisterendeSak = memory.values.filter { sak -> sak.person == person }
                 .singleOrNull { sak ->
@@ -49,18 +40,18 @@ object InMemorySakRepository : SakRepository {
                         id = id,
                         saksnummer = Saksnummer.valueOf(id.id),
                         person = person,
-                        rettighetsperiode = periode,
+                        rettighetsperiode = Periode(søknadsdato, Tid.MAKS),
                     )
-                memory.put(id, sak)
+                memory[id] = sak
 
                 return sak
             }
         }
     }
 
-    override fun finnSakerFor(person: Person): List<Sak> {
+    override fun finnSakerFor(personId: PersonId): List<Sak> {
         synchronized(lock) {
-            return memory.values.filter { sak -> sak.person == person }
+            return memory.values.filter { sak -> sak.person.id == personId }
         }
     }
 

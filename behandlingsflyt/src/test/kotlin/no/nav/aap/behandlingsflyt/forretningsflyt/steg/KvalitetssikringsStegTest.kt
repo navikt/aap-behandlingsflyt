@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
@@ -7,32 +8,22 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.Totri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
-import kotlin.random.Random
 
 class KvalitetssikringsStegTest {
 
@@ -101,9 +92,31 @@ class KvalitetssikringsStegTest {
         }
     }
 
+    @Test
+    fun `om et behov godkjennes, og løses på nytt, så skal det kvalitetssikres på nytt`() {
+        Scenario().apply {
+            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
+
+            kjørSteg()
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.OPPRETTET)
+
+            kvalitetssikre(Definisjon.AVKLAR_SYKDOM, godkjent = true)
+            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.KVALITETSSIKRET)
+
+            kjørSteg()
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.AVSLUTTET)
+
+            opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
+
+            kjørSteg()
+            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.AVSLUTTET)
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.OPPRETTET)
+        }
+    }
+
     private class Scenario {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
-        private val behandling = opprettBehandling(periode.fom)
+        private val behandling = opprettInMemorySakOgBehandling(periode.fom).second
         private val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
         private val steg = KvalitetssikringsSteg(
@@ -113,32 +126,17 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = AlleAvskruddUnleash,
+            unleashGateway = FakeUnleashBaseWithDefaultDisabled(
+                enabledFlags = listOf(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)
+            ),
+            avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
+            behandlingRepository = inMemoryRepositoryProvider.provide(),
+            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
         )
 
         fun kjørSteg() {
             val kontekst = flytKontekstMedPerioder { behandling = this@Scenario.behandling }
             steg.utfør(kontekst)
-        }
-
-        private fun opprettBehandling(periode: LocalDate): Behandling {
-            val person =
-                Person(
-                    PersonId(Random.nextLong()),
-                    UUID.randomUUID(),
-                    listOf(genererIdent(LocalDate.now().minusYears(23)))
-                )
-            val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
-            val behandling = InMemoryBehandlingRepository.opprettBehandling(
-                sakId = sak.id,
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
-                forrigeBehandlingId = null,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                    årsak = ÅrsakTilOpprettelse.SØKNAD
-                )
-            )
-            return behandling
         }
 
         fun opprettOgLøs(
@@ -164,12 +162,7 @@ class KvalitetssikringsStegTest {
             val resultat = løser.løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(KVALITETSSIKRER),
-                    kontekst = FlytKontekst(
-                        sakId = behandling.sakId,
-                        behandlingId = behandling.id,
-                        forrigeBehandlingId = null,
-                        behandlingType = behandling.typeBehandling(),
-                    )
+                    kontekst = behandling.flytKontekst(),
                 ),
                 KvalitetssikringLøsning(
                     vurderinger = (godkjente + underkjente).map {
@@ -177,7 +170,8 @@ class KvalitetssikringsStegTest {
                             definisjon = it.kode,
                             godkjent = it in godkjente,
                             begrunnelse = if (it in underkjente) "Ikke godkjent" else null,
-                            grunner = emptyList()
+                            grunner = emptyList(),
+                            markeringer = emptyList()
                         )
                     }
                 )

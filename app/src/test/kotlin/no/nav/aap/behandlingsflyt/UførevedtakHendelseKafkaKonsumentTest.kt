@@ -7,9 +7,9 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsume
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
-import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -41,13 +41,13 @@ class UførevedtakHendelseKafkaKonsumentTest {
             .withStartupTimeout(Duration.ofSeconds(60))
             .withLogConsumer { Slf4jLogConsumer(logger) }
 
-        private lateinit var dataSource: TestDataSource
-        val repositoryRegistry = postgresRepositoryRegistry
+        private lateinit var dataSource: MockDataSource
+        val repositoryRegistry = inMemoryRepositoryRegistry
 
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
-            dataSource = TestDataSource()
+            dataSource = MockDataSource()
             kafka.start()
             System.setProperty("INTEGRASJON_UFORE_VEDTAK_TOPIC", UFØRE_KAFKA_TOPIC)
         }
@@ -56,7 +56,6 @@ class UførevedtakHendelseKafkaKonsumentTest {
         @JvmStatic
         internal fun afterAll() {
             kafka.stop()
-            dataSource.close()
         }
     }
 

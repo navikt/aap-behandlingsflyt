@@ -4,6 +4,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
 
     // Førstegangsbehandling/revurdering
     START_BEHANDLING(false, true),
+    KRAV(true, true),
     SEND_FORVALTNINGSMELDING(false, true),
     RETTIGHETSPERIODE(true, false),
     SØKNAD(true, false),
@@ -45,5 +46,6 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     
     // Aktivitetsplikt
     AKTIVITETSPLIKT_11_7(true, true),
-    AKTIVITETSPLIKT_11_9(true, true)
+    AKTIVITETSPLIKT_11_9(true, true),
+    AVBRYT_AKTIVITETSPLIKTBEHANDLING(true, false),
 }

@@ -14,7 +14,7 @@ sealed class BarnIdentifikator : Comparable<BarnIdentifikator> {
     data class BarnIdent(
         val ident: Ident,
         val navn: String? = null,
-        val fødselsdato: Fødselsdato? = null
+        val fødselsdato: Fødselsdato? = null,
     ) : BarnIdentifikator() {
         constructor(ident: String) : this(Ident(ident))
 
@@ -52,17 +52,24 @@ data class VurdertBarn(val ident: BarnIdentifikator, val vurderinger: List<Vurde
             is BarnIdentifikator.BarnIdent -> ident.fødselsdato?.let {
                 Barn.periodeMedRettTil(it, null).tom
             } ?: Tid.MAKS
+
             is BarnIdentifikator.NavnOgFødselsdato -> Barn.periodeMedRettTil(ident.fødselsdato, null).tom
         }
-        return vurderinger.sortedBy { it.fraDato }.map {
-            Tidslinje(
-                Periode(it.fraDato, til),
-                ForeldreansvarVurdering(it.harForeldreAnsvar, it.begrunnelse, it.erFosterForelder)
-            )
-        }.fold(Tidslinje<ForeldreansvarVurdering>()) { eksisterende, vurdering ->
-            eksisterende.kombiner(vurdering, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }.komprimer()
+        return vurderinger.sortedBy { it.fraDato }
+            .filter { it.fraDato <= til }
+            .map {
+                Tidslinje(
+                    Periode(it.fraDato, til),
+                    ForeldreansvarVurdering(it.harForeldreAnsvar, it.begrunnelse, it.erFosterForelder)
+                )
+            }.fold(Tidslinje<ForeldreansvarVurdering>()) { eksisterende, vurdering ->
+                eksisterende.kombiner(vurdering, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            }.komprimer()
     }
 
-    data class ForeldreansvarVurdering(val harForeldreAnsvar: Boolean, val begrunnelse: String, val erFosterforelder: Boolean? = null)
+    data class ForeldreansvarVurdering(
+        val harForeldreAnsvar: Boolean,
+        val begrunnelse: String,
+        val erFosterforelder: Boolean? = null
+    )
 }

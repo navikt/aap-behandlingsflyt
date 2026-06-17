@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
@@ -55,14 +56,10 @@ fun NormalOpenAPIRoute.behandlingApi(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             sakRepository.hent(sakId).person.identer()
         }.map { it.identifikator }.toSet()
+        val apiInternGateway = gatewayProvider.provide(ApiInternGateway::class)
 
-        val arenaStatus: ArenaStatusDTO? = runCatching {
-            gatewayProvider.provide(ApiInternGateway::class).hentArenaStatus(identer)
-        }.onFailure {
-            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
-        }.getOrNull()?.let {
-            ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk)
-        }
+        val arenaStatus = apiInternGateway.hentArenaStatus(identer)
+            .getOrNull()?.let { ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk) }
         return arenaStatus
     }
 
@@ -110,7 +107,7 @@ fun NormalOpenAPIRoute.behandlingApi(
 
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
-                        type = behandling.typeBehandling(),
+                        type = BehandlingService(repositoryProvider, gatewayProvider).utledFaktiskBehandlingstype(behandling),
                         status = behandling.status(),
                         opprettet = behandling.opprettetTidspunkt,
                         skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status()
@@ -151,7 +148,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         virkningstidspunkt = virkningstidspunkt,
                         kravMottatt = kravMottatt,
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
-                        vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
+                        vedtaksdato = VedtakService(repositoryProvider, gatewayProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
                         vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker,
                         arenaStatus = hentArenaStatus(behandling.sakId)
                     )

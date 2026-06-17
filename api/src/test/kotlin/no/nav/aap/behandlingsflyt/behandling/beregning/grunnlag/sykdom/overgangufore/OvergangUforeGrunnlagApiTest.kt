@@ -5,6 +5,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
@@ -22,6 +23,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class OvergangUforeGrunnlagApiTest : BaseApiTest() {
@@ -29,8 +31,8 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
     @Test
     fun `skal hente ut overgang uføre-vurderinger med grunnlagsdata`() {
         val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
-        val behandlingUtenUføreSøknad = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
+        val behandlingUtenUføreSøknad = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
 
         val vurdering = OvergangUføreVurdering(
             begrunnelse = "begrunnelse",
@@ -63,12 +65,13 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             brukerHarSøktUføretrygd = vurdering.brukerHarSøktOmUføretrygd,
             brukerHarFåttVedtakOmUføretrygd = vurdering.brukerHarFåttVedtakOmUføretrygd,
             brukerRettPåAAP = vurdering.brukerRettPåAAP,
-            virkningsdato = vurdering.fom,
             fom = vurdering.fom,
             tom = vurdering.tom,
-            vurdertAv = VurdertAvResponse(vurdering.vurdertAv, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
-            kvalitetssikretAv = null,
-            besluttetAv = null
+            vurderingerMeta = VurderingerMetaResponse(
+                vurdertAv = VurdertAvResponse(vurdering.vurdertAv, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
+                kvalitetssikretAv = null,
+                besluttetAv = null,
+            ),
         )
         val uføreSøknadOpplysninger = UføreSøknadOpplysninger(
             uføreSøknad.soknadsdato
@@ -98,7 +101,6 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             val overgangUføreGrunnlagResponse = responseMedSøknad.body<OvergangUføreGrunnlagResponse>()
             val overgangUføreGrunnlagUtenSøknadResponse = responseUtenSøknad.body<OvergangUføreGrunnlagResponse>()
             assertThat(overgangUføreGrunnlagResponse.nyeVurderinger).isEqualTo(listOf(vurderingResponse))
-            assertThat(overgangUføreGrunnlagResponse.vurdering).isEqualTo(vurderingResponse)
             assertThat(overgangUføreGrunnlagResponse.uføreSøknadOpplysninger).isEqualTo(uføreSøknadOpplysninger)
 
             assertThat(overgangUføreGrunnlagUtenSøknadResponse.uføreSøknadOpplysninger).isNull()

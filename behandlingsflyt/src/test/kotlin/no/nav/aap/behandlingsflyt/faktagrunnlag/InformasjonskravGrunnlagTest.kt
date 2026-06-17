@@ -34,7 +34,6 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -48,6 +47,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.help.ident
 
 @Fakes
 class InformasjonskravGrunnlagTest {
@@ -149,7 +149,7 @@ class InformasjonskravGrunnlagTest {
     }
 
     @Test
-    fun `Yrkesskadedata er utdatert, men har ingen endring fra registeret`() {
+    fun `Yrkesskadedata utdatert uten endring, oppgittYrkesskadeISoeknad lagres alltid`() {
         dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
@@ -165,7 +165,7 @@ class InformasjonskravGrunnlagTest {
                 kontekst
             )
 
-            assertThat(erOppdatert).isEmpty()
+            assertThat(erOppdatert).isNotEmpty()
         }
     }
 

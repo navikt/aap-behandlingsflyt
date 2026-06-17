@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.papsign.ktor.openapigen.model.info.InfoModel
@@ -14,11 +13,12 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
-import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
+import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.avbrytaktivitetspliktbehandling.avbrytAktivitetspliktbehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
@@ -43,7 +43,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurder
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
-import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
@@ -55,6 +55,7 @@ import no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling.klagebehandli
 import no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
 import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.krav.kravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapApi
@@ -65,7 +66,6 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetApi
 import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetsinfoApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
@@ -80,15 +80,12 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørMigrering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
@@ -105,39 +102,28 @@ import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
+import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.server.AZURE
+import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
-import java.net.InetAddress
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.time.Duration.Companion.seconds
-
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
     return Innsending::class.sealedSubclasses.map { it.java }.toList()
@@ -158,17 +144,19 @@ internal object AppConfig {
     // Tid appen får til å avslutte Motor, Kafka, etc
     val stansArbeidTimeout = shutdownGracePeriod - 1.seconds
 
-    // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", fordi vi har en del venting på IO (db, kafka, http):
-    private const val ktorParallellitet = 8
-
-    // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
-    // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
-    const val connectionGroupSize = ktorParallellitet / 2 + 1
-    const val workerGroupSize = ktorParallellitet / 2 + 1
-    const val callGroupSize = 4 * ktorParallellitet
-
     const val ANTALL_WORKERS_FOR_MOTOR = 4
-    const val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
+
+    // Vi følger *IKKE* ktor sin metodikk for å regne ut callGroupSize, for den metodikken antar at
+    // handlerene våre gjør async IO, men vi gjør ikke async IO, hverken mot database eller i HTTP-kall.
+    const val callGroupSize = 64
+
+    /* praktisk talt alle endepunkt hos oss starter med en transaksjon. Siden transaksjonen
+     * er blocking, er det i praksis hva som begrenser antall parallelle kall.
+     *
+     * Vi har maks 100 connections i prod, og vi kjører med 3-4 pods, så det er en begrenset ressurs.
+     * Bruker kun 92 connections for å beholde noen til administrasjon.
+     */
+    const val hikariMaxPoolSize = 92 / 4 /* max connections / max antall pods */
 }
 
 fun main() {
@@ -180,8 +168,6 @@ fun main() {
     aktiverPostgresLogging()
 
     embeddedServer(Netty, configure = {
-        connectionGroupSize = AppConfig.connectionGroupSize
-        workerGroupSize = AppConfig.workerGroupSize
         callGroupSize = AppConfig.callGroupSize
 
         shutdownGracePeriod = AppConfig.shutdownGracePeriod.inWholeMilliseconds
@@ -204,30 +190,45 @@ internal fun Application.server(
     dbConfig: DbConfig,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ) {
     DefaultJsonMapper.objectMapper()
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
     commonKtorModule(
-        prometheus, AzureConfig(), InfoModel(
-            title = "AAP - Behandlingsflyt", version = ApplikasjonsVersjon.versjon,
+        prometheus = prometheus,
+        infoModel = InfoModel(
+            title = "AAP - Behandlingsflyt",
+            version = ApplikasjonsVersjon.versjon,
             description = """
-                For å teste API i dev, besøk
-                <a href="https://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt">Token Generator</a> for å få token.
-                """.trimIndent(),
-        )
+            For å teste API i dev, besøk
+            <a href="https://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt">Token Generator</a> for å få token.
+            """.trimIndent(),
+        ),
+        identityProvider = IdentityProvider.ENTRA_ID
     )
 
     install(StatusPages, StatusPagesConfigHelper.setup())
 
-    val dataSource = initDatasource(dbConfig)
-    Migrering.migrate(dataSource)
+    val dedicatedMotorConnections = AppConfig.ANTALL_WORKERS_FOR_MOTOR * 2
+    val fellesDataSource = initDatasource(
+        dbConfig,
+        maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections,
+        prometheus = prometheus,
+    )
+    val motorDataSource = initDatasource(
+        dbConfig,
+        maximumPoolSize = dedicatedMotorConnections,
+        prometheus = prometheus,
+    )
+    Migrering.migrate(fellesDataSource)
 
-    val scheduler = utførMigreringer(dataSource, gatewayProvider, environment.log)
+    val motor = startMotor(motorDataSource, repositoryRegistry, gatewayProvider, prometheus)
 
-    val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
+    startKafkakonsumenter(fellesDataSource, repositoryRegistry, gatewayProvider)
+    TilgangGateway.initialiserPrometheus(prometheus)
 
-    startKafkakonsumenter(dataSource, repositoryRegistry, gatewayProvider)
+    BackfillStansOpphør(fellesDataSource, gatewayProvider).kjør()
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -238,98 +239,100 @@ internal fun Application.server(
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
         try {
-            scheduler.shutdownNow()
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
-            dataSource.close()
+            fellesDataSource.close()
+            motorDataSource.close()
         } catch (_: Exception) {
             // Ignorert
         }
     }
 
     routing {
-        authenticate(AZURE) {
+        authenticate(IdentityProvider.ENTRA_ID.value) {
             install(NavIdentInterceptor)
 
             apiRouting {
-                configApi()
-                saksApi(dataSource, repositoryRegistry, gatewayProvider)
-                behandlingApi(dataSource, repositoryRegistry, gatewayProvider)
-                flytApi(dataSource, repositoryRegistry, gatewayProvider)
-                fatteVedtakGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                kvalitetssikringApi(dataSource, repositoryRegistry, gatewayProvider)
-                kvalitetssikringTilgangApi(dataSource, repositoryRegistry)
-                bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                vedtakslengdeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                etableringEgenVirksomhetApi(dataSource, repositoryRegistry, gatewayProvider)
-                overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
-                studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                sykestipendGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
-                sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                inntektsbortfallGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                institusjonApi(dataSource, repositoryRegistry, gatewayProvider)
-                avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
-                tilkjentYtelseApi(dataSource, repositoryRegistry)
-                foreslaaVedtakApi(dataSource, repositoryRegistry)
-                trukketSøknadGrunnlagApi(dataSource, repositoryRegistry)
-                avbrytRevurderingGrunnlagApi(dataSource, repositoryRegistry)
-                rettighetsperiodeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                beregningVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
-                beregningsGrunnlagApi(dataSource, repositoryRegistry)
-                aldersGrunnlagApi(dataSource, repositoryRegistry)
-                barnetilleggApi(dataSource, repositoryRegistry, gatewayProvider)
-                motorApi(dataSource)
-                behandlingsflytPipApi(dataSource, repositoryRegistry)
-                auditlogApi(dataSource, repositoryRegistry)
-                refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(dataSource, repositoryRegistry)
-                mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
-                rettighetApi(dataSource, repositoryRegistry)
-                rettighetsinfoApi(dataSource, repositoryRegistry)
-                tidligereVurderingerApi(dataSource, repositoryRegistry, gatewayProvider)
-                barnepensjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                bekreftVurderingerOppfølgingApi(dataSource, repositoryRegistry, gatewayProvider)
+                personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                behandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                flytApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                fatteVedtakGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                kvalitetssikringApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                kvalitetssikringTilgangApi(fellesDataSource, repositoryRegistry)
+                bistandsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                meldepliktsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                meldepliktOverstyringGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                vedtakslengdeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                arbeidsevneGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                arbeidsopptrappingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                etableringEgenVirksomhetApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                overgangUforeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                studentgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykestipendGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykdomsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykdomsvurderingForBrevApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykepengerGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                inntektsbortfallGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                oppholdskravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                institusjonApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                avklaringsbehovApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                tilkjentYtelseApi(fellesDataSource, repositoryRegistry)
+                foreslaaVedtakApi(fellesDataSource, repositoryRegistry)
+                foreslaaVedtakVedtakslengdeApi(fellesDataSource, repositoryRegistry)
+                trukketSøknadGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                avbrytRevurderingGrunnlagApi(fellesDataSource, repositoryRegistry)
+                rettighetsperiodeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                beregningVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                beregningsGrunnlagApi(fellesDataSource, repositoryRegistry)
+                aldersGrunnlagApi(fellesDataSource, repositoryRegistry)
+                barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                motorApi(fellesDataSource)
+                behandlingsflytPipApi(fellesDataSource, repositoryRegistry)
+                auditlogApi(fellesDataSource, repositoryRegistry)
+                refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                manglendeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                mellomlagretVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                rettighetsinfoApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                tidligereVurderingerApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                kravGrunnlagApi(fellesDataSource, repositoryRegistry)
                 // Klage
-                påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                formkravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                behandlendeEnhetGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                klagebehandlingKontorGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                klageresultatApi(dataSource, repositoryRegistry)
-                trekkKlageGrunnlagApi(dataSource, repositoryRegistry)
+                påklagetBehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                fullmektigGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                formkravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                behandlendeEnhetGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                klagebehandlingKontorGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                klagebehandlingNayGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                klageresultatApi(fellesDataSource, repositoryRegistry)
+                trekkKlageGrunnlagApi(fellesDataSource, repositoryRegistry)
                 // Svar fra kabal
-                svarFraAndreinstansGrunnlagApi(dataSource, repositoryRegistry)
+                svarFraAndreinstansGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Oppfølgingsbehandling
-                avklarOppfolgingsoppgaveGrunnlag(dataSource, repositoryRegistry)
-                oppfølgingsOppgaveApi(dataSource, repositoryRegistry)
+                avklarOppfolgingsoppgaveGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
+                oppfølgingsOppgaveApi(fellesDataSource, repositoryRegistry)
                 // Aktivitetsplikt
-                aktivitetsplikt11_7GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                aktivitetsplikt11_9GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                aktivitetsplikt11_7GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                aktivitetsplikt11_9GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                avbrytAktivitetspliktbehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Meldekort
-                meldekortApi(dataSource, repositoryRegistry, gatewayProvider)
+                meldekortApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
-                brevApi(dataSource, repositoryRegistry, gatewayProvider)
-                dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
-                mottattHendelseApi(dataSource, repositoryRegistry)
-                underveisVurderingerApi(dataSource, repositoryRegistry)
-                lovvalgMedlemskapApi(dataSource, repositoryRegistry)
-                lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                samordningGrunnlag(dataSource, repositoryRegistry, gatewayProvider)
-                forutgåendeMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)
-                driftApi(dataSource, repositoryRegistry, gatewayProvider)
-                simuleringApi(dataSource, repositoryRegistry, gatewayProvider)
-                overgangArbeidGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                brevApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                dokumentinnhentingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                mottattHendelseApi(fellesDataSource, repositoryRegistry)
+                underveisVurderingerApi(fellesDataSource, repositoryRegistry)
+                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry)
+                lovvalgMedlemskapGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                samordningGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
+                forutgåendeMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                driftApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                simuleringApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                overgangArbeidGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Endepunkter kun tilgjengelig lokalt og i test
                 if (!Miljø.erProd()) {
-                    opprettDummySakApi(dataSource, repositoryRegistry, gatewayProvider)
+                    opprettDummySakApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                    fullførBehandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 }
             }
         }
@@ -401,8 +404,6 @@ private fun Application.startKafkakonsumenter(
                 gatewayProvider = gatewayProvider
             )
         )
-    }
-    if (Miljø.erDev()) {
         startKonsument(
             ForeldrepengevedtakKafkaKonsument(
                 config = KafkaConsumerConfig(),
@@ -433,49 +434,11 @@ private fun <K, V> Application.startKonsument(konsument: KafkaKonsument<K, V>) {
     }
 }
 
-// Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
-private fun utførMigreringer(
-    dataSource: HikariDataSource,
-    gatewayProvider: GatewayProvider,
-    log: io.ktor.util.logging.Logger
-): ScheduledExecutorService {
-    val scheduler = Executors.newScheduledThreadPool(1)
-    /* Prøv på nytt, for å se om vi er elected til leader, hvert 9. minutt. Hvis vi blir elected, så vil metoden
-     * aldri returnere, og med fixed delay, så blir det heller ikke skjedulert flere tasks.
-    **/
-    scheduler.scheduleWithFixedDelay(Runnable {
-        val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader")
-
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerStansOgOpphor) && isLeader) {
-            // kjør migreringer
-            StansEllerOpphørMigrering(dataSource, postgresRepositoryRegistry, gatewayProvider).migrer()
-        }
-
-    }, 1, 9, TimeUnit.MINUTES)
-    return scheduler
-}
-
-private fun isLeader(log: io.ktor.util.logging.Logger): Boolean {
-    val electorUrl = requiredConfigForKey("elector.get.url")
-    val client = HttpClient.newHttpClient()
-    val response = client.send(
-        HttpRequest.newBuilder().uri(URI.create(electorUrl)).GET().build(),
-        HttpResponse.BodyHandlers.ofString()
-    )
-    val json = ObjectMapper().readTree(response.body())
-    val leaderHostname = json.get("name").asText()
-    val hostname = InetAddress.getLocalHost().hostName
-    log.info("electorUrl=${electorUrl}, leaderHostname=$leaderHostname, hostname=$hostname")
-    return hostname == leaderHostname
-}
-
 fun Application.startMotor(
     dataSource: HikariDataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
     val motor = Motor(
         dataSource = dataSource,
@@ -524,12 +487,16 @@ val postgresConfig = Properties().apply {
     put("assumeMinServerVersion", "16.0") // raskere oppstart av driver
 }
 
-fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(HikariConfig().apply {
+fun initDatasource(
+    dbConfig: DbConfig,
+    maximumPoolSize: Int = AppConfig.hikariMaxPoolSize,
+    prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
+): HikariDataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
     password = dbConfig.password
     dataSourceProperties = postgresConfig
-    maximumPoolSize = AppConfig.hikariMaxPoolSize
+    this.maximumPoolSize = maximumPoolSize
     minimumIdle = 1
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus

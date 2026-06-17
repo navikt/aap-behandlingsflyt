@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -26,16 +27,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
@@ -44,10 +41,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
-import java.util.*
 
 class ManglendeLigningGrunnlagStegTest {
     private lateinit var avklaringsbehovRepository: AvklaringsbehovRepository
@@ -332,11 +327,8 @@ class ManglendeLigningGrunnlagStegTest {
         årsak: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
         vurderingsbehov: Vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD
     ): Behandling {
-        val person = person()
-        val sak = sak(person)
-
         return behandlingRepository.opprettBehandling(
-            sakId = sak.id,
+            sakId = opprettInMemorySak().id,
             typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -344,11 +336,4 @@ class ManglendeLigningGrunnlagStegTest {
             )
         )
     }
-
-    private fun sak(person: Person): Sak =
-        sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
-
-    private fun person(): Person = Person(
-        PersonId(Random(1235123).nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23)))
-    )
 }

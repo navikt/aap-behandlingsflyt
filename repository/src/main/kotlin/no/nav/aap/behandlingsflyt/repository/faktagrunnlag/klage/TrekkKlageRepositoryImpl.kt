@@ -61,14 +61,15 @@ class TrekkKlageRepositoryImpl(
     private fun lagreVurdering(vurdering: TrekkKlageVurdering): Long  {
         return connection.executeReturnKey("""
             INSERT INTO trekk_klage_vurdering(
-                skal_trekkes, hvorfor_trekkes, begrunnelse, vurdert_av
-            ) VALUES (?, ?, ?, ?)
+                skal_trekkes, hvorfor_trekkes, begrunnelse, vurdert_av, opprettet_tid
+            ) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()) {
             setParams {
                 setBoolean(1, vurdering.skalTrekkes)
                 setEnumName(2, vurdering.hvorforTrekkes)
                 setString(3, vurdering.begrunnelse)
                 setString(4, vurdering.vurdertAv.ident)
+                setInstant(5, vurdering.vurdert)
             }
         }
     }
@@ -76,12 +77,13 @@ class TrekkKlageRepositoryImpl(
     private fun lagreGrunnlag(behandlingId: BehandlingId, vurderingId: Long): Long {
         return connection.executeReturnKey("""
             INSERT INTO trekk_klage_grunnlag(
-                BEHANDLING_ID, VURDERING_ID, AKTIV
-            ) VALUES (?, ?, TRUE)
+                BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID
+            ) VALUES (?, ?, TRUE, ?)
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }

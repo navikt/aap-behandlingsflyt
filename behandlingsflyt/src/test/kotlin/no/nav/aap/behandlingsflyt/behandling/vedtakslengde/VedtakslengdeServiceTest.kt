@@ -31,11 +31,17 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 
 class VedtakslengdeServiceTest {
+
+    @BeforeEach
+    fun setup() {
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+    }
 
     private val forrigeBehandlingId = BehandlingId(1L)
     private val behandlingId = BehandlingId(2L)
@@ -129,7 +135,7 @@ class VedtakslengdeServiceTest {
     }
 
     @Test
-    fun `returnerer Manuell når sammenhengende bistandsbehov rettighet er under ett år og toggle er av`() {
+    fun `returnerer Automatisk når sammenhengende bistandsbehov rettighet er under ett år med gyldig avslagsårsak`() {
         val vedtattSluttdato = 1 desember 2025
         val bistandsbehovRettighetTom = 1 juni 2026
 
@@ -139,33 +145,7 @@ class VedtakslengdeServiceTest {
         )
         setupStansOpphør(behandlingId, bistandsbehovRettighetTom.plusDays(1), setOf(Avslagsårsak.BRUKER_OVER_67))
 
-        val resultat = vedtakslengdeService(unleash = AlleAvskruddUnleash).hentNesteVedtakslengdeUtvidelse(
-            behandlingId = behandlingId,
-            forrigeBehandlingId = forrigeBehandlingId
-        )
-
-        assertThat(resultat).isInstanceOf(VedtakslengdeUtvidelse.Manuell::class.java)
-        val manuell = resultat as VedtakslengdeUtvidelse.Manuell
-        assertThat(manuell.forrigeSluttdato).isEqualTo(vedtattSluttdato)
-        assertThat(manuell.avslagsårsaker).containsExactly(Avslagsårsak.BRUKER_OVER_67)
-    }
-
-    @Test
-    fun `returnerer Automatisk når sammenhengende bistandsbehov rettighet er under ett år med gyldig avslagsårsak og toggle er på`() {
-        val vedtattSluttdato = 1 desember 2025
-        val bistandsbehovRettighetTom = 1 juni 2026
-
-        setupForrigeBehandling(vedtattSluttdato)
-        setupRettighetstypeTidslinje(
-            listOf(Segment(Periode(1 januar 2025, bistandsbehovRettighetTom), RettighetsType.BISTANDSBEHOV))
-        )
-        setupStansOpphør(behandlingId, bistandsbehovRettighetTom.plusDays(1), setOf(Avslagsårsak.BRUKER_OVER_67))
-
-        val unleashMedToggle = FakeUnleashBaseWithDefaultDisabled(
-            enabledFlags = listOf(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
-        )
-
-        val resultat = vedtakslengdeService(unleash = unleashMedToggle).hentNesteVedtakslengdeUtvidelse(
+        val resultat = vedtakslengdeService().hentNesteVedtakslengdeUtvidelse(
             behandlingId = behandlingId,
             forrigeBehandlingId = forrigeBehandlingId
         )
@@ -178,7 +158,7 @@ class VedtakslengdeServiceTest {
     }
 
     @Test
-    fun `returnerer Manuell når sammenhengende bistandsbehov rettighet er under ett år med ugyldig avslagsårsak selv om toggle er på`() {
+    fun `returnerer Manuell når sammenhengende bistandsbehov rettighet er under ett år med ugyldig avslagsårsak`() {
         val vedtattSluttdato = 1 desember 2025
         val bistandsbehovRettighetTom = 1 juni 2026
 
@@ -189,11 +169,7 @@ class VedtakslengdeServiceTest {
         // IKKE_BEHOV_FOR_OPPFOLGING er ikke blant de gyldige automatiske avslagsårsakene
         setupStansOpphør(behandlingId, bistandsbehovRettighetTom.plusDays(1), setOf(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING))
 
-        val unleashMedToggle = FakeUnleashBaseWithDefaultDisabled(
-            enabledFlags = listOf(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
-        )
-
-        val resultat = vedtakslengdeService(unleash = unleashMedToggle).hentNesteVedtakslengdeUtvidelse(
+        val resultat = vedtakslengdeService().hentNesteVedtakslengdeUtvidelse(
             behandlingId = behandlingId,
             forrigeBehandlingId = forrigeBehandlingId
         )
@@ -204,7 +180,7 @@ class VedtakslengdeServiceTest {
     }
 
     @Test
-    fun `returnerer Manuell når sammenhengende bistandsbehov rettighet er under ett år uten avslagsårsaker selv om toggle er på`() {
+    fun `returnerer Manuell når sammenhengende bistandsbehov rettighet er under ett år uten avslagsårsaker`() {
         val vedtattSluttdato = 1 desember 2025
         val bistandsbehovRettighetTom = 1 juni 2026
 
@@ -214,11 +190,7 @@ class VedtakslengdeServiceTest {
         )
         every { stansOpphørRepository.hentHvisEksisterer(behandlingId) } returns null
 
-        val unleashMedToggle = FakeUnleashBaseWithDefaultDisabled(
-            enabledFlags = listOf(BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr)
-        )
-
-        val resultat = vedtakslengdeService(unleash = unleashMedToggle).hentNesteVedtakslengdeUtvidelse(
+        val resultat = vedtakslengdeService().hentNesteVedtakslengdeUtvidelse(
             behandlingId = behandlingId,
             forrigeBehandlingId = forrigeBehandlingId
         )
@@ -336,14 +308,13 @@ class VedtakslengdeServiceTest {
 
     // -- Hjelpefunksjoner --
 
-    private fun vedtakslengdeService(unleash: no.nav.aap.behandlingsflyt.unleash.UnleashGateway = AlleAvskruddUnleash) =
+    private fun vedtakslengdeService() =
         VedtakslengdeService(
             vedtakslengdeRepository = vedtakslengdeRepository,
             underveisRepository = underveisRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
             rettighetstypeService = rettighetstypeService,
             stansOpphørRepository = stansOpphørRepository,
-            unleashGateway = unleash,
             clock = clock,
         )
 

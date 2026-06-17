@@ -4,6 +4,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemM
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.GyldigPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -25,6 +29,20 @@ data class TilhørighetVurdering(
     val oppgittJobbetIUtlandGrunnlag: List<OppgittJobbetIUtlandGrunnlag>? = null,
     val oppgittUtenlandsOppholdGrunnlag: List<OppgittUtenlandsOppholdGrunnlag>? = null,
     val utenlandsAddresserGrunnlag: UtenlandsAdresserGrunnlag? = null,
+    val visuellTidslinje: List<VisuellTidslinjeArbeidInntektINorge> = emptyList(),
+    val bestemtArbeidsgruppeINorge: List<BestemtArbeidsgruppeINorgeGrunnlag>? = null,
+)
+
+data class VisuellTidslinjeInntektDetalj(
+    val virksomhetId: String?,
+    val virksomhetNavn: String?,
+    val beloep: Double,
+)
+
+data class VisuellTidslinjeArbeidInntektINorge(
+    val periode: Periode,
+    val inntekter: List<VisuellTidslinjeInntektDetalj> = emptyList(),
+    val periodeMangler: Boolean = inntekter.isEmpty(),
 )
 
 data class VedtakIMEDLGrunnlag(
@@ -39,6 +57,21 @@ data class ArbeidInntektINorgeGrunnlag(
     val virksomhetNavn: String?,
     val beloep: Double,
     val periode: Periode,
+)
+
+data class BestemtArbeidsgruppeINorgeGrunnlag(
+    val virksomhetId: String,
+    val virksomhetNavn: String?,
+    val fom: LocalDate,
+    val tom: LocalDate?,
+    val ansettelsesDetaljer: List<AsettelsesDetalj>? = emptyList(),
+)
+
+data class AsettelsesDetalj(
+    val skipsregister: Skipsregister? = null,
+    val skipstype: Skipstype? = null,
+    val fartsomraade: Fartsomraade? = null,
+    val yrke: Yrke? = null,
 )
 
 data class MottarSykepengerGrunnlag(

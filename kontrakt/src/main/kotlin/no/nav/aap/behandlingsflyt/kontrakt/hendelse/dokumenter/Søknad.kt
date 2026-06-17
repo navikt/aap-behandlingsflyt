@@ -17,6 +17,8 @@ public sealed interface Søknad : Melding
  * @param yrkesskade Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false. Fra db, mulige verdier er "Ikke oppgitt", "Ja", "Nei".
  * @param oppgitteBarn Om barn er oppgitt, mengden av identer.
  * @param medlemskap Søkers opphold i utland
+ * @param fastlege fastlege fra register og svar fra søker på om det er riktig.
+ * @param andreBehandlere behandlere som søker har lagt til manuelt.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class SøknadV0(
@@ -25,6 +27,8 @@ public data class SøknadV0(
     public val oppgitteBarn: OppgitteBarn?,
     public val medlemskap: SøknadMedlemskapDto? = null,
     public val andreUtbetalinger: AndreUtbetalingerDto? = null,
+    public val fastlege: List<FastlegeDto>? = null,
+    public val andreBehandlere: List<BehandlerDto>? = null,
 ) : Søknad
 
 
@@ -111,7 +115,7 @@ public data class AfpDto(
     public val hvemBetaler: String?
 )
 
-public enum class AndreUtbetalingerYtelserDto{
+public enum class AndreUtbetalingerYtelserDto {
     ØKONOMISK_SOSIALHJELP,
     OMSORGSSTØNAD,
     INTRODUKSJONSSTØNAD,
@@ -142,3 +146,27 @@ public data class Ident(@param:JsonDeserialize(using = WhiteSpaceRemovalDeserial
         require(identifikator.matches("\\d{11}".toRegex())) { "Ugyldig identifikator. Lengden må være 11 siffer. Lengde: ${identifikator.length}. Ikke-siffer: ${identifikator.filterNot { it.isDigit() }.length}." }
     }
 }
+
+public data class FastlegeDto(
+    public val navn: String,
+    public val behandlerRef: String,
+    public val kontaktinformasjon: FastlegeKontaktInformasjonDto,
+    public val erRegistrertFastlegeRiktig: JaNei?,
+)
+
+public data class FastlegeKontaktInformasjonDto(
+    public val kontor: String?,
+    public val adresse: String?,
+    public val telefon: String?,
+)
+
+public data class BehandlerDto(
+    public val firstname: String?,
+    public val lastname: String?,
+    public val legekontor: String?,
+    public val id: String?,
+    public val gateadresse: String?,
+    public val postnummer: String?,
+    public val poststed: String?,
+    public val telefon: String?,
+)

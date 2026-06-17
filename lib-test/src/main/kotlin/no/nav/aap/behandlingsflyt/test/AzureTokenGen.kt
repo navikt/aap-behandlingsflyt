@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-class AzureTokenGen(private val issuer: String, private val audience: String) {
+class AzureTokenGen(private val audience: String) {
     private val rsaKey: RSAKey = JWKSet.parse(AZURE_JWKS).getKeyByKeyId("localhost-signer") as RSAKey
 
     private fun signed(claims: JWTClaimsSet): SignedJWT {
@@ -28,7 +28,7 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
         val builder = JWTClaimsSet
             .Builder()
             .subject(UUID.randomUUID().toString())
-            .issuer(issuer)
+            .issuer("behandlingsflyt")
             .audience(audience)
             .expirationTime(LocalDateTime.now().plusHours(4).toDate())
 
@@ -45,6 +45,7 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
                         "medlemskaplovvalg-api",
                         "oppdater-behandlingsflyt-oppgaver",
                         "oppdater-postmottak-oppgaver",
+                        "syfo-api"
                     )
                 )
                 .claim(
@@ -52,6 +53,10 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
                 )
         } else {
             builder.claim("NAVident", navIdent ?: "X123456")
+                .claim(
+                    "groups",
+                    listOf("saksbehandler-rolle", "veileder-rolle", "kvalitetssikrer-rolle", "beslutter-rolle")
+                )
         }
 
         return builder.build()

@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -53,7 +53,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -80,21 +81,23 @@ import javax.sql.DataSource
 class TestScenarioOrkestrator(
     private val gatewayProvider: GatewayProvider,
     private val datasource: DataSource,
-    private val motor: ManuellMotorImpl
+    private val motor: ManuellMotorImpl,
 ) {
-    fun løsStudent(behandling: Behandling): Behandling {
+    fun løsStudent(behandling: Behandling, vurderingenGjelderFra: LocalDate): Behandling {
         return løsAvklaringsBehov(
             behandling,
-            AvklarStudentEnkelLøsning(
-                studentvurdering = StudentVurderingDTO(
-                    begrunnelse = "Er student ok",
-                    harAvbruttStudie = true,
-                    godkjentStudieAvLånekassen = true,
-                    avbruttPgaSykdomEllerSkade = true,
-                    harBehovForBehandling = true,
-                    avbruttStudieDato = LocalDate.now().minusMonths(1),
-                    avbruddMerEnn6Måneder = true,
-                )
+            AvklarStudentLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertStudentDto(
+                        fom = vurderingenGjelderFra,
+                        begrunnelse = "Er student ok",
+                        harAvbruttStudie = true,
+                        godkjentStudieAvLånekassen = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        harBehovForBehandling = true,
+                        avbruttStudieDato = LocalDate.now().minusMonths(1),
+                        avbruddMerEnn6Måneder = true,
+                    ))
             )
         )
     }
@@ -102,7 +105,7 @@ class TestScenarioOrkestrator(
     fun løsSykdom(
         behandling: Behandling,
         vurderingGjelderFra: LocalDate,
-        erArbeidsevnenNedsatt: Boolean,
+        harNedsattArbeidsevne: ArbeidsevneNedsattValg,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
     ): Behandling {
@@ -116,10 +119,9 @@ class TestScenarioOrkestrator(
                         harSkadeSykdomEllerLyte = true,
                         kodeverk = "ICPC2",
                         hoveddiagnose = "A03",
-                        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+                        harNedsattArbeidsevne = harNedsattArbeidsevne,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
                         erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
                         fom = vurderingGjelderFra,
@@ -210,7 +212,7 @@ class TestScenarioOrkestrator(
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
-                        behov.definisjon.kode, true, "begrunnelse", emptyList()
+                        behov.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()
                     )
                 }),
             bruker
@@ -287,6 +289,7 @@ class TestScenarioOrkestrator(
                         ident = barn.ident?.identifikator,
                         navn = barn.navn,
                         fødselsdato = barn.fødselsdato?.toLocalDate(),
+                        dødsdato = null,
                         vurderinger = listOf(
                             VurderingAvForeldreAnsvarDto(
                                 fraDato = LocalDate.now().minusMonths((index + 1).toLong()),
@@ -392,14 +395,14 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsOppholdskrav(behandling: Behandling): Behandling {
+    fun løsOppholdskrav(behandling: Behandling, sak: Sak): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarOppholdskravLøsning(
                 løsningerForPerioder = listOf(
                     AvklarOppholdkravLøsningForPeriodeDto(
                         begrunnelse = "Oppholdskrav ok",
-                        fom = LocalDate.now().minusMonths(2),
+                        fom = sak.rettighetsperiode.fom,
                         tom = null,
                         oppfylt = true,
                         land = "Norge"
@@ -454,7 +457,11 @@ class TestScenarioOrkestrator(
                     .filter { behov -> behov.erTotrinn() }
                     .map { behov ->
                         TotrinnsVurdering(
-                            behov.definisjon.kode, behov.definisjon != returVed, "begrunnelse", emptyList()
+                            behov.definisjon.kode,
+                            behov.definisjon != returVed,
+                            "begrunnelse",
+                            emptyList(),
+                            markeringer = emptyList()
                         )
                     }),
             Bruker("BESLUTTER")

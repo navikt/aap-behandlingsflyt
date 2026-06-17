@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -40,11 +40,11 @@ data class UføreHistorikkRespons(val uforeperioder: List<UførePeriode>)
  */
 object UføreGateway : UføreRegisterGateway {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val url = URI.create(requiredConfigForKey("integrasjon.pesys.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.pesys.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_PESYS_URL"))
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_PESYS_SCOPE"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
@@ -83,6 +83,7 @@ object UføreGateway : UføreRegisterGateway {
             Uføre(
                 virkningstidspunkt = it.virkningstidspunkt,
                 uføregrad = Prosent(it.uforegrad),
+                uføregradFom = it.uforegradFom,
                 uføregradTom = it.uforegradTom
             )
         }.toSet()
@@ -110,6 +111,7 @@ object UføreGateway : UføreRegisterGateway {
             return null
         }
     }
+
     override fun hentÅpenUføreSøknad(person: Person): UføreSøknad? {
         val response = queryÅpenUføreSøknad(UføreSøknadRequest(person.aktivIdent().identifikator))
         return response?.soknad

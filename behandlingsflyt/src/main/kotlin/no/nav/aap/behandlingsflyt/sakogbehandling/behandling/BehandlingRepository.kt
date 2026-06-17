@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
 
@@ -35,7 +35,7 @@ interface BehandlingRepository : Repository {
     ): List<Behandling>
 
     fun hentAlleMedVedtakFor(
-        person: Person,
+        personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
     ): List<BehandlingMedVedtak>
 

@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -27,7 +26,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
@@ -39,8 +37,15 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse)
 
         log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoForUtvidelse")
-        saker
-            .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}, Saker = $it") }
+
+        val (sakerSomHarEksisterendeJobb, sakerSomIkkeHarEksisterendeJobb) = saker.partition { finnesAlleredeUtvidVedtakslengdeJobbForSak(it) }
+
+        if (sakerSomHarEksisterendeJobb.isNotEmpty()) {
+            log.info("Filtrerer bort ${sakerSomHarEksisterendeJobb.size} saker som allerede har ventende utvidVedtakslengde-jobb. Saker: $sakerSomHarEksisterendeJobb")
+        }
+
+        sakerSomIkkeHarEksisterendeJobb
+            .also { log.info("Oppretter jobber for ${it.size} saker som er aktuelle kandidator for utvidelse av vedtakslengde. Saker: $it") }
             .forEach {
                 flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()))
             }
@@ -48,7 +53,14 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
 
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
-        val kandidater = vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
+        val alleSaker = vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
+        val (sakerMedÅpenUtvidelse, sakerUtenÅpenUtvidelse) = alleSaker.partition { harÅpenUtvidVedtakslengdeBehandling(it) }
+
+        if (sakerMedÅpenUtvidelse.isNotEmpty()) {
+            log.info("Filtrerer vekk ${sakerMedÅpenUtvidelse.size} saker som allerede har en åpen behandling med årsak UTVID_VEDTAKSLENGDE. Saker: $sakerMedÅpenUtvidelse")
+        }
+
+        val kandidater = sakerUtenÅpenUtvidelse
             .fold(KategoriserteKandidater()) { acc, sakId ->
                 val utvidelse = vurderUtvidelseBehov(sakId)
                 // Sikrer at nye typer i VedtakslengdeUtvidelse må håndteres
@@ -66,24 +78,18 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         if (kandidater.ingenRettighet.isNotEmpty()) {
             log.info("Følgende saker har ingen fremtidig bistandsbehovrettighet. Saker: ${kandidater.ingenRettighet}")
         }
-
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)) {
-            if (kandidater.manuelle.isNotEmpty()) {
-                log.info("Følgende saker trenger manuell utvidelse av vedtakslengde. Saker: ${kandidater.manuelle}")
-            }
-            if (kandidater.automatiske.isNotEmpty()) {
-                log.info("Følgende saker får automatisk utvidet vedtakslengde. Saker: ${kandidater.automatiske}")
-            }
-            kandidater.automatiske + kandidater.manuelle
-        } else {
-            if (kandidater.manuelle.isNotEmpty()) {
-                log.error("Følgende saker trenger manuell utvidelse av vedtakslengde. Må følges opp! Saker: ${kandidater.manuelle}")
-            }
-            if (kandidater.automatiske.isNotEmpty()) {
-                log.info("Følgende saker får automatisk utvidet vedtakslengde. Saker: ${kandidater.automatiske}")
-            }
-            kandidater.automatiske
+        if (kandidater.manuelle.isNotEmpty()) {
+            log.info("Følgende saker trenger manuell utvidelse av vedtakslengde. Saker: ${kandidater.manuelle}")
         }
+        if (kandidater.automatiske.isNotEmpty()) {
+            log.info("Følgende saker får automatisk utvidet vedtakslengde. Saker: ${kandidater.automatiske}")
+        }
+        return kandidater.automatiske + kandidater.manuelle
+    }
+
+    private fun harÅpenUtvidVedtakslengdeBehandling(sakId: SakId): Boolean {
+        val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId) ?: return false
+        return sisteBehandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE && sisteBehandling.status().erÅpen()
     }
 
     private fun vurderUtvidelseBehov(sakId: SakId): VedtakslengdeUtvidelse? {
@@ -96,6 +102,10 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             forrigeBehandlingId = sisteGjeldendeBehandling.id,
         )
     }
+
+    private fun finnesAlleredeUtvidVedtakslengdeJobbForSak(sakId: SakId): Boolean =
+        flytJobbRepository.hentJobberForSak(sakId.toLong())
+            .any { it.type() == OpprettBehandlingUtvidVedtakslengdeJobbUtfører.type }
 
     private data class KategoriserteKandidater(
         val automatiske: Set<SakId> = emptySet(),
@@ -110,7 +120,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

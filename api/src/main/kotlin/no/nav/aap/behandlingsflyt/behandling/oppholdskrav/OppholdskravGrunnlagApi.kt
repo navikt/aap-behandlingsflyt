@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
         getGrunnlag<BehandlingReferanse, OppholdskravGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.AVKLAR_OPPHOLDSKRAV.kode.toString(),
+            påkrevdRolle = Definisjon.AVKLAR_OPPHOLDSKRAV.løsesAv,
         ) { req ->
             val oppholdskravGrunnlag =
                 dataSource.transaction(readOnly = true) { connection ->
@@ -70,10 +70,14 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                             .segmenter()
                             .map { segment ->
                                 OppholdskravVurderingDto(
-                                    vurdertAv = VurdertAvResponse.fraIdent(
-                                        segment.verdi.vurdertAv,
-                                        segment.verdi.opprettet.toLocalDate(),
-                                        ansattInfoService
+                                    vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                                        definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
+                                        behandlingId = behandling.id,
+                                        vurdertAv = VurdertAvResponse.fraIdent(
+                                            segment.verdi.vurdertAv,
+                                            segment.verdi.opprettet.toLocalDate(),
+                                            ansattInfoService,
+                                        ),
                                     ),
                                     fom = segment.fom(),
                                     tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom(),

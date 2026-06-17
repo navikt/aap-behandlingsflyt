@@ -9,7 +9,7 @@ import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
@@ -21,12 +21,12 @@ class StatistikkGatewayImpl : StatistikkGateway {
     }
 
     private val restClient = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(scope = requiredConfigForKey("integrasjon.statistikk.scope")),
-        tokenProvider = ClientCredentialsTokenProvider,
+        config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_STATISTIKK_SCOPE")),
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
-    private val uri = URI.create(requiredConfigForKey("integrasjon.statistikk.url"))
+    private val uri = URI.create(requiredConfigForKey("INTEGRASJON_STATISTIKK_URL"))
 
     override fun avgiStatistikk(hendelse: StoppetBehandling) {
         restClient.post<_, Unit>(

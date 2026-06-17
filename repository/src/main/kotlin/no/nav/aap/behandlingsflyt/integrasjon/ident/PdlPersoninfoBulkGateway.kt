@@ -13,22 +13,6 @@ import org.intellij.lang.annotations.Language
 @Suppress("GraphQLUnresolvedReference")
 object PdlPersoninfoBulkGateway : PersoninfoBulkGateway {
 
-    @Language("GraphQL")
-    val PERSONINFO_BOLK_QUERY = $$"""
-        query($identer: [ID!]!) {
-            hentPersonBolk(identer: $identer) {
-                ident,
-                person {
-                    navn(historikk: false) {
-                        fornavn
-                        mellomnavn
-                        etternavn
-                    }
-                },
-                code
-            }
-        }
-    """.trimIndent()
 
     override fun hentPersoninfoForIdenter(identer: List<Ident>): List<Personinfo> {
         val request = PdlRequest(PERSONINFO_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
@@ -52,6 +36,26 @@ object PdlPersoninfoBulkGateway : PersoninfoBulkGateway {
         )
     }
 }
+
+
+@Language("GraphQL")
+val PERSONINFO_BOLK_QUERY = $$"""
+        query($identer: [ID!]!) {
+            hentPersonBolk(identer: $identer) {
+                ident,
+                person {
+                    navn(historikk: false) {
+                        fornavn
+                        mellomnavn
+                        etternavn
+                    }
+                },
+                code
+            }
+        }
+    """.trimIndent()
+
+
 
 
 

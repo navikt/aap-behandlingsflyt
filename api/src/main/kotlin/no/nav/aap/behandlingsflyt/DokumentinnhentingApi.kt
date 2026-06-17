@@ -4,16 +4,14 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
-import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.PurringLegeerklæringRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -22,8 +20,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
+import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -46,6 +51,24 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
 
     route("/api/dokumentinnhenting/syfo") {
+
+        route("/fastlege/{saksnummer}") {
+            authorizedGet<SaksnummerParameter, FastlegeResponse>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    sakPathParam = SakPathParam("saksnummer"),
+                    påkrevdRolle = Definisjon.BESTILL_LEGEERKLÆRING.løsesAv,
+                )
+            ) { saksnummer ->
+                val fastlegeResponse = dataSource.transaction { connection ->
+                    FastlegeService(repositoryRegistry.provider(connection), gatewayProvider)
+                        .utledFastlege(Saksnummer(saksnummer.saksnummer), token())
+                }
+                respond(fastlegeResponse)
+            }
+        }
+
         route("/bestill") {
             authorizedPost<Unit, String, BestillLegeerklæringDto>(
                 AuthorizationBodyPathConfig(
@@ -69,14 +92,16 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                         val behandling = repositoryProvider.provide<BehandlingRepository>()
                             .hent(BehandlingReferanse(req.behandlingsReferanse))
 
-                        AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
-                            .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
+                        if (req.dokumentasjonType != DokumentasjonType.MELDING_FRA_NAV) {
+                            AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
+                                .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
+                        }
 
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 
                         val bestillingUUID: String = dokumentinnhentingGateway.bestillLegeerklæring(
-                            LegeerklæringBestillingRequest(
+                            BehandlingsflytToDokumentInnhentingBestillingDto(
                                 bestillerNavIdent = bruker().ident,
                                 behandlerRef = req.behandlerRef,
                                 behandlerNavn = req.behandlerNavn,
@@ -100,7 +125,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
             }
         }
         route("/status/{saksnummer}") {
-            authorizedGet<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>>(
+            authorizedGet<HentStatusLegeerklæring, List<DialogmeldingStatusTilBehandslingsflytDto>>(
                 AuthorizationParamPathConfig(
                     applicationsOnly = false,
                     relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
@@ -112,7 +137,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
             }
         }
         route("/brevpreview") {
-            authorizedPost<Unit, BrevResponse, ForhåndsvisBrevRequest>(
+            authorizedPost<Unit, DialogmeldingForhåndsvisningDto, ForhåndsvisBrevRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SE,
                     relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
@@ -126,14 +151,14 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     val personIdent = sak.person.aktivIdent()
                     val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 
-                    val brevRequest = BrevRequest(
+                    val request = ForhåndsvisDialogmeldingDto(
                         bestillerNavIdent = bruker().ident,
                         personNavn = personinfo.fulltNavn(),
                         personIdent = personIdent.identifikator,
                         dialogmeldingTekst = req.fritekst,
                         dokumentasjonType = req.dokumentasjonType,
                     )
-                    dokumentinnhentingGateway.forhåndsvisBrev(brevRequest)
+                    dokumentinnhentingGateway.forhåndsvisDialogmelding(request)
                 }
                 respond(brevPreview)
             }
@@ -147,7 +172,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     applicationsOnly = false
                 )
             ) { _, req ->
-                val request = LegeerklæringPurringRequest(req.dialogmeldingPurringUUID)
+                val request = LegeerklæringPurringDto(req.dialogmeldingPurringUUID)
                 val bestillingUUID = dokumentinnhentingGateway.purrPåLegeerklæring(request)
                 respond(bestillingUUID)
             }

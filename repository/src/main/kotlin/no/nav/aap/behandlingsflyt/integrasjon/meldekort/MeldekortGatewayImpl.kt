@@ -10,18 +10,18 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.meldekort.kontrakt.sak.BehandslingsflytUtfyllingRequest
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.meldekort.kontrakt.sak.OppdaterIdenterV0
 import java.net.URI
 
 class MeldekortGatewayImpl : MeldekortGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.meldekort.url"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_MELDEKORT_URL"))
 
     private val client = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(scope = requiredConfigForKey("integrasjon.meldekort.scope")),
-        tokenProvider = ClientCredentialsTokenProvider,
+        config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_MELDEKORT_SCOPE")),
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
@@ -49,7 +49,12 @@ class MeldekortGatewayImpl : MeldekortGateway {
             PostRequest(
                 OppdaterIdenterV0(
                     saksnummer = saksnummer.toString(),
-                    identer = identer.map { it.identifikator },
+                    personIdenter = identer.map {
+                        no.nav.aap.meldekort.kontrakt.sak.Ident(
+                            ident = it.identifikator,
+                            aktiv = it.aktivIdent
+                        )
+                    },
                 )
             )
         )

@@ -12,9 +12,9 @@ object UnleashGatewayImpl : UnleashGateway {
     private val unleash = DefaultUnleash(
         UnleashConfig
             .builder()
-            .appName(requiredConfigForKey("nais.app.name"))
-            .unleashAPI("${requiredConfigForKey("unleash.server.api.url")}/api")
-            .apiKey(requiredConfigForKey("unleash.server.api.token"))
+            .appName(requiredConfigForKey("NAIS_APP_NAME"))
+            .unleashAPI("${requiredConfigForKey("UNLEASH_SERVER_API_URL")}/api")
+            .apiKey(requiredConfigForKey("UNLEASH_SERVER_API_TOKEN"))
             .build()
     )
 
@@ -28,4 +28,17 @@ object UnleashGatewayImpl : UnleashGateway {
                 .addProperty("typeBrev", typeBrev.name)
                 .build()
         )
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
+        val variant = unleash.getVariant(featureToggle.key())
+        return if (variant.isEnabled && variant.name == variantName) {
+            variant.getPayload().map { it.value }.orElse("")
+        } else ""
+    }
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
+        val variant = unleash.getVariant(featureToggle.key())
+        return variant.isEnabled && variant.name == variantName
+    }
+
 }

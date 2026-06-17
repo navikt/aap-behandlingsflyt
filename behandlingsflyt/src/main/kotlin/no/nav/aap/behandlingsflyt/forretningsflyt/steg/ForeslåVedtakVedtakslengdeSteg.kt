@@ -1,0 +1,109 @@
+package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
+
+class ForeslåVedtakVedtakslengdeSteg internal constructor(
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovService: AvklaringsbehovService,
+) : BehandlingSteg {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+    )
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = Definisjon.FORESLÅ_VEDTAK_VEDTAKSLENGDE,
+            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },
+            tilbakestillGrunnlag = {},
+            kontekst
+        )
+        return Fullført
+    }
+
+    private fun vedtakBehøverVurdering(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        return tidligereVurderinger.harBehandlingsgrunnlag(kontekst, type())
+                && skalInnomForeslåVedtak(avklaringsbehovene, kontekst.vurderingsbehovRelevanteForSteg)
+    }
+
+    private fun erTilstrekkeligVurdert(
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        val avklaringsbehovLøstAvNay = avklaringsbehovene.avklaringsbehovLøstAvNay()
+        val sistForeslåttVedtak = avklaringsbehovene.alle()
+            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttVedtakVedtakslengde() }
+            .maxOfOrNull { it.sistAvsluttet() }
+
+        if (sistForeslåttVedtak == null) {
+            log.info("Fant ikke avsluttede avklaringsbehov for foreslå vedtak vedtakslengde, men kom allikevel inn i 'erTilstrekkeligVurdert'")
+            return false
+        }
+
+        return avklaringsbehovLøstAvNay.all { it.sistEndret().isBefore(sistForeslåttVedtak) }
+    }
+
+    private fun skalInnomForeslåVedtak(
+        avklaringsbehovene: Avklaringsbehovene,
+        vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>
+    ): Boolean {
+        if (!vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VEDTAKSLENGDE_MANUELT)) {
+            return false
+        }
+
+        val harAvklaringsbehovLøstAvNay = avklaringsbehovene.avklaringsbehovLøstAvNay().isNotEmpty()
+        if (!harAvklaringsbehovLøstAvNay) {
+            return false
+        }
+
+        val nayHarBareLøstLovvalgEllerVentepunkt =
+            avklaringsbehovene.avklaringsbehovLøstAvNay()
+                .filterNot { it.erLovvalgOgMedlemskap() }
+                .filterNot { it.erVentepunkt() }
+                .isEmpty()
+        if (!nayHarBareLøstLovvalgEllerVentepunkt) {
+            return true
+        }
+        // Hvis behandling har vært innom sykdom, men behandlingen har ingen andre Nay-avklaringsbehov enn lovvalg
+        // så har lokal vurdert avslag. Skal returnere false
+        return !avklaringsbehovene.harVærtInnomSykdom()
+    }
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return ForeslåVedtakVedtakslengdeSteg(repositoryProvider, gatewayProvider)
+        }
+
+        override fun type(): StegType {
+            return StegType.FORESLÅ_VEDTAK_VEDTAKSLENGDE
+        }
+    }
+}

@@ -6,6 +6,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
 public const val VURDER_BRUDD_11_7_KODE: String = "4101"
 public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT: String = "4102"
 public const val VURDER_BRUDD_11_9_KODE: String = "4201"
+public const val AVBRYT_AKTIVITETSPLIKTBEHANDING_KODE: String = "4301"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
@@ -39,7 +40,10 @@ public const val AVBRYT_REVURDERING_KODE: String = "5033"
 public const val AVKLAR_SAMORDNING_SYKESTIPEND_KODE: String = "5034"
 public const val AVKLAR_OPPHOLDSKRAV: String = "5035"
 public const val AVKLAR_SAMORDNING_BARNEPENSJON_KODE: String = "5036"
+public const val AVKLAR_STUDENT_KODE_V2: String = "5037"
+public const val VURDER_KRAV_KODE: String = "5038"
 public const val VURDER_INNTEKTSBORTFALL: String = "5040"
+public const val SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE: String = "5041"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
@@ -49,6 +53,7 @@ public const val SAMORDNING_REFUSJONS_KRAV: String = "5056"
 public const val ARBEIDSOPPTRAPPING_KODE: String = "5057"
 public const val ETABLERING_EGEN_VIRKSOMHET_KODE: String = "5058"
 public const val AVKLAR_VEDTAKSLENGDE_KODE: String = "5059"
+public const val FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE: String = "5060"
 public const val FORESLÅ_UTTAK_KODE: String = "5096"
 public const val KVALITETSSIKRING_KODE: String = "5097"
 public const val FORESLÅ_VEDTAK_KODE: String = "5098"
@@ -90,6 +95,11 @@ public enum class AvklaringsbehovKode {
      * [VURDER_BRUDD_11_9_KODE]
      */
     `4201`,
+
+    /**
+     * [AVBRYT_AKTIVITETSPLIKTBEHANDING_KODE]
+     */
+    `4301`,
 
     /**
      * [AVKLAR_STUDENT_KODE]
@@ -276,9 +286,24 @@ public enum class AvklaringsbehovKode {
     `5036`,
 
     /**
+     * [AVKLAR_STUDENT_KODE_V2]
+     */
+    `5037`,
+
+    /**
+     * [VURDER_KRAV_KODE]
+     */
+    `5038`,
+
+    /**
      * [VURDER_INNTEKTSBORTFALL]
      */
     `5040`,
+
+    /**
+     * [SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE]
+     */
+    `5041`,
 
     /**
      * [SKRIV_BREV_KODE]
@@ -328,6 +353,11 @@ public enum class AvklaringsbehovKode {
      * [FORESLÅ_UTTAK_KODE]
      */
     `5096`,
+
+    /**
+     * [FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE]
+     */
+    `5060`,
 
     /**
      * [KVALITETSSIKRING_KODE]

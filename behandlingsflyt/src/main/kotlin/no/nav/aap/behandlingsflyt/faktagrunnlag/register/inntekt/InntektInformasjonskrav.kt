@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Year
+import java.time.YearMonth
 
 class InntektInformasjonskrav(
     private val sakService: SakService,
@@ -74,9 +75,12 @@ class InntektInformasjonskrav(
     override fun hentData(input: InntektInput): InntektRegisterdata {
         val (person, relevanteÅr, relevanteÅrUføre) = input
         val oppdaterteInntekter = inntektRegisterGateway.innhent(person, relevanteÅr)
+        val tidligsteMuligeInntektÅr = YearMonth.of(2015, 1)
 
         val fom = relevanteÅrUføre.minOfOrNull { it.atMonth(1) }
+            ?.coerceAtLeast(tidligsteMuligeInntektÅr)
         val tom = relevanteÅrUføre.maxOfOrNull { it.atMonth(12) }
+            ?.coerceAtLeast(tidligsteMuligeInntektÅr)
         val inntekter = if (fom != null && tom != null) inntektkomponentenGateway.hentAInntekt(
             person.aktivIdent().identifikator,
             fom,

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -20,17 +21,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -41,7 +38,6 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
 
 object SendKlagebrevEnabledOgAltAnnetAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
     emptyList()
@@ -60,7 +56,11 @@ class SendForvaltningsmeldingStegTest {
     @Test
     fun `steg før SendForvaltningsmeldingSteg skal ikke føre til avklaringsbehov som vil forsinke utsending`() {
         // Dersom det er definisjoner som ikke vil hindre i tilfeler det skal sendes forvaltningsmelding, så kan disse legges i unntak
-        val unntak = listOf(Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT, Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON)
+        val unntak = listOf(
+            Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
+            Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON,
+            Definisjon.VURDER_KRAV
+        )
 
         assertThat(
             definisjonerSomLøsesFørSteg(
@@ -197,8 +197,7 @@ class SendForvaltningsmeldingStegTest {
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
     private fun opprettSakOgbehandlingForForvaltningsmelding(typeBehandling: TypeBehandling): Behandling {
-        val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
+        val sak = opprettInMemorySak(søknadsdato = periode.fom)
         return InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
             typeBehandling,
@@ -222,8 +221,7 @@ class SendForvaltningsmeldingStegTest {
     }
 
     private fun opprettSakOgbehandlingForKlageMottatt(typeBehandling: TypeBehandling): Behandling {
-        val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-        val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
+        val sak = opprettInMemorySak(periode.fom)
         return InMemoryBehandlingRepository.opprettBehandling(
             sak.id,
             typeBehandling,

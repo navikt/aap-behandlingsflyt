@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektSis
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallKanBehandlesAutomatisk
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.Under62ÅrVedSøknadstidspunkt
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
@@ -67,11 +67,9 @@ data class InntektsbortfallVurderingDto(
     val begrunnelse: String,
     val rettTilUttak: Boolean,
     val vurdertIBehandling: BehandlingId,
-    override val besluttetAv: VurdertAvResponse?,
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse?,
-    override val kvalitetssikretAv: VurdertAvResponse?,
+    override val vurderingerMeta: VurderingerMetaResponse,
 ) : VurderingDto
 
 fun InntektsbortfallVurdering.tilDto(fom: LocalDate, vurdertAvService: VurdertAvService): InntektsbortfallVurderingDto =
@@ -79,17 +77,13 @@ fun InntektsbortfallVurdering.tilDto(fom: LocalDate, vurdertAvService: VurdertAv
         begrunnelse = begrunnelse,
         rettTilUttak = rettTilUttak,
         vurdertIBehandling = vurdertIBehandling,
-        besluttetAv = vurdertAvService.besluttetAv(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
-            behandlingId = vurdertIBehandling
-        ),
-        kvalitetssikretAv = vurdertAvService.besluttetAv(
-            definisjon = Definisjon.FRITAK_MELDEPLIKT,
-            behandlingId = vurdertIBehandling
+            behandlingId = vurdertIBehandling,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid),
         ),
         fom = fom,
         tom = null,
-        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid),
     )
 
 fun Under62ÅrVedSøknadstidspunkt.tilDto(): Under62ÅrVedSøknadstidspunktDto = Under62ÅrVedSøknadstidspunktDto(
@@ -127,7 +121,7 @@ fun NormalOpenAPIRoute.inntektsbortfallGrunnlagApi(
         getGrunnlag<BehandlingReferanse, InntektsbortfallGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.VURDER_INNTEKTSBORTFALL.kode.toString()
+            påkrevdRolle = Definisjon.VURDER_INNTEKTSBORTFALL.løsesAv
 
         ) { behandlingReferanse ->
             val (inntektsbortfallKanBehandlesAutomatisk, vurdering) = dataSource.transaction(readOnly = true) { connection ->

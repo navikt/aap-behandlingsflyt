@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
     InstitusjonsoppholdRepository {
@@ -190,7 +191,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
         connection.executeBatch(
             """
-                INSERT INTO OPPHOLD (INSTITUSJONSTYPE, KATEGORI, ORGNR, PERIODE, OPPHOLD_PERSON_ID, INSTITUSJONSNAVN) VALUES (?, ?, ?, ?::daterange, ?, ?)
+                INSERT INTO OPPHOLD (INSTITUSJONSTYPE, KATEGORI, ORGNR, PERIODE, OPPHOLD_PERSON_ID, INSTITUSJONSNAVN, OPPRETTET_TID) VALUES (?, ?, ?, ?::daterange, ?, ?, ?)
             """.trimIndent(), institusjonsopphold
         ) {
             setParams { opphold ->
@@ -200,6 +201,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setPeriode(4, opphold.periode())
                 setLong(5, oppholdPersonId)
                 setString(6, opphold.institusjonsnavn)
+                setLocalDateTime(7, LocalDateTime.now())
             }
         }
 
@@ -288,8 +290,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         // Vurderinger fra tidligere behandlinger valideres mot oppholdet som var aktivt
         // i den behandlingen de ble vurdert i.
         helseoppholdVurderinger.forEach { vurdering ->
-            val relevanteOppholdPersonId = vurdering.vurdertIBehandling
-                ?.let { hentOppholdPersonIdForBehandling(it) }
+            val relevanteOppholdPersonId = hentOppholdPersonIdForBehandling(vurdering.vurdertIBehandling)
                 ?: oppholdPersonId
 
             val oppholdFinnes = connection.queryFirstOrNull(
@@ -332,8 +333,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
         connection.executeBatch(query, helseoppholdVurderinger) {
             setParams { vurdering ->
-                val relevanteOppholdPersonId = vurdering.vurdertIBehandling
-                    ?.let { hentOppholdPersonIdForBehandling(it) }
+                val relevanteOppholdPersonId = hentOppholdPersonIdForBehandling(vurdering.vurdertIBehandling)
                     ?: oppholdPersonId
 
                 setLong(1, vurderingerId)
@@ -344,7 +344,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setBoolean(6, vurdering.harFasteUtgifter)
                 setString(7, vurdering.begrunnelse)
                 setPeriode(8, vurdering.periode)
-                setLong(9, vurdering.vurdertIBehandling?.toLong())
+                setLong(9, vurdering.vurdertIBehandling.toLong())
                 setString(10, vurdering.vurdertAv)
             }
         }

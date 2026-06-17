@@ -10,5 +10,6 @@ class ExtendedVurdertBarnDto(
     navn: String?,
     vurderinger: List<VurderingAvForeldreAnsvarDto>,
     fødselsdato: LocalDate?,
+    dødsdato: LocalDate?,
     oppgittForeldreRelasjon: Relasjon? = null,
-) : VurdertBarnDto(ident, navn, fødselsdato, vurderinger, oppgittForeldreRelasjon)
+) : VurdertBarnDto(ident, navn, fødselsdato, dødsdato, vurderinger, oppgittForeldreRelasjon)

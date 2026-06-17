@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepeng
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
@@ -24,16 +24,13 @@ data class SykepengerGrunnlagResponse(
 
 data class SykepengerVurderingResponse(
     val begrunnelse: String,
-    val dokumenterBruktIVurdering: List<JournalpostId>,
     val vurdertIBehandling: BehandlingId,
     val opprettet: LocalDateTime,
     val harRettPå: Boolean,
     @Deprecated("Bruk fom") val gjelderFra: LocalDate,
     @Deprecated("Bruk tom") val gjelderTom: LocalDate?,
     val grunn: SykepengerGrunn? = null,
-    override val vurdertAv: VurdertAvResponse,
+    override val vurderingerMeta: VurderingerMetaResponse,
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val kvalitetssikretAv: VurdertAvResponse?,
-    override val besluttetAv: VurdertAvResponse?,
 ): VurderingDto

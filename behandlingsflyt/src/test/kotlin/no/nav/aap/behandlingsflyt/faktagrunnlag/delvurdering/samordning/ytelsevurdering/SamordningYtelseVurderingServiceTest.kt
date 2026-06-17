@@ -37,6 +37,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
@@ -337,7 +338,8 @@ class SamordningYtelseVurderingServiceTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
     }
@@ -371,7 +373,7 @@ class SamordningYtelseVurderingServiceTest {
         val rettighetsperiode = rettighetsPeriode ?: Periode(LocalDate.now(), LocalDate.now().plusDays(5))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
             person,
-            rettighetsperiode
+            rettighetsperiode.fom
         ).id
         val behandlingId = BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,

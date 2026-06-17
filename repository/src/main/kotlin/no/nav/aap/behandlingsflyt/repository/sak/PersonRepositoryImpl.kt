@@ -47,6 +47,11 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
     }
 
+    override fun oppdaterIdenter(person: Person, identer: List<Ident>): Person {
+        oppdater(person, identer)
+        return hent(person.id)
+    }
+
     private fun oppdater(person: Person, identer: List<Ident>) {
         require(identer.filter { it.aktivIdent }.size < 2)
 
@@ -128,6 +133,19 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             setRowMapper { row ->
                 val identer = hentIdenter(personId)
                 Person(personId, row.getUUID("referanse"), identer)
+            }
+        }
+    }
+
+    override fun hent(identifikator: UUID): Person {
+        return connection.queryFirst("SELECT id FROM PERSON WHERE referanse = ?") {
+            setParams {
+                setUUID(1, identifikator)
+            }
+            setRowMapper { row ->
+                val personId = PersonId(row.getLong("id"))
+                val identer = hentIdenter(personId)
+                Person(personId, identifikator, identer)
             }
         }
     }

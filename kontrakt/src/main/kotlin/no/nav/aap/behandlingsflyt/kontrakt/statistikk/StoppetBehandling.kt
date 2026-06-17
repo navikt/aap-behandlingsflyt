@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * @param identerForSak Identer på sak. Brukes for å filtrere kode 6-personer.
  * @param tidspunktSisteEndring Brukes i statistikk-appen for å utlede avsluttet-tid for automatiske behandlinger.
  * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
+ * @param avsluttetBehandling Hvis behandlingen er avsluttet, skal denne inneholde data om ytelsen.
  */
 public data class StoppetBehandling(
     val saksnummer: String,
@@ -66,6 +67,7 @@ public data class StoppetBehandling(
  */
 public enum class Vurderingsbehov {
     SØKNAD,
+    VURDER_KRAV,
     AKTIVITETSMELDING,
     MELDEKORT,
     LEGEERKLÆRING,
@@ -77,6 +79,7 @@ public enum class Vurderingsbehov {
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_LOVVALG,
+
     // Ikke i bruk
     REVURDER_SAMORDNING,
     REVURDER_STUDENT,
@@ -109,6 +112,7 @@ public enum class Vurderingsbehov {
     AKTIVITETSPLIKT_11_7,
     AKTIVITETSPLIKT_11_9,
     OVERGANG_UFORE,
+    OVERGANG_UFORE_AUTOMATISK_STANS,
     OVERGANG_ARBEID,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
@@ -119,7 +123,8 @@ public enum class Vurderingsbehov {
     VEDTAKSLENGDE_MANUELT,
     MIGRER_RETTIGHETSPERIODE,
     REVURDER_SYKESTIPEND,
-    ETABLERING_EGEN_VIRKSOMHET;
+    ETABLERING_EGEN_VIRKSOMHET,
+    AKTIVITETSPLIKTBEHANDLING_AVBRUTT;
 }
 
 /**

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 
 class MottattDokumentRepositoryImpl(private val connection: DBConnection) : MottattDokumentRepository {
     private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<MottattDokumentRepositoryImpl> {
         override fun konstruer(connection: DBConnection): MottattDokumentRepositoryImpl {
             return MottattDokumentRepositoryImpl(connection)
@@ -42,15 +43,16 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         }
     }
 
-    override fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument {
+    override fun hent(sakId: SakId, innsendingsreferanse: InnsendingReferanse): MottattDokument {
         val query = """
-            SELECT * FROM MOTTATT_DOKUMENT WHERE referanse = ? and referanse_type = ?
+            SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? and referanse = ? and referanse_type = ?
         """.trimIndent()
-        
+
         return connection.queryFirst(query) {
             setParams {
-                setString(1, innsendingsreferanse.verdi)
-                setEnumName(2, innsendingsreferanse.type)
+                setLong(1, sakId.id)
+                setString(2, innsendingsreferanse.verdi)
+                setEnumName(3, innsendingsreferanse.type)
             }
             setRowMapper { row ->
                 mapMottattDokument(row)
@@ -121,9 +123,11 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from mottatt_dokument where behandling_id = ?;
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
             }
@@ -134,16 +138,17 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
     private fun mapMottattDokument(row: Row): MottattDokument {
         val brevkategori: InnsendingType = row.getEnum("type")
         val referanse = mapDokumentReferanse(row)
+        val sakId = SakId(row.getLong("sak_id"))
         return MottattDokument(
             referanse = referanse,
-            sakId = SakId(row.getLong("sak_id")),
+            sakId = sakId,
             behandlingId = row.getLongOrNull("BEHANDLING_ID")?.let { BehandlingId(it) },
             mottattTidspunkt = row.getLocalDateTime("MOTTATT_TID"),
             opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
             type = brevkategori,
             kanal = row.getEnum("kanal"),
             status = row.getEnum("status"),
-            strukturertDokument = LazyStrukturertDokument(referanse, connection),
+            strukturertDokument = LazyStrukturertDokument(referanse, connection, sakId),
             digitalisertAvPostmottak = row.getBooleanOrNull("DIGITALISERT_MANUELT_POSTMOTTAK")
         )
     }

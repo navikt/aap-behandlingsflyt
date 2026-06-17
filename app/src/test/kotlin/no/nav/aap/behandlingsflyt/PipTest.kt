@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -29,7 +31,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -52,7 +54,7 @@ class PipTest {
 
         private val client: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = ClientCredentialsTokenProvider,
+            tokenProvider = AzureM2MTokenProvider,
             responseHandler = DefaultResponseHandler()
         )
 
@@ -63,6 +65,7 @@ class PipTest {
                 dbConfig = dbConfig,
                 repositoryRegistry = postgresRepositoryRegistry,
                 gatewayProvider = defaultGatewayProvider { },
+                prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
             )
         }
 

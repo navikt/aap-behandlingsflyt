@@ -22,12 +22,25 @@ object InMemoryPersonRepository : PersonRepository {
         return personer[personId]!!
     }
 
+    override fun hent(identifikator: UUID): Person {
+        return personer.values.find { it.referanse == identifikator }!!
+    }
+
     override fun finn(ident: Ident): Person? {
         return personer.values.find { it.identer().contains(ident) }
     }
 
     override fun finn(identer: List<Ident>): Person? {
         return personer.values.find { it.identer().intersect(identer.toSet()).isNotEmpty() }
+    }
+
+    override fun oppdaterIdenter(
+        person: Person,
+        identer: List<Ident>
+    ): Person {
+        val oppdatertPerson = Person(person.id, person.referanse, identer)
+        personer[person.id] = oppdatertPerson
+        return oppdatertPerson
     }
 
     override fun slett(behandlingId: BehandlingId) {

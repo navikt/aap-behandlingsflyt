@@ -1,20 +1,22 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -30,8 +32,11 @@ class DatadelingBehandlingJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
-    private val stansOpphørRepository: StansOpphørRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val stansOpphørService: StansOpphørService,
+    private val rettighetstypeService: RettighetstypeService,
+    private val utledArenaVedtakstype: UtledArenaVedtakstype,
+    private val mottattDokumentRepository: MottattDokumentRepository,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -57,10 +62,8 @@ class DatadelingBehandlingJobbUtfører(
 
         val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
 
-        val vilkårsresultatTidslinje = underveis?.perioder.orEmpty()
-            .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
-            .let(::Tidslinje)
-
+        val vilkårsresultatTidslinje = underveis?.somTidslinje().orEmpty()
+            .mapNotNull { it.rettighetsType }
 
         val vedtakId = vedtakRepository.hentId(behandling.id)
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
@@ -73,19 +76,22 @@ class DatadelingBehandlingJobbUtfører(
 
         val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart)?.verdi
 
-        val stansOpphør = stansOpphørRepository.hentHvisEksisterer(behandling.id)?.stansOgOpphør
+        val stansOpphør = stansOpphørService.vedtattStansOpphør(behandling.id).toSet()
+
+        val maksdato = rettighetstypeService.sisteDagMedRett(sak.saksnummer)
 
         apiInternGateway.sendBehandling(
-            sak,
-            behandling,
-            vedtakId,
-            samId,
-            tilkjentYtelse,
-            beregningsgrunnlagIKroner,
-            underveis?.perioder.orEmpty(),
-            vedtaksTidspunkt.toLocalDate(),
-            vilkårsresultatTidslinje,
-            stansOpphør
+            sak = sak,
+            behandling = behandling,
+            vedtakId = vedtakId,
+            samId = samId,
+            tilkjent = tilkjentYtelse,
+            beregningsgrunnlag = beregningsgrunnlagIKroner,
+            vedtaksDato = vedtaksTidspunkt.toLocalDate(),
+            rettighetsTypeTidslinje = vilkårsresultatTidslinje,
+            muligMaksdato = maksdato,
+            stansOpphørGrunnlag = stansOpphør,
+            arenavedtak = utledArenaVedtakstype.utledVedtak(sak),
         )
     }
 
@@ -104,7 +110,14 @@ class DatadelingBehandlingJobbUtfører(
                 vedtakRepository = repositoryProvider.provide(),
                 samIdRepository = repositoryProvider.provide(),
                 beregningsgrunnlagRepository = repositoryProvider.provide(),
-                stansOpphørRepository = repositoryProvider.provide(),
+                stansOpphørService = StansOpphørService(
+                    repositoryProvider.provide(),
+                    repositoryProvider.provide(),
+                    repositoryProvider.provide(),
+                ),
+                rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
+                utledArenaVedtakstype = UtledArenaVedtakstype(repositoryProvider, gatewayProvider),
+                mottattDokumentRepository = repositoryProvider.provide(),
             )
         }
     }

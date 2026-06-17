@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.KVALITETSSIKRING_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -47,7 +46,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
             getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = KVALITETSSIKRING_KODE,
+                påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
                 modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))
             ) { req ->
 
@@ -73,7 +72,8 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                             unleashGateway
                         ),
                         vurderinger = vurderinger,
-                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene)
+                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker())
                     )
                 }
                 respond(dto)
@@ -88,15 +88,16 @@ private fun utledHarTilgangTilÅSaksbehandle(
     bruker: Bruker,
     unleashGateway: UnleashGateway
 ): Boolean {
-    if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
-        val harIkkeGjortNoenVurderinger =
-            avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
-                .any { !it.brukere().contains(bruker.ident) }
-
-        return kanSaksbehandle && harIkkeGjortNoenVurderinger
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+        kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
-        return kanSaksbehandle
+        kanSaksbehandle
     }
+}
+
+private fun brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene: Avklaringsbehovene, bruker: Bruker): Boolean {
+    return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
+        .any { it.brukere().contains(bruker.ident) }
 }
 
 private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
@@ -156,7 +157,7 @@ private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene, f
 }
 
 private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov): TotrinnsVurdering {
-    return if (it.erKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
+    return if (it.harBlittKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
             it.aktivHistorikk.lastOrNull {
                 it.status in setOf(
@@ -166,7 +167,7 @@ private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklar
             }
 
         val godkjent = when (it.status()) {
-            Status.AVSLUTTET -> null
+            Status.AVSLUTTET -> if (it.harBlittKvalitetssikretTidligere()) null else false
             else -> it.status() == Status.KVALITETSSIKRET
         }
 
@@ -174,9 +175,15 @@ private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklar
             it.definisjon.kode,
             godkjent,
             sisteVurdering?.begrunnelse,
-            sisteVurdering?.årsakTilRetur.orEmpty()
+            sisteVurdering?.årsakTilRetur.orEmpty(),
+            markeringer = emptyList(),
         )
     } else {
-        TotrinnsVurdering(it.definisjon.kode, null, null, emptyList())
+        TotrinnsVurdering(
+            it.definisjon.kode,
+            null,
+            null,
+            emptyList(),
+            markeringer = emptyList())
     }
 }

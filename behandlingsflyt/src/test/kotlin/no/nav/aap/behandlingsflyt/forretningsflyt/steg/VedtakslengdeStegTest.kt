@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
@@ -26,14 +27,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
@@ -45,7 +41,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeReposit
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -55,20 +50,15 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.LocalDate
-import java.util.*
 
 class VedtakslengdeStegTest {
-    private val random = Random(1235123)
-
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
 
     @Test
     fun `Skal forlenge sluttdato med 261 dager for fremtidig rett på ordinær`() {
         val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
-        val person = person()
-        val sak = sak(person, rettighetsperiode)
+        val sak = opprettInMemorySak(rettighetsperiode.fom)
         val forrigeBehandling = førstegangsbehandling(sak.id)
 
         val ikkeOppfyltPeriode = Periode(2 desember 2020, 1 januar 2021)
@@ -85,7 +75,7 @@ class VedtakslengdeStegTest {
             underveisperioder = vedtatteUnderveisperioder,
             input = object : Faktagrunnlag {}
         )
-        
+
         val vedtakslengdeRepository = InMemoryVedtakslengdeRepository
 
         val inneværendeBehandling = revurdering(
@@ -116,12 +106,8 @@ class VedtakslengdeStegTest {
         val kontekst =
             FlytKontekstMedPeriodeService(SakService(sakRepository, behandlingRepository), behandlingRepository)
                 .utled(
-                    FlytKontekst(
-                        inneværendeBehandling.sakId,
-                        inneværendeBehandling.id,
-                        inneværendeBehandling.forrigeBehandlingId,
-                        inneværendeBehandling.typeBehandling()
-                    ), StegType.FASTSETT_VEDTAKSLENGDE
+                    inneværendeBehandling.flytKontekst(),
+                    StegType.FASTSETT_VEDTAKSLENGDE,
                 )
 
         val dagensDato = 10 desember 2020
@@ -131,18 +117,22 @@ class VedtakslengdeStegTest {
                 vedtakslengdeRepository = InMemoryVedtakslengdeRepository,
                 underveisRepository = InMemoryUnderveisRepository,
                 vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-                rettighetstypeService = RettighetstypeService(InMemoryRettighetstypeRepository, InMemoryVilkårsresultatRepository, InMemoryUnderveisRepository),
+                rettighetstypeService = RettighetstypeService(
+                    InMemoryRettighetstypeRepository,
+                    InMemoryVilkårsresultatRepository,
+                    InMemoryUnderveisRepository,
+                    InMemorySakRepository,
+                    InMemoryBehandlingRepository
+                ),
                 stansOpphørRepository = mockk(),
-                unleashGateway = AlleAvskruddUnleash,
                 clock = fixedClock(dagensDato),
             ),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
             tidligereVurderinger = FakeTidligereVurderinger(),
-            unleashGateway = AlleAvskruddUnleash,
         )
 
         steg.utfør(kontekst)
-        
+
         assertThat(vedtakslengdeRepository.hentHvisEksisterer(inneværendeBehandling.id)).isNotNull
     }
 
@@ -171,13 +161,6 @@ class VedtakslengdeStegTest {
         )
 
     }
-
-    private fun sak(person: Person, periode: Periode): Sak =
-        sakRepository.finnEllerOpprett(person, periode)
-
-
-    private fun person(): Person =
-        Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
     private fun genererVilkårsresultat(periode: Periode, straffePeriode: Periode): Vilkårsresultat {
         val aldersVilkåret =
@@ -251,7 +234,7 @@ class VedtakslengdeStegTest {
                 )
             )
         )
-        
+
         val straffegjennomføringVilkår = Vilkår(
             Vilkårtype.STRAFFEGJENNOMFØRING, setOf(
                 Vilkårsperiode(

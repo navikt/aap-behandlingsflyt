@@ -75,8 +75,10 @@ class HåndterTilbakekrevingHendelseService(
             eksternFagsakId = this.eksternFagsakId,
             hendelseOpprettet = this.hendelseOpprettet,
             eksternBehandlingId = this.eksternBehandlingId,
-            sakOpprettet = this.tilbakekreving.sakOpprettet,
+            sakOpprettet = this.tilbakekreving.sakOpprettet.toLocalDateTime(),
             varselSendt = this.tilbakekreving.varselSendt,
+            venteGrunn = this.tilbakekreving.venter?.grunn,
+            gjenopptas = this.tilbakekreving.venter?.gjenopptas,
             behandlingsstatus = TilbakekrevingBehandlingsstatus.valueOf(
                 this.tilbakekreving.behandlingsstatus.name
             ),
@@ -108,7 +110,9 @@ class HåndterTilbakekrevingHendelseService(
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
             ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
             ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING,
-            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,
+            ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE,
+            ÅrsakTilOpprettelse.G_REGULERING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             ÅrsakTilOpprettelse.MELDEKORT,
             ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING

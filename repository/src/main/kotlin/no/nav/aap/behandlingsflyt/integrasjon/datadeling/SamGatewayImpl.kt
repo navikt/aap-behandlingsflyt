@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -27,12 +27,12 @@ class SamGatewayImpl : SamGateway {
     private val logger = LoggerFactory.getLogger(SamGatewayImpl::class.java)
 
     private val restClient = RestClient.withDefaultResponseHandler(
-        config = ClientConfig(scope = requiredConfigForKey("integrasjon.sam.scope")),
-        tokenProvider = ClientCredentialsTokenProvider,
+        config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_SAM_SCOPE")),
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 
-    private val uri = URI.create(requiredConfigForKey("integrasjon.sam.url"))
+    private val uri = URI.create(requiredConfigForKey("INTEGRASJON_SAM_URL"))
 
     override fun varsleVedtak(request: SamordneVedtakRequest) {
         restClient.post<SamordneVedtakRequest, SamordneVedtakRespons>(

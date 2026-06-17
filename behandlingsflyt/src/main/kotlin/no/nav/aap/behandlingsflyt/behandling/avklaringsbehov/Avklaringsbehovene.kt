@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -102,7 +102,7 @@ class Avklaringsbehovene(
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
                 )
-                if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
+                if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
                     // TODO: Vurdere om funnet steg bør ligge på endringen...
                     repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
                 } else {
@@ -221,16 +221,8 @@ class Avklaringsbehovene(
         return alle().filter { it.erÅpent() }.toList()
     }
 
-    fun skalTilbakeføresEtterTotrinnsVurdering(): Boolean {
-        return tilbakeførtFraBeslutter().isNotEmpty()
-    }
-
     override fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
         return tilbakeførtFraKvalitetssikrer().isNotEmpty()
-    }
-
-    fun tilbakeførtFraBeslutter(): List<Avklaringsbehov> {
-        return alle().filter { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }.toList()
     }
 
     fun tilbakeførtFraKvalitetssikrer(): List<Avklaringsbehov> {
@@ -253,7 +245,7 @@ class Avklaringsbehovene(
     fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {
         return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
             .filter { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
-            .filterNot { it.erForeslåttVedtak() }
+            .filterNot { it.erForeslåttVedtak() || it.erForeslåttVedtakVedtakslengde() }
     }
 
     fun harAvklaringsbehovSomKreverToTrinn(): Boolean {
@@ -270,18 +262,30 @@ class Avklaringsbehovene(
             .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
     }
 
+    fun harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.kreverKvalitetssikring() && !it.erKvalitetssikret() }
+    }
+
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }
 
     fun hentNyesteKvalitetssikringGittDefinisjon(definisjon: Definisjon): Endring? {
-        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.KVALITETSSIKRET }
-            ?.maxOrNull()
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter {
+            it.status in setOf(
+                Status.KVALITETSSIKRET,
+                Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+            )
+        }?.maxByOrNull { it.tidsstempel }
     }
 
-    fun beslutningFor(definisjon: Definisjon): Endring? {
-        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.TOTRINNS_VURDERT }
-            ?.maxOrNull()
+    fun hentNyesteBeslutningGittDefinisjon(definisjon: Definisjon): Endring? {
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter {
+            it.status in setOf(
+                Status.TOTRINNS_VURDERT,
+                Status.SENDT_TILBAKE_FRA_BESLUTTER
+            )
+        }?.maxByOrNull { it.tidsstempel }
     }
 
     fun validerTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
@@ -297,16 +301,22 @@ class Avklaringsbehovene(
         kontekst: FlytKontekst,
         repositoryProvider: RepositoryProvider
     ) {
+        if (løsning.definisjon().erFrivillig()
+            && løsning.løsningerForPerioder.isEmpty()
+        ) {
+            return
+        }
+
         val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
             .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
             .map { true }.komprimer()
 
-        val perioderDekkerAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
+        val perioderDekketAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
             løsning.hentLagredeLøstePerioder(it, repositoryProvider)
                 .map { true }.komprimer()
-        } ?: Tidslinje()
+        }.orEmpty()
 
-        val perioderDekket = perioderDekkerAvTidligereVurderinger.kombiner(
+        val perioderDekket = perioderDekketAvTidligereVurderinger.kombiner(
             perioderDekketAvLøsning,
             StandardSammenslåere.prioriterHøyreSideCrossJoin()
         ).komprimer()
@@ -349,10 +359,6 @@ class Avklaringsbehovene(
 
     fun hentÅpneVentebehov(): List<Avklaringsbehov> {
         return alle().filter { it.erVentepunkt() && it.erÅpent() }
-    }
-
-    override fun harÅpentBrevVentebehov(): Boolean {
-        return alle().any { avklaringsbehov -> avklaringsbehov.erBrevVentebehov() && avklaringsbehov.erÅpent() }
     }
 
     override fun erVurdertTidligereIBehandlingen(definisjon: Definisjon): Boolean {

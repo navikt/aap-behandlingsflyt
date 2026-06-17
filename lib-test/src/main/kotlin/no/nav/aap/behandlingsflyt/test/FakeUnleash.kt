@@ -15,6 +15,10 @@ open class FakeUnleashBase(
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
 }
 
 open class FakeUnleashBaseWithDefaultDisabled(
@@ -26,6 +30,10 @@ open class FakeUnleashBaseWithDefaultDisabled(
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
 }
 
 
@@ -34,26 +42,27 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
-        BehandlingsflytFeature.BekreftVurderingerOppfolging to true,
-        BehandlingsflytFeature.LagreStansOgOpphor to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
-        BehandlingsflytFeature.SamordningBarnepensjon to true,
-        BehandlingsflytFeature.SignaturEnhetFraOppgave to true,
-        BehandlingsflytFeature.hentDagpengerPerioder to true,
-        BehandlingsflytFeature.hentTiltakspengerPerioder to true,
-        BehandlingsflytFeature.VedtakslengdeAvklaringsbehov to true,
-        BehandlingsflytFeature.UtvidVedtakslengdeUnderEttAr to true,
-        BehandlingsflytFeature.hentUforesoknadsdata to true,
-        BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling to true,
-        BehandlingsflytFeature.AvslagLovvalgMedlemskap to true
+        BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
+        BehandlingsflytFeature.GReguleringUtplukkJobb to true,
+        BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring to true,
+        BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse to true,
+        BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true,
+        BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
+        BehandlingsflytFeature.AutomatiskStans1118 to true,
+        BehandlingsflytFeature.KravSteg to true,
+        BehandlingsflytFeature.StudentV2 to true,
+        BehandlingsflytFeature.BackfillStansOpphor to true,
         )
-)
+) {
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
+        return "1,100"
+    }
+}
 
 /** Unleash for bruk i tester - for å teste "prodlikt", hvor alle toggles er skrudd av
  * For det meste brukes denne i integrasjonstester og flyt-tester for å sjekke at ting som

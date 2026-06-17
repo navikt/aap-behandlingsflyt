@@ -36,7 +36,7 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
             getGrunnlag<BehandlingReferanse, SykepengerGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SYKEPENGEERSTATNING.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -87,7 +87,6 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
 private fun SykepengerVurdering.tilResponse(vurdertAvService: VurdertAvService): SykepengerVurderingResponse {
     return SykepengerVurderingResponse(
         begrunnelse = begrunnelse,
-        dokumenterBruktIVurdering = dokumenterBruktIVurdering,
         harRettPå = harRettPå,
         grunn = grunn,
         fom = gjelderFra,
@@ -96,15 +95,14 @@ private fun SykepengerVurdering.tilResponse(vurdertAvService: VurdertAvService):
         gjelderTom = gjelderTom,
         opprettet = vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering"),
         vurdertIBehandling = vurdertIBehandling,
-        besluttetAv = vurdertAvService.besluttetAv(Definisjon.AVKLAR_SYKEPENGEERSTATNING, vurdertIBehandling),
-        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-            Definisjon.AVKLAR_SYKEPENGEERSTATNING,
-            vurdertIBehandling
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+            definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
+            behandlingId = vurdertIBehandling,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(
+                ident = vurdertAv,
+                vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering"),
+            ),
         ),
-        vurdertAv = vurdertAvService.medNavnOgEnhet(
-            ident = vurdertAv,
-            vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering")
-        )
     )
 }
 

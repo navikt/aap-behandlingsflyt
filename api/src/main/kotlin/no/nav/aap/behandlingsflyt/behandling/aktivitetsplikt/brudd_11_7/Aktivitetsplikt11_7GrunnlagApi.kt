@@ -7,12 +7,13 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.brev.ForhåndsvarselBruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Varsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_BRUDD_11_7_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -39,7 +40,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
         getGrunnlag<BehandlingReferanse, Aktivitetsplikt11_7GrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = VURDER_BRUDD_11_7_KODE
+            påkrevdRolle = Definisjon.VURDER_BRUDD_11_7.løsesAv
         ) { req ->
             val respons = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
@@ -106,7 +107,7 @@ data class Aktivitetsplikt11_7VurderingDto(
     val erOppfylt: Boolean,
     val utfall: Utfall?,
     val gjelderFra: LocalDate,
-    val vurdertAv: VurdertAvResponse?,
+    val vurderingerMeta: VurderingerMetaResponse,
     val skalIgnorereVarselFrist: Boolean
 )
 
@@ -121,7 +122,9 @@ internal fun Aktivitetsplikt11_7Vurdering.tilDto(ansattInfoService: AnsattInfoSe
         erOppfylt = erOppfylt,
         utfall = utfall,
         gjelderFra = fom,
-        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        vurderingerMeta = VurderingerMetaResponse(
+            vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
+        ),
         skalIgnorereVarselFrist = this.skalIgnorereVarselFrist
     )
 }

@@ -7,21 +7,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -34,12 +33,11 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 class ResultatUtlederTest {
-    private val resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider)
+    private val resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider, minimalGatewayProvider())
 
     @Test
     fun `innvilgelse betyr minst en periode med oppfylt`() {
-        val sak = nySak(1 januar 2023)
-        val behandling = opprettBehandling(sak)
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2023)
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
@@ -57,8 +55,7 @@ class ResultatUtlederTest {
 
     @Test
     fun `avslag betyr ingen oppfylte perioder`() {
-        val sak = nySak(1 januar 2023)
-        val behandling = opprettBehandling(sak)
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2023)
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
@@ -76,8 +73,7 @@ class ResultatUtlederTest {
 
     @Test
     fun `ingen oppfylte periode gir rent avslag`() {
-        val sak = nySak(1 januar 2023)
-        val behandling = opprettBehandling(sak)
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2023)
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
@@ -95,8 +91,7 @@ class ResultatUtlederTest {
 
     @Test
     fun `per nå, støtter kun å utlede resultat for førstegangsbehandling og revurdering`() {
-        val sak = nySak(1 januar 2023)
-        val behandling = opprettBehandling(sak)
+        val (sak, behandling) = opprettInMemorySakOgBehandling(1 januar 2023)
         InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
         val klage = InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
@@ -148,17 +143,4 @@ class ResultatUtlederTest {
         meldepliktGradering = `0_PROSENT`,
     )
 
-    private fun nySak(fraDato: LocalDate): Sak {
-        return opprettInMemorySak(fraDato)
-    }
-
-    private fun opprettBehandling(sak: Sak): Behandling {
-        return InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
-            sak.id,
-            VurderingsbehovOgÅrsak(
-                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                ÅrsakTilOpprettelse.SØKNAD
-            )
-        )
-    }
 }

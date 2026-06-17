@@ -4,9 +4,9 @@ import org.slf4j.MDC
 import java.util.function.Supplier
 
 
-fun <U> withMdc(supplier: Supplier<U>): Supplier<U> {
+fun <U> withMdc(supplier: Supplier<U>): () -> U {
     val mdc = MDC.getCopyOfContextMap()
-    return Supplier {
+    return {
         MDC.setContextMap(mdc)
         try {
             supplier.get()

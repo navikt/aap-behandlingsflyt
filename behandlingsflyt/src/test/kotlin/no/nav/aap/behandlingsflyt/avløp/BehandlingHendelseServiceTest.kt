@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -13,14 +14,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.pip.PipService
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
@@ -29,17 +30,25 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class BehandlingHendelseServiceTest {
     private val sakService = mockk<SakService>()
     private val flytJobbRepository = mockk<FlytJobbRepository>()
     private val mottattDokumentRepository = mockk<MottattDokumentRepository>()
     private val pipRepository = mockk<PipService>()
+    private val behandlingService = mockk<BehandlingService>()
+    private val unleashGateway = mockk<UnleashGateway>()
 
     @AfterEach
     fun afterEach() {
-        checkUnnecessaryStub(sakService, flytJobbRepository, mottattDokumentRepository, pipRepository)
+        checkUnnecessaryStub(
+            sakService,
+            flytJobbRepository,
+            mottattDokumentRepository,
+            pipRepository,
+            behandlingService,
+            unleashGateway
+        )
     }
 
     @Test
@@ -72,12 +81,15 @@ class BehandlingHendelseServiceTest {
 
         every { pipRepository.finnIdenterPåBehandling(any<BehandlingReferanse>()) } returns emptyList()
 
+
         val behandlingHendelseService =
             BehandlingHendelseServiceImpl(
                 flytJobbRepository,
                 sakService,
                 mottattDokumentRepository,
-                pipRepository
+                pipRepository,
+                behandlingService,
+                unleashGateway,
             )
 
         val behandling = Behandling(
@@ -89,10 +101,12 @@ class BehandlingHendelseServiceTest {
             versjon = 1
         )
 
+        every { behandlingService.utledFaktiskBehandlingstype(behandling) }.returns(behandling.typeBehandling())
+        
         every { sakService.hent(SakId(1)) } returns Sak(
             id = SakId(1),
             saksnummer = Saksnummer("1"),
-            person = Person(UUID.randomUUID(), listOf(Ident("123", true))),
+            person = person(),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
@@ -100,7 +114,6 @@ class BehandlingHendelseServiceTest {
 
         every { avklaringsbehovene.alle() } returns emptyList()
         every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
-
 
         // ACT
 

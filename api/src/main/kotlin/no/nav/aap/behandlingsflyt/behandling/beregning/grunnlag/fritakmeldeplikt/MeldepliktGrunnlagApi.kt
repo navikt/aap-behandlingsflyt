@@ -31,7 +31,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
         getGrunnlag<BehandlingReferanse, FritakMeldepliktGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.FRITAK_MELDEPLIKT.kode.toString(),
+            påkrevdRolle = Definisjon.FRITAK_MELDEPLIKT.løsesAv
         ) { req ->
             val meldepliktGrunnlag =
                 dataSource.transaction(readOnly = true) { connection ->

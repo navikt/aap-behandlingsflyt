@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -18,49 +17,63 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
 
     @Test
     fun `skal nullstille mellomlagret verdi når avklaringsbehov løses - og nullstille hengende mellomlagrede verdier ved iverksettelse`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val søknadsdato = LocalDate.now()
         val person = TestPersoner.STANDARD_PERSON()
-        val ident = person.aktivIdent()
 
-        val førstegangsbehandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
-            .medKontekst {
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .mellomlagreSykdom()
-            .medKontekst {
-                val mellomlagretVerdi = hentMellomlagretVerdi()
-                assertThat(mellomlagretVerdi).isNotNull
-            }
-            .løsSykdom(periode.fom)
-            .medKontekst {
-                val mellomlagretVerdi = hentMellomlagretVerdi()
-                assertThat(mellomlagretVerdi).isNull()
-            }
-            .løsBistand(periode.fom)
-            .mellomlagreSykdom()
-            .løsRefusjonskrav()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy {
-                    assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+        val førstegangsbehandling =
+            sendInnFørsteSøknad(TestSøknader.STANDARD_SØKNAD, person, søknadsdato.atStartOfDay()).second
+                .medKontekst {
+                    assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 }
-            }
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(periode.fom)
-            .medKontekst {
-                val mellomlagretVerdi = hentMellomlagretVerdi()
-                assertThat(mellomlagretVerdi).isNotNull()
-            }
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .medKontekst {
-                val mellomlagretVerdi = hentMellomlagretVerdi()
-                assertThat(mellomlagretVerdi).isNull()
-            }
-            .løsVedtaksbrev()
+                .mellomlagreSykdom()
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNotNull
+                }
+                .løsSykdom(søknadsdato)
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNull()
+                }
+                .løsBistand(søknadsdato)
+                .mellomlagreSykdom()
+                .løsRefusjonskrav()
+                .medKontekst {
+                    assertThat(åpneAvklaringsbehov).anySatisfy {
+                        assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                    }
+                }
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .medKontekst {
+                    assertThat(åpneAvklaringsbehov).anySatisfy {
+                        assertThat(it.definisjon)
+                            .describedAs { "Er ikke tilstrekkelig vurdert dersom det finnes mellomlagret sykdomsvurdering" }
+                            .isEqualTo(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)
+                    }
+                }
+                .slettMellomlagretVurdering(Definisjon.AVKLAR_SYKDOM)
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNull()
+                }
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .mellomlagreSykdom()
+                .løsOppholdskrav(søknadsdato)
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNotNull()
+                }
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .medKontekst {
+                    val mellomlagretVerdi = hentMellomlagretVerdi()
+                    assertThat(mellomlagretVerdi).isNull()
+                }
+                .løsVedtaksbrev()
 
         assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
     }

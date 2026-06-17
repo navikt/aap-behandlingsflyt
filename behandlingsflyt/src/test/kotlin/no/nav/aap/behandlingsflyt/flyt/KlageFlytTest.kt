@@ -58,11 +58,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDIN
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KRAV
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -75,7 +76,7 @@ import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
     @Test
     fun `Teste Klageflyt - Omgjøring av 22-13 og revurdering genereres `() {
         val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
@@ -83,7 +84,6 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         // Avslås pga. alder
         val (sak, avslåttFørstegang) = sendInnFørsteSøknad(
             person = TestPersoner.PERSON_FOR_UNG(),
-            periode = periode,
             mottattTidspunkt = periode.fom.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
@@ -245,18 +245,21 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
                         grunner = emptyList(),
+                        markeringer = emptyList()
                     ),
                     TotrinnsVurdering(
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
                         grunner = emptyList(),
+                        markeringer = emptyList()
                     ),
                     TotrinnsVurdering(
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_FORMKRAV.kode,
-                        grunner = emptyList()
+                        grunner = emptyList(),
+                        markeringer = emptyList()
                     )
                 )
             ),
@@ -296,7 +299,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             assertThat(behandlingRepo.hentStegHistorikk(revurdering.id).map { tilstand -> tilstand.steg() }
                 .distinct()).containsExactlyElementsOf(
                 listOf(
-                    START_BEHANDLING, SEND_FORVALTNINGSMELDING, AVBRYT_REVURDERING, SØKNAD, VURDER_RETTIGHETSPERIODE
+                    START_BEHANDLING, KRAV, SEND_FORVALTNINGSMELDING, AVBRYT_REVURDERING, SØKNAD, VURDER_RETTIGHETSPERIODE
                 )
             )
 
@@ -316,19 +319,16 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Teste Klageflyt - Omgjøring av kapitel 2 og revurdering genereres `() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
-
-        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ), person = person
+        ).second
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
@@ -466,18 +466,21 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                             godkjent = true,
                             definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
                             grunner = emptyList(),
+                            markeringer = emptyList()
                         ),
                         TotrinnsVurdering(
                             begrunnelse = "Begrunnelse",
                             godkjent = true,
                             definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
                             grunner = emptyList(),
+                            markeringer = emptyList()
                         ),
                         TotrinnsVurdering(
                             begrunnelse = "Begrunnelse",
                             godkjent = true,
                             definisjon = Definisjon.VURDER_FORMKRAV.kode,
-                            grunner = emptyList()
+                            grunner = emptyList(),
+                            markeringer = emptyList()
                         )
                     )
                 ),
@@ -515,19 +518,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Teste Klageflyt`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
 
         val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ), person = person, mottattTidspunkt = periode.fom.atStartOfDay()
+        ).second
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
@@ -680,18 +682,21 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
                         grunner = emptyList(),
+                        markeringer = emptyList()
                     ),
                     TotrinnsVurdering(
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
                         grunner = emptyList(),
+                        markeringer = emptyList()
                     ),
                     TotrinnsVurdering(
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_FORMKRAV.kode,
-                        grunner = emptyList()
+                        grunner = emptyList(),
+                        markeringer = emptyList()
                     )
                 )
             ),
@@ -725,9 +730,9 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         // MeldingOmVedtakBrevSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER)
 
-        klagebehandling.løsVedtaksbrev(TypeBrev.KLAGE_OPPRETTHOLDELSE)
+        klagebehandling.løsVedtaksbrevKlage(TypeBrev.KLAGE_OPPRETTHOLDELSE)
 
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
@@ -739,19 +744,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Klage - Skal gå rett til beslutter ved avslag på frist`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
 
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ), person = person, mottattTidspunkt = periode.fom.atStartOfDay()
+        ).second
 
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
@@ -835,20 +839,20 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Klage - skal sende forhåndsvarsel ved avvist på formkrav, og kunne manuelt ta av vent og fortsette ved nye opplysninger`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
 
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode,
-            SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             ),
-        )
+            person = person,
+            mottattTidspunkt = periode.fom.atStartOfDay(),
+        ).second
 
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
@@ -1014,12 +1018,14 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                             godkjent = false,
                             definisjon = Definisjon.VURDER_FORMKRAV.kode,
                             grunner = listOf(ÅrsakTilRetur(ÅrsakTilReturKode.ANNET, "Formkrav ikke oppfylt")),
+                            markeringer = emptyList()
                         ),
                         TotrinnsVurdering(
                             begrunnelse = "Begrunneøse",
                             godkjent = true,
                             definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
                             grunner = emptyList(),
+                            markeringer = emptyList()
                         ),
                     )
                 ),
@@ -1027,7 +1033,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
             .medKontekst {
                 // Sjekk at avklaringsbehov er blitt gjenåpnet
-                assertThat(åpneAvklaringsbehov).hasSize(3)
+                assertThat(åpneAvklaringsbehov).hasSize(1)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
                 assertThat(
                     åpneAvklaringsbehov.first().status()
@@ -1039,18 +1045,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Teste TrekkKlageFlyt`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ),
+            person = person, mottattTidspunkt = periode.fom.atStartOfDay(),
+        ).second
 
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
@@ -1211,19 +1217,17 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Håndtere svar fra kabal - valg omgjøring av kapitel 2 skal opprette en revurdering av LOVVALG_OG_MEDLEMSKAP`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
-
-        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad =  SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+            ), person = person
+        ).second
+
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
@@ -1387,3 +1391,5 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     }
 
 }
+
+object KlageFlytTestUnleash: FakeUnleashBaseWithDefaultDisabled(emptyList())

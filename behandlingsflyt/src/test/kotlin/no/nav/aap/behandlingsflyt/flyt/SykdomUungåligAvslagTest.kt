@@ -4,11 +4,9 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -17,14 +15,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -45,16 +42,14 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
     fun `Oppfyller ikke 11-5`() {
         val fom = LocalDate.now().minusMonths(3)
 
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val person = TestPersoner.STANDARD_PERSON()
 
-        var (sak, behandling) = sendInnFørsteSøknad(
+        var (_, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
         )
 
-        val steg = behandling.løsAvklaringsBehov(
+        behandling.løsAvklaringsBehov(
             AvklarSykdomLøsning(
                 løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
@@ -63,9 +58,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                         harSkadeSykdomEllerLyte = false,
                         erSkadeSykdomEllerLyteVesentligdel = null,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = null,
+                        harNedsattArbeidsevne = null,
                         yrkesskadeBegrunnelse = null,
                         fom = fom,
                         tom = null
@@ -88,7 +82,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -111,15 +105,13 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `Oppfyller ikke 11-5, men vil vurderes for 11-13, men få nei`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
         val person = TestPersoner.STANDARD_PERSON()
 
         // Sender inn en søknad
+        val søknadsdato = LocalDate.now()
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
-            periode = periode,
-            mottattTidspunkt = periode.fom.atStartOfDay()
+            mottattTidspunkt = søknadsdato.atStartOfDay()
         )
 
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
@@ -134,12 +126,11 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         // Nei på denne gir mulighet til å innvilge på 11-13
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = true,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                         yrkesskadeBegrunnelse = null,
                         fom = sak.rettighetsperiode.fom,
-                        tom = null
+                        tom = null,
                     )
                 )
             ),
@@ -153,19 +144,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                     "Viss varighet false skal gi avklaringsbehov for sykepengeerstatning"
                 ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = false,
-                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            fom = periode.fom
-                        )
-                    ),
-                )
-            ).medKontekst {
+            .løsSykepengeerstatning(søknadsdato to false)
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
             }
@@ -179,7 +159,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -202,13 +182,11 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `Oppfyller 11-5 med YS og kun 30% nedsatt, 11-6 OK, 11-22 YS ikke årsaksammenhengende`() {
-        val fom = 1 april 2025
+        val søknadsdato = 1 april 2025
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
-        val periode = Periode(fom, fom.plusYears(3))
-        var (sak, behandling) = sendInnFørsteSøknad(
+        var (_, behandling) = sendInnFørsteSøknad(
             person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
         behandling = behandling.medKontekst {
             assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -222,19 +200,18 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                         SykdomsvurderingLøsningDto(
                             begrunnelse = "Er syk nok",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                             yrkesskadeBegrunnelse = "Skadd på jobb",
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            fom = periode.fom,
-                            tom = null
+                            fom = søknadsdato,
+                            tom = null,
                         )
                     )
                 ),
-            ).løsBistand(periode.fom, true)
+            ).løsBistand(søknadsdato, true)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
@@ -268,7 +245,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
@@ -290,15 +267,11 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
     }
 
     @Test
-    fun `Oppfyller 11-5, ikke oppfyller 11-6,ikke oppfyller 11-18,ikke oppfyller 11-17, ikke oppfyller 11-13 - Skal gi avslag`() {
-
-
-        val fom = LocalDate.now().minusMonths(3)
+    fun `Oppfyller 11-5, ikke oppfyller 11-6,ikke oppfyller 11-18,ikke oppfyller 11-17 - Skal gi avslag`() {
 
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val person = TestPersoner.STANDARD_PERSON()
 
-        var (_, behandling) = sendInnFørsteSøknad(periode = periode)
+        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = periode.fom.atStartOfDay())
         behandling
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -312,9 +285,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = periode.fom,
                             tom = null
@@ -338,45 +310,10 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                     ),
                 ),
             )
-            .løsAvklaringsBehov(
-                avklaringsBehovLøsning =
-                    AvklarOvergangUføreLøsning(
-                        listOf(
-                            OvergangUføreLøsningDto(
-                                begrunnelse = "Løsning",
-                                brukerHarSøktOmUføretrygd = false,
-                                brukerHarFåttVedtakOmUføretrygd = null,
-                                brukerRettPåAAP = false,
-                                fom = periode.fom,
-                                tom = null,
-                                overgangBegrunnelse = null
-                            )
-                        )
-                    )
-            ).løsRefusjonskrav()
+            .løsOvergangUføre(fom = periode.fom)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
-            }
-            .løsAvklaringsBehov(
-                PeriodisertAvklarSykepengerErstatningLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertSykepengerVurderingDto(
-                            begrunnelse = "...",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = false,
-                            grunn = null,
-                            fom = LocalDate.now()
-                        )
-                    ),
-                )
-            ).medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
@@ -386,22 +323,17 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider { }).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
     }
 
     @Test
     fun `Har periode med oppfylt 11-5 i en kort periode, men ikke etter - oppfyller 11-6 - Oppfyller ikke 11-17 - Skal gi avslag`() {
-
-        val fom = LocalDate.now().minusMonths(3)
-
         val periode115 = Periode(LocalDate.now(), LocalDate.now().plusMonths(1))
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        val person = TestPersoner.STANDARD_PERSON()
-
-        var (_, behandling) = sendInnFørsteSøknad(periode = periode)
+        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = periode.fom.atStartOfDay())
         behandling
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -415,9 +347,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                             yrkesskadeBegrunnelse = null,
                             fom = periode115.fom,
                             tom = periode115.tom
@@ -428,12 +359,11 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                             harSkadeSykdomEllerLyte = false,
                             erSkadeSykdomEllerLyteVesentligdel = null,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = null,
+                            harNedsattArbeidsevne = null,
                             yrkesskadeBegrunnelse = null,
                             fom = periode115.tom.plusDays(1),
-                            tom = null
+                            tom = null,
                         )
                     )
                 ),

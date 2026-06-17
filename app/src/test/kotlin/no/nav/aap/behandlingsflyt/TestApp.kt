@@ -20,11 +20,31 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
+import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FastlegeKontaktInformasjonDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNei
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -37,24 +57,26 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
-import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
+import no.nav.aap.behandlingsflyt.test.TexasPortHolder
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.testutil.ManuellMotorImpl
@@ -65,12 +87,13 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.postgresql.PostgreSQLContainer
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
-import kotlin.collections.map
 import kotlin.random.Random
 
 private val log = LoggerFactory.getLogger("TestApp")
@@ -78,14 +101,20 @@ lateinit var testScenarioOrkestrator: TestScenarioOrkestrator
 lateinit var motor: ManuellMotorImpl
 lateinit var datasource: DataSource
 
+private val nesteJournalpostIdIterator = generateSequence(9_000_000) { it + 1 }.iterator()
+
+private fun nyJournalpostId(): JournalpostId = synchronized(nesteJournalpostIdIterator) {
+    JournalpostId(nesteJournalpostIdIterator.next().toString())
+}
+
 data class IdentOgOpphold(val ident: String, val opphold: List<InstitusjonsoppholdJSON>)
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
     val dbConfig = initDbConfig()
 
-    AzurePortHolder.setPort(8081)
-    FakeServers.start(JSONTestPersonService()) // azurePort = 8081)
+    TexasPortHolder.setPort(8081)
+    FakeServers.start(JSONTestPersonService())
 
     // Starter server
     embeddedServer(Netty, configure = {
@@ -94,7 +123,9 @@ fun main() {
             port = 8080
         }
     }) {
-        val gatewayProvider = testGatewayProvider(LokalUnleash::class)
+        val gatewayProvider = testGatewayProvider(LokalUnleash::class) {
+            register<BehandlingHendelseServiceFactory>()
+        }
         val repositoryRegistry = postgresRepositoryRegistry
 
         // Useful for connecting to the test database locally
@@ -107,11 +138,13 @@ fun main() {
                 datasource,
                 jobber = ProsesseringsJobber.alle(),
                 repositoryRegistry = repositoryRegistry,
-                gatewayProvider
+                gatewayProvider = gatewayProvider
             )
         }.value
 
         testScenarioOrkestrator = TestScenarioOrkestrator(gatewayProvider, datasource, motor)
+
+        BackfillStansOpphør(datasource, gatewayProvider).kjør()
 
         apiRouting {
             route("/test") {
@@ -145,12 +178,25 @@ fun main() {
                 }
 
                 route("/endre/{saksnummer}/legg-til-yrkesskade") {
-                    post<SaksnummerParameter, Unit, Unit> { param, _ ->
+                    post<SaksnummerParameter, Unit, LeggTilYrkesskadeDTO> { param, dto ->
                         val ident = hentIdentForSak(Saksnummer(param.saksnummer))
 
                         val fakePersoner = JSONTestPersonService()
+                        val nyeYrkesskader = dto.yrkesskader.mapNotNull { entry ->
+                            when (entry.kilde) {
+                                Kilde.SØKNAD -> null
+                                Kilde.REGISTER -> TestYrkesskade(
+                                    skadedato = entry.skadedato,
+                                    skadeart = entry.skadeart,
+                                    diagnose = entry.diagnose,
+                                    skadebeskrivelse = entry.skadebeskrivelse,
+                                    vedtaksdato = entry.vedtaksdato,
+                                )
+                            }
+                        }.ifEmpty { listOf(TestYrkesskade()) }
+
                         val oppdatertPerson = fakePersoner.hentPerson(ident)?.let {
-                            it.medYrkesskade(it.yrkesskade + TestYrkesskade())
+                            it.medYrkesskade(it.yrkesskade + nyeYrkesskader)
                         }
 
                         if (oppdatertPerson != null) {
@@ -160,6 +206,24 @@ fun main() {
                             log.warn("Finner ikke person med ident $ident for å legge til yrkesskade")
                             respondWithStatus(HttpStatusCode.BadRequest)
                         }
+                    }
+                }
+
+                route("/endre/{saksnummer}/legg-til-kravvurdering") {
+                    post<SaksnummerParameter, Unit, LeggTilKravVurderingDTO> { param, dto ->
+                        val behandling = hentSisteBehandlingForSak(
+                            hentSakId(Saksnummer(param.saksnummer)),
+                            gatewayProvider
+                        )
+                        datasource.transaction { connection ->
+                            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+                            val kravRepository = repositoryProvider.provide<KravRepository>()
+                            val vurderinger = dto.kravVurderinger.map { krav ->
+                                mapKravVurdering(krav, behandling.id)
+                            }.toSet()
+                            kravRepository.lagre(behandling.id, vurderinger)
+                        }
+                        respondWithStatus(HttpStatusCode.OK)
                     }
                 }
             }
@@ -223,7 +287,7 @@ private fun slåSammenInstitusjonsopphold(
     val oppdaterte = fraFrontend.map { nytt ->
         val eksisterende = fraDb.find { it.startdato == nytt.oppholdFom }
         eksisterende?.let {
-            if ( it.forventetSluttdato != nytt.oppholdTom)
+            if (it.forventetSluttdato != nytt.oppholdTom)
                 it.copy(forventetSluttdato = nytt.oppholdTom)
             else it
         } ?: genererInstitusjonsopphold(nytt)
@@ -265,7 +329,7 @@ private fun genererSykehusopphold() = InstitusjonsoppholdJSON(
 )
 
 private fun genererBarn(dto: TestBarn): TestPerson {
-    val ident = genererIdent(dto.fodselsdato)
+    val ident = ident()
 
     return TestPerson(
         identer = setOf(ident),
@@ -273,9 +337,17 @@ private fun genererBarn(dto: TestBarn): TestPerson {
     )
 }
 
-private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
-    val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
-    val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
+private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>, fastlege: BehandlerDto?): SøknadV0 {
+    val søknadStudentDto = if (dto.student) {
+        SøknadStudentDto(
+            erStudent = StudentStatus.Avbrutt,
+            kommeTilbake = JaNeiVetIkke.Ja
+        )
+    } else {
+        null
+    }
+    val harYrkesskadeFraSøknad = dto.yrkesskader.any { it.kilde == Kilde.SØKNAD && it.harYrkesskade }
+    val harYrkesskade = if (harYrkesskadeFraSøknad) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
         OppgitteBarn(
@@ -295,35 +367,102 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
         null
     }
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
+
     return SøknadV0(
         andreUtbetalinger = AndreUtbetalingerDto(
             lønn = dto.andreUtbetalinger?.lønn,
             stønad = dto.andreUtbetalinger?.stønad,
             afp = dto.andreUtbetalinger?.afp
         ),
-        student = SøknadStudentDto(erStudent),
+        student = søknadStudentDto,
         yrkesskade = harYrkesskade,
         oppgitteBarn = oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
+        fastlege = listOfNotNull(fastlegeISøknad(dto, fastlege)),
+        andreBehandlere = andreBehandlereOppgittISøknad(dto)
     )
 }
 
-private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider, repositoryRegistry: RepositoryRegistry): Sak {
-    val ident = genererIdent(dto.fødselsdato)
+private fun fastlegeISøknad(
+    dto: OpprettTestcaseDTO,
+    fastlege: BehandlerDto?
+): FastlegeDto? = if (dto.fastlege?.harFastlege ?: false) {
+    if (!dto.fastlege.harEndretFastlege && fastlege == null) {
+        null
+    } else if (!dto.fastlege.harEndretFastlege && fastlege != null) {
+        FastlegeDto(
+            navn = listOfNotNull(fastlege.fornavn, fastlege.mellomnavn, fastlege.etternavn).joinToString { " " },
+            behandlerRef = fastlege.behandlerRef,
+            kontaktinformasjon = FastlegeKontaktInformasjonDto(
+                kontor = fastlege.kontor,
+                adresse = fastlege.adresse,
+                telefon = fastlege.telefon
+            ),
+            erRegistrertFastlegeRiktig = if (dto.fastlege.varFastlegeRiktigPåSøknadstidspunkt) JaNei.Ja else JaNei.Nei,
+        )
+    } else {
+        FastlegeDto(
+            navn = "Navn",
+            behandlerRef = UUID.randomUUID().toString(),
+            kontaktinformasjon = FastlegeKontaktInformasjonDto(
+                kontor = "kontor",
+                adresse = "adresse",
+                telefon = "telefon"
+            ),
+            erRegistrertFastlegeRiktig = if (dto.fastlege.varFastlegeRiktigPåSøknadstidspunkt) JaNei.Ja else JaNei.Nei,
+        )
+    }
+} else {
+    null
+}
+
+private fun andreBehandlereOppgittISøknad(dto: OpprettTestcaseDTO): List<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto> =
+    if (dto.fastlege?.harOppgittAndreBehandlere ?: false) {
+        List(Random.nextInt(1, 3)) { index ->
+            no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.BehandlerDto(
+                firstname = "firstname $index",
+                lastname = "lastname $index",
+                legekontor = "legekontor $index",
+                id = "id $index",
+                gateadresse = "gateadresse $index",
+                postnummer = "postnummer $index",
+                poststed = "poststed $index",
+                telefon = "$index$index$index$index$index$index$index$index",
+            )
+        }
+    } else {
+        emptyList()
+    }
+
+private fun sendInnSøknad(
+    dto: OpprettTestcaseDTO,
+    gatewayProvider: GatewayProvider,
+    repositoryRegistry: RepositoryRegistry
+): Sak {
+    val ident = ident()
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
     val urelaterteBarnIkkeIPDL = dto.barn.filter { !it.harRelasjon && !it.skalFinnesIPDL }.map { genererBarn(it) }
     val jsonTestPersonService = JSONTestPersonService()
+    val fastlege = genererFastlege(dto)
     barn.forEach { jsonTestPersonService.leggTil(it) }
     urelaterteBarnIPDL.forEach { jsonTestPersonService.leggTil(it) }
     jsonTestPersonService.leggTil(
         TestPerson(
             identer = setOf(ident),
             fødselsdato = Fødselsdato(dto.fødselsdato),
-            yrkesskade = if (dto.yrkesskade) listOf(
-                TestYrkesskade(),
-                TestYrkesskade(skadedato = null, saksreferanse = "ABCDE")
-            ) else emptyList(),
+            yrkesskade = dto.yrkesskader.mapNotNull { entry ->
+                when (entry.kilde) {
+                    Kilde.SØKNAD -> null
+                    Kilde.REGISTER -> TestYrkesskade(
+                        skadedato = entry.skadedato,
+                        skadeart = entry.skadeart,
+                        diagnose = entry.diagnose,
+                        skadebeskrivelse = entry.skadebeskrivelse,
+                        vedtaksdato = entry.vedtaksdato,
+                    )
+                }
+            },
             uføre = dto.uføre?.let {
                 Uføre(
                     virkningstidspunkt = dto.uføreTidspunkt!!,
@@ -385,17 +524,18 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
                     )
                 )
             ) else null,
+            fastlege = fastlege
         )
     )
 
     val sak = datasource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val sakService = PersonOgSakService(gatewayProvider, repositoryProvider)
-        val sak = sakService.finnEllerOpprett(ident, LocalDate.now())
+        val sak = sakService.finnEllerOpprett(ident, dto.søknadsdato ?: LocalDate.now())
 
         val flytJobbRepository = FlytJobbRepository(connection)
 
-        val melding = mapTilSøknad(dto, urelaterteBarnIkkeIPDL + urelaterteBarnIPDL)
+        val melding = mapTilSøknad(dto, urelaterteBarnIkkeIPDL + urelaterteBarnIPDL, fastlege)
 
         flytJobbRepository.leggTil(
             HendelseMottattHåndteringJobbUtfører.nyJobb(
@@ -413,6 +553,23 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProv
     return sak
 }
 
+private fun genererFastlege(dto: OpprettTestcaseDTO): BehandlerDto? = if (dto.fastlege?.harFastlege ?: false) {
+    BehandlerDto(
+        behandlerRef = UUID.randomUUID().toString(),
+        hprId = Random.nextInt(100000000, 999999999).toString(),
+        fornavn = "Fornavn",
+        mellomnavn = "Mellomnavn",
+        etternavn = "Etternavn",
+        kontor = "Kontor",
+        adresse = "Adresse",
+        postnummer = "0000",
+        poststed = "Poststed",
+        telefon = "00000000",
+    )
+} else {
+    null
+}
+
 private fun opprettNySakOgBehandling(
     dto: OpprettTestcaseDTO,
     gatewayProvider: GatewayProvider,
@@ -428,21 +585,32 @@ private fun opprettNySakOgBehandling(
     log.info("Fullfører førstegangsbehandling for sak ${sak.id}")
     val behandling = hentSisteBehandlingForSak(sak.id, gatewayProvider)
 
+    if (dto.kravVurderinger.isNotEmpty()) {
+        datasource.transaction { connection ->
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val kravRepository = repositoryProvider.provide<KravRepository>()
+            kravRepository.lagre(
+                behandling.id,
+                dto.kravVurderinger.map { mapKravVurdering(it, behandling.id) }.toSet()
+            )
+        }
+    }
+
     with(testScenarioOrkestrator) {
         // Student eller sykdom
         if (dto.student) {
-            løsStudent(behandling)
+            løsStudent(behandling, vurderingenGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom)
         } else {
             if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
             løsSykdom(
                 behandling = behandling,
                 vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
-                erArbeidsevnenNedsatt = dto.erArbeidsevnenNedsatt,
+                harNedsattArbeidsevne = if (dto.harNedsattArbeidsevne) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
                 erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
             )
         }
 
-        val harBehandlingsgrunnlag = dto.erArbeidsevnenNedsatt && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
+        val harBehandlingsgrunnlag = dto.harNedsattArbeidsevne && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
@@ -464,7 +632,8 @@ private fun opprettNySakOgBehandling(
 
         if (harBehandlingsgrunnlag) {
             // Yrkesskade
-            if (dto.yrkesskade) {
+            val harYrkesskade = dto.yrkesskader.any { it.kilde == Kilde.REGISTER }
+            if (harYrkesskade) {
                 if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
                 løsYrkesSkade(behandling)
             }
@@ -473,6 +642,10 @@ private fun opprettNySakOgBehandling(
             if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
             løsBeregningstidspunkt(behandling)
 
+            if (harYrkesskade) {
+                løsFastsettYrkesskadeInntekt(behandling)
+            }
+
             val manglendeInntektsÅr = manglendeInntektsår(dto)
             if (manglendeInntektsÅr.isNotEmpty()) {
                 if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
@@ -480,15 +653,14 @@ private fun opprettNySakOgBehandling(
             }
 
             // Forutgående medlemskap
-            if (dto.yrkesskade) {
-                løsFastsettYrkesskadeInntekt(behandling)
+            if (!harYrkesskade) {
+                if ((dto.steg == StegType.VURDER_MEDLEMSKAP)) return sak
+                løsForutgåendeMedlemskap(behandling, sak)
             }
-            if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
-            løsForutgåendeMedlemskap(behandling, sak)
 
             // Oppholdskrav
             if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
-            løsOppholdskrav(behandling)
+            løsOppholdskrav(behandling, sak)
 
             // Institusjonsopphold
             if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak
@@ -581,4 +753,72 @@ internal fun postgreSQLContainer(): PostgreSQLContainer {
         }
     postgres.start() // venter til container er klar
     return postgres
+}
+
+private fun hentSakId(saksnummer: Saksnummer): SakId {
+    return datasource.transaction(readOnly = true) { connection ->
+        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+        repositoryProvider.provide<SakRepository>().hent(saksnummer).id
+    }
+}
+
+private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: BehandlingId): KravVurdering {
+    val journalpostId = nyJournalpostId()
+    val referanse = Kravreferanse.ny()
+    
+    val now = Instant.now()
+    return when (krav.kravType) {
+        KravType.NYTT_KRAV_AAP -> NyttKrav(
+            referanse = referanse,
+            journalpostId = journalpostId,
+            vurdertAv = Bruker("Testbruker"),
+            begrunnelse = "Nytt krav",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+            søknadsdato = Søknadsdato(
+                dato = krav.søknadsdato,
+                årsak = SøknadsdatoÅrsak.SøknadMottatt
+            ),
+            overstyrMuligRettFra = krav.overstyrMuligRettFra?.let { OverstyrMuligRettFra(it, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
+            muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
+        )
+        KravType.GJENOPPTAK -> Gjenopptak(
+            referanse = referanse,
+            journalpostId = journalpostId,
+            vurdertAv = Bruker("Testbruker"),
+            begrunnelse = "Gjenopptak",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+            søknadsdato = Søknadsdato(
+                dato = krav.søknadsdato,
+                årsak = SøknadsdatoÅrsak.SøknadMottatt
+            ),
+            overstyrMuligRettFra = krav.overstyrMuligRettFra?.let { OverstyrMuligRettFra(it, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
+            muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
+        )
+        KravType.TRUKKET_SØKNAD -> TrukketSøknad(
+            referanse = referanse,
+            journalpostId = journalpostId,
+            vurdertAv = Bruker("Testbruker"),
+            begrunnelse = "Trukket søknad",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+        )
+        KravType.KLAGE -> Klage(
+            referanse = referanse,
+            journalpostId = journalpostId,
+            vurdertAv = Bruker("Testbruker"),
+            begrunnelse = "Klage",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+        )
+        KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
+            referanse = referanse,
+            journalpostId = journalpostId,
+            vurdertAv = Bruker("Testbruker"),
+            begrunnelse = "Tilleggsopplysning",
+            vurdertIBehandling = behandlingId,
+            opprettet = now,
+        )
+    }
 }

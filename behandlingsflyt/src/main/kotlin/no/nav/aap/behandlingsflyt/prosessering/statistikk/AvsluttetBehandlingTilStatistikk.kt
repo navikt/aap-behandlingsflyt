@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
@@ -11,13 +13,24 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
@@ -25,6 +38,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.DiagnoserMedPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Fritakvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
@@ -32,6 +46,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SamordningDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SamordningDTO.AvregningAndreYtelser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelsePeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Uføre
@@ -44,11 +60,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype as AvslagstypeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak as AvslagsårsakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør as StansEllerOpphørDTO
 
 class AvsluttetBehandlingTilStatistikk(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -56,36 +76,45 @@ class AvsluttetBehandlingTilStatistikk(
     private val sakService: SakService,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
     private val vedtakService: VedtakService,
-    trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
-    avbrytRevurderingService: AvbrytRevurderingService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
+    private val samordningService: SamordningService,
+    private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
+    private val samordningUføreRepository: SamordningUføreRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
+    private val stansOpphørService: StansOpphørService,
+    private val resultatUtleder: ResultatUtleder,
 ) {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider.provide(), repositoryProvider.provide()),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         beregningsgrunnlagRepository = repositoryProvider.provide(),
+        beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        vedtakService = VedtakService(repositoryProvider),
-        trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         meldepliktRepository = repositoryProvider.provide(),
-        arbeidsopptrappingRepository = repositoryProvider.provide()
+        samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
+        samordningService = SamordningService(repositoryProvider),
+        samordningArbeidsgiverRepository = repositoryProvider.provide(),
+        samordningUføreRepository = repositoryProvider.provide(),
+        arbeidsopptrappingRepository = repositoryProvider.provide(),
+        stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider),
+        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
-
-    private val resultatUtleder =
-        ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService, avbrytRevurderingService)
 
     /**
      * Skal kalles når en behandling er avsluttet for å levere statistikk til statistikk-appen.
@@ -109,19 +138,39 @@ class AvsluttetBehandlingTilStatistikk(
         }
 
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)
+        val beregningstidspunktVurdering =
+            beregningVurderingRepository.hentHvisEksisterer(behandling.id)?.tidspunktVurdering
 
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
-            if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
+            if (grunnlag == null || beregningstidspunktVurdering == null) null
+            else beregningsgrunnlagDTO(grunnlag, beregningstidspunktVurdering)
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
-        val rettighetstypePerioder = hentRettighetstypePerioder(behandling)
+        val underveistidslinje = underveisRepository
+            .hentHvisEksisterer(behandling.id)
+            ?.somTidslinje().orEmpty()
+
+        val rettighetstypePerioder = hentRettighetstypePerioder(underveistidslinje)
+
+        val institusjonsopphold =
+            underveistidslinje
+                .map { it.institusjonsoppholdReduksjon }
+                .filter { it.verdi.prosentverdi() > 0 }
+                .komprimer()
+                .perioder()
+                .toList()
 
         val fritaksvurderinger = hentFritaksvurderinger(behandling)
 
         val perioderMedArbeidsopptrapping =
             arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
 
+        val vedtattStansOpphør = if (behandling.typeBehandling()
+                .erYtelsesbehandling() && !avbrytRevurderingService.revurderingErAvbrutt(behandling.id)
+        ) stansOpphørService.vedtattStansOpphør(behandling.id) else emptyList()
+
+        val diagnoserPeriodisert = hentDiagnose(behandling)
         return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
                 typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
@@ -140,18 +189,90 @@ class AvsluttetBehandlingTilStatistikk(
                 }),
             tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
             beregningsGrunnlag = beregningsGrunnlagDTO,
-            diagnoser = hentDiagnose(behandling),
+            diagnoser = diagnoserPeriodisert.lastOrNull()?.let { Diagnoser(
+                kodeverk = it.kodeverk,
+                diagnosekode = it.diagnosekode,
+                bidiagnoser = it.bidiagnoser
+            ) },
+            diagnoserPeriodisert = diagnoserPeriodisert,
             rettighetstypePerioder = rettighetstypePerioder,
             resultat = hentResultat(behandling),
             vedtakstidspunkt = vedtakTidspunkt,
             fritaksvurderinger = fritaksvurderinger,
-            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) }
+            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) },
+            institusjonsopphold = institusjonsopphold.map { PeriodeDTO(it.fom, it.tom) },
+            vedtattStansOpphør = vedtattStansOpphør.map { it.tilKontrakt() },
+            samordning = utledSamordningDto(behandling),
         )
     }
 
-    private fun hentRettighetstypePerioder(behandling: Behandling): List<RettighetstypePeriode> {
-        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-            .filter { it.rettighetsType != null }.map { Segment(it.periode, it.rettighetsType) }.let(::Tidslinje)
+    private fun utledSamordningDto(behandling: Behandling): SamordningDTO {
+        val arbeidsgiverSamordning =
+            samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje().orEmpty().segmenter()
+                .map {
+                    SamordningDTO.Arbeidsgiver(fom = it.periode.fom, tom = it.periode.tom)
+                }
+
+        val samordningYtelserSamornding = samordningService.tidslinje(behandling.id).segmenter()
+            .flatMap { (periode, verdi) ->
+                verdi.ytelsesGraderinger.map { ytelseGradering ->
+                    SamordningDTO.StatligeYtelser(
+                        fom = periode.fom,
+                        tom = periode.tom,
+                        ytelse = when (ytelseGradering.ytelse) {
+                            Ytelse.SYKEPENGER -> SamordningDTO.SamordningYtelser.SYKEPENGER
+                            Ytelse.FORELDREPENGER -> SamordningDTO.SamordningYtelser.FORELDREPENGER
+                            Ytelse.PLEIEPENGER -> SamordningDTO.SamordningYtelser.PLEIEPENGER
+                            Ytelse.SVANGERSKAPSPENGER -> SamordningDTO.SamordningYtelser.SVANGERSKAPSPENGER
+                            Ytelse.OMSORGSPENGER -> SamordningDTO.SamordningYtelser.OMSORGSPENGER
+                            Ytelse.OPPLÆRINGSPENGER -> SamordningDTO.SamordningYtelser.OPPLÆRINGSPENGER
+                            Ytelse.FERIE_I_SYKEPENGEPERIODE -> SamordningDTO.SamordningYtelser.FERIE_I_SYKEPENGEPERIODE
+                        },
+                        prosent = ytelseGradering.gradering.prosentverdi()
+                    )
+                }
+            }
+
+        val andreYtelser =
+            samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering?.vurderingPerioder.orEmpty()
+                .map {
+                    AvregningAndreYtelser(
+                        fom = it.periode.fom,
+                        tom = it.periode.tom,
+                        ytelse = when (it.ytelse) {
+                            AndreStatligeYtelser.SYKEPENGER -> SamordningDTO.AndreStatligeYtelser.SYKEPENGER
+                            AndreStatligeYtelser.FORELDREPENGER -> SamordningDTO.AndreStatligeYtelser.FORELDREPENGER
+                            AndreStatligeYtelser.TILTAKSPENGER -> SamordningDTO.AndreStatligeYtelser.TILTAKSPENGER
+                            AndreStatligeYtelser.OMSTILLINGSSTØNAD -> SamordningDTO.AndreStatligeYtelser.OMSTILLINGSSTØNAD
+                            AndreStatligeYtelser.OVERGANGSSTØNAD -> SamordningDTO.AndreStatligeYtelser.OVERGANGSSTØNAD
+                            AndreStatligeYtelser.DAGPENGER -> SamordningDTO.AndreStatligeYtelser.DAGPENGER
+                            AndreStatligeYtelser.BARNEPENSJON -> SamordningDTO.AndreStatligeYtelser.BARNEPENSJON
+                            AndreStatligeYtelser.GJENLEVENDEPENSJON -> SamordningDTO.AndreStatligeYtelser.GJENLEVENDEPENSJON
+                        }
+                    )
+                }
+
+        val samordningUføre =
+            samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering?.tilTidslinje().orEmpty().segmenter()
+                .map { (periode, grad) ->
+                    SamordningDTO.UførePerioder(
+                        fom = periode.fom,
+                        tom = periode.tom,
+                        grad = grad.prosentverdi()
+                    )
+                }
+
+        return SamordningDTO(
+            uføre = samordningUføre,
+            arbeidsgiver = arbeidsgiverSamordning,
+            statligeYtelser = samordningYtelserSamornding,
+            avregningAndreYtelser = andreYtelser
+        )
+    }
+
+    private fun hentRettighetstypePerioder(underveistidslinje: Tidslinje<Underveisperiode>): List<RettighetstypePeriode> {
+        val rettighetstypePerioder = underveistidslinje
+            .mapNotNull { it.rettighetsType }
             .komprimer().segmenter().map {
                 RettighetstypePeriode(
                     fraDato = it.periode.fom,
@@ -184,32 +305,44 @@ class AvsluttetBehandlingTilStatistikk(
                     barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
                     barnetillegg = verdi.barnetillegg.verdi().toDouble(),
                     utbetalingsdato = verdi.utbetalingsdato,
-                    minsteSats = verdi.tilKontrakt()
+                    minsteSats = verdi.tilKontrakt(),
+                    samordningGradering = verdi.graderingGrunnlag.samordningGradering.prosentverdi().toDouble(),
+                    institusjonGradering = verdi.graderingGrunnlag.institusjonGradering.prosentverdi().toDouble(),
+                    arbeidGradering = verdi.graderingGrunnlag.arbeidGradering.prosentverdi().toDouble(),
+                    samordningUføregradering = verdi.graderingGrunnlag.samordningUføregradering.prosentverdi()
+                        .toDouble(),
+                    samordningArbeidsgiverGradering = verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi()
+                        .toDouble(),
+                    meldepliktGradering = verdi.graderingGrunnlag.meldepliktGradering.prosentverdi().toDouble(),
                 )
             }
 
-    private fun hentDiagnose(behandling: Behandling): Diagnoser? {
+    private fun hentDiagnose(behandling: Behandling): List<DiagnoserMedPeriode> {
         val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
-            ?.sykdomsvurderinger.orEmpty()
-            .filter { it.diagnose != null }
-            .maxByOrNull { it.opprettet }
+            ?.somSykdomsvurderingstidslinje()
+            .orEmpty()
 
-        if (sykdomsvurdering == null) {
+        if (sykdomsvurdering.isEmpty()) {
             log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")
-            return null
+            return emptyList()
         }
 
-        val diagnose = sykdomsvurdering.diagnose
-        if (diagnose?.hoveddiagnose == null) {
-            log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
-            return null
-        }
+        return sykdomsvurdering.map { it.diagnose }
+            .komprimer().segmenter().mapNotNull { (periode, diagnose) ->
+                if (diagnose == null) return@mapNotNull null
 
-        return Diagnoser(
-            kodeverk = diagnose.kodeverk,
-            diagnosekode = diagnose.hoveddiagnose,
-            bidiagnoser = diagnose.bidiagnoser.orEmpty(),
-        )
+                if (diagnose.hoveddiagnose == null) {
+                    log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
+                    return@mapNotNull null
+                }
+
+                DiagnoserMedPeriode(
+                    periodeDTO = PeriodeDTO(periode.fom, periode.tom),
+                    kodeverk = diagnose.kodeverk,
+                    diagnosekode = diagnose.hoveddiagnose,
+                    bidiagnoser = diagnose.bidiagnoser.orEmpty(),
+                )
+            }
     }
 
     private fun hentResultat(behandling: Behandling): ResultatKode? {
@@ -258,10 +391,13 @@ class AvsluttetBehandlingTilStatistikk(
     }
 
     private fun beregningsgrunnlagDTO(
-        grunnlag: Beregningsgrunnlag
+        grunnlag: Beregningsgrunnlag,
+        tidspunktVurdering: BeregningstidspunktVurdering,
     ): BeregningsgrunnlagDTO = when (grunnlag) {
         is Grunnlag11_19 -> BeregningsgrunnlagDTO(
             grunnlag11_19dto = grunnlag1119dto(grunnlag),
+            nedsattArbeidsevneEllerStudieevneDato = tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
+            ytterligereNedsattArbeidsevneDato = tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
         )
 
         is GrunnlagUføre -> BeregningsgrunnlagDTO(
@@ -274,14 +410,16 @@ class AvsluttetBehandlingTilStatistikk(
                 uføregrad = grunnlag.uføregrader().maxBy { it.virkningstidspunkt }.uføregrad.prosentverdi(),
                 uføregrader = grunnlag.uføregrader().map { Uføre(it.uføregrad.prosentverdi(), it.virkningstidspunkt) },
                 uføreInntekterFraForegåendeÅr = grunnlag.uføreInntekterFraForegåendeÅr()
-                    .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() })
+                    .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() }),
+            nedsattArbeidsevneEllerStudieevneDato = tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
+            ytterligereNedsattArbeidsevneDato = tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
         )
 
         is GrunnlagYrkesskade -> BeregningsgrunnlagDTO(
             grunnlagYrkesskade = GrunnlagYrkesskadeDTO(
                 beregningsgrunnlag = when (grunnlag.underliggende()) {
-                    is Grunnlag11_19 -> beregningsgrunnlagDTO(grunnlag.underliggende())
-                    is GrunnlagUføre -> beregningsgrunnlagDTO(grunnlag.underliggende())
+                    is Grunnlag11_19 -> beregningsgrunnlagDTO(grunnlag.underliggende(), tidspunktVurdering)
+                    is GrunnlagUføre -> beregningsgrunnlagDTO(grunnlag.underliggende(), tidspunktVurdering)
                     is GrunnlagYrkesskade -> error("Grunnlagyrkesskade kan ikke ha grunnlag yrkesskade")
                 },
                 andelYrkesskade = grunnlag.andelYrkesskade().prosentverdi(),
@@ -296,7 +434,9 @@ class AvsluttetBehandlingTilStatistikk(
                 yrkesskadeinntektIG = grunnlag.yrkesskadeinntektIG().verdi(),
                 grunnlaget = grunnlag.grunnlaget().verdi(),
                 inkludererUføre = grunnlag.underliggende() is GrunnlagUføre
-            )
+            ),
+            nedsattArbeidsevneEllerStudieevneDato = tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
+            ytterligereNedsattArbeidsevneDato = tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
         )
     }
 
@@ -307,5 +447,50 @@ class AvsluttetBehandlingTilStatistikk(
         er6GBegrenset = beregningsgrunnlag.inntekter().any { it.er6GBegrenset },
         erGjennomsnitt = beregningsgrunnlag.erGjennomsnitt(),
     )
+
+    private fun GjeldendeStansEllerOpphør.tilKontrakt(): StansEllerOpphørDTO {
+        val type = when (vurdering) {
+            is Stans -> AvslagstypeDTO.STANS
+            is Opphør -> AvslagstypeDTO.OPPHØR
+        }
+        return StansEllerOpphørDTO(
+            type = type,
+            fom = fom,
+            årsaker = vurdering.årsaker.map { it.tilStatistikkDTO() }.toSet()
+        )
+    }
+
+    private fun Avslagsårsak.tilStatistikkDTO(): AvslagsårsakDTO =
+        when (this) {
+            Avslagsårsak.BRUKER_UNDER_18 -> AvslagsårsakDTO.BRUKER_UNDER_18
+            Avslagsårsak.BRUKER_OVER_67 -> AvslagsårsakDTO.BRUKER_OVER_67
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON -> AvslagsårsakDTO.MANGLENDE_DOKUMENTASJON
+            Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING -> AvslagsårsakDTO.IKKE_RETT_PA_SYKEPENGEERSTATNING
+            Avslagsårsak.IKKE_RETT_PA_STUDENT -> AvslagsårsakDTO.IKKE_RETT_PA_STUDENT
+            Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_STUDENT
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET -> AvslagsårsakDTO.IKKE_SYKDOM_AV_VISS_VARIGHET
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE -> AvslagsårsakDTO.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+            Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING -> AvslagsårsakDTO.IKKE_BEHOV_FOR_OPPFOLGING
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> AvslagsårsakDTO.IKKE_MEDLEM_FORUTGÅENDE
+            Avslagsårsak.IKKE_MEDLEM -> AvslagsårsakDTO.IKKE_MEDLEM
+            Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS -> AvslagsårsakDTO.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS
+            Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT -> AvslagsårsakDTO.NORGE_IKKE_KOMPETENT_STAT
+            Avslagsårsak.ANNEN_FULL_YTELSE -> AvslagsårsakDTO.ANNEN_FULL_YTELSE
+            Avslagsårsak.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING -> AvslagsårsakDTO.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING
+            Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE -> AvslagsårsakDTO.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE
+            Avslagsårsak.VARIGHET_OVERSKREDET_OVERGANG_UFORE -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_OVERGANG_UFORE
+            Avslagsårsak.VARIGHET_OVERSKREDET_ARBEIDSSØKER -> AvslagsårsakDTO.VARIGHET_OVERSKREDET_ARBEIDSSØKER
+            Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER -> AvslagsårsakDTO.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> AvslagsårsakDTO.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING
+            Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS -> AvslagsårsakDTO.BRUDD_PÅ_AKTIVITETSPLIKT_STANS
+            Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_STANS
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR -> AvslagsårsakDTO.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON -> AvslagsårsakDTO.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
+            Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> AvslagsårsakDTO.ORDINÆRKVOTE_BRUKT_OPP
+            Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP -> AvslagsårsakDTO.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+        }
 
 }

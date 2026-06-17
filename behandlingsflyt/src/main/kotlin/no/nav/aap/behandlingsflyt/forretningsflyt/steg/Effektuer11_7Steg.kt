@@ -39,6 +39,8 @@ class Effektuer11_7Steg(
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> {
                 /* noop */
             }

@@ -13,12 +13,15 @@ Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike be
 APIene er dokumentert med Swagger: https://aap-behandlingsflyt.intern.dev.nav.no/swagger-ui/index.html
 
 ## Publiserte artefakter
+
 Gjennom Gradle sin publish task produserer prosjektets Github Workflow artefakter som lastes opp til Github Packages.
 
 ### kontrakt/kontrakt.jar
+
 Inneholder domeneobjekter som brukes i kommunikasjon med Behandlingsflyt sine tjenester. 
 
 ### sbom/sbom.xml
+
 Dependency-liste (software bill of materials, sbom). 
 Filen viser avhengigheter til tredjeparts- og NAV-artefakter for hver modul i dette prosjektet. Publiseres til Github Packages, på https://github.com/navikt/aap-behandlingsflyt/packages/2754153
 
@@ -58,7 +61,7 @@ githubUser=<github-brukernavn>
 githubPassword=<github-token>
 ```
 
-Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.œ
+Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.
 
 ### Kjøre lokalt
 
@@ -88,7 +91,7 @@ Alternativt, for å unngå å starte IntelliJ, gå i rotmappen og kjør:
 Swagger-dokumentasjon blir tilgjengelig på http://localhost:8080/swagger-ui/index.html. For å gjøre autentiserte kall trengs JWT-token fra "fake Azure AD" (startet i Fakes-klassen). "Fake AD" kjører på localhost:8081, og du kan få token ved å kjøre
 
 ```shell
-curl -s -XPOST http://localhost:8081/token/Z12345  | jq -r '.access_token' | pbcopy 
+curl -s -XPOST http://localhost:8081/token  | jq -r '.access_token' | pbcopy 
 ```
 
 Nå kan API-kall gjøres i Swagger UI ved å trykke på "Authorize"-knappen og lime inn token. For å gjøre API-kall i Swagger i dev kan man generere [maskin-til-maskin-token](http://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt)
@@ -96,7 +99,7 @@ eller [obo-token](http://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev
 
 For å rekjøre en jobb, kan følgende kommandoer kjøres:
 ```shell
-token=$(curl -s -XPOST http://localhost:8081/token/Z12345 | jq -r '.access_token')
+token=$(curl -s -XPOST http://localhost:8081/token | jq -r '.access_token')
 
 curl -X 'GET' \
   'http://0.0.0.0:8080/drift/api/jobb/rekjorAlleFeilede' \
@@ -107,7 +110,7 @@ curl -X 'GET' \
 Send inn dokument til TestApp:
 
 ```shell
-token=$(curl -s -XPOST http://localhost:8081/token/Z12345 | jq -r '.access_token')
+token=$(curl -s -XPOST http://localhost:8081/token | jq -r '.access_token')
 saksnummer=4LDY7G0
 asInnsendingId=$(uuidgen)
 
@@ -145,7 +148,7 @@ For at det skal kjøre lokalt må du gjøre følgende:
 1. Hent secret med [aap-cli/get-secret.sh](https://github.com/navikt/aap-cli): \
     `get-secret` \
 2. Kjør opp lokal database med: \
-    `docker-compose up -d`
+    `docker-compose --profile dev-gcp up -d`
 3. Om du ønsker å hente data fra dev til lokal maskin kan du bruke [dump-gcp-db.sh](https://github.com/navikt/aap-cli?tab=readme-ov-file#dump-gcp-dbsh).
    Hvis du ikke henter data fra dev, får du beskjed om at rollen `cloudsqliamuser` mangler. Den kan denne legges inn ved å logge på databasen og kjøre følgende: \
     `CREATE ROLE cloudsqliamuser;`

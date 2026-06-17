@@ -27,6 +27,7 @@ internal class FakesExtension : BeforeAllCallback, ParameterResolver,
         FakeServers.statistikkHendelser.clear()
         FakeServers.legeerklæringStatuser.clear()
         FakePersoner.nullstillPersoner()
+        FakeDokarkivGateway.nullstillJournalposter()
     }
 
     override fun supportsParameter(

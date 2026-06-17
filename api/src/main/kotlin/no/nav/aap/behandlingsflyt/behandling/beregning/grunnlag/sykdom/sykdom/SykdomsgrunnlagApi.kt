@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -43,7 +44,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
             getGrunnlag<BehandlingReferanse, SykdomGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_SYKDOM.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SYKDOM.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -106,7 +107,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
             getGrunnlag<BehandlingReferanse, YrkesskadeVurderingGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_YRKESSKADE.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_YRKESSKADE.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -127,7 +128,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     YrkesskadeVurderingGrunnlagResponse(
                         kanSaksbehandle(),
                         opplysninger = InnhentetSykdomsOpplysninger(
-                            oppgittYrkesskadeISøknad = false,
+                            oppgittYrkesskadeISøknad = yrkesskadeGrunnlag?.oppgittYrkesskadeISøknad,
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
                         yrkesskadeVurdering = sykdomGrunnlag?.yrkesskadevurdering?.toResponse(ansattInfoService),
@@ -148,12 +149,14 @@ private fun Yrkesskadevurdering.toResponse(ansattInfoService: AnsattInfoService)
         relevanteYrkesskadeSaker = relevanteSaker.map { YrkesskadeSakResponse(it.referanse, it.manuellYrkesskadeDato) },
         andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
         erÅrsakssammenheng = erÅrsakssammenheng,
-        vurdertAv = VurdertAvResponse(
-            ident = vurdertAv,
-            dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
-            ansattnavn = navnOgEnhet?.navn,
-            enhetsnavn = navnOgEnhet?.enhet,
-        )
+        vurderingerMeta = VurderingerMetaResponse(
+            vurdertAv = VurdertAvResponse(
+                ident = vurdertAv,
+                dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
+                ansattnavn = navnOgEnhet?.navn,
+                enhetsnavn = navnOgEnhet?.enhet,
+            )
+        ),
     )
 }
 

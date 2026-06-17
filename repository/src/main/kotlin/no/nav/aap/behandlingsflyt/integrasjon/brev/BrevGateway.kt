@@ -5,13 +5,19 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
+import no.nav.aap.behandlingsflyt.behandling.brev.ForholdTilAndreYtelser
 import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
+import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørDelvisUfør
+import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørFullUfør
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
+import no.nav.aap.behandlingsflyt.behandling.brev.YrkesskadeBeregningBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
@@ -49,7 +55,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.put
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -66,14 +72,14 @@ class BrevGateway : BrevbestillingGateway {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.brev.url"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_BREV_URL"))
     val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.brev.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_BREV_SCOPE"),
     )
 
     private val client = RestClient(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         responseHandler = HåndterConflictResponseHandler(),
         prometheus = prometheus
     )
@@ -217,6 +223,52 @@ class BrevGateway : BrevbestillingGateway {
         return response
     }
 
+    override fun forhåndsvisHtml(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: InputStream = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/forhandsvis-html"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    body
+                })
+        )
+        return response.readAllBytes().toString(Charsets.UTF_8)
+    }
+
+    override fun brevbyggerPreview(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+
+        val httpRequest = PostRequest(
+            body = ForhandsvisBrevRequest(signaturer),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+
+        val response: InputStream = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/bestilling/$bestillingReferanse/brevbygger-preview"),
+                request = httpRequest,
+                mapper = { body, _ ->
+                    body
+                })
+        )
+        return response.readAllBytes().toString(Charsets.UTF_8)
+    }
+
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
         val url = baseUri.resolve("/api/avbryt")
 
@@ -312,6 +364,8 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27
+        TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR -> Brevtype.VEDTAK_11_18_OPPHØR_FULL_UFØR
+        TypeBrev.VEDTAK_11_18_OPPHØR_DELVIS_UFØR -> Brevtype.VEDTAK_11_18_OPPHØR_DELVIS_UFØR
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
@@ -331,8 +385,28 @@ class BrevGateway : BrevbestillingGateway {
                         )
                     }
 
-                    if(brevBehov.sykdomsvurdering != null) {
+                    if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
+                    }
+
+                    if (brevBehov.foreldreansvarVurderinger != null) {
+                        add(
+                            foreldreansvarVurderingerTilFaktaGrunnlag(brevBehov.foreldreansvarVurderinger!!)
+                        )
+                    }
+
+                    brevBehov.forholdTilAndreYtelser?.let { forholdTilAndreYtelser ->
+                        add(forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser))
+                    }
+                    brevBehov.yrkesskadeBeregning?.let { yrkesskadeBeregning ->
+                        add(yrkesskadeBeregningTilFaktagrunnlag(yrkesskadeBeregning))
+                    }
+                    brevBehov.yrkesSkadeISøknadIkkeIRegister?.let {
+                        add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it))
+                    }
+                    brevBehov.meldepliktGrunnlag?.let {
+                        add(
+                            fritakmeldepliktTilFaktagrunnlag(it))
                     }
                 }
 
@@ -367,7 +441,7 @@ class BrevGateway : BrevbestillingGateway {
 
             is Avslag -> {
                 buildSet {
-                    if(brevBehov.sykdomsvurdering != null) {
+                    if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
                 }
@@ -380,6 +454,22 @@ class BrevGateway : BrevbestillingGateway {
                     )
                     add(
                         Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
+                    )
+                }
+            }
+
+            is Vedtak11_18OpphørFullUfør -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.InnvilgetUføretrygd(brevBehov.virkningstidspunkt)
+                    )
+                }
+            }
+
+            is Vedtak11_18OpphørDelvisUfør -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.InnvilgetUføretrygd(brevBehov.virkningstidspunkt)
                     )
                 }
             }
@@ -403,6 +493,47 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
+    private fun yrkesskadeBeregningTilFaktagrunnlag(yrkesskadeBeregning: YrkesskadeBeregningBrev): Faktagrunnlag.YrkesskadeBeregning {
+        return Faktagrunnlag.YrkesskadeBeregning(
+            yrkesskader = yrkesskadeBeregning.yrkesskader.map {
+                Faktagrunnlag.YrkesskadeBeregning.Yrkesskade(
+                    yrkesskadedato = it.yrkesskadedato,
+                    arbeidsinntektPaaSkadetidspunktet = it.arbeidsinntektPaaSkadetidspunktet,
+                    relevantForArbeidsevne = it.relevantForArbeidsevne,
+                    diagnose = it.diagnose,
+                )
+            },
+            andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
+        )
+    }
+
+    private fun fritakmeldepliktTilFaktagrunnlag(
+        meldepliktGrunnlag: MeldepliktGrunnlag
+    ): Faktagrunnlag.FritakMeldepliktGrunnlag {
+        return Faktagrunnlag.FritakMeldepliktGrunnlag(
+            fritakMeldepliktGrunnlag = meldepliktGrunnlag.vurderinger.map { vurdering ->
+                Faktagrunnlag.FritakMeldepliktGrunnlag.FritakMeldepliktVurdering(
+                    harFritak = vurdering.harFritak,
+                    fraDato = vurdering.fraDato,
+                    tilDato = vurdering.tilDato,
+                )
+            }
+        )
+    }
+
+    private fun foreldreansvarVurderingerTilFaktaGrunnlag(foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>): Faktagrunnlag.BarnUtenBarnetillegg {
+        return Faktagrunnlag.BarnUtenBarnetillegg(
+            foreldreansvarVurderinger.map { vurdering ->
+                Faktagrunnlag.BarnUtenBarnetillegg.Barn(
+                    harForeldreAnsvar = vurdering.harForeldreAnsvar,
+                    begrunnelse = vurdering.begrunnelse,
+                    erFosterforelder = vurdering.erFosterForelder,
+                )
+            }
+        )
+    }
+
+
     private fun grunnlagBeregningTilFaktagrunnlag(grunnlagBeregning: GrunnlagBeregning): Faktagrunnlag.GrunnlagBeregning {
         return Faktagrunnlag.GrunnlagBeregning(
             beregningstidspunkt = grunnlagBeregning.beregningstidspunkt,
@@ -410,7 +541,70 @@ class BrevGateway : BrevbestillingGateway {
             inntekterPerÅr = grunnlagBeregning.inntekterPerÅr.map {
                 Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
             },
+            beregningsutfallKategori = grunnlagBeregning.tilKontrakt(),
         )
 
+    }
+
+    private fun GrunnlagBeregning.tilKontrakt(): Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori? =
+        when (beregningsutfallKategori) {
+            GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.SISTE_AAR
+            GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.GJENNOMSNITT
+            GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25 -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_OVER_25
+            GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25 -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.MINSTESATS_UNDER_25
+            GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G -> Faktagrunnlag.GrunnlagBeregning.BeregningsutfallKategori.INNTEKT_OVER_6G
+            null -> null
+        }
+
+    private fun forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser: ForholdTilAndreYtelser): Faktagrunnlag {
+        return Faktagrunnlag.ForholdTilAndreYtelser(
+            fradragAndreYtelser = forholdTilAndreYtelser.fradragAndreYtelser.map { periode ->
+                Faktagrunnlag.ForholdTilAndreYtelser.FradragYtelse(
+                    ytelseNavn = periode.ytelseNavn,
+                    fraOgMed = periode.fraOgMed,
+                    tilOgMed = periode.tilOgMed,
+                )
+            },
+            reduksjonArbeidsgiver = forholdTilAndreYtelser.reduksjonArbeidsgiver.map { periode ->
+                Faktagrunnlag.ForholdTilAndreYtelser.ReduksjonArbeidsgiver(
+                    fraOgMed = periode.fraOgMed,
+                    tilOgMed = periode.tilOgMed,
+                )
+            },
+            refusjonskravTjenestepensjon = forholdTilAndreYtelser.refusjonskravTjenestepensjon?.let { tp ->
+                Faktagrunnlag.ForholdTilAndreYtelser.RefusjonskravTjenestepensjon(
+                    skalEtterbetalingHoldesIgjen = tp.skalEtterbetalingHoldesIgjen,
+                    fraOgMed = tp.fraOgMed,
+                    tilOgMed = tp.tilOgMed,
+                )
+            },
+            samordningAndreYtelser = forholdTilAndreYtelser.samordningAndreYtelser.map { samordning ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningYtelse(
+                    ytelseNavn = samordning.ytelseNavn,
+                    gradering = samordning.gradering,
+                    fraOgMed = samordning.fraOgMed,
+                    tilOgMed = samordning.tilOgMed,
+                )
+            },
+            samordningBarnepensjon = forholdTilAndreYtelser.samordningBarnepensjon.map { bp ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningBarnepensjon(
+                    fraOgMed = bp.fraOgMed,
+                    tilOgMed = bp.tilOgMed,
+                    månedsats = bp.månedsats,
+                )
+            },
+            samordningUføre = forholdTilAndreYtelser.samordningUføre.map { uføre ->
+                Faktagrunnlag.ForholdTilAndreYtelser.SamordningUføre(
+                    virkningstidspunkt = uføre.virkningstidspunkt,
+                    uføregradProsent = uføre.uføregradProsent,
+                )
+            },
+            sykestipend = forholdTilAndreYtelser.sykestipend.map { s ->
+                Faktagrunnlag.ForholdTilAndreYtelser.Sykestipend(
+                    fraOgMed = s.fraOgMed,
+                    tilOgMed = s.tilOgMed,
+                )
+            },
+        )
     }
 }

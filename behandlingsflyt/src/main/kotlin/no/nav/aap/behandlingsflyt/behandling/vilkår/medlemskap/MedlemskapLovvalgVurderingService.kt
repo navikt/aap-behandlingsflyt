@@ -8,23 +8,50 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
+import no.nav.aap.behandlingsflyt.lovvalgAutomatiskGjennomslipp
+import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurdering
+import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
 
 class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(
         grunnlag: MedlemskapLovvalgGrunnlag,
-        rettighetsPeriode: Periode
+        rettighetsPeriode: Periode,
+        type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
         val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any { it.resultat }
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
+        val kanBehandlesAutomatisk = oppfyltMinstEttKrav && ingenInntruffet
+
+        // No-op: Metrikker for videre utviklingsplan
+        if (type == VurderingType.FØRSTEGANGSBEHANDLING) {
+            prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
+
+            if (!oppfyltMinstEttKrav) {
+                prometheus.lovvalgÅrsakTilManuellVurdering("ingen_i_norge_kriterier_oppfylt").increment()
+                andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
+                    prometheus.lovvalgÅrsakTilManuellVurdering(lovvalgÅrsakNavn(vurdering.opplysning)).increment()
+                }
+            }
+        }
 
         return KanBehandlesAutomatiskVurdering(
-            oppfyltMinstEttKrav && ingenInntruffet,
+            kanBehandlesAutomatisk,
             førsteDelVurderinger + andreDelVurdering
         )
+    }
+
+    private fun lovvalgÅrsakNavn(opplysning: String): String = when (opplysning) {
+        "Arbeid i utland" -> "arbeid_i_utland"
+        "Opphold i utland" -> "opphold_i_utland"
+        "Utenlandsk adresse" -> "utenlandsk_adresse"
+        "Vedtak om annet lovvalgsland finnes" -> "annet_lovvalgsland"
+        "Mangler statsborgerskap i EØS" -> "mangler_statsborgerskap_eos"
+        else -> opplysning.replace(" ", "_").lowercase()
     }
 
     // Minst én må oppfylles
@@ -216,13 +243,14 @@ class MedlemskapLovvalgVurderingService {
             grunnlag?.statsborgerskap
                 ?.none { it.land in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
 
-        val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
-            ManglerStatsborgerskapGrunnlag(
-                land = it.land,
-                gyldigFraOgMed = it.gyldigFraOgMed,
-                gyldigTilOgMed = it.gyldigTilOgMed
-            )
-        }
+        val manglerStatsborgerskapGrunnlag =
+            grunnlag?.statsborgerskap?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
+                ManglerStatsborgerskapGrunnlag(
+                    land = it.land,
+                    gyldigFraOgMed = it.gyldigFraOgMed,
+                    gyldigTilOgMed = it.gyldigTilOgMed
+                )
+            }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),
@@ -236,7 +264,7 @@ class MedlemskapLovvalgVurderingService {
 
     private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
         val sykepengerInntektGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { inntekt ->
-            inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name }
+            inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name } && inntekt.beloep != 0.0
         }
 
         val mottarSykepengerGrunnlag = sykepengerInntektGrunnlag?.map {
@@ -259,7 +287,7 @@ class MedlemskapLovvalgVurderingService {
 
     private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
         val arbeidInntektINorgeGrunnlag =
-            grunnlag?.inntekterINorgeGrunnlag?.map {
+            grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }?.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,

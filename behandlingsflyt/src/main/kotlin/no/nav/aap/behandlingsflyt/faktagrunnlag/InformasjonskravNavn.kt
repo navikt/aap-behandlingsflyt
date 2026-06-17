@@ -22,6 +22,7 @@ enum class InformasjonskravNavn {
     DAGPENGER,
     TILTAKSPENGER,
     VEDTAKSLENGDE,
+    GRUNNBELØP,
 
     @Deprecated("Ikke i bruk, men finnes i databasen.")
     RETTIGHETSPERIODE,

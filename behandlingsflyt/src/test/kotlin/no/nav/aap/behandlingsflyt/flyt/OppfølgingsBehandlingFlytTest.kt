@@ -26,7 +26,7 @@ import java.time.LocalDateTime
 class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `opprette oppfølgingsbehandling`() {
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         val oppfølgingsbehandling = sak.sendInnOppfølgingsoppgave(
@@ -34,7 +34,8 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
                 datoForOppfølging = LocalDate.now().plusDays(1),
                 hvaSkalFølgesOpp = "noe",
                 hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
-                reserverTilBruker = "MEGSELV"
+                reserverTilBruker = "MEGSELV",
+                opprettetAv = null
             ),
             mottattTidspunkt = LocalDateTime.now().minusMonths(3),
         )
@@ -79,7 +80,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
     @Test
     fun `Opprett oppfølgningsoppgave med opprinnelse`() {
 
-        val sak = happyCaseFørstegangsbehandling()
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         sak.sendInnOppfølgingsoppgave(
@@ -88,6 +89,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
                 hvaSkalFølgesOpp = "noe",
                 hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
                 reserverTilBruker = "MEGSELV",
+                opprettetAv = null,
                 opprinnelse = Opprinnelse(
                     behandlingsreferanse = førstegangsbehandling.referanse.toString(),
                     avklaringsbehovKode = AvklaringsbehovKode.`5028`.toString()

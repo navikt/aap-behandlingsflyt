@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
 import java.util.UUID
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
+import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
 
 @Response(statusCode = 202)
@@ -14,8 +15,8 @@ data class LøsPeriodisertAvklaringsbehovPåBehandling(
     @param:JsonProperty(value = "behandlingVersjon", required = true, defaultValue = "0") val behandlingVersjon: Long,
     @param:JsonProperty(value = "behov", required = true) val behov: PeriodisertAvklaringsbehovLøsning<*>,
 ) : Behandlingsreferanse {
-    override fun hentAvklaringsbehovKode(): String {
-        return behov.definisjon().kode.toString()
+    override fun hentPåkrevdRolle(): List<Rolle> {
+        return behov.definisjon().løsesAv
     }
 
     override fun behandlingsreferanseResolverInput(): String {

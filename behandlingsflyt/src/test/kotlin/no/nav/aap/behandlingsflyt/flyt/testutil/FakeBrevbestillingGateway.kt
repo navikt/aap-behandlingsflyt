@@ -110,6 +110,20 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         return ByteArrayInputStream("test".toByteArray())
     }
 
+    override fun forhåndsvisHtml(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+        return "Brevtekst"
+    }
+
+    override fun brevbyggerPreview(
+        bestillingReferanse: BrevbestillingReferanse,
+        signaturer: List<SignaturGrunnlag>
+    ): String {
+        return "{}"
+    }
+
     companion object : Factory<BrevbestillingGateway> {
         override fun konstruer(): BrevbestillingGateway = FakeBrevbestillingGateway()
     }

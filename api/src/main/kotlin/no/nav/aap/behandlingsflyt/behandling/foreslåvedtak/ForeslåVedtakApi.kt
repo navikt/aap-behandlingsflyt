@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.foreslåvedtak
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.OpphevetStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
@@ -12,11 +10,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -35,7 +34,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
         route("/{referanse}/grunnlag/foreslaa-vedtak").getGrunnlag<BehandlingReferanse, ForeslåVedtakResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = FORESLÅ_VEDTAK_KODE
+            påkrevdRolle = Definisjon.FORESLÅ_VEDTAK.løsesAv
         ) { behandlingReferanse ->
             val response =
                 dataSource.transaction(readOnly = true) { conn ->
@@ -49,7 +48,9 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
                     val stansOpphørGrunnlag =
                         repositoryProvider.provide<StansOpphørRepository>().hentHvisEksisterer(behandling.id)
-                    val stansOgOpphør = stansOpphørGrunnlag?.stansOgOpphørMedHistorikk() ?: emptyMap()
+                    val stansOgOpphør = stansOpphørGrunnlag?.gjeldendeStansOgOpphør()
+                        ?.associate({ it.fom to listOf(it) })
+                        .orEmpty()
                     val referanseOppslag = behandlingRepository
                         .hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
                         .associate { it.id to it.referanse }
@@ -59,18 +60,11 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                             stansOpphørFraOgMed = fom,
                             historikk = historikk.map { vurdering ->
                                 StansOpphørVurderingDto(
-                                    type = when (vurdering) {
-                                        is GjeldendeStansEllerOpphør -> when (vurdering.vurdering) {
-                                            is Opphør -> StansOpphørVurderingTypeDto.OPPHØR
-                                            is Stans -> StansOpphørVurderingTypeDto.STANS
-                                        }
-
-                                        is OpphevetStansEllerOpphør -> StansOpphørVurderingTypeDto.OPPHEVET
+                                    type = when (vurdering.vurdering) {
+                                        is Opphør -> StansOpphørVurderingTypeDto.OPPHØR
+                                        is Stans -> StansOpphørVurderingTypeDto.STANS
                                     },
-                                    årsaker = when (vurdering) {
-                                        is GjeldendeStansEllerOpphør -> vurdering.vurdering.årsaker.toList()
-                                        is OpphevetStansEllerOpphør -> emptyList()
-                                    },
+                                    årsaker = vurdering.vurdering.årsaker.toList(),
                                     behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                         "Finner ikke ytelsesbehandling i sak med behandlingsid"
                                     }
@@ -83,7 +77,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     val avslagstidslinjer = utledAvslagstidslinjer(vilkårsresultat)
                     // Hvis avslag tidlig i behandlingen finnes ikke underveisgrunnlag
                     if (underveisGrunnlag == null) {
-                        ForeslåVedtakResponse(emptyList(), stansOgOpphørDto)
+                        ForeslåVedtakResponse(emptyList(), stansOgOpphørDto, kanSaksbehandle())
                     } else {
                         val foreslåVedtakPerioder =
                             underveisGrunnlag
@@ -108,6 +102,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                         ForeslåVedtakResponse(
                             foreslåVedtakPerioder,
                             stansOgOpphørDto,
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         )
                     }
                 }

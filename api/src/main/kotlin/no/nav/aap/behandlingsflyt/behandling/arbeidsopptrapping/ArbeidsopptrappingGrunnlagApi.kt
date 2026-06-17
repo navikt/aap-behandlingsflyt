@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
@@ -39,7 +40,7 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
         getGrunnlag<BehandlingReferanse, ArbeidsopptrappingGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.ARBEIDSOPPTRAPPING.kode.toString()
+            påkrevdRolle = Definisjon.ARBEIDSOPPTRAPPING.løsesAv
         ) { behandlingReferanse ->
             val response =
                 dataSource.transaction { connection ->
@@ -57,7 +58,7 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
                     val ikkeVurderbarePerioder =
-                        utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag, sak.rettighetsperiode.fom)
+                        utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag)
 
                     val arbeidsopptrappingGrunnlag = arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id)
 
@@ -66,7 +67,10 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                             ?: ArbeidsopptrappingGrunnlag(emptyList())
 
                     ArbeidsopptrappingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.ARBEIDSOPPTRAPPING.løsesISteg, behandling),
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
+                            Definisjon.ARBEIDSOPPTRAPPING.løsesISteg,
+                            behandling
+                        ),
                         sisteVedtatteVurderinger = ArbeidsopptrappingVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService
@@ -77,9 +81,11 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = listOf(),
                         ikkeVurderbarePerioder = ikkeVurderbarePerioder,
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            Definisjon.ARBEIDSOPPTRAPPING,
-                            behandling.id
+                        vurderingerMeta = VurderingerMetaResponse(
+                            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                                Definisjon.ARBEIDSOPPTRAPPING,
+                                behandling.id,
+                            ),
                         ),
                         ikkeRelevantePerioder = emptyList(/* Avklaringsbehovet er frivillig, så vi har ikke denne opplysningen lett tilgjengelig. */),
                     )
@@ -95,7 +101,6 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
 private fun utledIkkeVurderbarePerioder(
     sykdomGrunnlag: SykdomGrunnlag?,
     bistandGrunnlag: BistandGrunnlag?,
-    fom: LocalDate
 ): List<Periode> {
     val sykdomsvurderinger = sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
     val bistandsvurderinger =
@@ -103,7 +108,7 @@ private fun utledIkkeVurderbarePerioder(
 
     val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
         .filter {
-            it.verdi.first?.erOppfyltOrdinær(fom, it.periode) != true || it.verdi.second?.erBehovForBistand() != true
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true || it.verdi.second?.erBehovForBistand() != true
         }
     return mapped.perioder().toList()
 }

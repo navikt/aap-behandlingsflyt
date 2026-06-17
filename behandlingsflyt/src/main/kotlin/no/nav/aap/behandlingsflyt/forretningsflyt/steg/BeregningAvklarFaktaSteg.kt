@@ -63,6 +63,8 @@ class BeregningAvklarFaktaSteg private constructor(
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }
@@ -102,6 +104,8 @@ class BeregningAvklarFaktaSteg private constructor(
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }

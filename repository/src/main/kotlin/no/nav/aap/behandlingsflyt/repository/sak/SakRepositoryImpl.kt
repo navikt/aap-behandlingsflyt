@@ -31,7 +31,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     @WithSpan
     override fun finnEllerOpprett(person: Person, søknadsdato: LocalDate): Sak {
-        val relevantesaker = finnRelevanteSaker(person)
+        val relevantesaker = finnRelevanteSaker(person.id)
 
         if (relevantesaker.isEmpty()) {
             return opprett(person, søknadsdato)
@@ -95,14 +95,12 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
-    override fun finnSakerFor(person: Person): List<Sak> {
+    override fun finnSakerFor(personId: PersonId): List<Sak> {
         return connection.queryList(
-            "SELECT * " +
-                    "FROM SAK " +
-                    "WHERE person_id = ?"
+            """SELECT * FROM SAK WHERE person_id = ?"""
         ) {
             setParams {
-                setLong(1, person.id.id)
+                setLong(1, personId.id)
             }
             setRowMapper { row ->
                 mapSak(row)
@@ -110,7 +108,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
-    private fun finnRelevanteSaker(person: Person): List<Sak> {
+    private fun finnRelevanteSaker(personId: PersonId): List<Sak> {
         return connection.queryList(
             """
             select * from sak
@@ -128,7 +126,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         """.trimIndent()
         ) {
             setParams {
-                setLong(1, person.id.id)
+                setLong(1, personId.id)
             }
             setRowMapper { row ->
                 mapSak(row)
@@ -138,9 +136,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     override fun hent(sakId: SakId): Sak {
         return connection.queryFirst(
-            "SELECT * " +
-                    "FROM SAK " +
-                    "WHERE id = ?"
+            """SELECT * FROM SAK WHERE id = ?"""
         ) {
             setParams {
                 setLong(1, sakId.toLong())

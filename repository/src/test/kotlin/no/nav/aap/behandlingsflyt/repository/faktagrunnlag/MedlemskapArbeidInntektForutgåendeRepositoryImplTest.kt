@@ -1,7 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
@@ -87,6 +93,46 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             assertEquals(inntekt1.identifikator, "1234")
             assertEquals(inntekt2.organisasjonsNavn, "Rotte AS")
             assertEquals(inntekt2.identifikator, "4321")
+        }
+    }
+
+    @Test
+    fun `lagrer maritime felter og yrke paa arbeid forutgaaende`() {
+        dataSource.transaction { connection ->
+            val repo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val sak = opprettSak(connection, LocalDate.now())
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            repo.lagreArbeidsforholdOgInntektINorge(
+                behandlingId = behandling.id,
+                arbeidGrunnlag = listOf(
+                    ArbeidINorgeGrunnlag(
+                        identifikator = "9876",
+                        arbeidsforholdKode = Arbeidsforholdtype.MARITIMT_ARBEIDSFORHOLD,
+                        startdato = 1 mai 2020,
+                        sluttdato = null,
+                        ansettelsesdetaljer = listOf(
+                            ArbeidAnsettelsesdetaljGrunnlag(
+                                skipsregister = Skipsregister.NOR,
+                                skipstype = Skipstype.ANNET,
+                                fartsomraade = Fartsomraade.INNENRIKS,
+                                yrke = Yrke(kode = "6411104", beskrivelse = "FISKER"),
+                            )
+                        )
+                    )
+                ),
+                inntektGrunnlag = emptyList(),
+                medlId = null,
+                enhetGrunnlag = emptyList()
+            )
+
+            val lagretArbeid = repo.hentHvisEksisterer(behandling.id)!!.arbeiderINorgeGrunnlag.single()
+            assertThat(lagretArbeid.ansettelsesdetaljer).hasSize(1)
+            assertThat(lagretArbeid.ansettelsesdetaljer.first().skipsregister).isEqualTo(Skipsregister.NOR)
+            assertThat(lagretArbeid.ansettelsesdetaljer.first().skipstype).isEqualTo(Skipstype.ANNET)
+            assertThat(lagretArbeid.ansettelsesdetaljer.first().fartsomraade).isEqualTo(Fartsomraade.INNENRIKS)
+            assertThat(lagretArbeid.ansettelsesdetaljer.first().yrke?.kode).isEqualTo("6411104")
+            assertThat(lagretArbeid.ansettelsesdetaljer.first().yrke?.beskrivelse).isEqualTo("FISKER")
         }
     }
 
@@ -366,7 +412,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     private fun arbeidGrunnlag(): List<ArbeidINorgeGrunnlag> = listOf(
         ArbeidINorgeGrunnlag(
             identifikator = "1234",
-            arbeidsforholdKode = "ordinaertArbeidsforhold",
+            arbeidsforholdKode = Arbeidsforholdtype.ORDINAERT_ARBEIDSFORHOLD,
             startdato = 1 mai 2020,
             sluttdato = null
         )

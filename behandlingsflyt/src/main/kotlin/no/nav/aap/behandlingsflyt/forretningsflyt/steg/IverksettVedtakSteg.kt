@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
@@ -28,8 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -50,7 +47,6 @@ class IverksettVedtakSteg private constructor(
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
     private val resultatUtleder: ResultatUtleder,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -240,9 +236,7 @@ class IverksettVedtakSteg private constructor(
             /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
             return
         }
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak)) {
-            log.warn("Forventet å finne allerede lagret vedtak fra FatteVedtakSteg. Lagrer vedtak...")
-        }
+        log.warn("Forventet å finne allerede lagret vedtak fra FatteVedtakSteg. Lagrer vedtak...")
 
         val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
         val vedtakstidspunkt = stegHistorikk
@@ -274,14 +268,13 @@ class IverksettVedtakSteg private constructor(
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
-            val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val gosysService = GosysService(gatewayProvider)
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
-            val resultatUtleder = ResultatUtleder(repositoryProvider)
+            val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
             return IverksettVedtakSteg(
                 sakRepository = sakRepository,
                 refusjonkravRepository = refusjonkravRepository,
@@ -290,7 +283,7 @@ class IverksettVedtakSteg private constructor(
                     repositoryProvider = repositoryProvider,
                     gatewayProvider = gatewayProvider
                 ),
-                vedtakService = VedtakService(vedtakRepository, behandlingRepository),
+                vedtakService = VedtakService(repositoryProvider, gatewayProvider),
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
@@ -298,8 +291,6 @@ class IverksettVedtakSteg private constructor(
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
                 gosysService = gosysService,
                 resultatUtleder = resultatUtleder,
-                unleashGateway = gatewayProvider.provide<UnleashGateway>(),
-
                 )
         }
 

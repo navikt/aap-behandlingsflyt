@@ -31,6 +31,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SamordningServiceTest {
     companion object {
@@ -109,7 +110,8 @@ internal class SamordningServiceTest {
                                 )
                             )
                         )
-                    )
+                    ),
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -194,7 +196,8 @@ internal class SamordningServiceTest {
                             )
                         )
                     )
-                )
+                ),
+            vurdertTidspunkt = LocalDateTime.now()
             )
 
             val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
@@ -270,7 +273,8 @@ internal class SamordningServiceTest {
                         )
                     )
                 )
-            )
+            ),
+        vurdertTidspunkt = LocalDateTime.now()
         )
     ) {
         samordningVurderingRepo.lagreVurderinger(behandlingId, vurderinger)
@@ -301,7 +305,7 @@ internal class SamordningServiceTest {
         val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
             person,
-            Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+            LocalDate.now()
         ).id
         return BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,

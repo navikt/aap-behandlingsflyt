@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.søkerOppgirStudentstatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.skalVurdereStudent
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -18,6 +18,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -25,13 +27,15 @@ class VurderStudentSteg private constructor(
     private val studentRepository: StudentRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -41,20 +45,22 @@ class VurderStudentSteg private constructor(
             definisjon = Definisjon.AVKLAR_STUDENT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING ->
+                    VurderingType.FØRSTEGANGSBEHANDLING -> {
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                (studentGrunnlag.søkerOppgirStudentstatus() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg)
-
-                    VurderingType.REVURDERING ->
+                                (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg) && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
+                    }
+                    VurderingType.REVURDERING -> {
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
-
+                                Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
+                    }
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }
@@ -81,6 +87,8 @@ class VurderStudentSteg private constructor(
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> {
                 /* noop */
             }

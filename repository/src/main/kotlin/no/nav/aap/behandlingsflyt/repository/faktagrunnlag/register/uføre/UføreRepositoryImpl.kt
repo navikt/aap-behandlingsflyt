@@ -32,7 +32,6 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    behandlingId = behandlingId,
                     vurderinger = hentVurderinger(row.getLong("ufore_id"))
                 )
             }
@@ -54,7 +53,6 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    behandlingId = behandlingId,
                     vurderinger = hentVurderinger(row.getLong("ufore_id"))
                 )
             }
@@ -110,6 +108,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
                 Uføre(
                     virkningstidspunkt = row.getLocalDate("virkningstidspunkt"),
                     uføregrad = Prosent(row.getInt("uforegrad")),
+                    uføregradFom = row.getLocalDateOrNull("uforegrad_fom"),
                     uføregradTom = row.getLocalDateOrNull("uforegrad_tom")
                 )
             }
@@ -135,14 +134,15 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
         }
 
         connection.executeBatch(
-            "INSERT INTO UFORE_GRADERING (UFORE_ID, UFOREGRAD, VIRKNINGSTIDSPUNKT, UFOREGRAD_TOM) VALUES (?, ?, ?, ?)",
+            "INSERT INTO UFORE_GRADERING (UFORE_ID, UFOREGRAD, VIRKNINGSTIDSPUNKT, UFOREGRAD_FOM, UFOREGRAD_TOM) VALUES (?, ?, ?, ?, ?)",
             uføre
         ) {
             setParams {
                 setLong(1, uføreId)
                 setInt(2, it.uføregrad.prosentverdi())
                 setLocalDate(3, it.virkningstidspunkt)
-                setLocalDate(4, it.uføregradTom)
+                setLocalDate(4, it.uføregradFom)
+                setLocalDate(5, it.uføregradTom)
             }
         }
     }

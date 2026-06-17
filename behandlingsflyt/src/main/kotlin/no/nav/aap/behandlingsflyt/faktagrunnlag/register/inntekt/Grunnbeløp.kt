@@ -14,6 +14,7 @@ object Grunnbeløp {
     private val gjennomsnittsbeløpene = sortedSetOf<GjennomsnittElement>()
 
     init {
+        element(2026, 5, 136_549, 134_419)
         element(2025, 5, 130_160, 128_116)
         element(2024, 5, 124_028, 122_225)
         element(2023, 5, 118_620, 116_239)
@@ -146,6 +147,17 @@ object Grunnbeløp {
                     .plus(Segment(Periode(siste.dato, Tid.MAKS), siste.beløp))
                     .let(::Tidslinje)
             }
+            fun finnGrunnbeløpForÅr(år: Year): GrunnbeløpMedDato? {
+                val grunnbeløpElement = grunnbeløpene.find { Year.of(it.dato.year) == år }
+                if (grunnbeløpElement != null) {
+                    return GrunnbeløpMedDato(
+                        dato = grunnbeløpElement.dato,
+                        beløp = grunnbeløpElement.beløp
+                    )
+                } else {
+                    return null
+                }
+            }
         }
     }
 
@@ -245,5 +257,14 @@ object Grunnbeløp {
 
     fun tilTidslinje(): Tidslinje<Beløp> {
         return Element.tilTidslinje()
+    }
+
+    data class GrunnbeløpMedDato(
+        val dato: LocalDate,
+        val beløp: Beløp
+    )
+
+    fun finnesGrunnbeløpForÅr(år: Year) :  GrunnbeløpMedDato? {
+        return Element.finnGrunnbeløpForÅr(år)
     }
 }

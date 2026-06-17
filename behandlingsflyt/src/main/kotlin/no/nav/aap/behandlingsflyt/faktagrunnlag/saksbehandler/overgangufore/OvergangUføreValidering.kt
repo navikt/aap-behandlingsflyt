@@ -22,23 +22,8 @@ object OvergangUføreValidering {
                 kravdato
             ).inneholder(segmentPeriode) // Det er tillatt å vurdere 11-18 før kravdato
                     || overgangUføreVurdering.brukerRettPåAAP == false // Nei-vurdering er uavhengig av bistand og sykdom
-                    || sykdomErOppfyltOgBistandErIkkeOppfylt(
-                kravdato,
-                segmentPeriode,
-                sykdomsvurdering,
-                bistandsvurdering
-            )
+                    || (sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true && bistandsvurdering?.erBehovForBistand() != true)
         }.komprimer()
     }
 
-    fun sykdomErOppfyltOgBistandErIkkeOppfylt(
-        kravdato: LocalDate,
-        segmentPeriode: Periode,
-        sykdomsvurdering: Sykdomsvurdering?,
-        bistandsvurdering: Bistandsvurdering?
-    ): Boolean {
-        return sykdomsvurdering?.erOppfyltOrdinær(
-            kravdato, segmentPeriode
-        ) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
-    }
 }

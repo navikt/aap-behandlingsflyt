@@ -23,7 +23,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 val INSTITUSJONSOPPHOLD_EVENT_TOPIC: String =
-    requiredConfigForKey("integrasjon.institusjonsopphold.event.topic")
+    requiredConfigForKey("INTEGRASJON_INSTITUSJONSOPPHOLD_EVENT_TOPIC")
 
 class InstitusjonsOppholdKafkaKonsument(
     config: KafkaConsumerConfig<String, InstitusjonsOppholdHendelseKafkaMelding>,
@@ -69,7 +69,7 @@ class InstitusjonsOppholdKafkaKonsument(
             secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} $person")
             if (person != null) {
 
-                val saker = sakRepository.finnSakerFor(person)
+                val saker = sakRepository.finnSakerFor(person.id)
 
                 for (saken in saker) {
                     val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)
@@ -77,23 +77,24 @@ class InstitusjonsOppholdKafkaKonsument(
                         val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
                         if (søknadErTrukket) {
                             log.info("Institusjonsopphold oppdateres ikke, da sak med ${saken.id} er trukket")
+                            continue
                         }
                     }
-                    val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
-                    val beriketInstitusjonsopphold = Inst2KafkaDto(
-                        startdato = institusjonsopphold.startdato,
-                        sluttdato = institusjonsopphold.sluttdato,
-                    )
-                    meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
-
-                    hendelseService.registrerMottattHendelse(
-                        dto = meldingVerdi.tilInnsending(
-                            meldingKey,
-                            saken.saksnummer
+                        val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
+                        val beriketInstitusjonsopphold = Inst2KafkaDto(
+                            startdato = institusjonsopphold.startdato,
+                            sluttdato = institusjonsopphold.sluttdato,
                         )
-                    )
-                    log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
-                }
+                        meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
+
+                        hendelseService.registrerMottattHendelse(
+                            dto = meldingVerdi.tilInnsending(
+                                meldingKey,
+                                saken.saksnummer
+                            )
+                        )
+                        log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
+                    }
             }
         }
 

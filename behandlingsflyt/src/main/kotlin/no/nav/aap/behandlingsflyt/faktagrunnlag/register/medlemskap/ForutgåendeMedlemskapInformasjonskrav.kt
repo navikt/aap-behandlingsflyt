@@ -83,7 +83,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         val medlemskapPerioder = medlemskapPerioderFuture.get()
         val arbeidGrunnlag = arbeidGrunnlagFuture.get()
         val inntektGrunnlag = inntektGrunnlagFuture.get()
-        val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
+        val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag, arbeidGrunnlag)
 
         return MedlemsskapReggisterdata(
             medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag
@@ -123,14 +123,20 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         ).arbeidsInntektMåned
     }
 
-    private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMåned>): List<EnhetGrunnlag> {
-        if (inntektGrunnlag.isEmpty()) return emptyList()
+    private fun innhentEREGGrunnlag(
+        inntektGrunnlag: List<ArbeidsInntektMåned>,
+        aaregGrunnlag: List<ArbeidINorgeGrunnlag>
+    ): List<EnhetGrunnlag> {
+        if (inntektGrunnlag.isEmpty() && aaregGrunnlag.isEmpty()) return emptyList()
 
-        val orgnumre = inntektGrunnlag.flatMap {
+        val orgnumreInntekt = inntektGrunnlag.flatMap {
             it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
                 inntekt.virksomhet.identifikator
             }
         }.toSet()
+        val orgnumreAareg = aaregGrunnlag.map { it.identifikator }.toSet()
+        val orgnumre = orgnumreInntekt + orgnumreAareg
+
         // EREG har ikke batch-oppslag
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->

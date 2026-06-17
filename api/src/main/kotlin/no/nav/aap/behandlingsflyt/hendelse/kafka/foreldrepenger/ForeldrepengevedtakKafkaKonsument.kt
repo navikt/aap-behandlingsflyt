@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ForeldrepengevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -56,12 +58,25 @@ class ForeldrepengevedtakKafkaKonsument(
             val sakRepository: SakRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
+            val trukketSøknadService = TrukketSøknadService(repositoryProvider)
+            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
             val foreldrepengevedtakMelding = DefaultJsonMapper.fromJson<ForeldrepengevedtakKafkaMelding>(meldingVerdi)
             val ident = Ident(foreldrepengevedtakMelding.personidentifikator)
             val person = personRepository.finn(ident) ?: finnPersonMedIdenterFraPdl(ident, personRepository)
             if (person != null) {
-                val saker = sakRepository.finnSakerFor(person)
+                val saker = sakRepository.finnSakerFor(person.id)
                 for (saken in saker) {
+                    val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)
+                    if (sisteYtelsesBehandling == null) {
+                        log.info("Det finnes ingen behandling - oppretter ikke mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
+                        continue
+                    }
+                    val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
+                    if (søknadErTrukket) {
+                        log.info("Søknad er trukket - oppretter ikke mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
+                        continue
+                    }
+
                     log.info("Oppretter mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
                     hendelseService.registrerMottattHendelse(
                         dto = foreldrepengevedtakMelding.tilInnsending(

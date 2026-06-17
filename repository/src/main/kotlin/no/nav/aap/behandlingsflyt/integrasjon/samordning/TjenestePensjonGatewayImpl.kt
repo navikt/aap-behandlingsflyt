@@ -11,7 +11,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper.fromJson
 import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
@@ -22,8 +22,8 @@ import java.net.URI
  */
 class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
     private val url =
-        URI.create(requiredConfigForKey("integrasjon.tjenestepensjon.url") + "/api/tjenestepensjon/getActiveForholdMedActiveYtelser")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tjenestepensjon.scope"))
+        URI.create(requiredConfigForKey("INTEGRASJON_TJENESTEPENSJON_URL") + "/api/tjenestepensjon/getActiveForholdMedActiveYtelser")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_TJENESTEPENSJON_SCOPE"))
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -35,7 +35,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 

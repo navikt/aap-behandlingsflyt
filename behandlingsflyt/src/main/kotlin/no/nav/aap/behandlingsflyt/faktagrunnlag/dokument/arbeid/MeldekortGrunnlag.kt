@@ -20,10 +20,15 @@ data class MeldekortGrunnlag(
     }
 
     /**
-     * Returnerer sortert stigende på innsendingstidspunkt
+     * Returnerer sortert stigende på innsendingstidspunkt, med opprettetTidspunkt som tiebreaker
      */
     fun meldekort(): List<Meldekort> {
-        return meldekortene.sortedWith(compareBy { rekkefølge.first { at -> at.referanse.asJournalpostId == it.journalpostId }.mottattTidspunkt })
+        return meldekortene.sortedWith(
+            compareBy(
+                { rekkefølge.first { at -> at.referanse.asJournalpostId == it.journalpostId }.mottattTidspunkt },
+                { it.opprettetTidspunkt }
+            )
+        )
     }
 
     fun innsendingsdatoPerMelding(): Map<LocalDate, JournalpostId> {

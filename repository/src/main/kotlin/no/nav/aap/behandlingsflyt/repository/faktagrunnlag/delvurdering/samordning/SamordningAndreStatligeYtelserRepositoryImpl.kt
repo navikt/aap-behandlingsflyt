@@ -9,7 +9,8 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
-class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBConnection) : SamordningAndreStatligeYtelserRepository {
+class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBConnection) :
+    SamordningAndreStatligeYtelserRepository {
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<SamordningAndreStatligeYtelserRepositoryImpl> {
@@ -79,12 +80,13 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         }
 
         val samordingAndreStatligeYtelserVurderingQuery = """
-            INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING (begrunnelse, vurdert_av) VALUES (?, ?)
+            INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING (begrunnelse, vurdert_av, opprettet_tid) VALUES (?, ?, ?)
         """.trimIndent()
         val vurderingId = connection.executeReturnKey(samordingAndreStatligeYtelserVurderingQuery) {
             setParams {
                 setString(1, vurdering.begrunnelse)
                 setString(2, vurdering.vurdertAv)
+                setLocalDateTime(3, vurdering.vurdertTidspunkt)
             }
         }
 
@@ -114,12 +116,14 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
 
         val samordningStatligYtelseVurderingIds = getSamordningStatligYtelseVurderingIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from samordning_andre_statlige_ytelser_grunnlag where behandling_id = ?; 
             delete from samordning_andre_statlige_ytelser_vurdering_periode where vurdering_id = ANY(?::bigint[]);
             delete from samordning_andre_statlige_ytelser_vurdering where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, samordningStatligYtelseVurderingIds)

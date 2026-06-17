@@ -26,10 +26,10 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
         val journalpostId = input.payload<JournalpostId>()
         val sak = sakRepository.hent(SakId(input.sakId()))
 
-        val journalpost = mottattDokumentRepository.hent(InnsendingReferanse(journalpostId))
+        val journalpost = mottattDokumentRepository.hent(sak.id, InnsendingReferanse(journalpostId))
         val ubehandletMeldekort = mottaDokumentService.tilUbehandletMeldekort(journalpost)
 
-        if ( ubehandletMeldekort.harDuArbeidet == null || ubehandletMeldekort.timerArbeidPerPeriode.isEmpty()) return
+        if (ubehandletMeldekort.harDuArbeidet == null || ubehandletMeldekort.timerArbeidPerPeriode.isEmpty()) return
 
         val request = BehandslingsflytUtfyllingRequest(
             saksnummer = sak.saksnummer.toString(),
@@ -42,7 +42,9 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
             harDuJobbet = ubehandletMeldekort.harDuArbeidet,
             dager = ubehandletMeldekort.timerArbeidPerPeriode.map {
                 TimerArbeidetDto(it.periode.fom, it.timerArbeid.antallTimer.toDouble())
-            }
+            },
+            erDigitalisert = ubehandletMeldekort.digitalisertAvPostmottak,
+            opprettetAv = ubehandletMeldekort.opprettetAv
         )
         meldekortGateway.sendTimerArbeidetIPeriode(request)
     }

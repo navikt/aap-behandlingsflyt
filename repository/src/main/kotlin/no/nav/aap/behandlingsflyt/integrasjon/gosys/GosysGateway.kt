@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDate
@@ -36,13 +36,13 @@ class GosysGateway : OppgaveGateway {
 
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.gosys.url"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_GOSYS_URL"))
     val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.gosys.scope"),
+        scope = requiredConfigForKey("INTEGRASJON_GOSYS_SCOPE"),
     )
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 

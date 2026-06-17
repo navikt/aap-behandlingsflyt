@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -22,24 +23,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
-import java.time.LocalDate
-import java.util.*
 
 class RettighetsperiodeStegTest {
     private lateinit var vilkårsresultatRepository: VilkårsresultatRepository
@@ -48,7 +41,6 @@ class RettighetsperiodeStegTest {
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var rettighetsperiodeRepository: VurderRettighetsperiodeRepository
     private lateinit var steg: RettighetsperiodeSteg
-    private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
 
@@ -250,11 +242,8 @@ class RettighetsperiodeStegTest {
         årsak: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
         vurderingsbehov: Vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE
     ): Behandling {
-        val person = person()
-        val sak = sak(person)
-
         return behandlingRepository.opprettBehandling(
-            sakId = sak.id,
+            sakId = opprettInMemorySak().id,
             typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -263,14 +252,4 @@ class RettighetsperiodeStegTest {
             )
         )
     }
-
-    private fun sak(person: Person): Sak =
-        sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
-
-    private fun person(): Person =
-        Person(
-            id = PersonId(Random(1235123).nextLong()),
-            identifikator = UUID.randomUUID(),
-            identer = listOf(genererIdent(LocalDate.now().minusYears(23)))
-        )
 }

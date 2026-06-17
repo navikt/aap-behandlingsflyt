@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.net.URI
@@ -20,8 +20,8 @@ import java.time.LocalDate
 
 // https://navikt.github.io/dp-datadeling/openapi.html
 class DagpengerGatewayImpl: DagpengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.dagpenger.url") + "/dagpenger/datadeling/v1/perioder")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.dagpenger.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_DAGPENGER_URL") + "/dagpenger/datadeling/v1/perioder")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_DAGPENGER_SCOPE"))
 
     companion object : Factory<DagpengerGateway> {
         override fun konstruer(): DagpengerGateway {
@@ -30,7 +30,7 @@ class DagpengerGatewayImpl: DagpengerGateway {
     }
 
     private val client = RestClient.withDefaultResponseHandler(
-        config = config, tokenProvider = ClientCredentialsTokenProvider, prometheus = prometheus
+        config = config, tokenProvider = AzureM2MTokenProvider, prometheus = prometheus
     )
 
     private fun query(request: DagpengerRequest): DagpengerResponse {

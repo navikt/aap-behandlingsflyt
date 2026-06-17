@@ -32,7 +32,7 @@ class Avklaringsbehov(
 
     val perioderVedtaketBehøverVurdering: List<Periode>?
         get() = aktivHistorikk
-            .lastOrNull { it.status == Status.OPPRETTET }
+            .lastOrNull { it.status.erÅpent() }
             ?.perioderVedtaketBehøverVurdering
             ?.sorted()
 
@@ -51,7 +51,11 @@ class Avklaringsbehov(
         return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOfOrNull { it }?.status
     }
 
-    fun erKvalitetssikretTidligere(): Boolean {
+    fun erKvalitetssikret(): Boolean {
+        return Status.KVALITETSSIKRET == aktivHistorikk.maxOfOrNull { it }?.status
+    }
+
+    fun harBlittKvalitetssikretTidligere(): Boolean {
         return Status.KVALITETSSIKRET == aktivHistorikk.filter {
             it.status in setOf(
                 Status.KVALITETSSIKRET, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
@@ -212,6 +216,10 @@ class Avklaringsbehov(
 
     fun erForeslåttVedtak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_VEDTAK
+    }
+
+    fun erForeslåttVedtakVedtakslengde(): Boolean {
+        return definisjon == Definisjon.FORESLÅ_VEDTAK_VEDTAKSLENGDE
     }
 
     fun erLovvalgOgMedlemskap(): Boolean {

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 
 class ProsesserBehandlingJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
-    private val kontroller: FlytOrkestrator
+    private val flytOrkestrator: FlytOrkestrator
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -28,9 +28,8 @@ class ProsesserBehandlingJobbUtfører(
         val triggere =
             input.optionalParameter("trigger")?.let { DefaultJsonMapper.fromJson<List<Vurderingsbehov>>(it) }
                 .orEmpty()
-        val kontekst = kontroller.opprettKontekst(sakId, behandlingId)
 
-        kontroller.forberedOgProsesserBehandling(kontekst, triggere)
+        flytOrkestrator.forberedOgProsesserBehandling(behandlingId, triggere)
 
         log.info("Prosesserer behandling for jobb ${input.type()} med behandlingId $behandlingId")
 
@@ -41,7 +40,7 @@ class ProsesserBehandlingJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return ProsesserBehandlingJobbUtfører(
                 låsRepository = repositoryProvider.provide(),
-                kontroller = FlytOrkestrator(repositoryProvider, gatewayProvider)
+                flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
             )
         }
 

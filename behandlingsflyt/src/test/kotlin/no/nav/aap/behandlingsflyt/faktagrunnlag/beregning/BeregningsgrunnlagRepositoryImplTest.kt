@@ -41,7 +41,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre og yrkesskade`() {
-        val sak = dataSource.transaction { sak(it, periode) }
+        val sak = dataSource.transaction { sak(it, periode.fom) }
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
@@ -181,7 +181,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre uten yrkesskade`() {
-        val sak = dataSource.transaction { sak(it, periode) }
+        val sak = dataSource.transaction { sak(it, periode.fom) }
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
 
         val inntektPerÅr = listOf(
@@ -303,7 +303,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget uten uføre og yrkesskade`() {
-        val sak = dataSource.transaction { sak(it, periode) }
+        val sak = dataSource.transaction { sak(it, periode.fom) }
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
@@ -327,7 +327,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `lagre flere grunnlag`() {
-        val sak = dataSource.transaction { sak(it, periode) }
+        val sak = dataSource.transaction { sak(it, periode.fom) }
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
@@ -344,7 +344,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlag11_19Standard)
         }
 
-        val sak2 = dataSource.transaction { sak(it, periode) }
+        val sak2 = dataSource.transaction { sak(it, periode.fom) }
         val behandling2 = dataSource.transaction { finnEllerOpprettBehandling(it, sak2) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(

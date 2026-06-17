@@ -7,12 +7,40 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 data class StansOpphørGrunnlag(
-    val stansOgOpphør: Set<StansEllerOpphørVurdering>
+    /** Denne skal fases ut, til fordel for [stansOpphørV2] og [stansOpphørVurderingerV2]. */
+    val stansOgOpphør: Set<StansEllerOpphørVurdering>,
+
+    /** Dette er alle potensielle stans og opphør, gitt opplysningene
+     * vi har i denne behandlingen. Dette inkluderer stans og opphør lenger
+     * frem enn vedtaksperiodene vår, så et stans og opphør her er ikke nødvendigvis
+     * vedtatt.
+     *
+     * For å se hvilke stans og opphør som er vedtatt, så må du se i [stansOpphørVurderingerV2].
+     *
+     * Nullable frem til migrering er ferdig.
+     */
+    val stansOpphørV2: Map<LocalDate, StansEllerOpphør>?,
+
+    /** Vurderinger av stans og opphør.
+     *
+     * Dette er vurderinger av stans og opphør innenfor vedtaksperioden, altså
+     * stans og opphør som er vedtatt eller vil bli vedtatt i denne behandlingen.
+     *
+     * Det er full historikk på alle vurderingene som er gjort, så det kommer
+     * egne «omgjørings»-vurderinger dersom et stans eller opphør ikke skal
+     * gjelde lenger.
+     *
+     * Nullable frem til migrering er ferdig.
+     */
+    val stansOpphørVurderingerV2: Set<StansOpphørVurdering>?,
 ) {
+    constructor(): this(emptySet(), null, null)
+    constructor(stansOgOpphør: Set<StansEllerOpphørVurdering>): this(stansOgOpphør, null, null)
+
     fun gjeldendeStansOgOpphør(): Set<GjeldendeStansEllerOpphør> {
         return stansOgOpphør
             .groupBy { it.fom }
-            .mapNotNull { (_, vedtak) -> vedtak.maxByOrNull { it.opprettet }!! }
+            .mapNotNull { (_, vedtak) -> vedtak.maxBy { it.opprettet } }
             .mapNotNull {
                 when (it) {
                     is GjeldendeStansEllerOpphør -> it
@@ -35,7 +63,7 @@ data class StansOpphørGrunnlag(
         clock: Clock = Clock.systemDefaultZone(),
     ): StansOpphørGrunnlag {
         val endringer = mergeNotNull(
-            gjeldendeStansOgOpphør().associate { it.fom to  it.vurdering},
+            gjeldendeStansOgOpphør().associate { it.fom to it.vurdering },
             utlededeStansOgOpphør,
         ) { dato, vedtattStans, utledetStans ->
             if (utledetStans != null && vedtattStans != utledetStans) {
@@ -56,7 +84,9 @@ data class StansOpphørGrunnlag(
             }
         }
         return StansOpphørGrunnlag(
-            stansOgOpphør = stansOgOpphør + endringer.map { it.value }
+            stansOgOpphør = this.stansOgOpphør + endringer.map { it.value },
+            stansOpphørV2 = utlededeStansOgOpphør,
+            stansOpphørVurderingerV2 = this.stansOpphørVurderingerV2,
         )
     }
 }

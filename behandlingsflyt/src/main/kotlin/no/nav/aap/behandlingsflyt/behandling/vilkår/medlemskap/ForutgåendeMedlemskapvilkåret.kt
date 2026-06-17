@@ -10,16 +10,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapNorskOgAvslag
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.type.Periode
 
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
-    private val rettighetsPeriode: Periode,
+    private val rettighetsPeriode: Periode
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        val brukManuellVurderingForForutgåendeMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
+        val brukManuellVurderingForForutgåendeMedlemskap =
+            grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
         if (brukManuellVurderingForForutgåendeMedlemskap) {
             val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
@@ -46,12 +49,21 @@ class ForutgåendeMedlemskapvilkåret(
                 .komprimer()
                 .begrensetTil(rettighetsPeriode)
 
+            // No-op: av kun norske, hvor mange får nei på manuell vurdering av forutgående medlemskap (11-2)?
+            val kunNorskStatsborgerskap =
+                grunnlag.personopplysningGrunnlag?.brukerPersonopplysning?.statsborgerskap?.singleOrNull()?.land == "NOR"
+            val ikkeoppfyltePerioder = vilkårsvurderinger.filter { it.verdi.utfall == Utfall.IKKE_OPPFYLT }.isNotEmpty()
+            prometheus.forutgåendeMedlemskapNorskOgAvslag(kunNorskStatsborgerskap && ikkeoppfyltePerioder).increment()
+
             vilkår.leggTilVurderinger(vilkårsvurderinger)
-        } else if (grunnlag.nyeSoknadGrunnlag == null)  {
+        } else if (grunnlag.nyeSoknadGrunnlag == null) {
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
             leggTilVurdering(grunnlag, vurderingsResultat)
         } else {
-            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(grunnlag, rettighetsPeriode).kanBehandlesAutomatisk
+            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(
+                grunnlag,
+                rettighetsPeriode
+            ).kanBehandlesAutomatisk
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             val vurderingsResultat = VurderingsResultat(utfall, null, null)
             leggTilVurdering(grunnlag, vurderingsResultat)

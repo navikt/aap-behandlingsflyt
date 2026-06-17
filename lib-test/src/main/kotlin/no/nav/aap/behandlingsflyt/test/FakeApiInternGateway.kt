@@ -2,14 +2,13 @@ package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphørVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -44,10 +43,11 @@ class FakeApiInternGateway : ApiInternGateway {
         samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>,
         beregningsgrunnlag: BigDecimal?,
-        underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
-        stansOpphørGrunnlag: Set<StansEllerOpphørVurdering>?
+        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
+        arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
+        muligMaksdato: LocalDate?,
     ) {
         // No-op
     }
@@ -60,8 +60,8 @@ class FakeApiInternGateway : ApiInternGateway {
         // No-op
     }
 
-    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
-        return ArenaStatusResponse(false)
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse> {
+        return Result.success(ArenaStatusResponse(false))
     }
 
     override fun oppdaterIdenter(
@@ -70,4 +70,5 @@ class FakeApiInternGateway : ApiInternGateway {
     ) {
         // No-op
     }
+
 }

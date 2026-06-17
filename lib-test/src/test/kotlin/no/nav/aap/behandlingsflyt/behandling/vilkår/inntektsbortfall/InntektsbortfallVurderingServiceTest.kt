@@ -48,17 +48,17 @@ class InntektsbortfallVurderingServiceTest {
                 InntektPerÅr(
                     Year.of(2023), Grunnbeløp.finnGrunnbeløp(1 januar 2025).multiplisert(
                         GUnit(0.5.toBigDecimal())
-                    ), null
+                    )
                 ),
                 InntektPerÅr(
                     Year.of(2024), Grunnbeløp.finnGrunnbeløp(1 januar 2025).multiplisert(
                         GUnit(0.6.toBigDecimal())
-                    ), null
+                    )
                 ),
                 InntektPerÅr(
                     Year.of(2025), Grunnbeløp.finnGrunnbeløp(1 januar 2025).multiplisert(
                         GUnit(inntektIG.toBigDecimal())
-                    ), null
+                    )
                 )
             )
         )
@@ -86,7 +86,7 @@ class InntektsbortfallVurderingServiceTest {
                 InntektPerÅr(
                     Year.of(årForInntekt), Grunnbeløp.finnGrunnbeløp(1 januar årForInntekt).multiplisert(
                         GUnit(inntekt.toBigDecimal())
-                    ), null
+                    )
                 )
             }.toSet()
         )

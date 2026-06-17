@@ -14,7 +14,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import java.net.URI
 import java.time.LocalDate
 import java.time.YearMonth
@@ -23,13 +23,13 @@ import java.time.YearMonth
  * Se [Swagger](https://ikomp-q2.intern.dev.nav.no/swagger-ui/index.html?urls.primaryName=V1#/Legacy) for responstyper.
  */
 class InntektkomponentenGatewayImpl : InntektkomponentenGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.inntektskomponenten.url") + "/hentinntektliste")
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_INNTEKTSKOMPONENTEN_URL") + "/hentinntektliste")
     private val config =
-        ClientConfig(scope = requiredConfigForKey("integrasjon.inntektskomponenten.scope"))
+        ClientConfig(scope = requiredConfigForKey("INTEGRASJON_INNTEKTSKOMPONENTEN_SCOPE"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 

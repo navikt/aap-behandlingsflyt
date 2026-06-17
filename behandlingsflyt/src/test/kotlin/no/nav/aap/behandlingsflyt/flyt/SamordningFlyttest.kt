@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
@@ -47,20 +45,18 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 
 class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
-        val fom = LocalDate.now()
-        val periode = Periode(fom, fom.plusYears(3))
-        val sykePengerPeriode = Periode(fom.minusMonths(1), fom.plusMonths(1))
+        val søknadsdato = LocalDate.now()
+        val sykePengerPeriode = Periode(søknadsdato.minusMonths(1), søknadsdato.plusMonths(1))
 
         // Sender inn en søknad
         var (sak, behandling) = sendInnFørsteSøknad(
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
@@ -69,7 +65,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             ),
         )
 
-        sak.sendInnMeldekort(periode.dager().associateWith { 0.0 })
+        sak.sendInnMeldekort(Periode(søknadsdato, søknadsdato.plusYears(3)).dager().associateWith { 0.0 })
 
         behandling
             .medKontekst {
@@ -77,25 +73,15 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
             .løsRefusjonskrav()
-            .løsAvklaringsBehov(
-                FritakMeldepliktLøsning(
-                    fritaksvurderinger = listOf(
-                        FritaksvurderingDto(
-                            harFritak = true,
-                            fraDato = periode.fom,
-                            begrunnelse = "...",
-                        )
-                    ),
-                ),
-            )
+            .løsFritakMeldeplikt(søknadsdato)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
             .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
+            .løsOppholdskrav(søknadsdato)
             .løsAndreStatligeYtelser()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
@@ -194,7 +180,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning.fom).isEqualTo(periode.fom)
+        assertThat(periodeMedFullSamordning.fom).isEqualTo(søknadsdato)
         assertThat(periodeMedFullSamordning.tom).isEqualTo(sykePengerPeriode.tom)
 
         val behandlingReferanse = behandling.referanse
@@ -235,7 +221,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
 
         assertTidslinje(
             tilkjentYtelse.tilTidslinje(),
-            sykePengerPeriode.overlapp(periode)!! to {
+            sykePengerPeriode.overlapp(Periode(søknadsdato, søknadsdato.plusYears(3)))!! to {
                 assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
                 assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
             },
@@ -251,8 +237,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
 
     @Test
     fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
-        val fom = LocalDate.now().minusYears(1)
-        val periode = Periode(fom, fom.plusYears(3))
+        val søknadsdato = LocalDate.now().minusYears(1)
 
         val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
 
@@ -263,13 +248,13 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 )
             )
         )
-        val behandling = opprettSamordning(person, periode, sykePengerPeriode)
+        val behandling = opprettSamordning(person, søknadsdato, sykePengerPeriode)
         val sak = hentSak(behandling)
-        var revurdering =
-            sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+
+        sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
         // Opprett manuell revurdering før ta av vent
-        revurdering = sak.opprettManuellRevurdering(listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+        var revurdering = sak.opprettManuellRevurdering(listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
         assertThat(revurdering.vurderingsbehov().map { it.type }).describedAs("Ny årsak skal være lagt til")
             .contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
@@ -293,7 +278,6 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
     @Test
     fun `ny informasjon i tidligere steg skal tilbakeføre behandling som er på samordning`() {
         val fom = LocalDate.now().minusYears(1)
-        val periode = Periode(fom, fom.plusYears(3))
 
         val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
 
@@ -304,7 +288,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 )
             )
         )
-        val behandling = opprettSamordning(person, periode, sykePengerPeriode)
+        val behandling = opprettSamordning(person, fom, sykePengerPeriode)
         val sak = hentSak(behandling)
         val revurdering =
             sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
@@ -332,12 +316,11 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
             }
     }
-    
-    
+
 
     private fun opprettSamordning(
         person: TestPerson,
-        periode: Periode,
+        søknadsdato: LocalDate,
         sykePengerPeriode: Periode
     ): Behandling {
         // Sender inn en søknad
@@ -349,16 +332,15 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             ),
             person = person,
-            mottattTidspunkt = LocalDateTime.now(),
-            periode = periode,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
         ).second
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
+            .løsSykdom(søknadsdato)
+            .løsBistand(søknadsdato)
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(
@@ -368,17 +350,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                     )
                 )
             )
-            .løsAvklaringsBehov(
-                avklaringsBehovLøsning = FritakMeldepliktLøsning(
-                    fritaksvurderinger = listOf(
-                        FritaksvurderingDto(
-                            harFritak = true,
-                            fraDato = periode.fom,
-                            begrunnelse = "...",
-                        )
-                    ),
-                ),
-            )
+            .løsFritakMeldeplikt(søknadsdato)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
@@ -392,7 +364,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                     ),
                 ),
             )
-            .løsOppholdskrav(periode.fom)
+            .løsOppholdskrav(søknadsdato)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
             }
@@ -463,7 +435,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
         val sykePengerPeriode = Periode(fom, fom.plusMonths(1))
 
         // Sender inn en søknad
-        val (sak, behandling) = sendInnFørsteSøknad(periode = periode)
+        val (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
 
 
         behandling

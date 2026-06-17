@@ -39,21 +39,13 @@ spec:
         flags:
           - name: cloudsql.enable_pgaudit
             value: "true"
-          - name: pgaudit.log
-            value: "write,ddl,role"
-          - name: "pgaudit.log_parameter"
-            value: "on"
   terminationGracePeriodSeconds: 30
   liveness:
     path: /actuator/live
-    initialDelay: 3
-    periodSeconds: 3
-    failureThreshold: 21
+    initialDelay: 5
   readiness:
     path: /actuator/ready
-    initialDelay: 3
-    periodSeconds: 3
-    failureThreshold: 21
+    initialDelay: 5
   prometheus:
     enabled: true
     path: /actuator/metrics
@@ -100,6 +92,13 @@ spec:
         - application: azure-token-generator # Ikke i prod :)
           namespace: nais
           cluster: dev-gcp
+        - application: testnav-dolly-proxy
+          cluster: dev-fss
+          namespace: dolly
+        - application: testnav-dolly-proxy-trygdeetaten
+          cluster: dev-fss
+          namespace: dolly
+
     outbound:
       external:
         - host: pdl-api.dev-fss-pub.nais.io
@@ -110,6 +109,7 @@ spec:
         - host: pensjon-pen-q2.dev-fss-pub.nais.io
         - host: tp-api.dev-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
+        - host: dokarkiv.dev-fss-pub.nais.io
       rules:
         - application: brev
         - application: tilgang
@@ -140,6 +140,7 @@ spec:
           namespace: teamdagpenger
         - application: tiltakspenger-datadeling
           namespace: tpts
+        - application: saksbehandling-pdfgen
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -266,3 +267,11 @@ spec:
       value: http://tiltakspenger-datadeling.tpts
     - name: INTEGRASJON_TILTAKSPENGER_SCOPE
       value: api://dev-gcp.tpts.tiltakspenger-datadeling/.default
+    - name: INTEGRASJON_DOKARKIV_URL
+      value: https://dokarkiv-q2.dev-fss-pub.nais.io
+    - name: INTEGRASJON_DOKARKIV_SCOPE
+      value: api://dev-fss.teamdokumenthandtering.dokarkiv/.default
+    - name: INTEGRASJON_PDFGEN_URL
+      value: http://saksbehandling-pdfgen
+    - name: INTEGRASJON_PDFGEN_SCOPE
+      value: api://dev-gcp.aap.saksbehandling-pdfgen/.default

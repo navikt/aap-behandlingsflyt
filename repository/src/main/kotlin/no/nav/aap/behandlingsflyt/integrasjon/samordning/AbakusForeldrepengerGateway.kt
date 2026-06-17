@@ -12,15 +12,15 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import java.net.URI
 
 /**
  * Henter alle ytelser i fpabakus
  */
 class AbakusForeldrepengerGateway : ForeldrepengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.foreldrepenger.url") + "/hent-ytelse-vedtak")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.foreldrepenger.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_FORELDREPENGER_URL") + "/hent-ytelse-vedtak")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_FORELDREPENGER_SCOPE"))
 
     companion object : Factory<ForeldrepengerGateway> {
         override fun konstruer(): ForeldrepengerGateway {
@@ -30,7 +30,7 @@ class AbakusForeldrepengerGateway : ForeldrepengerGateway {
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 

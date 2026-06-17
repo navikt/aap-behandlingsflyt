@@ -6,9 +6,13 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -21,8 +25,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -35,13 +42,17 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.DiagnoserMedPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.SamordningDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StansEllerOpphør
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
@@ -50,9 +61,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -63,12 +76,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
@@ -76,6 +89,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPåklagetBehandlingR
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -85,6 +99,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -98,10 +113,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.*
 
 @Fakes
 class StatistikkJobbUtførerTest {
+    private val gatewayProvider = minimalGatewayProvider { }
+
     companion object {
         private lateinit var dataSource: TestDataSource
 
@@ -213,7 +229,9 @@ class StatistikkJobbUtførerTest {
 
         dataSource.transaction { connection ->
             StatistikkJobbUtfører(
-                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection)),
+                statistikkMetoder = StatistikkMetoder(
+                    postgresRepositoryRegistry.provider(connection),
+                    minimalGatewayProvider { }),
                 statistikkGateway = StatistikkGatewayImpl(),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -281,6 +299,7 @@ class StatistikkJobbUtførerTest {
                         )
                     ),
                     mottattTidspunkt = LocalDateTime.now(),
+                    opprettetTidspunkt = LocalDateTime.now()
                 )
             )
         )
@@ -291,12 +310,14 @@ class StatistikkJobbUtførerTest {
         val periode = Periode(
             fom = LocalDate.now().minusDays(1), tom = LocalDate.now().plusDays(1)
         )
+        val nedsattArbeidsevneDato = LocalDate.now().minusDays(5)
         val vedtakstidspunkt = LocalDateTime.now()
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
+            val beregningVurderingRepository = BeregningVurderingRepositoryImpl(connection)
 
             val ident = Ident(
                 identifikator = "123", aktivIdent = true
@@ -329,7 +350,7 @@ class StatistikkJobbUtførerTest {
                     ),
                 ),
             )
-            VedtakService(postgresRepositoryRegistry.provider(connection)).lagreVedtak(
+            VedtakService(postgresRepositoryRegistry.provider(connection), gatewayProvider).lagreVedtak(
                 opprettetBehandling.id, vedtakstidspunkt, LocalDate.now()
             )
             beregningsgrunnlagRepository.lagre(
@@ -338,6 +359,16 @@ class StatistikkJobbUtførerTest {
                     erGjennomsnitt = false,
                     gjennomsnittligInntektIG = GUnit(0),
                     inntekter = emptyList()
+                )
+            )
+            beregningVurderingRepository.lagre(
+                behandlingId = opprettetBehandling.id,
+                vurdering = BeregningstidspunktVurdering(
+                    begrunnelse = "begrunnelse",
+                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
+                    ytterligereNedsattBegrunnelse = null,
+                    ytterligereNedsattArbeidsevneDato = null,
+                    vurdertAv = "Z0000",
                 )
             )
 
@@ -376,18 +407,29 @@ class StatistikkJobbUtførerTest {
                 )
             )
 
+            StansOpphørRepositoryImpl(connection).lagre(
+                opprettetBehandling.id, StansOpphørGrunnlag(
+                    setOf(
+                        GjeldendeStansEllerOpphør(
+                            fom = (1 januar 2020).plusMonths(3),
+                            opprettet = Instant.now(),
+                            vurdertIBehandling = opprettetBehandling.id,
+                            vurdering = Stans(setOf(Avslagsårsak.BRUKER_OVER_67))
+                        )
+                    )
+                )
+            )
+
             SykdomRepositoryImpl(connection).lagre(
                 behandlingId = opprettetBehandling.id, listOf(
                     Sykdomsvurdering(
                         begrunnelse = "123",
-                        dokumenterBruktIVurdering = emptyList(),
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
                         yrkesskadeBegrunnelse = "begr",
-                        erArbeidsevnenNedsatt = true,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
                         diagnose = Diagnose(
                             kodeverk = "KODEVERK",
                             hoveddiagnose = "PEST",
@@ -460,7 +502,9 @@ class StatistikkJobbUtførerTest {
         dataSource.transaction { connection ->
             StatistikkJobbUtfører(
                 statistikkGateway = StatistikkGatewayImpl(),
-                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection)),
+                statistikkMetoder = StatistikkMetoder(
+                    postgresRepositoryRegistry.provider(connection),
+                    minimalGatewayProvider { }),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -474,14 +518,6 @@ class StatistikkJobbUtførerTest {
         }, LocalDateTime::class.java).isEqualTo(
             AvsluttetBehandlingDTO(
                 tilkjentYtelse = TilkjentYtelseDTO(perioder = emptyList()),
-                beregningsGrunnlag = BeregningsgrunnlagDTO(
-                    grunnlag11_19dto = Grunnlag11_19DTO(
-                        inntekter = emptyMap(),
-                        grunnlaget = 7.0,
-                        er6GBegrenset = false,
-                        erGjennomsnitt = false,
-                    )
-                ),
                 vilkårsResultat = VilkårsResultatDTO(
                     typeBehandling = TypeBehandling.Førstegangsbehandling, vilkår = listOf(
                         VilkårDTO(
@@ -500,6 +536,16 @@ class StatistikkJobbUtførerTest {
                         )
                     )
                 ),
+                beregningsGrunnlag = BeregningsgrunnlagDTO(
+                    grunnlag11_19dto = Grunnlag11_19DTO(
+                        inntekter = emptyMap(),
+                        grunnlaget = 7.0,
+                        er6GBegrenset = false,
+                        erGjennomsnitt = false,
+                    ),
+                    nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
+                    ytterligereNedsattArbeidsevneDato = null,
+                ),
                 diagnoser = Diagnoser(kodeverk = "KODEVERK", diagnosekode = "PEST", bidiagnoser = listOf("KOLERA")),
                 rettighetstypePerioder = listOf(
                     RettighetstypePeriode(
@@ -511,8 +557,30 @@ class StatistikkJobbUtførerTest {
                 resultat = ResultatKode.INNVILGET,
                 vedtakstidspunkt = vedtakstidspunkt,
                 fritaksvurderinger = emptyList(),
-                perioderMedArbeidsopptrapping = emptyList()
-            )
+                perioderMedArbeidsopptrapping = emptyList(),
+                institusjonsopphold = emptyList(),
+                vedtattStansOpphør = listOf(
+                    StansEllerOpphør(
+                        type = Avslagstype.STANS,
+                        fom = 1 april 2020,
+                        årsaker = setOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak.BRUKER_OVER_67)
+                    )
+                ),
+                samordning = SamordningDTO(
+                    uføre = emptyList(),
+                    statligeYtelser = emptyList(),
+                    avregningAndreYtelser = emptyList(),
+                    arbeidsgiver = emptyList()
+                ),
+                diagnoserPeriodisert = listOf(
+                    DiagnoserMedPeriode(
+                        periodeDTO = PeriodeDTO(1 januar 2020, Tid.MAKS),
+                        kodeverk = "KODEVERK",
+                        diagnosekode = "PEST",
+                        bidiagnoser = listOf("KOLERA")
+                    )
+                )
+            ),
         )
     }
 
@@ -520,29 +588,8 @@ class StatistikkJobbUtførerTest {
     fun `prosesserings-kall avgir statistikk korrekt`(hendelser: List<StoppetBehandling>) {
         val behandlingRepository = InMemoryBehandlingRepository
 
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            Person(
-                identifikator = UUID.randomUUID(), identer = listOf(
-                    Ident(
-                        identifikator = "1234", aktivIdent = true
-                    )
-                )
-            ), LocalDate.now()
-        )
-        InMemorySakRepository.oppdaterSakStatus(sak.id, UTREDES)
+        val (sak, behandling) = opprettInMemorySakOgBehandling(ident = Ident("1234"))
         val sakId = sak.id
-        val behandling = behandlingRepository.opprettBehandling(
-            sakId = sakId,
-            typeBehandling = TypeBehandling.Klage,
-            forrigeBehandlingId = null,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(
-                    VurderingsbehovMedPeriode(
-                        type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
-                    )
-                ), årsak = ÅrsakTilOpprettelse.SØKNAD
-            )
-        )
         val referanse = behandling.referanse
 
         val sakService = SakService(InMemorySakRepository, InMemoryBehandlingRepository)
@@ -585,7 +632,9 @@ class StatistikkJobbUtførerTest {
                 påklagetBehandlingRepository = InMemoryPåklagetBehandlingRepository,
                 meldekortRepository = InMemoryMeldekortRepository,
                 klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
-                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(inMemoryRepositoryProvider),
+                avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(
+                    inMemoryRepositoryProvider,
+                    minimalGatewayProvider { }),
             )
         )
 
@@ -648,7 +697,7 @@ class StatistikkJobbUtførerTest {
                 versjon = ApplikasjonsVersjon.versjon,
                 soknadsFormat = Kanal.PAPIR,
                 mottattTid = tidligsteMottattTid,
-                sakStatus = UTREDES,
+                sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("1234"),
                 årsakTilOpprettelse = no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SØKNAD,

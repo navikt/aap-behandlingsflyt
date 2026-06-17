@@ -5,3 +5,5 @@ import java.io.InputStream
 
 @BinaryResponse(contentTypes = ["application/pdf"])
 data class DokumentResponsDTO(val stream: InputStream)
+data class BrevResponsDTO(val html: String)
+data class BrevmalPreviewResponsDTO(val json: String)

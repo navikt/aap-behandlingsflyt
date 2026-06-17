@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -20,8 +18,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.InternfeilException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -35,14 +35,12 @@ fun NormalOpenAPIRoute.institusjonApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
-
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/soning") {
             getGrunnlag<BehandlingReferanse, SoningsGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_SONINGSFORRHOLD.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_SONINGSFORRHOLD.løsesAv
             ) { req ->
                 val soningsgrunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -50,6 +48,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
                     val institusjonsoppholdRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     val utlederService =
@@ -87,21 +86,19 @@ fun NormalOpenAPIRoute.institusjonApi(
                                 )
                             }
 
-                    val ansattNavnOgEnhet =
-                        grunnlag?.soningsVurderinger?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
-
-
                     SoningsGrunnlagDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         soningsforholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
                         manglendePerioder,
-                        vurdertAv =
+                        vurderingerMeta =
                             grunnlag?.soningsVurderinger?.let {
-                                VurdertAvResponse(
-                                    ident = it.vurdertAv,
-                                    dato = it.vurdertTidspunkt.toLocalDate(),
-                                    ansattnavn = ansattNavnOgEnhet?.navn,
-                                    enhetsnavn = ansattNavnOgEnhet?.enhet
+                                vurdertAvService.byggVurderingerMeta(
+                                    definisjon = Definisjon.AVKLAR_SONINGSFORRHOLD,
+                                    behandlingId = behandling.id,
+                                    vurdertAv = vurdertAvService.medNavnOgEnhet(
+                                        ident = it.vurdertAv,
+                                        tidspunkt = it.vurdertTidspunkt,
+                                    ),
                                 )
                             }
                     )
@@ -115,7 +112,7 @@ fun NormalOpenAPIRoute.institusjonApi(
             getGrunnlag<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_HELSEINSTITUSJON.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_HELSEINSTITUSJON.løsesAv
             ) { req ->
                 val grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -136,6 +133,7 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
                     val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
+                        .getOrThrow { InternfeilException(it.errorMessage) }
 
                     // Hent alle vurderinger gruppert per opphold fra repository
                     val vurderingerGruppertPerOpphold =
@@ -156,7 +154,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                         mapVurderingerToDto(
                             vedtatteVurderingerForOpphold,
                             oppholdInfo,
-                            ansattInfoService,
                             vurdertAvService
                         )
 
@@ -198,7 +195,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                         mapVurderingerToDto(
                             nyeVurderingerForOpphold,
                             oppholdInfo,
-                            ansattInfoService,
                             vurdertAvService
                         ) + uavklarteDto
                     }
@@ -242,7 +238,6 @@ fun NormalOpenAPIRoute.institusjonApi(
 private fun mapVurderingerToDto(
     vurderingerPerOpphold: Map<Periode, List<HelseinstitusjonVurdering>>,
     oppholdInfo: Tidslinje<Institusjon>,
-    ansattInfoService: AnsattInfoService,
     vurdertAvService: VurdertAvService,
 ): List<HelseoppholdDto> =
     vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
@@ -261,12 +256,6 @@ private fun mapVurderingerToDto(
                     oppholdSegment.periode.fom
                 ),
                 vurderinger = vurderingerForPeriode.map { vurdering ->
-
-                    val navnOgEnhet =
-                        ansattInfoService.hentAnsattNavnOgEnhet(
-                            vurdering.vurdertAv ?: "ukjent"
-                        )
-
                     HelseinstitusjonVurderingDto(
                         oppholdId = lagOppholdId(
                             oppholdSegment.verdi.navn,
@@ -277,16 +266,13 @@ private fun mapVurderingerToDto(
                         forsoergerEktefelle = vurdering.forsoergerEktefelle,
                         harFasteUtgifter = vurdering.harFasteUtgifter,
                         periode = vurdering.periode,
-                        vurdertAv = VurdertAvResponse(
-                            ident = vurdering.vurdertAv ?: "ukjent",
-                            dato = vurdering.vurdertTidspunkt?.toLocalDate()
-                                ?: LocalDate.now(),
-                            ansattnavn = navnOgEnhet?.navn,
-                            enhetsnavn = navnOgEnhet?.enhet
-                        ),
-                        besluttetAv = vurdertAvService.besluttetAv(
+                        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-                            behandlingId = vurdering.vurdertIBehandling
+                            behandlingId = vurdering.vurdertIBehandling,
+                            vurdertAv = vurdertAvService.medNavnOgEnhet(
+                                ident = vurdering.vurdertAv ?: "ukjent",
+                                dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
+                            ),
                         )
                     )
                 },
@@ -331,7 +317,7 @@ fun hentOppholdSomSkalVurderes(
 fun byggTidslinjeForInstitusjonsopphold(
     grunnlag: InstitusjonsoppholdGrunnlag?,
     type: Institusjonstype
-): Tidslinje<Institusjon> {
+): Validation<Tidslinje<Institusjon>> {
     val segments = grunnlag
         ?.oppholdene
         ?.opphold
@@ -339,13 +325,21 @@ fun byggTidslinjeForInstitusjonsopphold(
         ?.sortedBy { it.periode.fom }
         .orEmpty()
 
-    if (segments.size < 2) return Tidslinje(segments)
+    if (segments.size < 2) return Validation.Valid(Tidslinje(segments))
+
+    segments.zipWithNext { current, next ->
+        if (current.periode.tom > next.periode.fom) {
+            return Validation.Invalid(
+                Tidslinje(),
+                "Overlappende institusjonsopphold funnet: " +
+                        "(${current.periode}) overlapper med " +
+                        "(${next.periode}). " +
+                        "Oppholdene må korrigeres i kildesystemet (INST2)."
+            )
+        }
+    }
 
     val håndterOverlapp = segments.zipWithNext { current, next ->
-        require(current.periode.tom <= next.periode.fom) {
-            "For stort overlapp mellom periodene ${current.periode} og ${next.periode}"
-        }
-
         if (current.periode.tom == next.periode.fom) {
             current.copy(periode = Periode(current.periode.fom, current.periode.tom.minusDays(1)))
         } else {
@@ -353,7 +347,7 @@ fun byggTidslinjeForInstitusjonsopphold(
         }
     } + segments.last()
 
-    return Tidslinje(håndterOverlapp)
+    return Validation.Valid(Tidslinje(håndterOverlapp))
 }
 
 private fun byggTidslinjeAvType(

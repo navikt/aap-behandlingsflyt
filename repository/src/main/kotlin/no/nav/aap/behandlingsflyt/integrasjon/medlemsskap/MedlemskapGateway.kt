@@ -12,18 +12,18 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import java.net.URI
 
 class MedlemskapGateway : MedlemskapGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.medl.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.medl.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_MEDL_URL"))
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_MEDL_SCOPE"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 

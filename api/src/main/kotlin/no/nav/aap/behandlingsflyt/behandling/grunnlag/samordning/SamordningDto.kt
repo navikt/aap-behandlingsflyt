@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
@@ -26,7 +26,7 @@ data class SamordningYtelseVurderingGrunnlagDTO(
 data class SamordningYtelseVurderingDTO(
     val begrunnelse: String?,
     val vurderinger: List<SamordningVurderingDTO>,
-    val vurdertAv: VurdertAvResponse?
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 data class SamordningYtelseDTO(
@@ -54,7 +54,7 @@ data class SamordningUføreVurderingGrunnlagDTO(
 )
 
 /**
- * @param kilde Alltid lik PESYS.
+ * @property kilde Alltid lik PESYS.
  */
 data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
@@ -67,7 +67,7 @@ data class SamordningUføreGrunnlagDTO(
 data class SamordningUføreVurderingDTO(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningUføreVurderingPeriodeDTO>,
-    val vurdertAv: VurdertAvResponse
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 data class SamordningUføreVurderingPeriodeDTO(
@@ -85,7 +85,7 @@ data class SamordningAndreStatligeYtelserGrunnlagDTO(
 data class SamordningAndreStatligeYtelserVurderingDTO(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriodeDTO>,
-    val vurdertAv: VurdertAvResponse?
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
@@ -103,7 +103,7 @@ data class SamordningArbeidsgiverGrunnlagDTO(
 data class SamordningArbeidsgiverVurderingDTO(
     val begrunnelse: String,
     val perioder: List<Periode>,
-    val vurdertAv: VurdertAvResponse?
+    val vurderingerMeta: VurderingerMetaResponse,
 )
 
 data class TjenestepensjonGrunnlagDTO(
@@ -119,11 +119,7 @@ data class TjenestepensjonYtelseDTO(
     val ordning: TjenestePensjonOrdning
 )
 
-data class AndreStatligeYtelserGrunnlagDto (
-    val perioder: List<AndreStatligeYtelserPeriodeDto> = emptyList()
-)
-
-data class AndreStatligeYtelserPeriodeDto (
+data class AndreStatligeYtelserPeriodeDto(
     val fom: LocalDate,
     val tom: LocalDate?,
     val kilde: AndreStatligeYtelserKilde,
@@ -145,16 +141,3 @@ enum class AndreStatligeYtelserType {
     TILTAKSPENGER_INAKTIV
 }
 
-enum class DagpengerYtelseType{
-    DAGPENGER_ARBEIDSSOKER_ORDINAER, DAGPENGER_PERMITTERING_ORDINAER, DAGPENGER_PERMITTERING_FISKEINDUSTRI
-}
-enum class DagpengerKilde{
-    ARENA, DP_SAK
-}
-
-enum class TiltakspengerYtelseType{
-    TILTAKSPENGER, TILTAKSPENGER_OG_BARNETILLEGG, TILTAKSPENGER_INAKTIV
-}
-enum class TiltakspengerKilde{
-    TPSAK, ARENA
-}

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 
 
 data class SykdomsvurderingForBrevDto(
@@ -11,6 +11,5 @@ data class SykdomsvurderingForBrevDto(
 
 data class SykdomsvurderingForBrevVurderingDto(
     val vurdering: String?,
-    val vurdertAv: VurdertAvResponse,
-    val kvalitetssikretAv: VurdertAvResponse? = null
+    val vurderingerMeta: VurderingerMetaResponse,
 )

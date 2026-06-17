@@ -11,6 +11,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.gateway.Factory
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
+import kotlin.text.filter
+import kotlin.text.mapNotNull
+import kotlin.text.orEmpty
 
 class PdlBarnGateway : BarnGateway {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -57,10 +60,11 @@ class PdlBarnGateway : BarnGateway {
         val relasjoner = response.data?.hentPerson?.forelderBarnRelasjon.orEmpty()
             .filter { it.relatertPersonsRolle == ForelderBarnRelasjonRolle.BARN }
 
-        return relasjoner.map { relasjon ->
+        return relasjoner.mapNotNull { relasjon ->
             if (relasjon.relatertPersonsIdent == null) {
                 val harNavnOgFodselsdato =
-                    relasjon.relatertPersonUtenFolkeregisteridentifikator?.foedselsdato != null && relasjon.relatertPersonUtenFolkeregisteridentifikator.navn != null
+                    relasjon.relatertPersonUtenFolkeregisteridentifikator?.foedselsdato != null &&
+                            relasjon.relatertPersonUtenFolkeregisteridentifikator.navn != null
                 log.info("Barn har ingen ident. Har navn og fodselsdato: $harNavnOgFodselsdato")
                 if (harNavnOgFodselsdato) {
                     BarnIdentifikator.NavnOgFødselsdato(
@@ -68,7 +72,8 @@ class PdlBarnGateway : BarnGateway {
                         Fødselsdato(relasjon.relatertPersonUtenFolkeregisteridentifikator.foedselsdato)
                     )
                 } else {
-                    error("Barn mangler både ident og kombinasjonen navn+fødselsdato.")
+                    log.warn("Barn mangler både ident og kombinasjonen navn+fødselsdato. Hopper over barnet.")
+                    null
                 }
             } else {
                 BarnIdentifikator.BarnIdent(
@@ -77,6 +82,7 @@ class PdlBarnGateway : BarnGateway {
             }
         }
     }
+
 
     private fun hentBarn(identer: List<Ident>): List<Barn> {
         if (identer.isEmpty()) {
@@ -112,15 +118,6 @@ val BARN_RELASJON_QUERY = $$"""
             forelderBarnRelasjon {
                 relatertPersonsRolle
                 relatertPersonsIdent
-                relatertPersonUtenFolkeregisteridentifikator {
-                  foedselsdato
-                  navn {    
-                    fornavn
-                    mellomnavn
-                    etternavn
-                  }
-                 statsborgerskap
-               }
             }
         }
     }

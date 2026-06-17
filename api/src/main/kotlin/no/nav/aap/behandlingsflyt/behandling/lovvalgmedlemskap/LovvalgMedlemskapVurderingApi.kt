@@ -25,7 +25,10 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.lovvalgMedlemskapApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry
+) {
     route("/api/lovvalgmedlemskap/") {
         route("/vurdering/{referanse}") {
             authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(

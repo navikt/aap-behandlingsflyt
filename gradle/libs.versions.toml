@@ -1,12 +1,13 @@
 [versions]
 ktor = "3.4.0"
-komponenter = "2.0.25"
-tilgang = "1.0.184"
-utbetaling = "0.0.91"
-brev = "0.0.246"
-oppgave = "0.0.167"
-meldekort = "0.0.195"
-apiIntern = "0.0.34"
+komponenter = "2.0.72"
+tilgang = "1.0.225"
+utbetaling = "0.0.112"
+brev = "0.0.271"
+oppgave = "0.0.180"
+meldekort = "0.0.215"
+apiIntern = "0.0.87"
+dokumentinnhenting = "0.0.2"
 junit = "6.0.1"
 testcontainers = "2.0.2"
 
@@ -40,6 +41,7 @@ brevKontrakt = { module = "no.nav.aap.brev:kontrakt", version.ref = "brev" }
 oppgaveKontrakt = { module = "no.nav.aap.oppgave:api-kontrakt", version.ref = "oppgave" }
 meldekortKontrakt = { module = "no.nav.aap.meldekort:kontrakt", version.ref = "meldekort" }
 apiInternKontrakt = { module = "no.nav.aap.api.intern:kontrakt", version.ref = "apiIntern"}
+dokumentinnhentingKontrakt = { module = "no.nav.aap.dokumentinnhenting:kontrakt", version.ref = "dokumentinnhenting" }
 
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
 jacksonAnnotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.20" }
@@ -48,7 +50,6 @@ jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datat
 
 hikariCp = { module = "com.zaxxer:HikariCP", version = "7.0.2" }
 postgresql = { module = "org.postgresql:postgresql" }
-flywayDatabasePostgresql = { module = "org.flywaydb:flyway-database-postgresql", version = "11.17.2" }
 
 opentelemetryInstrumentationAnnotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.22.0" }
 opentelemetryLogbackMdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version = "2.22.0-alpha" }
@@ -76,10 +77,11 @@ tabletest = { module = "io.github.nchaugen:tabletest-junit", version = "0.5.5" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainersPostgres = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
 testcontainersKafka = { module = "org.testcontainers:testcontainers-kafka", version.ref = "testcontainers" }
-mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
+mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "4.0.0" }
 mockk = { module = "io.mockk:mockk", version = "1.14.6" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
+coroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.2" }
 
 [bundles]
 junit = ["junitApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]

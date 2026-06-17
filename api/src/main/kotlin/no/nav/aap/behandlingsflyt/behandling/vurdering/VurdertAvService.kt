@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -33,15 +34,31 @@ class VurdertAvService(
         val kvalitetsikring = avklaringsbehoveneFor(behandlingId)
             .hentNyesteKvalitetssikringGittDefinisjon(definisjon)
             ?: return null
-        return medNavnOgEnhet(kvalitetsikring.endretAv, kvalitetsikring.tidsstempel)
+
+        return medNavnOgEnhet(kvalitetsikring.endretAv, kvalitetsikring.tidsstempel).copy(
+            erRetur = kvalitetsikring.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+        )
     }
 
     fun besluttetAv(definisjon: Definisjon, behandlingId: BehandlingId): VurdertAvResponse? {
         val beslutning = avklaringsbehoveneFor(behandlingId)
-            .beslutningFor(definisjon)
+            .hentNyesteBeslutningGittDefinisjon(definisjon)
             ?: return null
-        return medNavnOgEnhet(beslutning.endretAv, beslutning.tidsstempel)
+
+        return medNavnOgEnhet(beslutning.endretAv, beslutning.tidsstempel).copy(
+            erRetur = beslutning.status == Status.SENDT_TILBAKE_FRA_BESLUTTER
+        )
     }
+
+    fun byggVurderingerMeta(
+        definisjon: Definisjon,
+        behandlingId: BehandlingId,
+        vurdertAv: VurdertAvResponse?,
+    ) = VurderingerMetaResponse(
+        vurdertAv = vurdertAv,
+        kvalitetssikretAv = kvalitetssikretAv(definisjon, behandlingId),
+        besluttetAv = besluttetAv(definisjon, behandlingId),
+    )
 
     fun medNavnOgEnhet(ident: String, dato: LocalDate): VurdertAvResponse {
         val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(ident)

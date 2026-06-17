@@ -2,12 +2,17 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService.Companion.prioritertType
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService.Companion.vurderingsbehovTilType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -21,8 +26,10 @@ class BehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val trukketSøknadService: `TrukketSøknadService`,
+    private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val underveisService: UnderveisService,
+    private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(
@@ -32,8 +39,10 @@ class BehandlingService(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        trukketSøknadService = `TrukketSøknadService`(repositoryProvider),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        underveisService = UnderveisService(repositoryProvider, gatewayProvider),
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -48,8 +57,31 @@ class BehandlingService(
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
         val sak = sakRepository.hent(sakId)
         val alleBehandlingerMedVedtak =
-            behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
+            behandlingRepository.hentAlleMedVedtakFor(sak.person.id, TypeBehandling.ytelseBehandlingstyper())
         return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
+    }
+
+    fun utledFaktiskBehandlingstype(behandling: Behandling): TypeBehandling {
+        return when (behandling.typeBehandling()) {
+            TypeBehandling.Revurdering -> {
+                val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
+                    "Revurdering skal alltid ha forrigeBehandling"
+                }
+
+                val erAktuellVurderingtype = prioritertType(
+                    vurderingTyper = behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet(),
+                    typeBehandling = behandling.typeBehandling()
+                ) in listOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
+
+                if (!underveisService.harRett(forrigeBehandlingId) && erAktuellVurderingtype) {
+                    TypeBehandling.Førstegangsbehandling
+                } else {
+                    TypeBehandling.Revurdering
+                }
+            }
+
+            else -> behandling.typeBehandling()
+        }
     }
 
     sealed interface OpprettetBehandling {
@@ -89,6 +121,8 @@ class BehandlingService(
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9,
         Vurderingsbehov.BARNETILLEGG_SATS_REGULERING,
+        Vurderingsbehov.G_REGULERING,
+        Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
@@ -198,7 +232,9 @@ class BehandlingService(
             }
         }
 
-        val forrige = aktivitetspliktBehandlinger.firstOrNull()?.id
+        val forrige =
+            aktivitetspliktBehandlinger.filterNot { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(it.id) }
+                .firstOrNull()?.id
 
         return behandlingRepository.opprettBehandling(
             sakId = sakId,
@@ -369,7 +405,7 @@ class BehandlingService(
         }
 
         val sortedListOfBehandlingId = mutableListOf<BehandlingId>()
-        var currentBehandlingId = ytelsesbehandlinger.find { it.forrigeBehandlingId==null }?.id
+        var currentBehandlingId = ytelsesbehandlinger.find { it.forrigeBehandlingId == null }?.id
         while (currentBehandlingId != null) {
             sortedListOfBehandlingId.add(currentBehandlingId)
             currentBehandlingId = nesteId[currentBehandlingId]

@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
@@ -35,7 +36,7 @@ class StatistikkMetoder(
     private val avsluttetBehandlingTilStatistikk: AvsluttetBehandlingTilStatistikk,
 ) {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider.provide(), repositoryProvider.provide()),
         pipService = PipService(repositoryProvider),
@@ -43,7 +44,7 @@ class StatistikkMetoder(
         meldekortRepository = repositoryProvider.provide(),
         påklagetBehandlingRepository = repositoryProvider.provide(),
         klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
-        avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(repositoryProvider),
+        avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)

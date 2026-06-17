@@ -9,18 +9,15 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.behandling.Resultat
-import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -61,9 +58,13 @@ fun NormalOpenAPIRoute.saksApi(
         route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
             AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))
         ) { _, dto ->
-            val saker: List<SaksinfoDTO> = finnSaksinfo(dataSource, repositoryRegistry, dto)
+            val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                SakOgBehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
+                    .finnSaksinfo(Ident(dto.ident))
+            }
             respond(saker)
         }
+
         route("/{saksnummer}/opprettAktivitetspliktBehandling")
             .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, OpprettAktivitetspliktBehandlingDto>(
                 routeConfig = AuthorizationParamPathConfig(
@@ -96,7 +97,10 @@ fun NormalOpenAPIRoute.saksApi(
 
 
         @Suppress("UnauthorizedPost") route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
-            val saker = finnSaksinfo(dataSource, repositoryRegistry, dto)
+            val saker = dataSource.transaction(readOnly = true) { connection ->
+                SakOgBehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
+                    .finnSaksinfo(Ident(dto.ident))
+            }
 
             // Midlertidig fiks for ikke å brekke postmottak
             val token = token()
@@ -105,7 +109,8 @@ fun NormalOpenAPIRoute.saksApi(
             } else {
                 val sakerMedTilgang = saker.filter { sak ->
                     tilgangGateway.sjekkTilgangTilSak(
-                        Saksnummer(sak.saksnummer), token, Operasjon.SE
+                        Saksnummer(sak.saksnummer), token, Operasjon.SE,
+                        relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer)
                     )
                 }
 
@@ -135,7 +140,7 @@ fun NormalOpenAPIRoute.saksApi(
                     if (person == null) {
                         null
                     } else {
-                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person.id)
 
                         log.info("Fant ${sakerForPerson.size} saker for person. Mottattidspunkt: ${dto.mottattTidspunkt}")
 
@@ -179,7 +184,7 @@ fun NormalOpenAPIRoute.saksApi(
 
                     val sak = PersonOgSakService(gatewayProvider, repositoryProvider).finnEllerOpprett(
                         ident = ident,
-                        periode = periode
+                        søknadsdato = dto.søknadsdato
                     )
 
                     SaksinfoDTO(
@@ -226,7 +231,7 @@ fun NormalOpenAPIRoute.saksApi(
                 val saksnummer = req.saksnummer
                 val (sak, behandlinger, søknadErTrukket) = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    SakOgBehandlingService(repositoryProvider).finnSakOgBehandlinger(Saksnummer(saksnummer))
+                    SakOgBehandlingService(repositoryProvider, gatewayProvider).finnSakOgBehandlinger(Saksnummer(saksnummer))
                 }
 
                 respond(
@@ -264,7 +269,8 @@ fun NormalOpenAPIRoute.saksApi(
                             harTilgang = tilgangGateway.sjekkTilgangTilSak(
                                 saksnummer = sak.saksnummer,
                                 token(),
-                                Operasjon.SE
+                                Operasjon.SE,
+                                relevanteIdenter = relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer.toString())
                             )
                         )
                     }
@@ -279,23 +285,17 @@ fun NormalOpenAPIRoute.saksApi(
                 routeConfig = AuthorizationMachineToMachineConfig(
                     authorizedAzps = listOf(Azp.Postmottak.uuid)
                 ).medAzureTokenGen()
-            ) { saksnummer, body ->
+            ) { saksnummer, typeBehandling ->
                 val behandlinger = dataSource.transaction { connection ->
                     val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
                     val behandlingRepository = repositoryRegistry.provider(connection).provide<BehandlingRepository>()
                     val sakId = sakRepository.hent(Saksnummer(saksnummer.saksnummer)).id
 
-                    val behandlinger = behandlingRepository.hentAlleFor(sakId)
-
-                    behandlinger.filter { it.typeBehandling() == body }.map {
-                        BehandlingAvTypeDTO(
-                            it.referanse.referanse, it.opprettetTidspunkt
-                        )
-                    }
-
-
+                    behandlingRepository.hentAlleFor(sakId, behandlingstypeFilter = listOf(typeBehandling))
                 }
-                respond(behandlinger)
+                respond(
+                    behandlinger.map { BehandlingAvTypeDTO(it.referanse.referanse, it.opprettetTidspunkt) }
+                )
             }
         }
 
@@ -309,11 +309,11 @@ fun NormalOpenAPIRoute.saksApi(
 
                 val saksnummer = req.saksnummer
 
-                val ident = dataSource.transaction(readOnly = true) { connection ->
+                val sak = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer = Saksnummer(saksnummer))
-                    sak.person.aktivIdent()
+                    repositoryProvider.provide<SakRepository>().hent(saksnummer = Saksnummer(saksnummer))
                 }
+                val ident = sak.person.aktivIdent()
 
                 val personinfo = personinfoGateway.hentPersoninfoForIdent(ident, token())
 
@@ -321,6 +321,7 @@ fun NormalOpenAPIRoute.saksApi(
                     SakPersoninfoDTO(
                         fnr = personinfo.ident.identifikator,
                         navn = personinfo.fulltNavn(),
+                        personReferanse = sak.person.referanse,
                         fødselsdato = personinfo.fødselsdato,
                         dødsdato = personinfo.dødsdato,
                     )
@@ -362,43 +363,4 @@ fun NormalOpenAPIRoute.saksApi(
     }
 }
 
-private fun finnSaksinfo(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-    dto: FinnSakForIdentDTO
-): List<SaksinfoDTO> {
-    val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-        val repositoryProvider = repositoryRegistry.provider(connection)
-        val ident = Ident(dto.ident)
-        val person = repositoryProvider.provide<PersonRepository>().finn(ident)
-        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-        val resultatUtleder = ResultatUtleder(repositoryProvider)
 
-        if (person == null) {
-            emptyList()
-        } else {
-            repositoryProvider.provide<SakRepository>().finnSakerFor(person).map { sak ->
-                val resultat = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
-                    ?.let { behandlingRepository.hent(it.behandlingId) }
-                    ?.let { resultatUtleder.utledResultat(it) }
-
-                SaksinfoDTO(
-                    saksnummer = sak.saksnummer.toString(),
-                    opprettetTidspunkt = sak.opprettetTidspunkt,
-                    periode = sak.rettighetsperiode,
-                    ident = sak.person.aktivIdent().identifikator,
-                    resultat = resultat.let {
-                        when (it) {
-                            Resultat.INNVILGELSE -> ResultatKode.INNVILGET
-                            Resultat.AVSLAG -> ResultatKode.AVSLAG
-                            Resultat.TRUKKET -> ResultatKode.TRUKKET
-                            Resultat.AVBRUTT -> ResultatKode.AVBRUTT
-                            null -> null
-                        }
-                    })
-            }
-        }
-
-    }
-    return saker
-}

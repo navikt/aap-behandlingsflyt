@@ -10,18 +10,18 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -35,7 +35,6 @@ import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class UtbetalingServiceTest {
 
@@ -78,10 +77,12 @@ class UtbetalingServiceTest {
         every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
+            VedtakId(0),
             førstegangsbehandling.id,
             andreTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+            VedtakId(1),
             revurdering.id,
             tredjeTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(),
             søknadsDato
@@ -122,10 +123,12 @@ class UtbetalingServiceTest {
         every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
+            VedtakId(0),
             førstegangsbehandling.id,
             førsteTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+            VedtakId(1),
             revurdering.id,
             tredjeTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(),
             søknadsDato
@@ -170,10 +173,12 @@ class UtbetalingServiceTest {
 
         val startdato = LocalDate.of(2025, 11, 29)
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
+            VedtakId(0),
             førstegangsbehandling.id,
             (8 desember 2025).atStartOfDay(), startdato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+            VedtakId(1),
             revurdering.id,
             LocalDate.of(2025, 12, 17).atStartOfDay(),
             startdato
@@ -261,10 +266,7 @@ class UtbetalingServiceTest {
     val sak = Sak(
         id = SakId(1),
         saksnummer = Saksnummer("1"),
-        person = Person(
-            identifikator = UUID.randomUUID(),
-            identer = listOf(Ident("0".repeat(11)))
-        ),
+        person = person(),
         rettighetsperiode = Periode(søknadsDato, søknadsDato.plusYears(1)),
     )
     val førstegangsbehandling = Behandling(

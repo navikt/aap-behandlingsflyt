@@ -15,7 +15,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
 class NorgGateway : EnhetGateway {
-    private val baseUri = URI.create(requiredConfigForKey("integrasjon.norg.url"))
+    private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_NORG_URL"))
     private val client =
         RestClient.withDefaultResponseHandler(
             config = ClientConfig(),

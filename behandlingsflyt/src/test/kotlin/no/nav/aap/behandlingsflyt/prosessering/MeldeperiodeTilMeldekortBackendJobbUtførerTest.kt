@@ -1,26 +1,22 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FREMTIDIG_IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØR_VEDTAK
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
-import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.mai
@@ -29,43 +25,42 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
 import kotlin.test.Test
 
 class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
     private val underveisperioder = listOf(
         underveisperiode("2025-03-31,2025-04-14", "2025-03-31,2025-04-14", IKKE_GRUNNLEGGENDE_RETT, null, FØR_VEDTAK),
         underveisperiode("2025-04-14,2025-04-28", "2025-04-14,2025-04-28", IKKE_GRUNNLEGGENDE_RETT, null, IKKE_MELDT_SEG),
-        underveisperiode("2025-04-28,2025-05-12", "2025-04-28,2025-05-12", IKKE_GRUNNLEGGENDE_RETT, null, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-05-12,2025-05-13", "2025-05-12,2025-05-26", IKKE_GRUNNLEGGENDE_RETT, null, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-05-13,2025-05-26", "2025-05-12,2025-05-26", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-05-26,2025-06-09", "2025-05-26,2025-06-09", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-06-09,2025-06-23", "2025-06-09,2025-06-23", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-06-23,2025-07-07", "2025-06-23,2025-07-07", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-07-07,2025-07-21", "2025-07-07,2025-07-21", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-07-21,2025-08-04", "2025-07-21,2025-08-04", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-08-04,2025-08-18", "2025-08-04,2025-08-18", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-08-18,2025-09-01", "2025-08-18,2025-09-01", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-09-01,2025-09-15", "2025-09-01,2025-09-15", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-09-15,2025-09-29", "2025-09-15,2025-09-29", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-09-29,2025-10-13", "2025-09-29,2025-10-13", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-10-13,2025-10-27", "2025-10-13,2025-10-27", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-10-27,2025-11-10", "2025-10-27,2025-11-10", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-11-10,2025-11-24", "2025-11-10,2025-11-24", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-11-24,2025-12-08", "2025-11-24,2025-12-08", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-12-08,2025-12-22", "2025-12-08,2025-12-22", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2025-12-22,2026-01-05", "2025-12-22,2026-01-05", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2026-01-05,2026-01-19", "2026-01-05,2026-01-19", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2026-01-19,2026-02-02", "2026-01-19,2026-02-02", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2026-02-02,2026-02-16", "2026-02-02,2026-02-16", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2026-02-16,2026-03-02", "2026-02-16,2026-03-02", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2026-03-02,2026-03-16", "2026-03-02,2026-03-16", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2026-03-16,2026-03-30", "2026-03-16,2026-03-30", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
-        underveisperiode("2026-03-30,2026-03-31", "2026-03-30,2026-04-13", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, FREMTIDIG_IKKE_OPPFYLT),
+        underveisperiode("2025-04-28,2025-05-12", "2025-04-28,2025-05-12", IKKE_GRUNNLEGGENDE_RETT, null, IKKE_MELDT_SEG),
+        underveisperiode("2025-05-12,2025-05-13", "2025-05-12,2025-05-26", IKKE_GRUNNLEGGENDE_RETT, null, IKKE_MELDT_SEG),
+        underveisperiode("2025-05-13,2025-05-26", "2025-05-12,2025-05-26", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-05-26,2025-06-09", "2025-05-26,2025-06-09", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-06-09,2025-06-23", "2025-06-09,2025-06-23", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-06-23,2025-07-07", "2025-06-23,2025-07-07", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-07-07,2025-07-21", "2025-07-07,2025-07-21", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-07-21,2025-08-04", "2025-07-21,2025-08-04", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-08-04,2025-08-18", "2025-08-04,2025-08-18", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-08-18,2025-09-01", "2025-08-18,2025-09-01", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-09-01,2025-09-15", "2025-09-01,2025-09-15", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-09-15,2025-09-29", "2025-09-15,2025-09-29", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-09-29,2025-10-13", "2025-09-29,2025-10-13", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-10-13,2025-10-27", "2025-10-13,2025-10-27", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-10-27,2025-11-10", "2025-10-27,2025-11-10", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-11-10,2025-11-24", "2025-11-10,2025-11-24", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-11-24,2025-12-08", "2025-11-24,2025-12-08", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-12-08,2025-12-22", "2025-12-08,2025-12-22", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2025-12-22,2026-01-05", "2025-12-22,2026-01-05", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2026-01-05,2026-01-19", "2026-01-05,2026-01-19", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2026-01-19,2026-02-02", "2026-01-19,2026-02-02", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2026-02-02,2026-02-16", "2026-02-02,2026-02-16", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2026-02-16,2026-03-02", "2026-02-16,2026-03-02", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2026-03-02,2026-03-16", "2026-03-02,2026-03-16", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2026-03-16,2026-03-30", "2026-03-16,2026-03-30", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
+        underveisperiode("2026-03-30,2026-03-31", "2026-03-30,2026-04-13", MELDEPLIKT_FRIST_IKKE_PASSERT, BISTANDSBEHOV, IKKE_MELDT_SEG),
     )
 
     @Test
@@ -74,8 +69,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             sak = Sak(
                 id = SakId(0),
                 saksnummer = Saksnummer("s1"),
-                person = Person(
-                    UUID.randomUUID(), listOf(
+                person = person(
+                    identer = listOf(
                         Ident("1".repeat(11), aktivIdent = false),
                         Ident("2".repeat(11), aktivIdent = true)
                     )
@@ -84,11 +79,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
                 status = Status.UTREDES,
             ),
             meldeperioder = underveisperioder.map { it.meldePeriode }.toSet().sorted(),
-            vedtak = Vedtak(
-                behandlingId = BehandlingId(0),
-                vedtakstidspunkt = LocalDateTime.parse("2025-05-05T10:43:44.561"),
-                virkningstidspunkt = LocalDate.parse("2025-05-13"),
-            ),
+            vedtaksdatoFørsteInnvilgelse = LocalDate.parse("2025-05-13"),
             meldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
             underveisGrunnlag = UnderveisGrunnlag(
                 id = 0,
@@ -96,7 +87,11 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             )
         )
 
-        assertEquals(opplysninger.identer.toSet(), setOf("1".repeat(11), "2".repeat(11)))
+        assertThat(opplysninger.personIdenter.map { it.ident to it.aktiv })
+            .containsExactlyInAnyOrder(
+                "1".repeat(11) to false,
+                "2".repeat(11) to true,
+            )
         assertEquals(opplysninger.opplysningsbehov.single().fom, 13 mai 2025)
         assertEquals(opplysninger.opplysningsbehov.single().tom, 30 mars 2026)
         assertEquals(opplysninger.meldeperioder.map { Periode(it.fom, it.tom) }.toSet(), setOf(
@@ -153,7 +148,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             LocalDate.parse("2026-03-02").let { Periode(it, it.plusDays(7))},
             LocalDate.parse("2026-03-16").let { Periode(it, it.plusDays(7))},
             LocalDate.parse("2026-03-30").let { Periode(it, it.plusDays(7))},
-
         ))
     }
 
@@ -168,7 +162,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
     ) = Underveisperiode(
         periode = parse(periode),
         meldePeriode = parse(meldeperiode),
-        utfall = IKKE_OPPFYLT,
+        utfall = if (rettighetstype == null) Utfall.IKKE_OPPFYLT else Utfall.OPPFYLT,
         rettighetsType = rettighetstype,
         avslagsårsak = avslagsårsak,
         grenseverdi = Prosent(60),
@@ -183,7 +177,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = emptySet(),
         meldepliktStatus = meldepliktStatus,
-        id = UnderveisperiodeId(id.also { id += 1 }),
         meldepliktGradering = Prosent.`0_PROSENT`,
     )
 

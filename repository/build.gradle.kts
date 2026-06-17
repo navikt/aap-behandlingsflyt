@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation(project(":behandlingsflyt"))
 
+    implementation(libs.coroutinesCore)
     implementation(libs.opentelemetryInstrumentationAnnotations)
     implementation(libs.logbackClassic)
     implementation(libs.verdityper)
@@ -17,7 +18,6 @@ dependencies {
     implementation(libs.apiInternKontrakt)
 
     implementation(libs.caffeine)
-    implementation(libs.flywayDatabasePostgresql)
     implementation("io.getunleash:unleash-client-java:11.1.1")
     runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
     implementation("no.bekk.bekkopen:nocommons:0.16.0")

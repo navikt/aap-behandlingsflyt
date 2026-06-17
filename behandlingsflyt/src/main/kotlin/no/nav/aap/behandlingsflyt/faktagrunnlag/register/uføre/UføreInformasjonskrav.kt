@@ -18,7 +18,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -59,9 +61,11 @@ class UføreInformasjonskrav(
 
         val inputHarEndretSeg = forrigeFraDato != nyFraDato
 
-        return kontekst.erFørstegangsbehandlingEllerRevurdering()
+        return (kontekst.erFørstegangsbehandlingEllerRevurdering() || kontekst.vurderingType == VurderingType.OVERGANG_UFORE_STANS)
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || inputHarEndretSeg || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || inputHarEndretSeg || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
+            oppdatert
+        ))
     }
 
     data class UføreInput(val sak: Sak, val behandlingId: BehandlingId, val beregningVurdering: BeregningGrunnlag?) :
@@ -97,6 +101,22 @@ class UføreInformasjonskrav(
         }
 
         return IKKE_ENDRET
+    }
+
+    override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
+        val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return IKKE_ENDRET
+        val grunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val forrigeGrunnlag = uføreRepository.hentHvisEksisterer(forrigeBehandlingId)
+
+        val forrigeVurderinger = forrigeGrunnlag?.vurderinger ?: return IKKE_ENDRET
+        val mergedVurderinger = (grunnlag?.vurderinger ?: emptySet()) + forrigeVurderinger
+
+        if (mergedVurderinger != grunnlag?.vurderinger) {
+            uføreRepository.lagre(kontekst.behandlingId, mergedVurderinger)
+            return ENDRET
+        } else {
+            return IKKE_ENDRET
+        }
     }
 
     private fun hentUføregrader(uføreInput: UføreInput): Set<Uføre> {

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -14,11 +15,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
 
@@ -179,6 +181,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return BehandlingMedVedtak(
             saksnummer = Saksnummer(row.getString("saksnummer")),
             id = behandlingId,
+            forrigeBehandlingId = row.getLongOrNull("forrige_id")?.let { BehandlingId(it) },
             referanse = BehandlingReferanse(row.getUUID("referanse")),
             typeBehandling = TypeBehandling.from(row.getString("type")),
             status = row.getEnum("status"),
@@ -187,6 +190,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             virkningstidspunkt = row.getLocalDateOrNull("virkningstidspunkt"),
             vurderingsbehov = hentVurderingsbehov(behandlingId).map { it.type }.toSet(),
             årsakTilOpprettelse = row.getEnumOrNull("aarsak_til_opprettelse"),
+            vedtakId = VedtakId(row.getLong("vedtak_id")),
         )
     }
 
@@ -378,20 +382,22 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     }
 
     override fun hentAlleMedVedtakFor(
-        person: Person,
+        personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> {
         val query = """
             SELECT
                 S.SAKSNUMMER,
                 B.ID,
+                B.FORRIGE_ID,
                 B.REFERANSE,
                 B.TYPE,
                 B.STATUS,
                 B.OPPRETTET_TID,
                 B.AARSAK_TIL_OPPRETTELSE,
                 V.VEDTAKSTIDSPUNKT,
-                V.VIRKNINGSTIDSPUNKT
+                V.VIRKNINGSTIDSPUNKT,
+                V.ID AS VEDTAK_ID
             FROM
                 SAK S
                 INNER JOIN BEHANDLING B ON B.SAK_ID = S.ID
@@ -406,7 +412,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         return connection.queryList(query) {
             setParams {
-                setLong(1, person.id.id)
+                setLong(1, personId.id)
                 setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper {
@@ -536,5 +542,24 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Trengs ikke implementeres
+    }
+
+    fun hentKandidatForStansOpphørBackfill(behandlingId: Long): Behandling? {
+        return connection.queryFirstOrNull("""
+            select *
+            from behandling
+            where
+            id = ? 
+            and type IN ('ae0034', 'ae0028')
+            and (type <> 'ae0034' or status <> 'OPPRETTET')
+            ${if (Miljø.erDev()) "and opprettet_tid >= '2025-04-01'::date" else ""}
+            """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId)
+            }
+            setRowMapper {
+                mapBehandling(it)
+            }
+        }
     }
 }

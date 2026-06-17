@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import java.time.LocalDate
 
 /**
  * Barn oppgitt i søknaden.

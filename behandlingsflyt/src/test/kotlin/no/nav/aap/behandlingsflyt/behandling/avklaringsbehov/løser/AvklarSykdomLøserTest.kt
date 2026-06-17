@@ -8,6 +8,7 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -74,9 +75,8 @@ class AvklarSykdomLøserTest {
                         harSkadeSykdomEllerLyte = false,
                         erSkadeSykdomEllerLyteVesentligdel = null,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = null,
+                        harNedsattArbeidsevne = null,
                         yrkesskadeBegrunnelse = null,
                         fom = 10 januar 2025,
                         tom = null
@@ -97,22 +97,20 @@ private fun sykdomsvurdering(
     harSkadeSykdomEllerLyte: Boolean = true,
     erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
     erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
-    erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
-    erArbeidsevnenNedsatt: Boolean = true,
+    harNedsattArbeidsevne: ArbeidsevneNedsattValg = ArbeidsevneNedsattValg.JA,
     vurderingenGjelderFra: LocalDate = 1 januar 2020,
     vurderingenGjelderTil: LocalDate? = null,
     opprettet: LocalDateTime = LocalDateTime.now(),
     vurdertIBehandling: BehandlingId
 ) = Sykdomsvurdering(
     begrunnelse = "",
-    dokumenterBruktIVurdering = emptyList(),
     harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
     erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
     erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-    erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-    erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+
+    harNedsattArbeidsevne = harNedsattArbeidsevne,
     yrkesskadeBegrunnelse = null,
     vurderingenGjelderFra = vurderingenGjelderFra,
     vurderingenGjelderTil = vurderingenGjelderTil,

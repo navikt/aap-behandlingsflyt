@@ -34,9 +34,6 @@ class DagpengerInformasjonskrav(
     override fun erRelevant(
         kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentDagpengerPerioder)) {
-            return false
-        }
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
             kontekst, steg
         ) && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
@@ -55,9 +52,6 @@ class DagpengerInformasjonskrav(
     }
 
     override fun hentData(input: DagpengerInput): DagpengerRegisterdata {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.hentDagpengerPerioder)) {
-            return DagpengerRegisterdata(emptySet())
-        }
         val (person, rettighetsperiode) = input
         val dagpengerPerioder = dagpengerGateway.hentYtelseDagpenger(
             personidentifikatorer = person.aktivIdent().identifikator,

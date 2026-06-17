@@ -12,29 +12,45 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
+import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeDokarkivGateway
+import no.nav.aap.behandlingsflyt.test.FakePdfgenGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -55,9 +71,17 @@ class MeldekortApiTest : BaseApiTest() {
         register<AlleAvskruddUnleash>()
     }
 
+    private fun createTestGatewayProviderMedDokarkiv() = createGatewayProvider {
+        register<NomInfoGateway>()
+        register<NorgGateway>()
+        register<AlleAvskruddUnleash>()
+        register<FakeDokarkivGateway>()
+        register<FakePdfgenGateway>()
+    }
+
     @Test
     fun `returnerer tomt sett når ingen vedtak finnes`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         testApplication {
@@ -77,7 +101,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer tomt meldekort for meldeperiode uten innsendt meldekort`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -111,7 +135,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer meldekort for siste fattede vedtak`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -125,7 +149,8 @@ class MeldekortApiTest : BaseApiTest() {
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
                 ArbeidIPeriode(Periode(dag2, dag2), TimerArbeid(BigDecimal("3.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -136,6 +161,17 @@ class MeldekortApiTest : BaseApiTest() {
 
         InMemoryMeldekortRepository.lagre(
             behandling.id, setOf(meldekort)
+        )
+
+        InMemoryMottattDokumentRepository.lagre(
+            mottattMeldekortDokument(
+                meldekort,
+                sak.id,
+                behandling.id,
+                begrunnelse = "Korrigering av timer",
+                opprettetAv = "Z123456",
+                opprettetTid = LocalDateTime.of(2025, 1, 20, 10, 0),
+            )
         )
 
         testApplication {
@@ -153,18 +189,22 @@ class MeldekortApiTest : BaseApiTest() {
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
-            assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
-            assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(meldekort.journalpostId.identifikator)
-            assertThat(meldeperiodeMedMeldekort.meldekort.mottattTidspunkt).isEqualTo(meldekort.mottattTidspunkt)
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager).hasSize(2)
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager.map { it.dato }).containsExactlyInAnyOrder(dag1, dag2)
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager.map { it.timerArbeidet }).containsExactlyInAnyOrder(7.5, 3.0)
+            val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
+            assertThat(meldekortDto.id).isEqualTo(meldekort.journalpostId.identifikator)
+            assertThat(meldekortDto.meldeDato).isEqualTo(meldekort.mottattTidspunkt.toLocalDate())
+            assertThat(meldekortDto.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
+            assertThat(meldekortDto.begrunnelse).isEqualTo("Korrigering av timer")
+            assertThat(meldekortDto.oppdatertAv).isEqualTo("Z123456")
+            assertThat(meldekortDto.dager).hasSize(2)
+            assertThat(meldekortDto.dager.map { it.dato }).containsExactlyInAnyOrder(dag1, dag2)
+            assertThat(meldekortDto.dager.map { it.timerArbeidet }).containsExactlyInAnyOrder(7.5, 3.0)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).isEmpty()
         }
     }
 
     @Test
     fun `returnerer flere meldekort`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -177,14 +217,16 @@ class MeldekortApiTest : BaseApiTest() {
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag, dag), TimerArbeid(BigDecimal("4.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 2, 17, 9, 0)
         )
         val meldekort2 = Meldekort(
             journalpostId = JournalpostId("bbb"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag.plusWeeks(2), dag.plusWeeks(2)), TimerArbeid(BigDecimal("6.0"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 3, 3, 9, 0),
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -199,6 +241,9 @@ class MeldekortApiTest : BaseApiTest() {
         InMemoryMeldekortRepository.lagre(
             behandling.id, setOf(meldekort1, meldekort2)
         )
+
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(meldekort1, sak.id, behandling.id))
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(meldekort2, sak.id, behandling.id))
 
         testApplication {
             installApplication {
@@ -219,7 +264,7 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer korrigert meldekort når flere meldekort finnes for samme periode`() {
-        val sak = nySak()
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -232,14 +277,16 @@ class MeldekortApiTest : BaseApiTest() {
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
         )
         val korrigertMeldekort = Meldekort(
             journalpostId = JournalpostId("222"),
             timerArbeidPerPeriode = setOf(
                 ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal.ZERO)),
             ),
-            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
         )
 
         InMemoryUnderveisRepository.lagre(
@@ -250,6 +297,25 @@ class MeldekortApiTest : BaseApiTest() {
 
         InMemoryMeldekortRepository.lagre(
             behandling.id, setOf(opprinneligMeldekort, korrigertMeldekort)
+        )
+
+        InMemoryMottattDokumentRepository.lagre(
+            mottattMeldekortDokument(
+                opprinneligMeldekort,
+                sak.id,
+                behandling.id,
+                opprettetTid = LocalDateTime.of(2025, 1, 20, 10, 0),
+            )
+        )
+        InMemoryMottattDokumentRepository.lagre(
+            mottattMeldekortDokument(
+                korrigertMeldekort,
+                sak.id,
+                behandling.id,
+                begrunnelse = "Feil i opprinnelig rapportering",
+                opprettetAv = "Z654321",
+                opprettetTid = LocalDateTime.of(2025, 1, 25, 11, 0),
+            )
         )
 
         testApplication {
@@ -266,17 +332,99 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(body.meldeperioderMedMeldekort).hasSize(1)
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
-            assertThat(meldeperiodeMedMeldekort.meldekort).isNotNull
-            assertThat(meldeperiodeMedMeldekort.meldekort!!.id).isEqualTo(korrigertMeldekort.journalpostId.identifikator)
-            assertThat(meldeperiodeMedMeldekort.meldekort.mottattTidspunkt).isEqualTo(korrigertMeldekort.mottattTidspunkt)
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager).hasSize(1)
-            assertThat(meldeperiodeMedMeldekort.meldekort.dager.first().timerArbeidet).isEqualTo(0.0)
+            val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
+            assertThat(meldekortDto.id).isEqualTo(korrigertMeldekort.journalpostId.identifikator)
+            assertThat(meldekortDto.meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
+            assertThat(meldekortDto.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 25))
+            assertThat(meldekortDto.begrunnelse).isEqualTo("Feil i opprinnelig rapportering")
+            assertThat(meldekortDto.oppdatertAv).isEqualTo("Z654321")
+            assertThat(meldekortDto.dager).hasSize(1)
+            assertThat(meldekortDto.dager.first().timerArbeidet).isEqualTo(0.0)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).hasSize(1)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().id).isEqualTo(opprinneligMeldekort.journalpostId.identifikator)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().meldeDato).isEqualTo(opprinneligMeldekort.mottattTidspunkt.toLocalDate())
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.first().oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
         }
     }
 
     @Test
-    fun `returnerer ikke meldeperioder med fom-dato frem i tid`() {
-        val sak = nySak()
+    fun `returnerer tidligere meldekort sortert synkende på mottattTidspunkt`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val dag1 = 6 januar 2025
+        val meldeperiode = Periode(dag1, dag1.plusDays(13))
+
+        val førsteMeldekort = Meldekort(
+            journalpostId = JournalpostId("111"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+        )
+        val andreMeldekort = Meldekort(
+            journalpostId = JournalpostId("222"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("5.0"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 22, 9, 0)
+        )
+        val tredjeMeldekort = Meldekort(
+            journalpostId = JournalpostId("333"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("3.0"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 25, 9, 0)
+        )
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryMeldekortRepository.lagre(
+            behandling.id, setOf(førsteMeldekort, andreMeldekort, tredjeMeldekort)
+        )
+
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(førsteMeldekort, sak.id, behandling.id))
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(andreMeldekort, sak.id, behandling.id))
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(tredjeMeldekort, sak.id, behandling.id))
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldeperioderMedMeldekortResponse>()
+            assertThat(body.meldeperioderMedMeldekort).hasSize(1)
+
+            val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
+            val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
+            assertThat(meldekortDto.id).isEqualTo(tredjeMeldekort.journalpostId.identifikator)
+
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).hasSize(2)
+            assertThat(meldeperiodeMedMeldekort.tidligereMeldekort.map { it.id })
+                .containsExactly(
+                    andreMeldekort.journalpostId.identifikator,
+                    førsteMeldekort.journalpostId.identifikator
+                )
+        }
+    }
+
+    @Test
+    fun `returnerer også meldeperioder med fom-dato frem i tid`() {
+        val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
@@ -307,15 +455,279 @@ class MeldekortApiTest : BaseApiTest() {
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
-            assertThat(body.meldeperioderMedMeldekort).hasSize(2)
-            assertThat(body.meldeperioderMedMeldekort.first().meldeperiode).isEqualTo(forrigeMeldeperiode)
-            assertThat(body.meldeperioderMedMeldekort.last().meldeperiode).isEqualTo(inneværendeMeldeperiode)
+            assertThat(body.meldeperioderMedMeldekort).hasSize(3)
         }
     }
 
-    private fun underveisperiode(utfall: Utfall, periode: Periode) = Underveisperiode(
+    @Test
+    fun `returnerer kun oppfylte perioder når meldeperiode har delvis oppfylt utfall`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        // Meldeperiode 1: ikke oppfylt (4 dager) + oppfylt standard sats (5 dager) + oppfylt annen sats (5 dager)
+        val meldeperiode1 = Periode(6 januar 2025, 19 januar 2025)
+        val mp1IkkeOppfylt = Periode(6 januar 2025, 9 januar 2025)
+        val mp1OppfyltStandardSats = Periode(10 januar 2025, 14 januar 2025)
+        val mp1OppfyltAnnenSats = Periode(15 januar 2025, 19 januar 2025)
+
+        // Meldeperiode 2: oppfylt (8 dager) + ikke oppfylt (6 dager)
+        val meldeperiode2 = Periode(20 januar 2025, 2 februar 2025)
+        val mp2Oppfylt = Periode(20 januar 2025, 27 januar 2025)
+        val mp2IkkeOppfylt = Periode(28 januar 2025, 2 februar 2025)
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(
+                underveisperiode(Utfall.IKKE_OPPFYLT, mp1IkkeOppfylt, meldePeriode = meldeperiode1),
+                underveisperiode(Utfall.OPPFYLT, mp1OppfyltStandardSats, meldePeriode = meldeperiode1),
+                underveisperiode(Utfall.OPPFYLT, mp1OppfyltAnnenSats, meldePeriode = meldeperiode1, trekk = Dagsatser(2)),
+                underveisperiode(Utfall.OPPFYLT, mp2Oppfylt, meldePeriode = meldeperiode2),
+                underveisperiode(Utfall.IKKE_OPPFYLT, mp2IkkeOppfylt, meldePeriode = meldeperiode2),
+            ),
+            input = object : Faktagrunnlag {}
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldeperioderMedMeldekortResponse>()
+            assertThat(body.meldeperioderMedMeldekort).hasSize(2)
+
+            val sortert = body.meldeperioderMedMeldekort.sortedBy { it.meldeperiode.fom }
+
+            // Meldeperiode 1: de to oppfylte periodene slås sammen til én sammenhengende periode
+            val mp1 = sortert[0]
+            assertThat(mp1.meldeperiode).isEqualTo(meldeperiode1)
+            assertThat(mp1.periode).isEqualTo(Periode(10 januar 2025, 19 januar 2025))
+            assertThat(mp1.meldekort).isNull()
+
+            // Meldeperiode 2: kun den oppfylte perioden returneres
+            val mp2 = sortert[1]
+            assertThat(mp2.meldeperiode).isEqualTo(meldeperiode2)
+            assertThat(mp2.periode).isEqualTo(mp2Oppfylt)
+            assertThat(mp2.meldekort).isNull()
+        }
+    }
+
+    @Test
+    fun `prosessering - returnerer KLAR når ingen ventende meldekort-jobber`() {
+        val sak = opprettInMemorySak()
+        opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}/prosessering") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldekortProsesseringResponse>()
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.KLAR)
+        }
+    }
+
+    @Test
+    fun `prosessering - returnerer PROSESSERER_MELDEKORT når det finnes ventende meldekort-jobber`() {
+        val sak = opprettInMemorySak()
+        opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryFlytJobbRepository.leggTil(
+            HendelseMottattHåndteringJobbUtfører.nyJobb(
+                sakId = sak.id,
+                dokumentReferanse = InnsendingReferanse(JournalpostId("999")),
+                brevkategori = InnsendingType.MELDEKORT,
+                kanal = Kanal.DIGITAL,
+                mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            )
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}/prosessering") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldekortProsesseringResponse>()
+            assertThat(body.meldekortProsesseringStatus).isEqualTo(MeldekortProsesseringStatus.PROSESSERER_MELDEKORT)
+        }
+    }
+
+    @Test
+    fun `skal journalføre oppdatert meldekort og returnere journalpostId`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, Periode(dag1, dag2))),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = Periode(dag1, dag2),
+            begrunnelse = "Korrigering av timer",
+            meldeDato = dag2.plusDays(1),
+            dager = setOf(
+                DagDto(dato = dag1, timerArbeidet = 7.5),
+                DagDto(dato = dag2, timerArbeidet = 3.0),
+            ),
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
+            }
+
+            val response = createClient().post("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<OppdaterMeldekortResponse>()
+            assertThat(body.journalpostId).isNotBlank()
+            // fixedClock = 2025-04-01T00:00:00Z = 2025-04-01T02:00:00 i Europe/Oslo (CEST)
+            assertThat(body.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 4, 1))
+        }
+    }
+
+    @Test
+    fun `tittel blir Meldekort-prefiks når det ikke finnes meldekort fra før på meldeperioden`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, Periode(dag1, dag2))),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = Periode(dag1, dag2),
+            begrunnelse = "Registrering av timer",
+            meldeDato = dag2.plusDays(1),
+            dager = setOf(DagDto(dato = dag1, timerArbeidet = 7.5)),
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
+            }
+
+            val response = createClient().post("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            val journalpost = FakeDokarkivGateway.journalposter.values.single()
+            assertThat(journalpost.tittel).startsWith("Meldekort for uke")
+            assertThat(journalpost.dokumenter!!.single().tittel).startsWith("Meldekort for uke")
+            assertThat(journalpost.dokumenter!!.single().brevkode).isEqualTo("NAV 00-10.02")
+        }
+    }
+
+    @Test
+    fun `tittel blir Korrigert meldekort-prefiks når det finnes meldekort fra før på meldeperioden`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+        val meldeperiode = Periode(dag1, dag2)
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val eksisterendeMeldekort = Meldekort(
+            journalpostId = JournalpostId("eksisterende"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+        )
+        InMemoryMeldekortRepository.lagre(behandling.id, setOf(eksisterendeMeldekort))
+
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = meldeperiode,
+            begrunnelse = "Korrigering av timer",
+            meldeDato = dag2.plusDays(1),
+            dager = setOf(DagDto(dato = dag1, timerArbeidet = 3.0)),
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
+            }
+
+            val response = createClient().post("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            val journalpost = FakeDokarkivGateway.journalposter.values.single()
+            assertThat(journalpost.tittel).startsWith("Korrigert meldekort for uke")
+            assertThat(journalpost.dokumenter!!.single().tittel).startsWith("Korrigert meldekort for uke")
+            assertThat(journalpost.dokumenter!!.single().brevkode).isEqualTo("NAV 00-10.03")
+        }
+    }
+
+    @Test
+    fun `når kun meldeDato og ingen timer sendes inn, settes harDuArbeidet til null`() {
+        val request = OppdaterMeldekortRequest(
+            meldeperiode = Periode(6 januar 2025, 7 januar 2025),
+            begrunnelse = "Korrigering av meldedato uten timer",
+            meldeDato = 6 januar 2025,
+            dager = emptySet(),
+        )
+
+        val meldekort = request.tilMeldekort(Bruker("saksbehandler"))
+
+        assertThat(meldekort.harDuArbeidet).isNull()
+        assertThat(meldekort.timerArbeidPerPeriode).isEmpty()
+    }
+
+    private fun underveisperiode(utfall: Utfall, periode: Periode, meldePeriode: Periode = periode, trekk: Dagsatser = Dagsatser(0)) = Underveisperiode(
         periode = periode,
-        meldePeriode = periode,
+        meldePeriode = meldePeriode,
         utfall = utfall,
         rettighetsType = RettighetsType.BISTANDSBEHOV,
         avslagsårsak = if (utfall == Utfall.IKKE_OPPFYLT) UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS else null,
@@ -327,10 +739,42 @@ class MeldekortApiTest : BaseApiTest() {
             gradering = Prosent.`100_PROSENT`,
             opplysningerMottatt = null,
         ),
-        trekk = Dagsatser(0),
+        trekk = trekk,
         brukerAvKvoter = emptySet(),
         institusjonsoppholdReduksjon = `0_PROSENT`,
         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
         meldepliktGradering = `0_PROSENT`,
     )
+
+    private fun mottattMeldekortDokument(
+        meldekort: Meldekort,
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        begrunnelse: String? = null,
+        opprettetAv: String? = null,
+        opprettetTid: LocalDateTime = LocalDateTime.now(),
+    ) =
+        MottattDokument(
+            referanse = InnsendingReferanse(meldekort.journalpostId),
+            sakId = sakId,
+            behandlingId = behandlingId,
+            mottattTidspunkt = meldekort.mottattTidspunkt,
+            opprettetTid = opprettetTid,
+            type = InnsendingType.MELDEKORT,
+            kanal = Kanal.DIGITAL,
+            strukturertDokument = StrukturertDokument(
+                MeldekortV0(
+                    harDuArbeidet = meldekort.timerArbeidPerPeriode.any { it.timerArbeid.antallTimer > BigDecimal.ZERO },
+                    timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map { arbeid ->
+                        ArbeidIPeriodeV0(
+                            fraOgMedDato = arbeid.periode.fom,
+                            tilOgMedDato = arbeid.periode.tom,
+                            timerArbeid = arbeid.timerArbeid.antallTimer.toDouble(),
+                        )
+                    },
+                    begrunnelse = begrunnelse,
+                    opprettetAv = opprettetAv,
+                )
+            ),
+        )
 }

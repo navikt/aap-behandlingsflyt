@@ -11,9 +11,13 @@ public enum class StegType(
         gruppe = StegGruppe.START_BEHANDLING,
         status = Status.OPPRETTET
     ),
+    KRAV(
+        gruppe = StegGruppe.KRAV,
+        status = Status.UTREDES
+    ),
     SEND_FORVALTNINGSMELDING(
         gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
-        status = Status.OPPRETTET
+        status = Status.UTREDES
     ),
     AVBRYT_REVURDERING(
         gruppe = StegGruppe.AVBRYT_REVURDERING,
@@ -42,6 +46,10 @@ public enum class StegType(
     AVKLAR_STUDENT(
         gruppe = StegGruppe.STUDENT,
         status = Status.UTREDES
+    ),
+    AVKLAR_STUDENT_V2(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES,
     ),
     AVKLAR_SYKDOM(
         gruppe = StegGruppe.SYKDOM,
@@ -183,6 +191,10 @@ public enum class StegType(
         gruppe = StegGruppe.VEDTAKSLENGDE,
         status = Status.UTREDES
     ),
+    FORESLÅ_VEDTAK_VEDTAKSLENGDE(
+        gruppe = StegGruppe.VEDTAKSLENGDE,
+        status = Status.UTREDES
+    ),
     IKKE_OPPFYLT_MELDEPLIKT(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
@@ -295,6 +307,11 @@ public enum class StegType(
 
     VURDER_AKTIVITETSPLIKT_11_9(
         gruppe = StegGruppe.AKTIVITETSPLIKT_11_9,
+        status = Status.UTREDES,
+    ),
+
+    AVBRYT_AKTIVITETSPLIKTBEHANDLING(
+        gruppe = StegGruppe.AVBRYT_AKTIVITETSPLIKTBEHANDLING,
         status = Status.UTREDES,
     ),
 

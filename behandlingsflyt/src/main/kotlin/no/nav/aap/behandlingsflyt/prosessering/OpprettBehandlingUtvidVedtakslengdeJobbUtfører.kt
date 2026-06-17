@@ -8,20 +8,21 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
+import java.time.Clock
+import java.time.LocalDate
+import java.time.LocalDate.now
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val behandlingService: BehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
-    private val unleashGateway: UnleashGateway,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -41,21 +42,21 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
             when (vedtakslengdeUtvidelse) {
                 is VedtakslengdeUtvidelse.Automatisk -> {
+                    val datoForUtvidelse = now(clock).plusDays(VedtakslengdeService.ANTALL_DAGER_FØR_UTVIDELSE)
+                    if (vedtakslengdeUtvidelse.forrigeSluttdato > datoForUtvidelse) {
+                        log.error("Saken er ikke aktuell for utvidelse ennå - sjekk ut hvorfor dette skjer ($vedtakslengdeUtvidelse)")
+                        return
+                    }
                     log.info("Oppretter automatisk behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
 
                     val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.UTVID_VEDTAKSLENGDE)
                     prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                 }
                 is VedtakslengdeUtvidelse.Manuell -> {
-                    if (unleashGateway.isEnabled(BehandlingsflytFeature.OpprettManuellVedtakslengdeBehandling)) {
-                        log.info("Oppretter manuell behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
+                    log.info("Oppretter manuell behandling for utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde for sak $sakId")
 
-                        val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
-                        prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
-                    } else {
-                        log.error("Sak med id $sakId trenger manuell utvidelse ($vedtakslengdeUtvidelse) av vedtakslengde. " +
-                                "Dette er ikke implementert. Må følges opp!")
-                    }
+                    val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId, Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
+                    prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                 }
                 is VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet -> {
                     log.info("Sak med id $sakId har ingen fremtidig bistandsbehovrettighet, ingen behandling opprettes")
@@ -81,7 +82,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

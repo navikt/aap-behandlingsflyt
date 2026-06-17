@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand
 
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -15,13 +15,9 @@ data class BistandVurderingResponse(
     val erBehovForAnnenOppfølging: Boolean?,
     val overgangBegrunnelse: String?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
-    @Deprecated("Bruk fom")
-    val vurderingenGjelderFra: LocalDate?,
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse,
-    override val kvalitetssikretAv: VurdertAvResponse?,
-    override val besluttetAv: VurdertAvResponse?
+    override val vurderingerMeta: VurderingerMetaResponse,
 ) : VurderingDto {
     companion object {
         fun fraDomene(
@@ -54,18 +50,13 @@ data class BistandVurderingResponse(
             erBehovForArbeidsrettetTiltak = bistandsvurdering.erBehovForArbeidsrettetTiltak,
             erBehovForAnnenOppfølging = bistandsvurdering.erBehovForAnnenOppfølging,
             fom = fom,
-            vurderingenGjelderFra = fom,
             tom = tom,
             skalVurdereAapIOvergangTilArbeid = bistandsvurdering.skalVurdereAapIOvergangTilArbeid,
             overgangBegrunnelse = bistandsvurdering.overgangBegrunnelse,
-            vurdertAv = vurdertAvService.medNavnOgEnhet(bistandsvurdering.vurdertAv, bistandsvurdering.opprettet),
-            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
                 behandlingId = bistandsvurdering.vurdertIBehandling,
-            ),
-            besluttetAv = vurdertAvService.besluttetAv(
-                definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
-                behandlingId = bistandsvurdering.vurdertIBehandling,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(bistandsvurdering.vurdertAv, bistandsvurdering.opprettet),
             ),
         )
     }

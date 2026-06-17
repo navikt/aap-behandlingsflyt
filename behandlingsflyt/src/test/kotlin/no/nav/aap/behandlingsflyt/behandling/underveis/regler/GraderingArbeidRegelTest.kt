@@ -66,11 +66,13 @@ class GraderingArbeidRegelTest {
                     journalpostId = JournalpostId(1010.toString()),
                     timerArbeidPerPeriode = arbeidetPerDag,
                     mottattTidspunkt = (1 januar 2024).atStartOfDay(),
+                    opprettetTidspunkt = (1 januar 2024).atStartOfDay()
                 ),
                 Meldekort(
                     journalpostId = JournalpostId(1011.toString()),
                     timerArbeidPerPeriode = emptySet(),
                     mottattTidspunkt = (2 januar 2024).atStartOfDay(),
+                    opprettetTidspunkt = (1 januar 2024).atStartOfDay()
                 )
             )
         )
@@ -147,7 +149,7 @@ class GraderingArbeidRegelTest {
     }
 
     @Test
-    fun `Kan ikke jobbe  over 60 prosent uten arbeidsopptrapping`() {
+    fun `Kan ikke jobbe over 60 prosent uten arbeidsopptrapping`() {
         assertMeldekortutregning(
             fastsattArbeidsevne = null,
             opptrapping = false,
@@ -430,6 +432,7 @@ class GraderingArbeidRegelTest {
                         )
                     }.toSet(),
                 mottattTidspunkt = LocalDateTime.now().plusMinutes(i.toLong()),
+                opprettetTidspunkt = LocalDateTime.now().plusMinutes(i.toLong())
             )
         }
     }

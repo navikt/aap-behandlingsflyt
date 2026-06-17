@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterDialogMeldingService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterFolkeregisterIdentHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterKlageService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
-import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterSykepengevedtakService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterVedtakHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterTilbakekrevingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterUførevedtakService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -18,6 +20,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehand
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -42,11 +45,14 @@ class HendelseMottattHåndteringJobbUtfører(
     private val håndterMottattDokumentService: HåndterMottattDokumentService,
     private val mottaDokumentService: MottaDokumentService,
     private val mottattDokumentRepository: MottattDokumentRepository,
-    private val håndterKlageService:HåndterKlageService,
+    private val håndterKlageService: HåndterKlageService,
     private val håndterTilbakekrevingHendelse: HåndterTilbakekrevingHendelseService,
     private val håndterDialogMeldingService: HåndterDialogMeldingService,
-    private val håndterSykepengevedtakService: HåndterSykepengevedtakService,
+    private val håndterVedtakHendelseService: HåndterVedtakHendelseService,
     private val håndterUførevedtakService: HåndterUførevedtakService,
+    private val håndterFolkeregisterIdentHendelseService: HåndterFolkeregisterIdentHendelseService,
+    private val behandlingService: BehandlingService,
+    private val trukketSøknadService: TrukketSøknadService,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -148,8 +154,15 @@ class HendelseMottattHåndteringJobbUtfører(
                 )
             }
 
-            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> {
-                håndterSykepengevedtakService.håndterMottattSykepengevedtakHendelse(
+            InnsendingType.SYKEPENGE_VEDTAK_HENDELSE, InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE -> {
+                håndterVedtakHendelseService.håndterMottattVedtakHendelseOgSjekkInformasjonskravPåNytt(
+                    sakId = sakId,
+                    referanse = referanse,
+                )
+            }
+
+            InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT -> {
+                håndterFolkeregisterIdentHendelseService.håndterOppdatertFolkeregisterIdentForSak(
                     sakId = sakId,
                     referanse = referanse,
                 )
@@ -161,6 +174,23 @@ class HendelseMottattHåndteringJobbUtfører(
                     referanse = referanse,
                     uførevedtak = parsedMelding as UførevedtakV0,
                     mottattTidspunkt = mottattTidspunkt,
+                )
+            }
+
+            InnsendingType.LEGEERKLÆRING -> {
+                val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
+                if (sisteYtelsesBehandling != null &&
+                    trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
+                ) {
+                    log.info("Legeerklæring håndteres ikke fordi søknad er trukket for sakId: $sakId")
+                    return
+                }
+                håndterMottattDokumentService.håndterMottatteDokumenter(
+                    sakId,
+                    referanse,
+                    mottattTidspunkt,
+                    innsendingType,
+                    parsedMelding
                 )
             }
 
@@ -214,10 +244,16 @@ class HendelseMottattHåndteringJobbUtfører(
                 mottaDokumentService = MottaDokumentService(repositoryProvider),
                 mottattDokumentRepository = repositoryProvider.provide(),
                 håndterKlageService = HåndterKlageService(repositoryProvider, gatewayProvider),
-                håndterTilbakekrevingHendelse = HåndterTilbakekrevingHendelseService(repositoryProvider, gatewayProvider),
+                håndterTilbakekrevingHendelse = HåndterTilbakekrevingHendelseService(
+                    repositoryProvider,
+                    gatewayProvider
+                ),
                 håndterDialogMeldingService = HåndterDialogMeldingService(repositoryProvider, gatewayProvider),
-                håndterSykepengevedtakService = HåndterSykepengevedtakService(repositoryProvider, gatewayProvider),
+                håndterVedtakHendelseService = HåndterVedtakHendelseService(repositoryProvider, gatewayProvider),
                 håndterUførevedtakService = HåndterUførevedtakService(repositoryProvider, gatewayProvider),
+                håndterFolkeregisterIdentHendelseService = HåndterFolkeregisterIdentHendelseService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
             )
         }
 

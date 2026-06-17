@@ -12,14 +12,14 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import java.net.URI
 import java.time.LocalDate
 
 // https://tiltakspenger-datadeling.intern.dev.nav.no/swagger
 class TiltakspengerGatewayImpl : TiltakspengerGateway {
-    private val url = URI.create(requiredConfigForKey("integrasjon.tiltakspenger.url") + "/vedtak/perioder")
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tiltakspenger.scope"))
+    private val url = URI.create(requiredConfigForKey("INTEGRASJON_TILTAKSPENGER_URL") + "/vedtak/perioder")
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_TILTAKSPENGER_SCOPE"))
 
     companion object : Factory<TiltakspengerGateway> {
         override fun konstruer(): TiltakspengerGateway {
@@ -28,7 +28,7 @@ class TiltakspengerGatewayImpl : TiltakspengerGateway {
     }
 
     private val client = RestClient.withDefaultResponseHandler(
-        config = config, tokenProvider = ClientCredentialsTokenProvider, prometheus = prometheus
+        config = config, tokenProvider = AzureM2MTokenProvider, prometheus = prometheus
     )
 
     private fun query(request: TiltakspengerRequest): List<TiltakspengerVedtakResponse> {

@@ -64,6 +64,9 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
         Vurderingsbehov.REVURDER_SYKESTIPEND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SYKESTIPEND
         Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
+        Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT
+        Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
+        Vurderingsbehov.VURDER_KRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_KRAV
     }
 
 
@@ -108,5 +111,7 @@ fun ÅrsakTilOpprettelse?.tilKontrakt(): no.nav.aap.behandlingsflyt.kontrakt.beh
         ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9 -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9
         ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
         ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
+        ÅrsakTilOpprettelse.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.G_REGULERING
+        ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
         null -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UDEFINERT
     }

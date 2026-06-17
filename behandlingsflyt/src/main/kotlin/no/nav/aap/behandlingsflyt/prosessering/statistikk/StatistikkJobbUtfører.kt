@@ -42,7 +42,7 @@ class StatistikkJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return StatistikkJobbUtfører(
                 statistikkGateway = gatewayProvider.provide(),
-                statistikkMetoder = StatistikkMetoder(repositoryProvider)
+                statistikkMetoder = StatistikkMetoder(repositoryProvider, gatewayProvider),
             )
         }
 

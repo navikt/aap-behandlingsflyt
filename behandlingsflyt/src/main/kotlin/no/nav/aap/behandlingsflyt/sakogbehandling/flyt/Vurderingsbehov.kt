@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov as Ekspone
 
 enum class Vurderingsbehov {
     MOTTATT_SØKNAD,
+    VURDER_KRAV,
     HELHETLIG_VURDERING,
     MOTTATT_AKTIVITETSMELDING,
     MOTTATT_MELDEKORT,
@@ -16,7 +17,7 @@ enum class Vurderingsbehov {
     KLAGE_TRUKKET,
     REVURDER_MEDLEMSKAP,
     REVURDER_SAMORDNING,
-    REVURDER_LOVVALG,
+    REVURDER_LOVVALG,           // Brukes ikke lenger, men kan ikke slettes. Bruk LOVVALG_OG_MEDLEMSKAP isteden.
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_STUDENT,
@@ -52,12 +53,14 @@ enum class Vurderingsbehov {
     EFFEKTUER_AKTIVITETSPLIKT,
     EFFEKTUER_AKTIVITETSPLIKT_11_9,
     OVERGANG_UFORE,
+    OVERGANG_UFORE_AUTOMATISK_STANS,
     OVERGANG_ARBEID,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
     BARNETILLEGG_SATS_REGULERING,
     REVURDER_SYKESTIPEND,
-    ETABLERING_EGEN_VIRKSOMHET
+    ETABLERING_EGEN_VIRKSOMHET,
+    AKTIVITETSPLIKTBEHANDLING_AVBRUTT
     ;
 
     companion object {
@@ -131,6 +134,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
         EksponertÅrsak.OPPHOLDSKRAV -> Vurderingsbehov.OPPHOLDSKRAV
         EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
+        EksponertÅrsak.OVERGANG_UFORE_AUTOMATISK_STANS -> Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
         EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
         EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
@@ -140,4 +144,6 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.BARNETILLEGG_SATS_REGULERING -> Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
         EksponertÅrsak.REVURDER_SYKESTIPEND -> Vurderingsbehov.REVURDER_SYKESTIPEND
         EksponertÅrsak.ETABLERING_EGEN_VIRKSOMHET -> Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
+        EksponertÅrsak.AKTIVITETSPLIKTBEHANDLING_AVBRUTT -> Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT
+        EksponertÅrsak.VURDER_KRAV -> Vurderingsbehov.VURDER_KRAV
     }

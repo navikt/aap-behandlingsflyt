@@ -1,14 +1,12 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.`andreYtelserOppgittISøknad`
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -32,7 +30,7 @@ class AndreYtelserOppgittISøknadRepositoryImplTest {
     @Test
     fun `lagre og hente ut igjen`() {
         val behandling = dataSource.transaction {
-            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            val sak = sak(it, 1 januar 2023)
             finnEllerOpprettBehandling(it, sak)
         }
 
@@ -50,7 +48,7 @@ class AndreYtelserOppgittISøknadRepositoryImplTest {
         }
 
         val resultat = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(behandling.id)
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
         assertThat(resultat).isEqualTo(input)

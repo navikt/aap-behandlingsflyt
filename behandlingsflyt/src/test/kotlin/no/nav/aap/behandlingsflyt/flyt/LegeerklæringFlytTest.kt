@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -109,13 +108,11 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
     @Test
     fun `Ventebehov gjør at behandling ikke kommer videre før fristen er gått ut`() {
         val fom = LocalDate.now()
-        val periode = Periode(fom, fom.plusYears(3))
         val person = PERSON_62().medInntekter(emptyList())
 
         val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
-            periode = periode,
         )
 
         // Validér avklaring

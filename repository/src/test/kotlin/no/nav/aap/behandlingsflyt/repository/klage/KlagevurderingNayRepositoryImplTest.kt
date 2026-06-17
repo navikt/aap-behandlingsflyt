@@ -9,18 +9,18 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.Klagebehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import java.time.LocalDate
 
 class KlagevurderingNayRepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        private val søknadsdato = LocalDate.now()
 
         private lateinit var dataSource: TestDataSource
 
@@ -38,7 +38,7 @@ class KlagevurderingNayRepositoryImplTest {
     @Test
     fun `Lagrer og henter klagevurdering nay`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, søknadsdato)
             finnEllerOpprettBehandling(connection, sak)
             val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
 
@@ -49,7 +49,8 @@ class KlagevurderingNayRepositoryImplTest {
                 innstilling = KlageInnstilling.OPPRETTHOLD,
                 vilkårSomOmgjøres = emptyList(),
                 vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            opprettet = Instant.now()
             )
 
             klagebehandlingNayRepository.lagre(klageBehandling.id, vurdering)

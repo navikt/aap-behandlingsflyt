@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
@@ -26,9 +26,7 @@ data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
 data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse?,
-    override val kvalitetssikretAv: VurdertAvResponse? = null,
-    override val besluttetAv: VurdertAvResponse? = null,
+    override val vurderingerMeta: VurderingerMetaResponse,
     val lovvalg: LovvalgResponse,
     val medlemskap: MedlemskapResponse?,
     val overstyrt: Boolean = false,
@@ -52,10 +50,10 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
     PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
         fom = fom,
         tom = tom,
-        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato.toLocalDate()),
-        besluttetAv = vurdertAvService.besluttetAv(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-            behandlingId = vurdertIBehandling
+            behandlingId = vurdertIBehandling,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato.toLocalDate()),
         ),
         lovvalg = lovvalg.toResponse(),
         medlemskap = medlemskap?.toResponse(),

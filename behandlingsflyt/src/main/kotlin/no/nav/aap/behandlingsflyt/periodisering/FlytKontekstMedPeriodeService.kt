@@ -10,11 +10,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.AUTOMATISK_
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.G_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.OVERGANG_UFORE_STANS
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -53,88 +55,95 @@ class FlytKontekstMedPeriodeService(
             vurderingsbehovRelevanteForStegMedPerioder = relevanteVurderingsbehovMedPerioder
         )
     }
-
-    private fun prioritertType(vurderingTyper: Set<VurderingType>, typeBehandling: TypeBehandling): VurderingType {
-        if (typeBehandling == TypeBehandling.Førstegangsbehandling) {
-            return FØRSTEGANGSBEHANDLING
+    
+    companion object {
+        fun prioritertType(vurderingTyper: Set<VurderingType>, typeBehandling: TypeBehandling): VurderingType {
+            if (typeBehandling == TypeBehandling.Førstegangsbehandling) {
+                return FØRSTEGANGSBEHANDLING
+            }
+            return when {
+                FØRSTEGANGSBEHANDLING in vurderingTyper -> FØRSTEGANGSBEHANDLING
+                REVURDERING in vurderingTyper -> REVURDERING
+                G_REGULERING in vurderingTyper -> G_REGULERING
+                MELDEKORT in vurderingTyper -> MELDEKORT
+                EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
+                EFFEKTUER_AKTIVITETSPLIKT_11_9 in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT_11_9
+                UTVID_VEDTAKSLENGDE in vurderingTyper -> UTVID_VEDTAKSLENGDE
+                MIGRER_RETTIGHETSPERIODE in vurderingTyper -> MIGRER_RETTIGHETSPERIODE
+                AUTOMATISK_BREV in vurderingTyper -> AUTOMATISK_BREV
+                OVERGANG_UFORE_STANS in vurderingTyper -> OVERGANG_UFORE_STANS
+                else -> IKKE_RELEVANT
+            }
         }
-        return when {
-            FØRSTEGANGSBEHANDLING in vurderingTyper -> FØRSTEGANGSBEHANDLING
-            REVURDERING in vurderingTyper -> REVURDERING
-            MELDEKORT in vurderingTyper -> MELDEKORT
-            EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
-            EFFEKTUER_AKTIVITETSPLIKT_11_9 in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT_11_9
-            UTVID_VEDTAKSLENGDE in vurderingTyper -> UTVID_VEDTAKSLENGDE
-            MIGRER_RETTIGHETSPERIODE in vurderingTyper -> MIGRER_RETTIGHETSPERIODE
-            AUTOMATISK_BREV in vurderingTyper -> AUTOMATISK_BREV
-            else -> IKKE_RELEVANT
-        }
-    }
 
-    private fun vurderingsbehovTilType(vurderingsbehov: Vurderingsbehov): VurderingType {
-        return when (vurderingsbehov) {
-            Vurderingsbehov.MOTTATT_SØKNAD ->
-                FØRSTEGANGSBEHANDLING
+        fun vurderingsbehovTilType(vurderingsbehov: Vurderingsbehov): VurderingType {
+            return when (vurderingsbehov) {
+                Vurderingsbehov.MOTTATT_SØKNAD ->
+                    FØRSTEGANGSBEHANDLING
 
-            Vurderingsbehov.HELHETLIG_VURDERING,
-            Vurderingsbehov.MOTTATT_AKTIVITETSMELDING,
-            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-            Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING,
-            Vurderingsbehov.MOTTATT_DIALOGMELDING,
-            Vurderingsbehov.G_REGULERING,
-            Vurderingsbehov.REVURDER_MEDLEMSKAP,
-            Vurderingsbehov.REVURDER_BEREGNING,
-            Vurderingsbehov.REVURDER_YRKESSKADE,
-            Vurderingsbehov.REVURDER_LOVVALG,
-            Vurderingsbehov.REVURDER_SAMORDNING,
-            Vurderingsbehov.REVURDER_STUDENT,
-            Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
-            Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
-            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-            Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
-            Vurderingsbehov.BARNETILLEGG,
-            Vurderingsbehov.INSTITUSJONSOPPHOLD,
-            Vurderingsbehov.SAMORDNING_OG_AVREGNING,
-            Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
-            Vurderingsbehov.REVURDER_SAMORDNING_UFØRE,
-            Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
-            Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER,
-            Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON,
-            Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON,
-            Vurderingsbehov.REVURDER_SYKESTIPEND,
-            Vurderingsbehov.REFUSJONSKRAV,
-            Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-            Vurderingsbehov.SØKNAD_TRUKKET,
-            Vurderingsbehov.DØDSFALL_BRUKER,
-            Vurderingsbehov.DØDSFALL_BARN,
-            Vurderingsbehov.VEDTAKSLENGDE_MANUELT,
-            Vurderingsbehov.REVURDERING_AVBRUTT ->
-                REVURDERING
+                Vurderingsbehov.HELHETLIG_VURDERING,
+                Vurderingsbehov.MOTTATT_AKTIVITETSMELDING,
+                Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING,
+                Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                Vurderingsbehov.REVURDER_MEDLEMSKAP,
+                Vurderingsbehov.REVURDER_BEREGNING,
+                Vurderingsbehov.REVURDER_YRKESSKADE,
+                Vurderingsbehov.REVURDER_LOVVALG,
+                Vurderingsbehov.REVURDER_SAMORDNING,
+                Vurderingsbehov.REVURDER_STUDENT,
+                Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
+                Vurderingsbehov.BARNETILLEGG,
+                Vurderingsbehov.INSTITUSJONSOPPHOLD,
+                Vurderingsbehov.SAMORDNING_OG_AVREGNING,
+                Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+                Vurderingsbehov.REVURDER_SAMORDNING_UFØRE,
+                Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
+                Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER,
+                Vurderingsbehov.REVURDER_SAMORDNING_BARNEPENSJON,
+                Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON,
+                Vurderingsbehov.REVURDER_SYKESTIPEND,
+                Vurderingsbehov.REFUSJONSKRAV,
+                Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                Vurderingsbehov.SØKNAD_TRUKKET,
+                Vurderingsbehov.DØDSFALL_BRUKER,
+                Vurderingsbehov.DØDSFALL_BARN,
+                Vurderingsbehov.VEDTAKSLENGDE_MANUELT,
+                Vurderingsbehov.VURDER_KRAV,
+                Vurderingsbehov.REVURDERING_AVBRUTT ->
+                    REVURDERING
 
-            Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
-            Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
-            Vurderingsbehov.OVERGANG_UFORE,
-            Vurderingsbehov.OVERGANG_ARBEID,
-            Vurderingsbehov.OPPHOLDSKRAV,
-            Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
-            Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
-                REVURDERING
+                Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
+                Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
+                Vurderingsbehov.OVERGANG_UFORE,
+                Vurderingsbehov.OVERGANG_ARBEID,
+                Vurderingsbehov.OPPHOLDSKRAV,
+                Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
+                Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
+                    REVURDERING
 
-            Vurderingsbehov.MOTTATT_MELDEKORT,
-            Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
-            Vurderingsbehov.FRITAK_MELDEPLIKT -> MELDEKORT
+                Vurderingsbehov.MOTTATT_MELDEKORT,
+                Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
+                Vurderingsbehov.FRITAK_MELDEPLIKT -> MELDEKORT
 
-            Vurderingsbehov.MOTATT_KLAGE,
-            Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE,
-                ->
-                IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
-            Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
-            Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT
-            Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
-            Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> EFFEKTUER_AKTIVITETSPLIKT_11_9
-            Vurderingsbehov.UTVID_VEDTAKSLENGDE -> UTVID_VEDTAKSLENGDE
-            Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> MIGRER_RETTIGHETSPERIODE
-            Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> AUTOMATISK_BREV
+                Vurderingsbehov.MOTATT_KLAGE,
+                Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE,
+                    ->
+                    IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
+                Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
+                Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT -> IKKE_RELEVANT
+                Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT
+                Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
+                Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> EFFEKTUER_AKTIVITETSPLIKT_11_9
+                Vurderingsbehov.UTVID_VEDTAKSLENGDE -> UTVID_VEDTAKSLENGDE
+                Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> MIGRER_RETTIGHETSPERIODE
+                Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> AUTOMATISK_BREV
+                Vurderingsbehov.G_REGULERING -> G_REGULERING
+                Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS -> OVERGANG_UFORE_STANS
+            }
         }
     }
 }

@@ -4,44 +4,61 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.Meldep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
+import no.nav.aap.behandlingsflyt.utils.diff.somDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import javax.sql.DataSource
-import kotlin.collections.firstOrNull
-import kotlin.collections.lastOrNull
-import kotlin.collections.orEmpty
 
 class TilkjentYtelseService(
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry
 ) {
     fun hentTilkjentYtelse(behandlingReferanse: BehandlingReferanse): TilkjentYtelse2Dto {
+        val behandling = hentBehandling(behandlingReferanse)
+        return hentTilkjentYtelseForBehandling(behandling.id)
+    }
+
+
+    fun hentTilkjentYtelseMedDiff(behandlingReferanse: BehandlingReferanse): TilkjentYtelse2MedDiffDto {
+        val behandling = hentBehandling(behandlingReferanse)
+        val gjeldendeTilkjentYtelse = hentTilkjentYtelseForBehandling(behandling.id)
+        val forrigeTilkjentYtelse = behandling.forrigeBehandlingId?.let { hentTilkjentYtelseForBehandling(it) }
+
+        val diff = diffTidslinjer(
+            forrige = forrigeTilkjentYtelse?.tilTidslinje() ?: Tidslinje(),
+            nå = gjeldendeTilkjentYtelse.tilTidslinje()
+        ).mapValue { it.somDto() }
+
+        return TilkjentYtelse2MedDiffDto( diff.verdier().toList())
+    }
+
+    private fun hentTilkjentYtelseForBehandling(behandlingId: BehandlingId): TilkjentYtelse2Dto {
         return dataSource.transaction(readOnly = true) { connection ->
             val repositoryFactory = repositoryRegistry.provider(connection)
-            val behandlingRepository = repositoryFactory.provide<BehandlingRepository>()
             val tilkjentYtelseRepository: TilkjentYtelseRepository =
                 repositoryFactory.provide<TilkjentYtelseRepository>()
             val meldekortRepository = repositoryFactory.provide<MeldekortRepository>()
             val meldeperiodeRepository = repositoryFactory.provide<MeldeperiodeRepository>()
 
-            val behandling = behandlingRepository.hent(behandlingReferanse)
-
             val meldekortene =
-                meldekortRepository.hentHvisEksisterer(behandling.id)
+                meldekortRepository.hentHvisEksisterer(behandlingId)
                     ?.meldekort()
                     .orEmpty()
 
             val tilkjentYtelseTidslinje =
-                tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
+                tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
                     ?.tilTidslinje()
                     .orEmpty()
 
             val meldeperioder = if (tilkjentYtelseTidslinje.isNotEmpty()) {
-                meldeperiodeRepository.hentMeldeperioder(behandling.id, tilkjentYtelseTidslinje.helePerioden())
+                meldeperiodeRepository.hentMeldeperioder(behandlingId, tilkjentYtelseTidslinje.helePerioden())
             } else {
                 emptyList()
             }
@@ -54,6 +71,16 @@ class TilkjentYtelseService(
                 )
             )
         }
+
+    }
+
+    private fun hentBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
+        val behandling = dataSource.transaction(readOnly = true) { connection ->
+            val repositoryFactory = repositoryRegistry.provider(connection)
+            val behandlingRepository = repositoryFactory.provide<BehandlingRepository>()
+            behandlingRepository.hent(behandlingReferanse)
+        }
+        return behandling
     }
 
     private fun mapTilkjentYtelsePerioder(

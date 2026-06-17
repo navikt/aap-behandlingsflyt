@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -38,7 +39,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
             getGrunnlag<BehandlingReferanse, OvergangUføreGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_OVERGANG_UFORE.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_OVERGANG_UFORE.løsesAv
             ) { req ->
                 val respons = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -63,23 +64,13 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val nyeVurderinger = grunnlag?.overgangUføreVurderingerVurdertIBehandling(behandling.id)
                         .orEmpty()
                         .map { OvergangUføreVurderingResponse.fraDomene(it, vurdertAvService) }
-
-                    val nyesteVurdering = grunnlag?.overgangUføreVurderingerVurdertIBehandling(behandling.id)
-                        ?.maxByOrNull { it.opprettet!! }
-                        ?.let { OvergangUføreVurderingResponse.fraDomene(it, vurdertAvService) }
-
+                    
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
 
                     OvergangUføreGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.AVKLAR_OVERGANG_UFORE.løsesISteg, behandling),
-                        vurdering = nyesteVurdering, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
-                        // TODO: Fjern
-                        gjeldendeVedtatteVurderinger = OvergangUføreVurderingResponse.fraDomene(
-                            grunnlag?.vedtattOvergangUførevurderingstidslinje(behandling.id).orEmpty(),
-                            vurdertAvService
-                        ),
                         sisteVedtatteVurderinger = OvergangUføreVurderingResponse.fraDomene(
                             grunnlag?.vedtattOvergangUførevurderingstidslinje(behandling.id).orEmpty(),
                             vurdertAvService
@@ -105,9 +96,11 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
                         perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()
                             .orEmpty().toList(),
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            Definisjon.AVKLAR_OVERGANG_UFORE,
-                            behandling.id
+                        vurderingerMeta = VurderingerMetaResponse(
+                            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                                Definisjon.AVKLAR_OVERGANG_UFORE,
+                                behandling.id,
+                            ),
                         ),
                         uføreSøknadOpplysninger = uføreSøknad?.let { UføreSøknadOpplysninger(it.uføreSøknad.soknadsdato) }
                     )

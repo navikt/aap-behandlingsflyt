@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet
 
 import no.nav.aap.komponenter.verdityper.Bruker
+import java.time.Instant
 
 data class BehandlendeEnhetLøsningDto(
     val skalBehandlesAvNay: Boolean,
@@ -9,6 +10,7 @@ data class BehandlendeEnhetLøsningDto(
     fun tilVurdering(bruker: Bruker) = BehandlendeEnhetVurdering(
         skalBehandlesAvNay = skalBehandlesAvNay,
         skalBehandlesAvKontor = skalBehandlesAvKontor,
-        vurdertAv = bruker.ident
+        vurdertAv = bruker.ident,
+        opprettet = Instant.now(),
     )
 }

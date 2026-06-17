@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -72,13 +72,13 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val personOppholdUrl =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
+        URI.create(requiredConfigForKey("INTEGRASJON_INSTITUSJONSOPPHOLD_URL") + "?Med-Institusjonsinformasjon=true")
     private val enkeltOppholdURL =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsoppholdenkelt.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
+        URI.create(requiredConfigForKey("INTEGRASJON_INSTITUSJONSOPPHOLDENKELT_URL"))
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus
     )
 

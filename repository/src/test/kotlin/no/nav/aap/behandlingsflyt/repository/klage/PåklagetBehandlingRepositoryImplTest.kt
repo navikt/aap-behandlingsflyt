@@ -8,17 +8,17 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.PåklagetBehand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import java.time.LocalDate
+import java.time.Instant
 
 internal class PåklagetBehandlingRepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        private val søknadsdato = LocalDate.now()
 
         private lateinit var dataSource: TestDataSource
 
@@ -36,7 +36,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
     @Test
     fun `Lagrer og henter påklagetbehandling med id`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, søknadsdato)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
             
@@ -44,7 +44,8 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            opprettet = Instant.now()
             )
             
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
@@ -59,7 +60,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
     @Test
     fun `Lagrer og henter påklagetbehandling med referanse`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection, periode)
+            val sak = sak(connection, søknadsdato)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
 
@@ -67,7 +68,8 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
-                vurdertAv = "ident"
+                vurdertAv = "ident",
+            opprettet = Instant.now()
             )
 
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)

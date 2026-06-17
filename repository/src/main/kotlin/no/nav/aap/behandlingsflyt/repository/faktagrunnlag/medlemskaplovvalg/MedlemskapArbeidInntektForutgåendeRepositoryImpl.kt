@@ -1,9 +1,15 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
@@ -140,7 +146,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             deaktiverGrunnlag(behandlingId)
         }
 
-        val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag)
+        val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag, enhetGrunnlag)
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
@@ -165,7 +171,9 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
-            delete from INNTEKT_I_NORGE_FORUTGAAENDE where id = ANY(?::bigint[]);
+            delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
+            delete from INNTEKTER_I_NORGE_FORUTGAAENDE where id = ANY(?::bigint[]);
+            delete from ARBEID_DETALJER where arbeid_forutgaaende_id in (select id from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]));
             delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where vurderinger_id = ANY(?::bigint[]);
@@ -176,10 +184,12 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, inntekterIds)
-                setLongArray(3, arbeidIds)
+                setLongArray(3, inntekterIds)
                 setLongArray(4, arbeidIds)
-                setLongArray(5, vurderingerIds)
-                setLongArray(6, vurderingerIds)
+                setLongArray(5, arbeidIds)
+                setLongArray(6, arbeidIds)
+                setLongArray(7, vurderingerIds)
+                setLongArray(8, vurderingerIds)
             }
         }
         log.info("Slettet $deletedRows rader fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
@@ -227,7 +237,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    private fun lagreArbeidGrunnlag(arbeidGrunnlag: List<ArbeidINorgeGrunnlag>): Long? {
+    private fun lagreArbeidGrunnlag(
+        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ): Long? {
         if (arbeidGrunnlag.isEmpty()) return null
 
         val arbeiderQuery = """
@@ -237,20 +250,58 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
         for (forhold in arbeidGrunnlag) {
             val arbeidQuery = """
-                INSERT INTO ARBEID_FORUTGAAENDE (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?)
+                INSERT INTO ARBEID_FORUTGAAENDE (
+                    identifikator,
+                    arbeidsforhold_kode,
+                    arbeider_id,
+                    startdato,
+                    sluttdato,
+                    organisasjonsnavn
+                ) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
+            val orgNavn =
+                enhetGrunnlag.firstOrNull { it.orgnummer == forhold.identifikator }?.orgNavn
 
-            connection.execute(arbeidQuery) {
+            val arbeidId = connection.executeReturnKey(arbeidQuery) {
                 setParams {
                     setString(1, forhold.identifikator)
-                    setString(2, forhold.arbeidsforholdKode)
+                    setString(2, forhold.arbeidsforholdKode.kode)
                     setLong(3, arbeiderId)
                     setLocalDate(4, forhold.startdato)
                     setLocalDate(5, forhold.sluttdato)
+                    setString(6, orgNavn)
                 }
             }
+
+            lagreArbeidDetaljer(arbeidId, forhold.ansettelsesdetaljer)
         }
         return arbeiderId
+    }
+
+    private fun lagreArbeidDetaljer(arbeidId: Long, ansettelsesdetaljer: List<ArbeidAnsettelsesdetaljGrunnlag>) {
+        if (ansettelsesdetaljer.isEmpty()) return
+
+        val query = """
+            INSERT INTO ARBEID_DETALJER (
+                arbeid_forutgaaende_id,
+                skipsregister_kode,
+                skipstype_kode,
+                fartsomraade_kode,
+                yrke_kode,
+                yrke_beskrivelse
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        connection.executeBatch(query, ansettelsesdetaljer) {
+            setParams { detalj ->
+                setLong(1, arbeidId)
+                setString(2, detalj.skipsregister?.kode)
+                setString(3, detalj.skipstype?.kode)
+                setString(4, detalj.fartsomraade?.kode)
+                setString(5, detalj.yrke?.kode)
+                setString(6, detalj.yrke?.beskrivelse)
+            }
+        }
     }
 
     private fun lagreArbeidsInntektGrunnlag(
@@ -368,9 +419,35 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             setRowMapper {
                 ArbeidINorgeGrunnlag(
                     identifikator = it.getString("identifikator"),
-                    arbeidsforholdKode = it.getString("arbeidsforhold_kode"),
+                    arbeidsforholdKode = Arbeidsforholdtype.fraKode(it.getString("arbeidsforhold_kode")),
                     startdato = it.getLocalDate("startdato"),
                     sluttdato = it.getLocalDateOrNull("sluttdato"),
+                    organisasjonsNavn = it.getStringOrNull("organisasjonsnavn"),
+                    ansettelsesdetaljer = hentAnsettelsesdetaljer(it.getLong("id"))
+                )
+            }
+        }
+    }
+
+    private fun hentAnsettelsesdetaljer(arbeidId: Long): List<ArbeidAnsettelsesdetaljGrunnlag> {
+        val query = """
+            SELECT * FROM ARBEID_DETALJER WHERE arbeid_forutgaaende_id = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, arbeidId)
+            }
+            setRowMapper {
+                ArbeidAnsettelsesdetaljGrunnlag(
+                    skipsregister = it.getStringOrNull("skipsregister_kode")
+                        ?.let { kode -> Skipsregister.fraKode(kode) },
+                    skipstype = it.getStringOrNull("skipstype_kode")
+                        ?.let { kode -> Skipstype.fraKode(kode) },
+                    fartsomraade = it.getStringOrNull("fartsomraade_kode")
+                        ?.let { kode -> Fartsomraade.fraKode(kode) },
+                    yrke = it.getStringOrNull("yrke_kode")
+                        ?.let { kode -> Yrke(kode, it.getStringOrNull("yrke_beskrivelse")) },
                 )
             }
         }

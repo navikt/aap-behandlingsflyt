@@ -9,8 +9,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.utils.diff.somDto
+import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -23,10 +26,11 @@ fun NormalOpenAPIRoute.underveisVurderingerApi(datasource: DataSource, repositor
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, datasource),
         ),
         null,
+        null,
         info(
             summary = "Hente alle underveis-vurderinger på en behandling",
             description = """
-                * periode: Perioden denne vurdering gjelder for 
+                * periode: Perioden denne vurderingen gjelder for 
                 * meldePeriode: Meldeperioden denne vurderingen faller inn i
                 * trekk: Total trekk for hele perioden
             """.trimIndent()
@@ -47,4 +51,35 @@ fun NormalOpenAPIRoute.underveisVurderingerApi(datasource: DataSource, repositor
             respond(underveisGrunnlag.perioder.map(::UnderveisperiodeDto))
         }
     }
+    route("/api/behandling/underveis-med-diff/{referanse}").authorizedGet<BehandlingReferanse, UnderveisGrunnlagMedDiffDto>(
+        AuthorizationParamPathConfig(
+            behandlingPathParam = BehandlingPathParam("referanse"),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, datasource),
+        ),
+        null,
+        null,
+        info(
+            summary = "Hente underveisperioder med diff-vurderinger på gjeldende og forrige behandling"
+        )
+    ) { behandlingReferanse ->
+        val (gjeldendeUnderveisGrunnlag, forrigeUnderveisGrunnlag) = datasource.transaction(readOnly = true) { conn ->
+            val repositoryProvider = repositoryRegistry.provider(conn)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val behandling =
+                BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+            val underveisGrunnlagForrigeBehandling =
+                behandling.forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
+            Pair(underveisGrunnlag, underveisGrunnlagForrigeBehandling)
+        }
+
+        val diff = diffTidslinjer(
+            forrigeUnderveisGrunnlag?.tilDto()?.somTidslinje()?.komprimer() ?: Tidslinje(),
+            gjeldendeUnderveisGrunnlag?.tilDto()?.somTidslinje()?.komprimer() ?: Tidslinje(),
+        ).mapValue { it.somDto() }
+
+        respond(UnderveisGrunnlagMedDiffDto(diff.verdier().toList()))
+    }
+
 }

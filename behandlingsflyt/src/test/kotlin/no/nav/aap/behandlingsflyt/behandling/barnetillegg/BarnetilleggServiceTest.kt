@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.help.ident
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -16,22 +18,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBarnRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class BarnetilleggServiceTest {
     val gatewayProvider = createGatewayProvider {
@@ -62,18 +60,20 @@ class BarnetilleggServiceTest {
     fun `tidslinjen stopper når barnet blir 18 år`() {
         val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
 
-        val (sak, behandling) = opprettPersonBehandlingOgSak()
+        val (_, behandling) = opprettPersonBehandlingOgSak()
+        val søknadsdato = LocalDate.now()
 
-        val fødselsdatoGammeltBarn = LocalDate.now().minusYears(21)
-        val fødseldatoUngtBarn = LocalDate.now().minusYears(5)
+        val fødselsdatoGammeltBarn = søknadsdato.minusYears(21)
+        val fødseldatoUngtBarn = søknadsdato.minusYears(5)
 
+        val attenårsdagUngtBarn = søknadsdato.plusYears(13)
         val gammeltBarn = Barn(
-            ident = BarnIdentifikator.BarnIdent(genererIdent(fødselsdatoGammeltBarn)),
+            ident = BarnIdentifikator.BarnIdent(ident()),
             fødselsdato = Fødselsdato(fødselsdatoGammeltBarn)
         )
 
         val ungtBarn = Barn(
-            ident = BarnIdentifikator.BarnIdent(genererIdent(fødseldatoUngtBarn)),
+            ident = BarnIdentifikator.BarnIdent(ident()),
             fødselsdato = Fødselsdato(fødseldatoUngtBarn)
         )
 
@@ -84,14 +84,20 @@ class BarnetilleggServiceTest {
 
         val res = service.beregn(behandlingId = behandling.id)
 
-        assertTidslinje(res, sak.rettighetsperiode to {
-            assertThat(it).isEqualTo(
-                RettTilBarnetillegg(
-                    // Kun det unge barnet gir rett til barnetillegg
-                    barn = setOf(ungtBarn.identifikator())
+
+        assertTidslinje(
+            res, Periode(søknadsdato, attenårsdagUngtBarn.minusDays(1)) to {
+                assertThat(it).isEqualTo(
+                    RettTilBarnetillegg(
+                        // Kun det unge barnet gir rett til barnetillegg
+                        barn = setOf(ungtBarn.identifikator())
+                    )
                 )
-            )
-        })
+            },
+            Periode(attenårsdagUngtBarn, Tid.MAKS) to {
+                assertThat(it).isEqualTo(RettTilBarnetillegg())
+            }
+        )
     }
 
     @Test
@@ -104,7 +110,7 @@ class BarnetilleggServiceTest {
         val dødsdato = LocalDate.now().plusMonths(6)
 
         val dødtBarn = Barn(
-            ident = BarnIdentifikator.BarnIdent(genererIdent(fødseldatoUngtBarn)),
+            ident = BarnIdentifikator.BarnIdent(ident()),
             fødselsdato = Fødselsdato(fødseldatoUngtBarn),
             dødsdato = Dødsdato(dødsdato)
         )
@@ -131,10 +137,12 @@ class BarnetilleggServiceTest {
     fun `barnetillegg for folkeregistrerte barn skal gi rett på barnetillegg om man ikke har lagt inn perioder`() {
         val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
         val (sak, behandling) = opprettPersonBehandlingOgSak()
+        val søknadsdato = sak.rettighetsperiode.fom
         val fødseldatoUngtBarn = LocalDate.now().minusYears(5)
+        val attenårsdag = LocalDate.now().plusYears(13)
 
         val barn = Barn(
-            ident = BarnIdentifikator.BarnIdent(genererIdent(fødseldatoUngtBarn)),
+            ident = BarnIdentifikator.BarnIdent(ident()),
             fødselsdato = Fødselsdato(fødseldatoUngtBarn),
         )
 
@@ -145,9 +153,14 @@ class BarnetilleggServiceTest {
 
         val res = service.beregn(behandlingId = behandling.id)
 
-        assertTidslinje(res, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom) to {
-            assertThat(it.barnMedRettTil()).hasSize(1)
-        })
+        assertTidslinje(
+            res, Periode(søknadsdato, attenårsdag.minusDays(1)) to {
+                assertThat(it.barnMedRettTil()).hasSize(1)
+            },
+            Periode(attenårsdag, Tid.MAKS) to {
+                assertThat(it.barnMedRettTil()).isEmpty()
+            }
+        )
     }
 
     @Test
@@ -156,7 +169,7 @@ class BarnetilleggServiceTest {
         val (sak, behandling) = opprettPersonBehandlingOgSak()
 
         val barn = Barn(
-            ident = BarnIdentifikator.BarnIdent(genererIdent(LocalDate.now().minusYears(5))),
+            ident = BarnIdentifikator.BarnIdent(ident()),
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(5)),
         )
 
@@ -168,14 +181,27 @@ class BarnetilleggServiceTest {
             listOf(barn)
         )
 
-        lagreVurdering(behandling, VurdertBarn(ident = barn.ident, vurderinger = listOf(
-            VurderingAvForeldreAnsvar(fraDato = periodeUtenRett.fom, harForeldreAnsvar = false, begrunnelse = "Uten rett"),
-            VurderingAvForeldreAnsvar(fraDato = periodeMedRett.fom, harForeldreAnsvar = true, begrunnelse = "Med rett")
-        )))
+        lagreVurdering(
+            behandling, VurdertBarn(
+                ident = barn.ident, vurderinger = listOf(
+                    VurderingAvForeldreAnsvar(
+                        fraDato = periodeUtenRett.fom,
+                        harForeldreAnsvar = false,
+                        begrunnelse = "Uten rett"
+                    ),
+                    VurderingAvForeldreAnsvar(
+                        fraDato = periodeMedRett.fom,
+                        harForeldreAnsvar = true,
+                        begrunnelse = "Med rett"
+                    )
+                )
+            )
+        )
 
         val res = service.beregn(behandlingId = behandling.id)
 
-        assertTidslinje(res,
+        assertTidslinje(
+            res,
             periodeUtenRett to { assertThat(it.barnMedRettTil()).hasSize(0) },
             periodeMedRett to { assertThat(it.barnMedRettTil()).hasSize(1) }
         )
@@ -276,16 +302,7 @@ class BarnetilleggServiceTest {
     }
 
     private fun opprettPersonBehandlingOgSak(): Pair<Sak, Behandling> {
-        val person =
-            Person(
-                PersonId(Random().nextLong()),
-                UUID.randomUUID(),
-                listOf(genererIdent(LocalDate.now().minusYears(23)))
-            )
-        val sak = InMemorySakRepository.finnEllerOpprett(
-            person,
-            periode = Periode(LocalDate.now(), LocalDate.now().plusYears(5)),
-        )
+        val sak = opprettInMemorySak()
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,
             typeBehandling = TypeBehandling.Førstegangsbehandling,

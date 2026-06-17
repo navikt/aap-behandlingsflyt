@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -23,9 +23,7 @@ data class PeriodisertForutgåendeMedlemskapGrunnlagResponse(
 data class PeriodisertManuellVurderingForForutgåendeMedlemskapResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse?,
-    override val kvalitetssikretAv: VurdertAvResponse? = null,
-    override val besluttetAv: VurdertAvResponse? = null,
+    override val vurderingerMeta: VurderingerMetaResponse,
     val begrunnelse: String,
     val harForutgåendeMedlemskap: Boolean,
     val varMedlemMedNedsattArbeidsevne: Boolean?,
@@ -41,10 +39,10 @@ fun ManuellVurderingForForutgåendeMedlemskap.toResponse(
     PeriodisertManuellVurderingForForutgåendeMedlemskapResponse(
         fom = fom,
         tom = tom,
-        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertTidspunkt.toLocalDate()),
-        besluttetAv = vurdertAvService.besluttetAv(
+        vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-            behandlingId = vurdertIBehandling
+            behandlingId = vurdertIBehandling,
+            vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertTidspunkt.toLocalDate()),
         ),
         begrunnelse = begrunnelse,
         harForutgåendeMedlemskap = harForutgåendeMedlemskap,

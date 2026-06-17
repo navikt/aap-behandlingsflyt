@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus.DatadelingBehandlingStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -14,11 +16,13 @@ class SakstatusDatadelingService(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
     private val behandlingService: BehandlingService,
+    private val mottattDokumentRepository: MottattDokumentRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         repositoryProvider.provide(),
         repositoryProvider.provide(),
-        BehandlingService(repositoryProvider, gatewayProvider)
+        BehandlingService(repositoryProvider, gatewayProvider),
+        mottattDokumentRepository = repositoryProvider.provide(),
     )
 
     fun utledSakstatus(referanse: BehandlingReferanse): SakStatus {
@@ -38,11 +42,15 @@ class SakstatusDatadelingService(
             else -> DatadelingBehandlingStatus.FERDIGBEHANDLET
         }
 
+        val søknadsdatoer = mottattDokumentRepository
+            .hentDokumenterAvType(sak.id, InnsendingType.SØKNAD)
+            .map { it.mottattTidspunkt.toLocalDate() }
 
         return SakStatus.fromKelvin(
-            sak.saksnummer.toString(),
-            datadelingBehandlingStatus,
-            sak.rettighetsperiode
+            saksnummer = sak.saksnummer.toString(),
+            datadelingBehandlingStatus = datadelingBehandlingStatus,
+            periode = sak.rettighetsperiode,
+            søknadsdatoer = søknadsdatoer
         )
     }
 }

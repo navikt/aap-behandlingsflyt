@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
             getGrunnlag<BehandlingReferanse, BistandGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_BISTANDSBEHOV.kode.toString()
+                påkrevdRolle = Definisjon.AVKLAR_BISTANDSBEHOV.løsesAv
             ) { req ->
                 val respons = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

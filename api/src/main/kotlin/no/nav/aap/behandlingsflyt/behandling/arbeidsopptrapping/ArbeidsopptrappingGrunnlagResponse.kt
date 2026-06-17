@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -18,15 +19,13 @@ data class ArbeidsopptrappingGrunnlagResponse(
     override val behøverVurderinger: List<Periode>,
     override val ikkeRelevantePerioder: List<Periode>,
     val ikkeVurderbarePerioder: List<Periode>,
-    val kvalitetssikretAv: VurdertAvResponse?,
+    val vurderingerMeta: VurderingerMetaResponse,
 ) : PeriodiserteVurderingerDto<ArbeidsopptrappingVurderingResponse>
 
 data class ArbeidsopptrappingVurderingResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val vurdertAv: VurdertAvResponse,
-    override val kvalitetssikretAv: VurdertAvResponse?,
-    override val besluttetAv: VurdertAvResponse?,
+    override val vurderingerMeta: VurderingerMetaResponse,
     val begrunnelse: String,
     val reellMulighetTilOpptrapping: Boolean,
     val rettPaaAAPIOpptrapping: Boolean,
@@ -62,17 +61,13 @@ data class ArbeidsopptrappingVurderingResponse(
             rettPaaAAPIOpptrapping = arbeidsopptrappingVurdering.rettPaaAAPIOpptrapping,
             fom = fom,
             tom = tom,
-            vurdertAv = vurdertAvService.medNavnOgEnhet(
-                arbeidsopptrappingVurdering.vurdertAv,
-                arbeidsopptrappingVurdering.opprettetTid
-            ),
-            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.ARBEIDSOPPTRAPPING,
                 behandlingId = arbeidsopptrappingVurdering.vurdertIBehandling,
-            ),
-            besluttetAv = vurdertAvService.besluttetAv(
-                definisjon = Definisjon.ARBEIDSOPPTRAPPING,
-                behandlingId = arbeidsopptrappingVurdering.vurdertIBehandling,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(
+                    arbeidsopptrappingVurdering.vurdertAv,
+                    arbeidsopptrappingVurdering.opprettetTid,
+                ),
             ),
         )
     }

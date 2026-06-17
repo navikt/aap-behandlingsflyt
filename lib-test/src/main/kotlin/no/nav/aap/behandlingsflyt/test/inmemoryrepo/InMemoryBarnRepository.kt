@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -52,8 +53,17 @@ object InMemoryBarnRepository : BarnRepository {
         }
     }
 
-    override fun hentVurderteBarnHvisEksisterer(behandlingId: BehandlingId): VurderteBarn {
-        TODO("Not yet implemented")
+    override fun hentVurderteBarnHvisEksisterer(behandlingId: BehandlingId): VurderteBarn? {
+        synchronized(lock) {
+            return vurdertBarn[behandlingId]?.let {
+                VurderteBarn(
+                    id = 0,
+                    barn = it,
+                    vurdertAv = "ingen",
+                    vurdertTidspunkt = LocalDateTime.now()
+                )
+            }
+        }
     }
 
     override fun hent(behandlingId: BehandlingId): BarnGrunnlag {
@@ -133,8 +143,12 @@ object InMemoryBarnRepository : BarnRepository {
         TODO("Not yet implemented")
     }
 
-    override fun finnSaksbehandlerOppgitteBarn(ident: Ident): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn {
+    override fun finnFødselsdatoForRegisterBarn(ident: Ident): Fødselsdato? {
         TODO("Not yet implemented")
+    }
+
+    override fun finnSaksbehandlerOppgitteBarn(ident: Ident): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? {
+        return null
     }
 
     override fun finnSøknadsBarn(ident: Ident): OppgitteBarn.OppgittBarn? {

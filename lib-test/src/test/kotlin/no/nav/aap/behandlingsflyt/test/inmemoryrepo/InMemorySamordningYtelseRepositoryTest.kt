@@ -3,18 +3,15 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -27,7 +24,7 @@ class InMemorySamordningYtelseRepositoryTest {
     @Test
     fun `lagre og hente ut igjen`() {
         val samordningYtelseRepo = InMemorySamordningYtelseRepository
-        val behandling = opprettBehandling(nySak())
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         samordningYtelseRepo.lagre(behandling.id, emptySet())
 
         val res = samordningYtelseRepo.hentHvisEksisterer(behandling.id)
@@ -415,16 +412,7 @@ class InMemorySamordningYtelseRepositoryTest {
 
 
     private fun nySak(): Sak {
-        return PersonOgSakService(
-            object : IdentGateway {
-                override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
-                    return listOf(ident)
-                }
-            },
-            FakeApiInternGateway.konstruer(),
-            InMemoryPersonRepository,
-            InMemorySakRepository
-        ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        return opprettInMemorySak(LocalDate.now())
     }
 
     private fun opprettBehandling(sak: Sak): Behandling {

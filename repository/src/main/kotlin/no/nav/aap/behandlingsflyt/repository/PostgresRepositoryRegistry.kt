@@ -44,6 +44,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.overgangarbeid.Overga
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.test.TestAutomatiskMeldekortSakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.dagpenger.DagpengerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
@@ -59,10 +60,12 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeids
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver.SamordningArbeidsgiverRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.inntektsbortfall.InntektsbortfallRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav.KravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangUføreRepositoryImpl
@@ -169,3 +172,6 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<RettighetstypeRepositoryImpl>()
     .register<EtableringEgenVirksomhetRepositoryImpl>()
     .register<StansOpphørRepositoryImpl>()
+    .register<AvbrytAktivitetspliktbehandlingRepositoryImpl>()
+    .register<KravRepositoryImpl>()
+    .register<TestAutomatiskMeldekortSakRepositoryImpl>()

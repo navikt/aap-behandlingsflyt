@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.Meldep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
@@ -35,9 +36,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -75,7 +78,7 @@ class UnderveisService(
         meldeperiodeRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
-        vedtakService = VedtakService(repositoryProvider),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider),
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
@@ -138,7 +141,7 @@ class UnderveisService(
     }
 
     fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
-        val input = genererInput(sakId, behandlingId)
+        val input = genererInput(behandlingId)
 
         val vurderRegler = vurderRegler(input)
         underveisRepository.lagre(
@@ -155,7 +158,7 @@ class UnderveisService(
         }
     }
 
-    private fun genererInput(sakId: SakId, behandlingId: BehandlingId): UnderveisInput {
+    private fun genererInput(behandlingId: BehandlingId): UnderveisInput {
         val sak = sakService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
@@ -183,7 +186,10 @@ class UnderveisService(
         val periodeForVurdering = utledPeriodeForUnderveisvurderinger(behandlingId, sak)
         val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, periodeForVurdering)
 
-        val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
+        val vedtaksdatoFørstegangsbehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse))
+            vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)
+        else
+            vedtakService.vedtakstidspunktFørstegangsbehandling(sak.id)
 
         val rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId)
 
@@ -252,5 +258,15 @@ class UnderveisService(
         val vedtattUnderveis =
             behandlingRepository.hent(behandlingId).forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         return vedtattUnderveis?.perioder?.maxOfOrNull { it.periode.tom }
+    }
+
+    fun rettighetsType(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
+        return underveisRepository.hentHvisEksisterer(behandlingId)
+            ?.rettighetstyper()
+            .orEmpty()
+    }
+
+    fun harRett(behandlingId: BehandlingId): Boolean {
+        return rettighetsType(behandlingId).isNotEmpty()
     }
 }

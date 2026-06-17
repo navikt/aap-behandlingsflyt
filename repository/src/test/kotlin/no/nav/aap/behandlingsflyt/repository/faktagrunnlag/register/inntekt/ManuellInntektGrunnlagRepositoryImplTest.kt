@@ -3,11 +3,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -32,7 +30,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
     @Test
     fun `lagre og hente ut igjen`() {
         val behandling = dataSource.transaction {
-            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            val sak = sak(it,1 januar 2023)
             finnEllerOpprettBehandling(it, sak)
         }
 
@@ -89,7 +87,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
     @Test
     fun `lagre for flere år og hente ut igjen`() {
         val behandling = dataSource.transaction {
-            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            val sak = sak(it,1 januar 2023)
             finnEllerOpprettBehandling(it, sak)
         }
 
@@ -120,7 +118,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
     @Test
     fun `lagre for flere år og så fjerne et år`() {
         val behandling = dataSource.transaction {
-            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            val sak = sak(it, 1 januar 2023)
             finnEllerOpprettBehandling(it, sak)
         }
 
@@ -150,6 +148,49 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             val uthentetEtterSletting = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentetEtterSletting?.manuelleInntekter).hasSize(1)
+        }
+    }
+
+    @Test
+    fun `sletting fjerner kun den angitte behandlingens vurderinger`() {
+        val (behandlingSomSlettes, behandlingSomBeholdes) = dataSource.transaction {
+            val sak1 = sak(it, 1 januar 2023)
+            val sak2 = sak(it, 1 januar 2023)
+            Pair(finnEllerOpprettBehandling(it, sak1), finnEllerOpprettBehandling(it, sak2))
+        }
+
+        val vurdering = ManuellInntektVurdering(
+            år = Year.of(2024),
+            begrunnelse = "skal slettes",
+            belop = BigDecimal(100).let(::Beløp),
+            vurdertAv = "saksbehandler"
+        )
+        val vurderingBeholdt = ManuellInntektVurdering(
+            år = Year.of(2024),
+            begrunnelse = "skal beholdes",
+            belop = BigDecimal(200).let(::Beløp),
+            vurdertAv = "annen saksbehandler"
+        )
+
+        dataSource.transaction {
+            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            repo.lagre(behandlingSomSlettes.id, vurdering)
+            repo.lagre(behandlingSomBeholdes.id, vurderingBeholdt)
+        }
+
+        dataSource.transaction {
+            ManuellInntektGrunnlagRepositoryImpl(it).slett(behandlingSomSlettes.id)
+        }
+
+        dataSource.transaction {
+            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            assertThat(repo.hentHvisEksisterer(behandlingSomSlettes.id)).isNull()
+            assertThat(repo.hentHvisEksisterer(behandlingSomBeholdes.id)).isNotNull()
+            assertThat(repo.hentHvisEksisterer(behandlingSomBeholdes.id)!!.manuelleInntekter)
+                .hasSize(1)
+                .usingRecursiveComparison()
+                .ignoringFields("opprettet")
+                .isEqualTo(setOf(vurderingBeholdt))
         }
     }
 }

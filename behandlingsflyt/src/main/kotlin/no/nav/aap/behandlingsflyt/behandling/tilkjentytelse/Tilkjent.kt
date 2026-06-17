@@ -4,7 +4,6 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
-import java.math.RoundingMode
 import java.time.LocalDate
 
 /**
@@ -18,9 +17,30 @@ data class Tilkjent(
     val graderingGrunnlag: GraderingGrunnlag,
     val grunnlagsfaktor: GUnit,
     val grunnbeløp: Beløp,
+
+    /** Antall barn som gir rett til barnetillegg. */
     val antallBarn: Int,
+
+    /** Størrelsen på ugradert barnetilleggsats.
+     *
+     * Verdien er ugradert, i den forstand at:
+     * Hvis barnetilleggsatsen er spesifisert i AAP-forskriften § 8 til 38 kroner, og medlemmet får 50% AAP,
+     * så vil [barnetilleggsats] være 38.
+     **/
     val barnetilleggsats: Beløp,
+
+    /** Størrelsen på total, ugradert barnetillegg.
+     *
+     * Verdien er total i den forstand at den tar hensyn til antall barn.
+     *
+     * Den er ugradert i den forstand at hvis medlemmet har 2 barn, får 50 % AAP
+     * på grunn av samordning, og barnetilleggssatsen er spesifisert i AAP-forskriften § 8 til 38 kroner,
+     * så vil [barnetillegg] være 2 * 38 = 76. Altså vi har ikke redusert barnetillegget med 50% her.
+     *
+     * Spesifikasjon: [barnetillegg] = [barnetilleggsats] * [antallBarn].
+     */
     val barnetillegg: Beløp,
+
     val barnepensjonDagsats: Beløp,
     val utbetalingsdato: LocalDate,
     val minsteSats: Minstesats,
@@ -38,28 +58,25 @@ data class Tilkjent(
     fun redusertDagsats(): Beløp {
         if (redusertDagsats != null) return redusertDagsats
 
-        return maks(
-            Beløp(0),
-            Beløp(
-                dagsats.multiplisert(gradering)
-                    .pluss(barnetillegg.multiplisert(gradering))
-                    .minus(barnepensjonDagsats)
-                    .verdi().setScale(0, RoundingMode.HALF_UP)
-            )
+        /* I historiske behandlinger, så er ikke `redusertDagsats` lagret
+         * ned. Regner derfor ut her. Burde vurdere å backfille, slik at
+         * vi ikke trenger denne kodesnutten.
+         */
+        return BeregnTilkjentYtelseService.redusertDagsats(
+            dagsats = dagsats,
+            barnetillegg = barnetillegg,
+            barnepensjonDagsats = barnepensjonDagsats,
+            gradering = gradering,
         )
     }
 
     @Suppress("FunctionName")
     fun dagsatsFor11_9Reduksjon(): Beløp {
-        return maks(
-            Beløp(0),
-            Beløp(
-                dagsats.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())
-                    .pluss(barnetillegg.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon()))
-                    .minus(barnepensjonDagsats)
-                    .verdi()
-                    .setScale(0, RoundingMode.HALF_UP)
-            )
+        return BeregnTilkjentYtelseService.redusertDagsats(
+            dagsats = dagsats,
+            barnetillegg = barnetillegg,
+            barnepensjonDagsats = barnepensjonDagsats,
+            gradering = graderingGrunnlag.graderingForDagsats11_9Reduksjon(),
         )
     }
 }

@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
             getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = FATTE_VEDTAK_KODE
+                påkrevdRolle = Definisjon.FATTE_VEDTAK.løsesAv
             ) { req ->
 
                 val dto = dataSource.transaction(readOnly = true) { connection ->
@@ -84,7 +84,11 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
                         ),
                         vurderinger = vurderinger,
                         historikk = historikk,
-                        besluttetAv = beslutter
+                        besluttetAv = beslutter,
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
+                            avklaringsbehovene,
+                            bruker()
+                        )
                     )
                 }
                 respond(dto)
@@ -100,14 +104,19 @@ private fun utledHarTilgangTilÅSaksbehandle(
     gatewayProvider: GatewayProvider
 ): Boolean {
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-    if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
-        val harIkkeGjortNoenVurderinger =
-            avklaringsbehovene.alle().filter { it.erTotrinn() }.none { it.brukere().contains(bruker.ident) }
-
-        return kanSaksbehandle && harIkkeGjortNoenVurderinger
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+        kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
-        return kanSaksbehandle
+        kanSaksbehandle
     }
+}
+
+private fun brukerHarGjortVilkårsvurderingerPåBehandling(
+    avklaringsbehovene: Avklaringsbehovene,
+    bruker: Bruker
+): Boolean {
+    return avklaringsbehovene.alle().filter { it.erTotrinn() }
+        .any { it.brukere().contains(bruker.ident) }
 }
 
 
@@ -183,9 +192,15 @@ private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
             it.definisjon.kode,
             godkjent,
             sisteVurdering?.begrunnelse,
-            sisteVurdering?.årsakTilRetur.orEmpty()
+            sisteVurdering?.årsakTilRetur.orEmpty(),
+            markeringer = emptyList(),
         )
     } else {
-        TotrinnsVurdering(it.definisjon.kode, null, null, emptyList())
+        TotrinnsVurdering(
+            it.definisjon.kode,
+            null,
+            null,
+            emptyList(),
+            markeringer = emptyList())
     }
 }

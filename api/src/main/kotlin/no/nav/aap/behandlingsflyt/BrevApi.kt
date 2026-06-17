@@ -3,9 +3,8 @@ package no.nav.aap.behandlingsflyt
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
@@ -18,13 +17,14 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingServi
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_BREV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevmalPreviewResponsDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -46,11 +46,12 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("BrevAPI")
@@ -62,7 +63,7 @@ fun NormalOpenAPIRoute.brevApi(
     val authorizationParamPathConfig = AuthorizationParamPathConfig(
         relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
         operasjon = Operasjon.SAKSBEHANDLE,
-        avklaringsbehovKode = SKRIV_BREV_KODE,
+        påkrevdRolle = Definisjon.SKRIV_BREV.løsesAv,
         behandlingPathParam = BehandlingPathParam(
             param = "brevbestillingReferanse",
             resolver = {
@@ -96,7 +97,12 @@ fun NormalOpenAPIRoute.brevApi(
                         )
                     )
                 ) { behandlingReferanse ->
-                    val brevGrunnlag = dataSource.transaction(readOnly = true) { connection ->
+                    class DataResultat(
+                        val harIkkeGjortNoenVurderinger: Boolean,
+                        val brevGrunnlag: List<Pair<Definisjon, BrevGrunnlag.Brev>>
+                    )
+
+                    val databasetilstand = dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
@@ -115,6 +121,7 @@ fun NormalOpenAPIRoute.brevApi(
                                 listOf(
                                     Definisjon.SKRIV_BREV,
                                     Definisjon.SKRIV_VEDTAKSBREV,
+                                    Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER,
                                     Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
                                     Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
                                 )
@@ -127,77 +134,91 @@ fun NormalOpenAPIRoute.brevApi(
                                         + skrivBrevAvklaringsbehov.joinToString { it.toString() })
                         }
 
-                        val grunnlag = brevbestillinger.map { brevbestilling ->
-                            val brevbestillingResponse =
-                                brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
+                        DataResultat(
+                            harIkkeGjortNoenVurderinger = avklaringsbehovene
+                                .alle()
+                            .filter { it.erTotrinn() }
+                            .none { it.brukere().contains(bruker().ident) },
+                            brevGrunnlag = brevbestillinger.map { brevbestilling ->
+                                val brevbestillingResponse =
+                                    brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
 
-                            val signaturer = if (brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
-                                brevbestillingGateway.hentSignaturForhåndsvisning(
-                                    signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
-                                    personIdent.identifikator,
-                                    brevbestilling.typeBrev
+                                val signaturer = if (brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
+                                    brevbestillingGateway.hentSignaturForhåndsvisning(
+                                        signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                                        personIdent.identifikator,
+                                        brevbestilling.typeBrev
+                                    )
+                                } else {
+                                    emptyList()
+                                }
+                                val definisjon = when {
+                                    brevbestilling.typeBrev.erVedtak() &&
+                                            skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }
+                                        -> {
+                                        Definisjon.SKRIV_VEDTAKSBREV
+                                    }
+
+                                    brevbestilling.typeBrev.erVedtak() &&
+                                            skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER }
+                                        -> {
+                                        Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
+                                    }
+                                    
+                                    brevbestilling.typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT &&
+                                            skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV } -> {
+                                        Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
+                                    }
+
+                                    brevbestilling.typeBrev == TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV && skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV } -> {
+                                        Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
+                                    }
+
+                                    else -> {
+                                        Definisjon.SKRIV_BREV
+                                    }
+                                }
+
+                                definisjon to BrevGrunnlag.Brev(
+                                    avklaringsbehovKode = definisjon.kode,
+                                    brevbestillingReferanse = brevbestillingResponse.referanse,
+                                    brev = brevbestillingResponse.brev,
+                                    brevmal = brevbestillingResponse.brevmal,
+                                    brevdata = brevbestillingResponse.brevdata,
+                                    opprettet = brevbestillingResponse.opprettet,
+                                    oppdatert = brevbestillingResponse.oppdatert,
+                                    brevtype = brevbestillingResponse.brevtype,
+                                    språk = brevbestillingResponse.språk,
+                                    status = when (brevbestillingResponse.status) {
+                                        no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
+                                        no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
+                                        no.nav.aap.brev.kontrakt.Status.AVBRUTT -> Status.AVBRUTT
+                                    },
+                                    mottaker = Mottaker(
+                                        navn = personinfo.fulltNavn(),
+                                        ident = personinfo.ident.identifikator
+                                    ),
+                                    signaturer = signaturer,
+                                    harTilgangTilÅSendeBrev = false, // nb. settes utenfor transaksjonen pga kall til tilgang som vi ønsker skal være async
                                 )
-                            } else {
-                                emptyList()
-                            }
-                            val definisjon = when {
-                                brevbestilling.typeBrev.erVedtak() &&
-                                        skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_VEDTAKSBREV }
-                                    -> {
-                                    Definisjon.SKRIV_VEDTAKSBREV
-                                }
-
-                                brevbestilling.typeBrev == TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT &&
-                                        skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV } -> {
-                                    Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV
-                                }
-
-                                brevbestilling.typeBrev == TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV && skrivBrevAvklaringsbehov.any { it.definisjon == Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV } -> {
-                                    Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
-                                }
-
-                                else -> {
-                                    Definisjon.SKRIV_BREV
-                                }
-                            }
-
-                            BrevGrunnlag.Brev(
-                                avklaringsbehovKode = definisjon.kode,
-                                brevbestillingReferanse = brevbestillingResponse.referanse,
-                                brev = brevbestillingResponse.brev,
-                                brevmal = brevbestillingResponse.brevmal,
-                                brevdata = brevbestillingResponse.brevdata,
-                                opprettet = brevbestillingResponse.opprettet,
-                                oppdatert = brevbestillingResponse.oppdatert,
-                                brevtype = brevbestillingResponse.brevtype,
-                                språk = brevbestillingResponse.språk,
-                                status = when (brevbestillingResponse.status) {
-                                    no.nav.aap.brev.kontrakt.Status.UNDER_ARBEID -> Status.FORHÅNDSVISNING_KLAR
-                                    no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
-                                    no.nav.aap.brev.kontrakt.Status.AVBRUTT -> Status.AVBRUTT
-                                },
-                                mottaker = Mottaker(
-                                    navn = personinfo.fulltNavn(),
-                                    ident = personinfo.ident.identifikator
-                                ),
-                                signaturer = signaturer,
-                                harTilgangTilÅSendeBrev = utledHarTilgangTilÅSendeBrev(
-                                    behandlingReferanse.referanse,
-                                    token(),
-                                    avklaringsbehovene,
-                                    bruker(),
-                                    definisjon,
-                                    gatewayProvider
-                                )
-                            )
-                        }
-
-                        BrevGrunnlag(
-                            grunnlag
-                        )
+                            })
                     }
 
-                    respond(brevGrunnlag)
+                    respond(BrevGrunnlag(databasetilstand.brevGrunnlag.map { (definisjon, grunnlag) ->
+                        grunnlag.copy(
+                            harTilgangTilÅSendeBrev = utledHarTilgangTilÅSendeBrev(
+                                behandlingReferanse.referanse,
+                                token(),
+                                databasetilstand.harIkkeGjortNoenVurderinger,
+                                bruker(),
+                                definisjon,
+                                gatewayProvider,
+                                relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource).resolve(
+                                    behandlingReferanse.referanse.toString()
+                                )
+                            )
+                        )
+                    }))
                 }
             }
         }
@@ -274,6 +295,47 @@ fun NormalOpenAPIRoute.brevApi(
                     respond(DokumentResponsDTO(pdf))
                 }
             }
+
+            route("/{brevbestillingReferanse}/forhandsvis-html") {
+                authorizedGet<BrevbestillingReferanse, BrevResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                    val html = dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val brevbestillingRepository =
+                            repositoryProvider.provide<BrevbestillingRepository>()
+
+                        val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+                            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
+
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
+                        brevbestillingGateway.forhåndsvisHtml(
+                            bestillingReferanse = brevbestillingReferanse,
+                            signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                        )
+                    }
+                    respond(BrevResponsDTO(html))
+                }
+            }
+
+            route("/{brevbestillingReferanse}/brevmal-preview") {
+                authorizedGet<BrevbestillingReferanse, BrevmalPreviewResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
+                    val json = dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val brevbestillingRepository =
+                            repositoryProvider.provide<BrevbestillingRepository>()
+
+                        val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+                            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
+
+                        val signaturService = SignaturService(repositoryProvider, gatewayProvider)
+                        brevbestillingGateway.brevbyggerPreview(
+                            bestillingReferanse = brevbestillingReferanse,
+                            signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker()),
+                        )
+                    }
+
+                    respond(BrevmalPreviewResponsDTO(json))
+                }
+            }
         }
         route("/{brevbestillingReferanse}/kan-distribuere-brev") {
             authorizedPost<BrevbestillingReferanse, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
@@ -292,28 +354,25 @@ fun NormalOpenAPIRoute.brevApi(
     }
 }
 
-private fun utledHarTilgangTilÅSendeBrev(
+private suspend fun utledHarTilgangTilÅSendeBrev(
     behandlingReferanse: UUID,
     token: OidcToken,
-    avklaringsbehovene: Avklaringsbehovene,
+    harIkkeGjortNoenVurderinger: Boolean,
     bruker: Bruker,
     definisjon: Definisjon,
-    gatewayProvider: GatewayProvider
+    gatewayProvider: GatewayProvider,
+    relevanteIdenter: RelevanteIdenter
 ): Boolean {
     val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
-    fun harTilgang(tilDefinisjon: Definisjon): Boolean =
-        tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token)
+    suspend fun harTilgang(tilDefinisjon: Definisjon): Boolean =
+        tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token, relevanteIdenter)
 
     return when (definisjon) {
-        Definisjon.SKRIV_VEDTAKSBREV -> {
+        Definisjon.SKRIV_VEDTAKSBREV, Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
             val harTilgang = harTilgang(definisjon)
             if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
-                val harIkkeGjortNoenVurderinger = avklaringsbehovene
-                    .alle()
-                    .filter { it.erTotrinn() }
-                    .none { it.brukere().contains(bruker.ident) }
                 harTilgang && harIkkeGjortNoenVurderinger
             } else {
                 harTilgang

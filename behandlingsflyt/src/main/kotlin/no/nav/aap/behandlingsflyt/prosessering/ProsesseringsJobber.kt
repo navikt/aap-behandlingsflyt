@@ -6,13 +6,14 @@ import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortJob
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.ResendStatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.SendFagsysteminfoBehovTilTilbakekrevingUtfører
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.motor.JobbSpesifikasjon
 
 object ProsesseringsJobber {
 
     fun alle(): List<JobbSpesifikasjon> {
         // Legger her alle oppgavene som skal utføres i systemet
-        return listOf(
+        return listOfNotNull(
             ProsesserBehandlingJobbUtfører,
             VarsleOppgaveOmHendelseJobbUtFører,
             GjenopptaBehandlingJobbUtfører,
@@ -26,6 +27,7 @@ object ProsesseringsJobber {
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettJobbForFritakMeldepliktJobbUtfører,
             OpprettJobbUtvidVedtakslengdeJobbUtfører,
+            OpprettJobbForGReguleringJobbUtfører,
             OpprettBehandlingFritakMeldepliktJobbUtfører,
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
             OpprettBehandlingUtvidVedtakslengdeJobbUtfører,
@@ -39,11 +41,13 @@ object ProsesseringsJobber {
             OpprettJobbForMigrereRettighetsperiodeJobbUtfører,
             OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører,
             OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
+            OpprettBehandlingGReguleringJobbUtfører,
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
             SjekkInstitusjonsOppholdJobbUtfører,
             HåndterUbehandletDokumentJobbUtfører,
             DigitaliserteMeldekortTilMeldekortBackendJobbUtfører,
-            HåndterUbehandledeMeldekortForSakJobbUtfører
+            HåndterUbehandledeMeldekortForSakJobbUtfører,
+            if (!Miljø.erProd()) SendAutomatiskMeldekortJobbUtfører else null
         )
     }
 }

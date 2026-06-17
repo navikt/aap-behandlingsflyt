@@ -5,13 +5,10 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -24,13 +21,9 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
@@ -42,7 +35,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
         getGrunnlag<BehandlingReferanse, EtableringEgenVirksomhetGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            avklaringsbehovKode = Definisjon.ETABLERING_EGEN_VIRKSOMHET.kode.toString()
+            påkrevdRolle = Definisjon.ETABLERING_EGEN_VIRKSOMHET.løsesAv
         ) { behandlingReferanse ->
             val response =
                 dataSource.transaction { connection ->
@@ -52,8 +45,6 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val etableringEgenVirksomhetRepository =
                         repositoryProvider.provide<EtableringEgenVirksomhetRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                    val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
-                    val bistandRepository = repositoryProvider.provide<BistandRepository>()
 
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val etableringEgenVirksomhetService = EtableringEgenVirksomhetService(repositoryProvider)
@@ -63,9 +54,6 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val sak = sakRepository.hent(behandling.sakId)
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                    val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandling.id)
-                    val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-
                     val etableringEgenVirksomhetGrunnlag =
                         etableringEgenVirksomhetRepository.hentHvisEksisterer(behandling.id)
                     val forrigeGrunnlag =
@@ -73,7 +61,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             ?: EtableringEgenVirksomhetGrunnlag(emptyList())
 
                     val ikkeVurderbarePerioder =
-                        utledIkkeVurderbarePerioder(sykdomGrunnlag, bistandGrunnlag, sak.rettighetsperiode.fom)
+                        etableringEgenVirksomhetService.utledIkkeVurderbarePerioder(behandling.id)
 
                     val alleVurderinger =
                         etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
@@ -107,9 +95,11 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             },
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = listOf(),
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
-                            behandlingId = behandling.id
+                        vurderingerMeta = VurderingerMetaResponse(
+                            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                                definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
+                                behandlingId = behandling.id,
+                            ),
                         ),
                         ikkeRelevantePerioder = ikkeVurderbarePerioder,
                         bruktUtviklingsDager = bruktUtviklingsDager,
@@ -121,36 +111,4 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
             )
         }
     }
-}
-
-private fun utledIkkeVurderbarePerioder(
-    sykdomGrunnlag: SykdomGrunnlag?,
-    bistandGrunnlag: BistandGrunnlag?,
-    fom: LocalDate
-): List<Periode> {
-    val sykdomsvurderinger = sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
-    val bistandsvurderinger =
-        bistandGrunnlag?.somBistandsvurderingstidslinje().orEmpty()
-
-    val zipped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
-
-    val førsteDagIOppfyltPeriode = zipped
-        .filter {
-            it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                fom,
-                it.periode
-            ) == true || it.verdi.second?.erBehovForBistand() != true
-        }.perioder().toList().firstOrNull()?.fom
-
-    if (førsteDagIOppfyltPeriode == null) return emptyList()
-
-    val mapped = zipped
-        .filter {
-            it.verdi.first?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                fom,
-                it.periode
-            ) != true || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
-        }
-
-    return mapped.perioder().plus(Periode(førsteDagIOppfyltPeriode, førsteDagIOppfyltPeriode)).toList()
 }

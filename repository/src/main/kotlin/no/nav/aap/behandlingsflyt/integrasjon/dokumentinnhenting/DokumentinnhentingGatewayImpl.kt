@@ -1,13 +1,15 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.BrevResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringBestillingRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringPurringRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MarkerDialogmeldingSomMottattRequest
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
+import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
+import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
+import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
+import no.nav.aap.dokumentinnhenting.kontrakt.MarkerBestillingSomMottattDto
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -16,7 +18,9 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
@@ -24,12 +28,18 @@ import java.net.URI
  * Bestiller dokumenter fra dokumentinnhenting
  */
 class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
-    private val syfoUri = requiredConfigForKey("integrasjon.dokumentinnhenting.url") + "/syfo"
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.dokumentinnhenting.scope"))
+    private val syfoUri = requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_URL") + "/syfo"
+    private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_SCOPE"))
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
+        prometheus = prometheus
+    )
+
+    private val oboClient = RestClient.withDefaultResponseHandler(
+        config = config,
+        tokenProvider = AzureOBOTokenProvider,
         prometheus = prometheus
     )
 
@@ -39,7 +49,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         }
     }
 
-    override fun bestillLegeerklæring(request: LegeerklæringBestillingRequest): String {
+    override fun bestillLegeerklæring(request: BehandlingsflytToDokumentInnhentingBestillingDto): String {
         val request = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -51,7 +61,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         return requireNotNull(client.post(uri = URI.create("$syfoUri/dialogmeldingbestilling"), request))
     }
 
-    override fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringRequest): String {
+    override fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringDto): String {
         val request = PostRequest(
             body = purringRequest,
             additionalHeaders = listOf(
@@ -62,7 +72,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
     }
 
-    override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerDialogmeldingSomMottattRequest): LegeerklæringStatusResponse {
+    override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerBestillingSomMottattDto): DialogmeldingStatusTilBehandslingsflytDto {
         val request = PostRequest(
             body = markerSomMottattRequest,
             additionalHeaders = listOf(
@@ -80,7 +90,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
     }
 
-    override fun legeerklæringStatus(saksnummer: String): List<LegeerklæringStatusResponse> {
+    override fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
@@ -96,7 +106,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
     }
 
-    override fun forhåndsvisBrev(request: BrevRequest): BrevResponse {
+    override fun forhåndsvisDialogmelding(request: ForhåndsvisDialogmeldingDto): DialogmeldingForhåndsvisningDto {
         val request = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -106,5 +116,18 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
 
         return requireNotNull(client.post(uri = URI.create("$syfoUri/brevpreview"), request))
+    }
+
+    override fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto {
+        val request = PostRequest(
+            body = request,
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            ),
+            currentToken = currentToken,
+        )
+
+        return requireNotNull(oboClient.post(uri = URI.create("$syfoUri/behandleroppslag/fastlege"), request))
     }
 }

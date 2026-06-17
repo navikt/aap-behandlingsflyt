@@ -6,9 +6,8 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import org.assertj.core.api.Assertions.assertThat
@@ -20,24 +19,18 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.io.InputStream
 import java.net.URI
 import java.time.LocalDate
-import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
 class PdlBarnGatewayTest {
 
     private lateinit var gateway: PdlBarnGateway
-    private val mockPerson: Person = Person(
-        id = PersonId(0L),
-        identifikator = UUID.randomUUID(),
-        identer = listOf(Ident("12345678901"))
-    )
+    private val mockPerson = person()
 
     @BeforeAll
     fun setupMocks() {
@@ -110,7 +103,7 @@ class PdlBarnGatewayTest {
     }
 
     @Test
-    fun `hentBarn skal kaste feil når barn mangler både ident og navn-fødselsdato kombinasjon`() {
+    fun `hentBarn skal hoppe over barn som mangler både ident og navn-fødselsdato kombinasjon`() {
         val pdlResponse = lagPdlRelasjonResponse(
             listOf(lagBarnRelasjonUtenIdentOgData())
         )
@@ -124,9 +117,11 @@ class PdlBarnGatewayTest {
             )
         } returns pdlResponse
 
-        assertThrows<IllegalStateException> {
-            gateway.hentBarn(mockPerson, emptyList(), emptyList())
-        }
+        val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
+
+        assertTrue(resultat.registerBarn.isEmpty())
+        assertTrue(resultat.oppgitteBarnFraPDL.isEmpty())
+        assertTrue(resultat.saksbehandlerOppgitteBarnPDL.isEmpty())
     }
 
     @Test
