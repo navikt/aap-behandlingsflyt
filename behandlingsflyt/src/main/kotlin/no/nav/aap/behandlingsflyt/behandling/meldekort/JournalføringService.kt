@@ -27,7 +27,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 class JournalføringService(
     private val dokarkivGateway: DokarkivGateway,

@@ -42,13 +42,6 @@ data class DagDto(
     val timerArbeidet: Double
 )
 
-data class OppdaterMeldekortRequest(
-    val meldeperiode: Periode,
-    val meldeDato: LocalDate,
-    val begrunnelse: String,
-    val dager: Set<DagDto>,
-)
-
 data class OppdaterMeldekortResponse(
     val journalpostId: String,
     val oppdatertTidspunkt: LocalDate,
