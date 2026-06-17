@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
@@ -40,4 +41,35 @@ data class MeldekortGrunnlag(
 
         return datoer
     }
+
+    /**
+     * Nyeste meldekort som overlapper meldeperioden (basert på innmeldte timer).
+     * Returnerer ikke meldekort uten innmeldte timer.
+     */
+    fun nyesteForMeldeperiode(meldeperiode: Periode): Meldekort? =
+        meldekort().lastOrNull { it.tilhørerMeldeperiode(meldeperiode) }
+
+    /**
+     * Nyeste meldekort som overlapper meldeperioden på en gitt dato (basert på innmeldte timer).
+     * Returnerer ikke meldekort uten innmeldte timer.
+     */
+    fun nyesteForMeldeperiodePåDato(meldeperiode: Periode, dato: LocalDate): Meldekort? =
+        meldekort().lastOrNull {
+            it.tilhørerMeldeperiode(meldeperiode) && it.mottattTidspunkt.toLocalDate() == dato
+        }
+
+    /**
+     * Alle tidligere meldekort for en meldeperiode.
+     * Det nyeste meldekortet (jf. [nyesteForMeldeperiode]) er ekskludert.
+     */
+    fun tidligereForMeldeperiode(meldeperiode: Periode): List<Meldekort> {
+        val nyeste = nyesteForMeldeperiode(meldeperiode)
+        return meldekort()
+            .filter { it.tilhørerMeldeperiode(meldeperiode) && it != nyeste }
+    }
+}
+
+private fun Meldekort.tilhørerMeldeperiode(meldeperiode: Periode): Boolean {
+    val arbeidsperiode = arbeidsperiode()
+    return arbeidsperiode != null && meldeperiode.overlapper(arbeidsperiode)
 }

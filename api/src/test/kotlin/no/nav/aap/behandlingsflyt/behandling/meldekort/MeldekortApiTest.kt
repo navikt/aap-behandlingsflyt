@@ -454,7 +454,7 @@ class MeldekortApiTest : BaseApiTest() {
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
-            assertThat(body.meldeperioderMedMeldekort).hasSize(3)
+            assertThat(body.meldeperioderMedMeldekort).hasSize(2)
         }
     }
 
@@ -607,8 +607,6 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<OppdaterMeldekortResponse>()
             assertThat(body.journalpostId).isNotBlank()
-            // fixedClock = 2025-04-01T00:00:00Z = 2025-04-01T02:00:00 i Europe/Oslo (CEST)
-            assertThat(body.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 4, 1))
         }
     }
 

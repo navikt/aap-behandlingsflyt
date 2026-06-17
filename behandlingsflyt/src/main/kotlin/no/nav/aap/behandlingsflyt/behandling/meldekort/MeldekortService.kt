@@ -75,20 +75,21 @@ class MeldekortService(
         val sisteFattedeVedtaksBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
 
         val meldeperiodeMedMeldekort = sisteFattedeVedtaksBehandling?.let { behandling ->
-            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id) ?: return@let null
+            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                ?: return@let null
 
             val meldeperioder = hentAktuelleMeldeperioderMedMeldepliktStatus(underveisGrunnlag)
-            val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
+            val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandling.id)
             val mottatteDokumenter = mottattDokumentRepository
                 .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                 .associateBy { it.referanse }
 
-            meldeperioder.map { (meldeperiode, meldeperiodeData) ->
+            meldeperioder.map { (meldeperiode, oppfyltMeldeperiodeMedMeldepliktStatus) ->
                 toMeldeperiodeMedMeldekortDto(
                     meldeperiode = meldeperiode,
-                    meldeperiodeData = meldeperiodeData,
-                    gjeldendeMeldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode),
-                    tidligereMeldekort = tidligereMeldekortForMeldeperiode(meldekortene, meldeperiode),
+                    oppfyltMeldeperiodeMedMeldepliktStatus = oppfyltMeldeperiodeMedMeldepliktStatus,
+                    nyesteMeldekort = meldekortGrunnlag?.nyesteForMeldeperiode(meldeperiode),
+                    tidligereMeldekort = meldekortGrunnlag?.tidligereForMeldeperiode(meldeperiode).orEmpty(),
                     mottatteDokumenter = mottatteDokumenter,
                 )
             }
@@ -112,8 +113,7 @@ class MeldekortService(
 
         validerMeldeperiodeOgMeldedato(behandling, meldedato, meldeperiode)
 
-        val meldekortene = meldekortRepository.hentHvisEksisterer(behandling.id)?.meldekort().orEmpty()
-        val tidspunkt = Instant.now(clock)
+        val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandling.id)
 
         val journalpostId = journalføringService.journalfør(
             sak = sak,
@@ -121,14 +121,14 @@ class MeldekortService(
             meldekort = meldekort,
             oppdatertAv = bruker,
             enhet = ansattInfoService.hentAnsattEnhet(bruker.ident),
-            tidspunkt = tidspunkt,
+            tidspunkt = Instant.now(clock),
             meldeDato = meldedato,
-            korrigert = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode) != null
+            korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(meldeperiode) != null
         )
 
         val mottattTidspunkt = utledetMottattTidspunkt(
             meldedato,
-            nyesteMeldekortForMeldeperiodePåDato(meldekortene, meldeperiode, meldedato)
+            meldekortGrunnlag?.nyesteForMeldeperiodePåDato(meldeperiode, meldedato)
         )
 
         // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
@@ -137,7 +137,7 @@ class MeldekortService(
         )
 
         logger.info("Saksbehandler har opprettet/korrigert meldekort for saksnummer $saksnummer")
-        return OppdatertMeldekort(journalpostId, tidspunkt)
+        return OppdatertMeldekort(journalpostId)
     }
 
     fun hentProsesseringStatus(saksnummer: Saksnummer): MeldekortProsesseringResponse {
@@ -156,12 +156,14 @@ class MeldekortService(
             ?: throw UgyldigForespørselException("Fant ikke underveisgrunnlag for behandlingen")
 
         if (meldedato <= meldeperiode.tom) {
-            throw UgyldigForespørselException("Meldedatoen $meldedato må være etter sluttdatoen for meldeperioden som er ${meldeperiode.tom}")
+            throw UgyldigForespørselException(
+                "Meldedatoen $meldedato må være etter sluttdatoen for meldeperioden som er ${meldeperiode.tom}"
+            )
         }
 
-        val gyldigeMeldeperioder = hentAktuelleMeldeperioderMedMeldepliktStatus(underveisGrunnlag).keys
+        val aktuelleMeldeperioder = hentAktuelleMeldeperioderMedMeldepliktStatus(underveisGrunnlag).keys
 
-        if (!gyldigeMeldeperioder.contains(meldeperiode)) {
+        if (!aktuelleMeldeperioder.contains(meldeperiode)) {
             throw UgyldigForespørselException("Angitt meldeperiode $meldeperiode er ikke gyldig for vedtaket")
         }
     }
@@ -177,6 +179,47 @@ class MeldekortService(
         } else {
             MeldekortProsesseringStatus.KLAR
         }
+    }
+
+    /**
+     * Henter meldeperioder som kan være aktuelle å endre for saksbehandler. Følgende kriterier gjelder:
+     * - Perioden må ha en rettighetstype
+     * - Meldeperioder bakover i tid inkluderes
+     * - Inneværende periode inkluderes
+     * - Perioder frem i tid inkluderes ikke
+     *
+     * For at en bruker som i utgangspunktet ikke har oppfylt meldeplikten (ikke meldt seg til NKS, ikke sendt
+     * inn meldekort) skal få utbetalt, må saksbehandler sørge for at meldeplikten oppfylles, enten ved
+     * - Sette mottattdato på dokumentet innenfor meldevinduet. Dette er riktig dersom saksbehandler bare har vært
+     *   treig med å legge inn timene.
+     * - Gi fritak, dersom bruker skulle hatt fritak.
+     * - Gi rimelig grunn, dersom bruker faktisk hadde rimelig grunn til ikke å ha meldt seg.
+     */
+    private fun hentAktuelleMeldeperioderMedMeldepliktStatus(
+        underveisGrunnlag: UnderveisGrunnlag,
+    ): Map<Periode, OppfyltMeldeperiodeMedMeldepliktStatus> {
+        return underveisGrunnlag.perioder
+            .filter { it.utfall == Utfall.OPPFYLT && it.periode.fom < LocalDate.now(clock) }
+            .groupBy({ it.meldePeriode })
+            .mapValues { (_, underveisPerioder) ->
+                val periodeMedMeldepliktStatus =
+                    Tidslinje(underveisPerioder.map { Segment(it.periode, it.meldepliktStatus) })
+                        .komprimer()
+                        .segmenter()
+                        .map { Pair(it.periode, it.verdi) }
+
+                // Samme logikk som gjøres i meldekort-backend - returnerer en periode hvor start og slutt innskrenkes
+                val periode = if (periodeMedMeldepliktStatus.isEmpty()) null
+                else Periode(periodeMedMeldepliktStatus.first().first.fom, periodeMedMeldepliktStatus.last().first.tom)
+
+                // Aktuelle meldeplikt statuser - duplikater fjernes
+                val meldepliktStatus = periodeMedMeldepliktStatus.mapNotNull { it.second }.toSet()
+
+                OppfyltMeldeperiodeMedMeldepliktStatus(
+                    periode = periode,
+                    meldepliktStatus = meldepliktStatus
+                )
+            }
     }
 }
 
@@ -206,93 +249,8 @@ private fun utledetMottattTidspunkt(meldedato: LocalDate, nyesteMeldekortPåDato
         meldedato.atStartOfDay()
     }
 
-/**
- * Henter ut nyeste meldekort som sammenfaller med meldeperiode basert på innmeldte timer.
- * Dette vil ikke returnere meldekort som ikke inneholder innmeldte timer.
- */
-private fun nyesteMeldekortForMeldeperiode(
-    meldekortene: List<Meldekort>,
-    meldeperiode: Periode,
-): Meldekort? = meldekortene.lastOrNull { meldekort ->
-    meldekort.tilhørerMeldeperiode(meldeperiode)
-}
-
-/**
- * Henter ut nyeste meldekort som sammenfaller med meldeperiode basert på innmeldte timer og angitt dato.
- * Dette vil ikke returnere meldekort som ikke inneholder innmeldte timer.
- */
-private fun nyesteMeldekortForMeldeperiodePåDato(
-    meldekortene: List<Meldekort>,
-    meldeperiode: Periode,
-    dato: LocalDate
-): Meldekort? = meldekortene.lastOrNull { meldekort ->
-    meldekort.tilhørerMeldeperiode(meldeperiode) && meldekort.mottattTidspunkt.toLocalDate() == dato
-}
-
-/**
- * Henter ut alle tidligere meldekort for en meldeperiode, sortert synkende på mottattTidspunkt (nyest først).
- * Det nyeste meldekortet (som returneres av nyesteMeldekortForMeldeperiode) er ekskludert.
- */
-private fun tidligereMeldekortForMeldeperiode(
-    meldekortene: List<Meldekort>,
-    meldeperiode: Periode,
-): List<Meldekort> {
-    val nyesteMeldekort = nyesteMeldekortForMeldeperiode(meldekortene, meldeperiode)
-    return meldekortene
-        .filter { meldekort ->
-            meldekort.tilhørerMeldeperiode(meldeperiode) && meldekort != nyesteMeldekort
-        }
-        .sortedByDescending { it.mottattTidspunkt }
-}
-
-private fun Meldekort.tilhørerMeldeperiode(meldeperiode: Periode): Boolean {
-    val arbeidsperiode = arbeidsperiode()
-    return arbeidsperiode != null && meldeperiode.overlapper(arbeidsperiode)
-}
-
-/**
- * Henter meldeperioder som kan være aktuelle å endre for saksbehandler. Følgende kriterier gjelder:
- * - Perioden må ha en rettighetstype
- * - Meldeperioder bakover i tid inkluderes
- * - Inneværende periode inkluderes
- * - Perioder frem i tid inkluderes ikke
- *
- * For at en bruker som i utgangspunktet ikke har oppfylt meldeplikten (ikke meldt seg til NKS, ikke sendt inn meldekort)
- * skal få utbetalt, må saksbehandler sørge for at meldeplikten oppfylles, enten ved
- * - Sette mottattdato på dokumentet innenfor meldevinduet. Dette er riktig dersom saksbehandler bare har vært treig med å legge inn timene.
- * - Gi fritak, dersom bruker skulle hatt fritak.
- * - Gi rimelig grunn, dersom bruker faktisk hadde rimelig grunn til ikke å ha meldt seg.
- */
-private fun hentAktuelleMeldeperioderMedMeldepliktStatus(
-    underveisGrunnlag: UnderveisGrunnlag,
-): Map<Periode, OppfyltMeldeperiodeMedMeldepliktStatus> {
-    return underveisGrunnlag.perioder
-        .filter { it.utfall == Utfall.OPPFYLT && it.periode.fom < LocalDate.now() }
-        .groupBy({ it.meldePeriode })
-        .mapValues { (_, underveisPerioder) ->
-            val periodeMedMeldepliktStatus =
-                Tidslinje(underveisPerioder.map { Segment(it.periode, it.meldepliktStatus) })
-                    .komprimer()
-                    .segmenter()
-                    .map { Pair(it.periode, it.verdi) }
-
-            // Samme logikk som gjøres i meldekort-backend - returnerer en periode hvor start og slutt innskrenkes
-            val periode = if (periodeMedMeldepliktStatus.isEmpty()) null
-            else Periode(periodeMedMeldepliktStatus.first().first.fom, periodeMedMeldepliktStatus.last().first.tom)
-
-            // Aktuelle meldeplikt statuser - duplikater fjernes
-            val meldepliktStatus = periodeMedMeldepliktStatus.mapNotNull { it.second }.toSet()
-
-            OppfyltMeldeperiodeMedMeldepliktStatus(
-                periode = periode,
-                meldepliktStatus = meldepliktStatus
-            )
-        }
-}
-
 data class OppdatertMeldekort(
     val journalpostId: JournalpostId,
-    val tidspunkt: Instant,
 )
 
 data class OppfyltMeldeperiodeMedMeldepliktStatus(

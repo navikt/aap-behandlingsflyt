@@ -27,8 +27,8 @@ data class MeldeperiodeMedMeldekortDto(
 
 data class MeldekortDto(
     val journalpostId: String,
-    val mottattTidspunkt: LocalDate? = null,
-    val oppdatertTidspunkt: LocalDate? = null,
+    val mottattTidspunkt: LocalDate,
+    val oppdatertTidspunkt: LocalDate,
     val oppdatertAv: String? = null,
     val oppdatertAvSaksbehandler: Boolean,
     val begrunnelse: String? = null,
@@ -42,7 +42,6 @@ data class DagDto(
 
 data class OppdaterMeldekortResponse(
     val journalpostId: String,
-    val oppdatertTidspunkt: LocalDate,
 )
 
 data class MeldekortProsesseringResponse(
@@ -50,17 +49,22 @@ data class MeldekortProsesseringResponse(
 )
 
 fun Meldekort.toDto(
-    begrunnelse: String?,
-    oppdatertAv: String?,
-    oppdatertAvSaksbehandler: Boolean
-): MeldekortDto =
-    MeldekortDto(
+    meldekortData: MeldekortV0?
+): MeldekortDto {
+    val oppdatertAvSaksbehandler = meldekortData?.opprettetAv != null
+    return MeldekortDto(
         journalpostId = journalpostId.identifikator,
         mottattTidspunkt = mottattTidspunkt.toLocalDate(),
-        oppdatertTidspunkt = opprettetTidspunkt.toLocalDate(),
-        begrunnelse = begrunnelse,
-        oppdatertAv = oppdatertAv,
-        oppdatertAvSaksbehandler = oppdatertAvSaksbehandler,
+        /*
+         * Kan ikke bruke mottatt tidspunkt når saksbehandler oppdaterer meldekort da denne datoen som fastsettes
+         * manuelt av saksbehandler vil avvike fra når oppdateringen faktisk skjer.
+         */
+        oppdatertTidspunkt =
+            if (oppdatertAvSaksbehandler) opprettetTidspunkt.toLocalDate()
+            else mottattTidspunkt.toLocalDate(),
+        begrunnelse = meldekortData?.begrunnelse,
+        oppdatertAv = meldekortData?.opprettetAv,
+        oppdatertAvSaksbehandler = meldekortData?.opprettetAv != null,
         dager = timerArbeidPerPeriode.map { arbeid ->
             DagDto(
                 dato = arbeid.periode.fom,
@@ -68,6 +72,8 @@ fun Meldekort.toDto(
             )
         }.toSet()
     )
+}
+
 
 /**
  * Bygger DTO for én meldeperiode med tilhørende meldekort.
@@ -75,40 +81,32 @@ fun Meldekort.toDto(
  */
 fun toMeldeperiodeMedMeldekortDto(
     meldeperiode: Periode,
-    meldeperiodeData: OppfyltMeldeperiodeMedMeldepliktStatus,
-    gjeldendeMeldekort: Meldekort?,
+    oppfyltMeldeperiodeMedMeldepliktStatus: OppfyltMeldeperiodeMedMeldepliktStatus,
+    nyesteMeldekort: Meldekort?,
     tidligereMeldekort: List<Meldekort>,
     mottatteDokumenter: Map<InnsendingReferanse, MottattDokument>,
 ): MeldeperiodeMedMeldekortDto {
-    if (gjeldendeMeldekort == null) {
+    if (nyesteMeldekort == null) {
         return MeldeperiodeMedMeldekortDto(
             meldeperiode = meldeperiode,
-            periode = meldeperiodeData.periode,
-            meldepliktStatus = meldeperiodeData.meldepliktStatus,
+            periode = oppfyltMeldeperiodeMedMeldepliktStatus.periode,
+            meldepliktStatus = oppfyltMeldeperiodeMedMeldepliktStatus.meldepliktStatus,
             meldekort = null,
         )
     }
 
-    val meldekortData = mottatteDokumenter.metadataFor(gjeldendeMeldekort)
-
-    // Fallback til bruker dersom opprettetAv er null – settes eksplisitt ved korrigering
-    val oppdatertAvSaksbehandler = meldekortData?.opprettetAv != null
-
     return MeldeperiodeMedMeldekortDto(
         meldeperiode = meldeperiode,
-        periode = meldeperiodeData.periode,
-        meldepliktStatus = meldeperiodeData.meldepliktStatus,
-        meldekort = gjeldendeMeldekort.toDto(
-            begrunnelse = meldekortData?.begrunnelse,
-            oppdatertAv = meldekortData?.opprettetAv,
-            oppdatertAvSaksbehandler = oppdatertAvSaksbehandler,
+        periode = oppfyltMeldeperiodeMedMeldepliktStatus.periode,
+        meldepliktStatus = oppfyltMeldeperiodeMedMeldepliktStatus.meldepliktStatus,
+        meldekort = nyesteMeldekort.toDto(
+            meldekortData = mottatteDokumenter.metadataFor(nyesteMeldekort),
         ),
-        tidligereMeldekort = tidligereMeldekort.map { tidligere ->
-            val data = mottatteDokumenter.metadataFor(tidligere)
-            tidligere.toDto(
-                begrunnelse = data?.begrunnelse,
-                oppdatertAv = data?.opprettetAv,
-                oppdatertAvSaksbehandler = oppdatertAvSaksbehandler,
+        tidligereMeldekort = tidligereMeldekort
+            .sortedByDescending { it.mottattTidspunkt }
+            .map { tidligereMeldekort ->
+            tidligereMeldekort.toDto(
+                meldekortData = mottatteDokumenter.metadataFor(tidligereMeldekort)
             )
         },
     )
