@@ -62,10 +62,11 @@ class UføreInformasjonskrav(
         val forrigeFraDato = forrigeInput?.let {
             utledFraDato(
                 forrigeInput.beregningVurdering,
-                forrigeInput.sak.rettighetsperiode.fom
+                forrigeInput.sak.rettighetsperiode.fom,
+                forrigeInput.fødselsdato
             )
         }
-        val nyFraDato = utledFraDato(nyInput.beregningVurdering, nyInput.sak.rettighetsperiode.fom)
+        val nyFraDato = utledFraDato(nyInput.beregningVurdering, nyInput.sak.rettighetsperiode.fom, nyInput.fødselsdato)
 
         val inputHarEndretSeg = forrigeFraDato != nyFraDato
 
@@ -80,7 +81,7 @@ class UføreInformasjonskrav(
         val sak: Sak,
         val behandlingId: BehandlingId,
         val beregningVurdering: BeregningGrunnlag?,
-        val fødselsdato: Fødselsdato?
+        val fødselsdato: Fødselsdato?,
     ) : InformasjonskravInput
 
     data class UføreRegisterdata(val innhentMedHistorikk: Set<Uføre>) : InformasjonskravRegisterdata
@@ -142,18 +143,23 @@ class UføreInformasjonskrav(
         val sak = uføreInput.sak
         val beregningVurdering = uføreInput.beregningVurdering
         // prøver å sette fraDato riktig hvis den finnes
-        val fraDato = utledFraDato(beregningVurdering, sak.rettighetsperiode.fom)
-        return uføreRegisterGateway.innhentMedHistorikk(sak.person, uføreInput.fødselsdato?.dato ?: treÅrFør(fraDato))
+        val fraDato = utledFraDato(beregningVurdering, sak.rettighetsperiode.fom, uføreInput.fødselsdato)
+        return uføreRegisterGateway.innhentMedHistorikk(sak.person, fraDato)
     }
 
     private fun utledFraDato(
         beregningVurdering: BeregningGrunnlag?,
-        kravdato: LocalDate
+        kravdato: LocalDate,
+        fødselsdato: Fødselsdato?
     ): LocalDate {
-        val fraDato = beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-            ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
-            ?: kravdato
-        return fraDato
+        // Vi henter fra fødselsdato enn så lenge, inntil Team Uføre har laget et endepunkt
+        // som kan gi oss uføregrader over tid
+        // Se Slack: https://nav-it.slack.com/archives/C06NKNY1399/p1781519190507349
+        return fødselsdato?.dato ?: treÅrFør(
+            beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+                ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+                ?: kravdato
+        )
     }
 
     private fun treÅrFør(fraOgMed: LocalDate): LocalDate {
