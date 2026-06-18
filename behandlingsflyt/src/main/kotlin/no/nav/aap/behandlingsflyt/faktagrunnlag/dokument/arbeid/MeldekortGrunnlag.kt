@@ -69,6 +69,10 @@ data class MeldekortGrunnlag(
     }
 }
 
+/**
+ * Sjekker om et meldekort har timer innenfor en meldeperiode.
+ * Merk at denne ikke tar høyde for meldekort hvor det ikke er innmeldte timer.
+ */
 private fun Meldekort.tilhørerMeldeperiode(meldeperiode: Periode): Boolean {
     val arbeidsperiode = arbeidsperiode()
     return arbeidsperiode != null && meldeperiode.overlapper(arbeidsperiode)
