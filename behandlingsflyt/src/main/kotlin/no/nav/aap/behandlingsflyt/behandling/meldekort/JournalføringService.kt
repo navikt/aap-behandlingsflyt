@@ -44,7 +44,7 @@ class JournalføringService(
         meldeperiode: Periode,
         meldekort: MeldekortV0,
         oppdatertAv: Bruker,
-        enhet: String,
+        enhet: String?,
         tidspunkt: Instant,
         meldeDato: LocalDate,
         korrigert: Boolean
@@ -63,7 +63,7 @@ class JournalføringService(
 
         val journalpost = journalpost(
             ident = sak.person.aktivIdent(),
-            enhet = enhet,
+            enhet = enhet ?: "9999",
             meldeperiode = meldeperiode,
             meldekort = meldekort,
             tidspunkt = tidspunkt,

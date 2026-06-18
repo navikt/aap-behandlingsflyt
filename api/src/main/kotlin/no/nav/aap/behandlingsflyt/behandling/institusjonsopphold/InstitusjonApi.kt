@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.InternfeilException
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -133,7 +134,7 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
                     val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
-                        .getOrThrow { InternfeilException(it.errorMessage) }
+                        .getOrThrow { UgyldigForespørselException(it.errorMessage) }
 
                     // Hent alle vurderinger gruppert per opphold fra repository
                     val vurderingerGruppertPerOpphold =

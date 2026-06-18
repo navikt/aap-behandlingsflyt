@@ -24,7 +24,6 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import java.time.Clock
 import java.time.LocalDate
-import java.time.ZoneId
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.meldekortApi(
@@ -56,7 +55,7 @@ fun NormalOpenAPIRoute.meldekortApi(
                 relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                 sakPathParam = SakPathParam("saksnummer"),
                 operasjon = Operasjon.SAKSBEHANDLE,
-                påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+                påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL, Rolle.SAKSBEHANDLER_OPPFOLGING),
             ),
             modules = arrayOf(TagModule(listOf(Tags.Sak))),
         ) { req, body ->
@@ -101,7 +100,6 @@ fun NormalOpenAPIRoute.meldekortApi(
 private fun OppdatertMeldekort.tilResponse(): OppdaterMeldekortResponse =
     OppdaterMeldekortResponse(
         journalpostId = journalpostId.identifikator,
-        oppdatertTidspunkt = LocalDate.ofInstant(tidspunkt, ZoneId.of("Europe/Oslo")),
     )
 
 data class OppdaterMeldekortRequest(
