@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningUføreRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -26,7 +27,7 @@ class SamordningUføreStegTest {
 
     @Test
     fun `skal kreve vurdering`() {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 juni 2026)
 
         InMemoryUføreRepository.lagre(
             behandling.id, setOf(
@@ -38,12 +39,54 @@ class SamordningUføreStegTest {
                 )
             )
         )
-
         kjørSteg(behandling)
 
         assertThat(hentAvklaringsbehov(behandling)?.erÅpent()).isTrue
 
-        løsBehov(behandling)
+        løsBehov(
+            behandling, listOf(
+                SamordningUføreVurderingPeriodeDto(
+                    virkningstidspunkt = 1 januar 2026, uføregradTilSamordning = 50
+                )
+            )
+        )
+
+        kjørSteg(behandling)
+
+        assertThat(hentAvklaringsbehov(behandling)?.erÅpent()).isFalse
+    }
+
+    @Test
+    fun `skal ikke kreve vurdering av uførevedtak som slutter før rettighetsperiode start`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 juni 2026)
+
+        InMemoryUføreRepository.lagre(
+            behandling.id, setOf(
+                Uføre(
+                    virkningstidspunkt = 1 januar 2020,
+                    uføregrad = Prosent(20),
+                    uføregradFom = 1 januar 2020,
+                    uføregradTom = 1 januar 2021
+                ),
+                Uføre(
+                    virkningstidspunkt = 1 januar 2026,
+                    uføregrad = Prosent(50),
+                    uføregradFom = 1 januar 2026,
+                    uføregradTom = null
+                )
+            )
+        )
+        kjørSteg(behandling)
+
+        assertThat(hentAvklaringsbehov(behandling)?.erÅpent()).isTrue
+
+        løsBehov(
+            behandling, listOf(
+                SamordningUføreVurderingPeriodeDto(
+                    virkningstidspunkt = 1 januar 2026, uføregradTilSamordning = 50
+                )
+            )
+        )
 
         kjørSteg(behandling)
 
@@ -69,17 +112,14 @@ class SamordningUføreStegTest {
     )
 
     private fun løsBehov(
-        behandling: Behandling
+        behandling: Behandling,
+        løsning: List<SamordningUføreVurderingPeriodeDto>
     ) {
         val behovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         AvklarSamordningUføreLøser(inMemoryRepositoryProvider).løs(
             avklaringsbehovKontekst { this.behandling = behandling }, AvklarSamordningUføreLøsning(
                 samordningUføreVurdering = SamordningUføreVurderingDto(
-                    begrunnelse = "...", vurderingPerioder = listOf(
-                        SamordningUføreVurderingPeriodeDto(
-                            virkningstidspunkt = 1 januar 2026, uføregradTilSamordning = 50
-                        )
-                    )
+                    begrunnelse = "...", vurderingPerioder = løsning
                 )
             )
         )

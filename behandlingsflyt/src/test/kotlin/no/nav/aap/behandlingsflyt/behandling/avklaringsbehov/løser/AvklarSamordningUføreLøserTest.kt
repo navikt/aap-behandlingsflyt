@@ -1,20 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningUføreRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUføreRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -25,7 +19,7 @@ class AvklarSamordningUføreLøserTest {
         val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val samordningUføreLøser =
-            AvklarSamordningUføreLøser(InMemorySamordningUføreRepository, InMemoryUføreRepository)
+            AvklarSamordningUføreLøser(inMemoryRepositoryProvider)
         val feil = assertThrows<UgyldigForespørselException> {
             samordningUføreLøser.løs(
                 avklaringsbehovKontekst { this.behandling = behandling },
@@ -55,7 +49,7 @@ class AvklarSamordningUføreLøserTest {
         val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val samordningUføreRepository = InMemorySamordningUføreRepository
-        val samordningUføreLøser = AvklarSamordningUføreLøser(samordningUføreRepository, InMemoryUføreRepository)
+        val samordningUføreLøser = AvklarSamordningUføreLøser(inMemoryRepositoryProvider)
         samordningUføreLøser.løs(
             avklaringsbehovKontekst { this.behandling = behandling },
             løsning = AvklarSamordningUføreLøsning(
@@ -82,13 +76,3 @@ class AvklarSamordningUføreLøserTest {
 
 }
 
-private fun lagAvklaringsbehovKontekst(): AvklaringsbehovKontekst =
-    AvklaringsbehovKontekst(
-        bruker = Bruker("12345678901"),
-        kontekst = FlytKontekst(
-            sakId = SakId(1L),
-            behandlingId = BehandlingId(2L),
-            forrigeBehandlingId = BehandlingId(1L),
-            behandlingType = TypeBehandling.Revurdering
-        )
-    )

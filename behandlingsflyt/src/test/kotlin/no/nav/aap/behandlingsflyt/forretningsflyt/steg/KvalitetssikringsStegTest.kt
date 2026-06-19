@@ -159,7 +159,7 @@ class KvalitetssikringsStegTest {
             val resultat = løser.løs(
                 avklaringsbehovKontekst {
                     bruker = Bruker(KVALITETSSIKRER)
-                    this.behandling = behandling
+                    this.behandling = this@Scenario.behandling
                 },
                 KvalitetssikringLøsning(
                     vurderinger = (godkjente + underkjente).map {
