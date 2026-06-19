@@ -52,7 +52,6 @@ class FakeApiInternGateway : ApiInternGateway {
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
         muligMaksdato: LocalDate?
     ) {
-        TODO("Not yet implemented")
     }
 
     override fun sendDetaljertMeldekortListe(

@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdfgen
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.aap.behandlingsflyt.behandling.meldekort.Dokument
 import no.nav.aap.behandlingsflyt.behandling.meldekort.MeldekortPdfRequest
 import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
 import no.nav.aap.behandlingsflyt.prometheus
@@ -26,6 +28,23 @@ class PdfgenGatewayImpl : PdfgenGateway {
         val uri = baseUri.resolve("/api/v1/genpdf/aap-saksbehandling-meldekort/meldekort")
         val httpRequest = PostRequest(
             body = request,
+            additionalHeaders = listOf(
+                Header("Accept", "application/pdf")
+            )
+        )
+
+        val pdf = requireNotNull(
+            client.post(uri, httpRequest) { body, _ -> body.readBytes() }
+        )
+
+        return pdf
+    }
+
+    override fun genererGeneriskDokument(dokument: Dokument): ByteArray {
+        val uri = URI("http://localhost:7777/api/v1/genpdf/tmp/misc")
+        println(jacksonObjectMapper().writeValueAsString(dokument))
+        val httpRequest = PostRequest(
+            body = dokument,
             additionalHeaders = listOf(
                 Header("Accept", "application/pdf")
             )
