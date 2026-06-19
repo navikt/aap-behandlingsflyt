@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
@@ -17,6 +18,7 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -71,7 +73,7 @@ class HåndterUførevedtakService(
             val kanHaRettPåAapEtterVirkningsdato =
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
 
-            if (skalOppretteAutomatiskOpphør11_18(uførevedtak)) {
+            if (skalOppretteAutomatiskOpphør11_18(uførevedtak, rettighetstypeTidslinje)) {
                 log.info("Oppretter atomær 11_18 behandling for mottatt uførevedtak for sak $sakId")
                 val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
                 val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
@@ -120,9 +122,12 @@ class HåndterUførevedtakService(
     }
 
     private fun skalOppretteAutomatiskOpphør11_18(
-        uførevedtak: UførevedtakV0
+        uførevedtak: UførevedtakV0, rettighetstypeTidslinje: Tidslinje<RettighetsType>
     ): Boolean {
+
         return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
+                && rettighetstypeTidslinje.filter { it.verdi.hjemmel == RettighetsType.VURDERES_FOR_UFØRETRYGD.hjemmel }
+            .isNotEmpty()
                 && uførevedtak.resultat == UførevedtakResultat.INNV
                 && uførevedtak.virkningsdato.isAfter(LocalDate.now()) // Må endres i senere tid for del 2
     }
