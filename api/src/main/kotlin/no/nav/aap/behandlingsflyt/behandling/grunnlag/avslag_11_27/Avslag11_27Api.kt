@@ -52,7 +52,8 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
 
             val nyVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.id }
 
-            val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling != behandling.id }
+            // TODO Thao: Holder det å vise kun vurderinger fra forrige behandling?
+            val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.forrigeBehandlingId }
 
             val nyttKravListeDto = Avslag11_27KravDto.avslag11_27TilDto(nyttKravListe);
 
@@ -74,7 +75,7 @@ private fun mapVurderingerTilDto(
 ): List<Avslag11_27VurderingDto> {
     return vurderinger.map { vurdering ->
         Avslag11_27VurderingDto(
-            referanse = vurdering.referanse.toString(),
+            referanse = vurdering.referanse.verdi.toString(),
             begrunnelse = vurdering.begrunnelse,
             harAnnenFullYtelse = vurdering.harAnnenFullYtelse,
             brukersYtelse = vurdering.brukersYtelse,
