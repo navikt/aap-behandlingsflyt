@@ -741,7 +741,7 @@ private fun hentSisteBehandlingForSak(sakId: SakId, gatewayProvider: GatewayProv
 }
 
 internal fun postgreSQLContainer(): PostgreSQLContainer {
-    val postgres = PostgreSQLContainer("postgres:16")
+    val postgres = PostgreSQLContainer("postgres:18")
         .apply {
             val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
             if (envPort != null) {
