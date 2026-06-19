@@ -43,7 +43,9 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
             behandlingStatus = tilbakekrevingsbehandling.behandlingsstatus.tilKontrakt(),
             sakOpprettet = tilbakekrevingsbehandling.sakOpprettet,
             totaltFeilutbetaltBeløp = tilbakekrevingsbehandling.totaltFeilutbetaltBeløp.verdi,
-            saksbehandlingURL = tilbakekrevingsbehandling.saksbehandlingURL.toString()
+            saksbehandlingURL = tilbakekrevingsbehandling.saksbehandlingURL.toString(),
+            gjenopptas = tilbakekrevingsbehandling.gjenopptas,
+            venteGrunn = tilbakekrevingsbehandling.venteGrunn,
         )
 
         log.info("Kaller oppgavestyring for å varsle om oppdatering av tilbakekrevingsbehandling for sak: ${sak.saksnummer}")
