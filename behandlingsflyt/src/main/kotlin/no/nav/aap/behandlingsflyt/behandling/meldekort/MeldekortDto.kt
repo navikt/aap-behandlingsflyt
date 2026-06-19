@@ -88,7 +88,7 @@ fun toMeldeperiodeMedMeldekortDto(
     tidligereMeldekort: List<Meldekort>,
     mottatteDokumenter: Map<InnsendingReferanse, MottattDokument>,
 ): MeldeperiodeMedMeldekortDto {
-    val meldefrist = helligdagsunntakjustertMeldefrist(meldeperiode.fom.plusDays(7))
+    val meldefrist = helligdagsunntakjustertMeldefrist(meldeperiode.tom.plusDays(8))
     if (nyesteMeldekort == null) {
         return MeldeperiodeMedMeldekortDto(
             meldeperiode = meldeperiode,
