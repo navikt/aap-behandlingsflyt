@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -285,10 +284,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(
 
     @Test
     fun `Ny kvalitetssikring skal skje dersom behandlingen blir dratt tilbake til 22-13 og ny startdato settes`() {
-        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.KvalitetssikringVed2213)) {
-            return
-        }
-
         val fom = LocalDate.now().minusMonths(3)
 
         val person = TestPersoner.STANDARD_PERSON()
