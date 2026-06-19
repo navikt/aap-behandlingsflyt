@@ -129,7 +129,7 @@ class MeldekortApiTest : BaseApiTest() {
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
-            assertThat(meldeperiodeMedMeldekort.meldefrist).isEqualTo(meldeperiode.fom.plusDays(7))
+            assertThat(meldeperiodeMedMeldekort.meldefrist).isEqualTo(meldeperiode.tom.plusDays(8))
             assertThat(meldeperiodeMedMeldekort.meldekort).isNull()
         }
     }
