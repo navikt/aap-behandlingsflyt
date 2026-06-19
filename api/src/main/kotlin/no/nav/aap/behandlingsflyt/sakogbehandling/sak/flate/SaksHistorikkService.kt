@@ -18,20 +18,24 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 
 class SaksHistorikkService(
-    private val repositoryProvider: RepositoryProvider,
+    private val behandlingRepository: BehandlingRepository,
+    private val avklaringsbehovOperasjonerRepository: AvklaringsbehovOperasjonerRepository,
+    private val trukketSøknadRepository: TrukketSøknadRepository,
     private val oppgavestyringGateway: OppgavestyringGateway,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
     ) : this(
-        repositoryProvider = repositoryProvider,
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovOperasjonerRepository = repositoryProvider.provide(),
+        trukketSøknadRepository = repositoryProvider.provide(),
         oppgavestyringGateway = gatewayProvider.provide()
     )
 
     fun utledSaksHistorikk(sakId: SakId): List<BehandlingHistorikkDTO> {
-        val alleBehandlinger = repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sakId)
-        val behandlingerMedBehov = repositoryProvider.provide<AvklaringsbehovOperasjonerRepository>()
+        val alleBehandlinger = behandlingRepository.hentAlleFor(sakId)
+        val behandlingerMedBehov = avklaringsbehovOperasjonerRepository
             .hentAlleAvklaringsbehovForSak(alleBehandlinger.map { it.id })
 
         val opprettelsesHendelser = utledOpprettelseHendelser(alleBehandlinger)
@@ -180,7 +184,7 @@ class SaksHistorikkService(
                         }
 
                         Definisjon.VURDER_TREKK_AV_SØKNAD -> {
-                            val nyesteVurdering = repositoryProvider.provide<TrukketSøknadRepository>()
+                            val nyesteVurdering = trukketSøknadRepository
                                 .hentTrukketSøknadVurderinger(behandling.behandlingId)
                                 .maxByOrNull { it.vurdert }
 
