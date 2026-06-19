@@ -96,7 +96,7 @@ class MeldingOmVedtakBrevSteg(
         log.warn(
             "Dette steget støtter ikke tilbakestilling. Steget er i status IVERKSETTES og vedtaksresultat " +
                     "skal ikke kunne endres. Det er bestilt et brev som må fullføres eller avbrytes " +
-                    "manuelt. Dersom dette logges bør vurderes om det forutsetningene har endret seg."
+                    "manuelt. Dersom dette logges bør det vurderes om forutsetningene har endret seg."
         )
     }
 
