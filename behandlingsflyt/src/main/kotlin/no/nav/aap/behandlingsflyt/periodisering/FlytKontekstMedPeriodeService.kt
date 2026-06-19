@@ -112,6 +112,7 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.DØDSFALL_BRUKER,
                 Vurderingsbehov.DØDSFALL_BARN,
                 Vurderingsbehov.VEDTAKSLENGDE_MANUELT,
+                Vurderingsbehov.VURDER_KRAV,
                 Vurderingsbehov.REVURDERING_AVBRUTT ->
                     REVURDERING
 

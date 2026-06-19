@@ -41,6 +41,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
@@ -103,6 +106,7 @@ class BrevUtlederService(
     private val sykdomRepository: SykdomRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
+    private val meldepliktRepository: MeldepliktRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -129,6 +133,7 @@ class BrevUtlederService(
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
+        meldepliktRepository = repositoryProvider.provide(),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
     )
 
@@ -385,15 +390,11 @@ class BrevUtlederService(
         } else {
             null
         }
-        val yrkesskader = if (Miljø.erDev()) yrkesskadeRepository.hentHvisEksisterer(behandling.id) else null
+        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
-        val yrkesSkadeISøknadIkkeIRegister = if (Miljø.erDev()) {
-            yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
-        } else null
+        val yrkesSkadeISøknadIkkeIRegister = yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
 
-        val yrkesskadeBeregning = if (Miljø.erDev()) {
-            utledYrkesskadeBeregning(behandling.id, yrkesskader)
-        } else null
+        val yrkesskadeBeregning = utledYrkesskadeBeregning(behandling.id, yrkesskader)
 
         val foreldreAnsvarVurderinger = hentBarnVurderingPerioder(behandling.id)
         return Innvilgelse(
@@ -406,6 +407,7 @@ class BrevUtlederService(
             yrkesskadeBeregning = yrkesskadeBeregning,
             yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister,
             foreldreansvarVurderinger = foreldreAnsvarVurderinger,
+            meldepliktGrunnlag = hentMeldepliktVurderingPerioder(behandling.id),
         )
     }
 
@@ -718,6 +720,10 @@ class BrevUtlederService(
             ?.barn
             ?.flatMap { it.vurderinger }
             .orEmpty()
+    }
+
+    fun hentMeldepliktVurderingPerioder(behandlingId: BehandlingId): MeldepliktGrunnlag? {
+        return meldepliktRepository.hentHvisEksisterer(behandlingId)
     }
 
     private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): List<SamordningYtelse> {

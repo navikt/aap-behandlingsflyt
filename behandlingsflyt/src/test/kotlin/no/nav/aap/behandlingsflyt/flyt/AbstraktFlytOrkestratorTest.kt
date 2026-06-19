@@ -581,13 +581,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsRettighetsperiode(dato: LocalDate): Behandling {
+    protected fun Behandling.løsRettighetsperiode(dato: LocalDate, begrunnelse: String = "En begrunnelse", harRett: RettighetsperiodeHarRett = RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger): Behandling {
         return this.løsAvklaringsBehov(
             avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
                 rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = dato,
-                    begrunnelse = "En begrunnelse",
-                    harRett = RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger
+                    begrunnelse = begrunnelse,
+                    harRett = harRett
                 )
             )
         )

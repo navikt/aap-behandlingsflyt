@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
@@ -14,9 +16,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.prosessering.OppdagEndretInformasjonskravJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -25,6 +29,7 @@ import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.collections.orEmpty
 
 class HåndterUførevedtakService(
     private val behandlingService: BehandlingService,
@@ -34,6 +39,7 @@ class HåndterUførevedtakService(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val flytJobbRepository: FlytJobbRepository,
     private val unleashGateway: UnleashGateway,
+    private val underveisRepository: UnderveisRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
@@ -42,7 +48,8 @@ class HåndterUførevedtakService(
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         flytJobbRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
+        unleashGateway = gatewayProvider.provide(),
+        underveisRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -71,7 +78,8 @@ class HåndterUførevedtakService(
             val kanHaRettPåAapEtterVirkningsdato =
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
 
-            if (skalOppretteAutomatiskOpphør11_18(uførevedtak)) {
+            if (skalOppretteAutomatiskOpphør11_18(uførevedtak, rettighetstypeTidslinje, sisteYtelsesBehandling.id)) {
+                log.info("Oppretter atomær 11_18 behandling for mottatt uførevedtak for sak $sakId")
                 val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
                 val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
                     sakId,
@@ -119,9 +127,16 @@ class HåndterUførevedtakService(
     }
 
     private fun skalOppretteAutomatiskOpphør11_18(
-        uførevedtak: UførevedtakV0
+        uførevedtak: UførevedtakV0, rettighetstypeTidslinje: Tidslinje<RettighetsType>, behandlingId: BehandlingId
     ): Boolean {
+        val perioder = underveisRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
+        val innvilgetEtter11_18 =
+            perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
+                    || rettighetstypeTidslinje.filter { it.verdi.hjemmel == RettighetsType.VURDERES_FOR_UFØRETRYGD.hjemmel }
+                .isNotEmpty()
+
         return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
+                && innvilgetEtter11_18
                 && uførevedtak.resultat == UførevedtakResultat.INNV
                 && uførevedtak.virkningsdato.isAfter(LocalDate.now()) // Må endres i senere tid for del 2
     }

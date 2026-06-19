@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -70,7 +71,7 @@ class UføreInformasjonskrav(
 
         val inputHarEndretSeg = forrigeFraDato != nyFraDato
 
-        return kontekst.erFørstegangsbehandlingEllerRevurdering()
+        return (kontekst.erFørstegangsbehandlingEllerRevurdering() || kontekst.vurderingType == VurderingType.OVERGANG_UFORE_STANS)
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
                 && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode || inputHarEndretSeg || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
             oppdatert

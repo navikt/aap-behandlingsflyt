@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
@@ -8,10 +7,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryEtableringEgenVirksomRepository
@@ -38,11 +36,6 @@ class EtableringEgenVirksomhetLøserTest {
         )
     )
 
-    private fun opprettKontekst(sak: Sak, behandling: Behandling) = AvklaringsbehovKontekst(
-        Bruker("dd"),
-        FlytKontekst(sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling())
-    )
-
     private fun oppfyltVurdering(
         fom: LocalDate,
         utviklingsPerioder: List<Periode> = emptyList(),
@@ -66,7 +59,7 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-        val kontekst = opprettKontekst(sak, behandling)
+        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(oppfyltVurdering(fom = sak.rettighetsperiode.fom.plusDays(1)))
         )
@@ -80,7 +73,7 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-        val kontekst = opprettKontekst(sak, behandling)
+        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
@@ -104,7 +97,7 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-        val kontekst = opprettKontekst(sak, behandling)
+        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
@@ -128,7 +121,7 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-        val kontekst = opprettKontekst(sak, behandling)
+        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
@@ -153,7 +146,7 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
-        val kontekst = opprettKontekst(sak, behandling)
+        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(

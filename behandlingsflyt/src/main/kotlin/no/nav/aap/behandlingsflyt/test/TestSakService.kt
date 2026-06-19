@@ -30,7 +30,7 @@ class TestSakService(
     private val identGateway: IdentGateway,
     private val personOgSakService: PersonOgSakService,
     private val behandlingService: BehandlingService,
-    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val mottattDokumentRepository: MottattDokumentRepository
 ) {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -38,7 +38,7 @@ class TestSakService(
         identGateway = gatewayProvider.provide(),
         personOgSakService = PersonOgSakService(gatewayProvider, repositoryProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-        mottattDokumentRepository = repositoryProvider.provide(),
+        mottattDokumentRepository = repositoryProvider.provide()
     )
 
     fun opprettTestSak(
