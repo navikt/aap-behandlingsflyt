@@ -12,7 +12,7 @@ import java.time.YearMonth
 class InntektValideringTest {
 
     @Test
-    fun `skal feile når forskjellen mellom inntekt fra A-inntekt og PESYS er mer enn 100kr`() {
+    fun `skal feile når forskjellen mellom inntekt fra A-inntekt og POPP er mer enn 100kr`() {
         val år = Year.of(2022)
         val årsInntekter = setOf(InntektPerÅr(år, Beløp(500000)))
         val månedsinntekter = mapOf(YearMonth.of(2022, 1) to Beløp(500102))
