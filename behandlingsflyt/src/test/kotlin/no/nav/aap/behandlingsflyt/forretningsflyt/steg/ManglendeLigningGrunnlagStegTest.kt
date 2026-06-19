@@ -99,7 +99,6 @@ class ManglendeLigningGrunnlagStegTest {
         )
 
         steg = ManglendeLigningGrunnlagSteg(
-            avklaringsbehovRepository,
             inntektGrunnlagRepository,
             manuellInntektGrunnlagRepository,
             tidligereVurderinger,
