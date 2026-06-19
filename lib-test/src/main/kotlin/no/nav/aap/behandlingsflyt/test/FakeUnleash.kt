@@ -55,7 +55,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
-        BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true
+        BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
+        BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true
         )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
