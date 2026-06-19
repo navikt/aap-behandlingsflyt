@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.BarnetilleggSatsRegulering
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -28,6 +30,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.format.DateTimeFormatter
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status as BrevStatus
 
 private val log = LoggerFactory.getLogger("BrevSteg")
 
@@ -67,7 +70,14 @@ class MeldingOmVedtakBrevSteg(
         ).forEach { definisjon ->
             avklaringsbehovService.oppdaterAvklaringsbehov(
                 definisjon,
-                vedtakBehøverVurdering = { vedtakBehøverVurdering(behandlingErAvbrutt, definisjon, brevBehov) },
+                vedtakBehøverVurdering = {
+                    vedtakBehøverVurdering(
+                    kontekst.behandlingId,
+                        avklaringsbehovRepository.hentAvklaringsbehovene(
+                            kontekst.behandlingId
+                        ), behandlingErAvbrutt, definisjon, brevBehov
+                    )
+                },
                 erTilstrekkeligVurdert =
                     { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
                 tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
@@ -99,13 +109,29 @@ class MeldingOmVedtakBrevSteg(
     }
 
     private fun vedtakBehøverVurdering(
+        behandlingId: BehandlingId,
+        avklaringsbehovene: Avklaringsbehovene,
         behandlingErAvbrutt: Boolean,
         forDefinisjon: Definisjon,
         brevBehov: BrevBehov?
     ): Boolean {
         val harManueltBrevbehov = (!behandlingErAvbrutt && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev())
+        
+        val behovForBeslutterbrev = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
+        val harBeslutterSkrevetBrev = behovForBeslutterbrev?.historikk?.any { it.status == Status.AVSLUTTET } ?: false
+        
+        val erBeslutterbehovAvbrutt = behovForBeslutterbrev?.status() == Status.AVBRUTT
+        
+        if (harBeslutterSkrevetBrev && erBeslutterbehovAvbrutt && brevBehov != null) {
+            val brevbestilling = brevbestillingService.hentBestillinger(behandlingId, brevBehov.typeBrev)
+                .maxByOrNull { it.opprettet }
+            if (brevbestilling?.status == BrevStatus.AVBRUTT) {
+                brevbestillingService.gjenopptaBestilling(behandlingId, brevbestilling.referanse)
+            }
+        }
+        
         return when (brevBehov) {
-            is KlageOpprettholdelse -> harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
+            is KlageOpprettholdelse -> !harBeslutterSkrevetBrev && harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER
             else -> harManueltBrevbehov && forDefinisjon == Definisjon.SKRIV_VEDTAKSBREV
         }
     }
