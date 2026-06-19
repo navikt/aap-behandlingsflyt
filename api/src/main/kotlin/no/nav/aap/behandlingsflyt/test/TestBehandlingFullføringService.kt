@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevA
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TjenestepensjonRefusjonskravLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
@@ -35,6 +36,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
@@ -46,6 +49,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TilleggsopplysningKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
@@ -55,6 +62,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -67,6 +76,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -82,6 +92,35 @@ class TestBehandlingFullføringService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Fullfører behandlingen ved å vente på en åpen behandling og deretter løse
+     * avklaringsbehov til behandlingen er avsluttet, eller vi når maks antall forsøk.
+     *
+     * ```mermaid
+     * flowchart TD
+     *     Start([fullførBehandling])
+     *     AlleredeAvsluttet{ventPåNyBehandling = false<br/>og behandlingen er allerede avsluttet?}
+     *     VentPåÅpen[Vent på åpen behandling]
+     *     FantÅpen{Fant åpen behandling innen tidsgrensen?}
+     *     Loop{{Maks 200 iterasjoner<br/>mens behandlingen ikke er avsluttet}}
+     *     Prosesser[prosesserNesteSteg]
+     *     Avsluttet{Behandlingen er avsluttet?}
+     *     LoggIngenÅpen[Logg feil og returner]
+     *     LoggIkkeAvsluttet[Logg feil om manglende avslutning]
+     *     Slutt([Returner])
+     *
+     *     Start --> AlleredeAvsluttet
+     *     AlleredeAvsluttet -->|Ja| Slutt
+     *     AlleredeAvsluttet -->|Nei| VentPåÅpen
+     *     VentPåÅpen --> FantÅpen
+     *     FantÅpen -->|Nei| LoggIngenÅpen --> Slutt
+     *     FantÅpen -->|Ja| Loop
+     *     Loop -->|Ja| Prosesser --> Loop
+     *     Loop -->|Nei| Avsluttet
+     *     Avsluttet -->|Ja| Slutt
+     *     Avsluttet -->|Nei| LoggIkkeAvsluttet --> Slutt
+     * ```
+     */
     fun fullførBehandling(sak: Sak, ventPåNyBehandling: Boolean = false) {
         // Dersom vi ikke venter på ny behandling og siste allerede er avsluttet, er det ingen jobb å gjøre
         if (!ventPåNyBehandling && erBehandlingAvsluttet(sak)) {
@@ -130,9 +169,34 @@ class TestBehandlingFullføringService(
 
     /**
      * Henter avklaringsbehov og løser det første åpne. Returnerer behandlingId hvis et behov ble løst.
+     *
+     *
+     * `prosesserNesteSteg` gjør videre dette:
+     *
+     * ```mermaid
+     * flowchart TD
+     *     Start([prosesserNesteSteg])
+     *     RiktigBehandling{Fant behandling<br/>og den er ikke avsluttet?}
+     *     HentBehov[Hent søknader og avklaringsbehov]
+     *     ÅpentBehov{Finnes et åpent behov<br/>som ikke er ventebehov?}
+     *     LagLøsning{Klarer vi å lage en løsning?}
+     *     Løs[Velg rolle og løs behovet]
+     *     Vent[Vent litt og returner]
+     *     Feil[Logg feil og avbryt]
+     *     Ferdig([Returner behandlingId eller null])
+     *
+     *     Start --> RiktigBehandling
+     *     RiktigBehandling -->|Nei| Vent --> Ferdig
+     *     RiktigBehandling -->|Ja| HentBehov --> ÅpentBehov
+     *     ÅpentBehov -->|Nei| Vent --> Ferdig
+     *     ÅpentBehov -->|Ja| LagLøsning
+     *     LagLøsning -->|Nei| Feil --> Ferdig
+     *     LagLøsning -->|Ja| Løs --> Ferdig
+     * ```
      */
     @Suppress("ReturnCount")
     private fun prosesserNesteSteg(sak: Sak, forventetBehandlingId: BehandlingId): BehandlingId? {
+
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(sak.id)
@@ -141,6 +205,15 @@ class TestBehandlingFullføringService(
         if (behandling == null || behandling.id != forventetBehandlingId || behandling.status() == Status.AVSLUTTET) {
             Thread.sleep(200)
             return null
+        }
+
+        val søknaderSomMåHåndteres = when (behandling.typeBehandling()) {
+            TypeBehandling.Førstegangsbehandling -> emptySet()
+            else -> dataSource.transaction(readOnly = true) { connection ->
+                repositoryRegistry.provider(connection)
+                    .provide<MottattDokumentRepository>()
+                    .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
+            }
         }
 
         val alleAvklaringsbehov = dataSource.transaction(readOnly = true) { connection ->
@@ -158,7 +231,7 @@ class TestBehandlingFullføringService(
             return behandling.id
         }
 
-        val løsning = lagLøsning(åpentBehov, alleAvklaringsbehov, sak, behandling.id)
+        val løsning = lagLøsning(åpentBehov, alleAvklaringsbehov, sak, behandling.id, søknaderSomMåHåndteres)
         if (løsning == null) {
             log.error("Ukjent avklaringsbehov: ${åpentBehov.definisjon} — avbryter fullføring")
             return null
@@ -185,7 +258,16 @@ class TestBehandlingFullføringService(
         alleAvklaringsbehov: List<Avklaringsbehov>,
         sak: Sak,
         behandlingId: BehandlingId,
+        søknaderSomMåHåndteres: Set<MottattDokument>
     ): AvklaringsbehovLøsning? = when (behov.definisjon) {
+        Definisjon.VURDER_KRAV -> VurderKravLøsning(
+            kravVurderinger = søknaderSomMåHåndteres.map {
+                TilleggsopplysningKravLøsningDto(
+                    journalpostId = it.referanse.asJournalpostId,
+                    begrunnelse = "Tilleggsopplysning",
+                )
+            }.toSet())
+
         Definisjon.AVKLAR_STUDENT -> AvklarStudentLøsning(
             løsningerForPerioder = listOf(
                 PeriodisertStudentDto(

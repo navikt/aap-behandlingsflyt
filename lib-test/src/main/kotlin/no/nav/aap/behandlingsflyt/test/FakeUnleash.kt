@@ -44,20 +44,25 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
-        BehandlingsflytFeature.KvalitetssikringVed2213 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
-        BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring to true,
         BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse to true,
         BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true,
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
         BehandlingsflytFeature.AutomatiskStans1118 to true,
         BehandlingsflytFeature.KravSteg to true,
-        BehandlingsflytFeature.StudentV2 to true
+        BehandlingsflytFeature.StudentV2 to true,
+        BehandlingsflytFeature.BackfillStansOpphor to true,
+        BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
+        BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true
         )
-)
+) {
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
+        return "1,100"
+    }
+}
 
 /** Unleash for bruk i tester - for å teste "prodlikt", hvor alle toggles er skrudd av
  * For det meste brukes denne i integrasjonstester og flyt-tester for å sjekke at ting som

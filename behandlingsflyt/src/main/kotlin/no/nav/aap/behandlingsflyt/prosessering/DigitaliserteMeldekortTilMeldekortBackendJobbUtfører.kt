@@ -26,7 +26,7 @@ class DigitaliserteMeldekortTilMeldekortBackendJobbUtfører(
         val journalpostId = input.payload<JournalpostId>()
         val sak = sakRepository.hent(SakId(input.sakId()))
 
-        val journalpost = mottattDokumentRepository.hent(InnsendingReferanse(journalpostId))
+        val journalpost = mottattDokumentRepository.hent(sak.id, InnsendingReferanse(journalpostId))
         val ubehandletMeldekort = mottaDokumentService.tilUbehandletMeldekort(journalpost)
 
         if (ubehandletMeldekort.harDuArbeidet == null || ubehandletMeldekort.timerArbeidPerPeriode.isEmpty()) return

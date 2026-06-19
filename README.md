@@ -87,6 +87,13 @@ Alternativt, for å unngå å starte IntelliJ, gå i rotmappen og kjør:
 
 ```./gradlew runTestApp ```
 
+Alternativt, for å kjøre mot oppgave:
+
+```
+docker-compose up -d
+./gradlew runTestAppMotOppgave 
+```
+
 
 Swagger-dokumentasjon blir tilgjengelig på http://localhost:8080/swagger-ui/index.html. For å gjøre autentiserte kall trengs JWT-token fra "fake Azure AD" (startet i Fakes-klassen). "Fake AD" kjører på localhost:8081, og du kan få token ved å kjøre
 

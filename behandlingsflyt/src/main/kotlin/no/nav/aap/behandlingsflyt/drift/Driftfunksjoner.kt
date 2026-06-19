@@ -206,14 +206,14 @@ class Driftfunksjoner(
         if (nyttAktivtSteg != behandling.aktivtSteg()) {
             throw UgyldigForespørselException("Aktivt steg er ulikt etter utvidelse av rettighetsperiode - rull tilbake. Før=${behandling.aktivtSteg()} etter=$nyttAktivtSteg")
         }
-        if (`avklaringsbehovFørEndring`.size != avklaringsbehovEtterEndring.size) {
-            throw UgyldigForespørselException("Ulikt antall avklaringsbehov før og etter endring, ruller tilbake. Før=${`avklaringsbehovFørEndring`} etter=${avklaringsbehovEtterEndring}")
+        if (avklaringsbehovFørEndring.size != avklaringsbehovEtterEndring.size) {
+            throw UgyldigForespørselException("Ulikt antall avklaringsbehov før og etter endring, ruller tilbake. Før=${avklaringsbehovFørEndring} etter=${avklaringsbehovEtterEndring}")
         }
         avklaringsbehovEtterEndring.forEach { etter ->
-            val før = `avklaringsbehovFørEndring`.find { it.definisjon == etter.definisjon }
+            val før = avklaringsbehovFørEndring.find { it.definisjon == etter.definisjon }
                 ?: error("Fant ikke avklaringsbehov med definisjon ${etter.definisjon} fra avklaringsbehovene før endringen")
             if (før.status() != etter.status()) {
-                throw UgyldigForespørselException("Ulik status på avklaringsbehov før og etter endring for ${etter.definisjon}, ruller tilbake. Før=${`avklaringsbehovFørEndring`} etter=${avklaringsbehovEtterEndring}")
+                throw UgyldigForespørselException("Ulik status på avklaringsbehov før og etter endring for ${etter.definisjon}, ruller tilbake. Før=${avklaringsbehovFørEndring} etter=${avklaringsbehovEtterEndring}")
             }
         }
     }

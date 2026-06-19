@@ -52,7 +52,7 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
     }
 
     override fun hentId(behandlingId: BehandlingId): Long {
-        return requireNotNull(connection.queryFirstOrNull("SELECT * FROM VEDTAK WHERE behandling_id = ?") {
+        return requireNotNull(connection.queryFirstOrNull("SELECT id FROM VEDTAK WHERE behandling_id = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }

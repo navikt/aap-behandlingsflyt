@@ -12,6 +12,8 @@ enum class TypeBrev {
     VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27,
     VEDTAK_11_17,
     VEDTAK_11_18,
+    VEDTAK_11_18_OPPHØR_DELVIS_UFØR,
+    VEDTAK_11_18_OPPHØR_FULL_UFØR,
     VEDTAK_ENDRING,
     BARNETILLEGG_SATS_REGULERING,
     VEDTAK_11_7,
@@ -63,6 +65,8 @@ enum class TypeBrev {
             VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12,
             VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26,
             VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27,
+            VEDTAK_11_18_OPPHØR_DELVIS_UFØR,
+            VEDTAK_11_18_OPPHØR_FULL_UFØR,
         ).contains(this)
     }
 }
