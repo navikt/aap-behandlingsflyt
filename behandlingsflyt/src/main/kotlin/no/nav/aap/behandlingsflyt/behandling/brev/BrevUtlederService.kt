@@ -394,10 +394,7 @@ class BrevUtlederService(
 
         val yrkesSkadeISøknadIkkeIRegister = yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
 
-        val yrkesskadeBeregning = if (Miljø.erDev()) {
-            utledYrkesskadeBeregning(behandling.id, yrkesskader)
-        } else null
-
+        val yrkesskadeBeregning = utledYrkesskadeBeregning(behandling.id, yrkesskader)
 
         val foreldreAnsvarVurderinger = hentBarnVurderingPerioder(behandling.id)
         return Innvilgelse(
