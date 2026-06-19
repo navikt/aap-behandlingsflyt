@@ -58,10 +58,10 @@ class VurderAvslag11_27Steg private constructor(
 
     private fun tilbakestillGrunnlag(kontekst: FlytKontekstMedPerioder) {
         val tidligereVurderinger =
-            kontekst.forrigeBehandlingId?.let { avslag11_27repository.hentHvisEksisterer(it)?.vurderinger } ?: emptyList()
+            kontekst.forrigeBehandlingId?.let { avslag11_27repository.hentHvisEksisterer(it)?.vurderinger }.orEmpty()
 
         val alleVurderinger =
-            avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger ?: emptyList()
+            avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
 
         if (tidligereVurderinger != alleVurderinger) { // TODO Thao: Test ut om dette stemmer
             avslag11_27repository.lagre(kontekst.behandlingId, tidligereVurderinger)

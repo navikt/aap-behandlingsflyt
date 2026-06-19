@@ -7,6 +7,9 @@ data class Avslag11_27VurderingDto(
     val begrunnelse: String,
     val harAnnenFullYtelse: Boolean,
     val brukersYtelse: Ytelse? = null,
-    val harSykepengegrunnlagOver2G: Boolean? = null, // Kun for sykepenger
+    /**
+     * Kun for sykepenger
+     */
+    val harSykepengegrunnlagOver2G: Boolean? = null,
     val skalAvslås1127: Boolean,
 )

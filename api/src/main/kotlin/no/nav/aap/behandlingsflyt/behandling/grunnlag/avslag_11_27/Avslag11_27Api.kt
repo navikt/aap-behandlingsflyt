@@ -45,14 +45,13 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
 
             val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
             val nyttKravListe =
-                kravRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.filterIsInstance<NyttKrav>()
-                    ?: emptyList()
+                kravRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.filterIsInstance<NyttKrav>().orEmpty()
 
             val alleVurderinger = avslag_11_27Repository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
 
             val nyVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.id }
 
-            // TODO Thao: Holder det å vise kun vurderinger fra forrige behandling?
+            // TODO Thao: Holder det å vise kun vurderinger fra forrige behandling? Eller viser vurderinger fra alle behandlinger ulik behandling.id
             val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.forrigeBehandlingId }
 
             val nyttKravListeDto = Avslag11_27KravDto.avslag11_27TilDto(nyttKravListe);
