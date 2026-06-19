@@ -33,7 +33,7 @@ class FakeOppgavestyringGateway : OppgavestyringGateway {
         return OppgaveEnhetResponse(emptyList())
     }
 
-    override fun hentMarkeringer(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto> {
         return emptyList()
     }
 

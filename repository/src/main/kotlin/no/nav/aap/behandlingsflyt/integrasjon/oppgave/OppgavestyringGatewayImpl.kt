@@ -75,7 +75,7 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
         }
     }
 
-    override fun hentMarkeringer(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
@@ -83,7 +83,7 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
         )
         return checkNotNull(
             client.get<List<MarkeringNyDto>>(
-                uri = url.resolve("/${behandlingReferanse.referanse}/hent-markeringer"),
+                uri = url.resolve("/${behandlingReferanse.referanse}/hent-markeringer-og-historikk"),
                 request = request
             )
         ) {
