@@ -385,7 +385,7 @@ class BrevUtlederService(
         } else {
             null
         }
-        val yrkesskader = if (Miljø.erDev()) yrkesskadeRepository.hentHvisEksisterer(behandling.id) else null
+        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
         val yrkesSkadeISøknadIkkeIRegister = yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
 
