@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -29,7 +28,6 @@ import java.time.Year
  * Dette steget sjekker om vi mangler inntekt for året før nedsettelsesdatoen.
  */
 class ManglendeLigningGrunnlagSteg internal constructor(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -37,7 +35,6 @@ class ManglendeLigningGrunnlagSteg internal constructor(
     private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        avklaringsbehovRepository = repositoryProvider.provide(),
         inntektGrunnlagRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),

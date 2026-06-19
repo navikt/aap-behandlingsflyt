@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.meldekort
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakjustertMeldefrist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -20,6 +21,7 @@ enum class MeldekortProsesseringStatus {
 data class MeldeperiodeMedMeldekortDto(
     val meldeperiode: Periode,
     val periode: Periode?,
+    val meldefrist: LocalDate,
     val meldekort: MeldekortDto?,
     val tidligereMeldekort: List<MeldekortDto> = emptyList(),
     val meldepliktStatus: Set<MeldepliktStatus>,
@@ -86,10 +88,12 @@ fun toMeldeperiodeMedMeldekortDto(
     tidligereMeldekort: List<Meldekort>,
     mottatteDokumenter: Map<InnsendingReferanse, MottattDokument>,
 ): MeldeperiodeMedMeldekortDto {
+    val meldefrist = helligdagsunntakjustertMeldefrist(meldeperiode.fom.plusDays(7))
     if (nyesteMeldekort == null) {
         return MeldeperiodeMedMeldekortDto(
             meldeperiode = meldeperiode,
             periode = oppfyltMeldeperiodeMedMeldepliktStatus.periode,
+            meldefrist = meldefrist,
             meldepliktStatus = oppfyltMeldeperiodeMedMeldepliktStatus.meldepliktStatus,
             meldekort = null,
         )
@@ -98,6 +102,7 @@ fun toMeldeperiodeMedMeldekortDto(
     return MeldeperiodeMedMeldekortDto(
         meldeperiode = meldeperiode,
         periode = oppfyltMeldeperiodeMedMeldepliktStatus.periode,
+        meldefrist = meldefrist,
         meldepliktStatus = oppfyltMeldeperiodeMedMeldepliktStatus.meldepliktStatus,
         meldekort = nyesteMeldekort.toDto(
             meldekortData = mottatteDokumenter.metadataFor(nyesteMeldekort),

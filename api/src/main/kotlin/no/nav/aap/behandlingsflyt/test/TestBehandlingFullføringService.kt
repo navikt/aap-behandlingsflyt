@@ -92,6 +92,35 @@ class TestBehandlingFullføringService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Fullfører behandlingen ved å vente på en åpen behandling og deretter løse
+     * avklaringsbehov til behandlingen er avsluttet, eller vi når maks antall forsøk.
+     *
+     * ```mermaid
+     * flowchart TD
+     *     Start([fullførBehandling])
+     *     AlleredeAvsluttet{ventPåNyBehandling = false<br/>og behandlingen er allerede avsluttet?}
+     *     VentPåÅpen[Vent på åpen behandling]
+     *     FantÅpen{Fant åpen behandling innen tidsgrensen?}
+     *     Loop{{Maks 200 iterasjoner<br/>mens behandlingen ikke er avsluttet}}
+     *     Prosesser[prosesserNesteSteg]
+     *     Avsluttet{Behandlingen er avsluttet?}
+     *     LoggIngenÅpen[Logg feil og returner]
+     *     LoggIkkeAvsluttet[Logg feil om manglende avslutning]
+     *     Slutt([Returner])
+     *
+     *     Start --> AlleredeAvsluttet
+     *     AlleredeAvsluttet -->|Ja| Slutt
+     *     AlleredeAvsluttet -->|Nei| VentPåÅpen
+     *     VentPåÅpen --> FantÅpen
+     *     FantÅpen -->|Nei| LoggIngenÅpen --> Slutt
+     *     FantÅpen -->|Ja| Loop
+     *     Loop -->|Ja| Prosesser --> Loop
+     *     Loop -->|Nei| Avsluttet
+     *     Avsluttet -->|Ja| Slutt
+     *     Avsluttet -->|Nei| LoggIkkeAvsluttet --> Slutt
+     * ```
+     */
     fun fullførBehandling(sak: Sak, ventPåNyBehandling: Boolean = false) {
         // Dersom vi ikke venter på ny behandling og siste allerede er avsluttet, er det ingen jobb å gjøre
         if (!ventPåNyBehandling && erBehandlingAvsluttet(sak)) {
@@ -140,6 +169,30 @@ class TestBehandlingFullføringService(
 
     /**
      * Henter avklaringsbehov og løser det første åpne. Returnerer behandlingId hvis et behov ble løst.
+     *
+     *
+     * `prosesserNesteSteg` gjør videre dette:
+     *
+     * ```mermaid
+     * flowchart TD
+     *     Start([prosesserNesteSteg])
+     *     RiktigBehandling{Fant behandling<br/>og den er ikke avsluttet?}
+     *     HentBehov[Hent søknader og avklaringsbehov]
+     *     ÅpentBehov{Finnes et åpent behov<br/>som ikke er ventebehov?}
+     *     LagLøsning{Klarer vi å lage en løsning?}
+     *     Løs[Velg rolle og løs behovet]
+     *     Vent[Vent litt og returner]
+     *     Feil[Logg feil og avbryt]
+     *     Ferdig([Returner behandlingId eller null])
+     *
+     *     Start --> RiktigBehandling
+     *     RiktigBehandling -->|Nei| Vent --> Ferdig
+     *     RiktigBehandling -->|Ja| HentBehov --> ÅpentBehov
+     *     ÅpentBehov -->|Nei| Vent --> Ferdig
+     *     ÅpentBehov -->|Ja| LagLøsning
+     *     LagLøsning -->|Nei| Feil --> Ferdig
+     *     LagLøsning -->|Ja| Løs --> Ferdig
+     * ```
      */
     @Suppress("ReturnCount")
     private fun prosesserNesteSteg(sak: Sak, forventetBehandlingId: BehandlingId): BehandlingId? {

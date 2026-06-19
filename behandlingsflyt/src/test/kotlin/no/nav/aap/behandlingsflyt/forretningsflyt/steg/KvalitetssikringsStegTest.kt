@@ -12,13 +12,12 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -93,7 +92,7 @@ class KvalitetssikringsStegTest {
     }
 
     @Test
-    fun `om et behov godkjennes, og løses på nytt, så skal det kvalitetssikres på nytt`() {
+    fun `om et behov godkjennes og senere løses på nytt, så skal det kvalitetssikres på nytt`() {
         Scenario().apply {
             opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
 
@@ -126,9 +125,7 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = FakeUnleashBaseWithDefaultDisabled(
-                enabledFlags = listOf(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)
-            ),
+            unleashGateway = AlleAvskruddUnleash,
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
             behandlingRepository = inMemoryRepositoryProvider.provide(),
             behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())

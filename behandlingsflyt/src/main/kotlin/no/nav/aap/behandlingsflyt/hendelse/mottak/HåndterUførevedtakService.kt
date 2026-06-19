@@ -72,6 +72,7 @@ class HåndterUførevedtakService(
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
 
             if (skalOppretteAutomatiskOpphør11_18(uførevedtak)) {
+                log.info("Oppretter atomær 11_18 behandling for mottatt uførevedtak for sak $sakId")
                 val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
                 val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
                     sakId,
