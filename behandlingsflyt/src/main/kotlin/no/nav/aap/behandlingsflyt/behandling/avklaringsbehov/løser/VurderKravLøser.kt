@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KlageKravLøs
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering.validerKravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
@@ -55,21 +56,6 @@ class VurderKravLøser(
         kravRepository.lagre(kontekst.behandlingId(), alleVurderinger)
 
         return LøsningsResultat("Fullført")
-    }
-
-    private fun validerKravMedDato(
-        vurdering: KravMedDato,
-        søknadForVurdering: MottattDokument?
-    ) {
-        if (søknadForVurdering != null) {
-            if (vurdering.søknadsdato.årsak == SøknadsdatoÅrsak.SøknadMottatt && søknadForVurdering.mottattTidspunkt.toLocalDate() != vurdering.søknadsdato.dato) {
-                throw UgyldigForespørselException("Søknadsdato for krav må være lik mottatt dato for den digitaliserte søknaden.")
-            }
-        }
-        val overstyrMuligRettFra = vurdering.overstyrMuligRettFra
-        if (overstyrMuligRettFra != null && overstyrMuligRettFra.dato > vurdering.søknadsdato.dato) {
-            throw UgyldigForespørselException("Med rett fra annen dato enn søknadsdato må den nye rettighetsdatoen være tidligere enn søknadsdatoen.")
-        }
     }
 
     private fun validerGyldighet(

@@ -390,22 +390,13 @@ class BrevUtlederService(
         } else {
             null
         }
-        val yrkesskader = if (Miljø.erDev()) yrkesskadeRepository.hentHvisEksisterer(behandling.id) else null
+        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
-        val yrkesSkadeISøknadIkkeIRegister = if (Miljø.erDev()) {
-            yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
-        } else null
+        val yrkesSkadeISøknadIkkeIRegister = yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
 
-        val yrkesskadeBeregning = if (Miljø.erDev()) {
-            utledYrkesskadeBeregning(behandling.id, yrkesskader)
-        } else null
+        val yrkesskadeBeregning = utledYrkesskadeBeregning(behandling.id, yrkesskader)
 
         val foreldreAnsvarVurderinger = hentBarnVurderingPerioder(behandling.id)
-
-        val meldepliktGrunnlag = if (Miljø.erDev()) {
-            hentMeldepliktVurderingPerioder(behandling.id)
-        } else null
-
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
@@ -416,7 +407,7 @@ class BrevUtlederService(
             yrkesskadeBeregning = yrkesskadeBeregning,
             yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister,
             foreldreansvarVurderinger = foreldreAnsvarVurderinger,
-            meldepliktGrunnlag = meldepliktGrunnlag,
+            meldepliktGrunnlag = hentMeldepliktVurderingPerioder(behandling.id),
         )
     }
 

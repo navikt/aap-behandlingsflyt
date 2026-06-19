@@ -27,7 +27,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 class JournalføringService(
     private val dokarkivGateway: DokarkivGateway,
@@ -43,7 +44,7 @@ class JournalføringService(
         meldeperiode: Periode,
         meldekort: MeldekortV0,
         oppdatertAv: Bruker,
-        enhet: String,
+        enhet: String?,
         tidspunkt: Instant,
         meldeDato: LocalDate,
         korrigert: Boolean
@@ -62,7 +63,7 @@ class JournalføringService(
 
         val journalpost = journalpost(
             ident = sak.person.aktivIdent(),
-            enhet = enhet,
+            enhet = enhet ?: "9999",
             meldeperiode = meldeperiode,
             meldekort = meldekort,
             tidspunkt = tidspunkt,

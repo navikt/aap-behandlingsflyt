@@ -4,11 +4,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -18,8 +21,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -436,6 +442,113 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         }
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
         assertTrue(overstyrtManuellVurdering == true)
+    }
+
+    @Test
+    fun `lovvalg går fra oppfylt for vurdert periode til oppfylt frem til Tid MAKS når saken går fra manuell til automatisk innvilgelse`() {
+        // Person uten inntekt i Norge og uten MEDL-vedtak -> lovvalg kan ikke avgjøres automatisk
+        val person = FakePersoner.leggTil(
+            TestPerson(
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)),
+                inntekter = emptyList(),
+            )
+        )
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = LocalDateTime.now(),
+            søknad = SøknadV0(
+                student = SøknadStudentDto(StudentStatus.Nei),
+                yrkesskade = "NEI",
+                oppgitteBarn = null,
+                // Ingen utenlandsopphold i søknad -> ingen "utenfor Norge"-indikasjon fra søknaden
+                medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null),
+            ),
+        )
+
+        val fom = sak.rettighetsperiode.fom
+        val sisteOppfylteDag = fom.plusMonths(2)
+        val ikkeOppfyltFra = sisteOppfylteDag.plusDays(1)
+
+        // Lovvalg krever manuell avklaring (ingen automatiske I_NORGE-kriterier er oppfylt)
+        behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+        }
+
+        // Fase 1: bruker legger inn to perioder - oppfylt frem til sisteOppfylteDag, ikke oppfylt etter
+        val oppdatertBehandling = behandling.løsAvklaringsBehov(
+            AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = fom,
+                        tom = sisteOppfylteDag,
+                        begrunnelse = "",
+                        lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapDto("begrunnelse", true)
+                    ),
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = ikkeOppfyltFra,
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapDto("begrunnelse", false)
+                    )
+                )
+            )
+        )
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(fom)
+            .løsFastsettManuellInntekt()
+            .løsForutgåendeMedlemskap(fom)
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+
+        // Fase 1: lovvalg er oppfylt KUN for den vurderte perioden (frem til sisteOppfylteDag),
+        // og ikke oppfylt etterpå
+        val lovvalgFase1 = hentVilkårsresultat(oppdatertBehandling.id)
+            .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+        assertThat(lovvalgFase1.filter { it.erOppfylt() }.maxOf { it.periode.tom }).isEqualTo(sisteOppfylteDag)
+        assertThat(lovvalgFase1.any { !it.erOppfylt() }).isTrue()
+
+        // Fase 2: grunnlaget oppdateres - et MEDL-vedtak om medlemskap i Norge kommer inn,
+        // slik at lovvalg nå kan avgjøres automatisk som oppfylt for hele perioden
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = person.identer,
+                fødselsdato = person.fødselsdato,
+                inntekter = emptyList(),
+                medlStatus = listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 100087727,
+                        ident = person.aktivIdent().identifikator,
+                        fraOgMed = fom.minusYears(1).toString(),
+                        tilOgMed = fom.plusYears(2).toString(),
+                        status = "GYLD",
+                        statusaarsak = null,
+                        medlem = true,
+                        grunnlag = "grunnlag",
+                        lovvalg = "lovvalg",
+                        helsedel = true,
+                        lovvalgsland = "NOR",
+                        kilde = null
+                    )
+                )
+            )
+        )
+
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.LOVVALG, sak.id)
+        val oppdatertBehandlingNyttGrunnlag = prosesserBehandling(oppdatertBehandling)
+
+        // Fase 2: lovvalg er nå oppfylt for hele perioden, helt til Tid.MAKS
+        val lovvalgFase2 = hentVilkårsresultat(oppdatertBehandlingNyttGrunnlag.id)
+            .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+        assertThat(lovvalgFase2).allMatch { it.erOppfylt() }
+        assertThat(lovvalgFase2.maxOf { it.periode.tom }).isEqualTo(Tid.MAKS)
     }
 
 }
