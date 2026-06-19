@@ -398,7 +398,6 @@ class BrevUtlederService(
             utledYrkesskadeBeregning(behandling.id, yrkesskader)
         } else null
 
-        val meldepliktGrunnlag = hentMeldepliktVurderingPerioder(behandling.id)
 
         val foreldreAnsvarVurderinger = hentBarnVurderingPerioder(behandling.id)
         return Innvilgelse(
@@ -411,6 +410,7 @@ class BrevUtlederService(
             yrkesskadeBeregning = yrkesskadeBeregning,
             yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister,
             foreldreansvarVurderinger = foreldreAnsvarVurderinger,
+            meldepliktGrunnlag = hentMeldepliktVurderingPerioder(behandling.id),
         )
     }
 
@@ -723,6 +723,10 @@ class BrevUtlederService(
             ?.barn
             ?.flatMap { it.vurderinger }
             .orEmpty()
+    }
+
+    fun hentMeldepliktVurderingPerioder(behandlingId: BehandlingId): MeldepliktGrunnlag? {
+        return meldepliktRepository.hentHvisEksisterer(behandlingId)
     }
 
     private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): List<SamordningYtelse> {
