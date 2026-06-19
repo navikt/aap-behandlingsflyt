@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -37,28 +38,34 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtførerTest {
 
     private val tilbakekrevingRepository = mockk<TilbakekrevingRepository>()
     private val oppgavestyringGateway = mockk<OppgavestyringGateway>()
+    private val sakRepository = mockk<SakRepository>()
+    private val statistikkGateway = mockk<StatistikkGateway>(relaxed = true)
 
     private val sakId = SakId(Random.nextLong())
     private val behandlingId = UUID.randomUUID()
 
-    private lateinit var utfører: OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører
-
     @BeforeEach
     fun setUp() {
-        val sak = stubSak()
-        val sakRepository = mockk<SakRepository>()
-        val statistikkGateway = mockk<StatistikkGateway>(relaxed = true)
-        val unleashGateway = mockk<UnleashGateway>(relaxed = true)
-        every { sakRepository.hent(sakId) } returns sak
+        every { sakRepository.hent(sakId) } returns stubSak()
         every { oppgavestyringGateway.finnNayEnhetForPerson(any(), any()) } returns EnhetNrDto("1234")
         every { oppgavestyringGateway.hentOppgaveEnhet(any()) } returns OppgaveEnhetResponse(emptyList())
-        utfører = OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
-            oppgaveStyringGateway = oppgavestyringGateway,
-            statistikkGateway = statistikkGateway,
-            tilbakekrevingsbehandlingRepository = tilbakekrevingRepository,
-            unleashGateway = unleashGateway,
-            sakRepository = sakRepository,
+    }
+
+    @Test
+    fun `tilbakekrevingshendelse inkluderer ikke vente-info når toggle er av`() {
+        val gjenopptas = LocalDate.now().plusMonths(2)
+        val behandlingPåVent = stubTilbakekrevingsbehandling().copy(
+            venteGrunn = TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE,
+            gjenopptas = gjenopptas,
         )
+        val hendelse = slot<TilbakekrevingsbehandlingOppdatertHendelse>()
+        every { oppgavestyringGateway.varsleTilbakekrevingHendelse(capture(hendelse)) } returns Unit
+        every { tilbakekrevingRepository.hent(behandlingId) } returns behandlingPåVent
+
+        utfør(ventStatusTogglePå = false)
+
+        assertThat(hendelse.captured.gjenopptas).isNull()
+        assertThat(hendelse.captured.venteGrunn).isNull()
     }
 
     @Test
@@ -71,14 +78,14 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtførerTest {
         every { oppgavestyringGateway.varsleTilbakekrevingHendelse(capture(hendelse)) } returns Unit
         every { tilbakekrevingRepository.hent(behandlingId) } returns behandlingIkkePåVent
 
-        utfør()
+        utfør(ventStatusTogglePå = true)
 
         assertThat(hendelse.captured.gjenopptas).isNull()
         assertThat(hendelse.captured.venteGrunn).isNull()
     }
 
     @Test
-    fun `tilbakekrevingshendelse inkluderer vente-info når behandlingen er på vent`() {
+    fun `tilbakekrevingshendelse inkluderer vente-info når behandlingen er på vent og toggle er på`() {
         val gjenopptas = LocalDate.now().plusMonths(2)
         val behandlingPåVent = stubTilbakekrevingsbehandling().copy(
             venteGrunn = TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE,
@@ -88,13 +95,24 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtførerTest {
         every { oppgavestyringGateway.varsleTilbakekrevingHendelse(capture(hendelse)) } returns Unit
         every { tilbakekrevingRepository.hent(behandlingId) } returns behandlingPåVent
 
-        utfør()
+        utfør(ventStatusTogglePå = true)
 
         assertThat(hendelse.captured.gjenopptas).isEqualTo(gjenopptas)
         assertThat(hendelse.captured.venteGrunn).isEqualTo(TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE)
     }
 
-    private fun utfør() {
+    private fun utfør(ventStatusTogglePå: Boolean) {
+        val unleashGateway = mockk<UnleashGateway>(relaxed = true)
+        every {
+            unleashGateway.isEnabled(BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt)
+        } returns ventStatusTogglePå
+        val utfører = OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
+            oppgaveStyringGateway = oppgavestyringGateway,
+            statistikkGateway = statistikkGateway,
+            tilbakekrevingsbehandlingRepository = tilbakekrevingRepository,
+            unleashGateway = unleashGateway,
+            sakRepository = sakRepository,
+        )
         val jobbInput = JobbInput(OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører)
             .medParameter("tilbakekrevingBehandlingId", behandlingId.toString())
             .forSak(sakId.toLong())

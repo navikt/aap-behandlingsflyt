@@ -25,7 +25,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AutomatiskStans1118,
     StudentV2,
     BackfillStansOpphor,
-    LagreVurderRettighetsperiodeSomKrav
+    LagreVurderRettighetsperiodeSomKrav,
+    VentStatusForTilbakekrevingIBehandlingsflyt
     ;
 
     override fun key(): String = name
