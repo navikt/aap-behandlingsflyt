@@ -1,41 +1,27 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import io.mockk.checkUnnecessaryStub
-import io.mockk.every
-import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageNayLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNayLøsningDto
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.ImMemoryKlagebehandlingNayRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class VurderKlageNayLøserTest {
-    private val klagebehandlingNayRepositoryMock = mockk<KlagebehandlingNayRepository>()
-
-    @AfterEach
-    fun afterEach() {
-        checkUnnecessaryStub(klagebehandlingNayRepositoryMock)
-    }
 
     @Test
     fun `løs skal returnere et løsningsresultat når vilkårSomOmgjøres inneholder gyldige hjemler`() {
-        every { klagebehandlingNayRepositoryMock.lagre(any(), any()) } returns Unit
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
-        val vurderKlageNayLøser = VurderKlageNayLøser(klagebehandlingNayRepositoryMock)
+        val vurderKlageNayLøser = VurderKlageNayLøser(ImMemoryKlagebehandlingNayRepository)
 
         val løsning = vurderKlageNayLøser.løs(
-            kontekst = lagAvklaringsbehovKontekst(),
+            kontekst = avklaringsbehovKontekst { this.behandling = behandling },
             løsning = VurderKlageNayLøsning(
                 klagevurderingNay = KlagevurderingNayLøsningDto(
                     begrunnelse = "Begrunnelse for klage",
@@ -52,9 +38,9 @@ class VurderKlageNayLøserTest {
 
     @Test
     fun `løs skal kaste exception når vilkårSomOmgjøres inneholder hjemler som ikke kan mappes via tilÅrsak`() {
-        every { klagebehandlingNayRepositoryMock.lagre(any(), any()) } returns Unit
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
-        val vurderKlageNayLøser = VurderKlageNayLøser(klagebehandlingNayRepositoryMock)
+        val vurderKlageNayLøser = VurderKlageNayLøser(ImMemoryKlagebehandlingNayRepository)
 
         val løsning = VurderKlageNayLøsning(
             klagevurderingNay = KlagevurderingNayLøsningDto(
@@ -68,22 +54,11 @@ class VurderKlageNayLøserTest {
 
         val exception = assertThrows<UgyldigForespørselException> {
             vurderKlageNayLøser.løs(
-                kontekst = lagAvklaringsbehovKontekst(),
+                kontekst = avklaringsbehovKontekst { this.behandling = behandling },
                 løsning = løsning
             )
         }
 
         assertThat(exception.message).contains("FOLKETRYGDLOVEN_11_3")
     }
-
-    private fun lagAvklaringsbehovKontekst(): AvklaringsbehovKontekst =
-        AvklaringsbehovKontekst(
-            bruker = Bruker("12345678901"),
-            kontekst = FlytKontekst(
-                sakId = SakId(1L),
-                behandlingId = BehandlingId(1L),
-                forrigeBehandlingId = null,
-                behandlingType = TypeBehandling.Klage
-            )
-        )
 }
