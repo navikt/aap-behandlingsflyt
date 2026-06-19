@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
+import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -157,10 +157,10 @@ class KvalitetssikringsStegTest {
         fun kvalitetssikre(godkjente: List<Definisjon>, underkjente: List<Definisjon> = emptyList()) {
             val løser = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash)
             val resultat = løser.løs(
-                AvklaringsbehovKontekst(
-                    bruker = Bruker(KVALITETSSIKRER),
-                    kontekst = behandling.flytKontekst(),
-                ),
+                avklaringsbehovKontekst {
+                    bruker = Bruker(KVALITETSSIKRER)
+                    this.behandling = this@Scenario.behandling
+                },
                 KvalitetssikringLøsning(
                     vurderinger = (godkjente + underkjente).map {
                         TotrinnsVurdering(

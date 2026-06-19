@@ -29,7 +29,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
@@ -51,7 +50,6 @@ class ManglendeLigningGrunnlagStegTest {
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var beregningService: BeregningService
     private lateinit var steg: ManglendeLigningGrunnlagSteg
-    private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
     private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
