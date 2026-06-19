@@ -5,13 +5,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderAvsl
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.avslag11_27.flate.Avslag11_27VurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
+import java.util.*
 
 class VurderAvslag11_27Løser(
     private val behandlingRepository: BehandlingRepository,
@@ -28,10 +29,22 @@ class VurderAvslag11_27Løser(
         løsning: VurderAvslag11_27Løsning
     ): LøsningsResultat {
         val vurdertAv = kontekst.bruker.ident
+        val forrigeBehandlingId = behandlingRepository.hent(kontekst.kontekst.behandlingId).forrigeBehandlingId
+        val vurderinger =
+            tilAvslag11_27Vurderinger(
+                løsning.avslag11_27Vurdering.vurderinger,
+                vurdertAv,
+                kontekst.behandlingId()
+            )
+
+        val gjeldendeVedtatte =
+            forrigeBehandlingId?.let { avslag1127repository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
+
+        val nyGjeldende = vurderinger + gjeldendeVedtatte
 
         avslag1127repository.lagre(
             kontekst.behandlingId(),
-            tilAvslag11_27Vurderinger(løsning.avslag11_27Vurdering.vurderinger, vurdertAv, kontekst.behandlingId())
+            nyGjeldende
         )
 
         return LøsningsResultat(løsning.avslag11_27Vurdering.vurderinger.joinToString(" ") { it.begrunnelse })
@@ -47,7 +60,7 @@ class VurderAvslag11_27Løser(
         behandlingId: BehandlingId
     ): List<Avslag11_27Vurdering> = nyeVurderinger.map { vurdering ->
         Avslag11_27Vurdering(
-            journalpostId = JournalpostId(vurdering.journalpostId),
+            referanse = Kravreferanse(UUID.fromString(vurdering.referanse)),
             skalAvslås1127 = vurdering.skalAvslås1127,
             brukersYtelse = vurdering.brukersYtelse,
             harSykepengegrunnlagOver2G = vurdering.harSykepengegrunnlagOver2G,

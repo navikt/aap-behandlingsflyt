@@ -40,7 +40,8 @@ class VurderAvslag11_27Steg private constructor(
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
                 (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                        && Vurderingsbehov.VURDER_AVSLAG_11_27 in kontekst.vurderingsbehovRelevanteForSteg)
+                        && Vurderingsbehov.VURDER_AVSLAG_11_27 in kontekst.vurderingsbehovRelevanteForSteg
+                        && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty())
 
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,

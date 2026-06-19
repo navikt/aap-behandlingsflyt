@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.avslag11_27
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 
 class Avslag11_27Vurdering (
-    val journalpostId: JournalpostId,
+    val referanse: Kravreferanse,
     val begrunnelse: String,
     val harAnnenFullYtelse: Boolean,
     val brukersYtelse: Ytelse? = null,

@@ -7,7 +7,7 @@ CREATE TABLE avslag_11_27_vurderinger
 CREATE TABLE avslag_11_27_vurdering
 (
     id                                  BIGSERIAL    NOT NULL PRIMARY KEY,
-    journalpost_id                      TEXT         NOT NULL,
+    referanse                           TEXT         NOT NULL,
     avslag_11_27_vurderinger_id         BIGINT       NOT NULL REFERENCES avslag_11_27_vurderinger (id),
     har_annen_full_ytelse               BOOLEAN      NOT NULL,
     brukers_ytelse                      TEXT         NULL,

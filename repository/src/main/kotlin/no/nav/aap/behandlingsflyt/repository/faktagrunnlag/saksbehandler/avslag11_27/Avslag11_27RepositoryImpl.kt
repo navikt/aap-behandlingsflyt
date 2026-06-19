@@ -4,11 +4,11 @@ import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.time.Instant
 
@@ -46,7 +46,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         val vurderinger = connection.queryList(
             """
             SELECT
-                v.journalpost_id                  AS v_journalpost_id,
+                v.referanse                       AS v_referanse,
                 v.begrunnelse                     AS v_begrunnelse,
                 v.har_annen_full_ytelse           AS v_har_annen_full_ytelse,
                 v.brukers_ytelse                  AS v_brukers_ytelse,
@@ -65,7 +65,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
             }
             setRowMapper {
                 Avslag11_27Vurdering(
-                    journalpostId = JournalpostId(it.getString("v_journalpost_id")),
+                    referanse = Kravreferanse(it.getUUID("v_referanse")),
                     begrunnelse = it.getString("v_begrunnelse"),
                     harAnnenFullYtelse = it.getBoolean("v_har_annen_full_ytelse"),
                     brukersYtelse = it.getStringOrNull("v_brukers_ytelse")?.let { Ytelse.valueOf(it) },
@@ -87,16 +87,20 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
+        hentHvisEksisterer(fraBehandling) ?: return
 
         connection.execute(
-            """INSERT INTO avslag_11_27_grunnlag (behandling_id, avslag_11_27_vurderinger_id)
-                SELECT ?, avslag_11_27_vurderinger_id
+            """
+                INSERT INTO avslag_11_27_grunnlag (behandling_id, avslag_11_27_vurderinger_id, opprettet_tid)
+                SELECT ?, avslag_11_27_vurderinger_id, ?
                 FROM avslag_11_27_grunnlag
-                WHERE aktiv AND behandling_id = ?""".trimIndent()
+                WHERE aktiv AND behandling_id = ?
+                """.trimIndent()
         ) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }
@@ -159,13 +163,13 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
 
         val query = """
                 INSERT INTO avslag_11_27_vurdering 
-                (journalpost_id, begrunnelse, har_annen_full_ytelse, brukers_ytelse, har_sykepengegrunnlag_over_2g, skal_avslaas_1127, vurdert_i_behandling, vurdert_tidspunkt, vurdert_av, avslag_11_27_vurderinger_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)
+                (referanse, begrunnelse, har_annen_full_ytelse, brukers_ytelse, har_sykepengegrunnlag_over_2g, skal_avslaas_1127, vurdert_i_behandling, vurdert_tidspunkt, vurdert_av, avslag_11_27_vurderinger_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
             setParams { vurdering ->
-                setString(1, vurdering.journalpostId.toString())
+                setUUID(1, vurdering.referanse.verdi)
                 setString(2, vurdering.begrunnelse)
                 setBoolean(3, vurdering.harAnnenFullYtelse)
                 setString(4, vurdering.brukersYtelse?.name)

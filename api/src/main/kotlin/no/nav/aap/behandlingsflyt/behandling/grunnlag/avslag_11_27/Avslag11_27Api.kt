@@ -5,8 +5,10 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
@@ -18,6 +20,8 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
@@ -37,25 +41,26 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val avslag_11_27Repository = repositoryProvider.provide<Avslag11_27Repository>()
             val kravRepository = repositoryProvider.provide<KravRepository>()
+            val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
             val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
             val nyttKravListe =
                 kravRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.filterIsInstance<NyttKrav>()
                     ?: emptyList()
 
-            val nyVurderinger =
-                behandling.id.let { avslag_11_27Repository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+            val alleVurderinger = avslag_11_27Repository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
 
-            val vedtatteVurderinger =
-                behandling.forrigeBehandlingId?.let { avslag_11_27Repository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+            val nyVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.id }
+
+            val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling != behandling.id }
 
             val nyttKravListeDto = Avslag11_27KravDto.avslag11_27TilDto(nyttKravListe);
 
             Avslag11_27GrunnlagDto(
                 harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                 krav = nyttKravListeDto,
-                vurderinger = mapVurderingerTilDto(nyVurderinger),
-                vedtatteVurdering = mapVurderingerTilDto(vedtatteVurderinger)
+                vurderinger = mapVurderingerTilDto(nyVurderinger, vurdertAvService),
+                vedtatteVurdering = mapVurderingerTilDto(vedtatteVurderinger, vurdertAvService)
             )
         }
 
@@ -63,15 +68,26 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
     }
 }
 
-private fun mapVurderingerTilDto(vurderinger: List<Avslag11_27Vurdering>): List<Avslag11_27VurderingDto> {
+private fun mapVurderingerTilDto(
+    vurderinger: List<Avslag11_27Vurdering>,
+    vurdertAvService: VurdertAvService
+): List<Avslag11_27VurderingDto> {
     return vurderinger.map { vurdering ->
         Avslag11_27VurderingDto(
-            journalpostId = vurdering.journalpostId.identifikator,
+            referanse = vurdering.referanse.toString(),
             begrunnelse = vurdering.begrunnelse,
             harAnnenFullYtelse = vurdering.harAnnenFullYtelse,
             brukersYtelse = vurdering.brukersYtelse,
             harSykepengegrunnlagOver2G = vurdering.harSykepengegrunnlagOver2G,
-            skalAvslås1127 = vurdering.skalAvslås1127
+            skalAvslås1127 = vurdering.skalAvslås1127,
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                definisjon = Definisjon.VURDER_AVSLAG_11_27,
+                behandlingId = vurdering.vurdertIBehandling,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(
+                    ident = vurdering.vurdertAv.toString(),
+                    dato = vurdering.vurdertTidspunkt.atZone(ZoneId.systemDefault())?.toLocalDate() ?: LocalDate.now(),
+                )
+            )
         )
     }
 }
