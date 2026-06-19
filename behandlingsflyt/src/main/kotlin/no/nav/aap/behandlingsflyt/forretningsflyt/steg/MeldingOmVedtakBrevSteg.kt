@@ -91,22 +91,13 @@ class MeldingOmVedtakBrevSteg(
         }
         return Fullført
     }
-
-    /**
-     * Brevbestillinger i endeTilstand (FULLFØRT, AVBRUTT) kan per i dag ikke tilbakestilles i aap-behandlingsflyt.
-     * Hvis dette endres i fremtiden må også tilbakestillGrunnlag() logikken her tilpasses.
-     *
-     * BrevBestillinger i tilstand FORHÅNDSVISNING_KLAR og SENDT kan i teorien tilbakestilles. Den praktiske
-     * begrensningen per i dag er at selve brev steget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
-     */
+    
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
-        if (!brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)) {
-            val brevBestillingerOmVedtakSomKanTilbakestilles =
-                brevbestillingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
-            for (brevBestilling in brevBestillingerOmVedtakSomKanTilbakestilles) {
-                brevbestillingService.avbryt(brevBestilling.behandlingId, brevBestilling.referanse)
-            }
-        }
+        log.warn(
+            "Dette steget støtter ikke tilbakestilling. Steget er i status IVERKSETTES og vedtaksresultat " +
+                    "skal ikke kunne endres. Det er bestilt et brev som må fullføres eller avbrytes " +
+                    "manuelt. Dersom dette logges bør vurderes om det forutsetningene har endret seg."
+        )
     }
 
     private fun vedtakBehøverVurdering(
