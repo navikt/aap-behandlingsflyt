@@ -6,10 +6,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 public sealed interface AnnetRelevantDokument : Melding {
     public val årsakerTilBehandling: List<Vurderingsbehov>
     public val begrunnelse: String?
-    public val kategori: AnnetRelevantDokumentKategori?
+    public val underKategori: AnnetRelevantDokumentUnderKategori?
 }
 
-public enum class AnnetRelevantDokumentKategori {
+public enum class AnnetRelevantDokumentUnderKategori {
     ARBEIDSUTPROVING,
     BARNETILLEGG,
     ETABLERING,
@@ -35,12 +35,13 @@ public data class AnnetRelevantDokumentV0(
     public override val årsakerTilBehandling: List<Vurderingsbehov>,
 ) : AnnetRelevantDokument {
     public override val begrunnelse: String? = null
-    public override val kategori: AnnetRelevantDokumentKategori? = null
+    public override val underKategori: AnnetRelevantDokumentUnderKategori? = null
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class AnnetRelevantDokumentV1(
     public override val årsakerTilBehandling: List<Vurderingsbehov>,
     public override val begrunnelse: String,
-    public override val kategori: AnnetRelevantDokumentKategori,
+    public override val underKategori: AnnetRelevantDokumentUnderKategori,
 ) : AnnetRelevantDokument
+
