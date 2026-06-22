@@ -50,7 +50,7 @@ class TrekkKlageRepositoryImpl(
         return connection.execute("""
             UPDATE trekk_klage_grunnlag
             SET aktiv = false
-            WHERE behandling_id = ?
+            WHERE behandling_id = ? AND aktiv
         """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.toLong())
