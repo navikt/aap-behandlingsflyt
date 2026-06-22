@@ -83,6 +83,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
@@ -134,7 +135,6 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
@@ -580,13 +580,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsRettighetsperiode(dato: LocalDate): Behandling {
+    protected fun Behandling.løsRettighetsperiode(dato: LocalDate, begrunnelse: String = "En begrunnelse", harRett: RettighetsperiodeHarRett = RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger): Behandling {
         return this.løsAvklaringsBehov(
             avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
                 rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = dato,
-                    begrunnelse = "En begrunnelse",
-                    harRett = RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger
+                    begrunnelse = begrunnelse,
+                    harRett = harRett
                 )
             )
         )
@@ -726,6 +726,29 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
             vissVarighet = vissVarighet,
             erOppfylt = erOppfylt,
+        )
+    }
+
+    @JvmName("løsSykdomSomPotensieltOppfyltStudentExt")
+    protected fun Behandling.løsSykdomSomPotensieltOppfyltStudent(vurderingGjelderFra: LocalDate): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            AvklarSykdomLøsning(
+                løsningerForPerioder = listOf(
+                    SykdomsvurderingLøsningDto(
+                        begrunnelse = "Er syk som student",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        harSkadeSykdomEllerLyte = true,
+                        erSkadeSykdomEllerLyteVesentligdel = null,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI_MEN_STUDENT,
+                        yrkesskadeBegrunnelse = null,
+                        fom = vurderingGjelderFra,
+                        tom = null,
+                    )
+                )
+            ),
         )
     }
 

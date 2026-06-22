@@ -5,33 +5,25 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.Adresse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
+import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
 @Fakes
 class KabalGatewayTest {
-    private val random = Random(1235123)
 
     @Test
     fun kanOversendeTilKabal() {
-        val person = Person(
-            random.nextLong().let(::PersonId),
-            UUID.randomUUID(),
-            listOf(genererIdent(LocalDate.now().minusYears(23)))
-        )
-
         assertDoesNotThrow {
             KabalGateway().oversendTilAndreinstans(
-                klagenGjelder = person,
+                klagenGjelder = person(),
                 behandlingsreferanse = BehandlingReferanse(UUID.randomUUID()),
                 saksbehandlersEnhet = "0301",
                 kravDato = LocalDate.now(),
@@ -53,6 +45,7 @@ class KabalGatewayTest {
                         )
                     ),
                     vurdertAv = "Saksbehandler",
+                    opprettet = Instant.now(),
                 )
             )
         }

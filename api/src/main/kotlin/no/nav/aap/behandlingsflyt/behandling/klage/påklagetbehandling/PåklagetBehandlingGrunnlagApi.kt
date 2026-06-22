@@ -48,7 +48,8 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
 
                 val gjeldendeVurdering =
                     påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
-                val behandlingerMedVedtak = påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.person)
+                val behandlingerMedVedtak =
+                    påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.person.id)
 
                 mapTilPåklagetBehandlingGrunnlagDto(
                     gjeldendeVurdering,

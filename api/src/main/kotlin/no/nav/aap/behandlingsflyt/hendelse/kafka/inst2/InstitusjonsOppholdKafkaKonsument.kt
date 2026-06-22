@@ -69,7 +69,7 @@ class InstitusjonsOppholdKafkaKonsument(
             secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} $person")
             if (person != null) {
 
-                val saker = sakRepository.finnSakerFor(person)
+                val saker = sakRepository.finnSakerFor(person.id)
 
                 for (saken in saker) {
                     val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)

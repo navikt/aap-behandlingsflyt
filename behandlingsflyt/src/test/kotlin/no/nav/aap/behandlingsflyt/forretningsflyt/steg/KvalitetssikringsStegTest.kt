@@ -1,24 +1,23 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
+import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -93,7 +92,7 @@ class KvalitetssikringsStegTest {
     }
 
     @Test
-    fun `om et behov godkjennes, og løses på nytt, så skal det kvalitetssikres på nytt`() {
+    fun `om et behov godkjennes og senere løses på nytt, så skal det kvalitetssikres på nytt`() {
         Scenario().apply {
             opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
 
@@ -126,9 +125,7 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = FakeUnleashBaseWithDefaultDisabled(
-                enabledFlags = listOf(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)
-            ),
+            unleashGateway = AlleAvskruddUnleash,
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
             behandlingRepository = inMemoryRepositoryProvider.provide(),
             behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
@@ -160,10 +157,10 @@ class KvalitetssikringsStegTest {
         fun kvalitetssikre(godkjente: List<Definisjon>, underkjente: List<Definisjon> = emptyList()) {
             val løser = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash)
             val resultat = løser.løs(
-                AvklaringsbehovKontekst(
-                    bruker = Bruker(KVALITETSSIKRER),
-                    kontekst = behandling.flytKontekst(),
-                ),
+                avklaringsbehovKontekst {
+                    bruker = Bruker(KVALITETSSIKRER)
+                    this.behandling = this@Scenario.behandling
+                },
                 KvalitetssikringLøsning(
                     vurderinger = (godkjente + underkjente).map {
                         TotrinnsVurdering(

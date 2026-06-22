@@ -93,6 +93,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                 body = SakStatusKelvin(
                     ident = ident, status = no.nav.aap.api.intern.behandlingsflyt.SakStatus(
                         sakId = sakStatus.sakId,
+                        søknadsdatoer = sakStatus.søknadsdatoer,
                         statusKode = when (sakStatus.status) {
                             SakStatus.DatadelingBehandlingStatus.SOKNAD_UNDER_BEHANDLING -> SakstatusFraKelvin.SOKNAD_UNDER_BEHANDLING
                             SakStatus.DatadelingBehandlingStatus.REVURDERING_UNDER_BEHANDLING -> SakstatusFraKelvin.REVURDERING_UNDER_BEHANDLING
@@ -120,7 +121,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
-        muligMaksdato: LocalDate?
+        muligMaksdato: LocalDate?,
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.komponenter.type.Periode
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -12,6 +13,7 @@ import java.util.Locale
 data class MeldekortPdfRequest(
     val ident: String,
     val sendtInnDato: String,
+    val meldeDato: String,
     val utførtAv: String,
     val begrunnelse: String?,
     val sammenlagtArbeidIPerioden: Int,
@@ -46,6 +48,7 @@ fun MeldekortV0.tilPdfRequest(
     meldeperiode: Periode,
     utførtAv: String,
     tidspunkt: Instant,
+    meldeDato: LocalDate,
 ): MeldekortPdfRequest {
     val ukeFields = WeekFields.of(Locale.of("nb", "NO"))
     val datoFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
@@ -74,6 +77,7 @@ fun MeldekortV0.tilPdfRequest(
     return MeldekortPdfRequest(
         ident = ident,
         sendtInnDato = tidspunkt.atZone(ZoneId.of("Europe/Oslo")).toLocalDate().format(datoFormatter),
+        meldeDato = meldeDato.format(datoFormatter),
         utførtAv = utførtAv,
         sammenlagtArbeidIPerioden = timerArbeidPerPeriode.sumOf { it.timerArbeid }.toInt(),
         meldeperiode = MeldekortMeldeperiode(

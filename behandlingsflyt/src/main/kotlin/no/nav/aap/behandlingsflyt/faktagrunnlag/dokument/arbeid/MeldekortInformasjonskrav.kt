@@ -23,6 +23,8 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class MeldekortInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
@@ -80,6 +82,7 @@ class MeldekortInformasjonskrav private constructor(
                 journalpostId = ubehandletMeldekort.journalpostId,
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt,
+                opprettetTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
             )
             mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,

@@ -112,7 +112,7 @@ class UtledArenaVedtakstype(
 
     private fun behandlingerMedVedtak(sak: Sak): List<BehandlingMedVedtak> =
         behandlingRepository.hentAlleMedVedtakFor(
-            sak.person,
+            sak.person.id,
             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
         )
             .filter { it.saksnummer == sak.saksnummer }

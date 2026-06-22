@@ -1,0 +1,4 @@
+alter table krav_vurdering rename column kravdato to overstyr_mulig_rett_fra;
+alter table krav_vurdering rename column mulig_rett_fra_aarsak to overstyr_mulig_rett_fra_aarsak;
+
+alter table krav_vurdering add column referanse uuid not null;

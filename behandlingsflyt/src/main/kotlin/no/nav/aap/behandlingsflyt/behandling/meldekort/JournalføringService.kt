@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.FagsaksSystem
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Filetype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalpost
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalposttype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.OverstyrInnsynsregler
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Sakstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Tema
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Variantformat
@@ -23,9 +24,11 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 class JournalføringService(
     private val dokarkivGateway: DokarkivGateway,
@@ -41,14 +44,17 @@ class JournalføringService(
         meldeperiode: Periode,
         meldekort: MeldekortV0,
         oppdatertAv: Bruker,
-        enhet: String,
+        enhet: String?,
         tidspunkt: Instant,
+        meldeDato: LocalDate,
+        korrigert: Boolean
     ): JournalpostId {
         val meldekortPdfRequest = meldekort.tilPdfRequest(
             ident = sak.person.aktivIdent().identifikator,
             meldeperiode = meldeperiode,
             utførtAv = oppdatertAv.ident,
-            tidspunkt = tidspunkt
+            tidspunkt = tidspunkt,
+            meldeDato = meldeDato,
         )
 
         val pdf = pdfgenGateway.genererMeldekortPdf(
@@ -57,12 +63,13 @@ class JournalføringService(
 
         val journalpost = journalpost(
             ident = sak.person.aktivIdent(),
-            enhet = enhet,
+            enhet = enhet ?: "9999",
             meldeperiode = meldeperiode,
             meldekort = meldekort,
             tidspunkt = tidspunkt,
             pdf = pdf,
             sak = sak,
+            korrigert = korrigert
         )
 
         val response = dokarkivGateway.oppdater(
@@ -82,14 +89,14 @@ class JournalføringService(
         tidspunkt: Instant,
         pdf: ByteArray,
         sak: Sak,
+        korrigert: Boolean,
     ): Journalpost {
         val uke1 = meldeperiode.fom.get(uke)
         val uke2 = meldeperiode.tom.get(uke)
         val fra = meldeperiode.fom.format(dateFormatter)
         val til = meldeperiode.tom.format(dateFormatter)
-        val tittelsuffix =
-            "for uke $uke1 - $uke2 ($fra - $til) elektronisk mottatt av NAV" // TODO tittelen her bør vurderes
-        val tittel = "Korrigert meldekort $tittelsuffix"
+        val prefix = if (korrigert) "Korrigert meldekort" else "Meldekort"
+        val tittel = "$prefix for uke $uke1 - $uke2 ($fra - $til)"
 
         return Journalpost(
             journalposttype = Journalposttype.NOTAT,
@@ -107,10 +114,12 @@ class JournalføringService(
             tittel = tittel,
             eksternReferanseId = UUID.randomUUID().toString(),
             datoMottatt = tidspunkt.toString(),
+            // Overstyrer for å vise notat på Mine AAP
+            overstyrInnsynsregler = OverstyrInnsynsregler.VISES_MANUELT_GODKJENT,
             dokumenter = listOf(
                 Dokument(
                     tittel = tittel,
-                    brevkode = "NAV 00-10.03", // Korrigering
+                    brevkode = if (korrigert) "NAV 00-10.03" else "NAV 00-10.02",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = Filetype.PDF,

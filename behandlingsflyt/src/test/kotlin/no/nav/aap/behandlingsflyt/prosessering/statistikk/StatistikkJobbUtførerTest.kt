@@ -299,6 +299,7 @@ class StatistikkJobbUtførerTest {
                         )
                     ),
                     mottattTidspunkt = LocalDateTime.now(),
+                    opprettetTidspunkt = LocalDateTime.now()
                 )
             )
         )

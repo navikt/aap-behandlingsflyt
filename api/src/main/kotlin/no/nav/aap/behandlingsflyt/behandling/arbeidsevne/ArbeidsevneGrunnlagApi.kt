@@ -55,7 +55,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
                     behøverVurderinger = emptyList(),
                     nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
                     sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService),
-                    ikkeRelevantePerioder = emptyList(/* Er et frivillig avklaringsbehov, så vi har ikke disse opplysnignene lett tilgjengelig i steget. */),
+                    ikkeRelevantePerioder = emptyList(/* Er et frivillig avklaringsbehov, så vi har ikke disse opplysningene lett tilgjengelig i steget. */),
                 )
             }
 

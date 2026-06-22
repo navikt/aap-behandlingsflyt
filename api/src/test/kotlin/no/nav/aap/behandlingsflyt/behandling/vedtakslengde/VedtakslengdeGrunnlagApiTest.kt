@@ -26,13 +26,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class VedtakslengdeGrunnlagApiTest : BaseApiTest() {
 
     @Test
     fun `henter vedtakslengde grunnlag uten vurderinger`() {
-        val sak = nySak(søknadsDato = LocalDate.of(2024, 1, 1))
+        val sak = opprettInMemorySak(søknadsdato = LocalDate.of(2024, 1, 1))
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         testApplication {
@@ -57,7 +58,7 @@ class VedtakslengdeGrunnlagApiTest : BaseApiTest() {
 
     @Test
     fun `henter vedtakslengde grunnlag med nye vurderinger`() {
-        val sak = nySak(søknadsDato = LocalDate.of(2024, 1, 1))
+        val sak = opprettInMemorySak(søknadsdato = LocalDate.of(2024, 1, 1))
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
         val sluttdato = LocalDate.of(2025, 1, 1)
 
@@ -100,7 +101,7 @@ class VedtakslengdeGrunnlagApiTest : BaseApiTest() {
     @Test
     fun `henter vedtakslengde grunnlag med vedtatte vurderinger og nye vurderinger`() {
         val søknadsDato = LocalDate.of(2024, 1, 1)
-        val sak = nySak(søknadsDato = søknadsDato)
+        val sak = opprettInMemorySak(søknadsdato = søknadsDato)
         val førstegangsbehandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         val sluttdatoFørstegangsbehandling = LocalDate.of(2025, 1, 1)

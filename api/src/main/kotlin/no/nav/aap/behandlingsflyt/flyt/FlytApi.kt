@@ -91,7 +91,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val sak = sakRepository.hent(behandling.sakId)
                     val avklaringsbehovene = lazy { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) }
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
-                    val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider)
+                    val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider, gatewayProvider)
                     val avbrytAktivitetspliktbehandlingService =
                         AvbrytAktivitetspliktbehandlingService(repositoryProvider)
 
@@ -103,8 +103,12 @@ fun NormalOpenAPIRoute.flytApi(
                     // Henter denne ut etter status er utledet for å være sikker på at dataene er i rett tilstand
                     behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val flyt = behandling.flyt()
+
+                    val skalViseKravSteg = unleashGateway.isEnabled(BehandlingsflytFeature.KravSteg)
+
                     val stegGrupper =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
+                            .filter { it.key != StegGruppe.KRAV || skalViseKravSteg }
                     val aktivtSteg = behandling.aktivtSteg()
                     val aktivtStegDefinisjon = Definisjon.fraStegType(aktivtSteg)
                     var erFullført = true

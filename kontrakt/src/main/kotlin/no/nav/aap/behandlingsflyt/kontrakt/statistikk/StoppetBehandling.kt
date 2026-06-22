@@ -67,6 +67,7 @@ public data class StoppetBehandling(
  */
 public enum class Vurderingsbehov {
     SØKNAD,
+    VURDER_KRAV,
     AKTIVITETSMELDING,
     MELDEKORT,
     LEGEERKLÆRING,

@@ -18,6 +18,7 @@ enum class MeldepliktStatus {
     IKKE_MELDT_SEG,
     RIMELIG_GRUNN,
 
+    @Suppress("unused")
     @Deprecated(
         """Verdien produseres ikke lenger, men vil kunne leses ut fra databasen. Den brukes også i
         |OpprettBehandlingFastsattPeriodePassertJobbUtførerfor å identifisere perioder i tilkjent ytelser som 

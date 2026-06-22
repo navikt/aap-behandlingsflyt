@@ -44,6 +44,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IkkeOppfyltMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.InntektsbortfallSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.InstitusjonsoppholdSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
@@ -75,6 +76,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlems
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStudentStegV2
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
@@ -85,8 +87,13 @@ object Revurdering : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(
                 steg = StartBehandlingSteg,
-                informasjonskrav = listOf(SøknadInformasjonskrav, BarnInformasjonskrav),
+                informasjonskrav = listOf(SøknadInformasjonskrav, BarnInformasjonskrav),  // TODO: Mulig vi ønsker å endre disse ifb krav?
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
+            )
+            .medSteg(
+                steg = KravSteg,
+                informasjonskrav = emptyList(),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.VURDER_KRAV)
             )
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,
@@ -144,6 +151,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.OVERGANG_ARBEID,
+                    Vurderingsbehov.REVURDER_STUDENT
                 )
             )
             .medSteg(
@@ -244,6 +252,14 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
+            .medSteg(
+                steg = AvklarStudentStegV2, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_STUDENT,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                 )
             )
             .medSteg(

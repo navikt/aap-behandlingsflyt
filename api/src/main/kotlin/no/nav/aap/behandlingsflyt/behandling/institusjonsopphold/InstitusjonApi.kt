@@ -134,7 +134,7 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
                     val oppholdInfo = byggTidslinjeForInstitusjonsopphold(grunnlag, Institusjonstype.HS)
-                        .getOrThrow { InternfeilException(it.errorMessage) }
+                        .getOrThrow { UgyldigForespørselException(it.errorMessage) }
 
                     // Hent alle vurderinger gruppert per opphold fra repository
                     val vurderingerGruppertPerOpphold =

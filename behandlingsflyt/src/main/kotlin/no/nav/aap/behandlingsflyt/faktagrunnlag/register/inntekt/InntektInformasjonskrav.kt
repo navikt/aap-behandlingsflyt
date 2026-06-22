@@ -63,8 +63,7 @@ class InntektInformasjonskrav(
         val person: Person,
         val relevanteÅr: Set<Year>,
         val relevanteÅrUføre: Set<Year>
-    ) :
-        InformasjonskravInput
+    ) : InformasjonskravInput
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): InntektInput {
         val sak = sakService.hent(kontekst.sakId)

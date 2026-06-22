@@ -10,11 +10,15 @@ registries:
 updates:
     - package-ecosystem: github-actions
       directory: /
+      commit-message:
+        prefix: "AAP-2194"
       schedule:
           interval: daily
 
     - package-ecosystem: gradle
       directory: /
+      commit-message:
+        prefix: "AAP-2194"
       schedule:
           interval: daily
       cooldown:
@@ -36,6 +40,8 @@ updates:
       registries:
           - maven-github
     - package-ecosystem: docker
+      commit-message:
+        prefix: "AAP-2194"
       directory: /
       schedule:
           interval: daily

@@ -110,7 +110,7 @@ class StansOpphørGrunnlagTest {
 
         assertThat(oppdatertGrunnlag).isEqualTo(
             StansOpphørGrunnlag(
-                setOf(
+                stansOgOpphør = setOf(
                     GjeldendeStansEllerOpphør(
                         fom = LocalDate.now(),
                         opprettet = t0,
@@ -119,7 +119,11 @@ class StansOpphørGrunnlagTest {
                             setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
                         )
                     )
-                )
+                ),
+                stansOpphørV2 = mapOf(
+                    LocalDate.now() to Stans(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
+                ),
+                stansOpphørVurderingerV2 = null,
             )
         )
 
@@ -131,7 +135,7 @@ class StansOpphørGrunnlagTest {
 
         assertThat(rekjørtGrunnlag).isEqualTo(
             StansOpphørGrunnlag(
-                setOf(
+                stansOgOpphør = setOf(
                     GjeldendeStansEllerOpphør(
                         fom = LocalDate.now(),
                         opprettet = t0,
@@ -140,7 +144,11 @@ class StansOpphørGrunnlagTest {
                             setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS),
                         )
                     )
-                )
+                ),
+                stansOpphørV2 = mapOf(
+                    LocalDate.now() to Stans(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
+                ),
+                stansOpphørVurderingerV2 = null,
             )
         )
     }
@@ -169,7 +177,7 @@ class StansOpphørGrunnlagTest {
 
         assertThat(oppdatertGrunnlag).isEqualTo(
             StansOpphørGrunnlag(
-                setOf(
+                stansOgOpphør = setOf(
                     GjeldendeStansEllerOpphør(
                         fom = LocalDate.now(),
                         opprettet = t0,
@@ -183,7 +191,9 @@ class StansOpphørGrunnlagTest {
                         opprettet = t1,
                         vurdertIBehandling = BehandlingId(1L),
                     )
-                )
+                ),
+                stansOpphørV2 = mapOf(),
+                stansOpphørVurderingerV2 = null,
             )
         )
     }
@@ -237,7 +247,11 @@ class StansOpphørGrunnlagTest {
                             setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR)
                         )
                     )
-                )
+                ),
+                stansOpphørV2 = mapOf(
+                    LocalDate.now() to Opphør(setOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR))
+                ),
+                stansOpphørVurderingerV2 = null,
             )
         )
     }

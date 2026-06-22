@@ -140,7 +140,7 @@ fun NormalOpenAPIRoute.saksApi(
                     if (person == null) {
                         null
                     } else {
-                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person.id)
 
                         log.info("Fant ${sakerForPerson.size} saker for person. Mottattidspunkt: ${dto.mottattTidspunkt}")
 

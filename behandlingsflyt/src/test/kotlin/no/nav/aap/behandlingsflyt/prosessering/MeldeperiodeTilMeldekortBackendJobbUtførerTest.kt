@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.I
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
@@ -14,10 +13,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.mai
@@ -30,7 +29,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.*
 import kotlin.test.Test
 
 class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
@@ -71,8 +69,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             sak = Sak(
                 id = SakId(0),
                 saksnummer = Saksnummer("s1"),
-                person = Person(
-                    UUID.randomUUID(), listOf(
+                person = person(
+                    identer = listOf(
                         Ident("1".repeat(11), aktivIdent = false),
                         Ident("2".repeat(11), aktivIdent = true)
                     )
@@ -150,7 +148,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             LocalDate.parse("2026-03-02").let { Periode(it, it.plusDays(7))},
             LocalDate.parse("2026-03-16").let { Periode(it, it.plusDays(7))},
             LocalDate.parse("2026-03-30").let { Periode(it, it.plusDays(7))},
-
         ))
     }
 
@@ -180,7 +177,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         trekk = Dagsatser(0),
         brukerAvKvoter = emptySet(),
         meldepliktStatus = meldepliktStatus,
-        id = UnderveisperiodeId(id.also { id += 1 }),
         meldepliktGradering = Prosent.`0_PROSENT`,
     )
 

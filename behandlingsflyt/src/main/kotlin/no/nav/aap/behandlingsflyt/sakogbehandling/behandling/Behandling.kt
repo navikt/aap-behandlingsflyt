@@ -30,6 +30,9 @@ class Behandling(
 
     fun flyt(): BehandlingFlyt = typeBehandling.flyt()
 
+    /**
+     * Kanskje er det mer riktig å bruke [BehandlingService.utledFaktiskBehandlingstype] istedenfor denne.
+     */
     fun typeBehandling(): TypeBehandling = typeBehandling
 
     fun flytKontekst(): FlytKontekst {

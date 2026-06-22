@@ -116,6 +116,13 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    AVKLAR_STUDENT_V2(
+        kode = AvklaringsbehovKode.`5037`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVKLAR_STUDENT_V2,
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     AVKLAR_SAMORDNING_SYKESTIPEND(
         kode = AvklaringsbehovKode.`5034`,
         type = BehovType.MANUELT_FRIVILLIG,
@@ -338,6 +345,14 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5036`,
         type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_BARNEPENSJON,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
+    ),
+
+    VURDER_KRAV(
+        kode = AvklaringsbehovKode.`5038`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.KRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),

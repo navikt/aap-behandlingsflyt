@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
@@ -43,7 +44,9 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører(
             behandlingStatus = tilbakekrevingsbehandling.behandlingsstatus.tilKontrakt(),
             sakOpprettet = tilbakekrevingsbehandling.sakOpprettet,
             totaltFeilutbetaltBeløp = tilbakekrevingsbehandling.totaltFeilutbetaltBeløp.verdi,
-            saksbehandlingURL = tilbakekrevingsbehandling.saksbehandlingURL.toString()
+            saksbehandlingURL = tilbakekrevingsbehandling.saksbehandlingURL.toString(),
+            gjenopptas = if (unleashGateway.isEnabled(BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt)) tilbakekrevingsbehandling.gjenopptas else null,
+            venteGrunn = if (unleashGateway.isEnabled(BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt)) tilbakekrevingsbehandling.venteGrunn else null,
         )
 
         log.info("Kaller oppgavestyring for å varsle om oppdatering av tilbakekrevingsbehandling for sak: ${sak.saksnummer}")

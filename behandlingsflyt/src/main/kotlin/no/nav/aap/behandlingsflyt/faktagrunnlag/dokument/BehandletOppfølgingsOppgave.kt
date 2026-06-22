@@ -12,6 +12,7 @@ data class BehandletOppfølgingsOppgave(
     val hvemSkalFølgeOpp: HvemSkalFølgeOpp,
     val hvaSkalFølgesOpp: String,
     val reserverTilBruker: String?,
+    val opprettetAv: String?,
     val opprinnelse: Opprinnelse? = null
 ) {
     companion object {
@@ -22,8 +23,8 @@ data class BehandletOppfølgingsOppgave(
                     hvemSkalFølgeOpp = dokument.hvemSkalFølgeOpp,
                     hvaSkalFølgesOpp = dokument.hvaSkalFølgesOpp,
                     reserverTilBruker = dokument.reserverTilBruker,
+                    opprettetAv = dokument.opprettetAv,
                     opprinnelse = dokument.opprinnelse
-
                 )
             }
         }

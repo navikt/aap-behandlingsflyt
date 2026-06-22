@@ -11,7 +11,7 @@ data class FullmektigVurdering(
     val fullmektigIdent: IdentMedType? = null,
     val fullmektigNavnOgAdresse: NavnOgAdresse? = null,
     val vurdertAv: String,
-    val opprettet: Instant? = null
+    val opprettet: Instant
 ) {
     init {
         require(harFullmektig || (fullmektigIdent == null && fullmektigNavnOgAdresse == null)) {

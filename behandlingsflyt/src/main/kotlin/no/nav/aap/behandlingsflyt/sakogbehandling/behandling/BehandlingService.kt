@@ -9,7 +9,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitets
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService.Companion.prioritertType
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService.Companion.vurderingsbehovTilType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -54,7 +57,7 @@ class BehandlingService(
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
         val sak = sakRepository.hent(sakId)
         val alleBehandlingerMedVedtak =
-            behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
+            behandlingRepository.hentAlleMedVedtakFor(sak.person.id, TypeBehandling.ytelseBehandlingstyper())
         return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
     }
 
@@ -64,7 +67,13 @@ class BehandlingService(
                 val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
                     "Revurdering skal alltid ha forrigeBehandling"
                 }
-                if (!underveisService.harRett(forrigeBehandlingId)) {
+
+                val erAktuellVurderingtype = prioritertType(
+                    vurderingTyper = behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet(),
+                    typeBehandling = behandling.typeBehandling()
+                ) in listOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
+
+                if (!underveisService.harRett(forrigeBehandlingId) && erAktuellVurderingtype) {
                     TypeBehandling.Førstegangsbehandling
                 } else {
                     TypeBehandling.Revurdering
@@ -223,7 +232,9 @@ class BehandlingService(
             }
         }
 
-        val forrige = aktivitetspliktBehandlinger.filterNot { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(it.id) }.firstOrNull()?.id
+        val forrige =
+            aktivitetspliktBehandlinger.filterNot { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(it.id) }
+                .firstOrNull()?.id
 
         return behandlingRepository.opprettBehandling(
             sakId = sakId,

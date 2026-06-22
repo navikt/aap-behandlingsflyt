@@ -86,7 +86,6 @@ class PersonopplysningRepositoryImpl(
             }
             setRowMapper { row ->
                 Personopplysning(
-                    id = id,
                     fødselsdato = Fødselsdato(row.getLocalDate("FODSELSDATO")),
                     dødsdato = row.getLocalDateOrNull("dodsdato")?.let(::Dødsdato),
                     statsborgerskap = hentStatsborgerskap(row),

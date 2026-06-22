@@ -36,6 +36,7 @@ data class StansOpphørGrunnlag(
 ) {
     constructor(): this(emptySet(), null, null)
     constructor(stansOgOpphør: Set<StansEllerOpphørVurdering>): this(stansOgOpphør, null, null)
+
     fun gjeldendeStansOgOpphør(): Set<GjeldendeStansEllerOpphør> {
         return stansOgOpphør
             .groupBy { it.fom }
@@ -84,7 +85,7 @@ data class StansOpphørGrunnlag(
         }
         return StansOpphørGrunnlag(
             stansOgOpphør = this.stansOgOpphør + endringer.map { it.value },
-            stansOpphørV2 = this.stansOpphørV2,
+            stansOpphørV2 = utlededeStansOgOpphør,
             stansOpphørVurderingerV2 = this.stansOpphørVurderingerV2,
         )
     }

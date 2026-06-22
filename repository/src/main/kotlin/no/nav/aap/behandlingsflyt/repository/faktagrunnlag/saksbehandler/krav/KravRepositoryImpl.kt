@@ -6,7 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøkna
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
@@ -59,36 +61,37 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 journalpost_id, vurdert_av, opprettet_tid,
                 begrunnelse, vurdert_i_behandling,
                 krav_type, soknadsdato, soknadsdato_aarsak,
-                mulig_rett_fra, mulig_rett_fra_aarsak,
-                 kravdato
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                overstyr_mulig_rett_fra, overstyr_mulig_rett_fra_aarsak,
+                mulig_rett_fra, referanse
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             grunnlag.vurderinger
         ) {
             setParams { v ->
                 setLong(1, vurderingerId)
                 setString(2, v.journalpostId.identifikator)
-                setString(3, v.vurdertAv)
+                setString(3, v.vurdertAv.ident)
                 setInstant(4, v.opprettet)
                 setString(5, v.begrunnelse)
                 setLong(6, v.vurdertIBehandling.id)
+                setUUID(13, v.referanse.verdi)
                 when (v) {
                     is NyttKrav -> {
                         setEnumName(7, KravType.NYTT_KRAV_AAP)
                         setLocalDate(8, v.søknadsdato.dato)
                         setEnumName(9, v.søknadsdato.årsak)
-                        setLocalDate(10, v.muligRettFra?.dato)
-                        setEnumName(11, v.muligRettFra?.årsak)
-                        setLocalDate(12, v.kravdato)
+                        setLocalDate(10, v.overstyrMuligRettFra?.dato)
+                        setEnumName(11, v.overstyrMuligRettFra?.årsak)
+                        setLocalDate(12, v.muligRettFra)
                     }
 
                     is Gjenopptak -> {
                         setEnumName(7, KravType.GJENOPPTAK)
                         setLocalDate(8, v.søknadsdato.dato)
                         setEnumName(9, v.søknadsdato.årsak)
-                        setLocalDate(10, v.muligRettFra?.dato)
-                        setEnumName(11, v.muligRettFra?.årsak)
-                        setLocalDate(12, v.kravdato)
+                        setLocalDate(10, v.overstyrMuligRettFra?.dato)
+                        setEnumName(11, v.overstyrMuligRettFra?.årsak)
+                        setLocalDate(12, v.muligRettFra)
                     }
 
                     is TrukketSøknad -> {
@@ -152,10 +155,10 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     private fun hentVurderinger(vurderingerId: Long): Set<KravVurdering> {
         return connection.querySet(
             """
-            SELECT journalpost_id, vurdert_av, krav_type,
+            SELECT referanse, journalpost_id, vurdert_av, krav_type,
                    soknadsdato, soknadsdato_aarsak,
-                   mulig_rett_fra, mulig_rett_fra_aarsak,
-                   begrunnelse, kravdato, vurdert_i_behandling, opprettet_tid
+                   overstyr_mulig_rett_fra, overstyr_mulig_rett_fra_aarsak,
+                   begrunnelse, mulig_rett_fra, vurdert_i_behandling, opprettet_tid
             FROM krav_vurdering
             WHERE krav_vurderinger_id = ?
             """.trimIndent()
@@ -166,44 +169,50 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     }
 
     private fun mapVurdering(row: Row): KravVurdering {
+        val referanse = Kravreferanse(row.getUUID("referanse"))
         val journalpostId = JournalpostId(row.getString("journalpost_id"))
-        val vurdertAv = row.getString("vurdert_av")
+        val vurdertAv = Bruker(row.getString("vurdert_av"))
         val opprettet = row.getInstant("opprettet_tid")
         val begrunnelse = row.getString("begrunnelse")
         val vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling"))
 
         return when (val kravType = row.getEnum<KravType>("krav_type")) {
             KravType.NYTT_KRAV_AAP -> NyttKrav(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
                 søknadsdato = mapSøknadsdato(row),
-                muligRettFra = mapMuligRett(row),
-                kravdato = row.getLocalDate("kravdato"),
+                overstyrMuligRettFra = mapOverstyrMuligRettFra(row),
+                muligRettFra = row.getLocalDate("mulig_rett_fra"),
             )
 
             KravType.GJENOPPTAK -> Gjenopptak(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
                 søknadsdato = mapSøknadsdato(row),
-                muligRettFra = mapMuligRett(row),
-                kravdato = row.getLocalDate("kravdato"),
+                overstyrMuligRettFra = mapOverstyrMuligRettFra(row),
+                muligRettFra = row.getLocalDate("mulig_rett_fra"),
             )
 
             KravType.TRUKKET_SØKNAD -> TrukketSøknad(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
             KravType.KLAGE -> Klage(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
             KravType.TILLEGGSOPPLYSNING -> Tilleggsopplysning(
+                referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
@@ -211,9 +220,9 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         }
     }
 
-    private fun mapMuligRett(row: Row): MuligRettFra? {
-        return row.getLocalDateOrNull("mulig_rett_fra")
-            ?.let { MuligRettFra(dato = it, årsak = row.getEnum("mulig_rett_fra_aarsak")) }
+    private fun mapOverstyrMuligRettFra(row: Row): OverstyrMuligRettFra? {
+        return row.getLocalDateOrNull("overstyr_mulig_rett_fra")
+            ?.let { OverstyrMuligRettFra(dato = it, årsak = row.getEnum("overstyr_mulig_rett_fra_aarsak")) }
     }
 
     private fun mapSøknadsdato(row: Row): Søknadsdato {
@@ -224,22 +233,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val vurderingerIder = hentVurderingerIder(behandlingId)
-
-        val deletedRows = connection.executeReturnUpdated(
-            """
-            DELETE FROM krav_grunnlag WHERE behandling_id = ?;
-            DELETE FROM krav_vurdering WHERE krav_vurderinger_id = ANY(?::bigint[]);
-            DELETE FROM krav_vurderinger WHERE id = ANY(?::bigint[]);
-            """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, behandlingId.id)
-                setLongArray(2, vurderingerIder)
-                setLongArray(3, vurderingerIder)
-            }
-        }
-        log.info("Slettet $deletedRows rader fra krav-tabeller for behandling $behandlingId")
+        // Skal ikke slette krav selv om søknad trekkes
     }
 
     private fun hentVurderingerIder(behandlingId: BehandlingId): List<Long> {

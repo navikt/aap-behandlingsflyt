@@ -36,6 +36,6 @@ class SøkPåSakService(
         if (person == null) {
             return emptyList()
         }
-        return sakRepository.finnSakerFor(person)
+        return sakRepository.finnSakerFor(person.id)
     }
 }

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov as Ekspone
 
 enum class Vurderingsbehov {
     MOTTATT_SØKNAD,
+    VURDER_KRAV,
     HELHETLIG_VURDERING,
     MOTTATT_AKTIVITETSMELDING,
     MOTTATT_MELDEKORT,
@@ -144,4 +145,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.REVURDER_SYKESTIPEND -> Vurderingsbehov.REVURDER_SYKESTIPEND
         EksponertÅrsak.ETABLERING_EGEN_VIRKSOMHET -> Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
         EksponertÅrsak.AKTIVITETSPLIKTBEHANDLING_AVBRUTT -> Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT
+        EksponertÅrsak.VURDER_KRAV -> Vurderingsbehov.VURDER_KRAV
     }

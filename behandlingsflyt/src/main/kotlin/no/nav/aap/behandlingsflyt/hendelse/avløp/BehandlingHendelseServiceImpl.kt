@@ -25,7 +25,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -81,14 +80,11 @@ class BehandlingHendelseServiceImpl(
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
-        )
-
-        // Bør prate med øvrige konsumenter før vi begynner å sende utledet førstegangsbehandling 
-        val hendelseTilOppgave = hendelse.copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
+        ).copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         flytJobbRepository.leggTil(
-            JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelseTilOppgave)
+            JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
                 .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(

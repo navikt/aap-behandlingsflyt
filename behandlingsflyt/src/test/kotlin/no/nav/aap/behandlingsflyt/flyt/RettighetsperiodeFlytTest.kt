@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
@@ -9,6 +10,13 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -23,9 +31,11 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -33,9 +43,10 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.reflect.KClass
-
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
@@ -231,11 +242,42 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `Skal kunne overstyre rettighetsperioden i førstegangsbehandling hos NAY`() {
-        val (sak, behandling) = sendInnFørsteSøknad()
+        val nå = LocalDateTime.now()
+        val journalpostId = JournalpostId("1188")
+        val (sak, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = nå,
+            journalpostId = journalpostId
+        )
 
         val ident = sak.person.aktivIdent()
         val nyStartDato = sak.rettighetsperiode.fom.minusDays(7)
         behandling
+            .medKontekst {
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
+                    val kravGrunnlag = repositoryProvider.provide<KravRepository>().hentHvisEksisterer(behandling.id)
+                    assertThat(kravGrunnlag?.vurderinger).hasSize(1)
+                    assertThat(kravGrunnlag?.vurderinger?.first())
+                        .usingRecursiveComparison()
+                        .ignoringFields("opprettet")
+                        .ignoringFields("referanse")
+                        .isEqualTo(
+                            NyttKrav(
+                                muligRettFra = nå.toLocalDate(),
+                                søknadsdato = Søknadsdato(
+                                    årsak = SøknadsdatoÅrsak.SøknadMottatt,
+                                    dato = nå.toLocalDate()
+                                ),
+                                journalpostId = journalpostId,
+                                vurdertAv = SYSTEMBRUKER,
+                                begrunnelse = "Automatisk vurdert",
+                                opprettet = Instant.now(), //Ignorert
+                                overstyrMuligRettFra = null,
+                                vurdertIBehandling = behandling.id,
+                                referanse = Kravreferanse.ny() // Ignorert
+                            )
+                        )
+                }
+            }
             .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
@@ -250,12 +292,55 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
         }
 
+        val rettighetsperiodeVurdering = Triple(
+            nyStartDato,
+            "Var ikke i stand til å søke tidligere",
+            RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere
+        )
+
         oppdatertBehandling = oppdatertBehandling
-            .løsRettighetsperiode(nyStartDato)
+            .løsRettighetsperiode(
+                rettighetsperiodeVurdering.first,
+                rettighetsperiodeVurdering.second,
+                rettighetsperiodeVurdering.third
+            )
             .medKontekst {
                 val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
                 assertThat(åpneAvklaringsbehov).hasSize(2)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM)
+
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
+                    val kravGrunnlag = repositoryProvider.provide<KravRepository>().hentHvisEksisterer(behandling.id)
+                    assertThat(kravGrunnlag?.vurderinger).hasSize(2)
+                    assertThat(kravGrunnlag?.vurderinger?.first { it.vurdertAv != SYSTEMBRUKER })
+                        .usingRecursiveComparison()
+                        .ignoringFields("opprettet")
+                        .ignoringFields("referanse")
+                        .isEqualTo(
+                            NyttKrav(
+                                muligRettFra = rettighetsperiodeVurdering.first,
+                                søknadsdato = Søknadsdato(
+                                    årsak = SøknadsdatoÅrsak.SøknadMottatt,
+                                    dato = nå.toLocalDate()
+                                ),
+                                journalpostId = journalpostId,
+                                vurdertAv = Bruker("SAKSBEHANDLER"),
+                                begrunnelse = rettighetsperiodeVurdering.second,
+                                opprettet = Instant.now(), //Ignorert
+                                overstyrMuligRettFra = OverstyrMuligRettFra(
+                                    dato = rettighetsperiodeVurdering.first,
+                                    årsak = rettighetsperiodeVurdering.third.tilOverstyrMuligRettFraÅrsak()
+                                ),
+                                vurdertIBehandling = behandling.id,
+                                referanse = Kravreferanse.ny() // Ignorert
+                            )
+                        )
+                    assertThat(kravGrunnlag?.gjeldendeVurderinger()).hasSize(1)
+                    assertThat(
+                        kravGrunnlag?.gjeldendeVurderinger()?.first()?.vurdertAv
+                    ).isEqualTo(Bruker("SAKSBEHANDLER"))
+
+                }
 
             }
             .løsSykdom(nyStartDato)
@@ -270,14 +355,9 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .medKontekst {
                 val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
-                if (unleashGateway.objectInstance?.isEnabled(BehandlingsflytFeature.KvalitetssikringVed2213) == true) {
-                    assertThat(åpneAvklaringsbehov).hasSize(2)
-                    assertThat(åpneAvklaringsbehov).anySatisfy {
-                        assertThat(it.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
-                    }
-                } else {
-                    assertThat(åpneAvklaringsbehov).hasSize(1)
-                    assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+                assertThat(åpneAvklaringsbehov).hasSize(2)
+                assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(it.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
                 }
             }
             .bekreftVurderinger()

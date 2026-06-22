@@ -15,11 +15,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
 
@@ -381,7 +382,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     }
 
     override fun hentAlleMedVedtakFor(
-        person: Person,
+        personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> {
         val query = """
@@ -411,7 +412,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         return connection.queryList(query) {
             setParams {
-                setLong(1, person.id.id)
+                setLong(1, personId.id)
                 setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper {
@@ -541,5 +542,24 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Trengs ikke implementeres
+    }
+
+    fun hentKandidatForStansOpphørBackfill(behandlingId: Long): Behandling? {
+        return connection.queryFirstOrNull("""
+            select *
+            from behandling
+            where
+            id = ? 
+            and type IN ('ae0034', 'ae0028')
+            and (type <> 'ae0034' or status <> 'OPPRETTET')
+            ${if (Miljø.erDev()) "and opprettet_tid >= '2025-04-01'::date" else ""}
+            """.trimIndent()) {
+            setParams {
+                setLong(1, behandlingId)
+            }
+            setRowMapper {
+                mapBehandling(it)
+            }
+        }
     }
 }
