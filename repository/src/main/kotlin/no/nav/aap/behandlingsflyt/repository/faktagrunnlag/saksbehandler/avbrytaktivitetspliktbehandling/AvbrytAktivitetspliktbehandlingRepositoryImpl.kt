@@ -50,7 +50,7 @@ class AvbrytAktivitetspliktbehandlingRepositoryImpl(
             """
             update avbryt_aktivitetspliktbehandling_grunnlag
             set aktiv = false
-            where behandling_id = ?
+            where behandling_id = ? and aktiv
         """.trimIndent()
         ) {
             setParams {
