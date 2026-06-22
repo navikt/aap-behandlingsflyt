@@ -42,6 +42,13 @@ public data class AnnetRelevantDokumentV0(
 public data class AnnetRelevantDokumentV1(
     public override val årsakerTilBehandling: List<Vurderingsbehov>,
     public override val begrunnelse: String,
+    public override val underKategori: AnnetRelevantDokumentUnderKategori? = null,
+) : AnnetRelevantDokument
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public data class AnnetRelevantDokumentV2(
+    public override val årsakerTilBehandling: List<Vurderingsbehov>,
+    public override val begrunnelse: String,
     public override val underKategori: AnnetRelevantDokumentUnderKategori,
 ) : AnnetRelevantDokument
 
