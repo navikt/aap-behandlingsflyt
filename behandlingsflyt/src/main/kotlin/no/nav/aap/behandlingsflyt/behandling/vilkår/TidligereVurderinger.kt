@@ -114,6 +114,10 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
             },
 
+            Sjekk(StegType.VURDER_AVSLAG_11_27) { vilkårsresultat, _, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.AVSLAG_11_27, vilkårsresultat)
+            },
+
             Sjekk(StegType.AVKLAR_STUDENT) { vilkårsresultat, _, _ ->
                 vilkårsresultat.tidslinjeFor(Vilkårtype.STUDENT).map {
                     TidligereVurderinger.PotensieltOppfylt(

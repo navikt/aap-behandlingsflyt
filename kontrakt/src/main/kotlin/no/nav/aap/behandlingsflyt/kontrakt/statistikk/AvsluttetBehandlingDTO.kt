@@ -128,6 +128,7 @@ public enum class Avslagsårsak {
     HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON,
     ORDINÆRKVOTE_BRUKT_OPP,
     SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
+    ANNEN_FULL_YTELSE_11_27
 }
 
 public enum class Avslagstype {

@@ -51,8 +51,7 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
 
             val nyVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.id }
 
-            // TODO Thao: Holder det å vise kun vurderinger fra forrige behandling? Eller viser vurderinger fra alle behandlinger ulik behandling.id
-            val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.forrigeBehandlingId }
+            val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling != behandling.id }
 
             val nyttKravListeDto = Avslag11_27KravDto.avslag11_27TilDto(nyttKravListe);
 

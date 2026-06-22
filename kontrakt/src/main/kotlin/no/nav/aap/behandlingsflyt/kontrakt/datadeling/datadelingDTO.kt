@@ -89,6 +89,7 @@ public enum class AvslagsårsakDTO(
     ORDINÆRKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
     SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
     IKKE_SYKDOM_SKADE_LYTE(StansEllerOpphørEnumDTO.OPPHØR),
+    ANNEN_FULL_YTELSE_11_27(StansEllerOpphørEnumDTO.OPPHØR)
 }
 
 

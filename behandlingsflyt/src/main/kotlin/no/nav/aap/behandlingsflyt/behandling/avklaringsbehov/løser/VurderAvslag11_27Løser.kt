@@ -38,7 +38,7 @@ class VurderAvslag11_27Løser(
             )
 
         val gjeldendeVedtatte =
-            forrigeBehandlingId?.let { avslag1127repository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
+            forrigeBehandlingId?.let { avslag1127repository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         val nyGjeldende = vurderinger + gjeldendeVedtatte
 

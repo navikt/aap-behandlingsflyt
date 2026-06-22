@@ -4,6 +4,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -19,7 +25,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderAvslag11_27Steg private constructor(
     private val avslag11_27repository: Avslag11_27Repository,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val tidligereVurderinger: TidligereVurderinger
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -32,7 +39,35 @@ class VurderAvslag11_27Steg private constructor(
             },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
         )
+
+        settVilkårsresultat(kontekst)
+
         return Fullført
+    }
+
+    private fun settVilkårsresultat(kontekst: FlytKontekstMedPerioder) {
+        val grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId) ?: return
+        val nåværendeVurderinger = grunnlag.vurderinger.filter { it.vurdertIBehandling == kontekst.behandlingId }
+        if (nåværendeVurderinger.isEmpty()) return
+
+        val harAvslag = nåværendeVurderinger.all { it.skalAvslås1127 }
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.AVSLAG_11_27).nullstillTidslinje()
+
+        vilkår.leggTilVurdering(
+            Vilkårsperiode(
+                periode = kontekst.rettighetsperiode,
+                vilkårsvurdering = Vilkårsvurdering(
+                    utfall = if (harAvslag) Utfall.IKKE_OPPFYLT else Utfall.OPPFYLT,
+                    manuellVurdering = true,
+                    begrunnelse = if (harAvslag) "§ 11-27 avslag" else "§ 11-27 ikke avslag",
+                    avslagsårsak = if (harAvslag) Avslagsårsak.ANNEN_FULL_YTELSE_11_27 else null,
+                    faktagrunnlag = null,
+                )
+            )
+        )
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }
 
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -76,7 +111,8 @@ class VurderAvslag11_27Steg private constructor(
             return VurderAvslag11_27Steg(
                 avslag11_27repository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                vilkårsresultatRepository = repositoryProvider.provide()
             )
         }
 
