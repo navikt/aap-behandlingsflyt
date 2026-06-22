@@ -169,7 +169,7 @@ class StansOpphørRepositoryImpl(
             """
             update stans_opphor_grunnlag
             set aktiv = false
-            where behandling_id = ?
+            where behandling_id = ? and aktiv
         """
         ) {
             setParams {
