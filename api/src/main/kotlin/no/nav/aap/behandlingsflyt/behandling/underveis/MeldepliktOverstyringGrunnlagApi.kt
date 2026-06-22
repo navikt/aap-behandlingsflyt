@@ -54,16 +54,16 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
                     val grunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandling.id)
 
                     val gjeldendeVedtatteVurdertePerioder = grunnlag
-                        ?.vurderinger
-                        ?.filter { it.vurdertIBehandling != behandling.referanse }
-                        ?.tilTidslinje()
-                        ?.tilVurderingResponse(ansattInfoService) ?: emptyList()
+                        ?.vurderinger.orEmpty()
+                        .filter { it.vurdertIBehandling != behandling.referanse }
+                        .tilTidslinje()
+                        .tilVurderingResponse(ansattInfoService)
 
                     val overstyringerFraDenneBehandlingen = grunnlag
-                        ?.vurderinger
-                        ?.filter { it.vurdertIBehandling == behandling.referanse }
-                        ?.tilTidslinje()
-                        ?.tilVurderingResponse(ansattInfoService) ?: emptyList()
+                        ?.vurderinger.orEmpty()
+                        .filter { it.vurdertIBehandling == behandling.referanse }
+                        .tilTidslinje()
+                        .tilVurderingResponse(ansattInfoService)
 
                     // Grunnlaget vil være tomt til underveis har kjørt, 
                     // men siden det er frivillig overstyring der steget automatisk returnerer Fullført, er dette greit
@@ -73,11 +73,11 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
                     MeldepliktOverstyringGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         perioderIkkeMeldt = underveisGrunnlag?.perioder
-                            ?.filter { it.meldePeriode.fom <= now }
-                            ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
-                            ?.map { it.meldePeriode }
-                            ?.distinctBy { it.fom }
-                            ?: emptyList(),
+                            .orEmpty()
+                            .filter { it.meldePeriode.fom <= now }
+                            .filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
+                            .map { it.meldePeriode }
+                            .distinctBy { it.fom },
                         gjeldendeVedtatteOversyringsvurderinger = gjeldendeVedtatteVurdertePerioder,
                         overstyringsvurderinger = overstyringerFraDenneBehandlingen
                     )

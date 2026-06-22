@@ -34,7 +34,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -118,7 +117,7 @@ class UnderveisService(
             )
         }
 
-        fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
+        internal fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
             .map {
                 Underveisperiode(
                     periode = it.periode,
@@ -140,7 +139,7 @@ class UnderveisService(
             }
     }
 
-    fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
+    fun vurder(behandlingId: BehandlingId): Tidslinje<Vurdering> {
         val input = genererInput(behandlingId)
 
         val vurderRegler = vurderRegler(input)

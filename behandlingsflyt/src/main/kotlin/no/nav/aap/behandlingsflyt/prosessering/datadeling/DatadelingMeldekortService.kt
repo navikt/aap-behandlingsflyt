@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
@@ -57,8 +59,10 @@ class DatadelingMeldekortService(
             }.ifEmpty { return null }
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
-        val underveistidslinje = underveisGrunnlag?.somTidslinje()
-        val helePerioden = underveistidslinje?.helePerioden() ?: sak.rettighetsperiodeEttÅrFraStartDato()
+        val underveistidslinje = underveisGrunnlag?.somTidslinje().orEmpty()
+
+        val helePerioden =
+            if (underveistidslinje.isNotEmpty()) underveistidslinje.helePerioden() else sak.rettighetsperiodeEttÅrFraStartDato()
         val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
 
         val arbeidsgradering = underveistidslinje
@@ -67,12 +71,21 @@ class DatadelingMeldekortService(
                     benyttetGrenseverdi = it.grenseverdi.prosentverdi(),
                     gradering = it.arbeidsgradering.gradering.prosentverdi(),
                     fastsattArbeidsevne = it.arbeidsgradering.fastsattArbeidsevne.prosentverdi(),
-                    arbeidetOverGrenseverdi = it.arbeidsgradering.andelArbeid.prosentverdi() > it.grenseverdi.prosentverdi()
+                    arbeidetOverGrenseverdi = it.arbeidsgradering.andelArbeid.prosentverdi() > it.grenseverdi.prosentverdi(),
+                    meldekortForSent = it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG
                 )
             }
 
         return if (meldePeriodene.isNotEmpty()) {
-            filtrerOgMapMeldekort(meldekortene, meldePeriodene, personIdent, sak, behandlingId, arbeidsgradering)
+            filtrerOgMapMeldekort(
+                meldekortene,
+                meldePeriodene,
+                personIdent,
+                sak,
+                behandlingId,
+                arbeidsgradering,
+                underveistidslinje
+            )
         } else {
             log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
             null
@@ -85,7 +98,8 @@ class DatadelingMeldekortService(
         personIdent: Ident,
         sak: Sak,
         behandlingId: BehandlingId,
-        arbeidsgradering: Tidslinje<Arbeidsgradering>
+        arbeidsgradering: Tidslinje<Arbeidsgradering>,
+        underveistidslinje: Tidslinje<Underveisperiode>
     ): List<DetaljertMeldekortDTO> {
         return meldekortene.mapNotNull { meldekort ->
             val arbeidsperiode = meldekort.arbeidsperiode()
@@ -105,7 +119,9 @@ class DatadelingMeldekortService(
                     saksnummer = sak.saksnummer,
                     behandlingId = behandlingId,
                     meldeperiode = meldekortetsPeriode,
-                    arbeidsgradering = arbeidsgradering
+                    arbeidsgradering = arbeidsgradering,
+                    underveistidslinje.begrensetTil(meldekortetsPeriode).komprimer()
+                        .map { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }.segmenter().any { it.verdi }
                 )
             }
         }
@@ -115,7 +131,8 @@ class DatadelingMeldekortService(
         val benyttetGrenseverdi: Int,
         val gradering: Int,
         val fastsattArbeidsevne: Int,
-        val arbeidetOverGrenseverdi: Boolean
+        val arbeidetOverGrenseverdi: Boolean,
+        val meldekortForSent: Boolean,
     )
 
     private fun tilKontrakt(
@@ -125,6 +142,7 @@ class DatadelingMeldekortService(
         behandlingId: BehandlingId,
         meldeperiode: Periode,
         arbeidsgradering: Tidslinje<Arbeidsgradering>,
+        forSentMeldekort: Boolean,
     ): DetaljertMeldekortDTO {
         return DetaljertMeldekortDTO(
             personIdent = personIdent.identifikator,
@@ -139,7 +157,8 @@ class DatadelingMeldekortService(
                     it.periode.fom, it.periode.tom, it.timerArbeid.antallTimer
                 )
             },
-            arbeidsgradering = arbeidsgradering.begrensetTil(Periode(meldeperiode.fom, meldeperiode.tom)).komprimer()
+            forsentMeldekort = forSentMeldekort,
+            arbeidsgradering = arbeidsgradering.begrensetTil(Periode(meldeperiode.fom, meldeperiode.tom).flytt(0)).komprimer()
                 .segmenter().map { (periode, arbeidsgradering) ->
                     ArbeidsgraderingDTO(
                         periodeFom = periode.fom,
@@ -160,11 +179,11 @@ class DatadelingMeldekortService(
 
         val periodeViaArbeidsperiode =
             meldeperioder.firstOrNull { arbeidsperiode != null && it.overlapper(arbeidsperiode) }
-        return periodeViaArbeidsperiode
-            ?: meldeperioder.firstOrNull {
-                it.inneholder(
-                    meldekort.mottattTidspunkt.toLocalDate()
-                )
-            }
+
+        if (periodeViaArbeidsperiode != null) return periodeViaArbeidsperiode
+
+        return meldeperioder.filterIndexed { index, _ ->
+            meldeperioder[index + 1].inneholder(meldekort.mottattTidspunkt.toLocalDate())
+        }.firstOrNull()
     }
 }

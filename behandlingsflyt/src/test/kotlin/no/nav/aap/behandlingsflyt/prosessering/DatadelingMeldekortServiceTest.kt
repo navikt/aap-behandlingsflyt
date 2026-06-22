@@ -1,37 +1,45 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.help.opprettSak
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortService
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import no.nav.aap.behandlingsflyt.help.ident
 
 
 class DatadelingMeldekortServiceTest {
@@ -56,36 +64,27 @@ class DatadelingMeldekortServiceTest {
         dataSource.transaction { connection ->
 
             // SETUP
-            val behandlingRepository = BehandlingRepositoryImpl(connection)
             val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
             val meldekortRepository = MeldekortRepositoryImpl(connection)
-            val sakRepository = SakRepositoryImpl(connection)
             val underveisRepository = UnderveisRepositoryImpl(connection)
             val meldeperiodeRepository = MeldeperiodeRepositoryImpl(connection)
 
             val testMeg = DatadelingMeldekortService(
-                sakRepository,
-                underveisRepository,
-                meldeperiodeRepository = meldeperiodeRepository,
-                mottattDokumentRepository = mottattDokumentRepository
+                postgresRepositoryRegistry.provider(connection), minimalGatewayProvider()
             )
 
             // Legg inn testdata
             val testSak = opprettSak(connection, testIdent, testPeriode.fom)
 
-            // aktiv behandling med meldekort
-            val testBehandling = behandlingRepository.opprettBehandling(
-                sakId = testSak.id,
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
-                forrigeBehandlingId = null,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    emptyList(), ÅrsakTilOpprettelse.MELDEKORT
-                )
-            )
+            // Aktiv behandling med meldekort
+            val testBehandling = finnEllerOpprettBehandling(connection, testSak)
 
-            val periodeStart = testSak.opprettetTidspunkt.plusDays(1).toLocalDate()
+            val periodeStart = testSak.rettighetsperiode.fom
 
             val meldeperioder = lagreMeldeperioder(periodeStart, meldeperiodeRepository, testBehandling)
+
+            lagreUnderveisperioder(meldeperioder, testBehandling, underveisRepository)
+
 
             val testMeldekort = lagreMeldekort(
                 InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, 100001.toString()),
@@ -100,6 +99,9 @@ class DatadelingMeldekortServiceTest {
             val hentetFrem = meldekortRepository.hentHvisEksisterer(testBehandling.id)
             assertThat(hentetFrem).isNotNull
             assertThat(hentetFrem!!.meldekort()).isNotEmpty
+            val meldekortetsPeriode = testMeg.finnMeldekortetsPeriode(hentetFrem.meldekort().first(), meldeperioder)
+
+            assertThat(meldekortetsPeriode).isEqualTo(meldeperioder.first())
 
             // Start selve testen
             val testet = testMeg.opprettKontraktObjekter(testSak.id, testBehandling.id)
@@ -122,11 +124,44 @@ class DatadelingMeldekortServiceTest {
                 }
                 val timetall = timerArbeidPerPeriode.sumOf { it.timerArbeidet }
                 assertThat(timetall).isEqualTo(16.0.toBigDecimal())
+
+                assertThat(this.arbeidsgradering).isNotEmpty()
             }
 
         }
     }
+}
 
+private fun lagreUnderveisperioder(
+    meldeperioder: List<Periode>,
+    testBehandling: Behandling,
+    underveisRepository: UnderveisRepositoryImpl
+) {
+    underveisRepository.lagre(
+        testBehandling.id, meldeperioder.map {
+            Underveisperiode(
+                periode = it,
+                meldePeriode = it,
+                utfall = Utfall.OPPFYLT,
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsårsak = null,
+                grenseverdi = Prosent.`70_PROSENT`,
+                institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+                arbeidsgradering = ArbeidsGradering(
+                    totaltAntallTimer = TimerArbeid(10.toBigDecimal()),
+                    andelArbeid = Prosent.`30_PROSENT`,
+                    fastsattArbeidsevne = Prosent.`50_PROSENT`,
+                    gradering = Prosent.`50_PROSENT`,
+                    opplysningerMottatt = it.tom.plusDays(1)
+                ),
+                trekk = Dagsatser(0),
+                brukerAvKvoter = setOf(Kvote.ORDINÆR),
+                meldepliktStatus = MeldepliktStatus.MELDT_SEG,
+                meldepliktGradering = Prosent.`100_PROSENT`
+            )
+        },
+        input = object : Faktagrunnlag {}
+    )
 }
 
 private fun lagreMeldeperioder(
