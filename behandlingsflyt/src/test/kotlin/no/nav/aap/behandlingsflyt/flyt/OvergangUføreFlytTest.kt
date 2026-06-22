@@ -182,7 +182,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             dataSource.transaction {
                 ResultatUtleder(
                     postgresRepositoryRegistry.provider(it),
-                    minimalGatewayProvider { }).utledResultatFørstegangsBehandling(
+                    minimalGatewayProvider()).utledResultatFørstegangsBehandling(
                     behandling.id
                 )
             }
@@ -209,7 +209,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             dataSource.transaction {
                 ResultatUtleder(
                     postgresRepositoryRegistry.provider(it),
-                    minimalGatewayProvider { }).utledResultatFørstegangsBehandling(
+                    minimalGatewayProvider()).utledResultatFørstegangsBehandling(
                     behandling.id
                 )
             }
