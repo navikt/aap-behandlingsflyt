@@ -129,19 +129,13 @@ class HåndterUførevedtakService(
     private fun skalOppretteAutomatiskOpphør11_18(
         uførevedtak: UførevedtakV0, rettighetstypeTidslinje: Tidslinje<RettighetsType>, behandlingId: BehandlingId
     ): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans1118)) return false // midlertidig early return for logging
-
         val perioder = underveisRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
         val oppfylteRettighetsperioder = perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
-        val oppfylteRettighetstypeTidslinje = rettighetstypeTidslinje.filter { it.verdi.hjemmel == RettighetsType.VURDERES_FOR_UFØRETRYGD.hjemmel }
-            .isNotEmpty()
+        val oppfylteRettighetstypeTidslinje =
+            rettighetstypeTidslinje.filter { it.verdi.hjemmel == RettighetsType.VURDERES_FOR_UFØRETRYGD.hjemmel }
+                .isNotEmpty()
 
         val innvilgetEtter11_18 = oppfylteRettighetsperioder || oppfylteRettighetstypeTidslinje
-
-        log.info("oppfylteRettighetsperioder: $oppfylteRettighetsperioder")
-        log.info(perioder.toString())
-        log.info("oppfylteRettighetstypeTidslinje: $oppfylteRettighetstypeTidslinje")
-        log.info(rettighetstypeTidslinje.toString())
 
         return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
                 && innvilgetEtter11_18
