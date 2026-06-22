@@ -49,7 +49,7 @@ class AvbrytRevurderingRepositoryImpl(
         return connection.execute("""
             update avbryt_revurdering_grunnlag
             set aktiv = false
-            where behandling_id = ?
+            where behandling_id = ? and aktiv
         """.trimIndent()
         ) {
             setParams {

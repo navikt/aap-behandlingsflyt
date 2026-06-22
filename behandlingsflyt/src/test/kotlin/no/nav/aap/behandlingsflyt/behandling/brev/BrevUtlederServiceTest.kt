@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
@@ -67,12 +67,13 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.util.ReadsSystemProperty
+import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -88,6 +89,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
+@ReadsSystemProperty
 class BrevUtlederServiceTest {
     val repositoryProvider = inMemoryRepositoryProvider
     val gatewayProvider = createGatewayProvider {
@@ -461,6 +463,7 @@ class BrevUtlederServiceTest {
     }
 
     @Nested
+    @RestoreSystemProperties
     inner class TestGruppe_AutomatiskStans1118 {
         @ParameterizedTest(name = "skal utlede {1} når bruker har fått vedtak om uføretrygd = {0}")
         @MethodSource("no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederServiceTest#automatiskStans1118Brevtyper")
@@ -552,17 +555,13 @@ class BrevUtlederServiceTest {
         }
     }
 
+    @RestoreSystemProperties
     @Nested
     inner class TestGruppe_BeregningsutfallKategori {
 
         @BeforeEach
         fun settDevMiljø() {
             System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
-        }
-
-        @AfterEach
-        fun tilbakestillMiljø() {
-            System.clearProperty("NAIS_CLUSTER_NAME")
         }
 
         @Test
