@@ -219,15 +219,19 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsBeregningstidspunkt(behandling: Behandling, dato: LocalDate = LocalDate.now()): Behandling {
+    fun løsBeregningstidspunkt(
+        behandling: Behandling,
+        dato: LocalDate = LocalDate.now(),
+        ytterligereNedsattArbeidsevneDato: LocalDate? = null,
+    ): Behandling {
         return løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
                 beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = dato,
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
+                    ytterligereNedsattArbeidsevneDato = ytterligereNedsattArbeidsevneDato,
+                    ytterligereNedsattBegrunnelse = ytterligereNedsattArbeidsevneDato?.let { "Ytterligere nedsatt (test)" },
                 ),
             ),
         )

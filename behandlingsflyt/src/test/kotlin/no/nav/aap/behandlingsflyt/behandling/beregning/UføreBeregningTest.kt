@@ -204,6 +204,30 @@ class UføreBeregningTest {
     }
 
     @Test
+    fun `hopper over validering for år med manuell periodeinntekt, slik at avvik ikke krasjer`() {
+        val uføreBeregning = UføreBeregning(
+            grunnlag = elleveNittenGrunnlag(2),
+            uføregrader = uføreGrader(
+                LocalDate.of(2021, 1, 1) to Prosent.`50_PROSENT`,
+                LocalDate.of(2021, 6, 1) to Prosent.`66_PROSENT`,
+            ),
+            inntektsPerioder = emptySet(),
+            ytterligereNedsattDato = LocalDate.of(2023, 4, 2),
+            årsInntekter = setOf(
+                InntektPerÅr(2021, Beløp(10_000)),
+                InntektPerÅr(2020, Beløp(10_000)),
+                InntektPerÅr(2022, Beløp(10_000))
+            ),
+            // 2021 har manuell periodeinntekt -> sanity-sjekken mot årsinntekt skal hoppes over
+            manuelleInntektsÅr = setOf(Year.of(2021)),
+        )
+
+        val grunnlag = uføreBeregning.beregnUføre()
+
+        assertThat(grunnlag).isNotNull
+    }
+
+    @Test
     fun `50 prosent uføre et halvt år, 0 prosent uføre resten av året`() {
         val (inntektsPerioder, årsInntekter) = genererInntektsPerioder(
             2022 to 10_000,

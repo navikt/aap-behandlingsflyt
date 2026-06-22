@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @Deprecated("Erstattes av vurderinger")
 data class ManuellInntektVurderingGrunnlagResponse(
@@ -25,6 +26,11 @@ data class ManuellInntektGrunnlagResponse(
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean,
+    /**
+     * Delperioder for år der uføregraden endrer seg midt i året (én rad per uføregrad-segment),
+     * som saksbehandler skal legge inn beregnet PGI for. Tom når funksjonen ikke er aktiv.
+     */
+    val delperioderForSplittÅr: List<DelperiodeData>? = emptyList(),
 )
 
 data class ManuellInntektGrunnlagVurdering(
@@ -38,4 +44,13 @@ data class ÅrData(
     val beløp: BigDecimal?,
     val eøsBeløp: BigDecimal? = null,
     val ferdigLignetPGI: BigDecimal? = null,
+    val periodeFom: LocalDate? = null,
+    val periodeTom: LocalDate? = null,
+)
+
+data class DelperiodeData(
+    val år: Int,
+    val periodeFom: LocalDate,
+    val periodeTom: LocalDate,
+    val uføregrad: Int,
 )

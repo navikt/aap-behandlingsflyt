@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
 import java.math.BigDecimal
+import java.time.LocalDate
 
 data class ManuellInntektVurderingDto(
     val begrunnelse: String,
@@ -13,4 +14,10 @@ data class ÅrsVurdering(
     val eøsBeløp: BigDecimal?,
     val år: Int,
     val ferdigLignetPGI: BigDecimal?,
+    /**
+     * Delperiode innen [år] når inntekten gjelder en del av året (før/etter endring i uføregrad).
+     * `null` betyr hele året.
+     */
+    val periodeFom: LocalDate? = null,
+    val periodeTom: LocalDate? = null,
 )

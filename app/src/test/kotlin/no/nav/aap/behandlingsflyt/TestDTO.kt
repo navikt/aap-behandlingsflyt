@@ -79,6 +79,8 @@ data class OpprettTestcaseDTO(
     @param:NotNull @param:JsonProperty(value = "medlemskap", defaultValue = "true") val medlemskap: Boolean,
     val fastlege: TestFastlege? = null,
     @param:JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅrDto>? = null,
+    @param:JsonProperty(value = "aInntekterPerAr") val aInntekterPerAr: List<InntektPerÅrDto>? = null,
+    @param:JsonProperty(value = "ytterligereNedsattArbeidsevneDato") val ytterligereNedsattArbeidsevneDato: LocalDate? = null,
     @param:JsonProperty(value = "tjenestePensjon") val tjenestePensjon: Boolean? = null,
     val institusjoner: Institusjoner = Institusjoner(),
     val samordning: List<SamordningDto> = emptyList(),

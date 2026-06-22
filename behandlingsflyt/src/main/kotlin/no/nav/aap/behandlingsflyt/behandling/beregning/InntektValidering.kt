@@ -14,7 +14,7 @@ object InntektValidering {
         val årsInntekt = årsInntekter.firstOrNull { it.år == år }?.beløp ?: return
         val differanse = (årsInntekt.verdi.stripTrailingZeros() - summertMånedsinntekt.verdi.stripTrailingZeros()).abs()
         require(differanse < BigDecimal(100)) {
-            "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og PESYS. Fikk $summertMånedsinntekt for år $år, men fant $årsInntekt"
+            "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og POPP. Fikk $summertMånedsinntekt for år $år, men fant $årsInntekt"
         }
     }
 }

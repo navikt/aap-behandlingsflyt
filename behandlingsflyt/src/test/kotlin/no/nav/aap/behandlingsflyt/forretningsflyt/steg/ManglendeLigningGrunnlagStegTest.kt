@@ -14,6 +14,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
@@ -49,6 +51,9 @@ class ManglendeLigningGrunnlagStegTest {
     private lateinit var manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var beregningService: BeregningService
+    private lateinit var uføreRepository: UføreRepository
+    private lateinit var beregningVurderingRepository: BeregningVurderingRepository
+    private lateinit var unleashGateway: no.nav.aap.behandlingsflyt.unleash.UnleashGateway
     private lateinit var steg: ManglendeLigningGrunnlagSteg
     private val behandlingRepository = InMemoryBehandlingRepository
     private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
@@ -84,6 +89,14 @@ class ManglendeLigningGrunnlagStegTest {
 
         avklaringsbehovRepository = mockk()
 
+        uføreRepository = mockk {
+            every { hentHvisEksisterer(any()) } returns null
+        }
+        beregningVurderingRepository = mockk {
+            every { hentHvisEksisterer(any()) } returns null
+        }
+        unleashGateway = mockk(relaxed = true)
+
         avbrytRevurderingService = mockk {
             every { revurderingErAvbrutt(any()) } returns false
         }
@@ -101,7 +114,10 @@ class ManglendeLigningGrunnlagStegTest {
             manuellInntektGrunnlagRepository,
             tidligereVurderinger,
             beregningService,
-            avklaringsbehovService
+            avklaringsbehovService,
+            uføreRepository,
+            beregningVurderingRepository,
+            unleashGateway
         )
     }
 

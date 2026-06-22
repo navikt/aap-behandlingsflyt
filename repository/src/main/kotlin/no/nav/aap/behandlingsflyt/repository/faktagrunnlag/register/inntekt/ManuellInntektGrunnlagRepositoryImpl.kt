@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellI
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -90,6 +91,9 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                     opprettet = it.getLocalDateTime( "opprettet_tid"),
                     eøsBeløp = it.getBigDecimalOrNull("eos_belop")?.let(::Beløp),
                     ferdigLignetPGI = it.getBigDecimalOrNull("ferdig_lignet_pgi")?.let(::Beløp),
+                    periode = it.getLocalDateOrNull("periode_fom")?.let { fom ->
+                        Periode(fom, it.getLocalDate("periode_tom"))
+                    },
                 )
             }
         }
@@ -98,9 +102,9 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
     override fun lagre(behandlingId: BehandlingId, manuellVurdering: ManuellInntektVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
-        // Hvis det finnes en vurdering på samme år, så overskrives denne
+        // Hvis det finnes en vurdering på samme år og delperiode, så overskrives denne
         val kombinerteEntries = (eksisterendeGrunnlag?.manuelleInntekter.orEmpty()
-            .filterNot { it.år == manuellVurdering.år } + manuellVurdering).toSet()
+            .filterNot { it.år == manuellVurdering.år && it.periode == manuellVurdering.periode } + manuellVurdering).toSet()
 
         lagre(behandlingId, kombinerteEntries)
     }
@@ -135,7 +139,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         manuellInntektVurderingerId: Long
     ) {
         val query = """
-            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, EOS_BELOP, FERDIG_LIGNET_PGI) VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, EOS_BELOP, FERDIG_LIGNET_PGI, PERIODE_FOM, PERIODE_TOM) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(query, manuellVurderinger) {
@@ -147,6 +151,8 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 setLong(5, manuellInntektVurderingerId)
                 setBigDecimal(6, it.eøsBeløp?.verdi)
                 setBigDecimal(7, it.ferdigLignetPGI?.verdi)
+                setLocalDate(8, it.periode?.fom)
+                setLocalDate(9, it.periode?.tom)
             }
         }
     }

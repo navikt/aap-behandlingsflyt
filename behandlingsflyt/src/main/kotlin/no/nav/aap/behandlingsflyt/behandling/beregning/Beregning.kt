@@ -37,6 +37,11 @@ class Beregning(
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,
     val yrkesskadeBeløpVurderinger: List<YrkesskadeBeløpVurdering>?,
+    /**
+     * År der saksbehandler har lagt inn manuell periodeinntekt. Videreføres til [UføreBeregning]
+     * for å hoppe over sanity-sjekken mot årsinntekt. Tom = dagens oppførsel.
+     */
+    val manuelleInntektsÅr: Set<Year> = emptySet(),
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -52,6 +57,7 @@ class Beregning(
                 ytterligereNedsattDato = requireNotNull(ytterligereNedsettelsesDato),
                 inntektsPerioder = inntektsPerioder,
                 årsInntekter = årsInntekter,
+                manuelleInntektsÅr = manuelleInntektsÅr,
             ).beregnUføre()
         } else {
             grunnlag11_19
@@ -204,11 +210,12 @@ class Beregning(
             inntekter: Set<InntektPerÅr>,
             manuelleInntekter: Set<ManuellInntektVurdering>
         ): Set<InntektPerÅr> {
-            val manuellePGIByÅr = manuelleInntekter
-                .tilÅrInntekt { it.belop }
+            val (periodeVurderinger, årsVurderinger) = manuelleInntekter.partition { it.periode != null }
 
-            val manuellEOSByÅr = manuelleInntekter
-                .tilÅrInntekt { it.eøsBeløp }
+            // År-nivå (uendret oppførsel): manuell inntekt fyller inn år som mangler fra register;
+            // register vinner på belop for år som finnes, og eøs legges til.
+            val manuellePGIByÅr = årsVurderinger.tilÅrInntekt { it.belop }
+            val manuellEOSByÅr = årsVurderinger.tilÅrInntekt { it.eøsBeløp }
 
             val inntekterByÅr = inntekter
                 .groupBy { it.år }
@@ -217,13 +224,25 @@ class Beregning(
                     it.value.first()
                 }
 
-            val kombinerteInntekter =
+            val årNivåKombinert =
                 (manuellePGIByÅr + inntekterByÅr).mapValues { (år, inntektPerÅr) ->
                     val eos = manuellEOSByÅr[år]?.beløp ?: Beløp(BigDecimal.ZERO)
                     inntektPerÅr.copy(beløp = inntektPerÅr.beløp.pluss(eos))
-                }.values.toSet()
+                }
 
-            return kombinerteInntekter
+            // Periode-nivå (endring i uføregrad): delperioder for samme år summeres (belop + eøs)
+            // og OVERSTYRER register/år-nivå for det året, slik at ordinær §11-19 og «Totalt» i
+            // kortet bruker manuell sum.
+            val periodeNivåByÅr = periodeVurderinger
+                .groupBy { it.år }
+                .mapValues { (år, vurderinger) ->
+                    val sum = vurderinger.sumOf {
+                        (it.belop?.verdi ?: BigDecimal.ZERO) + (it.eøsBeløp?.verdi ?: BigDecimal.ZERO)
+                    }
+                    InntektPerÅr(år, Beløp(sum))
+                }
+
+            return (årNivåKombinert + periodeNivåByÅr).values.toSet()
         }
 
         private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(selector: (ManuellInntektVurdering) -> Beløp?): Map<Year, InntektPerÅr> {

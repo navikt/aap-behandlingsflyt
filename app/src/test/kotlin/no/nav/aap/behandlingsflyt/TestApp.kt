@@ -483,6 +483,7 @@ private fun sendInnSøknad(
                 if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
             ),
             inntekter = dto.inntekterPerAr.orEmpty().map { inn -> inn.to() },
+            aInntekter = dto.aInntekterPerAr?.map { inn -> inn.to() },
             sykepenger = dto.sykepenger.map {
                 TestPerson.Sykepenger(
                     grad = it.grad,
@@ -640,15 +641,15 @@ private fun opprettNySakOgBehandling(
 
             // Inntekt
             if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
-            løsBeregningstidspunkt(behandling)
+            løsBeregningstidspunkt(behandling, ytterligereNedsattArbeidsevneDato = dto.ytterligereNedsattArbeidsevneDato)
 
             if (harYrkesskade) {
                 løsFastsettYrkesskadeInntekt(behandling)
             }
 
             val manglendeInntektsÅr = manglendeInntektsår(dto)
+            if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
             if (manglendeInntektsÅr.isNotEmpty()) {
-                if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
                 løsManuellInntektVurdering(behandling, manglendeInntektsÅr)
             }
 
