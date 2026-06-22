@@ -112,6 +112,11 @@ class DatadelingMeldekortService(
                     )
                     null
                 }
+                // TODO: hvordan dele dette fornuftig!?!?
+
+                // hvis ikke levert, hvordan identifisere meldeperioder
+
+                // og hva med arbeidsperioder, de kommer som en og en dag. blir rotete??
 
                 else -> tilKontrakt(
                     meldekort = meldekort,
