@@ -99,6 +99,18 @@ class Driftfunksjoner(
         }
     }
 
+    fun prosesserBehandling(behandling: Behandling, skalForberede: Boolean) {
+        taSkriveLåsRepository.withLåstBehandling(behandling.id) {
+            if (skalForberede) {
+                log.info("Forbereder og prosesserer behandling")
+                flytOrkestrator.forberedOgProsesserBehandling(behandling.id)
+            } else {
+                log.info("Prosesserer behandling")
+                flytOrkestrator.prosesserBehandling(behandling.flytKontekst())
+            }
+        }
+    }
+
     fun avbrytVedtsaksbrevBestilling(
         bruker: Bruker,
         brevbestillingReferanse: BrevbestillingReferanse,
