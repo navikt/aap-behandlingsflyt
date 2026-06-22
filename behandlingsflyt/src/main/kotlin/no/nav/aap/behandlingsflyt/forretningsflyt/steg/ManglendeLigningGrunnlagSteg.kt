@@ -140,12 +140,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
     }
 
     private fun hentSisteRelevanteÅr(kontekst: FlytKontekstMedPerioder): Set<Year> {
-        val relevantBeregningsPeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
-        val sisteÅr = relevantBeregningsPeriode.max()
-
-        val relevanteÅr = (0L..2L).map { sisteÅr.minusYears(it) }.toSet()
-
-        return relevanteÅr
+        return beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
     }
 
     companion object : FlytSteg {

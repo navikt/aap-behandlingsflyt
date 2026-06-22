@@ -105,6 +105,27 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        data class ProsesserBehandling(val skalForberede: Boolean)
+        route("/behandling/{referanse}/prosesser") {
+            authorizedPost<BehandlingReferanse, Unit, ProsesserBehandling>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, request ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val driftfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
+
+                    val behandling = behandlingRepository.hent(BehandlingReferanse(params.referanse))
+                    driftfunksjoner.prosesserBehandling(behandling, request.skalForberede)
+                }
+                respondWithStatus(HttpStatusCode.NoContent)
+            }
+        }
+
+
         route("/behandling/{referanse}/utvid-rettighetsperiode-og-kjor-fra-start") {
             authorizedPost<BehandlingReferanse, Unit, Unit>(
                 AuthorizationParamPathConfig(
