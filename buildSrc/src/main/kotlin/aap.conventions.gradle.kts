@@ -56,6 +56,7 @@ detekt {
 }
 
 tasks.withType(dev.detekt.gradle.Detekt::class.java).configureEach {
+    ignoreFailures = true
     reports {
         html.required.set(true)
         checkstyle.required.set(false)

@@ -67,7 +67,9 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING -> {
-                vurderVilkår(kontekst, grunnlag.value)
+                // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
+                val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
+                vurderVilkår(kontekst, grunnlag)
             }
 
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,

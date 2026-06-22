@@ -74,13 +74,14 @@ class RettighetstypeService(
         val utlededeRettighetstyper = vurderRettighetstypeOgKvoter(vilkårsresultat, KvoteService().beregn())
             .filter { it.verdi is KvoteOk }
             .mapNotNull { it.rettighetsType }
+            .komprimer()
 
         if (underveisperioder == null || underveisperioder.isEmpty()) {
             return utlededeRettighetstyper
         }
 
         val differanse = diffTidslinjer(
-            underveisperioder.mapNotNull { it.rettighetsType },
+            underveisperioder.mapNotNull { it.rettighetsType }.komprimer(),
             utlededeRettighetstyper.begrensetTil(underveisperioder.helePerioden())
         ).filter { (_, it) -> it !is Uendret<*> }
         if (differanse.isNotEmpty()) {

@@ -66,9 +66,11 @@ class VurderLovvalgSteg private constructor(
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING -> {
+                // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
+                val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
-                    .vurder(grunnlag.value)
+                    .vurder(grunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
 

@@ -3,10 +3,15 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSamordningUføreLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -344,21 +349,48 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
     @Test
     fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering uten kvalitetssikring`() {
-        val fom = LocalDate.now().minusMonths(2)
-        val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-        val virkningsdato = LocalDate.now().plusMonths(1)
+        val overgangUførDato = LocalDate.now().plusMonths(1)
+        val virkningsdato = LocalDate.now()
+        val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = virkningsdato.atStartOfDay())
 
         sisteBehandling
-            .løsSykdom(fom, erOppfylt = false)
+            .løsSykdom(virkningsdato, erOppfylt = true)
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        BistandLøsningDto(
+                            begrunnelse = "Ikke oppfylt bistand",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Yep",
+                            fom = virkningsdato,
+                            tom = null
+                        )
+                    ),
+                ),
+            )
+            .løsOvergangUføre(
+                fom = virkningsdato,
+                brukerHarSøktOmUføretrygd = true,
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                brukerHarRettPåAap = true
+            )
+            .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(virkningsdato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
 
         val (_, revurdering) = opprettUførevedtakshendelse(
             sak = sak,
             behandling = sisteBehandling,
-            virkningsdato = virkningsdato,
+            virkningsdato = overgangUførDato,
             resultat = UførevedtakResultat.INNV,
             avslag12_5 = false,
         )
@@ -374,11 +406,11 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == virkningsdato }
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == overgangUførDato }
 
             assertThat(vurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
             assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER.ident)
-            assertThat(vurdering.fom).isEqualTo(virkningsdato)
+            assertThat(vurdering.fom).isEqualTo(overgangUførDato)
             assertThat(vurdering.brukerRettPåAAP).isFalse()
             assertThat(vurdering.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT)
 
@@ -388,15 +420,15 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val automatiskVurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == virkningsdato }
-            
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == overgangUførDato }
+
             assertThat(automatiskVurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
-            assertThat(automatiskVurdering.fom).isEqualTo(virkningsdato)
+            assertThat(automatiskVurdering.fom).isEqualTo(overgangUførDato)
 
             val overgangUføreVilkårFør = vilkårsresultat
                 .finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 .tidslinje()
-                .segment(virkningsdato.minusDays(1))
+                .segment(overgangUførDato.minusDays(1))
                 ?.verdi
 
             assertThat(overgangUføreVilkårFør!!.utfall).isNotEqualTo(Utfall.IKKE_OPPFYLT)
@@ -405,7 +437,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val overgangUføreVilkårEtter = vilkårsresultat
                 .finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 .tidslinje()
-                .segment(virkningsdato)
+                .segment(overgangUførDato)
                 ?.verdi
             assertThat(overgangUføreVilkårEtter!!.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
             assertThat(overgangUføreVilkårEtter.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE)
@@ -414,28 +446,66 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
     @Test
     fun `innvilget uførevedtak fram i tid bruker uføregateway for å utlede full innvilgelse`() {
-        val fom = LocalDate.now().minusMonths(2)
-        val virkningsdato = LocalDate.now().plusMonths(1)
+        val overgangUførDato = LocalDate.now().plusMonths(1)
+        val virkningsdato = LocalDate.now()
         val person = TestPersoner.STANDARD_PERSON().medUføre(
             uføre = Prosent(100),
-            virkningstidspunkt = virkningsdato,
+            virkningstidspunkt = overgangUførDato,
         )
         val (sak, sisteBehandling) = sendInnFørsteSøknad(
             person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
+            mottattTidspunkt = virkningsdato.atStartOfDay()
         )
 
         sisteBehandling
-            .løsSykdom(fom, erOppfylt = false)
+            .løsSykdom(virkningsdato, erOppfylt = true)
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        BistandLøsningDto(
+                            begrunnelse = "Ikke oppfylt bistand",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Yep",
+                            fom = virkningsdato,
+                            tom = null
+                        )
+                    ),
+                ),
+            )
+            .løsOvergangUføre(
+                fom = virkningsdato,
+                brukerHarSøktOmUføretrygd = true,
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                brukerHarRettPåAap = true
+            )
+            .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(virkningsdato)
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(
+                AvklarSamordningUføreLøsning(
+                    samordningUføreVurdering = SamordningUføreVurderingDto(
+                        begrunnelse = "",
+                        vurderingPerioder = listOf(
+                            SamordningUføreVurderingPeriodeDto(overgangUførDato, 100)
+                        )
+                    )
+                )
+            )
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
 
         val (_, revurdering) = opprettUførevedtakshendelse(
             sak = sak,
             behandling = sisteBehandling,
-            virkningsdato = virkningsdato,
+            virkningsdato = overgangUførDato,
             resultat = UførevedtakResultat.INNV,
             avslag12_5 = false,
         )
@@ -444,7 +514,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == virkningsdato }
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == overgangUførDato }
             assertThat(vurdering).isNotNull
             assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
         }
