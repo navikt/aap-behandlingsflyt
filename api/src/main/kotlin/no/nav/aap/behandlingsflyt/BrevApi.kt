@@ -370,7 +370,7 @@ private suspend fun utledHarTilgangTilÅSendeBrev(
         tilgangGateway.sjekkTilgangTilBehandling(behandlingReferanse, tilDefinisjon, token, relevanteIdenter)
 
     return when (definisjon) {
-        Definisjon.SKRIV_VEDTAKSBREV, Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
+        Definisjon.SKRIV_VEDTAKSBREV -> {
             val harTilgang = harTilgang(definisjon)
             if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
                 harTilgang && harIkkeGjortNoenVurderinger
@@ -379,6 +379,7 @@ private suspend fun utledHarTilgangTilÅSendeBrev(
             }
         }
 
+        Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER,
         Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
         Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV -> harTilgang(definisjon)
 

@@ -506,7 +506,6 @@ class BrevUtlederService(
             val internsak = yrkesSkaderMedManuelledatoer.firstOrNull { it.referanse == ys.ref }
             val skadedato = ys.skadedato
                 ?: internsak?.manuellYrkesskadeDato
-                ?: error("Mangler skadedato for yrkesskade med referanse ${ys.ref}")
             val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.ref }?.antattÅrligInntekt
             YrkesskadeBeregningBrev.Yrkesskade(
                 yrkesskadedato = skadedato,
