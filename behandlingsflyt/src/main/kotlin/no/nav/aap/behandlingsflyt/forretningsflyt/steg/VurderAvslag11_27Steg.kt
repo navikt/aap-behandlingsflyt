@@ -37,7 +37,12 @@ class VurderAvslag11_27Steg private constructor(
             erTilstrekkeligVurdert = {
                 avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId) != null
             },
-            tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
+            tilbakestillGrunnlag = {
+                avslag11_27repository.tilbakestillGrunnlag(
+                    kontekst.behandlingId,
+                    kontekst.forrigeBehandlingId
+                )
+            },
         )
 
         settVilkårsresultat(kontekst)
@@ -88,18 +93,6 @@ class VurderAvslag11_27Steg private constructor(
             VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT ->
                 false
-        }
-    }
-
-    private fun tilbakestillGrunnlag(kontekst: FlytKontekstMedPerioder) {
-        val tidligereVurderinger =
-            kontekst.forrigeBehandlingId?.let { avslag11_27repository.hentHvisEksisterer(it)?.vurderinger }.orEmpty()
-
-        val alleVurderinger =
-            avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
-
-        if (tidligereVurderinger != alleVurderinger) { // TODO Thao: Test ut om dette stemmer
-            avslag11_27repository.lagre(kontekst.behandlingId, tidligereVurderinger)
         }
     }
 

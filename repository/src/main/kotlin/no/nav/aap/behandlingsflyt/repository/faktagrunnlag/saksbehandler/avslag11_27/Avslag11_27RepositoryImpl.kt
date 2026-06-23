@@ -27,6 +27,8 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
 
+        if (vurderinger.isEmpty()) return
+
         val vurderingerId = lagreAvslag11_27Vurderinger(vurderinger)
         connection.execute(
             """
@@ -85,6 +87,18 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         )
     }
 
+    override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?) {
+        val eksisternedeGrunnlagId = hentGrunnlagsId(behandlingId)
+
+        if (eksisternedeGrunnlagId != null) {
+            deaktiverEksisterendeGrunnlag(behandlingId)
+        }
+
+        if (forrigeBehandling != null) {
+            kopier(forrigeBehandling, behandlingId)
+        }
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
         hentHvisEksisterer(fraBehandling) ?: return
@@ -118,10 +132,24 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, vurderingIds)
+                setLongArray(3, vurderingIds)
             }
         }
 
-        log.info("Slettet $deletedRows rader for avslag_11_27")
+        log.info("Slettet $deletedRows rader for avslag_11_27 på behandling ${behandlingId.id}")
+    }
+
+    private fun hentGrunnlagsId(behandlingsId: BehandlingId): Long? {
+        val hentGrunnlagQuery = """
+            SELECT ID FROM avslag_11_27_grunnlag WHERE behandling_id = ? AND AKTIV = TRUE
+        """.trimIndent()
+
+        return connection.queryFirstOrNull<Long>(hentGrunnlagQuery) {
+            setParams {
+                setLong(1, behandlingsId.toLong())
+            }
+            setRowMapper { it.getLong("ID") }
+        }
     }
 
     private fun deaktiverEksisterendeGrunnlag(behandlingId: BehandlingId) {
