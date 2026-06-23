@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -27,6 +29,7 @@ class Underveisperiode(
     val brukerAvKvoter: Set<Kvote>,
     val meldepliktStatus: MeldepliktStatus?,
     val meldepliktGradering: Prosent?,
+    val unleashGateway: UnleashGateway? = null,
 ) : Comparable<Underveisperiode> {
     init {
         if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak) { "Må ha avslagsårsak om utfall ikke oppfylt." }
@@ -35,7 +38,16 @@ class Underveisperiode(
 
     /** Tidligere lagret [UnderveisService][no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService] ned [rettighetsType] også for perioder uten rett til AAP.
      * Nå lagrer den kun ned hvis medlemmet faktisk har rett på AAP. Denne getteren gjør at vi ikke trenger å ta hensyn til den forskjellen. */
-    val rettighetsType: RettighetsType? = if (utfall == Utfall.OPPFYLT) rettighetsType else null
+    val rettighetsType: RettighetsType? = when (unleashGateway?.isEnabled(BehandlingsflytFeature.BackfillStansOpphor)) {
+        true ->
+            if (utfall == Utfall.OPPFYLT || avslagsårsak?.konsekvens == Konsekvens.REDUKSJON)
+                rettighetsType
+            else
+                null
+
+        null, false ->
+            if (utfall == Utfall.OPPFYLT) rettighetsType else null
+    }
 
     override fun compareTo(other: Underveisperiode): Int {
         return periode.compareTo(other.periode)
