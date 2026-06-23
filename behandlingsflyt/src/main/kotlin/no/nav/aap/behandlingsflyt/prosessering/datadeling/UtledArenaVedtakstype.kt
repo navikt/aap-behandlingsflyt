@@ -239,7 +239,8 @@ class UtledArenaVedtakstype(
                 .minOfOrNull { it.mottattTidspunkt.toLocalDate() }
                 ?: søknader.filter { it.mottattTidspunkt <= behandling.opprettetTidspunkt }
                     .maxOfOrNull { it.mottattTidspunkt.toLocalDate() }
-                ?: søknader.minOf { it.mottattTidspunkt.toLocalDate() }
+                ?: søknader.minOfOrNull { it.mottattTidspunkt.toLocalDate() }
+                ?: behandling.opprettetTidspunkt.toLocalDate()
 
             return eksisterendeVedtak.mergePrioriterHøyre(
                 tidslinjeOf(
