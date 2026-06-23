@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
 
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
-            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
+            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
@@ -64,7 +64,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
 
                     val vurderinger = kvalitetssikringsVurdering(avklaringsbehovene, flyt)
 
-                    KvalitetssikringGrunnlagDto(
+                    KvalitetssikringGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
                             kanSaksbehandle(),
                             avklaringsbehovene,
@@ -73,7 +73,10 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                         ),
                         vurderinger = vurderinger,
                         historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
-                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker())
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
+                            avklaringsbehovene,
+                            bruker()
+                        )
                     )
                 }
                 respond(dto)
@@ -95,7 +98,10 @@ private fun utledHarTilgangTilÅSaksbehandle(
     }
 }
 
-private fun brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene: Avklaringsbehovene, bruker: Bruker): Boolean {
+private fun brukerHarGjortVilkårsvurderingerPåBehandling(
+    avklaringsbehovene: Avklaringsbehovene,
+    bruker: Bruker
+): Boolean {
     return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
         .any { it.brukere().contains(bruker.ident) }
 }
@@ -148,7 +154,10 @@ private fun utledEndringerSidenSist(
     }.flatten()
 }
 
-private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
+private fun kvalitetssikringsVurdering(
+    avklaringsbehovene: Avklaringsbehovene,
+    flyt: BehandlingFlyt
+): List<TotrinnsVurderingResponse> {
     return avklaringsbehovene.alle()
         .filter { it.erIkkeAvbrutt() }
         .filter { it.definisjon.kvalitetssikres }
@@ -156,34 +165,46 @@ private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene, f
         .map { tilKvalitetssikring(it) }
 }
 
-private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov): TotrinnsVurdering {
-    return if (it.harBlittKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
+private fun tilKvalitetssikring(avklaringsbehov: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov): TotrinnsVurderingResponse {
+    return if (avklaringsbehov.harBlittKvalitetssikretTidligere() || avklaringsbehov.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
-            it.aktivHistorikk.lastOrNull {
+            avklaringsbehov.aktivHistorikk.lastOrNull {
                 it.status in setOf(
                     Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                     Status.KVALITETSSIKRET
                 )
             }
 
-        val godkjent = when (it.status()) {
-            Status.AVSLUTTET -> if (it.harBlittKvalitetssikretTidligere()) null else false
-            else -> it.status() == Status.KVALITETSSIKRET
+        val godkjent = when (avklaringsbehov.status()) {
+            Status.AVSLUTTET -> if (avklaringsbehov.harBlittKvalitetssikretTidligere()) null else false
+            else -> avklaringsbehov.status() == Status.KVALITETSSIKRET
         }
 
-        TotrinnsVurdering(
-            it.definisjon.kode,
-            godkjent,
-            sisteVurdering?.begrunnelse,
-            sisteVurdering?.årsakTilRetur.orEmpty(),
+        val endretSidenSist = when (avklaringsbehov.definisjon) {
+            Definisjon.SKRIV_SYKDOMSVURDERING_BREV -> {
+                // TODO sjekk diff
+                null
+            }
+
+            else -> null
+        }
+
+        TotrinnsVurderingResponse(
+            definisjon = avklaringsbehov.definisjon.kode,
+            godkjent = godkjent,
+            begrunnelse = sisteVurdering?.begrunnelse,
+            endretSidenSist = endretSidenSist,
+            grunner = sisteVurdering?.årsakTilRetur.orEmpty(),
             markeringer = emptyList(),
         )
     } else {
-        TotrinnsVurdering(
-            it.definisjon.kode,
-            null,
-            null,
-            emptyList(),
-            markeringer = emptyList())
+        TotrinnsVurderingResponse(
+            definisjon = avklaringsbehov.definisjon.kode,
+            godkjent = null,
+            begrunnelse = null,
+            endretSidenSist = null,
+            grunner = emptyList(),
+            markeringer = emptyList()
+        )
     }
 }
