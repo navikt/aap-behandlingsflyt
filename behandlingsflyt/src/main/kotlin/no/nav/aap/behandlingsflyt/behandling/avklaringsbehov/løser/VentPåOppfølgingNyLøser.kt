@@ -3,8 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingNyLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.lookup.repository.RepositoryProvider
 
-class VentPåOppfølgingNyLøser : AvklaringsbehovsLøser<VentPåOppfølgingNyLøsning> {
+class VentPåOppfølgingNyLøser(repositoryProvider: RepositoryProvider) : AvklaringsbehovsLøser<VentPåOppfølgingNyLøsning> {
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: VentPåOppfølgingNyLøsning

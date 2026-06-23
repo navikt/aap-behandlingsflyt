@@ -23,6 +23,6 @@ class VentPåOppfølgingNyLøsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider,
     ): LøsningsResultat {
-        return VentPåOppfølgingNyLøser().løs(kontekst, this)
+        return VentPåOppfølgingNyLøser(repositoryProvider).løs(kontekst, this)
     }
 }
