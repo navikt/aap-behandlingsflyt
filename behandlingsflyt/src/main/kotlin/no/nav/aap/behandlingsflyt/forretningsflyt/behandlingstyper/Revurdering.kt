@@ -311,6 +311,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_INNTEKTSBORTFALL,
                 )
             )
             .medSteg(

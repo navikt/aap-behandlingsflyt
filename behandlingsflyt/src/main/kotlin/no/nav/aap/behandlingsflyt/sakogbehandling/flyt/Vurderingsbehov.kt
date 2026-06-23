@@ -21,6 +21,7 @@ enum class Vurderingsbehov {
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_STUDENT,
+    REVURDER_INNTEKTSBORTFALL, // 11-4 2. ledd - inntektsbortfall
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
     REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
     REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,  // Samordning andre folketrygdytelser
@@ -101,6 +102,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.REVURDER_YRKESSKADE -> Vurderingsbehov.REVURDER_YRKESSKADE
         EksponertÅrsak.REVURDER_BEREGNING -> Vurderingsbehov.REVURDER_BEREGNING
         EksponertÅrsak.REVURDER_LOVVALG -> Vurderingsbehov.REVURDER_LOVVALG
+        EksponertÅrsak.REVURDER_INNTEKTSBORTFALL -> Vurderingsbehov.REVURDER_INNTEKTSBORTFALL
         EksponertÅrsak.REVURDER_SAMORDNING -> Vurderingsbehov.REVURDER_SAMORDNING
         EksponertÅrsak.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER -> Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER
         EksponertÅrsak.REVURDER_SAMORDNING_UFØRE -> Vurderingsbehov.REVURDER_SAMORDNING_UFØRE

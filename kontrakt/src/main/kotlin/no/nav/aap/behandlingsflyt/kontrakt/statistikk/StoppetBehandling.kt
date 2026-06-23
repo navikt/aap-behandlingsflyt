@@ -91,6 +91,7 @@ public enum class Vurderingsbehov {
     BARNETILLEGG,               // Barnetillegg
     INSTITUSJONSOPPHOLD,        // Institusjonsopphold
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
+    REVURDER_INNTEKTSBORTFALL, // 11-4 2. ledd - inntektsbortfall
     REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
     REVURDER_SAMORDNING_UFØRE,
     REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
