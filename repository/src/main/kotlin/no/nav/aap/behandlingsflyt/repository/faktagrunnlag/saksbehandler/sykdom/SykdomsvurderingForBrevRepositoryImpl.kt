@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import java.time.LocalDateTime
 
 class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection) : SykdomsvurderingForBrevRepository {
 
@@ -61,6 +62,13 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
                 toSykdomsvurderingForBrev(row)
             }
         }
+    }
+
+    override fun hentAktivPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): SykdomsvurderingForBrev? {
+        TODO("Not yet implemented")
     }
 
     override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {

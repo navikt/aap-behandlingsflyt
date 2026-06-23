@@ -5,17 +5,19 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.VurderingEndretService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
@@ -62,7 +64,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val flyt = behandling.flyt()
 
-                    val vurderinger = kvalitetssikringsVurdering(avklaringsbehovene, flyt)
+                    val vurderinger = kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt)
 
                     KvalitetssikringGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
@@ -155,17 +157,22 @@ private fun utledEndringerSidenSist(
 }
 
 private fun kvalitetssikringsVurdering(
+    behandlingId: BehandlingId,
     avklaringsbehovene: Avklaringsbehovene,
     flyt: BehandlingFlyt
 ): List<TotrinnsVurderingResponse> {
+    val sistKvalitetssikret = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttet()
     return avklaringsbehovene.alle()
         .filter { it.erIkkeAvbrutt() }
         .filter { it.definisjon.kvalitetssikres }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
-        .map { tilKvalitetssikring(it) }
+        .map { tilKvalitetssikring(behandlingId, it, sistKvalitetssikret) }
 }
 
-private fun tilKvalitetssikring(avklaringsbehov: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov): TotrinnsVurderingResponse {
+private fun tilKvalitetssikring(behandlingId: BehandlingId,
+                                avklaringsbehov: Avklaringsbehov,
+                                sistKvalitetssikret: LocalDateTime?
+): TotrinnsVurderingResponse {
     return if (avklaringsbehov.harBlittKvalitetssikretTidligere() || avklaringsbehov.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
             avklaringsbehov.aktivHistorikk.lastOrNull {
@@ -180,14 +187,8 @@ private fun tilKvalitetssikring(avklaringsbehov: no.nav.aap.behandlingsflyt.beha
             else -> avklaringsbehov.status() == Status.KVALITETSSIKRET
         }
 
-        val endretSidenSist = when (avklaringsbehov.definisjon) {
-            Definisjon.SKRIV_SYKDOMSVURDERING_BREV -> {
-                // TODO sjekk diff
-                null
-            }
-
-            else -> null
-        }
+        val service: VurderingEndretService = TODO()
+        val endretSidenSist = sistKvalitetssikret?.let { service.endretSidenTidspunkt(behandlingId, avklaringsbehov, it) }
 
         TotrinnsVurderingResponse(
             definisjon = avklaringsbehov.definisjon.kode,
