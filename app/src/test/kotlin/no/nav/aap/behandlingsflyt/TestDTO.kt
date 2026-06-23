@@ -81,6 +81,7 @@ data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "inntekterPerAr") val inntekterPerAr: List<InntektPerÅrDto>? = null,
     @param:JsonProperty(value = "aInntekterPerAr") val aInntekterPerAr: List<InntektPerÅrDto>? = null,
     @param:JsonProperty(value = "ytterligereNedsattArbeidsevneDato") val ytterligereNedsattArbeidsevneDato: LocalDate? = null,
+    @param:JsonProperty(value = "uføreHistorikk") val uføreHistorikk: List<TestUføreHistorikkDto> = emptyList(),
     @param:JsonProperty(value = "tjenestePensjon") val tjenestePensjon: Boolean? = null,
     val institusjoner: Institusjoner = Institusjoner(),
     val samordning: List<SamordningDto> = emptyList(),
@@ -159,6 +160,13 @@ data class InntektPerÅrDto(val år: Int, val beløp: Beløp) {
         return InntektPerÅr(Year.of(år), beløp)
     }
 }
+
+data class TestUføreHistorikkDto(
+    val uføregrad: Int,
+    val virkningstidspunkt: LocalDate,
+    val uføregradFom: LocalDate? = null,
+    val uføregradTom: LocalDate? = null,
+)
 
 data class TestFastlege(
     val harFastlege: Boolean = false,

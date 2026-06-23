@@ -470,6 +470,14 @@ private fun sendInnSøknad(
                     uføregradTom = dto.uføregradTom,
                 )
             },
+            uføreHistorikk = dto.uføreHistorikk.map {
+                Uføre(
+                    virkningstidspunkt = it.virkningstidspunkt,
+                    uføregrad = Prosent(it.uføregrad),
+                    uføregradFom = it.uføregradFom,
+                    uføregradTom = it.uføregradTom,
+                )
+            },
             uføreSøknad = dto.uføreSøknadDato?.let {
                 UføreSøknad(
                     soknadsdato = dto.uføreSøknadDato,

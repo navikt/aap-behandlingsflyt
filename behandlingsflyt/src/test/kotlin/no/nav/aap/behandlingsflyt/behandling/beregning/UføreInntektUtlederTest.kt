@@ -105,4 +105,33 @@ class UføreInntektUtlederTest {
         assertThat(delperioder.last().periode.tom).isEqualTo(LocalDate.of(2022, 12, 31))
         assertThat(delperioder.last().uføregrad).isEqualTo(Prosent.`50_PROSENT`)
     }
+
+    @Test
+    fun `delperioder kan utledes for et år med to uføre-segmenter i historikken`() {
+        val uføregrader = setOf(
+            Uføre(virkningstidspunkt = LocalDate.of(2024, 1, 1), uføregrad = Prosent.`50_PROSENT`),
+            Uføre(virkningstidspunkt = LocalDate.of(2025, 3, 1), uføregrad = Prosent(80)),
+        )
+        val månedsinntekter = (1..12).map { Månedsinntekt(YearMonth.of(2025, it), Beløp(10_000)) }.toSet()
+        val årsInntekter = setOf(InntektPerÅr(2025, Beløp(200_000)))
+
+        val relevanteÅr = UføreInntektUtleder.finnÅrSomKreverManuellPeriodeinntekt(
+            uføregrader = uføregrader,
+            inntektPerMåned = månedsinntekter,
+            årsInntekter = årsInntekter,
+            ytterligereNedsattDato = LocalDate.of(2026, 6, 1),
+        )
+
+        assertThat(relevanteÅr).contains(Year.of(2025))
+
+        val delperioder = UføreInntektUtleder.utledDelperioder(uføregrader, Year.of(2025))
+
+        assertThat(delperioder).hasSize(2)
+        assertThat(delperioder.first().periode.fom).isEqualTo(LocalDate.of(2025, 1, 1))
+        assertThat(delperioder.first().periode.tom).isEqualTo(LocalDate.of(2025, 2, 28))
+        assertThat(delperioder.first().uføregrad).isEqualTo(Prosent.`50_PROSENT`)
+        assertThat(delperioder.last().periode.fom).isEqualTo(LocalDate.of(2025, 3, 1))
+        assertThat(delperioder.last().periode.tom).isEqualTo(LocalDate.of(2025, 12, 31))
+        assertThat(delperioder.last().uføregrad).isEqualTo(Prosent(80))
+    }
 }

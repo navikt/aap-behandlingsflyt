@@ -44,6 +44,7 @@ class TestPerson(
     var yrkesskade: List<TestYrkesskade> = emptyList(),
     var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     var uføre: Uføre? = null,
+    var uføreHistorikk: List<Uføre> = emptyList(),
     var uføreSøknad: UføreSøknad? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     aInntekter: List<InntektPerÅr>? = null,
@@ -89,6 +90,7 @@ class TestPerson(
         return inntekter.toList()
     }
 
+    @JsonProperty
     fun aInntekter(): List<InntektPerÅr>? {
         return aInntekter
     }
@@ -98,7 +100,7 @@ class TestPerson(
     }
 
     override fun toString(): String {
-        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, dagpenger=${dagpenger}, tiltakspenger=$tiltakspenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
+        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, uføreHistorikk=$uføreHistorikk, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, dagpenger=${dagpenger}, tiltakspenger=$tiltakspenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
     }
 
     fun sykepenger(): List<Sykepenger> {
