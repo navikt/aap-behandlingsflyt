@@ -50,7 +50,6 @@ class SykestipendSteg private constructor(
                     VurderingType.FØRSTEGANGSBEHANDLING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                                 && studentGrunnlag.skalVurdereStudent()
-                                && studentGrunnlag?.vurderinger?.any { it.erOppfylt() } == true
 
                     VurderingType.REVURDERING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
