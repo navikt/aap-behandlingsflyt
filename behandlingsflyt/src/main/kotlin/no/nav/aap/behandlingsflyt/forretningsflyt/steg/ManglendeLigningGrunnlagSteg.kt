@@ -146,10 +146,11 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.ManuellInntektDelvisUfore)) return emptySet()
 
         val ytterligereNedsattDato = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato ?: return emptySet()
+            ?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         val uføregrader = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
-        if (uføregrader.isEmpty()) return emptySet()
-        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return emptySet()
+        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        if (ytterligereNedsattDato == null || uføregrader.isEmpty() || inntektGrunnlag == null) return emptySet()
 
         return UføreInntektUtleder.finnÅrSomKreverManuellPeriodeinntekt(
             uføregrader = uføregrader,

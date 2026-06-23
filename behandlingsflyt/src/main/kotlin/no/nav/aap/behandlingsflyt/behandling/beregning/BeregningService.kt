@@ -46,9 +46,6 @@ class BeregningService(
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
         val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
 
-        // Data-drevet: år der saksbehandler har lagt inn manuell periodeinntekt (delperioder pga.
-        // endring i uføregrad). For disse erstatter vi register-månedene med jevnt fordelte manuelle
-        // månedsinntekter, og hopper over sanity-sjekken mot årsinntekt i UføreBeregning.
         val manuelleInntektsÅr = manuelleInntekter.filter { it.periode != null }.map { it.år }.toSet()
         val inntektsPerioder = byggInntektsPerioder(
             registerMåneder = inntektGrunnlag.inntektPerMåned,

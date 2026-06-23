@@ -16,7 +16,6 @@ data class ÅrsVurdering(
     val ferdigLignetPGI: BigDecimal?,
     /**
      * Delperiode innen [år] når inntekten gjelder en del av året (før/etter endring i uføregrad).
-     * `null` betyr hele året.
      */
     val periodeFom: LocalDate? = null,
     val periodeTom: LocalDate? = null,

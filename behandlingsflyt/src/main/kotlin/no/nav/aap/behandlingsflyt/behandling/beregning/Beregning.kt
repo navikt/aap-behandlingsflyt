@@ -38,8 +38,7 @@ class Beregning(
     val registrerteYrkesskader: Yrkesskader?,
     val yrkesskadeBeløpVurderinger: List<YrkesskadeBeløpVurdering>?,
     /**
-     * År der saksbehandler har lagt inn manuell periodeinntekt. Videreføres til [UføreBeregning]
-     * for å hoppe over sanity-sjekken mot årsinntekt. Tom = dagens oppførsel.
+     * År der saksbehandler har lagt inn manuell periodeinntekt.
      */
     val manuelleInntektsÅr: Set<Year> = emptySet(),
 ) {

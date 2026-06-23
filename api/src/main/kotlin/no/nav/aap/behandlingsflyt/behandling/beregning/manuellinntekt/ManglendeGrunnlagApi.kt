@@ -135,7 +135,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
 
 /**
  * Delperioder (uføregrad-segmenter) for år der uføregraden endrer seg midt i året, slik at
- * saksbehandler må legge inn beregnet PGI per delperiode. Bak [BehandlingsflytFeature.ManuellInntektDelvisUfore].
+ * saksbehandler må legge inn beregnet PGI per delperiode.
  */
 private fun utledDelperioderForSplittÅr(
     provider: RepositoryProvider,

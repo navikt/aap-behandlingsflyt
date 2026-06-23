@@ -26,10 +26,6 @@ data class ManuellInntektGrunnlagResponse(
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean,
-    /**
-     * Delperioder for år der uføregraden endrer seg midt i året (én rad per uføregrad-segment),
-     * som saksbehandler skal legge inn beregnet PGI for. Tom når funksjonen ikke er aktiv.
-     */
     val delperioderForSplittÅr: List<DelperiodeData>? = emptyList(),
 )
 

@@ -175,7 +175,7 @@ class UføreBeregning(
         uføreTidslinje: Tidslinje<Prosent>
     ): UføreInntekt {
         // For år med manuell periodeinntekt har saksbehandler lagt inn beregnet PGI som bevisst
-        // kan avvike fra ferdig lignet PGI – da skal ikke sanity-sjekken mot årsinntekt kjøre.
+        // kan avvike fra ferdig lignet PGI
         if (år !in manuelleInntektsÅr) {
             InntektValidering.validerSummertInntekt(år, månedEntries.associate { it.key to it.value }, årsInntekter)
         }
