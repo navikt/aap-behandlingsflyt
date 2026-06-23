@@ -89,21 +89,17 @@ class UføreInntektUtlederTest {
     }
 
     @Test
-    fun `utledDelperioder fyller perioden før første uføre-segment med 0 prosent`() {
-        // Kun ett segment fra 1. mars -> jan-feb skal fylles med 0 prosent (som i skissen).
+    fun `utledDelperioder returnerer kun perioder fra uføregrunnlaget`() {
         val uføregrader = setOf(
             Uføre(virkningstidspunkt = LocalDate.of(2022, 3, 1), uføregrad = Prosent.`50_PROSENT`),
         )
 
         val delperioder = UføreInntektUtleder.utledDelperioder(uføregrader, Year.of(2022))
 
-        assertThat(delperioder).hasSize(2)
-        assertThat(delperioder.first().periode.fom).isEqualTo(LocalDate.of(2022, 1, 1))
-        assertThat(delperioder.first().periode.tom).isEqualTo(LocalDate.of(2022, 2, 28))
-        assertThat(delperioder.first().uføregrad).isEqualTo(Prosent.`0_PROSENT`)
-        assertThat(delperioder.last().periode.fom).isEqualTo(LocalDate.of(2022, 3, 1))
-        assertThat(delperioder.last().periode.tom).isEqualTo(LocalDate.of(2022, 12, 31))
-        assertThat(delperioder.last().uføregrad).isEqualTo(Prosent.`50_PROSENT`)
+        assertThat(delperioder).hasSize(1)
+        assertThat(delperioder.single().periode.fom).isEqualTo(LocalDate.of(2022, 3, 1))
+        assertThat(delperioder.single().periode.tom).isEqualTo(LocalDate.of(2022, 12, 31))
+        assertThat(delperioder.single().uføregrad).isEqualTo(Prosent.`50_PROSENT`)
     }
 
     @Test

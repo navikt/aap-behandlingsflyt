@@ -114,7 +114,6 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                     (inntektGrunnlagSisteRelevanteÅr.map { it.år } + manuelleInntekterRelevanteÅr.orEmpty()
                         .map { it.år }).toSet()
 
-                // Krever at år med endring i uføregrad midt i året har manuell periodeinntekt lagt inn
                 val harPeriodeinntektForKrevdeÅr = årSomKreverPeriodeinntekt.all { år ->
                     manuellInntektGrunnlag?.manuelleInntekter?.any { it.år == år && it.periode != null } == true
                 }
@@ -143,10 +142,6 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         return kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.REVURDER_MANUELL_INNTEKT }
     }
 
-    /**
-     * Årene der uføregraden endrer seg midt i året og A-inntekt avviker fra årsinntekt, slik at
-     * saksbehandler må legge inn beregnet PGI per delperiode. Gated bak [BehandlingsflytFeature.ManuellInntektDelvisUfore].
-     */
     private fun årSomKreverManuellPeriodeinntekt(kontekst: FlytKontekstMedPerioder): Set<Year> {
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.ManuellInntektDelvisUfore)) return emptySet()
 

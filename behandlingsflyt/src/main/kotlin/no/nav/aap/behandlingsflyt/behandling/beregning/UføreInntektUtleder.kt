@@ -10,11 +10,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 
-/**
- * Delperiode innen ett år der uføregraden er konstant (ett segment av uføre-tidslinjen klippet
- * til året). Brukes til å la saksbehandler legge inn beregnet PGI per delperiode, og til å vise
- * uføregrad-segmentene i kortet.
- */
 data class UføregradDelperiode(
     val periode: Periode,
     val uføregrad: Prosent,
@@ -22,19 +17,13 @@ data class UføregradDelperiode(
 
 /**
  * Avgjør når saksbehandler må legge inn manuell periodeinntekt fordi uføregraden endrer seg midt
- * i et beregningsår og A-inntekt (månedsinntekt) og POPP (årsinntekt) er uenige.
+ * i et beregningsår og A-inntekt (månedsinntekt) og POPP (årsinntekt) er forskjellig.
  */
 object UføreInntektUtleder {
-
-    // Samme avviksgrense som [InntektValidering]: avvik >= 100 kr betyr at vi ikke stoler på
+    // Avvik >= 100 kr betyr at vi ikke stoler på
     // automatisk sammenslåing av A-inntekt og årsinntekt.
     private val AVVIKSGRENSE = BigDecimal(100)
 
-    /**
-     * Returnerer årene som krever manuell periodeinntekt: år med variabel uføregrad (endring midt
-     * i året — ikke konstant hele året) OG der summen av månedsinntekt (A-inntekt) avviker fra
-     * årsinntekt (POPP). Vurderer kun de tre årene forut for [ytterligereNedsattDato].
-     */
     fun finnÅrSomKreverManuellPeriodeinntekt(
         uføregrader: Set<Uføre>,
         inntektPerMåned: Set<Månedsinntekt>,
@@ -51,36 +40,15 @@ object UføreInntektUtleder {
             .toSet()
     }
 
-    /**
-     * Deler [år] opp i delperioder etter uføregrad-segmentene (f.eks. «jan–feb» @ 0 % og
-     * «mar–des» @ 50 %). Perioder uten registrert uføregrad fylles med 0 % slik at hele året dekkes
-     * — samme antagelse som månedsberegningen i [UføreBeregning] (måned uten segment = 0 %).
-     */
     fun utledDelperioder(uføregrader: Set<Uføre>, år: Year): List<UføregradDelperiode> {
         if (uføregrader.isEmpty()) return emptyList()
-        val detteÅret = årsperiode(år)
-        val uføreSegmenter = uføregrader.tilTidslinje()
-            .begrensetTil(detteÅret)
+
+        return uføregrader.tilTidslinje()
+            .begrensetTil(årsperiode(år))
             .komprimer()
             .segmenter()
             .map { UføregradDelperiode(it.periode, it.verdi) }
             .sortedBy { it.periode.fom }
-
-        if (uføreSegmenter.isEmpty()) return emptyList()
-
-        val medHull = mutableListOf<UføregradDelperiode>()
-        var cursor = detteÅret.fom
-        for (segment in uføreSegmenter) {
-            if (segment.periode.fom > cursor) {
-                medHull.add(UføregradDelperiode(Periode(cursor, segment.periode.fom.minusDays(1)), Prosent.`0_PROSENT`))
-            }
-            medHull.add(segment)
-            cursor = segment.periode.tom.plusDays(1)
-        }
-        if (cursor <= detteÅret.tom) {
-            medHull.add(UføregradDelperiode(Periode(cursor, detteÅret.tom), Prosent.`0_PROSENT`))
-        }
-        return medHull
     }
 
     private fun harVariabelUføregrad(uføreTidslinje: Tidslinje<Prosent>, år: Year): Boolean {
