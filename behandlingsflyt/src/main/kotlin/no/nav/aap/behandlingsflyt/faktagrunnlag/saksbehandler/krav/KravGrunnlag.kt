@@ -23,14 +23,5 @@ data class KravGrunnlag(
             .sortedBy { (it as KravMedDato).muligRettFra }
             .somTidslinje({ Periode((it as KravMedDato).muligRettFra, Tid.MAKS) })
     }
-
-    fun kravdatoer(): Set<LocalDate> {
-        return gjeldendeVurderinger()
-            .filterIsInstance<NyttKrav>()
-            .map { (it).muligRettFra }
-            .sorted()
-            .toSet()
-
-    }
 }
 
