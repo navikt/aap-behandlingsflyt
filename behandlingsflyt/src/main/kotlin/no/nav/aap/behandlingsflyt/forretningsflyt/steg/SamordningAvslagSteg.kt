@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse.SamordningAnnenFullYtelseFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse.SamordningAnnenFullYtelseVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
@@ -46,10 +48,10 @@ class SamordningAvslagSteg(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
-            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                return Fullført
-            }
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING &&
+            tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
+        ) {
+            return Fullført
         }
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -69,42 +71,14 @@ class SamordningAvslagSteg(
             return Fullført
         }
 
-        val rettighetsperiode = kontekst.rettighetsperiode
+        val grunnlag = SamordningAnnenFullYtelseFaktagrunnlag(
+            rettighetsperiode = kontekst.rettighetsperiode,
+            samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId),
+            uføreTidslinje = uføreService.tidslinje(kontekst.behandlingId),
+            samordningAvslagGrunnlag = utledFaktagrunnlag(kontekst)
+        )
 
-        val samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId)
-        val samordningUføreTidslinje = uføreService.tidslinje(kontekst.behandlingId)
-
-        /* NB: bevisst valg å ikke gi avslag selv om summen av samordninger blir til 100%. */
-        val samordningsVurderinger =
-            samordningTidslinje.outerJoinNotNull(samordningUføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
-                val samordningerYtelser =
-                    andreYtelserSamordning?.ytelsesGraderinger.orEmpty()
-                        .map { it.ytelse.toString() to it.gradering }
-                val samordningUføre = listOfNotNull(samordningUføreGradering?.let { "UFØRE" to it })
-                val samordninger = (samordningerYtelser + samordningUføre)
-                    .filter { (_, prosent) -> prosent == `100_PROSENT` }
-
-                if (samordninger.isEmpty())
-                    Vilkårsvurdering(
-                        utfall = Utfall.IKKE_VURDERT,
-                        manuellVurdering = false,
-                        begrunnelse = "Ikke full ytelse av samordninger",
-                        avslagsårsak = null,
-                        faktagrunnlag = utledFaktagrunnlag(kontekst),
-                    )
-                else
-                    Vilkårsvurdering(
-                        utfall = Utfall.IKKE_OPPFYLT,
-                        manuellVurdering = false,
-                        begrunnelse = "Full ytelse ${samordninger.joinToString { (navn, _) -> navn }}",
-                        avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE,
-                        faktagrunnlag = utledFaktagrunnlag(kontekst),
-                    )
-            }
-
-
-        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING).nullstillTidslinje()
-        vilkår.leggTilVurderinger(samordningsVurderinger.begrensetTil(rettighetsperiode))
+        SamordningAnnenFullYtelseVilkår(vilkårsresultat).vurder(grunnlag)
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         return Fullført
     }
