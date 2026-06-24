@@ -2,10 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVKLAR_BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -16,11 +15,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
@@ -38,20 +35,14 @@ import java.time.LocalDateTime
 class AvklaringsbehovServiceTest {
 
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
-    private val avbrytRevurderingService = AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository)
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private lateinit var avklaringsbehovService: AvklaringsbehovService
 
     @BeforeEach
     fun setup() {
         avklaringsbehovService = AvklaringsbehovService(
-            avbrytRevurderingService = avbrytRevurderingService,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            behandlingRepository = InMemoryBehandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
-            trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-            unleashGateway = AlleAvskruddUnleash
+            inMemoryRepositoryProvider,
+            createGatewayProvider { register<AlleAvskruddUnleash>() }
         )
     }
 

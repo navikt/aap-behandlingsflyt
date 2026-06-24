@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -56,6 +57,7 @@ class ManglendeLigningGrunnlagStegTest {
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
     private lateinit var avklaringsbehovService: AvklaringsbehovService
+    private lateinit var kravRepository: KravRepository
 
     private val sisteÅr = Year.of(2025)
 
@@ -88,6 +90,7 @@ class ManglendeLigningGrunnlagStegTest {
         avbrytRevurderingService = mockk {
             every { revurderingErAvbrutt(any()) } returns false
         }
+        kravRepository = mockk()
 
         avklaringsbehovService = AvklaringsbehovService(
             avbrytRevurderingService,
@@ -95,6 +98,7 @@ class ManglendeLigningGrunnlagStegTest {
             behandlingRepository,
             vilkårsresultatRepository,
             TrukketSøknadService(trukketSøknadRepository),
+            kravRepository,
             AlleAvskruddUnleash
         )
 

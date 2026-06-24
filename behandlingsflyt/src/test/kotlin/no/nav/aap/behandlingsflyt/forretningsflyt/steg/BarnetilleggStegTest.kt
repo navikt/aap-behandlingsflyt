@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -40,6 +41,7 @@ class BarnetilleggStegTest {
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
     private lateinit var trukketSøknadService: TrukketSøknadService
+    private lateinit var kravRepository: KravRepository
     private val behandlingId = BehandlingId(Random().nextLong())
 
     @BeforeEach
@@ -63,6 +65,7 @@ class BarnetilleggStegTest {
         avklaringsbehovRepository = mockk()
         vilkårsresultatRepository = mockk()
         behandlingRepository = mockk()
+        kravRepository = mockk()
 
         avklaringsbehovService = AvklaringsbehovService(
             avbrytRevurderingService,
@@ -70,6 +73,7 @@ class BarnetilleggStegTest {
             behandlingRepository,
             vilkårsresultatRepository,
             trukketSøknadService,
+            kravRepository,
             AlleAvskruddUnleash
         )
         steg = BarnetilleggSteg(

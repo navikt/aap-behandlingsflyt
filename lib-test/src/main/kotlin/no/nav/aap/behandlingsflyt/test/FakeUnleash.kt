@@ -51,12 +51,13 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true,
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
         BehandlingsflytFeature.AutomatiskStans1118 to true,
-        BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
-        BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true
-        )
+        BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
+        BehandlingsflytFeature.KravSteg to false,
+        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to false
+    )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
         return "1,100"
