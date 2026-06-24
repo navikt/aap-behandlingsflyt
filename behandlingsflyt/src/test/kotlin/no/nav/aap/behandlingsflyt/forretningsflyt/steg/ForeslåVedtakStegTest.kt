@@ -43,6 +43,7 @@ class ForeslåVedtakStegTest {
                 InMemoryTrukketSøknadRepository
             ),
         kravRepository = InMemoryKravRepository,
+        sakRepository = InMemorySakRepository,
         AlleAvskruddUnleash
     )
     private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)

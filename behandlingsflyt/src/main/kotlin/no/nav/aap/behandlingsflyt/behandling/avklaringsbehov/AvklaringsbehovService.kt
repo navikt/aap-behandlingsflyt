@@ -18,6 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -34,6 +36,7 @@ class AvklaringsbehovService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val kravRepository: KravRepository,
+    private val sakRepository: SakRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -43,6 +46,7 @@ class AvklaringsbehovService(
         vilkårsresultatRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         kravRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -398,7 +402,7 @@ class AvklaringsbehovService(
     private fun nårEndringIKrav(
         kontekst: FlytKontekstMedPerioder,
     ): Tidslinje<Boolean> {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov)) {
+        if (erToggleAvskrudd(kontekst)) {
             return Tidslinje.empty()
         }
 
@@ -443,5 +447,26 @@ class AvklaringsbehovService(
                 )
             }
             .orEmpty()
+    }
+
+    private fun erToggleAvskrudd(kontekst: FlytKontekstMedPerioder): Boolean {
+        return unleashGateway.isDisabled(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov)
+                || !unleashGateway.isVariantEnabled(
+            BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+            "saksnumre"
+        )
+                || !skalSakTaHensynTilKrav(kontekst.sakId)
+    }
+
+    private fun skalSakTaHensynTilKrav(sakId: SakId): Boolean {
+        val saksnumre =
+            unleashGateway.getVariantValue(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre")
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .map(SakId::fromStringOrNull)
+                .toSet()
+        val sakIder = saksnumre.map { sakRepository.hent(sakId).id }
+        return sakIder.contains(sakId)
     }
 }

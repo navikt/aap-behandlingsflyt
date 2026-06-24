@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -42,6 +43,7 @@ class BarnetilleggStegTest {
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
     private lateinit var trukketSøknadService: TrukketSøknadService
     private lateinit var kravRepository: KravRepository
+    private lateinit var sakRepository: SakRepository
     private val behandlingId = BehandlingId(Random().nextLong())
 
     @BeforeEach
@@ -66,6 +68,7 @@ class BarnetilleggStegTest {
         vilkårsresultatRepository = mockk()
         behandlingRepository = mockk()
         kravRepository = mockk()
+        sakRepository = mockk()
 
         avklaringsbehovService = AvklaringsbehovService(
             avbrytRevurderingService,
@@ -74,6 +77,7 @@ class BarnetilleggStegTest {
             vilkårsresultatRepository,
             trukketSøknadService,
             kravRepository,
+            sakRepository,
             AlleAvskruddUnleash
         )
         steg = BarnetilleggSteg(

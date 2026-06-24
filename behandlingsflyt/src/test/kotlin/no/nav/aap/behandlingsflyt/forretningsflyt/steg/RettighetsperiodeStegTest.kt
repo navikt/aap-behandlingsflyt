@@ -80,6 +80,7 @@ class RettighetsperiodeStegTest {
                 vilkårsresultatRepository,
                 TrukketSøknadService(trukketSøknadRepository),
                 kravRepository,
+                mockk(),
                 gatewayProvider.provide()
             ),
             tidligereVurderinger,

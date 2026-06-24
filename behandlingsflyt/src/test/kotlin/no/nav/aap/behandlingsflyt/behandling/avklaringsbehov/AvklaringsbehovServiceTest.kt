@@ -590,6 +590,7 @@ class AvklaringsbehovServiceTest {
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.forrigeBehandlingId = forrigeBehandlingId
+            this.sakId = sak.id
             this.rettighetsperiode = helePeriode
             this.vurderingsbehovRelevanteForStegMedPerioder = emptySet()
         }

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -81,4 +83,22 @@ object UnleashMedKrav : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
     )
-)
+) {
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
+        return when (Pair(featureToggle, variantName)) {
+            Pair(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre") -> true
+            else -> false
+        }
+    }
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
+        return when (Pair(featureToggle, variantName)) {
+            Pair(
+                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+                "saksnumre"
+            ) -> InMemorySakRepository.alle().map { it.saksnummer }.joinToString(",")
+
+            else -> ""
+        }
+    }
+}

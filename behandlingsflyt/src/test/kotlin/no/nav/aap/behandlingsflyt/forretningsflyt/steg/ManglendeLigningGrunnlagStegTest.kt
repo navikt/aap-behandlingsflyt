@@ -99,6 +99,7 @@ class ManglendeLigningGrunnlagStegTest {
             vilkårsresultatRepository,
             TrukketSøknadService(trukketSøknadRepository),
             kravRepository,
+            mockk(),
             AlleAvskruddUnleash
         )
 
