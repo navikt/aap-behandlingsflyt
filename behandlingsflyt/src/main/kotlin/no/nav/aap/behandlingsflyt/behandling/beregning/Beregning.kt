@@ -211,8 +211,6 @@ class Beregning(
         ): Set<InntektPerÅr> {
             val (periodeVurderinger, årsVurderinger) = manuelleInntekter.partition { it.periode != null }
 
-            // År-nivå (uendret oppførsel): manuell inntekt fyller inn år som mangler fra register;
-            // register vinner på belop for år som finnes, og eøs legges til.
             val manuellePGIByÅr = årsVurderinger.tilÅrInntekt { it.belop }
             val manuellEOSByÅr = årsVurderinger.tilÅrInntekt { it.eøsBeløp }
 
@@ -229,9 +227,7 @@ class Beregning(
                     inntektPerÅr.copy(beløp = inntektPerÅr.beløp.pluss(eos))
                 }
 
-            // Periode-nivå (endring i uføregrad): delperioder for samme år summeres (belop + eøs)
-            // og OVERSTYRER register/år-nivå for det året, slik at ordinær §11-19 og «Totalt» i
-            // kortet bruker manuell sum.
+            // Periode-nivå (endring i uføregrad): delperioder for samme år summeres (belop + eøs) og overstyrer register/år-nivå for det året.
             val periodeNivåByÅr = periodeVurderinger
                 .groupBy { it.år }
                 .mapValues { (år, vurderinger) ->

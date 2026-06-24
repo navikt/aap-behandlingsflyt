@@ -231,7 +231,7 @@ class TestScenarioOrkestrator(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = dato,
                     ytterligereNedsattArbeidsevneDato = ytterligereNedsattArbeidsevneDato,
-                    ytterligereNedsattBegrunnelse = ytterligereNedsattArbeidsevneDato?.let { "Ytterligere nedsatt (test)" },
+                    ytterligereNedsattBegrunnelse = ytterligereNedsattArbeidsevneDato?.let { "Satt ned enda mer, må sitte" },
                 ),
             ),
         )

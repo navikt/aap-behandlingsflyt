@@ -20,8 +20,6 @@ data class UføregradDelperiode(
  * i et beregningsår og A-inntekt (månedsinntekt) og POPP (årsinntekt) er forskjellig.
  */
 object UføreInntektUtleder {
-    // Avvik >= 100 kr betyr at vi ikke stoler på
-    // automatisk sammenslåing av A-inntekt og årsinntekt.
     private val AVVIKSGRENSE = BigDecimal(100)
 
     fun finnÅrSomKreverManuellPeriodeinntekt(
