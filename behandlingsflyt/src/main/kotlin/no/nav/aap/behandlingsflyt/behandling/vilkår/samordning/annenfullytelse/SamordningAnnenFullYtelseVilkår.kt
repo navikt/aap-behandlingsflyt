@@ -1,13 +1,31 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse
 
+import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
+import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
+
+data class SamordningAnnenFullYtelseFaktagrunnlag(
+    val rettighetsperiode: Periode,
+    val samordningTidslinje: Tidslinje<SamordningGradering>,
+    val uføreTidslinje: Tidslinje<Prosent>,
+    val samordningGrunnlag: SamordningYtelseVurderingGrunnlag?,
+    val uføreRegisterGrunnlag: UføreGrunnlag?,
+    val uføreVurderingGrunnlag: SamordningUføreGrunnlag?,
+) : Faktagrunnlag
 
 class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
     Vilkårsvurderer<SamordningAnnenFullYtelseFaktagrunnlag> {
@@ -31,7 +49,7 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
                         manuellVurdering = false,
                         begrunnelse = "Ikke full ytelse av samordninger",
                         avslagsårsak = null,
-                        faktagrunnlag = grunnlag.samordningAvslagGrunnlag,
+                        faktagrunnlag = grunnlag,
                     )
                 else
                     Vilkårsvurdering(
@@ -39,7 +57,7 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
                         manuellVurdering = false,
                         begrunnelse = "Full ytelse ${samordninger.joinToString { (navn, _) -> navn }}",
                         avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE,
-                        faktagrunnlag = grunnlag.samordningAvslagGrunnlag,
+                        faktagrunnlag = grunnlag,
                     )
             }
 
