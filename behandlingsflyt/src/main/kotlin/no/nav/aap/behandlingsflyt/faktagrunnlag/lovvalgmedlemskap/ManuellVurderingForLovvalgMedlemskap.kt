@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.enums.enumEntries
 
 data class ManuellVurderingForLovvalgMedlemskap(
     val lovvalg: LovvalgDto,
@@ -19,7 +20,7 @@ data class ManuellVurderingForLovvalgMedlemskap(
 ) {
     fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
         val lovvalgsLand = lovvalg.lovvalgsEØSLandEllerLandMedAvtale
-        return lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
+        return lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumEntries<EØSLandEllerLandMedAvtale>().map { it }
     }
 
     fun medlemIFolketrygd(): Boolean {

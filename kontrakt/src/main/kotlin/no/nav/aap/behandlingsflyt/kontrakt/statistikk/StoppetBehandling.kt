@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * Hendelse til statistikk-appen.
  *
  * @param saksnummer Saksnummer.
- * @param behandlingReferanse Behandlingsreferanse
+ * @param behandlingReferanse Behandlingsreferanse.
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
  * @param relatertFagsystem Stort sett Kelvin, men om behandlingen har oppstått f.eks fra en klagebehandling i Kabal, skal dette refereres her.
  * @param mottattTid Dato for første søknad mottatt for behandlingen.
@@ -91,6 +91,7 @@ public enum class Vurderingsbehov {
     BARNETILLEGG,               // Barnetillegg
     INSTITUSJONSOPPHOLD,        // Institusjonsopphold
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
+    REVURDER_INNTEKTSBORTFALL, // 11-4 2. ledd - inntektsbortfall
     REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
     REVURDER_SAMORDNING_UFØRE,
     REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,

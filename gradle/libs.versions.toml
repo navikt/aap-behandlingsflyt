@@ -1,14 +1,14 @@
 [versions]
 ktor = "3.4.0"
-komponenter = "2.0.74"
-tilgang = "1.0.225"
-utbetaling = "0.0.113"
-brev = "0.0.271"
-oppgave = "0.0.181"
-meldekort = "0.0.216"
+komponenter = "2.0.77"
+tilgang = "1.0.226"
+utbetaling = "0.0.116"
+brev = "0.0.273"
+oppgave = "0.0.185"
+meldekort = "0.0.219"
 apiIntern = "0.0.87"
 dokumentinnhenting = "0.0.2"
-junit = "6.0.1"
+junit = "6.1.0"
 testcontainers = "2.0.2"
 
 [libraries]

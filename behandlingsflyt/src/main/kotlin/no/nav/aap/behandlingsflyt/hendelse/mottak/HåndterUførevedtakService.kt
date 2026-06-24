@@ -130,10 +130,12 @@ class HåndterUførevedtakService(
         uførevedtak: UførevedtakV0, rettighetstypeTidslinje: Tidslinje<RettighetsType>, behandlingId: BehandlingId
     ): Boolean {
         val perioder = underveisRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
-        val innvilgetEtter11_18 =
-            perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
-                    || rettighetstypeTidslinje.filter { it.verdi.hjemmel == RettighetsType.VURDERES_FOR_UFØRETRYGD.hjemmel }
+        val oppfylteRettighetsperioder = perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
+        val oppfylteRettighetstypeTidslinje =
+            rettighetstypeTidslinje.filter { it.verdi.hjemmel == RettighetsType.VURDERES_FOR_UFØRETRYGD.hjemmel }
                 .isNotEmpty()
+
+        val innvilgetEtter11_18 = oppfylteRettighetsperioder || oppfylteRettighetstypeTidslinje
 
         return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
                 && innvilgetEtter11_18

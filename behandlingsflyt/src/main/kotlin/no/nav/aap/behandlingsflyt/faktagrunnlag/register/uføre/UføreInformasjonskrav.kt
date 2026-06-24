@@ -12,6 +12,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav.UføreRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -34,6 +36,7 @@ class UføreInformasjonskrav(
     private val sakService: SakService,
     private val uføreRepository: UføreRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val personopplysningRepository: PersonopplysningRepository,
     private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav<UføreInformasjonskrav.UføreInput, UføreRegisterdata>, KanTriggeRevurdering {
@@ -41,6 +44,7 @@ class UføreInformasjonskrav(
         sakService = SakService(repositoryProvider, gatewayProvider),
         uføreRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
+        personopplysningRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
     )
@@ -56,8 +60,14 @@ class UføreInformasjonskrav(
         val forrigeInput = oppdatert?.forrigeInput<UføreInput>()
         val nyInput = klargjør(kontekst)
 
-        val forrigeFraDato = forrigeInput?.let { utledFraDato(forrigeInput.beregningVurdering, forrigeInput.sak) }
-        val nyFraDato = utledFraDato(nyInput.beregningVurdering, nyInput.sak)
+        val forrigeFraDato = forrigeInput?.let {
+            utledFraDato(
+                forrigeInput.beregningVurdering,
+                forrigeInput.sak.rettighetsperiode.fom,
+                forrigeInput.fødselsdato
+            )
+        }
+        val nyFraDato = utledFraDato(nyInput.beregningVurdering, nyInput.sak.rettighetsperiode.fom, nyInput.fødselsdato)
 
         val inputHarEndretSeg = forrigeFraDato != nyFraDato
 
@@ -68,15 +78,26 @@ class UføreInformasjonskrav(
         ))
     }
 
-    data class UføreInput(val sak: Sak, val behandlingId: BehandlingId, val beregningVurdering: BeregningGrunnlag?) :
-        InformasjonskravInput
+    data class UføreInput(
+        val sak: Sak,
+        val behandlingId: BehandlingId,
+        val beregningVurdering: BeregningGrunnlag?,
+        val fødselsdato: Fødselsdato?,
+    ) : InformasjonskravInput
 
     data class UføreRegisterdata(val innhentMedHistorikk: Set<Uføre>) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): UføreInput {
         val behandlingId = kontekst.behandlingId
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        return UføreInput(sakService.hentSakFor(behandlingId), behandlingId, beregningVurdering)
+        val fødselsdato =
+            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)?.fødselsdato
+        return UføreInput(
+            sak = sakService.hentSakFor(behandlingId),
+            behandlingId = behandlingId,
+            beregningVurdering = beregningVurdering,
+            fødselsdato = fødselsdato
+        )
     }
 
     override fun hentData(input: UføreInput): UføreRegisterdata {
@@ -109,7 +130,7 @@ class UføreInformasjonskrav(
         val forrigeGrunnlag = uføreRepository.hentHvisEksisterer(forrigeBehandlingId)
 
         val forrigeVurderinger = forrigeGrunnlag?.vurderinger ?: return IKKE_ENDRET
-        val mergedVurderinger = (grunnlag?.vurderinger ?: emptySet()) + forrigeVurderinger
+        val mergedVurderinger = grunnlag?.vurderinger.orEmpty() + forrigeVurderinger
 
         if (mergedVurderinger != grunnlag?.vurderinger) {
             uføreRepository.lagre(kontekst.behandlingId, mergedVurderinger)
@@ -123,18 +144,23 @@ class UføreInformasjonskrav(
         val sak = uføreInput.sak
         val beregningVurdering = uføreInput.beregningVurdering
         // prøver å sette fraDato riktig hvis den finnes
-        val fraDato = utledFraDato(beregningVurdering, sak)
-        return uføreRegisterGateway.innhentMedHistorikk(sak.person, treÅrFør(fraDato))
+        val fraDato = utledFraDato(beregningVurdering, sak.rettighetsperiode.fom, uføreInput.fødselsdato)
+        return uføreRegisterGateway.innhentMedHistorikk(sak.person, fraDato)
     }
 
     private fun utledFraDato(
         beregningVurdering: BeregningGrunnlag?,
-        sak: Sak
+        kravdato: LocalDate,
+        fødselsdato: Fødselsdato?
     ): LocalDate {
-        val fraDato = beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-            ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
-            ?: sak.rettighetsperiode.fom
-        return fraDato
+        // Vi henter fra fødselsdato enn så lenge, inntil Team Uføre har laget et endepunkt
+        // som kan gi oss uføregrader over tid
+        // Se Slack: https://nav-it.slack.com/archives/C06NKNY1399/p1781519190507349
+        return fødselsdato?.dato ?: treÅrFør(
+            beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+                ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+                ?: kravdato
+        )
     }
 
     private fun treÅrFør(fraOgMed: LocalDate): LocalDate {
@@ -143,8 +169,16 @@ class UføreInformasjonskrav(
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val fødselsdato = personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandlingId)?.fødselsdato
         val uføregrader =
-            hentUføregrader(UføreInput(sakService.hentSakFor(behandlingId), behandlingId, beregningVurdering))
+            hentUføregrader(
+                UføreInput(
+                    sakService.hentSakFor(behandlingId),
+                    behandlingId,
+                    beregningVurdering,
+                    fødselsdato
+                )
+            )
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge

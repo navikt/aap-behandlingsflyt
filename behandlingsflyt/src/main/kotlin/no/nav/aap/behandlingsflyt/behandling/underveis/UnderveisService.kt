@@ -35,7 +35,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -185,11 +184,6 @@ class UnderveisService(
         val periodeForVurdering = utledPeriodeForUnderveisvurderinger(behandlingId, sak)
         val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, periodeForVurdering)
 
-        val vedtaksdatoFørstegangsbehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse))
-            vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)
-        else
-            vedtakService.vedtakstidspunktFørstegangsbehandling(sak.id)
-
         val rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId)
 
         return UnderveisInput(
@@ -204,7 +198,7 @@ class UnderveisService(
             meldepliktGrunnlag = meldepliktGrunnlag,
             overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
             meldeperioder = meldeperioder,
-            vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
+            vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)?.toLocalDate(),
             rettighetstypeGrunnlag = rettighetstypeGrunnlag,
         )
     }
