@@ -34,6 +34,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
@@ -107,6 +109,7 @@ class BrevUtlederService(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
+    private val medlemskapRepository: MedlemskapRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -134,7 +137,8 @@ class BrevUtlederService(
         yrkesskadeRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
-        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
+        medlemskapRepository = repositoryProvider.provide(),
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -413,7 +417,8 @@ class BrevUtlederService(
 
     private fun brevBehovAvslag(behandling: Behandling): Avslag {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        return Avslag(sykdomsvurdering = sykdomsvurdering)
+        val lovvalgOgMedlemskapVurdering = hentLovvalgOgMedlemsskapVurdering(behandling.id)
+        return Avslag(sykdomsvurdering = sykdomsvurdering, medlemsskapVurdering = lovvalgOgMedlemskapVurdering)
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
@@ -525,6 +530,11 @@ class BrevUtlederService(
     private fun hentSykdomsvurdering(behandlingId: BehandlingId): String? {
         val grunnlag = sykdomsvurderingForBrevRepository.hent(behandlingId)
         return grunnlag?.vurdering
+    }
+
+    private fun hentLovvalgOgMedlemsskapVurdering(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag? {
+        val grunnlag = medlemskapRepository.hentHvisEksisterer(behandlingId)
+        return grunnlag
     }
 
     private fun utledGrunnlagBeregning11_9(

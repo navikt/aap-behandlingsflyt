@@ -444,6 +444,9 @@ class BrevGateway : BrevbestillingGateway {
                     if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
+                    if (brevBehov.medlemsskapVurdering != null) {
+                        add(Faktagrunnlag.MedlemskapVurdering(brevBehov.medlemsskapVurdering))
+                    }
                 }
             }
 
