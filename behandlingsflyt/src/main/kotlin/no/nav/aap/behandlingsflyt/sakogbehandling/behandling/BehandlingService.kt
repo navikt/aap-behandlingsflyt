@@ -61,6 +61,10 @@ class BehandlingService(
         return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
     }
 
+    fun utledFaktiskBehandlingstype(behandling: BehandlingId): TypeBehandling {
+        return utledFaktiskBehandlingstype(behandlingRepository.hent(behandling))
+    }
+
     fun utledFaktiskBehandlingstype(behandling: Behandling): TypeBehandling {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Revurdering -> {

@@ -58,7 +58,7 @@ class SamordningArbeidsgiverSteg(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return SamordningArbeidsgiverSteg(
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
             )
         }

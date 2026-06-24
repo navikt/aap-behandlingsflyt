@@ -52,7 +52,7 @@ class MeldingOmVedtakBrevSteg(
         sakRepository = repositoryProvider.provide(),
         trekkKlageService = TrekkKlageService(repositoryProvider),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )

@@ -62,7 +62,7 @@ class OvergangUføreSteg private constructor(
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         bistandRepository = repositoryProvider.provide(),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         mottattDokumentRepository = repositoryProvider.provide(),
         uføreRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
