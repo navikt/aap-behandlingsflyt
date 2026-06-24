@@ -195,12 +195,12 @@ class MeldekortService(
      * - Gi fritak, dersom bruker skulle hatt fritak.
      * - Gi rimelig grunn, dersom bruker faktisk hadde rimelig grunn til ikke å ha meldt seg.
      */
-    private fun hentAktuelleMeldeperioderMedMeldepliktStatus(
+    fun hentAktuelleMeldeperioderMedMeldepliktStatus(
         underveisGrunnlag: UnderveisGrunnlag,
     ): Map<Periode, OppfyltMeldeperiodeMedMeldepliktStatus> {
         return underveisGrunnlag.perioder
             .filter { it.utfall == Utfall.OPPFYLT && it.periode.fom < LocalDate.now(clock) }
-            .groupBy({ it.meldePeriode })
+            .groupBy { it.meldePeriode }
             .mapValues { (_, underveisPerioder) ->
                 val periodeMedMeldepliktStatus =
                     Tidslinje(underveisPerioder.map { Segment(it.periode, it.meldepliktStatus) })
@@ -212,7 +212,7 @@ class MeldekortService(
                 val periode = if (periodeMedMeldepliktStatus.isEmpty()) null
                 else Periode(periodeMedMeldepliktStatus.first().first.fom, periodeMedMeldepliktStatus.last().first.tom)
 
-                // Aktuelle meldeplikt statuser - duplikater fjernes
+                // Aktuelle meldeplikt-statuser - duplikater fjernes
                 val meldepliktStatus = periodeMedMeldepliktStatus.mapNotNull { it.second }.toSet()
 
                 OppfyltMeldeperiodeMedMeldepliktStatus(

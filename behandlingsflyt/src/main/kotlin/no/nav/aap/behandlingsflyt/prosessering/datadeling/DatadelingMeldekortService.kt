@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.meldekort.MeldekortService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidsgraderingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
@@ -28,12 +30,14 @@ class DatadelingMeldekortService(
     private val underveisRepository: UnderveisRepository,
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
+    private val meldekortService: MeldekortService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, @Suppress("unused") gatewayProvider: GatewayProvider) : this(
         saksRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         mottattDokumentRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
+        meldekortService = MeldekortService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -48,7 +52,15 @@ class DatadelingMeldekortService(
         val sak = saksRepository.hent(sakId)
         val personIdent = sak.person.aktivIdent()
 
-        val meldekortene = mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.MELDEKORT)
+        /*
+        todo
+
+         - kun dele arbeidsgradering først, dropp sanksjon enn så lenge
+         - for meldekort sendt før vedtak fattet, hvordan håndtere? kun dele de som er i perioder med rett??
+         */
+
+        val dokumentrekkefølge = mottattDokumentRepository.hentDokumentRekkefølge(sakId, InnsendingType.MELDEKORT)
+        val meldekortgrunnlag = mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.MELDEKORT)
             .map { it to it.strukturerteData<no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort>()?.data }
             .map { (dokument, m) ->
                 Meldekort.fraKontrakt(
@@ -56,14 +68,31 @@ class DatadelingMeldekortService(
                     dokument.mottattTidspunkt,
                     dokument.opprettetTid,
                     requireNotNull(m) { "Meldekort mangler strukturert data. JournalpostId=${dokument.referanse.asJournalpostId}" })
-            }.ifEmpty { return null }
+            }
+            .ifEmpty { return null }
+            .let {
+                MeldekortGrunnlag(it.toSet(), dokumentrekkefølge)
+            }
+
+        meldekortgrunnlag.meldekort().groupBy {
+
+        }
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
+
+        val meldekortene = meldekortgrunnlag.meldekort()
+
         val underveistidslinje = underveisGrunnlag?.somTidslinje().orEmpty()
 
         val helePerioden =
             if (underveistidslinje.isNotEmpty()) underveistidslinje.helePerioden() else sak.rettighetsperiodeEttÅrFraStartDato()
         val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
+
+
+        val z =
+            underveisGrunnlag?.let { meldekortService.hentAktuelleMeldeperioderMedMeldepliktStatus(underveisGrunnlag) }
+                .orEmpty()
+
 
         val arbeidsgradering = underveistidslinje
             .orEmpty().map {
@@ -163,7 +192,8 @@ class DatadelingMeldekortService(
                 )
             },
             forsentMeldekort = forSentMeldekort,
-            arbeidsgradering = arbeidsgradering.begrensetTil(Periode(meldeperiode.fom, meldeperiode.tom).flytt(0)).komprimer()
+            arbeidsgradering = arbeidsgradering.begrensetTil(Periode(meldeperiode.fom, meldeperiode.tom).flytt(0))
+                .komprimer()
                 .segmenter().map { (periode, arbeidsgradering) ->
                     ArbeidsgraderingDTO(
                         periodeFom = periode.fom,
