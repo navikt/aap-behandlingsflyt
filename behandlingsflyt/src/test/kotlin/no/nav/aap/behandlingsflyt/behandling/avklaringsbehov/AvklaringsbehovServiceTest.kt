@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -49,7 +50,8 @@ class AvklaringsbehovServiceTest {
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             behandlingRepository = InMemoryBehandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
-            trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+            trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+            unleashGateway = AlleAvskruddUnleash
         )
     }
 

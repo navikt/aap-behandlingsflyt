@@ -146,7 +146,7 @@ class KravSteg(
                 unleashGateway = gatewayProvider.provide(),
                 kravRepository = repositoryProvider.provide(),
                 mottattDokumentRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
             )
         }
 

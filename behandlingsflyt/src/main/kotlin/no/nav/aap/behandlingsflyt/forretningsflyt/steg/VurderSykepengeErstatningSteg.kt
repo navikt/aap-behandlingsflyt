@@ -39,7 +39,7 @@ class VurderSykepengeErstatningSteg private constructor(
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {

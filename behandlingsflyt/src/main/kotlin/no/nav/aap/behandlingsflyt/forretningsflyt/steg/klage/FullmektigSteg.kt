@@ -34,7 +34,7 @@ class FullmektigSteg private constructor(
         ): BehandlingSteg {
             return FullmektigSteg(
                 trekkKlageService = TrekkKlageService(repositoryProvider),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
             )
         }
 
