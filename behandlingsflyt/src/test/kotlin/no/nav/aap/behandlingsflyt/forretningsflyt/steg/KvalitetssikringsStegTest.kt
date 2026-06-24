@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -121,7 +122,10 @@ class KvalitetssikringsStegTest {
         private val steg = KvalitetssikringsSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             avklaringsbehovService = AvklaringsbehovService(
-                inMemoryRepositoryProvider
+                inMemoryRepositoryProvider,
+                createGatewayProvider {
+                    register<AlleAvskruddUnleash>()
+                }
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),

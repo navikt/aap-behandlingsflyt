@@ -119,7 +119,7 @@ class AvklarOppfølgingSteg(
                 låsRepository = repositoryProvider.provide(),
                 prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider.provide()),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide()
             )

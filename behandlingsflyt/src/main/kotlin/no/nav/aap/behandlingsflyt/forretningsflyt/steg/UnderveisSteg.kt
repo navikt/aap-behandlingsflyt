@@ -29,12 +29,12 @@ class UnderveisSteg(
         underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         underveisRepository = repositoryProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
+        underveisService.vurder(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.FORESLÅ_UTTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },

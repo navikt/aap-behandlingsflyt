@@ -58,7 +58,7 @@ class KlagebehandlingKontorSteg private constructor(
                 behandlendeEnhetRepository = repositoryProvider.provide(),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 trekkKlageService = TrekkKlageService(repositoryProvider),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 kontorRepository = repositoryProvider.provide(),
             )
         }

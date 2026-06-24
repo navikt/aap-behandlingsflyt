@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
@@ -28,14 +30,16 @@ class AvklaringsbehovService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val trukketSøknadService: TrukketSøknadService
+    private val trukketSøknadService: TrukketSøknadService,
+    private val unleashGateway: UnleashGateway
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        trukketSøknadService = TrukketSøknadService(repositoryProvider)
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     fun oppdaterAvklaringsbehov(

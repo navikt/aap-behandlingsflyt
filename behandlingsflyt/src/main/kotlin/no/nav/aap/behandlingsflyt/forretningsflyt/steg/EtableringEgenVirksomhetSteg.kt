@@ -29,7 +29,7 @@ class EtableringEgenVirksomhetSteg(
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         etableringEgenVirksomhetService = EtableringEgenVirksomhetService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
     )

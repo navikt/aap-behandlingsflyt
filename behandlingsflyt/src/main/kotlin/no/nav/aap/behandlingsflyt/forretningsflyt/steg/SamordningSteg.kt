@@ -30,7 +30,7 @@ class SamordningSteg(
         samordningService = SamordningService(repositoryProvider),
         samordningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)

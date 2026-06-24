@@ -15,7 +15,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
     RevurderingEtterAvslagSkalKvalitetssikres,
-    MeldepliktForsteFraForsteInnvilgelse,
     KravSteg,
     MeldekortEndretAvSaksbehandler,
     AutomatiskStans1118,
