@@ -58,7 +58,7 @@ class VarsleVedtakJobbUtfører(
         val forrigeBehandlingId = behandling.forrigeBehandlingId
 
         val forrigeUnderveisGrunnlag = forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
-        val nåværendeUnderveisGrunnlag = underveisRepository.hent(behandling.id)
+        val nåværendeUnderveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
 
 
         requireNotNull(vedtak) { "Forventer at vedtak-objekter er lagret når denne jobben kjøres." }
@@ -71,7 +71,7 @@ class VarsleVedtakJobbUtfører(
             vedtakId = vedtakId.toString(),
             sakId = sak.id.id,
             virkFom = virkFom,
-            virkTom = sak.rettighetsperiode.tom, // alltid 01-01-2999
+            virkTom = sak.rettighetsperiode.tom,
             fagomrade = "AAP",
             ytelseType = "AAP",
             etterbetaling = vedtak.virkningstidspunkt?.let {
@@ -87,7 +87,7 @@ class VarsleVedtakJobbUtfører(
         val førstegangsbehandling = behandlingType == TypeBehandling.Førstegangsbehandling
         val endringIRettighetsTypeTidslinje = endringIRettighetstypeTidslinje(
             forrigeUnderveisGrunnlag,
-            nåværendeUnderveisGrunnlag
+            nåværendeUnderveisGrunnlag!!
         )
 
         val tpYtelser =
