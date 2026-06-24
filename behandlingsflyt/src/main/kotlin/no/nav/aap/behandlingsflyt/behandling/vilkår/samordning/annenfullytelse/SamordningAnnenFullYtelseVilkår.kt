@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
@@ -14,14 +13,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 
 data class SamordningAnnenFullYtelseFaktagrunnlag(
     val rettighetsperiode: Periode,
     val samordningTidslinje: Tidslinje<SamordningGradering>,
-    val uføreTidslinje: Tidslinje<Prosent>,
     val samordningGrunnlag: SamordningYtelseVurderingGrunnlag?,
     val uføreRegisterGrunnlag: UføreGrunnlag?,
     val uføreVurderingGrunnlag: SamordningUføreGrunnlag?,
@@ -33,9 +31,11 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
 
     override fun vurder(grunnlag: SamordningAnnenFullYtelseFaktagrunnlag) {
+        val uføreTidslinje = grunnlag.uføreVurderingGrunnlag?.vurdering?.tilTidslinje().orEmpty()
+
         /* NB: bevisst valg å ikke gi avslag selv om summen av samordninger blir til 100%. */
         val vurderinger =
-            grunnlag.samordningTidslinje.outerJoinNotNull(grunnlag.uføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
+            grunnlag.samordningTidslinje.outerJoinNotNull(uføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
                 val samordningerYtelser =
                     andreYtelserSamordning?.ytelsesGraderinger.orEmpty()
                         .map { it.ytelse.toString() to it.gradering }

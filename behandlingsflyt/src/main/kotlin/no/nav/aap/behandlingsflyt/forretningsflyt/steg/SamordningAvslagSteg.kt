@@ -6,12 +6,9 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse.SamordningAnnenFullYtelseFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse.SamordningAnnenFullYtelseVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -25,13 +22,15 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SamordningAvslagSteg(
     private val samordningService: SamordningService,
-    private val uføreService: UføreService,
+    private val uføreRepository: UføreRepository,
+    private val samordningUføreRepository: SamordningUføreRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         samordningService = SamordningService(repositoryProvider),
-        uføreService = UføreService(repositoryProvider.provide(), repositoryProvider.provide()),
+        uføreRepository = repositoryProvider.provide(),
+        samordningUføreRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
     )
@@ -55,13 +54,12 @@ class SamordningAvslagSteg(
         SamordningAnnenFullYtelseFaktagrunnlag(
             rettighetsperiode = kontekst.rettighetsperiode,
             samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId),
-            uføreTidslinje = uføreService.tidslinje(kontekst.behandlingId),
             samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
                 ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
                 vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
             ),
-            uføreRegisterGrunnlag = uføreService.hentRegisterGrunnlagHvisEksisterer(kontekst.behandlingId),
-            uføreVurderingGrunnlag = uføreService.hentVurderingGrunnlagHvisEksisterer(kontekst.behandlingId),
+            uføreRegisterGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId),
+            uføreVurderingGrunnlag = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId),
         )
 
     companion object : FlytSteg {
