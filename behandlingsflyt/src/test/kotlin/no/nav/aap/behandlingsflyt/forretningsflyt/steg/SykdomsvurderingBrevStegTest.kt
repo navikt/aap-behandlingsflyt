@@ -29,7 +29,7 @@ class SykdomsvurderingBrevStegTest {
 
     private val steg = SykdomsvurderingBrevSteg(
         InMemorySykdomsvurderingForBrevRepository,
-        AvklaringsbehovService(inMemoryRepositoryProvider, createGatewayProvider { provide<AlleAvskruddUnleash>() }),
+        AvklaringsbehovService(inMemoryRepositoryProvider, createGatewayProvider { register<AlleAvskruddUnleash>() }),
         InMemoryAvklaringsbehovRepository,
         FakeTidligereVurderinger()
     )

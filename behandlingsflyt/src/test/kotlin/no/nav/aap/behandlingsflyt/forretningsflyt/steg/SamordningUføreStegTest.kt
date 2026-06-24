@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test
 
 class SamordningUføreStegTest {
     
-    val gatewayProvider = createGatewayProvider { provide<AlleAvskruddUnleash>()}
+    val gatewayProvider = createGatewayProvider { register<AlleAvskruddUnleash>()}
 
     @Test
     fun `skal kreve vurdering`() {
