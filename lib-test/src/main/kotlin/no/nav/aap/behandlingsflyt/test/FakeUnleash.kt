@@ -73,3 +73,12 @@ object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
     )
 )
+
+object UnleashMedKrav : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.IngenValidering,
+        BehandlingsflytFeature.KravSteg,
+        BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav,
+        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+    )
+)
