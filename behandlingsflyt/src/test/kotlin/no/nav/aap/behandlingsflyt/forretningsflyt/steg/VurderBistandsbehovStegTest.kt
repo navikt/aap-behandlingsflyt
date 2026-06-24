@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -36,6 +37,9 @@ import java.time.Instant
 
 class VurderBistandsbehovStegTest {
     private val behandlingRepository = InMemoryBehandlingRepository
+    private val gatewayProvider = createGatewayProvider {
+        register<AlleAvskruddUnleash>()
+    }
 
     @Test
     fun `Gjeldende vurdering er ikke god nok dersom den ikke dekker hele rettighetsperioden`() {
@@ -94,7 +98,7 @@ class VurderBistandsbehovStegTest {
             vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
             overgangUføreRepository = InMemoryOvergangUføreRepository,
             tidligereVurderinger = FakeTidligereVurderinger(),
-            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
         )
 
         opprettOgLøsBistandsbehov(behandling)
