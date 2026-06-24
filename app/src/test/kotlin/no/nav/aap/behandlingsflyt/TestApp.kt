@@ -656,8 +656,8 @@ private fun opprettNySakOgBehandling(
             }
 
             val manglendeInntektsÅr = manglendeInntektsår(dto)
-            if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
             if (manglendeInntektsÅr.isNotEmpty()) {
+                if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
                 løsManuellInntektVurdering(behandling, manglendeInntektsÅr)
             }
 
