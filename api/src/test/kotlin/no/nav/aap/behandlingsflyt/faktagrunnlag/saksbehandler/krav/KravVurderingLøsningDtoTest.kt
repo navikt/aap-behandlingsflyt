@@ -19,7 +19,7 @@ class KravVurderingLøsningDtoTest {
     @Test
     fun `Deserialiser nytt krav`() {
         val forventet = NyttKravLøsningDto(
-            referanse = UUID.fromString("89cbb68f-f7f7-459a-909d-25edec9971ce"),
+            referanse = null,
             journalpostId = JournalpostId("123456789"),
             begrunnelse = "Begrunnelse",
             søknadsdato = Søknadsdato(dato = 1 februar 2026, SøknadsdatoÅrsak.SøknadMottatt),
@@ -32,7 +32,6 @@ class KravVurderingLøsningDtoTest {
         val løsning = """
             {
               "kravType" : "NYTT_KRAV_AAP",
-              "referanse" : "89cbb68f-f7f7-459a-909d-25edec9971ce",
               "journalpostId" : {
                 "identifikator" : "123456789"
               },
@@ -80,8 +79,7 @@ class KravVurderingLøsningDtoTest {
         """.trimIndent()
 
         val faktisk = DefaultJsonMapper.fromJson(løsning, KravVurderingLøsningDto::class.java)
-        assertThat(faktisk).usingRecursiveComparison().ignoringFields("referanse").isEqualTo(forventet)
-        assertThat((faktisk as GjenopptakKravLøsningDto).referanse).isNotNull()
+        assertThat(faktisk).isEqualTo(forventet)
 
         val vurdering = { faktisk.tilVurdering(BehandlingId(1), Bruker("En ident"), Instant.now()) }
         assertThrows<UgyldigForespørselException> { vurdering() }
