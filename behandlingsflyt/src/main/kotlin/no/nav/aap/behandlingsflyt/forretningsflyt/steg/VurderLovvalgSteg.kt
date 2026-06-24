@@ -69,7 +69,7 @@ class VurderLovvalgSteg private constructor(
                 // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
                 val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
+                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, kontekst.vurderingType)
                     .vurder(grunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
