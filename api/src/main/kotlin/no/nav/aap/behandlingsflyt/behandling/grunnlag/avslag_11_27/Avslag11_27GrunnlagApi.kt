@@ -6,6 +6,8 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -44,8 +46,14 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
             val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
             val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
-            val nyttKravListe =
-                kravRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.filterIsInstance<NyttKrav>().orEmpty()
+            val kravGrunnlag = kravRepository.hentHvisEksisterer(behandling.id)
+
+            val kravMedDatoListe = kravGrunnlag?.vurderinger
+                ?.filterIsInstance<KravMedDato>()
+                ?.filter { it is NyttKrav || it is Gjenopptak }
+                .orEmpty()
+
+            val kravListeDto = Avslag11_27KravDto.avslag11_27TilDto(kravMedDatoListe)
 
             val alleVurderinger = avslag_11_27Repository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
 
@@ -53,11 +61,9 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
 
             val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling != behandling.id }
 
-            val nyttKravListeDto = Avslag11_27KravDto.avslag11_27TilDto(nyttKravListe);
-
             Avslag11_27GrunnlagDto(
                 harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                krav = nyttKravListeDto,
+                krav = kravListeDto,
                 vurderinger = mapVurderingerTilDto(nyVurderinger, vurdertAvService),
                 vedtatteVurdering = mapVurderingerTilDto(vedtatteVurderinger, vurdertAvService)
             )

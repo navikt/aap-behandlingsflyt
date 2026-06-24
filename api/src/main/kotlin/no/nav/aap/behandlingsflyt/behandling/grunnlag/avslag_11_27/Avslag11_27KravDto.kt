@@ -2,7 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.grunnlag.avslag_11_27
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.avslag11_27.Avslag11_27KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import java.time.LocalDate
@@ -15,12 +16,17 @@ data class Avslag11_27KravDto(
     val muligRettighetFra: LocalDate
 ) {
     companion object {
-        fun avslag11_27TilDto(kravListe: List<NyttKrav>): List<Avslag11_27KravDto> {
+        fun avslag11_27TilDto(kravListe: List<KravMedDato>): List<Avslag11_27KravDto> {
             return kravListe.map { krav ->
+                val (referanse, journalpostId, kravType) = when (krav) {
+                    is NyttKrav -> Triple(krav.referanse, krav.journalpostId, KravType.NYTT_KRAV_AAP)
+                    is Gjenopptak -> Triple(krav.referanse, krav.journalpostId, KravType.GJENOPPTAK)
+                    else -> error("Ustøttet kravtype: ${krav::class.simpleName}")
+                }
                 Avslag11_27KravDto(
-                    referanse = krav.referanse.verdi.toString(),
-                    søknadsdokument = krav.journalpostId.identifikator,
-                    type = KravType.NYTT_KRAV_AAP.name,
+                    referanse = referanse.verdi.toString(),
+                    søknadsdokument = journalpostId.identifikator,
+                    type = kravType.name,
                     søknadsdato = krav.søknadsdato.dato,
                     muligRettighetFra = krav.muligRettFra,
                 )
@@ -45,13 +51,3 @@ data class Avslag11_27VurderingDto(
     val skalAvslås1127: Boolean,
     val vurderingerMeta: VurderingerMetaResponse?,
 )
-
-enum class Avslag11_27KravVurderingDto {
-    AVSLÅTT,
-    GODKJENT
-}
-
-fun Avslag11_27KravVurdering.toDto() = when (this) {
-    Avslag11_27KravVurdering.AVSLÅTT -> Avslag11_27KravVurderingDto.AVSLÅTT
-    Avslag11_27KravVurdering.GODKJENT -> Avslag11_27KravVurderingDto.GODKJENT
-}
