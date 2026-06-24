@@ -30,7 +30,7 @@ class SamordningUføreSteg(
         samordningUføreRepository = repositoryProvider.provide(),
         uføreRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {

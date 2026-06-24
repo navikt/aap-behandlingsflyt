@@ -34,7 +34,7 @@ class VurderStudentSteg private constructor(
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 

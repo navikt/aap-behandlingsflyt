@@ -48,7 +48,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {

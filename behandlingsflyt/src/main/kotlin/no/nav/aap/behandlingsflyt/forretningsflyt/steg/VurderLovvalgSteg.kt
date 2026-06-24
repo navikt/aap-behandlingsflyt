@@ -44,7 +44,7 @@ class VurderLovvalgSteg private constructor(
         personopplysningRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 

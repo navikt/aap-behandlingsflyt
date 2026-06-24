@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -33,10 +34,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -57,13 +60,17 @@ class AvklarOppfølgingStegTest {
     private val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
 
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
+    private val gatewayProvider = createGatewayProvider { 
+        register<AlleAvskruddUnleash>()
+    }
 
     private val avklaringsbehovService = AvklaringsbehovService(
         avklaringsbehovRepository = avklaringsbehovRepository,
         behandlingRepository = behandlingRepository,
         vilkårsresultatRepository = vilkårsresultatRepository,
         avbrytRevurderingService = avbrytRevurderingService,
-        trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+        trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+        unleashGateway = gatewayProvider.provide()
     )
 
     private val behandling = Behandling(
