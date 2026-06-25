@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
@@ -93,7 +94,8 @@ class ManglendeLigningGrunnlagStegTest {
             avklaringsbehovRepository,
             behandlingRepository,
             vilkårsresultatRepository,
-            TrukketSøknadService(trukketSøknadRepository)
+            TrukketSøknadService(trukketSøknadRepository),
+            AlleAvskruddUnleash
         )
 
         steg = ManglendeLigningGrunnlagSteg(

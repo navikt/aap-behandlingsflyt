@@ -1,23 +1,29 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.oppfølgingsbehandling
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -29,6 +35,8 @@ class AvklarOppfølgingSteg(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val unleashGateway: UnleashGateway
 ) :
     BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -48,16 +56,32 @@ class AvklarOppfølgingSteg(
             tilbakestillGrunnlag = { /* Flyten i oppfølgingsbehandling skal aldri tilbakeføres eller totrinnskontrolleres */ },
             kontekst = kontekst
         )
-
         håndterVurderingAvOppfølging(kontekst)
+
+        if (!ventebehovVurdertFraFør(kontekst) && unleashGateway.isEnabled(BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang)) {
+            return FantVentebehov(
+                ventebehov = Ventebehov(
+                    definisjon = Definisjon.VENT_PÅ_OPPFØLGING_NY,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
+                    frist = oppfølgingsoppgavedokument.datoForOppfølging
+                ),
+            )
+        }
         return Fullført
     }
 
+    private fun ventebehovVurdertFraFør(
+        kontekst: FlytKontekstMedPerioder,
+    ): Boolean {
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        // må sjekke på begge definisjonene for å håndtere eksisterende oppfølgingsoppgaver i det endringen går i prod.
+        return avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VENT_PÅ_OPPFØLGING_NY) || avklaringsbehovene.erVurdertTidligereIBehandlingen(
+            Definisjon.VENT_PÅ_OPPFØLGING
+        )
+    }
+
     private fun håndterVurderingAvOppfølging(kontekst: FlytKontekstMedPerioder) {
-        val grunnlag = oppfølgingsBehandlingRepository.hent(kontekst.behandlingId)
-        if (grunnlag == null) {
-            return
-        }
+        val grunnlag = oppfølgingsBehandlingRepository.hent(kontekst.behandlingId) ?: return
         when (grunnlag.konsekvensAvOppfølging) {
             KonsekvensAvOppfølging.INGEN -> {
                 log.info("Ingen konsekvens av oppfølging. Avslutter oppfølgingsbehandling for sak ${kontekst.sakId}.")
@@ -85,14 +109,19 @@ class AvklarOppfølgingSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return AvklarOppfølgingSteg(
                 oppfølgingsBehandlingRepository = repositoryProvider.provide(),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 låsRepository = repositoryProvider.provide(),
                 prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider.provide()),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+                avklaringsbehovRepository = repositoryProvider.provide(),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 

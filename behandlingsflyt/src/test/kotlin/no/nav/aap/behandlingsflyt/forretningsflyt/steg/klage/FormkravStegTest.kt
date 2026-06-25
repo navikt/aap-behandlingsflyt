@@ -101,7 +101,8 @@ class FormkravStegTest {
                 InMemoryAvklaringsbehovRepository,
                 behandlingRepositoryMock,
                 InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+                unleashGateway = gatewayProvider.provide()
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -160,7 +161,8 @@ class FormkravStegTest {
                 InMemoryAvklaringsbehovRepository,
                 behandlingRepositoryMock,
                 InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+                AlleAvskruddUnleash
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -221,7 +223,8 @@ class FormkravStegTest {
                 InMemoryAvklaringsbehovRepository,
                 behandlingRepositoryMock,
                 InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+                AlleAvskruddUnleash
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -285,7 +288,8 @@ class FormkravStegTest {
                 InMemoryAvklaringsbehovRepository,
                 behandlingRepositoryMock,
                 InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+                AlleAvskruddUnleash
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -391,7 +395,8 @@ class FormkravStegTest {
                 InMemoryAvklaringsbehovRepository,
                 behandlingRepositoryMock,
                 InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+                AlleAvskruddUnleash
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -438,7 +443,8 @@ class FormkravStegTest {
                 InMemoryAvklaringsbehovRepository,
                 behandlingRepositoryMock,
                 InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+                AlleAvskruddUnleash
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -508,7 +514,8 @@ class FormkravStegTest {
                 InMemoryAvklaringsbehovRepository,
                 behandlingRepositoryMock,
                 InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+                AlleAvskruddUnleash
             ),
             unleashGateway = gatewayProvider.provide()
         )

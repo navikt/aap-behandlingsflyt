@@ -43,7 +43,7 @@ class AvbrytAktivitetspliktbehandlingSteg(
         ): BehandlingSteg {
             return AvbrytAktivitetspliktbehandlingSteg(
             avbrytAktivitetspliktbehandlingRepository = repositoryProvider.provide(),
-            avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+            avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
             )
         }
 

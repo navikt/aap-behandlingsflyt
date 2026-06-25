@@ -64,7 +64,7 @@ class SamordningAndreStatligeYtelserSteg(
         ): BehandlingSteg {
             return SamordningAndreStatligeYtelserSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 andreStatligeYtelserRepository = repositoryProvider.provide(),
             )

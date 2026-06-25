@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -63,13 +64,20 @@ class BarnetilleggStegTest {
         vilkårsresultatRepository = mockk()
         behandlingRepository = mockk()
 
-        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService, avklaringsbehovRepository, behandlingRepository, vilkårsresultatRepository, trukketSøknadService)
+        avklaringsbehovService = AvklaringsbehovService(
+            avbrytRevurderingService,
+            avklaringsbehovRepository,
+            behandlingRepository,
+            vilkårsresultatRepository,
+            trukketSøknadService,
+            AlleAvskruddUnleash
+        )
         steg = BarnetilleggSteg(
             barnetilleggService = mockk(),
             barnetilleggRepository = mockk(),
             barnRepository = barnRepository,
             tidligereVurderinger = tidligereVurderinger,
-            avklaringsbehovService = mockk()
+            avklaringsbehovService = mockk(),
         )
 
     }
