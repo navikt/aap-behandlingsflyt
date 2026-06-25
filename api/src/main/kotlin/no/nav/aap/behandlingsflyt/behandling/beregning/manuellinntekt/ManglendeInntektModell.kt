@@ -4,7 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import java.math.BigDecimal
 
 data class ManuellInntektGrunnlagResponse(
-    val sisteRelevanteÅr: Int,
+    @Deprecated("Brukes ikke av frontend snart.") val sisteRelevanteÅr: Int,
+    val alleRelevanteÅr: List<Int>,
     val manuelleVurderinger: ManuellInntektGrunnlagVurdering? = null,
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),

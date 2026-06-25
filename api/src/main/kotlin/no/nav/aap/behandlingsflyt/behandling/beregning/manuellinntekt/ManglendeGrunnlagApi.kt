@@ -63,7 +63,8 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         manuelleVurderinger = mappedVurdering,
                         historiskeManuelleVurderinger = mappedNyHistorikk,
                         registrerteInntekterSisteRelevanteAr = registrerteInntekterSisteTreÅr,
-                        sisteRelevanteÅr = år.value
+                        sisteRelevanteÅr = år.value,
+                        alleRelevanteÅr = relevanteÅr.map { it.value },
                     )
                 }
 

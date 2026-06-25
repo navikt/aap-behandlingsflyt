@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
 
 interface ManuellInntektGrunnlagRepository : Repository {
