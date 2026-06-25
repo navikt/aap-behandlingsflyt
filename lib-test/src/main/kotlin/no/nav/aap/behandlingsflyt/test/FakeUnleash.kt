@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -51,16 +52,31 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true,
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
         BehandlingsflytFeature.AutomatiskStans1118 to true,
-        BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
-        BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true,
-        )
+        BehandlingsflytFeature.KravSteg to false,
+        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to false,
+        BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true
+    )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
-        return "1,100"
+        return when (Pair(featureToggle, variantName)) {
+            Pair(
+                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+                "saksnumre"
+            ) -> "LoCAL_4LDW2A8"
+
+            else -> "1,100"
+        }
+    }
+
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
+        return when (Pair(featureToggle, variantName)) {
+            Pair(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre") -> true
+            else -> false
+        }
     }
 }
 
@@ -73,3 +89,30 @@ object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
     )
 )
+
+object UnleashMedKrav : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.IngenValidering,
+        BehandlingsflytFeature.KravSteg,
+        BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav,
+        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+    )
+) {
+    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
+        return when (Pair(featureToggle, variantName)) {
+            Pair(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre") -> true
+            else -> false
+        }
+    }
+
+    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
+        return when (Pair(featureToggle, variantName)) {
+            Pair(
+                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+                "saksnumre"
+            ) -> InMemorySakRepository.alle().map { it.saksnummer }.joinToString(",")
+
+            else -> ""
+        }
+    }
+}

@@ -22,6 +22,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BackfillStansOpphor,
     LagreVurderRettighetsperiodeSomKrav,
     VentStatusForTilbakekrevingIBehandlingsflyt,
+    NyttKravPeriodiserteAvklaringsbehov,
     OppfoelgingsoppgaveSynligMedEnGang
     ;
 
