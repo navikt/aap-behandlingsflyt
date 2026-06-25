@@ -130,7 +130,7 @@ class InntektsbortfallSteg private constructor(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return InntektsbortfallSteg(
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 personopplysningRepository = repositoryProvider.provide(),
                 manuellInntektGrunnlagRepository = repositoryProvider.provide(),

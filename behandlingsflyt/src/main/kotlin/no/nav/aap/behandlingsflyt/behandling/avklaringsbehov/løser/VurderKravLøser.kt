@@ -84,37 +84,3 @@ class VurderKravLøser(
     }
 
 }
-
-private fun KravVurderingLøsningDto.tilVurdering(
-    behandlingId: BehandlingId,
-    bruker: Bruker,
-    opprettetTid: Instant,
-): KravVurdering {
-    return when (this) {
-        is NyttKravLøsningDto -> NyttKrav(
-            referanse = referanse?.let(::Kravreferanse) ?: Kravreferanse.ny(),
-            journalpostId = journalpostId,
-            vurdertAv = bruker,
-            begrunnelse = begrunnelse,
-            vurdertIBehandling = behandlingId,
-            opprettet = opprettetTid,
-            søknadsdato = søknadsdato,
-            overstyrMuligRettFra = overstyrMuligRettFra,
-            muligRettFra = muligRettFra()
-        )
-
-        is TilleggsopplysningKravLøsningDto -> Tilleggsopplysning(
-            referanse = referanse?.let(::Kravreferanse) ?: Kravreferanse.ny(),
-            journalpostId = journalpostId,
-            vurdertAv = bruker,
-            begrunnelse = begrunnelse,
-            vurdertIBehandling = behandlingId,
-            opprettet = opprettetTid,
-        )
-
-        is TrukketSøknadKravLøsningDto, is GjenopptakKravLøsningDto, is KlageKravLøsningDto -> throw UgyldigForespørselException(
-            "Kelvin støtter foreløpig ikke ${this.kravType}."
-        )
-    }
-
-}

@@ -130,7 +130,7 @@ class BekreftVurderingerOppfølgingSteg(
         ): BehandlingSteg {
             return BekreftVurderingerOppfølgingSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 mellomlagretVurderingService = MellomlagretVurderingService(repositoryProvider)
             )

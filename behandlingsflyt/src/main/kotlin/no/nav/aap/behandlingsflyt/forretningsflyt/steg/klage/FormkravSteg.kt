@@ -203,7 +203,7 @@ class FormkravSteg (
                 repositoryProvider.provide(),
                 TrekkKlageService(repositoryProvider),
                 BrevbestillingService(repositoryProvider, gatewayProvider),
-                AvklaringsbehovService(repositoryProvider),
+                AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 gatewayProvider.provide(),
             )
         }

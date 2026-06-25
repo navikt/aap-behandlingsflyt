@@ -67,10 +67,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
-                    vedtaksdatoFørsteInnvilgelse = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse))
-                        vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)?.toLocalDate()
-                    else
-                        vedtakRepository.hent(behandling.id)?.virkningstidspunkt,
+                    vedtaksdatoFørsteInnvilgelse = vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)?.toLocalDate(),
                     meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id),
                     underveisGrunnlag = underveisGrunnlag
                 )
