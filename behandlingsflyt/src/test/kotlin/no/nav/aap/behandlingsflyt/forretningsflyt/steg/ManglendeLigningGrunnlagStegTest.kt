@@ -7,10 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -22,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningVurderingRepository
@@ -41,85 +38,7 @@ import java.time.Year
 import kotlin.random.Random
 
 class ManglendeLigningGrunnlagStegTest {
-    private lateinit var avklaringsbehovRepository: AvklaringsbehovRepository
-    private lateinit var inntektGrunnlagRepository: InntektGrunnlagRepository
-    private lateinit var manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository
-    private lateinit var tidligereVurderinger: TidligereVurderinger
-    private lateinit var beregningService: BeregningService
-    private lateinit var uføreRepository: UføreRepository
-    private lateinit var beregningVurderingRepository: BeregningVurderingRepository
-    private lateinit var unleashGateway: no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-    private lateinit var steg: ManglendeLigningGrunnlagSteg
-    private val behandlingRepository = InMemoryBehandlingRepository
-    private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
-    private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
-    private lateinit var avbrytRevurderingService: AvbrytRevurderingService
-    private lateinit var avklaringsbehovService: AvklaringsbehovService
-    private lateinit var kravRepository: KravRepository
-
     private val sisteÅr = Year.of(2025)
-
-    @BeforeEach
-    fun setup() {
-        avklaringsbehovRepository = mockk()
-        beregningService = mockk {
-            every { utledRelevanteBeregningsÅr(any()) } returns setOf(
-                sisteÅr.minusYears(2), sisteÅr.minusYears(1), sisteÅr
-            )
-        }
-        inntektGrunnlagRepository = mockk {
-            every { hentHvisEksisterer(any()) } returns InntektGrunnlag(
-                setOf(
-                    InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
-                    InntektPerÅr(sisteÅr.minusYears(1), Beløp(275_000)),
-                    InntektPerÅr(sisteÅr, Beløp(300_000))
-                ), emptySet()
-            )
-        }
-        manuellInntektGrunnlagRepository = mockk(relaxed = true) {
-            every { hentHvisEksisterer(any()) } returns null
-        }
-        tidligereVurderinger = mockk {
-            every { girAvslagEllerIngenBehandlingsgrunnlag(any(), StegType.MANGLENDE_LIGNING) } returns false
-        }
-
-        avklaringsbehovRepository = mockk()
-
-        uføreRepository = mockk {
-            every { hentHvisEksisterer(any()) } returns null
-        }
-        beregningVurderingRepository = mockk {
-            every { hentHvisEksisterer(any()) } returns null
-        }
-        unleashGateway = mockk(relaxed = true)
-
-        avbrytRevurderingService = mockk {
-            every { revurderingErAvbrutt(any()) } returns false
-        }
-        kravRepository = mockk()
-
-        avklaringsbehovService = AvklaringsbehovService(
-            avbrytRevurderingService,
-            avklaringsbehovRepository,
-            behandlingRepository,
-            vilkårsresultatRepository,
-            TrukketSøknadService(trukketSøknadRepository),
-            kravRepository,
-            mockk(),
-            AlleAvskruddUnleash
-        )
-
-        steg = ManglendeLigningGrunnlagSteg(
-            inntektGrunnlagRepository,
-            manuellInntektGrunnlagRepository,
-            tidligereVurderinger,
-            beregningService,
-            avklaringsbehovService,
-            uføreRepository,
-            beregningVurderingRepository,
-            unleashGateway
-        )
-    }
 
     @Test
     fun `oppretter ikke avklaringsbehov når det finnes inntekt for siste relevante år`() {
@@ -293,6 +212,9 @@ class ManglendeLigningGrunnlagStegTest {
         tidligereVurderinger = tidligereVurderinger,
         beregningService = BeregningService(inMemoryRepositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
+        uføreRepository = inMemoryRepositoryProvider.provide(),
+        beregningVurderingRepository = inMemoryRepositoryProvider.provide(),
+        unleashGateway = AlleAvskruddUnleash
     )
 
     private fun lagreBeregningstidspunkt(behandling: Behandling) {
