@@ -8,7 +8,6 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
@@ -104,15 +103,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         behandling
                     )
 
-                    val vurderingsbehovOgÅrsaker = run {
-                        val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
-                        val identer = vurderingsbehovOgÅrsaker.mapNotNull { it.opprettetAv }.distinct()
-                        val navnPerIdent = if (identer.isEmpty()) emptyMap()
-                        else AnsattInfoService(gatewayProvider).hentAnsatteVisningsnavn(identer)
-                            .filterNotNull()
-                            .associateBy({ it.navident }, { it.visningsnavn })
-                        vurderingsbehovOgÅrsaker.map { it.copy(opprettetAv = it.opprettetAv?.let { ident -> navnPerIdent[ident] ?: ident }) }
-                    }
+                    val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
 
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,

@@ -57,8 +57,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
 
         val årsakQuery = """
-            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid, opprettet_av)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid)
+            VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         val behandlingÅrsakId = connection.executeReturnKey(årsakQuery) {
@@ -67,7 +67,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
-                setString(5, vurderingsbehovOgÅrsak.opprettetAv)
             }
         }
 
@@ -224,12 +223,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             val vurderingsbehovOppdatertTid: LocalDateTime,
             val årsak: ÅrsakTilOpprettelse,
             val opprettet: LocalDateTime,
-            val opprettetAv: String?,
             val beskrivelse: String?
         )
 
         val query = """
-            SELECT ba.id as aarsak_id, ba.aarsak, ba.begrunnelse, ba.opprettet_tid, ba.opprettet_av,
+            SELECT ba.id as aarsak_id, ba.aarsak, ba.begrunnelse, ba.opprettet_tid,
                    vb.aarsak as vurderingsbehov, vb.opprettet_tid as vb_opprettet_Tid, vb.oppdatert_tid as vb_oppdatert_tid
             FROM behandling_aarsak ba
             INNER JOIN vurderingsbehov vb ON vb.behandling_aarsak_id = ba.id
@@ -247,7 +245,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     årsak = row.getEnum("aarsak"),
                     beskrivelse = row.getStringOrNull("begrunnelse"),
                     opprettet = row.getLocalDateTime("opprettet_tid"),
-                    opprettetAv = row.getStringOrNull("opprettet_av"),
                     vurderingsbehovType = row.getEnum("vurderingsbehov"),
                     vurderingsbehovOppdatertTid = row.getLocalDateTimeOrNull("vb_oppdatert_tid")
                         ?: row.getLocalDateTime("vb_opprettet_Tid")
@@ -262,7 +259,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     årsak = vurderingsbehovOgÅrsak.first().årsak,
                     beskrivelse = vurderingsbehovOgÅrsak.first().beskrivelse,
                     opprettet = vurderingsbehovOgÅrsak.first().opprettet,
-                    opprettetAv = vurderingsbehovOgÅrsak.first().opprettetAv,
                     vurderingsbehov = vurderingsbehovOgÅrsak.map {
                         VurderingsbehovMedPeriode(
                             it.vurderingsbehovType,
@@ -491,8 +487,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ) {
         val årsakQuery = """
-            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid, opprettet_av)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid)
+            VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         val behandlingÅrsakId = connection.executeReturnKey(årsakQuery) {
@@ -501,7 +497,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
-                setString(5, vurderingsbehovOgÅrsak.opprettetAv)
             }
         }
 

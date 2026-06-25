@@ -56,7 +56,6 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(brevkategori, melding)
-        val opprettetAvIdent = MottattHendelseUtleder.utledOpprettetAv(melding)
 
         val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
             sak.saksnummer,
@@ -64,7 +63,6 @@ class HåndterMottattDokumentService(
                 årsak = årsakTilOpprettelse,
                 vurderingsbehov = vurderingsbehov,
                 opprettet = mottattTidspunkt,
-                opprettetAv = opprettetAvIdent,
                 beskrivelse = MottattHendelseUtleder.utledBeskrivelseForÅrsakTilOpprettelse(melding)
             )
         )

@@ -88,9 +88,9 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                         val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                         val lås = låsRepository.lås(req.behandlingsReferanse)
 
+                        val sak = repositoryProvider.provide<SakRepository>().hent((Saksnummer(req.saksnummer)))
                         val behandling = repositoryProvider.provide<BehandlingRepository>()
                             .hent(BehandlingReferanse(req.behandlingsReferanse))
-                        val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
                         if (req.dokumentasjonType != DokumentasjonType.MELDING_FRA_NAV) {
                             AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
@@ -109,7 +109,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                                 personIdent = personIdent.identifikator,
                                 personNavn = personinfo.fulltNavn(),
                                 dialogmeldingTekst = req.fritekst,
-                                saksnummer = sak.saksnummer.toString(),
+                                saksnummer = req.saksnummer,
                                 dokumentasjonType = req.dokumentasjonType,
                                 behandlingsReferanse = req.behandlingsReferanse
                             )

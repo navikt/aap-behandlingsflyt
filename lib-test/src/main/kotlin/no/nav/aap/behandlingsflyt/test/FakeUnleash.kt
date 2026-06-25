@@ -63,21 +63,7 @@ object LokalUnleash : FakeUnleashBase(
         )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
-        return when (Pair(featureToggle, variantName)) {
-            Pair(
-                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
-                "saksnumre"
-            ) -> "LoCAL_4LDW2A8"
-
-            else -> "1,100"
-        }
-    }
-
-    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
-        return when (Pair(featureToggle, variantName)) {
-            Pair(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre") -> true
-            else -> false
-        }
+        return "1,100"
     }
 }
 

@@ -13,14 +13,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
     AvklaringsbehovOperasjonerRepository {
 
     private val idSeq = AtomicLong(10000)
-    private val endringSeq = AtomicLong(0)
     private val memory = HashMap<BehandlingId, AvklaringsbehovHolder>()
     private val lock = Any()
 
@@ -55,25 +53,29 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
             val avklaringsbehov = memory.getValue(behandlingId)
 
             val eksisterendeBehov = avklaringsbehov.hentBehov(definisjon)
-            val endring = lagretEndring(
-                Endring(
-                    status = Status.OPPRETTET,
-                    begrunnelse = begrunnelse,
-                    grunn = grunn,
-                    endretAv = endretAv,
-                    frist = frist,
-                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-                    perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
-                )
-            )
             if (eksisterendeBehov == null) {
                 avklaringsbehov.leggTilBehov(
                     definisjon,
                     funnetISteg,
-                    endring
+                    frist,
+                    begrunnelse,
+                    grunn,
+                    endretAv,
+                    perioderSomIkkeErTilstrekkeligVurdert,
+                    perioderVedtaketBehøverVurdering
                 )
             } else {
-                eksisterendeBehov.historikk.add(endring)
+                eksisterendeBehov.historikk.add(
+                    Endring(
+                        status = Status.OPPRETTET,
+                        begrunnelse = begrunnelse,
+                        grunn = grunn,
+                        endretAv = endretAv,
+                        frist = frist,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+                    )
+                )
             }
         }
     }
@@ -105,25 +107,16 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
     }
 
     fun clearMemory() {
-        synchronized(lock) {
-            memory.clear()
-            endringSeq.set(0)
-        }
+        memory.clear()
     }
 
     private fun endreAvklaringsbehov(
         avklaringsbehovId: Long,
         endring: Endring
     ) {
-        synchronized(lock) {
-            memory.values.flatMap { it.avklaringsbehovene }
-                .single { it.id == avklaringsbehovId }
-                .historikk.add(lagretEndring(endring))
-        }
-    }
-
-    private fun lagretEndring(endring: Endring): Endring {
-        return endring.copy(tidsstempel = LocalDateTime.now().plusNanos(endringSeq.incrementAndGet()))
+        memory.values.flatMap { it.avklaringsbehovene }
+            .single { it.id == avklaringsbehovId }
+            .historikk.add(endring)
     }
 
     private fun oppdaterFunnetISteg(avklaringsbehovId: Long, funnetISteg: StegType) {
@@ -163,11 +156,26 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         fun leggTilBehov(
             definisjon: Definisjon,
             funnetISteg: StegType,
-            endring: Endring,
+            frist: LocalDate?,
+            begrunnelse: String,
+            venteÅrsak: ÅrsakTilSettPåVent?,
+            endretAv: String,
+            perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+            perioderVedtaketBehøverVurdering: Set<Periode>?
         ) {
             val avklaringsbehov = Avklaringsbehov(
                 idSeq.andIncrement, definisjon,
-                mutableListOf(endring),
+                mutableListOf(
+                    Endring(
+                        status = Status.OPPRETTET,
+                        begrunnelse = begrunnelse,
+                        grunn = venteÅrsak,
+                        endretAv = endretAv,
+                        frist = frist,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+                    )
+                ),
                 funnetISteg = funnetISteg,
                 kreverToTrinn = false
             )

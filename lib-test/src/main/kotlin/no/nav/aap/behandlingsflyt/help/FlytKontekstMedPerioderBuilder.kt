@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 class FlytKontekstMedPerioderBuilder {
@@ -18,12 +17,8 @@ class FlytKontekstMedPerioderBuilder {
     var behandlingType: TypeBehandling = TypeBehandling.Revurdering
     var forrigeBehandlingId: BehandlingId? = null
     var vurderingType: VurderingType? = null
-    var rettighetsperiode: Periode = Periode(LocalDate.now(), Tid.MAKS)
+    var rettighetsperiode: Periode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
     var vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov> = emptySet()
-        set(value) {
-            field = value
-            vurderingsbehovRelevanteForStegMedPerioder = null
-        }
     var vurderingsbehovRelevanteForStegMedPerioder: Set<VurderingsbehovMedPeriode>? = null
 
     var behandling: Behandling? = null
@@ -32,7 +27,6 @@ class FlytKontekstMedPerioderBuilder {
             behandlingId = value?.id
             behandlingType = value?.typeBehandling() ?: behandlingType
             forrigeBehandlingId = value?.forrigeBehandlingId
-            vurderingsbehovRelevanteForStegMedPerioder = value?.vurderingsbehov()?.toSet()
             field = value
         }
 

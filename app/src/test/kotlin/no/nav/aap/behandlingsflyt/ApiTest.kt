@@ -77,7 +77,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
-import kotlin.time.Duration.Companion.milliseconds
 
 @Fakes
 // FIXME testene i klassen bruker samme database og er timing-sensitive. Derfor SAME_THREAD.
@@ -423,7 +422,7 @@ class ApiTest {
                     } catch (e: Exception) {
                         log.info("Exception: $e")
                     } finally {
-                        delay(delayMs.milliseconds)
+                        delay(delayMs)
                         tries++
                     }
                 }

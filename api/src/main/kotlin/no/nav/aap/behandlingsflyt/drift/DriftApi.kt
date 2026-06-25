@@ -37,7 +37,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -396,10 +395,6 @@ fun NormalOpenAPIRoute.driftApi(
 
                     SakDriftsinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
-                        person = PersonDriftsinfo(
-                            personId = sak.person.id.id,
-                            antallIdenter = sak.person.identer().size,
-                        ),
                         status = sak.status(),
                         rettighetsperiode = sak.rettighetsperiode,
                         opprettetTidspunkt = sak.opprettetTidspunkt,
@@ -477,17 +472,11 @@ private fun krevDtoErUtenFødselsnummer(dto: Any) {
 
 private data class SakDriftsinfoDTO(
     val saksnummer: String,
-    val person: PersonDriftsinfo,
     val status: SakStatus,
     val rettighetsperiode: Periode,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val behandlinger: List<BehandlingDriftsinfo>,
     val andreSakerPåBruker: List<String>,
-)
-
-private data class PersonDriftsinfo(
-    val personId: Long,
-    val antallIdenter: Int,
 )
 
 private data class BehandlingDriftsinfo(

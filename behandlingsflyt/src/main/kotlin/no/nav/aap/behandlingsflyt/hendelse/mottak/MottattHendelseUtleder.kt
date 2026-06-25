@@ -105,11 +105,6 @@ object MottattHendelseUtleder {
         }
     }
 
-    fun utledOpprettetAv(melding: Melding?): String? = when (melding) {
-        is ManuellRevurderingV0 -> melding.opprettetAv
-        else -> null
-    }
-
     fun utledBeskrivelseForÅrsakTilOpprettelse(melding: Melding?): String? = when (melding) {
         is ManuellRevurderingV0 -> melding.beskrivelse
         is OmgjøringKlageRevurdering -> melding.beskrivelse

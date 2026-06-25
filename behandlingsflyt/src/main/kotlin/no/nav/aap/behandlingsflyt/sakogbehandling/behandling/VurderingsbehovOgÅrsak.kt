@@ -6,6 +6,5 @@ data class VurderingsbehovOgÅrsak(
     val vurderingsbehov: List<VurderingsbehovMedPeriode>,
     val årsak: ÅrsakTilOpprettelse,
     val opprettet: LocalDateTime = LocalDateTime.now(),
-    val opprettetAv: String? = null,
     val beskrivelse: String? = null
 )

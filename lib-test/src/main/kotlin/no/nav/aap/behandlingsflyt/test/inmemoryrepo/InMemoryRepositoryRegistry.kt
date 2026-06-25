@@ -43,8 +43,6 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemorySykepengerErstatningRepository>()
     register<InMemoryRettighetstypeRepository>()
     register<InMemoryInformasjonskravRepository>()
-    register<InMemoryInntektGrunnlagRepository>()
-    register<InMemoryManuellInntektGrunnlagRepository>()
     register<InMemoryVedtakslengdeRepository>()
     register<InMemoryUføreSøknadRepository>()
     register<InMemoryFormkravRepository>()
