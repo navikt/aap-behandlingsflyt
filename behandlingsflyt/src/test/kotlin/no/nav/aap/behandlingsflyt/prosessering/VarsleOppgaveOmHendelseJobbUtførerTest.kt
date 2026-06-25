@@ -277,7 +277,7 @@ internal class CapturingOppgavestyringGateway private constructor() : Oppgavesty
     override fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse =
         OppgaveEnhetResponse(emptyList())
 
-    override fun hentMarkeringerOgHistorikk(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
         return emptyList()
     }
 

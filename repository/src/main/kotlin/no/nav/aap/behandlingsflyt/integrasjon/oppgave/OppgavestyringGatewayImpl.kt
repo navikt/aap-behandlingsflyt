@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetForPersonRequest
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -75,7 +76,7 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
         }
     }
 
-    override fun hentMarkeringerOgHistorikk(behandlingReferanse: BehandlingReferanse): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
@@ -83,11 +84,11 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
         )
         return checkNotNull(
             client.get<List<MarkeringNyDto>>(
-                uri = url.resolve("/${behandlingReferanse.referanse}/hent-markeringer-og-historikk"),
+                uri = url.resolve("/${saksnummer}/hent-markeringer-og-historikk"),
                 request = request
             )
         ) {
-            "Mangler response for markeringer for behandling ${behandlingReferanse.referanse}"
+            "Mangler response for markeringer for behandling ${saksnummer}"
         }
     }
 }

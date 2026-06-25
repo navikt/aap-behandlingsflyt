@@ -9,11 +9,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 
@@ -33,15 +35,15 @@ class SaksHistorikkService(
         oppgavestyringGateway = gatewayProvider.provide()
     )
 
-    fun utledSaksHistorikk(sakId: SakId): List<BehandlingHistorikkDTO> {
-        val alleBehandlinger = behandlingRepository.hentAlleFor(sakId)
+    fun utledSaksHistorikk(sak: Sak): List<BehandlingHistorikkDTO> {
+        val alleBehandlinger = behandlingRepository.hentAlleFor(sak.id)
         val behandlingerMedBehov = avklaringsbehovOperasjonerRepository
             .hentAlleAvklaringsbehovForSak(alleBehandlinger.map { it.id })
 
         val opprettelsesHendelser = utledOpprettelseHendelser(alleBehandlinger)
         val behandlingHendelser = utledBehandlingHendelser(behandlingerMedBehov)
         val returerMedÅrsakHendelser = utledReturerMedÅrsak(behandlingerMedBehov)
-        val markeringerHendelser = utledMarkeringerHendelser(alleBehandlinger)
+        val markeringerHendelser = utledMarkeringerHendelser(sak.saksnummer)
 
         return (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser + markeringerHendelser)
             .groupBy { it.behandlingId }
@@ -71,7 +73,7 @@ class SaksHistorikkService(
         val erVedtatt =
             avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.erTotrinn() }.all { it.erTotrinnsVurdert() }
         val alleBehovErKvalitetssikret =
-            avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.kreverKvalitetssikring()}
+            avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.kreverKvalitetssikring() }
                 .all { it.erKvalitetssikret() }
 
         return behandlingerMedBehov.mapNotNull { behandling ->
@@ -279,9 +281,10 @@ class SaksHistorikkService(
         }
     }
 
-    private fun utledMarkeringerHendelser(alleBehandlinger: List<Behandling>): List<BehandlingHistorikkInternal> {
-        return alleBehandlinger.mapNotNull { behandling ->
-            val markeringer = oppgavestyringGateway.hentMarkeringerOgHistorikk(behandling.referanse)
+    private fun utledMarkeringerHendelser(saksnummer: Saksnummer): List<BehandlingHistorikkInternal> {
+        val markeringer = oppgavestyringGateway.hentMarkeringerOgHistorikk(saksnummer)
+
+        return markeringer.groupBy { it.behandlingRef }.mapNotNull { (behandlingRef, markeringer) ->
             val hendelser = markeringer.map { markering ->
                 val hendelseType = when (markering.hendelseType) {
                     MarkeringHendelseType.OPPRETTET -> BehandlingHendelseType.MARKERING_OPPRETTET
@@ -297,6 +300,7 @@ class SaksHistorikkService(
                 )
             }
             if (hendelser.isNotEmpty()) {
+                val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingRef)
                 BehandlingHistorikkInternal(behandling.id, hendelser)
             } else null
         }
