@@ -64,7 +64,8 @@ class BeregningService(
     fun manglerInntekterFor(behandlingId: BehandlingId, inkluderManuelle: Boolean = true): Set<Year> {
         val relevanteÅr = utledRelevanteBeregningsÅr(behandlingId)
 
-        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.inntekter.orEmpty()
+        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
+            ?.inntekter.orEmpty()
             .filter { it.år in relevanteÅr }
 
         val manuelleInntekter =

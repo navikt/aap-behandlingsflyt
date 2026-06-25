@@ -50,11 +50,15 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         )
                     }
 
+                    val manglerInntekterFor =
+                        beregningService.manglerInntekterFor(behandling.id, inkluderManuelle = false)
+
                     val manglendeInntektGrunnlagService =
                         ManglendeInntektGrunnlagService(repositoryRegistry.provider(it))
 
                     val mappedVurdering = manglendeInntektGrunnlagService.mapManuellVurderinger(req, vurdertAvService)
-                    val mappedNyHistorikk = manglendeInntektGrunnlagService.mapHistoriskeManuelleVurderinger(req, vurdertAvService)
+                    val mappedNyHistorikk =
+                        manglendeInntektGrunnlagService.mapHistoriskeManuelleVurderinger(req, vurdertAvService)
 
                     val år = relevanteÅr.max()
 
@@ -64,7 +68,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         historiskeManuelleVurderinger = mappedNyHistorikk,
                         registrerteInntekterSisteRelevanteAr = registrerteInntekterSisteTreÅr,
                         sisteRelevanteÅr = år.value,
-                        alleRelevanteÅr = relevanteÅr.map { it.value },
+                        manglerInntektForÅr = manglerInntekterFor.map { it.value }.toList(),
                     )
                 }
 

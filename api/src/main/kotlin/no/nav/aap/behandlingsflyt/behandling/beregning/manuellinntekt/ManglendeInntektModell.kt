@@ -5,7 +5,7 @@ import java.math.BigDecimal
 
 data class ManuellInntektGrunnlagResponse(
     @Deprecated("Brukes ikke av frontend snart.") val sisteRelevanteÅr: Int,
-    val alleRelevanteÅr: List<Int>,
+    val manglerInntektForÅr: List<Int>,
     val manuelleVurderinger: ManuellInntektGrunnlagVurdering? = null,
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),
