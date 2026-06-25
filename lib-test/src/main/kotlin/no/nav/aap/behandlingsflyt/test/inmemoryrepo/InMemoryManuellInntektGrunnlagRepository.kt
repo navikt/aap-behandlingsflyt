@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 
 object InMemoryManuellInntektGrunnlagRepository : ManuellInntektGrunnlagRepository {
 
@@ -31,20 +30,6 @@ object InMemoryManuellInntektGrunnlagRepository : ManuellInntektGrunnlagReposito
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ManuellInntektGrunnlag? {
         synchronized(lock) {
             return memory[behandlingId]
-        }
-    }
-
-    override fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId
-    ): Set<Set<ManuellInntektVurdering>> {
-        synchronized(lock) {
-            val denneBehandlingOpprettet = InMemoryBehandlingRepository.hent(behandlingId).opprettetTidspunkt
-
-            return InMemoryBehandlingRepository.hentAlleFor(sakId, emptyList())
-                .filter { it.opprettetTidspunkt < denneBehandlingOpprettet }
-                .mapNotNull { memory[it.id]?.manuelleInntekter }
-                .toSet()
         }
     }
 
