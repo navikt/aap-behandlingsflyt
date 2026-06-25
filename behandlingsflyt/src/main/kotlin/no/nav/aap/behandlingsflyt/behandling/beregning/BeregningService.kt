@@ -61,7 +61,7 @@ class BeregningService(
         return beregningsgrunnlag
     }
 
-    fun harAlleInntekter(behandlingId: BehandlingId): Boolean {
+    fun manglerInntekterFor(behandlingId: BehandlingId, inkluderManuelle: Boolean = true): Set<Year> {
         val relevanteÅr = utledRelevanteBeregningsÅr(behandlingId)
 
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.inntekter.orEmpty()
@@ -71,13 +71,13 @@ class BeregningService(
             manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
 
         val manuelleInntekterRelevanteÅr =
-            manuelleInntekter.filter { it.år in relevanteÅr }
+            if (inkluderManuelle) manuelleInntekter.filter { it.år in relevanteÅr } else emptyList()
 
         val kombinerteÅr =
             (inntektGrunnlag.map { it.år } + manuelleInntekterRelevanteÅr
                 .map { it.år }).toSet()
 
-        return relevanteÅr.all { it in kombinerteÅr }
+        return relevanteÅr.filter { it !in kombinerteÅr }.toSet()
     }
 
     fun deaktiverGrunnlag(behandlingId: BehandlingId) {

@@ -4,9 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -18,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.Year
 
 /**
  * Dette steget sjekker om vi mangler inntekt for året før nedsettelsesdatoen.
@@ -50,16 +47,14 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                             manueltTriggetVurderingsbehov(kontekst) -> true
                             else -> {
-                                val harInntektIAlleRelevantÅrFraRegister =beregningService.harAlleInntekter(kontekst.behandlingId)
-                                val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
-
-                                val erVurdertManueltTidligere = hentManuellInntekterVurdering(
-                                    manuellInntektGrunnlag,
-                                    sisteRelevanteÅr
-                                )?.isNotEmpty() == true
+                                val harInntektIAlleRelevantÅrFraRegister =
+                                    beregningService.manglerInntekterFor(
+                                        kontekst.behandlingId,
+                                        inkluderManuelle = false
+                                    ).isEmpty()
 
                                 // Behøver vurdering dersom en inntekt for siste tre år mangler fra register
-                                !harInntektIAlleRelevantÅrFraRegister || erVurdertManueltTidligere
+                                !harInntektIAlleRelevantÅrFraRegister
                             }
                         }
                     }
@@ -77,7 +72,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                 }
             },
             erTilstrekkeligVurdert = {
-                beregningService.harAlleInntekter(kontekst.behandlingId)
+                beregningService.manglerInntekterFor(kontekst.behandlingId).isEmpty()
             },
             tilbakestillGrunnlag = {
                 val forrigeManuelleInntekter = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
@@ -97,17 +92,6 @@ class ManglendeLigningGrunnlagSteg internal constructor(
 
     private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean {
         return kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.REVURDER_MANUELL_INNTEKT }
-    }
-
-    private fun hentManuellInntekterVurdering(
-        manuellInntektGrunnlag: ManuellInntektGrunnlag?,
-        sisteRelevanteÅr: Set<Year>
-    ): List<ManuellInntektVurdering>? {
-        return manuellInntektGrunnlag?.manuelleInntekter?.filter { it.år in sisteRelevanteÅr }
-    }
-
-    private fun hentSisteRelevanteÅr(kontekst: FlytKontekstMedPerioder): Set<Year> {
-        return beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
     }
 
     companion object : FlytSteg {
