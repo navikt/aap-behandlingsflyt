@@ -64,16 +64,6 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, manuellVurdering: ManuellInntektVurdering) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-
-        // Hvis det finnes en vurdering på samme år, så overskrives denne
-        val kombinerteEntries = (eksisterendeGrunnlag?.manuelleInntekter.orEmpty()
-            .filterNot { it.år == manuellVurdering.år } + manuellVurdering).toSet()
-
-        lagre(behandlingId, kombinerteEntries)
-    }
-
     override fun lagre(behandlingId: BehandlingId, manuellVurderinger: Set<ManuellInntektVurdering>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
