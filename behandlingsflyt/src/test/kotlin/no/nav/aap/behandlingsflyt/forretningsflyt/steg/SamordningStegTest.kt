@@ -1,14 +1,9 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import io.mockk.every
-import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingRepository
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
@@ -23,38 +18,29 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
-import no.nav.aap.komponenter.tidslinje.tidslinjeOf
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.Instant
 import java.time.LocalDate
-import java.util.stream.Stream
 import java.time.LocalDateTime
+import java.util.stream.Stream
 
 class SamordningStegTest {
     companion object {
@@ -62,55 +48,6 @@ class SamordningStegTest {
         fun manuelleYtelserProvider(): Stream<Ytelse> {
             return Ytelse.entries.filter { it.type == AvklaringsType.MANUELL }.stream()
         }
-
-        @JvmStatic
-        fun automatiskBehandledeYtelserProvider(): Stream<Ytelse> {
-            return Ytelse.entries.filter { it.type == AvklaringsType.AUTOMATISK }.stream()
-        }
-    }
-
-    private val tidligereVurderinger = mockk<TidligereVurderinger>()
-    private val avbrytRevurderingRepository = mockk<AvbrytRevurderingRepository>()
-    private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
-
-    private val steg = SamordningSteg(
-        samordningService = SamordningService(
-            samordningVurderingRepository = InMemorySamordningVurderingRepository,
-            samordningYtelseRepository = InMemorySamordningYtelseRepository,
-        ),
-        samordningRepository = InMemorySamordningRepository,
-        tidligereVurderinger = tidligereVurderinger,
-        avklaringsbehovService = AvklaringsbehovService(
-            AvbrytRevurderingService(
-                avbrytRevurderingRepository
-            ),
-            InMemoryAvklaringsbehovRepository,
-            InMemoryBehandlingRepository,
-            InMemoryVilkårsresultatRepository,
-            trukketSøknadService = TrukketSøknadService(
-                trukketSøknadRepository
-            ),
-            InMemoryKravRepository,
-            InMemorySakRepository,
-            AlleAvskruddUnleash
-        ),
-    )
-
-    @BeforeEach
-    fun beforeEach() {
-        every { tidligereVurderinger.girAvslag(any(), any()) } returns false
-        every {
-            tidligereVurderinger.behandlingsutfall(
-                any(),
-                any()
-            )
-        } answers {
-            tidslinjeOf(
-                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.PotensieltOppfylt(null)
-            )
-            
-        }
-        every { avbrytRevurderingRepository.hentHvisEksisterer(any()) } returns null
     }
 
     @ParameterizedTest
@@ -119,9 +56,9 @@ class SamordningStegTest {
         ytelse: Ytelse
     ) {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        val steg = settOppRessurser(ytelse, behandling.id)
+        settOppRessurser(ytelse, behandling.id)
 
-        steg.utfør(flytKontekstMedPerioder(behandling))
+        steg().utfør(flytKontekstMedPerioder(behandling))
 
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
 
@@ -133,7 +70,7 @@ class SamordningStegTest {
                         ytelseType = ytelse,
                         vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
-                                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
                                 gradering = Prosent(50),
                                 manuell = false,
                             )
@@ -141,38 +78,23 @@ class SamordningStegTest {
                     )
                 ),
                 vurdertAv = "ident",
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
         løsBehovet(behandling)
 
-        steg.utfør(
-            kontekst = flytKontekstMedPerioder(behandling)
-        )
+        steg().utfør(flytKontekstMedPerioder(behandling))
 
         verifiserAvklaringsbehov(behandling, Status.AVSLUTTET)
-    }
-
-    @Disabled("Inntil vi samordner ytelser automatisk")
-    @ParameterizedTest
-    @MethodSource("automatiskBehandledeYtelserProvider")
-    fun `foreldrepenger, omsorgspenger, opplæringspenger avklares automatisk`(ytelse: Ytelse) {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
-        val steg = settOppRessurser(ytelse, behandling.id)
-
-        val res = steg.utfør(
-            kontekst = flytKontekstMedPerioder(behandling)
-        )
-
-        assertThat(res).isEqualTo(Fullført)
     }
 
     @Test
     fun `en fra register og en manuell, ikke overlappende perioder`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        val periodeMedSykepenger = Periode(LocalDate.now().minusYears(1), LocalDate.now())
+        val periodeMedSykepenger = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
-        val pleiepengerPeriode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusWeeks(2))
+        val pleiepengerPeriode =
+            Periode(LocalDate.now().plusYears(1).plusDays(1), LocalDate.now().plusYears(1).plusWeeks(2))
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
@@ -199,18 +121,17 @@ class SamordningStegTest {
                     )
                 ),
                 vurdertAv = "ident",
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
-
-        val steg = settOppRessurser(
+        settOppRessurser(
             Ytelse.SYKEPENGER,
             behandling.id,
             periode = periodeMedSykepenger
         )
 
-        steg.utfør(flytKontekstMedPerioder(behandling))
+        steg().utfør(flytKontekstMedPerioder(behandling))
 
         val perioderMedSamordning = InMemorySamordningRepository.hentHvisEksisterer(behandling.id)!!
 
@@ -223,8 +144,8 @@ class SamordningStegTest {
 
     @Test
     fun `tilbakeføring skal slette vurderinger`() {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
-        val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
+        settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
@@ -242,17 +163,16 @@ class SamordningStegTest {
                     )
                 ),
                 vurdertAv = "ident",
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
-        steg.utfør(flytKontekstMedPerioder(behandling))
+        steg().utfør(flytKontekstMedPerioder(behandling))
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
         løsBehovet(behandling)
 
-        // Simler trekk av søknad
-        simulerTrekkAvSøknad()
-        trukketSøknadRepository.lagreTrukketSøknadVurdering(
+        // Simuler trekk av søknad
+        InMemoryTrukketSøknadRepository.lagreTrukketSøknadVurdering(
             behandling.id,
             TrukketSøknadVurdering(
                 journalpostId = JournalpostId("12344321"),
@@ -263,30 +183,27 @@ class SamordningStegTest {
             )
         )
 
-        // skal tilbakefølre
-        steg.utfør(flytKontekstMedPerioder(behandling))
+        // skal tilbakeføre
+        steg(
+            FakeTidligereVurderinger(
+                Tidslinje(
+                    sak.rettighetsperiode,
+                    TidligereVurderinger.UunngåeligAvslag
+                )
+            ).apply {
+                avslagEllerIngenBehandlingsgrunnlag = true
+                ingenBehandlingsgrunnlag = true
+            })
+            .utfør(flytKontekstMedPerioder(behandling))
 
         val vurderinger = InMemorySamordningVurderingRepository.hentHvisEksisterer(behandling.id)
         assertThat(vurderinger).isNull()
     }
 
-    private fun simulerTrekkAvSøknad() {
-        every {
-            tidligereVurderinger.behandlingsutfall(
-                any(),
-                any()
-            )
-        } answers {
-            tidslinjeOf(
-                firstArg<FlytKontekstMedPerioder>().rettighetsperiode to TidligereVurderinger.IkkeBehandlingsgrunnlag
-            )
-        }
-    }
-
     @Test
     fun `saksbehandler kan lagre flere perioder enn det vi får fra registre`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
+        settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
@@ -296,7 +213,7 @@ class SamordningStegTest {
                         ytelseType = Ytelse.SYKEPENGER,
                         vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
-                                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
                                 gradering = Prosent(50),
                                 manuell = false,
                             )
@@ -304,11 +221,11 @@ class SamordningStegTest {
                     )
                 ),
                 vurdertAv = "ident",
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
-        val res2 = steg.utfør(
+        val res2 = steg().utfør(
             kontekst = flytKontekstMedPerioder(behandling)
         )
 
@@ -320,7 +237,7 @@ class SamordningStegTest {
         assertThat(uthentetGrunnlag!!.samordningPerioder).hasSize(1)
         assertThat(uthentetGrunnlag.samordningPerioder.first()).isEqualTo(
             SamordningPeriode(
-                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
                 gradering = Prosent(50),
             )
         )
@@ -329,10 +246,10 @@ class SamordningStegTest {
     @Test
     fun `om det kommer ny informasjon, avklaringsbehov opprettes igjen`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        val steg = settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
+        settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
         val kontekst = flytKontekstMedPerioder(behandling)
 
-        steg.utfør(kontekst = kontekst)
+        steg().utfør(kontekst = kontekst)
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
 
         InMemorySamordningVurderingRepository.lagreVurderinger(
@@ -344,7 +261,7 @@ class SamordningStegTest {
 
                         vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
-                                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                                periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
                                 gradering = Prosent(50),
                                 manuell = false,
                             )
@@ -352,20 +269,24 @@ class SamordningStegTest {
                     )
                 ),
                 vurdertAv = "ident",
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
         løsBehovet(behandling)
 
-        val res2 = steg.utfør(kontekst = kontekst)
+        val res2 = steg().utfør(kontekst = kontekst)
 
         assertThat(res2).isEqualTo(Fullført)
         verifiserAvklaringsbehov(behandling, Status.AVSLUTTET)
 
-        lagreYtelseGrunnlag(behandling.id, Ytelse.SYKEPENGER, Periode(LocalDate.now().minusYears(2), LocalDate.now()))
+        lagreYtelseGrunnlag(
+            behandling.id,
+            Ytelse.SYKEPENGER,
+            Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(1))
+        )
         løsBehovet(behandling)
 
-        steg.utfør(kontekst = kontekst)
+        steg().utfør(kontekst = kontekst)
 
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
     }
@@ -373,7 +294,6 @@ class SamordningStegTest {
     private fun flytKontekstMedPerioder(behandling: Behandling): FlytKontekstMedPerioder =
         no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
             this.behandling = behandling
-            this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
         }
 
     @Test
@@ -397,7 +317,7 @@ class SamordningStegTest {
                     )
                 ),
                 vurdertAv = "ident",
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -407,7 +327,7 @@ class SamordningStegTest {
                 this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
             }
 
-        val res = steg.utfør(kontekst)
+        val res = steg().utfør(kontekst)
 
         assertThat(res).isEqualTo(Fullført)
 
@@ -439,7 +359,7 @@ class SamordningStegTest {
                     )
                 ),
                 vurdertAv = "ident",
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
 
@@ -449,7 +369,7 @@ class SamordningStegTest {
             this.rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
         }
 
-        val res = steg.utfør(kontekst)
+        val res = steg().utfør(kontekst)
 
         assertThat(res).isEqualTo(Fullført)
 
@@ -479,10 +399,18 @@ class SamordningStegTest {
     private fun settOppRessurser(
         ytelse: Ytelse,
         behandlingId: BehandlingId,
-        periode: Periode = Periode(LocalDate.now().minusYears(1), LocalDate.now())
-    ): SamordningSteg {
+        periode: Periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+    ) {
         lagreYtelseGrunnlag(behandlingId, ytelse, periode)
-        return steg
+    }
+
+    private fun steg(tidligereVurderinger: TidligereVurderinger = FakeTidligereVurderinger()): SamordningSteg {
+        return SamordningSteg(
+            samordningService = SamordningService(inMemoryRepositoryProvider),
+            samordningRepository = inMemoryRepositoryProvider.provide(),
+            tidligereVurderinger = tidligereVurderinger,
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider())
+        )
     }
 
     private fun lagreYtelseGrunnlag(
@@ -506,5 +434,4 @@ class SamordningStegTest {
             )
         )
     }
-
 }
