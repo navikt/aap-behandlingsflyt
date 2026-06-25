@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGatew
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -444,8 +445,10 @@ class BrevGateway : BrevbestillingGateway {
                     if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
-                    brevBehov.avslagsårsaker.forEach { årsak ->
-                        add(mapAvslagsårsakTilFaktagrunnlag(årsak))
+                    brevBehov.avslagsårsaker.forEach { _ ->
+                        prioriterAvslagsårsak(brevBehov.avslagsårsaker)?.let { årsak ->
+                            add(mapAvslagsårsakTilFaktagrunnlag(årsak))
+                        }
                     }
                 }
             }
@@ -609,5 +612,23 @@ class BrevGateway : BrevbestillingGateway {
                 )
             },
         )
+    }
+
+    private fun prioriterAvslagsårsak(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+        val prioritertRekkefølge = listOf(
+            Avslagsårsak.BRUKER_UNDER_18,
+            Avslagsårsak.BRUKER_OVER_67,
+            Avslagsårsak.IKKE_MEDLEM,
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE,
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
+            Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING,
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON,
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+        )
+        return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
+            ?: avslagsårsaker.firstOrNull()
     }
 }
