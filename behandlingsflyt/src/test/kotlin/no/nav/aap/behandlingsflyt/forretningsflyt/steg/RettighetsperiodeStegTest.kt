@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsp
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -28,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import org.assertj.core.api.Assertions.assertThat
@@ -44,6 +46,7 @@ class RettighetsperiodeStegTest {
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var rettighetsperiodeRepository: VurderRettighetsperiodeRepository
     private lateinit var steg: RettighetsperiodeSteg
+    private lateinit var kravRepository: KravRepository
     private val behandlingRepository = InMemoryBehandlingRepository
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private val gatewayProvider = createGatewayProvider {
@@ -65,6 +68,7 @@ class RettighetsperiodeStegTest {
         val avbrytRevurderingService: AvbrytRevurderingService = mockk {
             every { revurderingErAvbrutt(any()) } returns false
         }
+        kravRepository = mockk()
 
         steg = RettighetsperiodeSteg(
             vilkårsresultatRepository,
@@ -75,6 +79,8 @@ class RettighetsperiodeStegTest {
                 behandlingRepository,
                 vilkårsresultatRepository,
                 TrukketSøknadService(trukketSøknadRepository),
+                kravRepository,
+                mockk(),
                 gatewayProvider.provide()
             ),
             tidligereVurderinger,

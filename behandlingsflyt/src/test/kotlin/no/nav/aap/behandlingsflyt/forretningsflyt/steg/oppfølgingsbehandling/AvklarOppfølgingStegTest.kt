@@ -40,6 +40,8 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -74,6 +76,8 @@ class AvklarOppfølgingStegTest {
         vilkårsresultatRepository = vilkårsresultatRepository,
         avbrytRevurderingService = avbrytRevurderingService,
         trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
+        kravRepository = InMemoryKravRepository,
+        sakRepository = InMemorySakRepository,
         unleashGateway = gatewayProvider.provide()
     )
 
