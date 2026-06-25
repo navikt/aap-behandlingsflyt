@@ -53,8 +53,10 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                                         inkluderManuelle = false
                                     ).isEmpty()
 
+                                val harSendtInnManuelleTidligere = manuellInntektGrunnlag?.manuelleInntekter.orEmpty().isNotEmpty()
+
                                 // Behøver vurdering dersom en inntekt for siste tre år mangler fra register
-                                !harInntektIAlleRelevantÅrFraRegister
+                                !harInntektIAlleRelevantÅrFraRegister || harSendtInnManuelleTidligere
                             }
                         }
                     }
