@@ -27,6 +27,7 @@ class FlytKontekstMedPerioderBuilder {
             behandlingId = value?.id
             behandlingType = value?.typeBehandling() ?: behandlingType
             forrigeBehandlingId = value?.forrigeBehandlingId
+            vurderingsbehovRelevanteForSteg = value?.vurderingsbehov().orEmpty().map { it.type }.toSet()
             field = value
         }
 

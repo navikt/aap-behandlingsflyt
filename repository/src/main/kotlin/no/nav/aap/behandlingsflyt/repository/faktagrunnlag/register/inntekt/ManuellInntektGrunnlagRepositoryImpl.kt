@@ -10,10 +10,6 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.Year
-import kotlin.collections.filterNot
-import kotlin.collections.orEmpty
-import kotlin.collections.plus
-import kotlin.collections.toSet
 
 class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     ManuellInntektGrunnlagRepository {
@@ -93,16 +89,6 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 )
             }
         }
-    }
-
-    override fun lagre(behandlingId: BehandlingId, manuellVurdering: ManuellInntektVurdering) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-
-        // Hvis det finnes en vurdering på samme år, så overskrives denne
-        val kombinerteEntries = (eksisterendeGrunnlag?.manuelleInntekter.orEmpty()
-            .filterNot { it.år == manuellVurdering.år } + manuellVurdering).toSet()
-
-        lagre(behandlingId, kombinerteEntries)
     }
 
     override fun lagre(behandlingId: BehandlingId, manuellVurderinger: Set<ManuellInntektVurdering>) {

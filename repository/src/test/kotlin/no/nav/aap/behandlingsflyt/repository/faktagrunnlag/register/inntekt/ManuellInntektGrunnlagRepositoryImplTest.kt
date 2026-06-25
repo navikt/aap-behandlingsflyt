@@ -43,7 +43,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         dataSource.transaction {
             val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            manuellInntektGrunnlagRepo.lagre(behandling.id, manuellVurdering)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, setOf(manuellVurdering))
         }
 
         dataSource.transaction {
@@ -51,7 +51,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
             val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
-            assertThat(uthentet).isNotNull.extracting { it!!.manuelleInntekter }
+            assertThat(uthentet).isNotNull.extracting { grunnlag -> grunnlag!!.manuelleInntekter }
                 .usingRecursiveComparison().withEqualsForType(
                     { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
                     BigDecimal::class.java
@@ -64,9 +64,12 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         dataSource.transaction {
             val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            manuellInntektGrunnlagRepo.lagre(behandling.id, manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp)))
+            manuellInntektGrunnlagRepo.lagre(
+                behandling.id,
+                setOf(manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp)))
+            )
             val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
-            assertThat(uthentet).isNotNull.extracting { it!!.manuelleInntekter }
+            assertThat(uthentet).isNotNull.extracting { grunnlag -> grunnlag!!.manuelleInntekter }
                 .usingRecursiveComparison().withEqualsForType(
                     { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
                     BigDecimal::class.java
@@ -174,8 +177,8 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
         dataSource.transaction {
             val repo = ManuellInntektGrunnlagRepositoryImpl(it)
-            repo.lagre(behandlingSomSlettes.id, vurdering)
-            repo.lagre(behandlingSomBeholdes.id, vurderingBeholdt)
+            repo.lagre(behandlingSomSlettes.id, setOf(vurdering))
+            repo.lagre(behandlingSomBeholdes.id, setOf(vurderingBeholdt))
         }
 
         dataSource.transaction {
