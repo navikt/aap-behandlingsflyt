@@ -74,6 +74,7 @@ public const val FASTSETT_MANUELL_INNTEKT: String = "7001"
 public const val AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR: String = "8001"
 public const val AVKLAR_OPPFØLGINGSBEHOV_NAY: String = "8002"
 public const val VENT_PÅ_OPPFØLGING: String = "8003"
+public const val VENT_PÅ_OPPFØLGING_NY_KODE: String = "8004"
 public const val MANUELT_SATT_PÅ_VENT_KODE: String = "9001"
 public const val BESTILL_BREV_KODE: String = "9002"
 public const val BESTILL_LEGEERKLÆRING_KODE: String = "9003"
@@ -454,6 +455,11 @@ public enum class AvklaringsbehovKode {
      * [VENT_PÅ_OPPFØLGING]
      */
     `8003`,
+
+    /**
+     * [VENT_PÅ_OPPFØLGING_NY_KODE]
+     */
+    `8004`,
 
     /**
      * [MANUELT_SATT_PÅ_VENT_KODE]

@@ -58,8 +58,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.KravSteg to false,
-        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to false
-    )
+        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to false,
+        BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
         return "1,100"

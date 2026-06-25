@@ -120,7 +120,7 @@ class PdlHendelseKafkaKonsumentTest {
 
 
 private fun testConfig(brokers: String) = KafkaConsumerConfig<String, Personhendelse>(
-    applicationId = "behandlingsflyt-test",
+    applicationId = "behandlingsflyt-test-${java.util.UUID.randomUUID()}",
     brokers = brokers,
     ssl = null,
     schemaRegistry = SchemaRegistryConfig(
