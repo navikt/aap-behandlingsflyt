@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import java.time.LocalDateTime
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -32,6 +33,7 @@ class HåndterMottattDokumentService(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
     private val behandlingRepository: BehandlingRepository,
+    private val ansattInfoService: AnsattInfoService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -43,6 +45,7 @@ class HåndterMottattDokumentService(
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+        ansattInfoService = AnsattInfoService(gatewayProvider),
     )
 
     fun håndterMottatteDokumenter(
@@ -56,6 +59,8 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(brevkategori, melding)
+        val opprettetAvNavn = MottattHendelseUtleder.utledOpprettetAv(melding)
+            ?.let { navIdent -> ansattInfoService.hentAnsattNavnOgEnhet(navIdent)?.navn }
 
         val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
             sak.saksnummer,
@@ -63,6 +68,7 @@ class HåndterMottattDokumentService(
                 årsak = årsakTilOpprettelse,
                 vurderingsbehov = vurderingsbehov,
                 opprettet = mottattTidspunkt,
+                opprettetAv = opprettetAvNavn,
                 beskrivelse = MottattHendelseUtleder.utledBeskrivelseForÅrsakTilOpprettelse(melding)
             )
         )
