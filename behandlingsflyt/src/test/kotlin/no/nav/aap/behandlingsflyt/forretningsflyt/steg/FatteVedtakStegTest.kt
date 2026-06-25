@@ -372,11 +372,7 @@ class FatteVedtakStegTest {
         val avklaringsbehov =
             requireNotNull(InMemoryAvklaringsbehovRepository.hent(behandlingId).find { it.definisjon == definisjon })
 
-        endringer.forEach { endring ->
-            InMemoryAvklaringsbehovRepository.endre(
-                avklaringsbehovId = avklaringsbehov.id,
-                endring = endring
-            )
-        }
+        avklaringsbehov.historikk.clear()
+        avklaringsbehov.historikk.addAll(endringer)
     }
 }
