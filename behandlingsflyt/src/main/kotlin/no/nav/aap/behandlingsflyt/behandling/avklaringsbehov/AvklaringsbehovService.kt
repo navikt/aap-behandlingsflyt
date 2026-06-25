@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -464,9 +465,9 @@ class AvklaringsbehovService(
                 .split(",")
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
-                .map(SakId::fromStringOrNull)
+                .map(Saksnummer::fra)
                 .toSet()
-        val sakIder = saksnumre.map { sakRepository.hent(sakId).id }
-        return sakIder.contains(sakId)
+        val saksnummer = sakRepository.hent(sakId).saksnummer
+        return saksnumre.contains(saksnummer)
     }
 }
