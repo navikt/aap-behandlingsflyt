@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
-import java.time.LocalDate
 
 @Deprecated("Erstattes av vurderinger")
 data class ManuellInntektVurderingGrunnlagResponse(
@@ -27,7 +26,7 @@ data class ManuellInntektGrunnlagResponse(
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean,
-    val delperioderForSplittÅr: List<DelperiodeData> = emptyList(),
+    val manglendeMånedsInntekter: List<MånedsperiodeData> = emptyList(),
 )
 
 data class ManuellInntektGrunnlagVurdering(
@@ -41,11 +40,10 @@ data class ÅrData(
     val beløp: BigDecimal?,
     val eøsBeløp: BigDecimal? = null,
     val ferdigLignetPGI: BigDecimal? = null,
-    val periodeFom: LocalDate? = null,
-    val periodeTom: LocalDate? = null,
+    val periode: Periode? = null,
 )
 
-data class DelperiodeData(
+data class MånedsperiodeData(
     val år: Int,
     val periode: Periode,
     val uføregrad: Int,

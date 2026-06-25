@@ -122,7 +122,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         historiskeManuelleVurderinger = mappedNyHistorikk,
                         registrerteInntekterSisteRelevanteAr = registrerteInntekterSisteTreÅr,
                         sisteRelevanteÅr = år.value,
-                        delperioderForSplittÅr = utledDelperioderForSplittÅr(
+                        manglendeMånedsInntekter = utledManglendeMånedsperioderForSplittÅr(
                             unleashGateway = gatewayProvider.provide(),
                             ytterligereNedsattDato = beregningVurderingRepository.hentHvisEksisterer(behandling.id)?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato,
                             uføregrader = uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty(),
@@ -140,15 +140,15 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
 }
 
 /**
- * Delperioder (uføregrad-segmenter) for år der uføregraden endrer seg midt i året, slik at
+ * Månedsperioder (uføregrad-segmenter) for år der uføregraden endrer seg midt i året, slik at
  * saksbehandler må legge inn beregnet PGI per delperiode.
  */
-private fun utledDelperioderForSplittÅr(
+private fun utledManglendeMånedsperioderForSplittÅr(
     unleashGateway: UnleashGateway,
     ytterligereNedsattDato: LocalDate?,
     uføregrader: Set<Uføre>,
     inntektGrunnlag: InntektGrunnlag?,
-): List<DelperiodeData> {
+): List<MånedsperiodeData> {
     if (!unleashGateway.isEnabled(BehandlingsflytFeature.ManuellInntektDelvisUfore)) return emptyList()
     if (ytterligereNedsattDato == null || uføregrader.isEmpty() || inntektGrunnlag == null) return emptyList()
 
@@ -159,7 +159,7 @@ private fun utledDelperioderForSplittÅr(
         ytterligereNedsattDato = ytterligereNedsattDato,
     ).flatMap { år ->
         UføreInntektUtleder.utledDelperioder(uføregrader, år).map { delperiode ->
-            DelperiodeData(
+            MånedsperiodeData(
                 år = år.value,
                 periode = Periode(delperiode.periode.fom, delperiode.periode.tom),
                 uføregrad = delperiode.uføregrad.prosentverdi(),
