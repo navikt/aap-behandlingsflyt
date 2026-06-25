@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVBRUTT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
@@ -12,11 +13,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -31,6 +36,8 @@ class AvklaringsbehovService(
     private val behandlingRepository: BehandlingRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val trukketSøknadService: TrukketSøknadService,
+    private val kravRepository: KravRepository,
+    private val sakRepository: SakRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -39,6 +46,8 @@ class AvklaringsbehovService(
         behandlingRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        kravRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -253,38 +262,13 @@ class AvklaringsbehovService(
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
                 val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
-                val perioderVilkåretErVurdert = kontekst.forrigeBehandlingId
-                    ?.let { forrigeBehandlingId ->
-                        val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                        val forrigeRettighetsperiode =
-                            /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                            vilkårsresultatRepository.hent(forrigeBehandlingId)
-                                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                                .tidslinje()
-                                .helePerioden()
-
-                        nårVurderingErRelevant(
-                            kontekst.copy(
-                                /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                                behandlingId = forrigeBehandlingId,
-                                forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                                rettighetsperiode = forrigeRettighetsperiode,
-                                behandlingType = forrigeBehandling.typeBehandling(),
-                            )
-                        )
-                    }
-                    .orEmpty()
 
                 val perioderSomBehøverVurdering =
-                    perioderVilkåretErRelevant
-                        .begrensetTil(kontekst.rettighetsperiode)
-                        .leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
-                            erRelevant && erVurdert != true
-                        }
-                        .filter { it.verdi }
-                        .komprimer()
-                        .perioder()
-                        .toSet()
+                    perioderSomBehøverVurdering(
+                        kontekst,
+                        perioderVilkåretErRelevant,
+                        nårVurderingErRelevant
+                    )
 
                 if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
                     && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
@@ -398,5 +382,92 @@ class AvklaringsbehovService(
             nårVurderingErGyldig = nårVurderingErGyldig,
             tilbakestillGrunnlag = tilbakestillGrunnlag
         )
+    }
+
+    private fun perioderSomBehøverVurdering(
+        kontekst: FlytKontekstMedPerioder,
+        perioderVilkåretErRelevant: Tidslinje<Boolean>,
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+    ): Set<Periode> {
+        return Tidslinje.map3(
+            perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
+            perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant),
+            nårEndringIKrav(kontekst)
+        ) { erRelevant, erVurdert, erKravEndret ->
+            erRelevant == true && (erVurdert != true || erKravEndret == true)
+        }
+            .filter { it.verdi }
+            .komprimer().perioder().toSet()
+    }
+
+    private fun nårEndringIKrav(
+        kontekst: FlytKontekstMedPerioder,
+    ): Tidslinje<Boolean> {
+        if (erToggleAvskrudd(kontekst)) {
+            return Tidslinje.empty()
+        }
+
+        val forrigeVedtatteNyeKravEllerGjenopptak = kontekst.forrigeBehandlingId?.let {
+            kravRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId)?.kravtidslinje()
+        }.orEmpty()
+
+        val gjeldendeNyeKravEllerGjenopptak =
+            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.kravtidslinje().orEmpty()
+
+
+        return Tidslinje.map2(
+            gjeldendeNyeKravEllerGjenopptak,
+            forrigeVedtatteNyeKravEllerGjenopptak
+        ) { vedtatte, gjeldende ->
+            vedtatte?.referanse != gjeldende?.referanse
+        }
+    }
+
+    private fun perioderVilkåretErVurdert(
+        kontekst: FlytKontekstMedPerioder,
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>
+    ): Tidslinje<Boolean> {
+        return kontekst.forrigeBehandlingId
+            ?.let { forrigeBehandlingId ->
+                val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
+                val forrigeRettighetsperiode =
+                    /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
+                    vilkårsresultatRepository.hent(forrigeBehandlingId)
+                        .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+                        .tidslinje()
+                        .helePerioden()
+
+                nårVurderingErRelevant(
+                    kontekst.copy(
+                        /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
+                        behandlingId = forrigeBehandlingId,
+                        forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
+                        rettighetsperiode = forrigeRettighetsperiode,
+                        behandlingType = forrigeBehandling.typeBehandling(),
+                    )
+                )
+            }
+            .orEmpty()
+    }
+
+    private fun erToggleAvskrudd(kontekst: FlytKontekstMedPerioder): Boolean {
+        return unleashGateway.isDisabled(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov)
+                || !unleashGateway.isVariantEnabled(
+            BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+            "saksnumre"
+        )
+                || !skalSakTaHensynTilKrav(kontekst.sakId)
+    }
+
+    private fun skalSakTaHensynTilKrav(sakId: SakId): Boolean {
+        val saksnumre =
+            unleashGateway.getVariantValue(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre")
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .map(Saksnummer::fra)
+                .toSet()
+        val saksnummer = sakRepository.hent(sakId).saksnummer
+        return saksnumre.contains(saksnummer)
     }
 }

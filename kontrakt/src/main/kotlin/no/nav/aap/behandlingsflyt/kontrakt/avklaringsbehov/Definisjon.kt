@@ -574,10 +574,20 @@ public enum class Definisjon(
         løsesISteg = StegType.AVKLAR_OPPFØLGING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
     ),
+
+    @Deprecated("Brukt i tidligere behandlinger, erstattet av VENT_PÅ_OPPFØLGING_NY")
     VENT_PÅ_OPPFØLGING(
         kode = AvklaringsbehovKode.`8003`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.START_OPPFØLGINGSBEHANDLING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL),
+        defaultFrist = Period.ofWeeks(4),
+    ),
+
+    VENT_PÅ_OPPFØLGING_NY(
+        kode = AvklaringsbehovKode.`8004`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.AVKLAR_OPPFØLGING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofWeeks(4),
     ),

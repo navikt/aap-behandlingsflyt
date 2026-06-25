@@ -42,7 +42,7 @@ class VurderSykdomSteg(
             tvingerAvklaringsbehov = tvingerAvklaringsbehov(kontekst),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
-            kontekst,
+            kontekst = kontekst,
             tilbakestillGrunnlag = {
                 val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
                     ?.let { sykdomRepository.hentHvisEksisterer(it) }

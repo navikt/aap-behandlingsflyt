@@ -14,17 +14,24 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class StartOppfølgingsBehandlingSteg(
     private val mottattDokumentRepository: MottattDokumentRepository,
-    val avklaringsbehovRepository: AvklaringsbehovRepository
+    val avklaringsbehovRepository: AvklaringsbehovRepository,
+    val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang)) {
+            return Fullført
+        }
+
         if (kontekst.behandlingType != TypeBehandling.OppfølgingsBehandling) {
             log.info("Dette steget skal bare kalles for behandlingstype ${TypeBehandling.OppfølgingsBehandling}")
             return Fullført
@@ -56,6 +63,7 @@ class StartOppfølgingsBehandlingSteg(
             return StartOppfølgingsBehandlingSteg(
                 mottattDokumentRepository = repositoryProvider.provide(),
                 avklaringsbehovRepository = repositoryProvider.provide(),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 
