@@ -52,7 +52,7 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
 
                 val søknaderUtenKravvurdering =
                     mottattDokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
-                        .filter { søknad -> nyeVurderinger.any { it.journalpostId == søknad.referanse.asJournalpostId } }
+                        .filter { søknad -> nyeVurderinger.none { it.journalpostId == søknad.referanse.asJournalpostId } }
                         .map { it.tilSøknadUtenKravDto() }
 
                 KravGrunnlagDto(
