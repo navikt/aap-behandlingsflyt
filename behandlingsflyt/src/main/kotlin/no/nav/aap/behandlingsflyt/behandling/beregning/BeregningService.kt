@@ -101,13 +101,10 @@ class BeregningService(
             .takeWhile { !it.isAfter(YearMonth.from(periode.tom)) }
             .toList()
 
-        val perMåned = totalt.divide(BigDecimal(måneder.size), 2, RoundingMode.DOWN)
-        val rest = totalt.subtract(perMåned.multiply(BigDecimal(måneder.size)))
+        val perMåned = totalt.divide(BigDecimal(måneder.size), 2, RoundingMode.HALF_UP)
 
-        // Legg avrundingsresten på første måned slik at summen blir eksakt lik delperiodens total.
-        return måneder.mapIndexed { index, årMåned ->
-            val beløp = if (index == 0) perMåned.add(rest) else perMåned
-            Månedsinntekt(årMåned, Beløp(beløp))
+        return måneder.map { årMåned ->
+            Månedsinntekt(årMåned, Beløp(perMåned))
         }
     }
 

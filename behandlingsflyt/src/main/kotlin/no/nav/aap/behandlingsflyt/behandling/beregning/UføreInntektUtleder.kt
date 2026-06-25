@@ -39,8 +39,6 @@ object UføreInntektUtleder {
     }
 
     fun utledDelperioder(uføregrader: Set<Uføre>, år: Year): List<UføregradDelperiode> {
-        if (uføregrader.isEmpty()) return emptyList()
-
         return uføregrader.tilTidslinje()
             .begrensetTil(årsperiode(år))
             .komprimer()

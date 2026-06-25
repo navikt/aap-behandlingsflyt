@@ -5,10 +5,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManu
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.math.BigDecimal
@@ -48,7 +46,7 @@ class AvklarManuellInntektVurderingLøser(
                         år = Year.of(vurdering.år),
                         eøsBeløp = vurdering.eøsBeløp?.let { Beløp(it) },
                         ferdigLignetPGI = vurdering.ferdigLignetPGI?.let { Beløp(it) },
-                        periode = utledPeriode(vurdering),
+                        periode = vurdering.periode,
                     )
                 }.toSet()
             } else {
@@ -71,21 +69,5 @@ class AvklarManuellInntektVurderingLøser(
 
     override fun forBehov(): Definisjon {
         return Definisjon.FASTSETT_MANUELL_INNTEKT
-    }
-
-    private fun utledPeriode(vurdering: ÅrsVurdering): Periode? {
-        val fom = vurdering.periodeFom
-        val tom = vurdering.periodeTom
-        if (fom == null && tom == null) return null
-        if (fom == null || tom == null) {
-            throw UgyldigForespørselException("Delperiode må ha både fom og tom satt")
-        }
-        if (fom > tom) {
-            throw UgyldigForespørselException("Delperiode fom ($fom) kan ikke være etter tom ($tom)")
-        }
-        if (fom.year != vurdering.år || tom.year != vurdering.år) {
-            throw UgyldigForespørselException("Delperiode ($fom–$tom) må ligge innenfor året ${vurdering.år}")
-        }
-        return Periode(fom, tom)
     }
 }

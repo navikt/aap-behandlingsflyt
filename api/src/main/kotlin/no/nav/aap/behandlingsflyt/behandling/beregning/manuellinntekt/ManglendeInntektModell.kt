@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -46,7 +47,6 @@ data class ÅrData(
 
 data class DelperiodeData(
     val år: Int,
-    val periodeFom: LocalDate,
-    val periodeTom: LocalDate,
+    val periode: Periode,
     val uføregrad: Int,
 )

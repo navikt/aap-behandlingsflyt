@@ -8,14 +8,14 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.UføreInntektUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -24,10 +24,11 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.MonthDay
 import java.time.Year
 import javax.sql.DataSource
@@ -50,6 +51,8 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                     val beregningService = BeregningService(provider)
                     val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
                     val inntektRepository = provider.provide<InntektGrunnlagRepository>()
+                    val beregningVurderingRepository = provider.provide<BeregningVurderingRepository>()
+                    val uføreRepository = provider.provide<UføreRepository>()
                     val vurdertAvService = VurdertAvService(provider, gatewayProvider)
 
                     val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
@@ -120,7 +123,10 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         registrerteInntekterSisteRelevanteAr = registrerteInntekterSisteTreÅr,
                         sisteRelevanteÅr = år.value,
                         delperioderForSplittÅr = utledDelperioderForSplittÅr(
-                            repositoryRegistry.provider(it), gatewayProvider, behandling.id
+                            unleashGateway = gatewayProvider.provide(),
+                            ytterligereNedsattDato = beregningVurderingRepository.hentHvisEksisterer(behandling.id)?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato,
+                            uføregrader = uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty(),
+                            inntektGrunnlag = inntektGrunnlag,
                         ),
                     )
                 }
@@ -138,17 +144,12 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
  * saksbehandler må legge inn beregnet PGI per delperiode.
  */
 private fun utledDelperioderForSplittÅr(
-    provider: RepositoryProvider,
-    gatewayProvider: GatewayProvider,
-    behandlingId: BehandlingId,
+    unleashGateway: UnleashGateway,
+    ytterligereNedsattDato: LocalDate?,
+    uføregrader: Set<Uføre>,
+    inntektGrunnlag: InntektGrunnlag?,
 ): List<DelperiodeData> {
-    val unleash = gatewayProvider.provide<UnleashGateway>()
-    if (!unleash.isEnabled(BehandlingsflytFeature.ManuellInntektDelvisUfore)) return emptyList()
-
-    val ytterligereNedsattDato = provider.provide<BeregningVurderingRepository>().hentHvisEksisterer(behandlingId)
-        ?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-    val uføregrader = provider.provide<UføreRepository>().hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
-    val inntektGrunnlag = provider.provide<InntektGrunnlagRepository>().hentHvisEksisterer(behandlingId)
+    if (!unleashGateway.isEnabled(BehandlingsflytFeature.ManuellInntektDelvisUfore)) return emptyList()
     if (ytterligereNedsattDato == null || uføregrader.isEmpty() || inntektGrunnlag == null) return emptyList()
 
     return UføreInntektUtleder.finnÅrSomKreverManuellPeriodeinntekt(
@@ -160,8 +161,7 @@ private fun utledDelperioderForSplittÅr(
         UføreInntektUtleder.utledDelperioder(uføregrader, år).map { delperiode ->
             DelperiodeData(
                 år = år.value,
-                periodeFom = delperiode.periode.fom,
-                periodeTom = delperiode.periode.tom,
+                periode = Periode(delperiode.periode.fom, delperiode.periode.tom),
                 uføregrad = delperiode.uføregrad.prosentverdi(),
             )
         }

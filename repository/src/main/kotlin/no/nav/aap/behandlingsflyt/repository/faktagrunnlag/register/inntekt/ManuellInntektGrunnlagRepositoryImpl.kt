@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellI
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -88,12 +87,10 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                     begrunnelse = it.getString("begrunnelse"),
                     belop = it.getBigDecimalOrNull("belop")?.let { verdi -> Beløp(verdi) },
                     vurdertAv = it.getString("vurdert_av"),
-                    opprettet = it.getLocalDateTime( "opprettet_tid"),
+                    opprettet = it.getLocalDateTime("opprettet_tid"),
                     eøsBeløp = it.getBigDecimalOrNull("eos_belop")?.let(::Beløp),
                     ferdigLignetPGI = it.getBigDecimalOrNull("ferdig_lignet_pgi")?.let(::Beløp),
-                    periode = it.getLocalDateOrNull("periode_fom")?.let { fom ->
-                        Periode(fom, it.getLocalDate("periode_tom"))
-                    },
+                    periode = it.getPeriodeOrNull("periode"),
                 )
             }
         }
@@ -139,7 +136,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         manuellInntektVurderingerId: Long
     ) {
         val query = """
-            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, EOS_BELOP, FERDIG_LIGNET_PGI, PERIODE_FOM, PERIODE_TOM) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, EOS_BELOP, FERDIG_LIGNET_PGI, PERIODE) VALUES (?, ?, ?, ?, ?, ?, ?, ?::daterange)
         """.trimIndent()
 
         connection.executeBatch(query, manuellVurderinger) {
@@ -151,8 +148,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 setLong(5, manuellInntektVurderingerId)
                 setBigDecimal(6, it.eøsBeløp?.verdi)
                 setBigDecimal(7, it.ferdigLignetPGI?.verdi)
-                setLocalDate(8, it.periode?.fom)
-                setLocalDate(9, it.periode?.tom)
+                setPeriode(8, it.periode)
             }
         }
     }
