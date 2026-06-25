@@ -28,6 +28,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -107,6 +109,7 @@ class BrevUtlederService(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -134,6 +137,7 @@ class BrevUtlederService(
         yrkesskadeRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
     )
 
@@ -411,9 +415,18 @@ class BrevUtlederService(
         )
     }
 
+    private fun hentAvslagsårsaker(behandlingId: BehandlingId): Set<Avslagsårsak> {
+        return vilkårsresultatRepository.hent(behandlingId)
+            .alle()
+            .flatMap { it.vilkårsperioder() }
+            .mapNotNull { it.avslagsårsak }
+            .toSet()
+    }
+
     private fun brevBehovAvslag(behandling: Behandling): Avslag {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        return Avslag(sykdomsvurdering = sykdomsvurdering)
+        val avslagsårsaker = hentAvslagsårsaker(behandling.id)
+        return Avslag(sykdomsvurdering = sykdomsvurdering, avslagsårsaker = avslagsårsaker)
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
