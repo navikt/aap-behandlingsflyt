@@ -1,5 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav
 
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
+import java.time.LocalDate
+
 data class KravGrunnlag(
     val vurderinger: Set<KravVurdering>,
 ) {
@@ -9,6 +15,13 @@ data class KravGrunnlag(
             .values
             .map { kravForReferanse -> kravForReferanse.maxBy { it.opprettet } }
             .toSet()
+    }
+
+    fun kravtidslinje(): Tidslinje<KravVurdering> {
+        return gjeldendeVurderinger()
+            .filter { it is NyttKrav || it is Gjenopptak }
+            .sortedBy { (it as KravMedDato).muligRettFra }
+            .somTidslinje { Periode((it as KravMedDato).muligRettFra, Tid.MAKS) }
     }
 }
 

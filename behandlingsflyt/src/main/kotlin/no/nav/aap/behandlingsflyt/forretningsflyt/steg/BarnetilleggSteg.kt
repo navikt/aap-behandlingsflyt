@@ -35,7 +35,7 @@ class BarnetilleggSteg(
         barnetilleggRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)

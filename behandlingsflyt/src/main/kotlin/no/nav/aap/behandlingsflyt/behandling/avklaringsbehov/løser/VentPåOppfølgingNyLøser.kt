@@ -1,20 +1,19 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingNyLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-@Deprecated("Erstattes av VentPåOppfølgingNyLøser")
-class VentPåOppfølgingLøser(repositoryProvider: RepositoryProvider) : AvklaringsbehovsLøser<VentPåOppfølgingLøsning> {
+class VentPåOppfølgingNyLøser(repositoryProvider: RepositoryProvider) : AvklaringsbehovsLøser<VentPåOppfølgingNyLøsning> {
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: VentPåOppfølgingLøsning
+        løsning: VentPåOppfølgingNyLøsning
     ): LøsningsResultat {
         return LøsningsResultat("Tatt av vent")
     }
 
     override fun forBehov(): Definisjon {
-        return Definisjon.VENT_PÅ_OPPFØLGING
+        return Definisjon.VENT_PÅ_OPPFØLGING_NY
     }
 }

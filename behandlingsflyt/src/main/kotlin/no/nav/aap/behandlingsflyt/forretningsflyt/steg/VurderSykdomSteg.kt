@@ -32,7 +32,7 @@ class VurderSykdomSteg(
         sykdomRepository = repositoryProvider.provide(),
         overgangArbeidRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -42,7 +42,7 @@ class VurderSykdomSteg(
             tvingerAvklaringsbehov = tvingerAvklaringsbehov(kontekst),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
-            kontekst,
+            kontekst = kontekst,
             tilbakestillGrunnlag = {
                 val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
                     ?.let { sykdomRepository.hentHvisEksisterer(it) }

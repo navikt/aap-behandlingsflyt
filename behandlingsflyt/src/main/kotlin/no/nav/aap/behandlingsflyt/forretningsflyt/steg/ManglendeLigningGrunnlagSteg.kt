@@ -47,7 +47,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         beregningService = BeregningService(repositoryProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         uføreRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),

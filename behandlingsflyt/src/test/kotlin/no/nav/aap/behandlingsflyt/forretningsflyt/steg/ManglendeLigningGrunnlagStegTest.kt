@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -29,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
@@ -60,6 +62,7 @@ class ManglendeLigningGrunnlagStegTest {
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
     private lateinit var avklaringsbehovService: AvklaringsbehovService
+    private lateinit var kravRepository: KravRepository
 
     private val sisteÅr = Year.of(2025)
 
@@ -100,13 +103,17 @@ class ManglendeLigningGrunnlagStegTest {
         avbrytRevurderingService = mockk {
             every { revurderingErAvbrutt(any()) } returns false
         }
+        kravRepository = mockk()
 
         avklaringsbehovService = AvklaringsbehovService(
             avbrytRevurderingService,
             avklaringsbehovRepository,
             behandlingRepository,
             vilkårsresultatRepository,
-            TrukketSøknadService(trukketSøknadRepository)
+            TrukketSøknadService(trukketSøknadRepository),
+            kravRepository,
+            mockk(),
+            AlleAvskruddUnleash
         )
 
         steg = ManglendeLigningGrunnlagSteg(

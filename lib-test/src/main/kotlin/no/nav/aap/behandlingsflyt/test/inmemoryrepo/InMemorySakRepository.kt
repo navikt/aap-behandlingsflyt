@@ -132,4 +132,7 @@ object InMemorySakRepository : SakRepository {
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
+
+    fun alle() = synchronized(lock) { memory.values }
+
 }

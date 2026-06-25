@@ -18,9 +18,9 @@ import org.slf4j.LoggerFactory
 class TrekkKlageSteg private constructor(
     private val trekkKlageRepository: TrekkKlageRepository,
     private val repositoryProvider: RepositoryProvider,
+    private val avklaringsbehovService: AvklaringsbehovService
 ): BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val trekkKlageGrunnlag = trekkKlageRepository.hentTrekkKlageGrunnlag(kontekst.behandlingId)
@@ -53,7 +53,8 @@ class TrekkKlageSteg private constructor(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return TrekkKlageSteg (
                 trekkKlageRepository = repositoryProvider.provide(),
-                repositoryProvider = repositoryProvider
+                repositoryProvider = repositoryProvider,
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
             )
         }
 
