@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -13,10 +12,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
@@ -83,7 +85,8 @@ class AvsluttetBehandlingTilStatistikk(
     private val klageresultatUtleder: IKlageresultatUtleder,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
-    private val samordningService: SamordningService,
+    private val samordningVurderingRepository: SamordningVurderingRepository,
+    private val samordningYtelseRepository: SamordningYtelseRepository,
     private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
     private val meldepliktRepository: MeldepliktRepository,
@@ -106,7 +109,8 @@ class AvsluttetBehandlingTilStatistikk(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         meldepliktRepository = repositoryProvider.provide(),
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
-        samordningService = SamordningService(repositoryProvider),
+        samordningVurderingRepository = repositoryProvider.provide(),
+        samordningYtelseRepository = repositoryProvider.provide(),
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
@@ -213,7 +217,10 @@ class AvsluttetBehandlingTilStatistikk(
                     SamordningDTO.Arbeidsgiver(fom = it.periode.fom, tom = it.periode.tom)
                 }
 
-        val samordningYtelserSamornding = samordningService.tidslinje(behandling.id).segmenter()
+        val samordningYtelserSamornding = SamordningYtelseVurderingGrunnlag(
+            ytelseGrunnlag = samordningYtelseRepository.hentHvisEksisterer(behandling.id),
+            vurderingGrunnlag = samordningVurderingRepository.hentHvisEksisterer(behandling.id),
+        ).tilTidslinje().segmenter()
             .flatMap { (periode, verdi) ->
                 verdi.ytelsesGraderinger.map { ytelseGradering ->
                     SamordningDTO.StatligeYtelser(

@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -406,7 +405,8 @@ class SamordningStegTest {
 
     private fun steg(tidligereVurderinger: TidligereVurderinger = FakeTidligereVurderinger()): SamordningSteg {
         return SamordningSteg(
-            samordningService = SamordningService(inMemoryRepositoryProvider),
+            samordningVurderingRepository = inMemoryRepositoryProvider.provide(),
+            samordningYtelseRepository = inMemoryRepositoryProvider.provide(),
             samordningRepository = inMemoryRepositoryProvider.provide(),
             tidligereVurderinger = tidligereVurderinger,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider())

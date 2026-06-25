@@ -4,13 +4,20 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.samordning.YtelseGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -22,26 +29,28 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class SamordningAvslagStegTest {
 
-    val samordningService = mockk<SamordningService>()
     val uføreRepository = mockk<UføreRepository>()
     val samordningUføreRepository = mockk<SamordningUføreRepository>()
+    val samordningYtelseRepository = mockk<SamordningYtelseRepository>()
+    val samordningVurderingRepository = mockk<SamordningVurderingRepository>()
     val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
     val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
     val kontekst = mockk<FlytKontekstMedPerioder>(relaxed = true)
 
     val steg = SamordningAvslagSteg(
-        samordningService = samordningService,
         uføreRepository = uføreRepository,
         samordningUføreRepository = samordningUføreRepository,
+        samordningYtelseRepository = samordningYtelseRepository,
+        samordningVurderingRepository = samordningVurderingRepository,
         vilkårsresultatRepository = vilkårsresultatRepository,
         tidligereVurderinger = FakeTidligereVurderinger(),
     )
@@ -53,10 +62,10 @@ class SamordningAvslagStegTest {
     fun setUp() {
         every { kontekst.rettighetsperiode } returns rettighetsperiode
         every { vilkårsresultatRepository.hent(any()) } returns Vilkårsresultat(id = 1L, vilkår = emptyList())
-        every { samordningService.hentYtelser(any()) } returns null
-        every { samordningService.hentVurderinger(any()) } returns null
         every { uføreRepository.hentHvisEksisterer(any()) } returns null
         every { samordningUføreRepository.hentHvisEksisterer(any()) } returns null
+        every { samordningYtelseRepository.hentHvisEksisterer(any()) } returns null
+        every { samordningVurderingRepository.hentHvisEksisterer(any()) } returns null
     }
 
     private fun samordningUføregrunnlag(uføregrad: Prosent): SamordningUføreGrunnlag {
@@ -76,17 +85,49 @@ class SamordningAvslagStegTest {
 
     @Test
     fun `skal avslå hvis samordning ytelse er 100 i en periode`() {
-        val samordningGradering = SamordningGradering(
-            Prosent.`100_PROSENT`, listOf(
-                YtelseGradering(Ytelse.SYKEPENGER, Prosent.`100_PROSENT`)
+        val ytelseGrunnlag = SamordningYtelseGrunnlag(
+            grunnlagId = 1L,
+            ytelser = setOf(
+                SamordningYtelse(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    kilde = "kilde",
+                    ytelsePerioder = setOf(
+                        SamordningYtelsePeriode(
+                            periode = periode,
+                            gradering = Prosent.`100_PROSENT`,
+                        )
+                    )
+                )
             )
         )
-        every { samordningService.tidslinje(any()) } returns Tidslinje(periode, samordningGradering)
+        val vurderingGrunnlag = SamordningVurderingGrunnlag(
+            begrunnelse = "begrunnelse",
+            vurderinger = setOf(
+                SamordningVurdering(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    vurderingPerioder = setOf(
+                        SamordningVurderingPeriode(
+                            periode = periode,
+                            gradering = Prosent.`100_PROSENT`,
+                            manuell = true,
+                        )
+                    )
+                )
+            ),
+            vurdertAv = "test",
+            vurdertTidspunkt = LocalDateTime.now()
+        )
+
+        every { samordningYtelseRepository.hentHvisEksisterer(any()) } returns ytelseGrunnlag
+        every { samordningVurderingRepository.hentHvisEksisterer(any()) } returns vurderingGrunnlag
+
         var capturedVilkår: Vilkårsresultat? = null
         every { vilkårsresultatRepository.lagre(any(), any()) } answers {
             capturedVilkår = secondArg()
         }
+
         steg.utfør(kontekst = kontekst)
+
         val vilkårTidslinje = capturedVilkår!!.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
         assertThat(vilkårTidslinje.segmenter().count()).isEqualTo(1)
         assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -95,7 +136,6 @@ class SamordningAvslagStegTest {
 
     @Test
     fun `skal avslå hvis samordning uføre er 100 i en periode`() {
-        every { samordningService.tidslinje(any()) } returns Tidslinje.empty()
         every { samordningUføreRepository.hentHvisEksisterer(any()) } returns samordningUføregrunnlag(Prosent.`100_PROSENT`)
         var capturedVilkår: Vilkårsresultat? = null
         every { vilkårsresultatRepository.lagre(any(), any()) } answers {
@@ -115,7 +155,6 @@ class SamordningAvslagStegTest {
                 YtelseGradering(Ytelse.SYKEPENGER, Prosent.`50_PROSENT`)
             )
         )
-        every { samordningService.tidslinje(any()) } returns Tidslinje(forventetPeriode, samordningGradering)
         every { samordningUføreRepository.hentHvisEksisterer(any()) } returns samordningUføregrunnlag(Prosent.`50_PROSENT`)
         var capturedVilkår: Vilkårsresultat? = null
         every { vilkårsresultatRepository.lagre(any(), any()) } answers {

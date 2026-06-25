@@ -1,6 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
+import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere.slåSammenTilListe
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDateTime
@@ -41,7 +45,18 @@ data class SamordningVurderingGrunnlag(
     val vurderinger: Set<SamordningVurdering>,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime
-)
+) {
+    fun tilTidslinje(): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {
+        return vurderinger.filter { it.ytelseType.type == AvklaringsType.MANUELL }
+            .map { ytelse ->
+                val segmenterForYtelse =
+                    ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) }
+                Tidslinje(segmenterForYtelse)
+            }.fold(Tidslinje.empty()) { acc, curr ->
+                acc.kombiner(curr, slåSammenTilListe())
+            }
+    }
+}
 
 interface SamordningPeriode {
     val periode: Periode
