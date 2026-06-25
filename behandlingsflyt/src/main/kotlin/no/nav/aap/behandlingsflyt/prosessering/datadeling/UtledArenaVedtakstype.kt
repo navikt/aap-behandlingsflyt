@@ -99,7 +99,7 @@ class UtledArenaVedtakstype(
             eksisterendeVedtak = utledVedtak(
                 eksisterendeVedtak = eksisterendeVedtak,
                 behandling = behandling,
-                søknader = søknader.filter { it.mottattTidspunkt <= behandling.opprettetTidspunkt }.toSet(),
+                søknader = søknader,
                 rettighetsTyper = diffTidslinjer(forrigeRettighetsTyper, behandlingensRettighetsTyper),
                 stansOgOpphør = diffMap(forrigeStansOgOpphør, behandlingensStansOgOpphør),
             )
