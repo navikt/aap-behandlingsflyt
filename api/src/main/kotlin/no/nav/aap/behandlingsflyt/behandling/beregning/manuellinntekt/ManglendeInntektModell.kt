@@ -27,7 +27,7 @@ data class ManuellInntektGrunnlagResponse(
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean,
-    val delperioderForSplittÅr: List<DelperiodeData>? = emptyList(),
+    val delperioderForSplittÅr: List<DelperiodeData> = emptyList(),
 )
 
 data class ManuellInntektGrunnlagVurdering(
