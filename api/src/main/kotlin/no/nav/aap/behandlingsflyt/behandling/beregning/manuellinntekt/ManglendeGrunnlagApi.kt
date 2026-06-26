@@ -5,10 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -19,9 +16,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.math.BigDecimal
-import java.time.MonthDay
-import java.time.Year
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.manglendeGrunnlagApi(
@@ -40,7 +34,6 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                     val provider = repositoryRegistry.provider(it)
                     val behandlingRepository = provider.provide<BehandlingRepository>()
                     val beregningService = BeregningService(provider)
-                    val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
                     val inntektRepository = provider.provide<InntektGrunnlagRepository>()
                     val vurdertAvService = VurdertAvService(provider, gatewayProvider)
 
@@ -57,59 +50,26 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         )
                     }
 
-                    val grunnlag = manuellInntektRepository.hentHvisEksisterer(behandling.id)
-                    val manuellInntekter = grunnlag?.manuelleInntekter
-
-                    val gamleHistoriske =
-                        manuellInntektRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                            .flatten()
+                    val manglerInntekterFor =
+                        beregningService.manglerInntekterFor(behandling.id, inkluderManuelle = false)
 
                     val manglendeInntektGrunnlagService =
                         ManglendeInntektGrunnlagService(repositoryRegistry.provider(it))
 
                     val mappedVurdering = manglendeInntektGrunnlagService.mapManuellVurderinger(req, vurdertAvService)
-                    val mappedNyHistorikk = manglendeInntektGrunnlagService.mapHistoriskeManuelleVurderinger(req, vurdertAvService)
-
-                    // Gjennomsnittlig G-verdi første januar i året vi er interessert i
-                    val gVerdi = Grunnbeløp.gjennomsnittGrunnbeløp(
-                        Year.of(relevanteÅr.max().value).atMonthDay(
-                            MonthDay.of(1, 1)
-                        )
-                    )
+                    val mappedNyHistorikk =
+                        manglendeInntektGrunnlagService.mapHistoriskeManuelleVurderinger(req, vurdertAvService)
 
                     val år = relevanteÅr.max()
-                    val gammelVurderingFormat = manuellInntekter?.firstOrNull()
 
                     ManuellInntektGrunnlagResponse(
-                        ar = år.value,
-                        gverdi = gVerdi.verdi,
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = gammelVurderingFormat?.let { vurdering ->
-                            ManuellInntektVurderingGrunnlagResponse(
-                                begrunnelse = vurdering.begrunnelse,
-                                vurdertAv = VurdertAvResponse(
-                                    vurdering.vurdertAv,
-                                    vurdering.opprettet.toLocalDate()
-                                ),
-                                ar = vurdering.år.value,
-                                belop = vurdering.belop?.verdi ?: BigDecimal.ZERO,
-                            )
-                        },
-                        historiskeVurderinger = gamleHistoriske.map { vurdering ->
-                            ManuellInntektVurderingGrunnlagResponse(
-                                begrunnelse = vurdering.begrunnelse,
-                                vurdertAv = VurdertAvResponse(
-                                    vurdering.vurdertAv,
-                                    vurdering.opprettet.toLocalDate()
-                                ),
-                                ar = vurdering.år.value,
-                                belop = vurdering.belop?.verdi ?: BigDecimal.ZERO,
-                            )
-                        },
                         manuelleVurderinger = mappedVurdering,
                         historiskeManuelleVurderinger = mappedNyHistorikk,
                         registrerteInntekterSisteRelevanteAr = registrerteInntekterSisteTreÅr,
-                        sisteRelevanteÅr = år.value
+                        sisteRelevanteÅr = år.value,
+                        alleRelevanteÅr = relevanteÅr.map { it.value },
+                        manglerInntektForÅr = manglerInntekterFor.map { it.value }.toList(),
                     )
                 }
 

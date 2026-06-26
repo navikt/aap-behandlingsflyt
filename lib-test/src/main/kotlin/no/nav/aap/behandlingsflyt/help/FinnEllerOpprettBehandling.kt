@@ -81,7 +81,9 @@ fun sak(
     ).finnEllerOpprett(ident(), søknadsdato)
 }
 
-// Oppretter en revurdering ved å først lage en avsluttet førstegangsbehandling og deretter opprette en ny behandling.
+/**
+ * Oppretter en revurdering ved å først lage en avsluttet førstegangsbehandling og deretter opprette en ny behandling.
+ */
 fun opprettRevurdering(
     connection: DBConnection,
     sak: Sak,

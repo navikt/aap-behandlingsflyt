@@ -224,11 +224,13 @@ class FatteVedtakStegTest {
                 ),
             )
         )
+        val forventetVedtakstidspunkt = sistAvsluttet(kontekst.behandlingId, Definisjon.FATTE_VEDTAK)
+
         val resultat =
             steg().utfør(
                 kontekst
             )
-        verify { vedtakService.lagreVedtak(kontekst.behandlingId, nå.plusMinutes(8), virkningstidspunkt) }
+        verify { vedtakService.lagreVedtak(kontekst.behandlingId, forventetVedtakstidspunkt, virkningstidspunkt) }
         assertThat(resultat).isEqualTo(Fullført)
     }
 
@@ -378,5 +380,12 @@ class FatteVedtakStegTest {
                 endring = endring
             )
         }
+    }
+
+    private fun sistAvsluttet(behandlingId: BehandlingId, definisjon: Definisjon): LocalDateTime {
+        return requireNotNull(InMemoryAvklaringsbehovRepository.hent(behandlingId).find { it.definisjon == definisjon })
+            .historikk
+            .filter { it.status == Status.AVSLUTTET }
+            .maxOf { it.tidsstempel }
     }
 }
