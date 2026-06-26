@@ -11,9 +11,11 @@ import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.MeldekortGateway
+import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -29,12 +31,14 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
 
 /**
  * Klasse for alle driftsfunksjoner. Skal kún brukes av DriftApi.
  * */
 class Driftfunksjoner(
+    private val flytJobbRepository: FlytJobbRepository,
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
     private val taSkriveLåsRepository: TaSkriveLåsRepository,
@@ -49,6 +53,7 @@ class Driftfunksjoner(
     private val apiInternGateway: ApiInternGateway,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        flytJobbRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         taSkriveLåsRepository = repositoryProvider.provide(),
@@ -191,6 +196,18 @@ class Driftfunksjoner(
         val person = personRepository.finnEllerOpprett(identliste)
         meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = person.identer())
         apiInternGateway.oppdaterIdenter(sak.saksnummer, person.identer())
+
+        val sisteBehandling =
+            behandlingRepository.hentAlleMedVedtakFor(sak.person.id, TypeBehandling.ytelseBehandlingstyper())
+                .filter { it.saksnummer == sak.saksnummer }
+                .maxByOrNull { it.vedtakstidspunkt }
+
+        if (sisteBehandling == null) {
+            log.warn("Fant ingen vedtatt behandling på sak ${sak.saksnummer}. Oppdaterer ikke meldeperioder.")
+        } else {
+            log.info("Fant vedtatt behandling på sak ${sak.saksnummer}. Oppdaterer meldeperioder for behandling ${sisteBehandling.id}.")
+            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, sisteBehandling.id))
+        }
     }
 
     private fun validerGyldigTilstandFørUtvidelseAvRettighetsperiode(
