@@ -61,6 +61,9 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         )
                     }
 
+                    val manglerInntekterFor =
+                        beregningService.manglerInntekterFor(behandling.id, inkluderManuelle = false)
+
                     val manglendeInntektGrunnlagService =
                         ManglendeInntektGrunnlagService(repositoryRegistry.provider(it))
 
@@ -76,6 +79,8 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         historiskeManuelleVurderinger = mappedNyHistorikk,
                         registrerteInntekterSisteRelevanteAr = registrerteInntekterSisteTreÅr,
                         sisteRelevanteÅr = år.value,
+                        alleRelevanteÅr = relevanteÅr.map { it.value },
+                        manglerInntektForÅr = manglerInntekterFor.map { it.value }.toList(),
                         manglendeMånedsInntekter = utledManglendeMånedsperioderForSplittÅr(
                             unleashGateway = gatewayProvider.provide(),
                             ytterligereNedsattDato = beregningVurderingRepository.hentHvisEksisterer(behandling.id)?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato,

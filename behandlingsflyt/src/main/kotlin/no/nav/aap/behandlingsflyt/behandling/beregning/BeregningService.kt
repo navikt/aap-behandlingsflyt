@@ -18,6 +18,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Year
+import kotlin.collections.map
+import kotlin.collections.orEmpty
 import java.time.YearMonth
 
 class BeregningService(
@@ -46,7 +48,8 @@ class BeregningService(
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val registrerteYrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
-        val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
+        val manuelleInntekter =
+            manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
         val årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter)
 
         val årMedManuellInntektIPeriode = manuelleInntekter.filter { it.månedsPeriode != null }.map { it.år }.toSet()
@@ -78,6 +81,26 @@ class BeregningService(
 
         beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)
         return beregningsgrunnlag
+    }
+
+    fun manglerInntekterFor(behandlingId: BehandlingId, inkluderManuelle: Boolean = true): Set<Year> {
+        val relevanteÅr = utledRelevanteBeregningsÅr(behandlingId)
+
+        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
+            ?.inntekter.orEmpty()
+            .filter { it.år in relevanteÅr }
+
+        val manuelleInntekter =
+            manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
+
+        val manuelleInntekterRelevanteÅr =
+            if (inkluderManuelle) manuelleInntekter.filter { it.år in relevanteÅr } else emptyList()
+
+        val kombinerteÅr =
+            (inntektGrunnlag.map { it.år } + manuelleInntekterRelevanteÅr
+                .map { it.år }).toSet()
+
+        return relevanteÅr.filter { it !in kombinerteÅr }.toSet()
     }
 
     /**
