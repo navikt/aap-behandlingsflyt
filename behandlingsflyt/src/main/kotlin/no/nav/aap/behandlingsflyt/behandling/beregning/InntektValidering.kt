@@ -21,10 +21,10 @@ object InntektValidering {
 
     fun validerAtDelperioderDekkerHeleÅret(manuelleInntekter: Set<ManuellInntektVurdering>) {
         manuelleInntekter
-            .filter { it.periode != null }
+            .filter { it.månedsPeriode != null }
             .groupBy { it.år }
             .forEach { (år, vurderinger) ->
-                val perioder = vurderinger.mapNotNull { it.periode }
+                val perioder = vurderinger.mapNotNull { it.månedsPeriode }
                 if (perioder.isEmpty()) return@forEach
 
                 val sortert = perioder.sortedBy { it.fom }

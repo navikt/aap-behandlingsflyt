@@ -59,7 +59,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                     opprettet = it.getLocalDateTime("opprettet_tid"),
                     eøsBeløp = it.getBigDecimalOrNull("eos_belop")?.let(::Beløp),
                     ferdigLignetPGI = it.getBigDecimalOrNull("ferdig_lignet_pgi")?.let(::Beløp),
-                    periode = it.getPeriodeOrNull("periode"),
+                    månedsPeriode = it.getPeriodeOrNull("periode"),
                 )
             }
         }
@@ -107,7 +107,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 setLong(5, manuellInntektVurderingerId)
                 setBigDecimal(6, it.eøsBeløp?.verdi)
                 setBigDecimal(7, it.ferdigLignetPGI?.verdi)
-                setPeriode(8, it.periode)
+                setPeriode(8, it.månedsPeriode)
             }
         }
     }

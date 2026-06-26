@@ -101,7 +101,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             begrunnelse = "endring i uføregrad",
             belop = BigDecimal(100_000).let(::Beløp),
             vurdertAv = "saksbehandler",
-            periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 2, 28)),
+            månedsPeriode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 2, 28)),
         )
         val marDes = ManuellInntektVurdering(
             år = Year.of(2022),
@@ -109,7 +109,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             belop = BigDecimal(500_000).let(::Beløp),
             eøsBeløp = BigDecimal(25_000).let(::Beløp),
             vurdertAv = "saksbehandler",
-            periode = Periode(LocalDate.of(2022, 3, 1), LocalDate.of(2022, 12, 31)),
+            månedsPeriode = Periode(LocalDate.of(2022, 3, 1), LocalDate.of(2022, 12, 31)),
         )
 
         dataSource.transaction {

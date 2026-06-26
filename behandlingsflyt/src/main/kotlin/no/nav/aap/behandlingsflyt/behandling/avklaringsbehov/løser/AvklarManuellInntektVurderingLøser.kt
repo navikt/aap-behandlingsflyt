@@ -46,7 +46,7 @@ class AvklarManuellInntektVurderingLøser(
                         år = Year.of(vurdering.år),
                         eøsBeløp = vurdering.eøsBeløp?.let { Beløp(it) },
                         ferdigLignetPGI = vurdering.ferdigLignetPGI?.let { Beløp(it) },
-                        periode = vurdering.periode,
+                        månedsPeriode = vurdering.periode,
                     )
                 }.toSet()
             } else {

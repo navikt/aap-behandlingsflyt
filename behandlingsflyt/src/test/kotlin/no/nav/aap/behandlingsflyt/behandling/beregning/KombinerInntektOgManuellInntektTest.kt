@@ -59,7 +59,7 @@ class KombinerInntektOgManuellInntektTest {
                 begrunnelse = "endring i uføregrad",
                 belop = Beløp(100_000),
                 vurdertAv = "saksbehandler",
-                periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 2, 28)),
+                månedsPeriode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 2, 28)),
             ),
             ManuellInntektVurdering(
                 år = Year.of(2022),
@@ -67,7 +67,7 @@ class KombinerInntektOgManuellInntektTest {
                 belop = Beløp(540_500),
                 eøsBeløp = Beløp(35_000),
                 vurdertAv = "saksbehandler",
-                periode = Periode(LocalDate.of(2022, 3, 1), LocalDate.of(2022, 12, 31)),
+                månedsPeriode = Periode(LocalDate.of(2022, 3, 1), LocalDate.of(2022, 12, 31)),
             ),
         )
 

@@ -34,7 +34,7 @@ class ManglendeInntektGrunnlagService(
                 beløp = manuellInntekt.belop?.verdi,
                 eøsBeløp = manuellInntekt.eøsBeløp?.verdi,
                 ferdigLignetPGI = manuellInntekt.ferdigLignetPGI?.verdi,
-                periode = manuellInntekt.periode,
+                periode = manuellInntekt.månedsPeriode,
             )
         }
 
@@ -78,7 +78,7 @@ class ManglendeInntektGrunnlagService(
                     beløp = historiskManuellInntekt.belop?.verdi,
                     eøsBeløp = historiskManuellInntekt.eøsBeløp?.verdi,
                     ferdigLignetPGI = historiskManuellInntekt.ferdigLignetPGI?.verdi,
-                    periode = historiskManuellInntekt.periode,
+                    periode = historiskManuellInntekt.månedsPeriode,
                 )
             }
 

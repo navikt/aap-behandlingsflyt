@@ -17,11 +17,11 @@ data class ManuellInntektVurdering(
      * Delperiode innen [år] når inntekten gjelder en del av året (f.eks. før/etter endring i
      * uføregrad).
      */
-    val periode: Periode? = null,
+    val månedsPeriode: Periode? = null,
 ) {
     init {
-        require(periode == null || Year.from(periode.fom) == år && Year.from(periode.tom) == år) {
-            "Delperiode $periode må ligge innenfor året $år"
+        require(månedsPeriode == null || Year.from(månedsPeriode.fom) == år && Year.from(månedsPeriode.tom) == år) {
+            "Delperiode $månedsPeriode må ligge innenfor året $år"
         }
     }
 }

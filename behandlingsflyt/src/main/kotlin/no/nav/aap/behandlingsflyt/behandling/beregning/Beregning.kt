@@ -204,7 +204,7 @@ class Beregning(
             inntekter: Set<InntektPerÅr>,
             manuelleInntekter: Set<ManuellInntektVurdering>
         ): Set<InntektPerÅr> {
-            val (periodeVurderinger, årsVurderinger) = manuelleInntekter.partition { it.periode != null }
+            val (periodeVurderinger, årsVurderinger) = manuelleInntekter.partition { it.månedsPeriode != null }
 
             val manuellePGIByÅr = årsVurderinger.tilÅrInntekt { it.belop }
             val manuellEOSByÅr = årsVurderinger.tilÅrInntekt { it.eøsBeløp }

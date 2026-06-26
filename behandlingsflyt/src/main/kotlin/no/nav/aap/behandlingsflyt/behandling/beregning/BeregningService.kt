@@ -49,7 +49,7 @@ class BeregningService(
         val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
         val årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter)
 
-        val årMedManuellInntektIPeriode = manuelleInntekter.filter { it.periode != null }.map { it.år }.toSet()
+        val årMedManuellInntektIPeriode = manuelleInntekter.filter { it.månedsPeriode != null }.map { it.år }.toSet()
         InntektValidering.validerAtDelperioderDekkerHeleÅret(manuelleInntekter)
         val inntektsPerioder = byggInntektsPerioder(
             registerMåneder = inntektGrunnlag.inntektPerMåned,
@@ -95,14 +95,14 @@ class BeregningService(
             .filterNot { Year.of(it.årMåned.year) in årMedManuellInntektIPeriode }
 
         val manuelleMåneder = manuelleInntekter
-            .filter { it.periode != null && it.år in årMedManuellInntektIPeriode }
+            .filter { it.månedsPeriode != null && it.år in årMedManuellInntektIPeriode }
             .flatMap { distribuerPerMåned(it) }
 
         return (beholdteRegisterMåneder + manuelleMåneder).toSet()
     }
 
     private fun distribuerPerMåned(vurdering: ManuellInntektVurdering): List<Månedsinntekt> {
-        val periode = requireNotNull(vurdering.periode)
+        val periode = requireNotNull(vurdering.månedsPeriode)
         val totalt = (vurdering.belop?.verdi ?: BigDecimal.ZERO)
             .add(vurdering.eøsBeløp?.verdi ?: BigDecimal.ZERO)
 

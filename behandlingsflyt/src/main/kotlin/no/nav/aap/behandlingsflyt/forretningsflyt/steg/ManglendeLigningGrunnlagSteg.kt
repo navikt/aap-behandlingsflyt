@@ -115,7 +115,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                         .map { it.år }).toSet()
 
                 val harPeriodeinntektForKrevdeÅr = årSomKreverPeriodeinntekt.all { år ->
-                    manuellInntektGrunnlag?.manuelleInntekter?.any { it.år == år && it.periode != null } == true
+                    manuellInntektGrunnlag?.manuelleInntekter?.any { it.år == år && it.månedsPeriode != null } == true
                 }
 
                 // Har enten inntekt fra register eller manuelt satt inntekt for tre siste relevante år
