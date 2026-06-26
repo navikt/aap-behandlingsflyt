@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning.Companion.kombinerInntektOgManuellInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -13,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.math.BigDecimal
@@ -161,6 +163,29 @@ class BeregningService(
                     årsInntekter = årsInntekter,
                 )
             }
+    }
+
+    fun harPeriodeinntektForKrevdeÅr(kontekst: FlytKontekstMedPerioder, manuellInntektGrunnlag: ManuellInntektGrunnlag?): Boolean {
+        val årSomKreverPeriodeinntekt = årSomKreverManuellPeriodeinntekt(kontekst)
+        return årSomKreverPeriodeinntekt.all { år ->
+            manuellInntektGrunnlag?.manuelleInntekter?.any { it.år == år && it.månedsPeriode != null } == true
+        }
+    }
+
+    fun årSomKreverManuellPeriodeinntekt(kontekst: FlytKontekstMedPerioder): Set<Year> {
+        val ytterligereNedsattDato = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+        val uføregrader = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
+        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        if (ytterligereNedsattDato == null || uføregrader.isEmpty() || inntektGrunnlag == null) return emptySet()
+
+        return UføreInntektUtleder.finnÅrSomKreverManuellPeriodeinntekt(
+            uføregrader = uføregrader,
+            inntektPerMåned = inntektGrunnlag.inntektPerMåned,
+            årsInntekter = inntektGrunnlag.inntekter,
+            ytterligereNedsattDato = ytterligereNedsattDato,
+        )
     }
 
     fun deaktiverGrunnlag(behandlingId: BehandlingId) {

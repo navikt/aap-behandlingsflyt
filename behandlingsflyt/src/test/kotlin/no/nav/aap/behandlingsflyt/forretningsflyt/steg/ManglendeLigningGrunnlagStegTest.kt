@@ -208,12 +208,9 @@ class ManglendeLigningGrunnlagStegTest {
         tidligereVurderinger: TidligereVurderinger = FakeTidligereVurderinger()
     ): ManglendeLigningGrunnlagSteg = ManglendeLigningGrunnlagSteg(
         manuellInntektGrunnlagRepository = inMemoryRepositoryProvider.provide(),
-        uføreRepository = inMemoryRepositoryProvider.provide(),
         tidligereVurderinger = tidligereVurderinger,
         beregningService = BeregningService(inMemoryRepositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
-        inntektGrunnlagRepository = inMemoryRepositoryProvider.provide(),
-        beregningVurderingRepository = inMemoryRepositoryProvider.provide(),
         unleashGateway = minimalGatewayProvider().provide(),
     )
 
