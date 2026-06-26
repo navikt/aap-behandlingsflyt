@@ -27,7 +27,7 @@ class BeregningService(
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository
+    private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -50,6 +50,7 @@ class BeregningService(
         val årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter)
 
         val årMedManuellInntektIPeriode = manuelleInntekter.filter { it.periode != null }.map { it.år }.toSet()
+        InntektValidering.validerAtDelperioderDekkerHeleÅret(manuelleInntekter)
         val inntektsPerioder = byggInntektsPerioder(
             registerMåneder = inntektGrunnlag.inntektPerMåned,
             manuelleInntekter = manuelleInntekter,
