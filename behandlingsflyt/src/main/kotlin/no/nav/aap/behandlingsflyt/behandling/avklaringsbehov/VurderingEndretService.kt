@@ -18,12 +18,20 @@ class VurderingEndretService(
         avklaringsbehov: Avklaringsbehov,
         tidspunkt: LocalDateTime
     ): Boolean? {
+        // TODO: tilsvarende for alle avklaringsbehov som skal kvalitetssikres
         return when (avklaringsbehov.definisjon) {
             Definisjon.SKRIV_SYKDOMSVURDERING_BREV -> {
-                sykdomsvurderingForBrevRepository.hentAktivPåTidspunkt(behandlingId, tidspunkt)
-                sykdomsvurderingForBrevRepository.hent(behandlingId)
-                // TODO sjekk diff
-                null
+                val aktivPåTidspunkt = sykdomsvurderingForBrevRepository.hentAktivPåTidspunkt(behandlingId, tidspunkt)
+                val aktivVurderingNå = sykdomsvurderingForBrevRepository.hent(behandlingId)
+
+                if ((aktivPåTidspunkt == null && aktivVurderingNå != null) || (aktivPåTidspunkt != null && aktivVurderingNå == null)) {
+                    return true
+                }
+                if (aktivPåTidspunkt == null || aktivVurderingNå == null) {
+                    // avklaringsbehov aldri vurdert
+                    return null
+                }
+                !aktivVurderingNå.erFunksjoneltLik(aktivPåTidspunkt)
             }
 
             else -> null

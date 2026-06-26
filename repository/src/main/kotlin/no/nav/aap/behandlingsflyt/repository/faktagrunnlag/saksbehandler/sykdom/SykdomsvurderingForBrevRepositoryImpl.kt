@@ -68,7 +68,22 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime
     ): SykdomsvurderingForBrev? {
-        TODO("Not yet implemented")
+        val query = """
+            SELECT * FROM SYKDOM_VURDERING_BREV
+        WHERE behandling_id = ?
+        AND opprettet_tid <= ?
+        ORDER BY opprettet_tid DESC
+        LIMIT 1
+        """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row ->
+                toSykdomsvurderingForBrev(row)
+            }
+        }
     }
 
     override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {

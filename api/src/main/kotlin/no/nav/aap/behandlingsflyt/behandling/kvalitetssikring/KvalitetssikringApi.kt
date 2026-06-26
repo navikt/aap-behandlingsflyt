@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.VurderingEndretServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
+import no.nav.aap.behandlingsflyt.behandling.totrinnsvurdering.TotrinnsVurderingResponse
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -26,15 +27,14 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDateTime
 import javax.sql.DataSource
-import kotlin.collections.any
 
 fun NormalOpenAPIRoute.kvalitetssikringApi(
     dataSource: DataSource,
@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
 
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
-            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagResponse>(
+            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
@@ -63,8 +63,53 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                     val avklaringsbehovene =
                         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val flyt = behandling.flyt()
+                    val vurderingEndretService = VurderingEndretService(repositoryProvider)
 
-                    val vurderinger = kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt)
+                    val vurderinger =
+                        kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt, vurderingEndretService)
+
+                    KvalitetssikringGrunnlagDto(
+                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
+                            kanSaksbehandle(),
+                            avklaringsbehovene,
+                            bruker(),
+                            unleashGateway
+                        ),
+                        vurderinger = vurderinger.map { it.tilTotrinnsVurdering() },
+                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
+                            avklaringsbehovene,
+                            bruker()
+                        )
+                    )
+                }
+                respond(dto)
+            }
+        }
+
+        route("/{referanse}/grunnlag/kvalitetssikring/v2") {
+            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
+                modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))
+            ) { req ->
+
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository =
+                        repositoryProvider.provide<AvklaringsbehovRepository>()
+
+                    val behandling: Behandling =
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val avklaringsbehovene =
+                        avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val flyt = behandling.flyt()
+                    val vurderingEndretService = VurderingEndretService(repositoryProvider)
+
+                    val vurderinger =
+                        kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt, vurderingEndretService)
 
                     KvalitetssikringGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
@@ -81,7 +126,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                         )
                     )
                 }
-                respond(dto)
+                respond(response)
             }
         }
     }
@@ -142,7 +187,7 @@ private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehoven
 }
 
 private fun utledEndringerSidenSist(
-    alleBehov: List<no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov>,
+    alleBehov: List<Avklaringsbehov>,
     tidsstempelForrigeBehov: LocalDateTime,
     tidsstempel: LocalDateTime
 ): List<DefinisjonEndring> {
@@ -159,19 +204,22 @@ private fun utledEndringerSidenSist(
 private fun kvalitetssikringsVurdering(
     behandlingId: BehandlingId,
     avklaringsbehovene: Avklaringsbehovene,
-    flyt: BehandlingFlyt
+    flyt: BehandlingFlyt,
+    vurderingEndretService: VurderingEndretService
 ): List<TotrinnsVurderingResponse> {
-    val sistKvalitetssikret = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttet()
+    val sistKvalitetssikret = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
     return avklaringsbehovene.alle()
         .filter { it.erIkkeAvbrutt() }
         .filter { it.definisjon.kvalitetssikres }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
-        .map { tilKvalitetssikring(behandlingId, it, sistKvalitetssikret) }
+        .map { tilToTrinnsVurderingResponse(behandlingId, it, sistKvalitetssikret, vurderingEndretService) }
 }
 
-private fun tilKvalitetssikring(behandlingId: BehandlingId,
-                                avklaringsbehov: Avklaringsbehov,
-                                sistKvalitetssikret: LocalDateTime?
+private fun tilToTrinnsVurderingResponse(
+    behandlingId: BehandlingId,
+    avklaringsbehov: Avklaringsbehov,
+    sistKvalitetssikret: LocalDateTime?,
+    vurderingEndretService: VurderingEndretService
 ): TotrinnsVurderingResponse {
     return if (avklaringsbehov.harBlittKvalitetssikretTidligere() || avklaringsbehov.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
@@ -187,8 +235,8 @@ private fun tilKvalitetssikring(behandlingId: BehandlingId,
             else -> avklaringsbehov.status() == Status.KVALITETSSIKRET
         }
 
-        val service: VurderingEndretService = TODO()
-        val endretSidenSist = sistKvalitetssikret?.let { service.endretSidenTidspunkt(behandlingId, avklaringsbehov, it) }
+        val endretSidenSist =
+            sistKvalitetssikret?.let { vurderingEndretService.endretSidenTidspunkt(behandlingId, avklaringsbehov, it) }
 
         TotrinnsVurderingResponse(
             definisjon = avklaringsbehov.definisjon.kode,
@@ -196,7 +244,6 @@ private fun tilKvalitetssikring(behandlingId: BehandlingId,
             begrunnelse = sisteVurdering?.begrunnelse,
             endretSidenSist = endretSidenSist,
             grunner = sisteVurdering?.årsakTilRetur.orEmpty(),
-            markeringer = emptyList(),
         )
     } else {
         TotrinnsVurderingResponse(
@@ -205,7 +252,6 @@ private fun tilKvalitetssikring(behandlingId: BehandlingId,
             begrunnelse = null,
             endretSidenSist = null,
             grunner = emptyList(),
-            markeringer = emptyList()
         )
     }
 }
