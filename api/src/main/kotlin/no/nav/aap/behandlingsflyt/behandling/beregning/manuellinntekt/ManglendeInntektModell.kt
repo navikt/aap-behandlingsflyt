@@ -28,7 +28,6 @@ data class ÅrData(
 )
 
 data class MånedsperiodeData(
-    val år: Int,
     val periode: Periode,
     val uføregrad: Int,
 )

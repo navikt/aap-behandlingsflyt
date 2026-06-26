@@ -64,7 +64,7 @@ class BeregningService(
             yrkesskadevurdering = yrkesskadevurdering,
             registrerteYrkesskader = registrerteYrkesskader,
             yrkesskadeBeløpVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger,
-            manuelleInntektsÅr = manuelleInntektsÅr,
+            årMedManuellInntektIPeriode = manuelleInntektsÅr,
         ).beregnBeregningsgrunnlag()
 
         beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)

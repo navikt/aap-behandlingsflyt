@@ -29,7 +29,7 @@ class UføreBeregning(
      * manglende/avvikende A-inntekt). For disse skal sanity-sjekken mot årsinntekt hoppes over,
      * fordi beregnet PGI kan avvike fra ferdig lignet PGI. Tom = dagens oppførsel.
      */
-    private val manuelleInntektsÅr: Set<Year> = emptySet(),
+    private val årMedManuellInntektIPeriode: Set<Year> = emptySet(),
 ) {
     private val relevanteÅr = Beregning.treÅrForutFor(ytterligereNedsattDato)
     private val ytterligereNedsattÅr = Year.from(ytterligereNedsattDato)
@@ -176,7 +176,7 @@ class UføreBeregning(
     ): UføreInntekt {
         // For år med manuell periodeinntekt har saksbehandler lagt inn beregnet PGI som bevisst
         // kan avvike fra ferdig lignet PGI
-        if (år !in manuelleInntektsÅr) {
+        if (år !in årMedManuellInntektIPeriode) {
             InntektValidering.validerSummertInntekt(år, månedEntries.associate { it.key to it.value }, årsInntekter)
         }
         val månedsinntekter = månedEntries.map { (årMåned, beløp) ->

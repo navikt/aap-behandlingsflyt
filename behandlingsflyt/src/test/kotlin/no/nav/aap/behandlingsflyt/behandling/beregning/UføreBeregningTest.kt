@@ -219,7 +219,7 @@ class UføreBeregningTest {
                 InntektPerÅr(2022, Beløp(10_000))
             ),
             // 2021 har manuell periodeinntekt -> sanity-sjekken mot årsinntekt skal hoppes over
-            manuelleInntektsÅr = setOf(Year.of(2021)),
+            årMedManuellInntektIPeriode = setOf(Year.of(2021)),
         )
 
         val grunnlag = uføreBeregning.beregnUføre()

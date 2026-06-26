@@ -114,7 +114,6 @@ private fun utledManglendeMånedsperioderForSplittÅr(
     ).flatMap { år ->
         UføreInntektUtleder.utledDelperioder(uføregrader, år).map { delperiode ->
             MånedsperiodeData(
-                år = år.value,
                 periode = Periode(delperiode.periode.fom, delperiode.periode.tom),
                 uføregrad = delperiode.uføregrad.prosentverdi(),
             )
