@@ -40,6 +40,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -135,6 +136,14 @@ class OpprettOgFullførBehandlingApiTest {
                 afp = AfpDto("Nav"),
                 stoenad = listOf(AndreUtbetalingerYtelserApiDto.AFP)
             )
+        )
+    }
+
+    @Test
+    fun `oppretter og fullfører behandling automatisk når personen har uføregrad`() {
+        opprettOgVerifiserBehandling(
+            testPerson = standardTestPerson("10107099960").medUføre(Prosent(50)),
+            erStudent = false,
         )
     }
 
