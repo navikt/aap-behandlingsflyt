@@ -354,6 +354,9 @@ class BrevUtlederService(
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
             Avslagsårsak.ANNEN_FULL_YTELSE,
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
         )
         return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
