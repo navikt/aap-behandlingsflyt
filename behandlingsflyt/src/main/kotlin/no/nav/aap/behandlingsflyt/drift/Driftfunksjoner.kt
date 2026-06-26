@@ -198,9 +198,9 @@ class Driftfunksjoner(
         apiInternGateway.oppdaterIdenter(sak.saksnummer, person.identer())
 
         val sisteBehandling =
-            behandlingRepository.hentAlleMedVedtakFor(sak.person.id, TypeBehandling.ytelseBehandlingstyper())
-                .filter { it.saksnummer == sak.saksnummer }
-                .maxByOrNull { it.vedtakstidspunkt }
+            behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+                ?.behandlingId
+                ?.let { behandlingRepository.hent(it) }
 
         if (sisteBehandling == null) {
             log.warn("Fant ingen vedtatt behandling på sak ${sak.saksnummer}. Oppdaterer ikke meldeperioder.")
