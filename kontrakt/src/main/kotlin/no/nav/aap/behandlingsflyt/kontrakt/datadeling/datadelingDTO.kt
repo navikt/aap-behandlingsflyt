@@ -153,7 +153,6 @@ public data class DetaljertMeldekortDTO(
     val meldeperiodeFom: LocalDate,
     val meldeperiodeTom: LocalDate,
     val mottattTidspunkt: LocalDateTime,
-    val forsentMeldekort: Boolean,
     val timerArbeidPerPeriode: List<ArbeidIPeriodeDTO>,
     val arbeidsgradering: List<ArbeidsgraderingDTO>,
 )
@@ -161,7 +160,6 @@ public data class DetaljertMeldekortDTO(
 public data class ArbeidsgraderingDTO(
     val periodeFom: LocalDate,
     val periodeTom: LocalDate,
-    val benyttetGrenseverdi: Int,
     val gradering: Int,
     val fastsattArbeidsevne: Int,
     val harArbeidetOverGrenseverdi: Boolean,
