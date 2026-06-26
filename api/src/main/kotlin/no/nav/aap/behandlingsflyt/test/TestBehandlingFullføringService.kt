@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
@@ -36,12 +37,15 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
@@ -458,6 +462,8 @@ class TestBehandlingFullføringService(
             )
         )
 
+        Definisjon.AVKLAR_SAMORDNING_UFØRE -> lagSamordningUføreLøsning(sak, behandlingId)
+
         Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER -> AvklarSamordningAndreStatligeYtelserLøsning(
             SamordningAndreStatligeYtelserVurderingDto(
                 "Ingen andre statlige ytelser",
@@ -520,5 +526,31 @@ class TestBehandlingFullføringService(
                 ?.yrkesskader
                 ?.yrkesskader
                 ?.firstOrNull { it.skadedato != null }
+        }
+
+    private fun lagSamordningUføreLøsning(sak: Sak, behandlingId: BehandlingId) = AvklarSamordningUføreLøsning(
+        samordningUføreVurdering = SamordningUføreVurderingDto(
+            begrunnelse = "Samordning uføre",
+            vurderingPerioder = hentUføreperioderTilSamordning(sak, behandlingId)
+                .map {
+                    SamordningUføreVurderingPeriodeDto(
+                        virkningstidspunkt = it.virkningstidspunkt,
+                        uføregradTilSamordning = it.uføregrad.prosentverdi()
+                    )
+                }
+        )
+    )
+
+    private fun hentUføreperioderTilSamordning(sak: Sak, behandlingId: BehandlingId) =
+        dataSource.transaction(readOnly = true) { connection ->
+            repositoryRegistry.provider(connection)
+                .provide<UføreRepository>()
+                .hentHvisEksisterer(behandlingId)
+                ?.vurderinger
+                .orEmpty()
+                .filter {
+                    val uføregradTom = it.uføregradTom
+                    uføregradTom == null || uføregradTom >= sak.rettighetsperiode.fom
+                }
         }
 }
