@@ -101,6 +101,9 @@ class BeregningService(
         return (beholdteRegisterMåneder + manuelleMåneder).toSet()
     }
 
+    /**
+     * Fordeler total manuell inntekt jevnt over alle måneder i perioden og lager én månedsinntekt per måned.
+     */
     private fun distribuerPerMåned(vurdering: ManuellInntektVurdering): List<Månedsinntekt> {
         val periode = requireNotNull(vurdering.månedsPeriode)
         val totalt = (vurdering.belop?.verdi ?: BigDecimal.ZERO)
