@@ -206,7 +206,6 @@ class ManglendeLigningGrunnlagStegTest {
     private fun steg(
         tidligereVurderinger: TidligereVurderinger = FakeTidligereVurderinger()
     ): ManglendeLigningGrunnlagSteg = ManglendeLigningGrunnlagSteg(
-        inntektGrunnlagRepository = inMemoryRepositoryProvider.provide(),
         manuellInntektGrunnlagRepository = inMemoryRepositoryProvider.provide(),
         tidligereVurderinger = tidligereVurderinger,
         beregningService = BeregningService(inMemoryRepositoryProvider),
