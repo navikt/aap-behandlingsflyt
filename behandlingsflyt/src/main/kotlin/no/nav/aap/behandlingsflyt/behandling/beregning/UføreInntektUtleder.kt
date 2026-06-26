@@ -47,6 +47,16 @@ object UføreInntektUtleder {
             .sortedBy { it.periode.fom }
     }
 
+    fun harVariabelUføregrad(uføregrader: Set<Uføre>, år: Year): Boolean {
+        val detteÅret = årsperiode(år)
+        val uføreTidslinje = uføregrader.tilTidslinje()
+        val begrenset = uføreTidslinje.begrensetTil(detteÅret)
+        if (begrenset.isEmpty()) return false
+
+        val konstantHeleÅret = begrenset.helePerioden() == detteÅret && begrenset.verdier().toSet().size == 1
+        return !konstantHeleÅret
+    }
+
     private fun harVariabelUføregrad(uføreTidslinje: Tidslinje<Prosent>, år: Year): Boolean {
         val detteÅret = årsperiode(år)
         val begrenset = uføreTidslinje.begrensetTil(detteÅret)

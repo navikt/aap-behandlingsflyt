@@ -27,7 +27,6 @@ import java.util.*
 * @param registrerteYrkesskader
 * @param beregningGrunnlag Se [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag]
 * @param inntektsPerioder Inntekt per måned
-* @param manuelleInntektsÅr År der saksbehandler har lagt inn manuell periodeinntekt.
 */
 class Beregning(
     val nedsettelsesDato: LocalDate,
@@ -38,7 +37,6 @@ class Beregning(
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,
     val yrkesskadeBeløpVurderinger: List<YrkesskadeBeløpVurdering>?,
-    val årMedManuellInntektIPeriode: Set<Year> = emptySet(),
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -54,7 +52,6 @@ class Beregning(
                 ytterligereNedsattDato = requireNotNull(ytterligereNedsettelsesDato),
                 inntektsPerioder = inntektsPerioder,
                 årsInntekter = årsInntekter,
-                årMedManuellInntektIPeriode = årMedManuellInntektIPeriode,
             ).beregnUføre()
         } else {
             grunnlag11_19

@@ -3,8 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning.Companion.kombinerInntektOgManuellInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -45,16 +47,23 @@ class BeregningService(
         val registrerteYrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader
         val inntektGrunnlag = inntektGrunnlagRepository.hent(behandlingId)
         val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)?.manuelleInntekter.orEmpty()
+        val årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter)
 
-        val manuelleInntektsÅr = manuelleInntekter.filter { it.periode != null }.map { it.år }.toSet()
+        val årMedManuellInntektIPeriode = manuelleInntekter.filter { it.periode != null }.map { it.år }.toSet()
         val inntektsPerioder = byggInntektsPerioder(
             registerMåneder = inntektGrunnlag.inntektPerMåned,
             manuelleInntekter = manuelleInntekter,
-            manuelleInntektsÅr = manuelleInntektsÅr,
+            årMedManuellInntektIPeriode = årMedManuellInntektIPeriode,
+        )
+        validerMånedsinntekterForUføre(
+            inntektsPerioder = inntektsPerioder,
+            årsInntekter = årsInntekter,
+            uføregrader = uføregrad,
+            årMedManuellInntektIPeriode = årMedManuellInntektIPeriode,
         )
 
         val beregningsgrunnlag = Beregning(
-            årsInntekter = kombinerInntektOgManuellInntekt(inntektGrunnlag.inntekter, manuelleInntekter),
+            årsInntekter = årsInntekter,
             nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
                 ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning"),
             ytterligereNedsettelsesDato = beregningGrunnlag.tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
@@ -64,7 +73,6 @@ class BeregningService(
             yrkesskadevurdering = yrkesskadevurdering,
             registrerteYrkesskader = registrerteYrkesskader,
             yrkesskadeBeløpVurderinger = beregningGrunnlag.yrkesskadeBeløpVurdering?.vurderinger,
-            årMedManuellInntektIPeriode = manuelleInntektsÅr,
         ).beregnBeregningsgrunnlag()
 
         beregningsgrunnlagRepository.lagre(behandlingId, beregningsgrunnlag)
@@ -72,21 +80,21 @@ class BeregningService(
     }
 
     /**
-     * Erstatter register-månedene for [manuelleInntektsÅr] med manuelle månedsinntekter der
+     * Erstatter register-månedene for [årMedManuellInntektIPeriode] med manuelle månedsinntekter der
      * delperiodens (beregnet PGI + eøs) fordeles jevnt på periodens måneder.
      */
     private fun byggInntektsPerioder(
         registerMåneder: Set<Månedsinntekt>,
         manuelleInntekter: Set<ManuellInntektVurdering>,
-        manuelleInntektsÅr: Set<Year>,
+        årMedManuellInntektIPeriode: Set<Year>,
     ): Set<Månedsinntekt> {
-        if (manuelleInntektsÅr.isEmpty()) return registerMåneder
+        if (årMedManuellInntektIPeriode.isEmpty()) return registerMåneder
 
         val beholdteRegisterMåneder = registerMåneder
-            .filterNot { Year.of(it.årMåned.year) in manuelleInntektsÅr }
+            .filterNot { Year.of(it.årMåned.year) in årMedManuellInntektIPeriode }
 
         val manuelleMåneder = manuelleInntekter
-            .filter { it.periode != null && it.år in manuelleInntektsÅr }
+            .filter { it.periode != null && it.år in årMedManuellInntektIPeriode }
             .flatMap { distribuerPerMåned(it) }
 
         return (beholdteRegisterMåneder + manuelleMåneder).toSet()
@@ -106,6 +114,26 @@ class BeregningService(
         return måneder.map { årMåned ->
             Månedsinntekt(årMåned, Beløp(perMåned))
         }
+    }
+
+    private fun validerMånedsinntekterForUføre(
+        inntektsPerioder: Set<Månedsinntekt>,
+        årsInntekter: Set<InntektPerÅr>,
+        uføregrader: Set<Uføre>,
+        årMedManuellInntektIPeriode: Set<Year>,
+    ) {
+        inntektsPerioder
+            .groupBy { Year.of(it.årMåned.year) }
+            .forEach { (år, perioder) ->
+                if (år in årMedManuellInntektIPeriode) return@forEach
+                if (!UføreInntektUtleder.harVariabelUføregrad(uføregrader, år)) return@forEach
+
+                InntektValidering.validerSummertInntekt(
+                    år = år,
+                    månedsinntekter = perioder.associate { it.årMåned to it.beløp },
+                    årsInntekter = årsInntekter,
+                )
+            }
     }
 
     fun deaktiverGrunnlag(behandlingId: BehandlingId) {

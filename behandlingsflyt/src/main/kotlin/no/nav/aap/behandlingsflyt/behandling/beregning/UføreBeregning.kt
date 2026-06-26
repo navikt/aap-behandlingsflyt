@@ -24,12 +24,6 @@ class UføreBeregning(
     private val inntektsPerioder: Set<Månedsinntekt>,
     ytterligereNedsattDato: LocalDate,
     private val årsInntekter: Set<InntektPerÅr>,
-    /**
-     * År der saksbehandler har lagt inn manuell periodeinntekt (ulik uføregrad midt i året og
-     * manglende/avvikende A-inntekt). For disse skal sanity-sjekken mot årsinntekt hoppes over,
-     * fordi beregnet PGI kan avvike fra ferdig lignet PGI. Tom = dagens oppførsel.
-     */
-    private val årMedManuellInntektIPeriode: Set<Year> = emptySet(),
 ) {
     private val relevanteÅr = Beregning.treÅrForutFor(ytterligereNedsattDato)
     private val ytterligereNedsattÅr = Year.from(ytterligereNedsattDato)
@@ -174,11 +168,6 @@ class UføreBeregning(
         månedEntries: List<Map.Entry<YearMonth, Beløp>>,
         uføreTidslinje: Tidslinje<Prosent>
     ): UføreInntekt {
-        // For år med manuell periodeinntekt har saksbehandler lagt inn beregnet PGI som bevisst
-        // kan avvike fra ferdig lignet PGI
-        if (år !in årMedManuellInntektIPeriode) {
-            InntektValidering.validerSummertInntekt(år, månedEntries.associate { it.key to it.value }, årsInntekter)
-        }
         val månedsinntekter = månedEntries.map { (årMåned, beløp) ->
             val uføregrad = uføreTidslinje.segment(årMåned.atDay(1))?.verdi ?: Prosent.`0_PROSENT`
             lagPeriodisertInntekt(Periode(årMåned.atDay(1), årMåned.atEndOfMonth()), beløp, uføregrad)
