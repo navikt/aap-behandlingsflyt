@@ -27,7 +27,9 @@ open class FakeUnleashBase(
         featureToggle: FeatureToggle,
         variantName: String,
         saksnummerResolver: () -> Saksnummer
-    ) = false
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }
 }
 
 open class FakeUnleashBaseWithDefaultDisabled(
@@ -43,14 +45,16 @@ open class FakeUnleashBaseWithDefaultDisabled(
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
-    
+
     override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = false
 
     override fun erPåskruddForSak(
         featureToggle: FeatureToggle,
         variantName: String,
         saksnummerResolver: () -> Saksnummer
-    ) = false
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }
 }
 
 
@@ -88,16 +92,7 @@ object LokalUnleash : FakeUnleashBase(
         }
     }
 
-    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
-        return when (Pair(featureToggle, variantName)) {
-            Pair(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre") -> true
-            else -> false
-        }
-    }
-
     override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = true
-    
-    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummerResolver: () -> Saksnummer) = true
 }
 
 /** Unleash for bruk i tester - for å teste "prodlikt", hvor alle toggles er skrudd av
