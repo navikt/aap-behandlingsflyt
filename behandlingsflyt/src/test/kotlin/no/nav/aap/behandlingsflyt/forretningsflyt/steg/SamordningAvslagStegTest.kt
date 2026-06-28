@@ -63,6 +63,8 @@ class SamordningAvslagStegTest {
         every { samordningService.hentVurderinger(any()) } returns null
         every { uføreRepository.hentHvisEksisterer(any()) } returns null
         every { samordningUføreRepository.hentHvisEksisterer(any()) } returns null
+        every { avslag1127repository.hentHvisEksisterer(any()) } returns null
+        every { kravRepository.hentHvisEksisterer(any()) } returns null
     }
 
     private fun samordningUføregrunnlag(uføregrad: Prosent): SamordningUføreGrunnlag {
