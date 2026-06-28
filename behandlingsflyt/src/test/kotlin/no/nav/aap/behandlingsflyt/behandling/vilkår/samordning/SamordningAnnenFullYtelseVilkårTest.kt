@@ -153,13 +153,13 @@ class SamordningAnnenFullYtelseVilkårTest {
     }
 
     @Test
-    fun `avslag11_27 skalAvslås false - gir IKKE_VURDERT`() {
+    fun `avslag11_27 skalAvslås false - gir OPPFYLT`() {
         val resultat = vurder(
             grunnlag(avslag1127 = avslag1127(false), kravGrunnlag = kravGrunnlag())
         )
         val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
         assertThat(segmenter).hasSize(1)
-        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.OPPFYLT)
     }
 
     // ── prioritering: avslag11_27 vs samordning ───────────────────────────────

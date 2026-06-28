@@ -30,7 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class VurderAvslag11_27Steg private constructor(
+class VurderAvslag11_27Steg(
     private val samordningService: SamordningService,
     private val uføreRepository: UføreRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
@@ -63,30 +63,6 @@ class VurderAvslag11_27Steg private constructor(
     }
 
     private fun settVilkårsresultat(kontekst: FlytKontekstMedPerioder) {
-        /*val grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId) ?: return
-        val nåværendeVurderinger = grunnlag.vurderinger.filter { it.vurdertIBehandling == kontekst.behandlingId }
-        if (nåværendeVurderinger.isEmpty()) return
-
-        val nyesteVurderingerPerKrav = grunnlag.nyesteVurderingPerKrav()
-        val harAvslag = nyesteVurderingerPerKrav.all { it.skalAvslås1127 }
-
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING).nullstillTidslinje()
-        // Tidslinje for avslag 11-27
-        // tidslinje for samordning og joine tidslinje over. Prioriterer avslag fremfor samordning.
-
-        vilkår.leggTilVurdering(
-            Vilkårsperiode(
-                periode = kontekst.rettighetsperiode,
-                vilkårsvurdering = Vilkårsvurdering(
-                    utfall = if (harAvslag) Utfall.IKKE_OPPFYLT else Utfall.OPPFYLT,
-                    manuellVurdering = true,
-                    begrunnelse = if (harAvslag) "§ 11-27 avslag" else "§ 11-27 ikke avslag",
-                    avslagsårsak = if (harAvslag) Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG else null,
-                    faktagrunnlag = null,
-                )
-            )
-        )*/
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val grunnlag = utledFaktagrunnlag(kontekst)
