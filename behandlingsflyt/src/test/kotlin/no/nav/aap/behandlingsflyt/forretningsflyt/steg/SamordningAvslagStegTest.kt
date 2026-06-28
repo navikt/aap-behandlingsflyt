@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.desember
@@ -34,16 +36,20 @@ class SamordningAvslagStegTest {
     val samordningService = mockk<SamordningService>()
     val uføreRepository = mockk<UføreRepository>()
     val samordningUføreRepository = mockk<SamordningUføreRepository>()
+    val avslag1127repository = mockk<Avslag11_27Repository>()
     val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
     val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
+    val kravRepository = mockk<KravRepository>()
     val kontekst = mockk<FlytKontekstMedPerioder>(relaxed = true)
 
     val steg = SamordningAvslagSteg(
         samordningService = samordningService,
         uføreRepository = uføreRepository,
         samordningUføreRepository = samordningUføreRepository,
+        avslag1127repository = avslag1127repository,
         vilkårsresultatRepository = vilkårsresultatRepository,
         tidligereVurderinger = FakeTidligereVurderinger(),
+        kravRepository = kravRepository,
     )
     val periode = Periode(1 februar 2025, 31 mars 2025)
     val rettighetsperiode = Periode(1 januar 2025, 31 desember 2025)

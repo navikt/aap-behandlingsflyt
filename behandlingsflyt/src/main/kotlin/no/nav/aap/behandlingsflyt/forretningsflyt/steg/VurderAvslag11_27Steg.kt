@@ -2,14 +2,22 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
+import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse.SamordningAnnenFullYtelseFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse.SamordningAnnenFullYtelseVilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -23,7 +31,11 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderAvslag11_27Steg private constructor(
+    private val samordningService: SamordningService,
+    private val uføreRepository: UføreRepository,
+    private val samordningUføreRepository: SamordningUføreRepository,
     private val avslag11_27repository: Avslag11_27Repository,
+    private val kravRepository: KravRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårsresultatRepository: VilkårsresultatRepository
@@ -51,14 +63,17 @@ class VurderAvslag11_27Steg private constructor(
     }
 
     private fun settVilkårsresultat(kontekst: FlytKontekstMedPerioder) {
-        val grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId) ?: return
+        /*val grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId) ?: return
         val nåværendeVurderinger = grunnlag.vurderinger.filter { it.vurdertIBehandling == kontekst.behandlingId }
         if (nåværendeVurderinger.isEmpty()) return
 
-        val harAvslag = nåværendeVurderinger.all { it.skalAvslås1127 }
+        val nyesteVurderingerPerKrav = grunnlag.nyesteVurderingPerKrav()
+        val harAvslag = nyesteVurderingerPerKrav.all { it.skalAvslås1127 }
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.AVSLAG_11_27).nullstillTidslinje()
+        val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING).nullstillTidslinje()
+        // Tidslinje for avslag 11-27
+        // tidslinje for samordning og joine tidslinje over. Prioriterer avslag fremfor samordning.
 
         vilkår.leggTilVurdering(
             Vilkårsperiode(
@@ -67,11 +82,16 @@ class VurderAvslag11_27Steg private constructor(
                     utfall = if (harAvslag) Utfall.IKKE_OPPFYLT else Utfall.OPPFYLT,
                     manuellVurdering = true,
                     begrunnelse = if (harAvslag) "§ 11-27 avslag" else "§ 11-27 ikke avslag",
-                    avslagsårsak = if (harAvslag) Avslagsårsak.ANNEN_FULL_YTELSE_11_27 else null,
+                    avslagsårsak = if (harAvslag) Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG else null,
                     faktagrunnlag = null,
                 )
             )
-        )
+        )*/
+
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val grunnlag = utledFaktagrunnlag(kontekst)
+        SamordningAnnenFullYtelseVilkår(vilkårsresultat).vurder(grunnlag)
+
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }
 
@@ -96,14 +116,32 @@ class VurderAvslag11_27Steg private constructor(
         }
     }
 
+    private fun utledFaktagrunnlag(kontekst: FlytKontekstMedPerioder) =
+        SamordningAnnenFullYtelseFaktagrunnlag(
+            rettighetsperiode = kontekst.rettighetsperiode,
+            samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId),
+            samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
+                ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
+                vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
+            ),
+            uføreRegisterGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId),
+            uføreVurderingGrunnlag = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId),
+            avslag1127grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId),
+            kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        )
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return VurderAvslag11_27Steg(
+                samordningService = SamordningService(repositoryProvider),
+                uføreRepository = repositoryProvider.provide(),
+                samordningUføreRepository = repositoryProvider.provide(),
                 avslag11_27repository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                kravRepository = repositoryProvider.provide(),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider,gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 vilkårsresultatRepository = repositoryProvider.provide()
             )

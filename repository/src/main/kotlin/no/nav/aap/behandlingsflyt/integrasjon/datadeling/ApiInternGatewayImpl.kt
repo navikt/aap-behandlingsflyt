@@ -234,7 +234,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
             Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> null
             Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT -> null
             Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON -> null
-            Avslagsårsak.ANNEN_FULL_YTELSE_11_27 -> AvslagsårsakDTO.ANNEN_FULL_YTELSE_11_27
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG -> AvslagsårsakDTO.ANNEN_FULL_YTELSE_AVLSAG
         }
     }
 

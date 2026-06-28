@@ -104,7 +104,8 @@ enum class Vilkårtype(
         kode = "AAP-27",
         spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
-            Avslagsårsak.ANNEN_FULL_YTELSE
+            Avslagsårsak.ANNEN_FULL_YTELSE,
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG
         ),
         hjemmel = "§ 11-27",
         obligatorisk = false
@@ -193,14 +194,5 @@ enum class Vilkårtype(
             Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
         ),
         hjemmel = "§ 11-13 1. ledd",
-    ),
-    AVSLAG_11_27(
-        kode = "AAP-27-2", // FIXME Thao: Hva bør denne være?
-        spesielleInnvilgelsesÅrsaker = emptyList(),
-        avslagsårsaker = listOf(
-            Avslagsårsak.ANNEN_FULL_YTELSE_11_27
-        ),
-        hjemmel = "§ 11-27",
-        obligatorisk = false
     )
 }

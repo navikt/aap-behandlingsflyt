@@ -37,7 +37,7 @@ enum class Avslagsårsak(
     HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON(kode = "11-4-2", hjemmel = "§ 11-4 2. ledd", Avslagstype.KUN_INNGANGSVILKÅR),
     ORDINÆRKVOTE_BRUKT_OPP(kode = "11-12", hjemmel = "§ 11-12", Avslagstype.OPPHØR),
     SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP(kode = "11-13", hjemmel = "§ 11-13", Avslagstype.OPPHØR),
-    ANNEN_FULL_YTELSE_11_27(kode = "11-27", hjemmel = "§ 11-27", Avslagstype.OPPHØR), // FIXME Thao: Er denne riktig?
+    ANNEN_FULL_YTELSE_AVSLAG(kode = "11-27", hjemmel = "§ 11-27", Avslagstype.KUN_INNGANGSVILKÅR),
 }
 
 /** [Avslagstype] sier hvordan en [Avslagsårsak] skal tolkes når

@@ -115,7 +115,7 @@ class TidligereVurderingerImpl(
             },
 
             Sjekk(StegType.VURDER_AVSLAG_11_27) { vilkårsresultat, _, _ ->
-                ikkeOppfyltFørerTilAvslag(Vilkårtype.AVSLAG_11_27, vilkårsresultat)
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING, vilkårsresultat)
             },
 
             Sjekk(StegType.AVKLAR_STUDENT) { vilkårsresultat, _, _ ->
