@@ -290,12 +290,12 @@ class SaksHistorikkService(
                 val hendelseType = when (markering.hendelseType) {
                     MarkeringHendelseType.OPPRETTET -> when (markering.markeringType) {
                         MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_OPPRETTET
-                        MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_SYKDOM_AVSLAG_OPPRETTET
+                        MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_AVSLAG_SYKDOM_OPPRETTET
                         else -> null
                     }
                     MarkeringHendelseType.FJERNET -> when (markering.markeringType) {
                         MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_FJERNET
-                        MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_SYKDOM_AVSLAG_FJERNET
+                        MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_AVSLAG_SYKDOM_FJERNET
                         else -> null
                     }
                     else -> null
