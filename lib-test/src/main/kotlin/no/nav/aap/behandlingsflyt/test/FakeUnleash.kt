@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -20,6 +20,16 @@ open class FakeUnleashBase(
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
+
+    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = false
+
+    override fun erPåskruddForSak(
+        featureToggle: FeatureToggle,
+        variantName: String,
+        saksnummerResolver: () -> Saksnummer
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }
 }
 
 open class FakeUnleashBaseWithDefaultDisabled(
@@ -35,6 +45,16 @@ open class FakeUnleashBaseWithDefaultDisabled(
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
+
+    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = false
+
+    override fun erPåskruddForSak(
+        featureToggle: FeatureToggle,
+        variantName: String,
+        saksnummerResolver: () -> Saksnummer
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }
 }
 
 
@@ -56,8 +76,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
-        BehandlingsflytFeature.KravSteg to false,
-        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to false,
+        BehandlingsflytFeature.KravSteg to true,
+        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
         BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true,
         BehandlingsflytFeature.ManuellInntektDelvisUfore to true
         )
@@ -73,12 +93,7 @@ object LokalUnleash : FakeUnleashBase(
         }
     }
 
-    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
-        return when (Pair(featureToggle, variantName)) {
-            Pair(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre") -> true
-            else -> false
-        }
-    }
+    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = true
 }
 
 /** Unleash for bruk i tester - for å teste "prodlikt", hvor alle toggles er skrudd av
@@ -90,30 +105,3 @@ object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
     )
 )
-
-object UnleashMedKrav : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(
-        BehandlingsflytFeature.IngenValidering,
-        BehandlingsflytFeature.KravSteg,
-        BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav,
-        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
-    )
-) {
-    override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean {
-        return when (Pair(featureToggle, variantName)) {
-            Pair(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre") -> true
-            else -> false
-        }
-    }
-
-    override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
-        return when (Pair(featureToggle, variantName)) {
-            Pair(
-                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
-                "saksnumre"
-            ) -> InMemorySakRepository.alle().map { it.saksnummer }.joinToString(",")
-
-            else -> ""
-        }
-    }
-}
