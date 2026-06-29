@@ -131,6 +131,10 @@ class AvsluttetBehandlingTilStatistikk(
 
         val vedtakTidspunkt = vedtakService.vedtakstidspunkt(behandling)
 
+        if (vedtakTidspunkt == null) {
+            log.warn("Fant ikke vedtakstidspunkt for behandling ${behandling.referanse.referanse} selv om behandlingen har status ${behandling.status()}. Sak: ${sak.saksnummer}")
+        }
+
         val tilkjentYtelse = mapTilkjentYtelse(behandling)
 
         if (tilkjentYtelse == null) {
@@ -189,11 +193,13 @@ class AvsluttetBehandlingTilStatistikk(
                 }),
             tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
             beregningsGrunnlag = beregningsGrunnlagDTO,
-            diagnoser = diagnoserPeriodisert.lastOrNull()?.let { Diagnoser(
-                kodeverk = it.kodeverk,
-                diagnosekode = it.diagnosekode,
-                bidiagnoser = it.bidiagnoser
-            ) },
+            diagnoser = diagnoserPeriodisert.lastOrNull()?.let {
+                Diagnoser(
+                    kodeverk = it.kodeverk,
+                    diagnosekode = it.diagnosekode,
+                    bidiagnoser = it.bidiagnoser
+                )
+            },
             diagnoserPeriodisert = diagnoserPeriodisert,
             rettighetstypePerioder = rettighetstypePerioder,
             resultat = hentResultat(behandling),
