@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGatew
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -610,4 +611,14 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
+    private fun mapAvslagsårsakTilFaktagrunnlag(
+        avslagsårsak: Avslagsårsak
+    ): Faktagrunnlag =
+        Faktagrunnlag.AvslagAarsak(
+            aarsak = avslagsårsak.tilKontrakt()
+        )
+
+
+    private fun Avslagsårsak.tilKontrakt(): no.nav.aap.brev.kontrakt.AvslagsÅrsak =
+        no.nav.aap.brev.kontrakt.AvslagsÅrsak.valueOf(this.name)
 }
