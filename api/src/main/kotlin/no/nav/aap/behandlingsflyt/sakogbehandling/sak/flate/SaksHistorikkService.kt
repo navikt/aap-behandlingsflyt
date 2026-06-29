@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
+import no.nav.aap.oppgave.verdityper.MarkeringForBehandling
 
 class SaksHistorikkService(
     private val behandlingRepository: BehandlingRepository,
@@ -285,12 +286,21 @@ class SaksHistorikkService(
         val markeringer = oppgavestyringGateway.hentMarkeringerOgHistorikk(saksnummer)
 
         return markeringer.groupBy { it.behandlingRef }.mapNotNull { (behandlingRef, markeringer) ->
-            val hendelser = markeringer.map { markering ->
+            val hendelser = markeringer.mapNotNull { markering ->
                 val hendelseType = when (markering.hendelseType) {
-                    MarkeringHendelseType.OPPRETTET -> BehandlingHendelseType.MARKERING_OPPRETTET
-                    MarkeringHendelseType.FJERNET -> BehandlingHendelseType.MARKERING_FJERNET
-                    else -> BehandlingHendelseType.MARKERING_OPPRETTET
-                }
+                    MarkeringHendelseType.OPPRETTET -> when (markering.markeringType) {
+                        MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_OPPRETTET
+                        MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_SYKDOM_AVSLAG_OPPRETTET
+                        else -> null
+                    }
+                    MarkeringHendelseType.FJERNET -> when (markering.markeringType) {
+                        MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_FJERNET
+                        MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_SYKDOM_AVSLAG_FJERNET
+                        else -> null
+                    }
+                    else -> null
+                } ?: return@mapNotNull null
+
                 BehandlingHendelseDTO(
                     hendelse = hendelseType,
                     tidspunkt = markering.opprettetTidspunkt,
