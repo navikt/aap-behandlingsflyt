@@ -2,25 +2,33 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVKLAR_BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
@@ -38,20 +46,19 @@ import java.time.LocalDateTime
 class AvklaringsbehovServiceTest {
 
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
-    private val avbrytRevurderingService = AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository)
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private lateinit var avklaringsbehovService: AvklaringsbehovService
+    private lateinit var avklaringsbehovServiceMedKrav: AvklaringsbehovService
 
     @BeforeEach
     fun setup() {
         avklaringsbehovService = AvklaringsbehovService(
-            avbrytRevurderingService = avbrytRevurderingService,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            behandlingRepository = InMemoryBehandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
-            trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-            unleashGateway = AlleAvskruddUnleash
+            inMemoryRepositoryProvider,
+            createGatewayProvider { register<AlleAvskruddUnleash>() }
+        )
+        avklaringsbehovServiceMedKrav = AvklaringsbehovService(
+            inMemoryRepositoryProvider,
+            createGatewayProvider { register<LokalUnleash>() }
         )
     }
 
@@ -180,6 +187,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal opprette avklaringsbehov når vurdering er relevant`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2001)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -209,6 +217,7 @@ class AvklaringsbehovServiceTest {
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -229,6 +238,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal ikke opprette avklaringsbehov når vurdering ikke er relevant`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2002)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -256,6 +266,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -275,6 +286,8 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal avbryte avklaringsbehov når vurdering ikke lenger er relevant`() {
+        val sak = opprettInMemorySak()
+        
         val behandlingId = BehandlingId(2003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -304,6 +317,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -324,6 +338,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal opprette avklaringsbehov når noen perioder krever vurdering`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -353,6 +368,7 @@ class AvklaringsbehovServiceTest {
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -373,6 +389,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert skal opprette avklaringsbehov for utilstrekkelig vurderte perioder`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2006)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -393,6 +410,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -413,6 +431,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert skal avslutte avklaringsbehov når alle perioder er tilstrekkelig vurdert`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2007)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -436,6 +455,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -455,6 +475,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2008)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -474,6 +495,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
             this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
@@ -494,6 +516,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov, også når behovet har blitt løst før, men kun om vurderingsbehovet er nyere`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(20099)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -515,6 +538,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
             this.vurderingsbehovRelevanteForStegMedPerioder =
@@ -537,6 +561,73 @@ class AvklaringsbehovServiceTest {
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+    }
+
+    @Test
+    fun `skal opprette avklaringsbehov i behandling med nytt krav, selv om alle relevante perioder er vurdert tidligere`() {
+        val behandlingId = BehandlingId(20100)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.AVKLAR_SYKDOM
+
+        val sak = opprettInMemorySak()
+        val forrigeBehandling = InMemoryBehandlingRepository.opprettBehandling(
+            sakId = sak.id,
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            forrigeBehandlingId = null,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                årsak = ÅrsakTilOpprettelse.SØKNAD
+            ),
+        )
+        val forrigeBehandlingId = forrigeBehandling.id
+
+
+        val startDato = LocalDate.of(2024, 6, 1)
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        InMemoryVilkårsresultatRepository.lagre(forrigeBehandlingId, genererVilkårsresultat(helePeriode))
+
+        val førsteKrav = opprettNyttKrav(forrigeBehandlingId, startDato)
+        InMemoryKravRepository.lagre(forrigeBehandlingId, setOf(førsteKrav))
+
+        val andreKrav = opprettNyttKrav(forrigeBehandlingId, startDato.plusMonths(1).plusWeeks(2))
+        InMemoryKravRepository.lagre(behandlingId, setOf(førsteKrav, andreKrav))
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje(
+                listOf(
+                    Segment(helePeriode, true),
+                )
+            )
+        }
+        val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
+        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.forrigeBehandlingId = forrigeBehandlingId
+            this.sakId = sak.id
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForStegMedPerioder = emptySet()
+        }
+
+        avklaringsbehovServiceMedKrav.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
+            tilbakestillGrunnlag = tilbakestillGrunnlag
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+        assertThat(avklaringsbehov?.perioderVedtaketBehøverVurdering).containsExactlyInAnyOrder(
+            Periode(
+                andreKrav.muligRettFra,
+                helePeriode.tom
+            )
+        )
     }
 
     @Test
@@ -615,11 +706,12 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `løfter avbrutt avklaringsbehov hvis det blir relevant igjen`() {
+        val sak = opprettInMemorySak()
         val rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
         val behandlingId = BehandlingId(1004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val kontekst = flytKontekstMedPerioder {
-            sakId = SakId(1)
+            sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = rettighetsperiode
             behandlingType = TypeBehandling.Førstegangsbehandling
@@ -677,4 +769,19 @@ class AvklaringsbehovServiceTest {
             assertThat(it?.status()).isEqualTo(Status.OPPRETTET)
         }
     }
+
+    private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): NyttKrav {
+        return NyttKrav(
+            referanse = Kravreferanse.ny(),
+            journalpostId = JournalpostId("JP-001"),
+            vurdertAv = Bruker("Z123456"),
+            begrunnelse = "Standard krav om AAP",
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            søknadsdato = Søknadsdato(kravdato, SøknadsdatoÅrsak.SøknadMottatt),
+            overstyrMuligRettFra = null,
+            muligRettFra = kravdato,
+        )
+    }
 }
+

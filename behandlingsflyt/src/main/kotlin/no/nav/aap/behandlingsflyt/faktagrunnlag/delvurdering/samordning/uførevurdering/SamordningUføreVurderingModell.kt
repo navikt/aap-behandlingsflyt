@@ -10,7 +10,11 @@ import java.time.LocalDateTime
 
 data class SamordningUføreGrunnlag(
     val vurdering: SamordningUføreVurdering,
-)
+) {
+    fun tilTidslinje(): Tidslinje<Prosent> {
+        return vurdering.tilTidslinje()
+    }
+}
 
 data class SamordningUføreVurdering(
     val begrunnelse: String,

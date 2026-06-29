@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -21,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -40,6 +42,8 @@ class BarnetilleggStegTest {
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
     private lateinit var trukketSøknadService: TrukketSøknadService
+    private lateinit var kravRepository: KravRepository
+    private lateinit var sakRepository: SakRepository
     private val behandlingId = BehandlingId(Random().nextLong())
 
     @BeforeEach
@@ -63,6 +67,8 @@ class BarnetilleggStegTest {
         avklaringsbehovRepository = mockk()
         vilkårsresultatRepository = mockk()
         behandlingRepository = mockk()
+        kravRepository = mockk()
+        sakRepository = mockk()
 
         avklaringsbehovService = AvklaringsbehovService(
             avbrytRevurderingService,
@@ -70,6 +76,8 @@ class BarnetilleggStegTest {
             behandlingRepository,
             vilkårsresultatRepository,
             trukketSøknadService,
+            kravRepository,
+            sakRepository,
             AlleAvskruddUnleash
         )
         steg = BarnetilleggSteg(

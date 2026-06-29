@@ -104,7 +104,7 @@ class BackfillStansOpphør(
                 }
             }
         }
-        log.info("Backfill stans/opphør av {} behandlinger. Ingen fler behandlinger for $til – $fra", antallBackfillUtført)
+        log.info("Backfill stans/opphør av {} behandlinger. Ingen fler behandlinger for $fra – $til", antallBackfillUtført)
         Thread.sleep(Duration.ofMinutes(5))
     }
 
