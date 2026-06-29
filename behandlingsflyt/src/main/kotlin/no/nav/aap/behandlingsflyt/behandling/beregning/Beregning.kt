@@ -204,11 +204,10 @@ class Beregning(
             inntekter: Set<InntektPerÅr>,
             manuelleInntekter: Set<ManuellInntektVurdering>
         ): Set<InntektPerÅr> {
-            val manuellePGIByÅr = manuelleInntekter
-                .tilÅrInntekt { it.belop }
+            val (periodeVurderinger, årsVurderinger) = manuelleInntekter.partition { it.månedsPeriode != null }
 
-            val manuellEOSByÅr = manuelleInntekter
-                .tilÅrInntekt { it.eøsBeløp }
+            val manuellePGIByÅr = årsVurderinger.tilÅrInntekt { it.belop }
+            val manuellEOSByÅr = årsVurderinger.tilÅrInntekt { it.eøsBeløp }
 
             val inntekterByÅr = inntekter
                 .groupBy { it.år }
@@ -217,13 +216,23 @@ class Beregning(
                     it.value.first()
                 }
 
-            val kombinerteInntekter =
+            val årNivåKombinert =
                 (manuellePGIByÅr + inntekterByÅr).mapValues { (år, inntektPerÅr) ->
                     val eos = manuellEOSByÅr[år]?.beløp ?: Beløp(BigDecimal.ZERO)
                     inntektPerÅr.copy(beløp = inntektPerÅr.beløp.pluss(eos))
-                }.values.toSet()
+                }
 
-            return kombinerteInntekter
+            // Periode-nivå (endring i uføregrad): delperioder for samme år summeres (belop + eøs) og overstyrer register/år-nivå for det året.
+            val periodeNivåByÅr = periodeVurderinger
+                .groupBy { it.år }
+                .mapValues { (år, vurderinger) ->
+                    val sum = vurderinger.sumOf {
+                        (it.belop?.verdi ?: BigDecimal.ZERO) + (it.eøsBeløp?.verdi ?: BigDecimal.ZERO)
+                    }
+                    InntektPerÅr(år, Beløp(sum))
+                }
+
+            return (årNivåKombinert + periodeNivåByÅr).values.toSet()
         }
 
         private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(selector: (ManuellInntektVurdering) -> Beløp?): Map<Year, InntektPerÅr> {

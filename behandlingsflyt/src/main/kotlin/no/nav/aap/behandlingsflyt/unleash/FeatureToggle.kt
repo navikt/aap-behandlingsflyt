@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     VentStatusForTilbakekrevingIBehandlingsflyt,
     NyttKravPeriodiserteAvklaringsbehov,
     OppfoelgingsoppgaveSynligMedEnGang,
+    ManuellInntektDelvisUfore,
     Avslag11_27
     ;
 

@@ -37,6 +37,7 @@ import java.time.Year
 import kotlin.random.Random
 
 class ManglendeLigningGrunnlagStegTest {
+
     private val sisteÅr = Year.of(2025)
 
     @Test
@@ -210,6 +211,7 @@ class ManglendeLigningGrunnlagStegTest {
         tidligereVurderinger = tidligereVurderinger,
         beregningService = BeregningService(inMemoryRepositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
+        unleashGateway = minimalGatewayProvider().provide(),
     )
 
     private fun lagreBeregningstidspunkt(behandling: Behandling) {
