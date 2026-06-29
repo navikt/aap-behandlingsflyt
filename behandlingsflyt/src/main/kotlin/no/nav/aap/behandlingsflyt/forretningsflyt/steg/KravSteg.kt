@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -30,7 +31,8 @@ class KravSteg(
     private val unleashGateway: UnleashGateway,
     private val kravRepository: KravRepository,
     private val mottattDokumentRepository: MottattDokumentRepository,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val sakRepository: SakRepository
 ) : BehandlingSteg {
 
     /**
@@ -40,7 +42,11 @@ class KravSteg(
      * For "resten": Alle søknader er ikke et eget "krav". Opphør/stans og gjeninntreden kan trolig holdes unna for backfill
      */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.KravSteg)) {
+        if (!unleashGateway.erPåskruddForSak(
+                BehandlingsflytFeature.KravSteg,
+                "saksnumre"
+            ) { sakRepository.hent(kontekst.sakId).saksnummer }
+        ) {
             return Fullført
         }
 
@@ -146,7 +152,8 @@ class KravSteg(
                 unleashGateway = gatewayProvider.provide(),
                 kravRepository = repositoryProvider.provide(),
                 mottattDokumentRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+                sakRepository = repositoryProvider.provide()
             )
         }
 

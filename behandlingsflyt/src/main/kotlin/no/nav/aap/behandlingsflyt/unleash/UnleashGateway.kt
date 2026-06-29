@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.unleash
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.gateway.Gateway
 
 interface UnleashGateway : Gateway {
@@ -12,4 +13,6 @@ interface UnleashGateway : Gateway {
 
     fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean
     fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String
+    fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer): Boolean
+    fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummerResolver: () -> Saksnummer): Boolean
 }
