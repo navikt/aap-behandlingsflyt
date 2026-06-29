@@ -407,7 +407,8 @@ class BrevGateway : BrevbestillingGateway {
                     }
                     brevBehov.meldepliktGrunnlag?.let {
                         add(
-                            fritakmeldepliktTilFaktagrunnlag(it))
+                            fritakmeldepliktTilFaktagrunnlag(it)
+                        )
                     }
                 }
 
@@ -445,9 +446,8 @@ class BrevGateway : BrevbestillingGateway {
                     if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
-                    brevBehov.avslagsårsak?.let { årsak ->
-                        add(mapAvslagsårsakTilFaktagrunnlag(årsak))
-                    }}
+                    add(mapAvslagsårsakTilFaktagrunnlag(brevBehov.avslagsårsak!!))
+                }
             }
 
             is UtvidVedtakslengde -> {
