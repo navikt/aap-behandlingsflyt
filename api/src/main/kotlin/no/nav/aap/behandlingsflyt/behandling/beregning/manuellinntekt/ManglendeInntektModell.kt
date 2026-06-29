@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
+import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 
 data class ManuellInntektGrunnlagResponse(
@@ -11,6 +12,7 @@ data class ManuellInntektGrunnlagResponse(
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean,
+    val manglendeMånedsInntekter: List<MånedsperiodeData> = emptyList(),
 )
 
 data class ManuellInntektGrunnlagVurdering(
@@ -24,4 +26,10 @@ data class ÅrData(
     val beløp: BigDecimal?,
     val eøsBeløp: BigDecimal? = null,
     val ferdigLignetPGI: BigDecimal? = null,
+    val periode: Periode? = null,
+)
+
+data class MånedsperiodeData(
+    val periode: Periode,
+    val uføregrad: Int,
 )

@@ -8,10 +8,10 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Percentage
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
@@ -183,7 +183,7 @@ class UføreBeregningTest {
     }
 
     @Test
-    fun `hvis uføregraden er forskjellig midt i et år, og månedsinntekt og årsinntekt er forskjellig, så krasjer det`() {
+    fun `hvis uføregraden er forskjellig midt i et år, behandles det uten validering i uføreberegning`() {
         val uføreBeregning = UføreBeregning(
             grunnlag = elleveNittenGrunnlag(2),
             uføregrader = uføreGrader(
@@ -200,7 +200,7 @@ class UføreBeregningTest {
             ),
         )
 
-        assertThrows<IllegalArgumentException> { uføreBeregning.beregnUføre() }
+        assertThatCode { uføreBeregning.beregnUføre() }.doesNotThrowAnyException()
     }
 
     @Test
