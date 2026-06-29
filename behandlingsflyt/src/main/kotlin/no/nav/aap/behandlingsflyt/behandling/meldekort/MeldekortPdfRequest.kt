@@ -55,7 +55,6 @@ fun MeldekortV0.tilPdfRequest(
     val norsk = Locale.of("nb", "NO")
 
     val uker = timerArbeidPerPeriode
-        .filter { it.timerArbeid > 0}
         .groupBy { it.fraOgMedDato.get(ukeFields.weekOfWeekBasedYear()) }
         .map { (ukenummer, dager) ->
             MeldekortUke(
