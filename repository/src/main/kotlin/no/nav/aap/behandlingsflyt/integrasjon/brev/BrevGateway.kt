@@ -446,7 +446,9 @@ class BrevGateway : BrevbestillingGateway {
                     if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
-                    add(mapAvslagsårsakTilFaktagrunnlag(brevBehov.avslagsårsak!!))
+                    brevBehov.avslagsårsak?.let { årsak ->
+                        add(mapAvslagsårsakTilFaktagrunnlag(årsak))
+                    }
                 }
             }
 
