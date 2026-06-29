@@ -403,7 +403,11 @@ class AvklaringsbehovService(
     private fun nårEndringIKrav(
         kontekst: FlytKontekstMedPerioder,
     ): Tidslinje<Boolean> {
-        if (erToggleAvskrudd(kontekst)) {
+        if (!unleashGateway.erPåskruddForSak(
+                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+                "saksnumre"
+            ) { sakRepository.hent(kontekst.sakId).saksnummer }
+        ) {
             return Tidslinje.empty()
         }
 
@@ -448,26 +452,5 @@ class AvklaringsbehovService(
                 )
             }
             .orEmpty()
-    }
-
-    private fun erToggleAvskrudd(kontekst: FlytKontekstMedPerioder): Boolean {
-        return unleashGateway.isDisabled(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov)
-                || !unleashGateway.isVariantEnabled(
-            BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
-            "saksnumre"
-        )
-                || !skalSakTaHensynTilKrav(kontekst.sakId)
-    }
-
-    private fun skalSakTaHensynTilKrav(sakId: SakId): Boolean {
-        val saksnumre =
-            unleashGateway.getVariantValue(BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov, "saksnumre")
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
-                .map(Saksnummer::fra)
-                .toSet()
-        val saksnummer = sakRepository.hent(sakId).saksnummer
-        return saksnumre.contains(saksnummer)
     }
 }

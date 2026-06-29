@@ -21,9 +21,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.UnleashMedKrav
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
@@ -59,7 +58,7 @@ class AvklaringsbehovServiceTest {
         )
         avklaringsbehovServiceMedKrav = AvklaringsbehovService(
             inMemoryRepositoryProvider,
-            createGatewayProvider { register<UnleashMedKrav>() }
+            createGatewayProvider { register<LokalUnleash>() }
         )
     }
 
@@ -188,6 +187,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal opprette avklaringsbehov når vurdering er relevant`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2001)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -217,6 +217,7 @@ class AvklaringsbehovServiceTest {
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -237,6 +238,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal ikke opprette avklaringsbehov når vurdering ikke er relevant`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2002)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -264,6 +266,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -283,6 +286,8 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal avbryte avklaringsbehov når vurdering ikke lenger er relevant`() {
+        val sak = opprettInMemorySak()
+        
         val behandlingId = BehandlingId(2003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -312,6 +317,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -332,6 +338,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal opprette avklaringsbehov når noen perioder krever vurdering`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -361,6 +368,7 @@ class AvklaringsbehovServiceTest {
         }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -381,6 +389,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert skal opprette avklaringsbehov for utilstrekkelig vurderte perioder`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2006)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -401,6 +410,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -421,6 +431,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert skal avslutte avklaringsbehov når alle perioder er tilstrekkelig vurdert`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2007)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -444,6 +455,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -463,6 +475,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2008)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -482,6 +495,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
             this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
@@ -502,6 +516,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov, også når behovet har blitt løst før, men kun om vurderingsbehovet er nyere`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(20099)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -523,6 +538,7 @@ class AvklaringsbehovServiceTest {
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
             this.vurderingsbehovRelevanteForStegMedPerioder =
@@ -690,11 +706,12 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `løfter avbrutt avklaringsbehov hvis det blir relevant igjen`() {
+        val sak = opprettInMemorySak()
         val rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
         val behandlingId = BehandlingId(1004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val kontekst = flytKontekstMedPerioder {
-            sakId = SakId(1)
+            sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = rettighetsperiode
             behandlingType = TypeBehandling.Førstegangsbehandling
