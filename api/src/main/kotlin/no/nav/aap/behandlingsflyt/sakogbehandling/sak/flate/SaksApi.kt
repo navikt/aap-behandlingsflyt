@@ -343,10 +343,10 @@ fun NormalOpenAPIRoute.saksApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val sakRepository = repositoryProvider.provide<SakRepository>()
 
-                val sakId = sakRepository.hent(Saksnummer(saksnummer)).id
-                val saksHistorikkService = SaksHistorikkService(repositoryProvider)
+                val sak = sakRepository.hent(Saksnummer(saksnummer))
+                val saksHistorikkService = SaksHistorikkService(repositoryProvider, gatewayProvider)
 
-                saksHistorikkService.utledSaksHistorikk(sakId)
+                saksHistorikkService.utledSaksHistorikk(sak)
             }
             val navidenterIHistorikk = historikk.flatMap { it.hendelser.mapNotNull { it.utførtAv } }
             val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk).mapNotNull { it }
