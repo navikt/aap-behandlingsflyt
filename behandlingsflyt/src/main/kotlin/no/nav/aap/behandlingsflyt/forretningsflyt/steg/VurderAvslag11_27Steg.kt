@@ -27,6 +27,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -38,7 +40,8 @@ class VurderAvslag11_27Steg(
     private val kravRepository: KravRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -68,7 +71,9 @@ class VurderAvslag11_27Steg(
         val grunnlag = utledFaktagrunnlag(kontekst)
         SamordningAnnenFullYtelseVilkår(vilkårsresultat).vurder(grunnlag)
 
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27)) {
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        }
     }
 
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -117,9 +122,10 @@ class VurderAvslag11_27Steg(
                 samordningUføreRepository = repositoryProvider.provide(),
                 avslag11_27repository = repositoryProvider.provide(),
                 kravRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider,gatewayProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-                vilkårsresultatRepository = repositoryProvider.provide()
+                vilkårsresultatRepository = repositoryProvider.provide(),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 

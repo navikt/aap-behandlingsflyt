@@ -23,7 +23,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     LagreVurderRettighetsperiodeSomKrav,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     NyttKravPeriodiserteAvklaringsbehov,
-    OppfoelgingsoppgaveSynligMedEnGang
+    OppfoelgingsoppgaveSynligMedEnGang,
+    Avslag11_27
     ;
 
     override fun key(): String = name

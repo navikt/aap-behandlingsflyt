@@ -31,6 +31,6 @@ class VurderAvslag11_27Løsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
-        return VurderAvslag11_27Løser(repositoryProvider).løs(kontekst, this)
+        return VurderAvslag11_27Løser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

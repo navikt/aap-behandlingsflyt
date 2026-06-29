@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvslag11_27Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningUføreRepository
@@ -27,6 +28,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
@@ -38,6 +40,11 @@ import java.util.*
 class VurderAvslag11_27StegTest {
 
     private val gatewayProvider = createGatewayProvider { register<AlleAvskruddUnleash>() }
+    val unleashMedAvslag1127 = FakeUnleashBaseWithDefaultDisabled(
+        enabledFlags = listOf(
+            BehandlingsflytFeature.Avslag11_27
+        )
+    )
 
     private fun steg() = VurderAvslag11_27Steg(
         samordningService = SamordningService(
@@ -50,6 +57,7 @@ class VurderAvslag11_27StegTest {
         avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
         tidligereVurderinger = FakeTidligereVurderinger(),
         vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+        unleashGateway = unleashMedAvslag1127
     )
 
     @BeforeEach

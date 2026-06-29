@@ -106,11 +106,13 @@ fun NormalOpenAPIRoute.flytApi(
 
                     val skalViseKravSteg =
                         unleashGateway.erPåskruddForSak(BehandlingsflytFeature.KravSteg, "saksnumre", sak.saksnummer)
+                    val skalViseAvslag11_27 = unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27)
 
                     val stegGrupper =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                             .filter { it.key != StegGruppe.KRAV || skalViseKravSteg }
-                    val aktivtSteg = behandling.aktivtSteg()
+                            .filter { it.key != StegGruppe.AVSLAG_11_27 || skalViseAvslag11_27}
+                                val aktivtSteg = behandling.aktivtSteg()
                     val aktivtStegDefinisjon = Definisjon.fraStegType(aktivtSteg)
                     var erFullført = true
 

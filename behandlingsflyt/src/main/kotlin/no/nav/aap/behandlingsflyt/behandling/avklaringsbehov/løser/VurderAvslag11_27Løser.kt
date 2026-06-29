@@ -9,6 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
@@ -16,12 +19,14 @@ import java.util.*
 
 class VurderAvslag11_27Løser(
     private val behandlingRepository: BehandlingRepository,
-    private val avslag1127repository: Avslag11_27Repository
+    private val avslag1127repository: Avslag11_27Repository,
+    private val unleashGateway: UnleashGateway,
 ) : AvklaringsbehovsLøser<VurderAvslag11_27Løsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
-        avslag1127repository = repositoryProvider.provide()
+        avslag1127repository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun løs(
@@ -42,10 +47,13 @@ class VurderAvslag11_27Løser(
 
         val nyGjeldende = vurderinger + gjeldendeVedtatte
 
-        avslag1127repository.lagre(
-            kontekst.behandlingId(),
-            nyGjeldende
-        )
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27)) {
+            avslag1127repository.lagre(
+                kontekst.behandlingId(),
+                nyGjeldende
+            )
+        }
+
 
         return LøsningsResultat(løsning.avslag11_27Vurdering.vurderinger.joinToString(" ") { it.begrunnelse })
     }

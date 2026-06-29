@@ -12,11 +12,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvslag11_27Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -31,6 +31,11 @@ class VurderAvslag11_27LøserTest {
 
     private val ref1 = Kravreferanse(UUID.randomUUID())
     private val ref2 = Kravreferanse(UUID.randomUUID())
+    val unleashMedAvslag1127 = FakeUnleashBaseWithDefaultDisabled(
+        enabledFlags = listOf(
+            BehandlingsflytFeature.Avslag11_27
+        )
+    )
 
     private fun løsning(vararg vurderinger: Avslag11_27VurderingDto) = VurderAvslag11_27Løsning(
         avslag11_27Vurdering = Avslag11_27VurderingerDto(vurderinger.toList())
@@ -52,7 +57,11 @@ class VurderAvslag11_27LøserTest {
     @Test
     fun `lagrer ny vurdering for behandling`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        val løser = VurderAvslag11_27Løser(inMemoryRepositoryProvider)
+        val løser = VurderAvslag11_27Løser(
+            InMemoryBehandlingRepository,
+            InMemoryAvslag11_27Repository,
+            unleashGateway = unleashMedAvslag1127
+        )
 
         løser.løs(
             avklaringsbehovKontekst { this.behandling = behandling },
@@ -69,7 +78,11 @@ class VurderAvslag11_27LøserTest {
     @Test
     fun `lagrer to vurderinger for ulike krav`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        val løser = VurderAvslag11_27Løser(inMemoryRepositoryProvider)
+        val løser = VurderAvslag11_27Løser(
+            InMemoryBehandlingRepository,
+            InMemoryAvslag11_27Repository,
+            unleashGateway = unleashMedAvslag1127
+        )
 
         løser.løs(
             avklaringsbehovKontekst { this.behandling = behandling },
@@ -86,7 +99,11 @@ class VurderAvslag11_27LøserTest {
     @Test
     fun `vurdering med skalAvslås false lagres korrekt`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        val løser = VurderAvslag11_27Løser(inMemoryRepositoryProvider)
+        val løser = VurderAvslag11_27Løser(
+            InMemoryBehandlingRepository,
+            InMemoryAvslag11_27Repository,
+            unleashGateway = unleashMedAvslag1127
+        )
 
         løser.løs(
             avklaringsbehovKontekst { this.behandling = behandling },
@@ -113,7 +130,11 @@ class VurderAvslag11_27LøserTest {
             )
         )
 
-        val løser = VurderAvslag11_27Løser(inMemoryRepositoryProvider)
+        val løser = VurderAvslag11_27Løser(
+            InMemoryBehandlingRepository,
+            InMemoryAvslag11_27Repository,
+            unleashGateway = unleashMedAvslag1127
+        )
 
         løser.løs(
             avklaringsbehovKontekst { this.behandling = forrigeBehandling },
@@ -136,7 +157,11 @@ class VurderAvslag11_27LøserTest {
     @Test
     fun `returnerer begrunnelse i løsningsresultat`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        val løser = VurderAvslag11_27Løser(inMemoryRepositoryProvider)
+        val løser = VurderAvslag11_27Løser(
+            InMemoryBehandlingRepository,
+            InMemoryAvslag11_27Repository,
+            unleashGateway = unleashMedAvslag1127
+        )
 
         val resultat = løser.løs(
             avklaringsbehovKontekst { this.behandling = behandling },
