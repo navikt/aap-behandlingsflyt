@@ -17,16 +17,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenaVedtaksvariantDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenavedtakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.AvslagsårsakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphørDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisperiodeDatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
@@ -120,6 +123,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
+        perioderMedFritakMeldeplikt: List<Periode>,
+        underveisperioder: List<UnderveisperiodeDatadeling>,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
         muligMaksdato: LocalDate?,
     ) {
@@ -145,6 +150,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             tilkjentFom = tilkjentPeriode.periode.fom,
                             tilkjentTom = tilkjentPeriode.periode.tom,
                             dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
+                            effektivDagsats = tilkjentPeriode.tilkjent.redusertDagsats().verdi.toInt(),
                             // legg til redusert dagsats
                             gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
                             samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
@@ -197,6 +203,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             }
                         )
                     },
+                    perioderMedFritakMeldeplikt = perioderMedFritakMeldeplikt.map { PeriodeDTO(it.fom, it.tom) },
+                    underveisperioder = underveisperioder.map { it.tilDatadelingDTO() },
                 ),
             ),
             mapper = { _, _ ->
@@ -285,3 +293,12 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
     }
 }
+
+internal fun UnderveisperiodeDatadeling.tilDatadelingDTO() = UnderveisperiodeDatadelingDTO(
+    fom = fom,
+    tom = tom,
+    meldepliktstatus = meldepliktstatus,
+    arbeidsgrad = arbeidsgrad,
+    overgrenseVerdi = overgrenseVerdi,
+    timerArbeidet = timerArbeidet,
+)
