@@ -63,7 +63,7 @@ fun MeldekortV0.tilPdfRequest(
                 ukenummer = ukenummer.toString(),
                 fraOgMedDato = dager.minOf { it.fraOgMedDato }.format(datoFormatter),
                 tilOgMedDato = dager.maxOf { it.tilOgMedDato }.format(datoFormatter),
-                dager = dager.map { dag ->
+                dager = dager.sortedBy { it.fraOgMedDato }.map { dag ->
                     MeldekortDag(
                         dag = dag.fraOgMedDato.dayOfWeek.getDisplayName(TextStyle.FULL, norsk),
                         timerArbeid = formaterTimer(dag.timerArbeid)

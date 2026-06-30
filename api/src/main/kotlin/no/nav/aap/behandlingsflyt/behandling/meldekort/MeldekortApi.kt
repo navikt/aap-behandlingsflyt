@@ -120,6 +120,6 @@ data class OppdaterMeldekortRequest(
                     tilOgMedDato = it.dato,
                     timerArbeid = it.timerArbeidet,
                 )
-            }
+            }.sortedBy { it.fraOgMedDato }
         )
 }
