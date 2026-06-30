@@ -8,7 +8,7 @@ repositories {
 plugins {
     id("aap.conventions")
     alias(libs.plugins.ktor)
-    id("com.gradleup.shadow") version "9.4.2"
+    id("com.gradleup.shadow") version "9.4.3"
 }
 
 application {
