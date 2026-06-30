@@ -11,13 +11,13 @@ import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.MeldekortGateway
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -208,6 +208,15 @@ class Driftfunksjoner(
             log.info("Fant vedtatt behandling på sak ${sak.saksnummer}. Oppdaterer meldeperioder for behandling ${sisteBehandling.id}.")
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, sisteBehandling.id))
         }
+    }
+
+    fun oppdaterMeldeperioderMeldekortbackend(saksnummer: Saksnummer) {
+        val sak = sakRepository.hent(saksnummer)
+        val sisteBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+            ?: throw UgyldigForespørselException("Finnes ingen vedtatt behandling for sak — avbryter oppdatering av meldeperioder")
+
+        log.info("Oppdaterer meldeperioder (sakId: ${sak.id}, behandlingId: ${sisteBehandling.behandlingId}) i meldekort-backend")
+        flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, sisteBehandling.behandlingId))
     }
 
     private fun validerGyldigTilstandFørUtvidelseAvRettighetsperiode(
