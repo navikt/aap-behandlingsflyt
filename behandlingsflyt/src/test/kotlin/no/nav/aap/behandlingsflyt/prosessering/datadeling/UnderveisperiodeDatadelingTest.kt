@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -27,11 +28,16 @@ class UnderveisperiodeDatadelingTest {
 
         val dto = underveisperiode.tilDatadeling()
 
-        assertThat(dto.periode).isEqualTo(Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 14)))
-        assertThat(dto.meldepliktstatus).isEqualTo("MELDT_SEG")
-        assertThat(dto.arbeidsgrad).isEqualTo(70)
-        assertThat(dto.overgrenseVerdi).isTrue()
-        assertThat(dto.timerArbeidet).isEqualByComparingTo(BigDecimal("14.5"))
+        val expected = UnderveisperiodeDatadeling(
+            periode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 14)),
+            meldeperiode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 14)),
+            meldepliktstatus = "MELDT_SEG",
+            arbeidsgrad = 70,
+            overgrenseVerdi = true,
+            timerArbeidet = BigDecimal("14.5"),
+        )
+
+        assertThat(dto).usingRecursiveComparison().isEqualTo(expected)
     }
 
     @Test
@@ -45,10 +51,16 @@ class UnderveisperiodeDatadelingTest {
 
         val dto = underveisperiode.tilDatadeling()
 
-        assertThat(dto.meldepliktstatus).isNull()
-        assertThat(dto.arbeidsgrad).isEqualTo(50)
-        assertThat(dto.overgrenseVerdi).isFalse()
-        assertThat(dto.timerArbeidet).isEqualByComparingTo(BigDecimal.ZERO)
+        val expected = UnderveisperiodeDatadeling(
+            periode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 14)),
+            meldeperiode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 14)),
+            meldepliktstatus = null,
+            arbeidsgrad = 50,
+            overgrenseVerdi = false,
+            timerArbeidet = BigDecimal("0.0"),
+        )
+
+        assertThat(dto).usingRecursiveComparison().isEqualTo(expected)
     }
 
     private fun underveisperiode(
