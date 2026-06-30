@@ -316,7 +316,7 @@ class BrevUtlederService(
 
         if (avslagsårsaker.isNotEmpty()) {
             // Støtter kun en avslagsårsak i brev - henter ut høyest prioritert
-            val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
+            val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsakUtvideVedtakslengde(avslagsårsaker)) {
                 "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
             }
 
@@ -346,7 +346,7 @@ class BrevUtlederService(
         else -> error("Uventet avslagsårsak for utvidelse under ett år: $avslagsårsak")
     }
 
-    private fun prioriterAvslagsårsak(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+    private fun prioriterAvslagsårsakUtvideVedtakslengde(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
         val prioritertRekkefølge = listOf(
             Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.IKKE_MEDLEM,
@@ -354,6 +354,12 @@ class BrevUtlederService(
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
             Avslagsårsak.ANNEN_FULL_YTELSE,
+        )
+        return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
+    }
+
+    private fun prioriterAvslagsårsakAvslagsTekst(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+        val prioritertRekkefølge = listOf(
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
@@ -426,7 +432,7 @@ class BrevUtlederService(
 
     private fun brevBehovAvslag(behandling: Behandling): Avslag {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        val avslagsårsak = prioriterAvslagsårsak(hentAvslagsårsaker(behandling.id))
+        val avslagsårsak = prioriterAvslagsårsakAvslagsTekst(hentAvslagsårsaker(behandling.id))
         return Avslag(sykdomsvurdering = sykdomsvurdering, avslagsårsak = avslagsårsak)
     }
 
