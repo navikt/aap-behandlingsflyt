@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingServi
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -42,7 +43,9 @@ class MeldingOmVedtakBrevStegTest {
     val behandlingRepository = InMemoryBehandlingRepository
     val sakRepository = InMemorySakRepository
     val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider)
+    val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, createGatewayProvider {
+        register<AlleAvskruddUnleash>()
+    })
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
 
     @BeforeEach

@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurdering
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
+import kotlin.enums.enumEntries
 
 class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(
@@ -264,7 +265,7 @@ class MedlemskapLovvalgVurderingService {
 
     private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
         val sykepengerInntektGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { inntekt ->
-            inntekt.inntektType?.uppercase() in enumValues<InntektTyper>().map { it.name } && inntekt.beloep != 0.0
+            inntekt.inntektType?.uppercase() in enumEntries<InntektTyper>().map { it.name } && inntekt.beloep != 0.0
         }
 
         val mottarSykepengerGrunnlag = sykepengerInntektGrunnlag?.map {

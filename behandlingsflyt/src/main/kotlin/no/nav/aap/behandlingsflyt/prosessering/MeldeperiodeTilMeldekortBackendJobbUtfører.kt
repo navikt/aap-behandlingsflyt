@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -17,8 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -41,10 +38,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val underveisRepository: UnderveisRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val vedtakRepository: VedtakRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val vedtakService: VedtakService,
-    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -67,10 +62,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
-                    vedtaksdatoFørsteInnvilgelse = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldepliktForsteFraForsteInnvilgelse))
-                        vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)?.toLocalDate()
-                    else
-                        vedtakRepository.hent(behandling.id)?.virkningstidspunkt,
+                    vedtaksdatoFørsteInnvilgelse = vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)?.toLocalDate(),
                     meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id),
                     underveisGrunnlag = underveisGrunnlag
                 )
@@ -109,10 +101,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 meldeperiodeRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 meldepliktRepository = repositoryProvider.provide(),
-                vedtakRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

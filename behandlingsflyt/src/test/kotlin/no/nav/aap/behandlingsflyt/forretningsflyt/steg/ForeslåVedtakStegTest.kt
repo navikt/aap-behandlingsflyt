@@ -16,9 +16,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
@@ -40,6 +42,9 @@ class ForeslåVedtakStegTest {
             TrukketSøknadService(
                 InMemoryTrukketSøknadRepository
             ),
+        kravRepository = InMemoryKravRepository,
+        sakRepository = InMemorySakRepository,
+        AlleAvskruddUnleash
     )
     private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)
     private val sakRepository = InMemorySakRepository

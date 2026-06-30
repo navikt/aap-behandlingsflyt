@@ -99,7 +99,7 @@ class UtledArenaVedtakstype(
             eksisterendeVedtak = utledVedtak(
                 eksisterendeVedtak = eksisterendeVedtak,
                 behandling = behandling,
-                søknader = søknader.filter { it.mottattTidspunkt <= behandling.opprettetTidspunkt }.toSet(),
+                søknader = søknader,
                 rettighetsTyper = diffTidslinjer(forrigeRettighetsTyper, behandlingensRettighetsTyper),
                 stansOgOpphør = diffMap(forrigeStansOgOpphør, behandlingensStansOgOpphør),
             )
@@ -230,11 +230,16 @@ class UtledArenaVedtakstype(
             eksisterendeVedtak: Tidslinje<ArenaVedtak>
         ): Tidslinje<ArenaVedtak> {
             /* Nyeste søknad knyttet til behandling, eventuelt siste søknad mottatt før behandlingen
-                 * ble opprettet som fallback. */
+             * ble opprettet som fallback, og hvis det ikke finnes, så tidligst mottatte søknad.
+             *
+             * Eksempel på case som hvor søknad er mottatt etter at behandlingen er opprettet, er
+             * hvis behandlingen er opprettet på grunn av mottatt legeerklæring.
+             **/
             val søknadsdato = søknader.filter { it.behandlingId == behandling.id }
                 .minOfOrNull { it.mottattTidspunkt.toLocalDate() }
-                ?: søknader.filter { it.mottattTidspunkt < behandling.opprettetTidspunkt }
-                    .maxOf { it.mottattTidspunkt.toLocalDate() }
+                ?: søknader.filter { it.mottattTidspunkt <= behandling.opprettetTidspunkt }
+                    .maxOfOrNull { it.mottattTidspunkt.toLocalDate() }
+                ?: søknader.minOf { it.mottattTidspunkt.toLocalDate() }
 
             return eksisterendeVedtak.mergePrioriterHøyre(
                 tidslinjeOf(

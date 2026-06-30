@@ -137,7 +137,7 @@ class RettighetsperiodeSteg(
                 sakService = SakService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 rettighetsperiodeRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
             )
         }
 

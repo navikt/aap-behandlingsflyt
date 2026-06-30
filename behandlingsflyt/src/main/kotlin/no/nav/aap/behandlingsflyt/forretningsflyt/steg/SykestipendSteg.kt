@@ -34,7 +34,7 @@ class SykestipendSteg private constructor(
         studentRepository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
@@ -50,7 +50,6 @@ class SykestipendSteg private constructor(
                     VurderingType.FØRSTEGANGSBEHANDLING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                                 && studentGrunnlag.skalVurdereStudent()
-                                && studentGrunnlag?.vurderinger?.any { it.erOppfylt() } == true
 
                     VurderingType.REVURDERING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())

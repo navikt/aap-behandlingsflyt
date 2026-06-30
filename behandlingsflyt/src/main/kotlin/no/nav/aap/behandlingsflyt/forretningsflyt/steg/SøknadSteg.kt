@@ -100,7 +100,7 @@ class SøknadSteg(
                 trukketSøknadRepository = repositoryProvider.provide(),
                 repositoryProvider = repositoryProvider,
                 sakRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
             )
         }
 

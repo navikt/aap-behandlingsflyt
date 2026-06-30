@@ -43,7 +43,7 @@ class VurderBistandsbehovSteg(
         vilkårsresultatRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 

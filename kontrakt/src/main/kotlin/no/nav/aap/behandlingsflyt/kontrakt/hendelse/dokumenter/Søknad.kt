@@ -130,6 +130,7 @@ public enum class AndreUtbetalingerYtelserDto {
 
 public data class ManueltOppgittBarn(
     public val navn: String,
+    @param:JsonDeserialize(using = FlexibleLocalDateDeserializer::class)
     public val fødselsdato: LocalDate,
     public val ident: Ident? = null,
     public val relasjon: Relasjon,

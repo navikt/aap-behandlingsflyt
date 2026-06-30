@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 
 /**
- * Se https://github.com/navikt/tp/blob/e99c670da41c23172e2ccc3a3e8dff4c7870fa82/tp-api/src/main/kotlin/no/nav/samhandling/tp/controller/TjenestepensjonController.kt#L117
+ * Se [kildekoden](https://github.com/navikt/tp/blob/e99c670da41c23172e2ccc3a3e8dff4c7870fa82/tp-api/src/main/kotlin/no/nav/samhandling/tp/controller/TjenestepensjonController.kt#L117)
  */
 class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
     private val url =

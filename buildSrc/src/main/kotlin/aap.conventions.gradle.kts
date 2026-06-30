@@ -27,7 +27,8 @@ dependencies {
 // https://docs.gradle.org/8.12.1/userguide/jvm_test_suite_plugin.html
 testing {
     suites {
-        @Suppress("UnstableApiUsage") val test by getting(JvmTestSuite::class) {
+        @Suppress("UnstableApiUsage")
+        getByName<JvmTestSuite>("test") {
             useJUnitJupiter()
         }
     }

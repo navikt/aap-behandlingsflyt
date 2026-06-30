@@ -1,30 +1,18 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 
-@Deprecated("Erstattes av vurderinger")
-data class ManuellInntektVurderingGrunnlagResponse(
-    val begrunnelse: String,
-    val vurdertAv: VurdertAvResponse,
-    val ar: Int,
-    val belop: BigDecimal,
-)
-
-/**
- * @param [ar] Året som det skal gjøres vurdering for. Er med i begge objektene fordi de teoretisk kan være forskjellige.
- */
 data class ManuellInntektGrunnlagResponse(
-    @Deprecated("Erstattes av vurderinger") val ar: Int,
-    @Deprecated("Erstattes av vurderinger") val gverdi: BigDecimal,
-    @Deprecated("Erstattes av vurderinger") val vurdering: ManuellInntektVurderingGrunnlagResponse?,
-    @Deprecated("Erstattes av vurderinger") val historiskeVurderinger: List<ManuellInntektVurderingGrunnlagResponse>,
-    val sisteRelevanteÅr: Int,
+    @Deprecated("Brukes ikke av frontend snart.") val sisteRelevanteÅr: Int,
+    val manglerInntektForÅr: List<Int>,
+    val alleRelevanteÅr: List<Int>,
     val manuelleVurderinger: ManuellInntektGrunnlagVurdering? = null,
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean,
+    val manglendeMånedsInntekter: List<MånedsperiodeData> = emptyList(),
 )
 
 data class ManuellInntektGrunnlagVurdering(
@@ -38,4 +26,10 @@ data class ÅrData(
     val beløp: BigDecimal?,
     val eøsBeløp: BigDecimal? = null,
     val ferdigLignetPGI: BigDecimal? = null,
+    val periode: Periode? = null,
+)
+
+data class MånedsperiodeData(
+    val periode: Periode,
+    val uføregrad: Int,
 )

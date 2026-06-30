@@ -4,16 +4,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.Year
-import kotlin.collections.filterNot
-import kotlin.collections.orEmpty
-import kotlin.collections.plus
-import kotlin.collections.toSet
 
 class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     ManuellInntektGrunnlagRepository {
@@ -46,32 +41,6 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         )
     }
 
-    override fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId
-    ): Set<Set<ManuellInntektVurdering>> {
-        val query = """
-            SELECT MANUELL_INNTEKT_VURDERINGER_ID
-            FROM MANUELL_INNTEKT_VURDERING_GRUNNLAG GRUNNLAG
-                JOIN BEHANDLING B1 ON B1.ID = GRUNNLAG.BEHANDLING_ID
-                LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON AR.BEHANDLING_ID = B1.ID
-            WHERE GRUNNLAG.AKTIV
-            AND B1.SAK_ID = ?
-            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE B2.ID = ?)
-            AND AR.BEHANDLING_ID IS NULL
-        """.trimIndent()
-
-        return connection.querySet(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper {
-                hentManuellInntektVurderinger(it.getLong("MANUELL_INNTEKT_VURDERINGER_ID"))
-            }
-        }
-    }
-
     private fun hentManuellInntektVurderinger(vurderingerId: Long): Set<ManuellInntektVurdering> {
         val query = """
             SELECT * FROM MANUELL_INNTEKT_VURDERING WHERE MANUELL_INNTEKT_VURDERINGER_ID = ?
@@ -87,22 +56,13 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                     begrunnelse = it.getString("begrunnelse"),
                     belop = it.getBigDecimalOrNull("belop")?.let { verdi -> Beløp(verdi) },
                     vurdertAv = it.getString("vurdert_av"),
-                    opprettet = it.getLocalDateTime( "opprettet_tid"),
+                    opprettet = it.getLocalDateTime("opprettet_tid"),
                     eøsBeløp = it.getBigDecimalOrNull("eos_belop")?.let(::Beløp),
                     ferdigLignetPGI = it.getBigDecimalOrNull("ferdig_lignet_pgi")?.let(::Beløp),
+                    månedsPeriode = it.getPeriodeOrNull("periode"),
                 )
             }
         }
-    }
-
-    override fun lagre(behandlingId: BehandlingId, manuellVurdering: ManuellInntektVurdering) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-
-        // Hvis det finnes en vurdering på samme år, så overskrives denne
-        val kombinerteEntries = (eksisterendeGrunnlag?.manuelleInntekter.orEmpty()
-            .filterNot { it.år == manuellVurdering.år } + manuellVurdering).toSet()
-
-        lagre(behandlingId, kombinerteEntries)
     }
 
     override fun lagre(behandlingId: BehandlingId, manuellVurderinger: Set<ManuellInntektVurdering>) {
@@ -135,7 +95,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         manuellInntektVurderingerId: Long
     ) {
         val query = """
-            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, EOS_BELOP, FERDIG_LIGNET_PGI) VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, EOS_BELOP, FERDIG_LIGNET_PGI, PERIODE) VALUES (?, ?, ?, ?, ?, ?, ?, ?::daterange)
         """.trimIndent()
 
         connection.executeBatch(query, manuellVurderinger) {
@@ -147,6 +107,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 setLong(5, manuellInntektVurderingerId)
                 setBigDecimal(6, it.eøsBeløp?.verdi)
                 setBigDecimal(7, it.ferdigLignetPGI?.verdi)
+                setPeriode(8, it.månedsPeriode)
             }
         }
     }
