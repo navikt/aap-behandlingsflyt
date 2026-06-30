@@ -16,4 +16,6 @@ data class BeregningstidspunktVurderingResponse(
     val ytterligereNedsattBegrunnelse: String?,
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
     val vurderingerMeta: VurderingerMetaResponse,
+    val årsak: String?,
+    val ytterligereNedsattÅrsak: String?,
 )

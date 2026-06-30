@@ -49,7 +49,9 @@ class BeregningVurderingRepositoryImplTest {
             nedsattArbeidsevneEllerStudieevneDato = LocalDate.now(),
             ytterligereNedsattBegrunnelse = "Dette er en ytterligere begrunnelse",
             ytterligereNedsattArbeidsevneDato = LocalDate.now().plusDays(30),
-            vurdertAv = "saksbehandler"
+            vurdertAv = "saksbehandler",
+            årsak = "KRAVDATO",
+            ytterligereNedsattÅrsak = "UFØRETIDSPUNKT",
         )
 
         val yrkesskadeVurderinger = listOf(
@@ -93,13 +95,17 @@ class BeregningVurderingRepositoryImplTest {
                     { it!!.begrunnelse },
                     { it!!.nedsattArbeidsevneEllerStudieevneDato },
                     { it!!.ytterligereNedsattBegrunnelse },
-                    { it!!.ytterligereNedsattArbeidsevneDato }
+                    { it!!.ytterligereNedsattArbeidsevneDato },
+                    { it!!.årsak },
+                    { it!!.ytterligereNedsattÅrsak },
                 )
                 .containsExactly(
                     tidspunktVurdering.begrunnelse,
                     tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
                     tidspunktVurdering.ytterligereNedsattBegrunnelse,
-                    tidspunktVurdering.ytterligereNedsattArbeidsevneDato
+                    tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
+                    tidspunktVurdering.årsak,
+                    tidspunktVurdering.ytterligereNedsattÅrsak,
                 )
 
             // Verifiser yrkesskadeVurderinger

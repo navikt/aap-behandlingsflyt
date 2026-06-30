@@ -15,6 +15,8 @@ data class BeregningstidspunktVurdering(
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
+    val årsak: String? = null,
+    val ytterligereNedsattÅrsak: String? = null,
 )
 
 data class BeregningstidspunktVurderingDto(
@@ -22,4 +24,6 @@ data class BeregningstidspunktVurderingDto(
     val nedsattArbeidsevneDato: LocalDate,
     val ytterligereNedsattBegrunnelse: String?,
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
+    val årsak: String? = null,
+    val ytterligereNedsattÅrsak: String? = null,
 )
