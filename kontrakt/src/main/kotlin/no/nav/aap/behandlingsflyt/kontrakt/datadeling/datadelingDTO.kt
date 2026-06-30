@@ -35,8 +35,10 @@ public data class PeriodeDTO(
 )
 
 public data class UnderveisperiodeDatadelingDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
+    @Deprecated("Fjernes. Bruk periode.") val fom: LocalDate,
+    @Deprecated("Fjernes. Bruk periode.") val tom: LocalDate,
+    val periode: PeriodeDTO,
+    val meldeperiode: PeriodeDTO,
     val meldepliktstatus: String?,
     val arbeidsgrad: Int,
     val overgrenseVerdi: Boolean,

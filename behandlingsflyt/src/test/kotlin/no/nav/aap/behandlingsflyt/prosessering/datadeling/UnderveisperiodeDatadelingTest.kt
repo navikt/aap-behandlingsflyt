@@ -27,8 +27,7 @@ class UnderveisperiodeDatadelingTest {
 
         val dto = underveisperiode.tilDatadeling()
 
-        assertThat(dto.fom).isEqualTo(LocalDate.of(2026, 1, 1))
-        assertThat(dto.tom).isEqualTo(LocalDate.of(2026, 1, 14))
+        assertThat(dto.periode).isEqualTo(Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 14)))
         assertThat(dto.meldepliktstatus).isEqualTo("MELDT_SEG")
         assertThat(dto.arbeidsgrad).isEqualTo(70)
         assertThat(dto.overgrenseVerdi).isTrue()

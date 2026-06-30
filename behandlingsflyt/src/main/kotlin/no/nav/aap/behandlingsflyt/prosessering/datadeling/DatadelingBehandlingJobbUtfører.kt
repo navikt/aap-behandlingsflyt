@@ -135,10 +135,10 @@ class DatadelingBehandlingJobbUtfører(
 }
 
 internal fun Underveisperiode.tilDatadeling() = UnderveisperiodeDatadeling(
-    fom = periode.fom,
-    tom = periode.tom,
+    periode = periode,
     meldepliktstatus = meldepliktStatus?.name,
     arbeidsgrad = arbeidsgradering.andelArbeid.prosentverdi(),
     overgrenseVerdi = arbeidsgradering.andelArbeid.prosentverdi() > grenseverdi.prosentverdi(),
     timerArbeidet = arbeidsgradering.totaltAntallTimer.antallTimer,
+    meldeperiode = meldePeriode,
 )
