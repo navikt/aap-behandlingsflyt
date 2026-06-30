@@ -520,6 +520,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         }
     }
 
+    @Suppress("FunctionParameterNaming")
     private fun opprettUførevedtakshendelse(
         sak: Sak,
         behandling: Behandling,
