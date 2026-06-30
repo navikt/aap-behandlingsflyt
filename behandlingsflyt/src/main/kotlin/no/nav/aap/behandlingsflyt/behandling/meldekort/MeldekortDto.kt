@@ -37,7 +37,7 @@ data class MeldekortDto(
     val oppdatertAv: String? = null,
     val oppdatertAvSaksbehandler: Boolean,
     val begrunnelse: String? = null,
-    val dager: Set<DagDto>,
+    val dager: List<DagDto>,
 )
 
 data class DagDto(
@@ -64,7 +64,7 @@ data class OppdaterMeldekort(
                     tilOgMedDato = it.dato,
                     timerArbeid = it.timerArbeidet,
                 )
-            }
+            }.sortedBy { it.fraOgMedDato }
     )
 
     fun meldekortMedTimerRegistrert() = dager.isNotEmpty()
@@ -100,7 +100,7 @@ fun Meldekort.toDto(
                 dato = arbeid.periode.fom,
                 timerArbeidet = arbeid.timerArbeid.antallTimer.toDouble()
             )
-        }.toSet()
+        }
     )
 }
 

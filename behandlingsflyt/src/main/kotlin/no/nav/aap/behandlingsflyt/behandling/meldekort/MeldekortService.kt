@@ -109,29 +109,39 @@ class MeldekortService(
         valider(behandling, meldekortGrunnlag, oppdaterMeldekort)
 
         val meldekort = oppdaterMeldekort.tilMeldekort()
-        val journalpostId = journalføringService.journalfør(
-            sak = sak,
-            meldeperiode = oppdaterMeldekort.meldeperiode,
-            meldekort = meldekort,
-            oppdatertAv = oppdaterMeldekort.bruker,
-            enhet = ansattInfoService.hentAnsattEnhet(oppdaterMeldekort.bruker.ident),
-            tidspunkt = Instant.now(clock),
-            meldeDato = oppdaterMeldekort.meldedato,
-            korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(oppdaterMeldekort.meldeperiode) != null
-        )
 
-        val mottattTidspunkt = utledetMottattTidspunkt(
-            oppdaterMeldekort.meldedato,
-            meldekortGrunnlag?.nyesteForMeldeperiodePåDato(oppdaterMeldekort.meldeperiode, oppdaterMeldekort.meldedato)
-        )
+        try {
+            val journalpostId = journalføringService.journalfør(
+                sak = sak,
+                meldeperiode = oppdaterMeldekort.meldeperiode,
+                meldekort = meldekort,
+                oppdatertAv = oppdaterMeldekort.bruker,
+                enhet = ansattInfoService.hentAnsattEnhet(oppdaterMeldekort.bruker.ident),
+                tidspunkt = Instant.now(clock),
+                meldeDato = oppdaterMeldekort.meldedato,
+                korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(oppdaterMeldekort.meldeperiode) != null
+            )
 
-        // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
-        mottattHendelseService.registrerMottattHendelse(
-            tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)
-        )
+            val mottattTidspunkt = utledetMottattTidspunkt(
+                oppdaterMeldekort.meldedato,
+                meldekortGrunnlag?.nyesteForMeldeperiodePåDato(oppdaterMeldekort.meldeperiode, oppdaterMeldekort.meldedato)
+            )
 
-        logger.info("Saksbehandler har opprettet/korrigert meldekort for saksnummer ${oppdaterMeldekort.saksnummer}")
-        return OppdatertMeldekort(journalpostId)
+            // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
+            mottattHendelseService.registrerMottattHendelse(
+                tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)
+            )
+
+            logger.info("Saksbehandler har opprettet/korrigert meldekort for saksnummer ${oppdaterMeldekort.saksnummer}")
+            return OppdatertMeldekort(journalpostId)
+
+        } catch (e: Exception) {
+            logger.error(
+                "En feil oppstod ved oppdatering av meldekort, dette må undersøkes da journalføring kan " +
+                        "være fullført, mens igangsetting av behandlingen ikke har startet", e
+            )
+            throw e
+        }
     }
 
     fun hentProsesseringStatus(saksnummer: Saksnummer): MeldekortProsesseringResponse {
@@ -209,7 +219,7 @@ class MeldekortService(
     ): Map<Periode, OppfyltMeldeperiodeMedMeldepliktStatus> {
         return underveisGrunnlag.perioder
             .filter { it.utfall == Utfall.OPPFYLT && it.periode.fom < LocalDate.now(clock) }
-            .groupBy({ it.meldePeriode })
+            .groupBy { it.meldePeriode }
             .mapValues { (_, underveisPerioder) ->
                 val periodeMedMeldepliktStatus =
                     Tidslinje(underveisPerioder.map { Segment(it.periode, it.meldepliktStatus) })

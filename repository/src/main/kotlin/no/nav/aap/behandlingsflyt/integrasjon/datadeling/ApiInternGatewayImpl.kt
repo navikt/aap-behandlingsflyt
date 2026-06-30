@@ -295,10 +295,14 @@ class ApiInternGatewayImpl : ApiInternGateway {
 }
 
 internal fun UnderveisperiodeDatadeling.tilDatadelingDTO() = UnderveisperiodeDatadelingDTO(
-    fom = fom,
-    tom = tom,
     meldepliktstatus = meldepliktstatus,
     arbeidsgrad = arbeidsgrad,
     overgrenseVerdi = overgrenseVerdi,
     timerArbeidet = timerArbeidet,
+    fom = periode.fom,
+    tom = periode.tom,
+    periode = periode.tilDatadelingDTO(),
+    meldeperiode = meldeperiode.tilDatadelingDTO()
 )
+
+internal fun Periode.tilDatadelingDTO() = PeriodeDTO(fom, tom)

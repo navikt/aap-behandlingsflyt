@@ -37,7 +37,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -134,7 +133,7 @@ fun NormalOpenAPIRoute.driftApi(
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.DRIFTE
                 )
-            ) { params, request ->
+            ) { params, _ ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -463,6 +462,23 @@ fun NormalOpenAPIRoute.driftApi(
                 }
 
                 respondWithStatus(HttpStatusCode.NoContent)
+            }
+        }
+
+        route("/sak/{saksnummer}/oppdater-meldeperioder") {
+            authorizedPost<SaksnummerParameter, String, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, _ ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val driftfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
+
+                    driftfunksjoner.oppdaterMeldeperioderMeldekortbackend(Saksnummer(params.saksnummer))
+                }
+                respond("Jobb for oppdatering av meldeperioder er startet")
             }
         }
 
