@@ -200,7 +200,7 @@ class MeldekortService(
     ): Map<Periode, OppfyltMeldeperiodeMedMeldepliktStatus> {
         return underveisGrunnlag.perioder
             .filter { it.utfall == Utfall.OPPFYLT && it.periode.fom < LocalDate.now(clock) }
-            .groupBy({ it.meldePeriode })
+            .groupBy { it.meldePeriode }
             .mapValues { (_, underveisPerioder) ->
                 val periodeMedMeldepliktStatus =
                     Tidslinje(underveisPerioder.map { Segment(it.periode, it.meldepliktStatus) })
