@@ -626,6 +626,7 @@ class BrevGateway : BrevbestillingGateway {
         try {
             no.nav.aap.brev.kontrakt.AvslagsÅrsak.valueOf(this.name)
         } catch (e: IllegalArgumentException) {
+            log.warn("Avslagsårsak finnes i brev: " + this.name)
             no.nav.aap.brev.kontrakt.AvslagsÅrsak.MANGLENDE_DOKUMENTASJON
         }
 }
