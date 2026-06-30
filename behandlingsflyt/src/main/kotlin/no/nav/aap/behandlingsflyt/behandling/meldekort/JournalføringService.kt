@@ -55,6 +55,7 @@ class JournalføringService(
             utførtAv = oppdatertAv.ident,
             tidspunkt = tidspunkt,
             meldeDato = meldeDato,
+            korrigert = korrigert,
         )
 
         val pdf = pdfgenGateway.genererMeldekortPdf(
