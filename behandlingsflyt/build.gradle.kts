@@ -3,7 +3,7 @@ plugins {
 }
 
 tasks {
-    val projectProps by registering(WriteProperties::class) {
+    val projectProps = register<WriteProperties>("projectProps") {
         destinationFile = layout.buildDirectory.file("behandlingsflyt-version.properties")
         // Define property.
         property("project.version", getCheckedOutGitCommitHash())
@@ -31,7 +31,7 @@ fun getCheckedOutGitCommitHash(): String {
     // Try to run git command
     return try {
         runCommand("git rev-parse --verify HEAD")
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         // Fallback: use a deterministic value when git is unavailable
         "unknown-no-git"
     }

@@ -23,8 +23,24 @@ public data class DatadelingDTO(
     val samId: String? = null,
     val vedtakId: Long,
     val beregningsgrunnlag: BigDecimal?,
+    val perioderMedFritakMeldeplikt: List<PeriodeDTO>,
     val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?,
     val arenavedtak: List<ArenavedtakDTO>,
+    val underveisperioder: List<UnderveisperiodeDatadelingDTO>,
+)
+
+public data class PeriodeDTO(
+    val fom: LocalDate,
+    val tom: LocalDate,
+)
+
+public data class UnderveisperiodeDatadelingDTO(
+    val fom: LocalDate,
+    val tom: LocalDate,
+    val meldepliktstatus: String?,
+    val arbeidsgrad: Int,
+    val overgrenseVerdi: Boolean,
+    val timerArbeidet: BigDecimal,
 )
 
 public data class ArenavedtakDTO(
@@ -109,6 +125,7 @@ public data class TilkjentDTO(
     val tilkjentFom: LocalDate,
     val tilkjentTom: LocalDate,
     val dagsats: Int,
+    val effektivDagsats: Int,
     val gradering: Int,
     val samordningUføregradering: Int? = null,
     val grunnlagsfaktor: BigDecimal,

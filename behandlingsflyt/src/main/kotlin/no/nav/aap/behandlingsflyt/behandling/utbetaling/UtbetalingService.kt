@@ -237,7 +237,7 @@ class UtbetalingService(
         map { segment ->
             val periode = segment.periode
             val detaljer = segment.tilkjent
-            val meldeperiode = meldeperioder.firstOrNull {Periode(it.fom, it.tom).inneholder(periode)}
+            val meldeperiode = meldeperioder.firstOrNull { Periode(it.fom, it.tom).inneholder(periode) }
             TilkjentYtelsePeriodeDto(
                 fom = periode.fom,
                 tom = periode.tom,

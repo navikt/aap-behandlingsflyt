@@ -17,7 +17,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 interface ApiInternGateway : Gateway {
     fun sendPerioder(ident: String, perioder: List<Periode>)
@@ -37,6 +36,8 @@ interface ApiInternGateway : Gateway {
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
+        perioderMedFritakMeldeplikt: List<Periode>,
+        underveisperioder: List<UnderveisperiodeDatadeling>,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
         muligMaksdato: LocalDate?,
     )
@@ -55,4 +56,3 @@ interface ApiInternGateway : Gateway {
 
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 }
-
