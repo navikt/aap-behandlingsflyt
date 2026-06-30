@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -117,9 +118,19 @@ internal fun harRelevantEndringForLovvalgOgMedlemskap(
     eksisterendeData: Personopplysning?,
     oppdatertData: Personopplysning
 ): Boolean {
-    if (eksisterendeData == null) {
+    val eksisterendeUtenUnntaksFelter = eksisterendeData?.copy(
+        statsborgerskap = emptyList(),
+        utenlandsAddresser = emptyList()
+    )
+
+    val oppdatertUtenUnntaksFelter = oppdatertData.copy(
+        statsborgerskap = emptyList(),
+        utenlandsAddresser = emptyList()
+    )
+    if (eksisterendeUtenUnntaksFelter != oppdatertUtenUnntaksFelter) {
         return true
     }
+
     val harMistetEøsEllerNorskStatsborgerskap =
         eksisterendeData.statsborgerskap.eøsLand().isNotEmpty() && oppdatertData.statsborgerskap.eøsLand().isEmpty()
 

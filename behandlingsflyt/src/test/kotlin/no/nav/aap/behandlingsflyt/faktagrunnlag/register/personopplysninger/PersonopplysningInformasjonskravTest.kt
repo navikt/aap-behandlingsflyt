@@ -8,7 +8,7 @@ import java.time.LocalDate
 class PersonopplysningInformasjonskravTest {
 
     @Test
-    fun `skal ikke trigge revurdering når kun irrelevante personopplysningsfelt endrer seg`() {
+    fun `skal trigge revurdering når grunnlag endrer seg på andre felt enn statsborgerskap og adresse`() {
         val eksisterende = personopplysning(
             status = PersonStatus.bosatt,
             statsborgerskap = listOf(Statsborgerskap("NOR")),
@@ -16,7 +16,7 @@ class PersonopplysningInformasjonskravTest {
         )
         val oppdatert = eksisterende.copy(status = PersonStatus.utflyttet)
 
-        assertFalse(harRelevantEndringForLovvalgOgMedlemskap(eksisterende, oppdatert))
+        assertTrue(harRelevantEndringForLovvalgOgMedlemskap(eksisterende, oppdatert))
     }
 
     @Test
