@@ -11,7 +11,6 @@ data class SykdomsvurderingForBrev(
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
 ) {
     fun erFunksjoneltLik(annenVurdering: SykdomsvurderingForBrev): Boolean {
-        // er dette litt juks
-        return annenVurdering.copy(vurdertTidspunkt = this.vurdertTidspunkt) == this
+        return annenVurdering.vurdering == this.vurdering
     }
 }
