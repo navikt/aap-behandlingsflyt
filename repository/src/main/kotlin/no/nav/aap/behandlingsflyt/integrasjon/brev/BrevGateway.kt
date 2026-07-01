@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGatew
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -406,7 +407,8 @@ class BrevGateway : BrevbestillingGateway {
                     }
                     brevBehov.meldepliktGrunnlag?.let {
                         add(
-                            fritakmeldepliktTilFaktagrunnlag(it))
+                            fritakmeldepliktTilFaktagrunnlag(it)
+                        )
                     }
                 }
 
@@ -443,6 +445,9 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
+                    }
+                    brevBehov.avslagsårsak?.let { årsak ->
+                        add(mapAvslagsårsakTilFaktagrunnlag(årsak))
                     }
                 }
             }
@@ -607,4 +612,21 @@ class BrevGateway : BrevbestillingGateway {
             },
         )
     }
+
+    private fun mapAvslagsårsakTilFaktagrunnlag(
+        avslagsårsak: Avslagsårsak
+    ): Faktagrunnlag =
+        Faktagrunnlag.AvslagAarsak(
+            aarsak = avslagsårsak.tilKontrakt()
+        )
+
+
+
+    private fun Avslagsårsak.tilKontrakt(): no.nav.aap.brev.kontrakt.AvslagsÅrsak =
+        try {
+            no.nav.aap.brev.kontrakt.AvslagsÅrsak.valueOf(this.name)
+        } catch (_: IllegalArgumentException) {
+            log.warn("Avslagsårsak finnes ikke i brev: " + this.name)
+            no.nav.aap.brev.kontrakt.AvslagsÅrsak.MANGLENDE_DOKUMENTASJON
+        }
 }

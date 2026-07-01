@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.hendelse.datadeling
 
+import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
-import java.time.LocalDate
 
 data class UnderveisperiodeDatadeling(
-    val fom: LocalDate,
-    val tom: LocalDate,
+    val periode: Periode,
+    val meldeperiode: Periode,
     val meldepliktstatus: String?,
     val arbeidsgrad: Int,
     val overgrenseVerdi: Boolean,

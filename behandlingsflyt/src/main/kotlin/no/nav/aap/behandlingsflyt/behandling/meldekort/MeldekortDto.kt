@@ -5,8 +5,11 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakju
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 
 data class MeldeperioderMedMeldekortResponse(
@@ -34,13 +37,38 @@ data class MeldekortDto(
     val oppdatertAv: String? = null,
     val oppdatertAvSaksbehandler: Boolean,
     val begrunnelse: String? = null,
-    val dager: Set<DagDto>,
+    val dager: List<DagDto>,
 )
 
 data class DagDto(
     val dato: LocalDate,
     val timerArbeidet: Double
 )
+
+data class OppdaterMeldekort(
+    val saksnummer: Saksnummer,
+    val meldeperiode: Periode,
+    val meldedato: LocalDate,
+    val begrunnelse: String,
+    val dager: Set<DagDto>,
+    val bruker: Bruker,
+) {
+    fun tilMeldekort(): MeldekortV0 =
+        MeldekortV0(
+            harDuArbeidet = dager.takeIf { it.isNotEmpty() }?.let { it.sumOf { dag -> dag.timerArbeidet } > 0.0 },
+            opprettetAv = bruker.ident,
+            begrunnelse = begrunnelse,
+            timerArbeidPerPeriode = dager.map {
+                ArbeidIPeriodeV0(
+                    fraOgMedDato = it.dato,
+                    tilOgMedDato = it.dato,
+                    timerArbeid = it.timerArbeidet,
+                )
+            }.sortedBy { it.fraOgMedDato }
+    )
+
+    fun meldekortMedTimerRegistrert() = dager.isNotEmpty()
+}
 
 data class OppdaterMeldekortResponse(
     val journalpostId: String,
@@ -72,7 +100,7 @@ fun Meldekort.toDto(
                 dato = arbeid.periode.fom,
                 timerArbeidet = arbeid.timerArbeid.antallTimer.toDouble()
             )
-        }.toSet()
+        }
     )
 }
 
