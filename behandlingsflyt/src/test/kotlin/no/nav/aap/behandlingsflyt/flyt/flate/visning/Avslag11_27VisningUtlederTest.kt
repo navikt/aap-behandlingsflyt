@@ -13,17 +13,11 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvslag11_27Repositor
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.*
 
 class Avslag11_27VisningUtlederTest {
-
-    @BeforeEach
-    fun reset() {
-        InMemoryAvslag11_27Repository.reset()
-    }
 
     private fun utleder() = Avslag11_27VisningUtleder(inMemoryRepositoryProvider)
 

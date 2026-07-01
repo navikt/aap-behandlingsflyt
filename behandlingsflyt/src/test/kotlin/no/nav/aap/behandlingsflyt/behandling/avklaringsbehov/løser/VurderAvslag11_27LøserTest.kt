@@ -7,34 +7,37 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.avslag11_27.flate.
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvslag11_27Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
 
 class VurderAvslag11_27LøserTest {
 
-    @BeforeEach
-    fun reset() {
-        InMemoryAvslag11_27Repository.reset()
-    }
-
-    private val ref1 = Kravreferanse(UUID.randomUUID())
-    private val ref2 = Kravreferanse(UUID.randomUUID())
+    private val gatewayProvider = createGatewayProvider { register<AlleAvskruddUnleash>() }
     val unleashMedAvslag1127 = FakeUnleashBaseWithDefaultDisabled(
         enabledFlags = listOf(
             BehandlingsflytFeature.Avslag11_27
         )
+    )
+    private val ref1 = Kravreferanse(UUID.randomUUID())
+    private val ref2 = Kravreferanse(UUID.randomUUID())
+
+    private fun løser() = VurderAvslag11_27Løser(
+        behandlingRepository = InMemoryBehandlingRepository,
+        avslag11_27repository = InMemoryAvslag11_27Repository,
+        unleashGateway = unleashMedAvslag1127
     )
 
     private fun løsning(vararg vurderinger: Avslag11_27VurderingDto) = VurderAvslag11_27Løsning(
@@ -56,14 +59,9 @@ class VurderAvslag11_27LøserTest {
 
     @Test
     fun `lagrer ny vurdering for behandling`() {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
-        val løser = VurderAvslag11_27Løser(
-            InMemoryBehandlingRepository,
-            InMemoryAvslag11_27Repository,
-            unleashGateway = unleashMedAvslag1127
-        )
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2026)
 
-        løser.løs(
+        løser().løs(
             avklaringsbehovKontekst { this.behandling = behandling },
             løsning(vurderingDto(ref1, skalAvslås = true))
         )
@@ -77,14 +75,9 @@ class VurderAvslag11_27LøserTest {
 
     @Test
     fun `lagrer to vurderinger for ulike krav`() {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
-        val løser = VurderAvslag11_27Løser(
-            InMemoryBehandlingRepository,
-            InMemoryAvslag11_27Repository,
-            unleashGateway = unleashMedAvslag1127
-        )
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2026)
 
-        løser.løs(
+        løser().løs(
             avklaringsbehovKontekst { this.behandling = behandling },
             løsning(
                 vurderingDto(ref1, skalAvslås = true),
@@ -92,20 +85,14 @@ class VurderAvslag11_27LøserTest {
             )
         )
 
-        val lagret = InMemoryAvslag11_27Repository.hentHvisEksisterer(behandling.id)
-        assertThat(lagret!!.vurderinger).hasSize(2)
+        assertThat(InMemoryAvslag11_27Repository.hentHvisEksisterer(behandling.id)!!.vurderinger).hasSize(2)
     }
 
     @Test
     fun `vurdering med skalAvslås false lagres korrekt`() {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
-        val løser = VurderAvslag11_27Løser(
-            InMemoryBehandlingRepository,
-            InMemoryAvslag11_27Repository,
-            unleashGateway = unleashMedAvslag1127
-        )
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2026)
 
-        løser.løs(
+        løser().løs(
             avklaringsbehovKontekst { this.behandling = behandling },
             løsning(vurderingDto(ref1, skalAvslås = false))
         )
@@ -119,7 +106,6 @@ class VurderAvslag11_27LøserTest {
     @Test
     fun `vedtatte vurderinger fra forrige behandling inkluderes`() {
         val (sak, forrigeBehandling) = opprettInMemorySakOgBehandling(1 januar 2026)
-
         val revurdering = InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,
             typeBehandling = TypeBehandling.Revurdering,
@@ -130,18 +116,12 @@ class VurderAvslag11_27LøserTest {
             )
         )
 
-        val løser = VurderAvslag11_27Løser(
-            InMemoryBehandlingRepository,
-            InMemoryAvslag11_27Repository,
-            unleashGateway = unleashMedAvslag1127
-        )
-
-        løser.løs(
+        løser().løs(
             avklaringsbehovKontekst { this.behandling = forrigeBehandling },
             løsning(vurderingDto(ref1, skalAvslås = true))
         )
 
-        løser.løs(
+        løser().løs(
             avklaringsbehovKontekst { this.behandling = revurdering },
             løsning(vurderingDto(ref2, skalAvslås = false))
         )
@@ -156,14 +136,9 @@ class VurderAvslag11_27LøserTest {
 
     @Test
     fun `returnerer begrunnelse i løsningsresultat`() {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
-        val løser = VurderAvslag11_27Løser(
-            InMemoryBehandlingRepository,
-            InMemoryAvslag11_27Repository,
-            unleashGateway = unleashMedAvslag1127
-        )
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2026)
 
-        val resultat = løser.løs(
+        val resultat = løser().løs(
             avklaringsbehovKontekst { this.behandling = behandling },
             løsning(vurderingDto(ref1))
         )

@@ -19,13 +19,13 @@ import java.util.*
 
 class VurderAvslag11_27Løser(
     private val behandlingRepository: BehandlingRepository,
-    private val avslag1127repository: Avslag11_27Repository,
+    private val avslag11_27repository: Avslag11_27Repository,
     private val unleashGateway: UnleashGateway,
 ) : AvklaringsbehovsLøser<VurderAvslag11_27Løsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
-        avslag1127repository = repositoryProvider.provide(),
+        avslag11_27repository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
 
@@ -43,12 +43,12 @@ class VurderAvslag11_27Løser(
             )
 
         val gjeldendeVedtatte =
-            forrigeBehandlingId?.let { avslag1127repository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+            forrigeBehandlingId?.let { avslag11_27repository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         val nyGjeldende = vurderinger + gjeldendeVedtatte
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27)) {
-            avslag1127repository.lagre(
+            avslag11_27repository.lagre(
                 kontekst.behandlingId(),
                 nyGjeldende
             )

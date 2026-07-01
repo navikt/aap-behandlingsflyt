@@ -9,8 +9,6 @@ import java.util.concurrent.ConcurrentHashMap
 object InMemoryAvslag11_27Repository : Avslag11_27Repository {
     private val store = ConcurrentHashMap<BehandlingId, List<Avslag11_27Vurdering>>()
 
-    fun reset() = store.clear()
-
     override fun lagre(behandlingId: BehandlingId, vurderinger: List<Avslag11_27Vurdering>) {
         store[behandlingId] = vurderinger
     }
@@ -23,7 +21,7 @@ object InMemoryAvslag11_27Repository : Avslag11_27Repository {
 
     override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?) {
         store.remove(behandlingId)
-        forrigeBehandling?.let { store[behandlingId]?.let { v -> store[behandlingId] = v } }
+        forrigeBehandling?.let { store[it]?.let { v -> store[behandlingId] = v } }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

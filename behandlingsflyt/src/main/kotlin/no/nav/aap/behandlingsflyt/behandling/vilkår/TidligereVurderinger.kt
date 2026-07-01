@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -9,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
@@ -67,6 +69,8 @@ class TidligereVurderingerImpl(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
+    private val avslag11_27repository: Avslag11_27Repository,
+    private val kravRepository: KravRepository,
     private val unleashGateway: UnleashGateway
 ) : TidligereVurderinger {
 
@@ -80,6 +84,8 @@ class TidligereVurderingerImpl(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
+        avslag11_27repository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -114,8 +120,17 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
             },
 
-            Sjekk(StegType.VURDER_AVSLAG_11_27) { vilkårsresultat, _, _ ->
-                ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING, vilkårsresultat)
+            Sjekk(StegType.VURDER_AVSLAG_11_27) { _, kontekst, tidligereVurderinger ->
+                val avslag11_27Grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId)
+                val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+                val avslag11_27Tidslinje = avslag11_27Grunnlag?.tilTidslinje(kravGrunnlag).orEmpty()
+
+                tidligereVurderinger.leftJoin(avslag11_27Tidslinje) { _, vurdering ->
+                    if (vurdering?.skalAvslås1127 == true)
+                        TidligereVurderinger.UunngåeligAvslag
+                    else
+                        TidligereVurderinger.PotensieltOppfylt(null)
+                }
             },
 
             Sjekk(StegType.AVKLAR_STUDENT) { vilkårsresultat, _, _ ->
@@ -206,7 +221,11 @@ class TidligereVurderingerImpl(
                         overgangArbeidVilkåret?.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
                             RettighetsType.ARBEIDSSØKER
                         )
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && skalIkkeVurderesForStudentEllerSykepengeerstatning(sykdomsvurdering) -> TidligereVurderinger.UunngåeligAvslag
+
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && skalIkkeVurderesForStudentEllerSykepengeerstatning(
+                            sykdomsvurdering
+                        ) -> TidligereVurderinger.UunngåeligAvslag
+
                         else -> TidligereVurderinger.PotensieltOppfylt(
                             null,
                             mapSykdomsvurderingTilMuligRettighetstypeFraNavKontor(sykdomsvurdering)

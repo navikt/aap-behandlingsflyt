@@ -92,13 +92,7 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
             when {
                 avslag1127?.utfall == Utfall.IKKE_OPPFYLT -> avslag1127
                 samordning?.utfall == Utfall.IKKE_OPPFYLT -> samordning
-                avslag1127 != null -> avslag1127
-                else -> samordning ?: Vilkårsvurdering(
-                    utfall = Utfall.IKKE_VURDERT,
-                    manuellVurdering = false,
-                    begrunnelse = "Ikke full ytelse av samordninger",
-                    faktagrunnlag = grunnlag,
-                )
+                else -> samordning
             }
         }
 
