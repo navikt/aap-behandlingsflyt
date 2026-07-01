@@ -62,8 +62,7 @@ class AvklaringsbehovValidering(
                 )
             }
         }
-
-        // Dette bevarer eksisterende logikk, men ser egentlig feil ut
+        
         val behovForDefinisjon = avklaringsbehovene.hentBehovForDefinisjon(løsning.definisjon())
         if (behovForDefinisjon != null) {
             val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
