@@ -316,7 +316,7 @@ class AvklaringsbehovService(
                                     kontekst.tilFlytKontekst()
                                 )
                             ) { erRelevant, erGyldig, dekkerKrav ->
-                                erRelevant != true || erGyldig == true || dekkerKrav == true
+                                erRelevant != true || erGyldig == true || dekkerKrav != false
                             }
                                 .begrensetTil(kontekst.rettighetsperiode)
                                 .komprimer()
@@ -344,7 +344,7 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering> = { Tidslinje.empty() }
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering> = { Tidslinje.empty() } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon,
@@ -383,7 +383,7 @@ class AvklaringsbehovService(
         nårVurderingErGyldig: () -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering> = { Tidslinje.empty() }
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering> = { Tidslinje.empty() } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
