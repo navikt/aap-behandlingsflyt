@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerExcepti
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -31,33 +30,22 @@ class FatteVedtakLøser(
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
 
-        val relevanteVurderinger = løsning.vurderinger.filter { Definisjon.forKode(it.definisjon).kreverToTrinn }
-        relevanteVurderinger.all { it.valider() }
+        val vurderingerSomErTotrinnskontrollert = løsning.vurderinger
+            .filter { Definisjon.forKode(it.definisjon).kreverToTrinn }
+            .filter { it.godkjent != null }
+        vurderingerSomErTotrinnskontrollert.all { it.valider() }
         validerAvklaringsbehovOppMotBruker(avklaringsbehovene.alle().filter { it.erTotrinn() }, kontekst.bruker)
 
-        if (skalSendesTilbake(relevanteVurderinger)) {
-            val vurderingerSomErSendtTilbake = løsning.vurderinger
-                .filter { it.godkjent == false }
-
-            vurderingerSomErSendtTilbake.forEach { vurdering ->
-                avklaringsbehovene.vurderTotrinn(
-                    definisjon = Definisjon.forKode(vurdering.definisjon),
-                    begrunnelse = vurdering.begrunnelse(),
-                    godkjent = vurdering.godkjent!!,
-                    årsakTilRetur = vurdering.grunner.orEmpty(),
-                    vurdertAv = kontekst.bruker.ident
-                )
-            }
-        } else {
-            relevanteVurderinger.forEach { vurdering ->
-                avklaringsbehovene.vurderTotrinn(
-                    definisjon = Definisjon.forKode(vurdering.definisjon),
-                    godkjent = vurdering.godkjent!!,
-                    begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker.ident
-                )
-            }
+        vurderingerSomErTotrinnskontrollert.forEach { vurdering ->
+            avklaringsbehovene.vurderTotrinn(
+                definisjon = Definisjon.forKode(vurdering.definisjon),
+                begrunnelse = vurdering.begrunnelse(),
+                godkjent = vurdering.godkjent!!,
+                årsakTilRetur = vurdering.grunner.orEmpty(),
+                vurdertAv = kontekst.bruker.ident
+            )
         }
+
         val sammenstiltBegrunnelse = sammenstillBegrunnelse(løsning)
 
         return LøsningsResultat(sammenstiltBegrunnelse)
@@ -72,11 +60,7 @@ class FatteVedtakLøser(
             throw KanIkkeVurdereEgneVurderingerException()
         }
     }
-
-    private fun skalSendesTilbake(vurderinger: List<TotrinnsVurdering>): Boolean {
-        return vurderinger.any { it.godkjent == false }
-    }
-
+    
     private fun sammenstillBegrunnelse(løsning: FatteVedtakLøsning): String {
         return løsning.vurderinger.joinToString("\\n") { it.begrunnelse() }
     }
