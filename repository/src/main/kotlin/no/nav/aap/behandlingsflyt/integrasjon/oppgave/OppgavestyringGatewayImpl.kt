@@ -1,23 +1,25 @@
 package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetForPersonRequest
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
-import no.nav.aap.komponenter.httpklient.httpclient.get
 import java.net.URI
 
 object OppgavestyringGatewayImpl : OppgavestyringGateway {
@@ -71,6 +73,22 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
             )
         ) {
             "Mangler response for enheter på oppgaver for behandling ${behandlingReferanse.referanse}"
+        }
+    }
+
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
+        val request = GetRequest(
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+        return checkNotNull(
+            client.get<List<MarkeringNyDto>>(
+                uri = url.resolve("/${saksnummer}/hent-markeringer-og-historikk"),
+                request = request
+            )
+        ) {
+            "Mangler response for markeringer for behandling ${saksnummer}"
         }
     }
 }

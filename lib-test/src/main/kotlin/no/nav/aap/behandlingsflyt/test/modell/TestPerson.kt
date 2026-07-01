@@ -44,8 +44,10 @@ class TestPerson(
     var yrkesskade: List<TestYrkesskade> = emptyList(),
     var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     var uføre: Uføre? = null,
+    var uføreHistorikk: List<Uføre> = emptyList(),
     var uføreSøknad: UføreSøknad? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
+    aInntekter: List<InntektPerÅr>? = null,
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
         PdlFolkeregisterPersonStatus(
             PersonStatus.bosatt,
@@ -76,9 +78,21 @@ class TestPerson(
 
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 
+    /**
+     * A-inntekt per år (kun for test). Når satt, brukes denne i [no.nav.aap.behandlingsflyt.test.fakes.AinntektFake]
+     * i stedet for å avlede A-inntekt fra POPP-inntekten — slik at man kan simulere avvik mellom
+     * A-inntekt og POPP (f.eks. ved endring i uføregrad midt i året).
+     */
+    private val aInntekter: List<InntektPerÅr>? = aInntekter
+
     @JsonProperty
     fun inntekter(): List<InntektPerÅr> {
         return inntekter.toList()
+    }
+
+    @JsonProperty
+    fun aInntekter(): List<InntektPerÅr>? {
+        return aInntekter
     }
 
     fun aktivIdent(): Ident {
@@ -86,7 +100,7 @@ class TestPerson(
     }
 
     override fun toString(): String {
-        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, dagpenger=${dagpenger}, tiltakspenger=$tiltakspenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
+        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, uføreHistorikk=$uføreHistorikk, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, dagpenger=${dagpenger}, tiltakspenger=$tiltakspenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
     }
 
     fun sykepenger(): List<Sykepenger> {

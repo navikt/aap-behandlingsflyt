@@ -125,7 +125,7 @@ class VurderKravLøserTest {
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
                     søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
-                    muligRettFra = null,
+                    overstyrMuligRettFra = null,
                 )
             )
         )

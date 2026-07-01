@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import com.papsign.ktor.openapigen.route.status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -17,8 +17,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStudentRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -276,6 +276,10 @@ internal class CapturingOppgavestyringGateway private constructor() : Oppgavesty
 
     override fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse =
         OppgaveEnhetResponse(emptyList())
+
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
+        return emptyList()
+    }
 
     companion object : Factory<OppgavestyringGateway> {
         val instans = CapturingOppgavestyringGateway()

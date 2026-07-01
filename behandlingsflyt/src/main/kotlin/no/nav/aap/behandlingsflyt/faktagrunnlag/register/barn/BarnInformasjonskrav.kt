@@ -14,9 +14,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG
@@ -35,7 +37,8 @@ class BarnInformasjonskrav internal constructor(
     private val barnGateway: BarnGateway,
     private val identGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val sakService: SakService
+    private val sakService: SakService,
+    private val behandlingService: BehandlingService,
 ) : Informasjonskrav<BarnInformasjonskrav.BarnInput, BarnInformasjonskrav.Registerdata>, KanTriggeRevurdering {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -49,7 +52,9 @@ class BarnInformasjonskrav internal constructor(
     ): Boolean {
         // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
         val gyldigBehandling =
-            kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedVurderingsbehov(BARNETILLEGG)
+            behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId) == TypeBehandling.Førstegangsbehandling || kontekst.erRevurderingMedVurderingsbehov(
+                BARNETILLEGG
+            )
         return gyldigBehandling &&
                 oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
@@ -174,7 +179,8 @@ class BarnInformasjonskrav internal constructor(
                 barnGateway = gatewayProvider.provide(),
                 identGateway = gatewayProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-                sakService = SakService(repositoryProvider, gatewayProvider)
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
             )
         }
     }

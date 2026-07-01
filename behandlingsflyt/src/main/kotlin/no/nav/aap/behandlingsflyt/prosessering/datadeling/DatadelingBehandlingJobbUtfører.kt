@@ -7,11 +7,12 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -33,10 +34,10 @@ class DatadelingBehandlingJobbUtfører(
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val meldepliktRepository: MeldepliktRepository,
     private val stansOpphørService: StansOpphørService,
     private val rettighetstypeService: RettighetstypeService,
     private val utledArenaVedtakstype: UtledArenaVedtakstype,
-    private val mottattDokumentRepository: MottattDokumentRepository,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -62,8 +63,10 @@ class DatadelingBehandlingJobbUtfører(
 
         val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
 
-        val vilkårsresultatTidslinje = underveis?.somTidslinje().orEmpty()
-            .mapNotNull { it.rettighetsType }
+        val underveistidslinje = underveis?.somTidslinje().orEmpty()
+
+        val vilkårsresultatTidslinje = underveistidslinje
+            .mapNotNull { it.rettighetsType }.komprimer()
 
         val vedtakId = vedtakRepository.hentId(behandling.id)
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
@@ -80,6 +83,11 @@ class DatadelingBehandlingJobbUtfører(
 
         val maksdato = rettighetstypeService.sisteDagMedRett(sak.saksnummer)
 
+        val perioderMedFritakMeldeplikt = meldepliktRepository.hentHvisEksisterer(behandling.id)
+            ?.gjeldendeVurderinger().orEmpty()
+            .map { it.harFritak }.segmenter()
+            .filter { it.verdi }.map { it.periode }
+
         apiInternGateway.sendBehandling(
             sak = sak,
             behandling = behandling,
@@ -91,6 +99,8 @@ class DatadelingBehandlingJobbUtfører(
             rettighetsTypeTidslinje = vilkårsresultatTidslinje,
             muligMaksdato = maksdato,
             stansOpphørGrunnlag = stansOpphør,
+            perioderMedFritakMeldeplikt = perioderMedFritakMeldeplikt,
+            underveisperioder = underveis?.perioder.orEmpty().map { it.tilDatadeling() },
             arenavedtak = utledArenaVedtakstype.utledVedtak(sak),
         )
     }
@@ -109,6 +119,7 @@ class DatadelingBehandlingJobbUtfører(
                 underveisRepository = repositoryProvider.provide(),
                 vedtakRepository = repositoryProvider.provide(),
                 samIdRepository = repositoryProvider.provide(),
+                meldepliktRepository = repositoryProvider.provide(),
                 beregningsgrunnlagRepository = repositoryProvider.provide(),
                 stansOpphørService = StansOpphørService(
                     repositoryProvider.provide(),
@@ -117,8 +128,17 @@ class DatadelingBehandlingJobbUtfører(
                 ),
                 rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
                 utledArenaVedtakstype = UtledArenaVedtakstype(repositoryProvider, gatewayProvider),
-                mottattDokumentRepository = repositoryProvider.provide(),
             )
         }
     }
+
 }
+
+internal fun Underveisperiode.tilDatadeling() = UnderveisperiodeDatadeling(
+    periode = periode,
+    meldepliktstatus = meldepliktStatus?.name,
+    arbeidsgrad = arbeidsgradering.andelArbeid.prosentverdi(),
+    overgrenseVerdi = arbeidsgradering.andelArbeid.prosentverdi() > grenseverdi.prosentverdi(),
+    timerArbeidet = arbeidsgradering.totaltAntallTimer.antallTimer,
+    meldeperiode = meldePeriode,
+)

@@ -41,15 +41,7 @@ class BackfillStansOpphør(
     fun kjør() {
         Thread.ofVirtual()
             .name("backfillStansOpphor")
-            .uncaughtExceptionHandler { _, throwable ->
-                log.warn("BackfillStansOpphør: uncaughtException {}, se secure / team log", throwable.javaClass.name)
-                teamLogs.warn(
-                    "BackfillStansOpphør: uncaughtException {}: {}",
-                    throwable.javaClass.name,
-                    throwable.message,
-                    throwable
-                )
-            }.start {
+            .start {
                 var forrigeFraTil: List<Long>? = null
                 while (true) {
                     if (isLeader(log) && unleashGateway.isEnabled(BehandlingsflytFeature.BackfillStansOpphor)) {
@@ -59,9 +51,19 @@ class BackfillStansOpphør(
                         ).split(",").map(String::toLong)
 
                         if (forrigeFraTil != fraTil) {
-                            backfillStansOpphørLoop(dataSource, fraTil[0], fraTil[1])
+                            try {
+                                backfillStansOpphørLoop(dataSource, fraTil[0], fraTil[1])
+                                forrigeFraTil = fraTil /* anser fra/til som forrige kun hvis vi fullfører backfill */
+                            } catch (e: Exception) {
+                                log.warn("BackfillStansOpphør: uncaughtException {}, se secure / team log", e.javaClass.name)
+                                teamLogs.warn(
+                                    "BackfillStansOpphør: uncaughtException {}: {}",
+                                    e.javaClass.name,
+                                    e.message,
+                                    e
+                                )
+                            }
                         }
-                        forrigeFraTil = fraTil
                     }
                     Thread.sleep(Duration.ofMinutes(5))
                 }
@@ -102,7 +104,7 @@ class BackfillStansOpphør(
                 }
             }
         }
-        log.info("Backfill stans/opphør av {} behandlinger. Ingen fler behandlinger for $til – $fra", antallBackfillUtført)
+        log.info("Backfill stans/opphør av {} behandlinger. Ingen fler behandlinger for $fra – $til", antallBackfillUtført)
         Thread.sleep(Duration.ofMinutes(5))
     }
 

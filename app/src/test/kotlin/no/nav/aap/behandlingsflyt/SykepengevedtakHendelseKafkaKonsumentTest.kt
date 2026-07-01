@@ -115,7 +115,7 @@ class SykepengevedtakHendelseKafkaKonsumentTest {
 
 
 private fun testConfig(brokers: String) = KafkaConsumerConfig<String, String>(
-    applicationId = "behandlingsflyt-test",
+    applicationId = "behandlingsflyt-test-${UUID.randomUUID()}",
     brokers = brokers,
     ssl = null,
     schemaRegistry = SchemaRegistryConfig(

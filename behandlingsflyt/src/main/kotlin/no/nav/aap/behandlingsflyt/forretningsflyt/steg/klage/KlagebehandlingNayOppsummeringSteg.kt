@@ -60,7 +60,7 @@ class KlagebehandlingNayOppsummeringSteg private constructor(
                 behandlendeEnhetRepository = repositoryProvider.provide(),
                 trekkKlageService = TrekkKlageService(repositoryProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
             )
         }
 

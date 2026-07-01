@@ -45,7 +45,7 @@ class AvbrytRevurderingSteg private constructor(
         ): BehandlingSteg {
             return AvbrytRevurderingSteg(
                 avbrytRevurderingRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
             )
         }
 

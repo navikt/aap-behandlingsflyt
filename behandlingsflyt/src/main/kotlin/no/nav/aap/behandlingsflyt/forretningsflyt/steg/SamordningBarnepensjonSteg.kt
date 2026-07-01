@@ -59,7 +59,7 @@ class SamordningBarnepensjonSteg(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return SamordningBarnepensjonSteg(
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }

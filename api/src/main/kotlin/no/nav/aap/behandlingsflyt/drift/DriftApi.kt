@@ -133,7 +133,7 @@ fun NormalOpenAPIRoute.driftApi(
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.DRIFTE
                 )
-            ) { params, request ->
+            ) { params, _ ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -395,6 +395,10 @@ fun NormalOpenAPIRoute.driftApi(
 
                     SakDriftsinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
+                        person = PersonDriftsinfo(
+                            personId = sak.person.id.id,
+                            antallIdenter = sak.person.identer().size,
+                        ),
                         status = sak.status(),
                         rettighetsperiode = sak.rettighetsperiode,
                         opprettetTidspunkt = sak.opprettetTidspunkt,
@@ -461,6 +465,23 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/sak/{saksnummer}/oppdater-meldeperioder") {
+            authorizedPost<SaksnummerParameter, String, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, _ ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val driftfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
+
+                    driftfunksjoner.oppdaterMeldeperioderMeldekortbackend(Saksnummer(params.saksnummer))
+                }
+                respond("Jobb for oppdatering av meldeperioder er startet")
+            }
+        }
+
     }
 }
 
@@ -472,11 +493,17 @@ private fun krevDtoErUtenFødselsnummer(dto: Any) {
 
 private data class SakDriftsinfoDTO(
     val saksnummer: String,
+    val person: PersonDriftsinfo,
     val status: SakStatus,
     val rettighetsperiode: Periode,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val behandlinger: List<BehandlingDriftsinfo>,
     val andreSakerPåBruker: List<String>,
+)
+
+private data class PersonDriftsinfo(
+    val personId: Long,
+    val antallIdenter: Int,
 )
 
 private data class BehandlingDriftsinfo(

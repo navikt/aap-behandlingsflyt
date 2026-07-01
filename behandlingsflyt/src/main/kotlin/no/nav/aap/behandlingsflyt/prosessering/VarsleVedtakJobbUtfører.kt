@@ -58,7 +58,7 @@ class VarsleVedtakJobbUtfører(
         val forrigeBehandlingId = behandling.forrigeBehandlingId
 
         val forrigeUnderveisGrunnlag = forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
-        val nåværendeUnderveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+        val nåværendeUnderveisGrunnlag = underveisRepository.hent(behandling.id)
 
 
         requireNotNull(vedtak) { "Forventer at vedtak-objekter er lagret når denne jobben kjøres." }
@@ -71,7 +71,7 @@ class VarsleVedtakJobbUtfører(
             vedtakId = vedtakId.toString(),
             sakId = sak.id.id,
             virkFom = virkFom,
-            virkTom = sak.rettighetsperiode.tom,
+            virkTom = sak.rettighetsperiode.tom, // alltid 01-01-2999
             fagomrade = "AAP",
             ytelseType = "AAP",
             etterbetaling = vedtak.virkningstidspunkt?.let {
@@ -87,7 +87,7 @@ class VarsleVedtakJobbUtfører(
         val førstegangsbehandling = behandlingType == TypeBehandling.Førstegangsbehandling
         val endringIRettighetsTypeTidslinje = endringIRettighetstypeTidslinje(
             forrigeUnderveisGrunnlag,
-            nåværendeUnderveisGrunnlag!!
+            nåværendeUnderveisGrunnlag
         )
 
         val tpYtelser =
@@ -108,12 +108,13 @@ class VarsleVedtakJobbUtfører(
             log.info("Varsler ikke SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}, tpYtelser=${tpYtelser.size}")
         }
 
+        // Trigger henting av samordnings-ID, som igjen trigger datadelingsjobb. Chainet, fordi datadelingsjobben trenger sam-id.
         flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id).forSak(sak.id.id))
     }
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return VarsleVedtakJobbUtfører(repositoryProvider, gatewayProvider,)
+            return VarsleVedtakJobbUtfører(repositoryProvider, gatewayProvider)
         }
 
         fun endringITilkjentYtelseTidslinje(

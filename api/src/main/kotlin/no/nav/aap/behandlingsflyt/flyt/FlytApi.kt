@@ -104,7 +104,8 @@ fun NormalOpenAPIRoute.flytApi(
                     behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val flyt = behandling.flyt()
 
-                    val skalViseKravSteg = unleashGateway.isEnabled(BehandlingsflytFeature.KravSteg)
+                    val skalViseKravSteg =
+                        unleashGateway.erPåskruddForSak(BehandlingsflytFeature.KravSteg, "saksnumre", sak.saksnummer)
 
                     val stegGrupper =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
