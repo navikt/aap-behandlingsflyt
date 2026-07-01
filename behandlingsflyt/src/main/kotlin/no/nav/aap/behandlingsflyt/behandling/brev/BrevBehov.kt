@@ -48,7 +48,13 @@ data class Vedtak11_18OpphørFullUfør(
     val virkningstidspunkt: LocalDate
 ) : BrevBehov(TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR)
 
-data class Avslag(val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak?) : BrevBehov(TypeBrev.VEDTAK_AVSLAG)
+
+sealed class AvslagBrev : BrevBehov(TypeBrev.VEDTAK_AVSLAG) {
+    object AvslagUnder17År9Måneder : AvslagBrev()
+    object AvslagSykdomsvilkåret : AvslagBrev()
+    data class Avslag(val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak? = null) : AvslagBrev()
+}
+
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object BarnetilleggSatsRegulering : BrevBehov(TypeBrev.BARNETILLEGG_SATS_REGULERING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)
