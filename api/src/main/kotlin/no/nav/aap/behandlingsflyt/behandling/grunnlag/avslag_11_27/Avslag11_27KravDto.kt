@@ -40,6 +40,8 @@ data class Avslag11_27GrunnlagDto(
     val krav: List<Avslag11_27KravDto>,
     val vurderinger: List<Avslag11_27VurderingDto>?,
     val vedtatteVurdering: List<Avslag11_27VurderingDto>?,
+    val brukersYtelseAlternativer: List<Ytelse> = Ytelse.entries,
+
 )
 
 data class Avslag11_27VurderingDto(
