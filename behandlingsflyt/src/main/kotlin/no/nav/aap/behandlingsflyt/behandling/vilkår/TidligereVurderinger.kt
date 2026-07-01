@@ -294,12 +294,18 @@ class TidligereVurderingerImpl(
     private fun lagSjekker(definerteSjekker: List<Sjekk>) = buildList {
         val førstegangsbehandling = Førstegangsbehandling.flyt()
 
-        val listeMedSjekker = if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)) {
-            // skip gammel student-sjekk når nytt steg er påskrudd
-            definerteSjekker.filterNot { it.steg == StegType.AVKLAR_STUDENT }
-        } else {
-            definerteSjekker
-        }
+        val listeMedSjekker = definerteSjekker
+            .let { sjekker ->
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2))
+                    sjekker.filterNot { it.steg == StegType.AVKLAR_STUDENT }
+                else sjekker
+            }
+            .let { sjekker ->
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27))
+                    sjekker
+                else
+                    sjekker.filterNot { it.steg == StegType.VURDER_AVSLAG_11_27 }
+            }
 
         listeMedSjekker.windowed(2).forEach { (sjekk1, sjekk2) ->
             require(førstegangsbehandling.erStegFør(sjekk1.steg, sjekk2.steg)) {
@@ -310,7 +316,6 @@ class TidligereVurderingerImpl(
         val sjekker = listeMedSjekker.iterator()
         var sjekk: Sjekk? = sjekker.next()
 
-        /* legg på default sjekk der det mangler. */
         for (steg in Førstegangsbehandling.flyt().stegene()) {
             if (steg == sjekk?.steg) {
                 add(sjekk)
