@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
 
@@ -35,6 +36,10 @@ class TilgangFake : FakeServer() {
             }
             post("/tilgang/journalpost") {
                 call.receive<JournalpostTilgangRequest>()
+                call.respond(TilgangResponse(true))
+            }
+            post("/tilgang/person") {
+                call.receive<PersonTilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
         }

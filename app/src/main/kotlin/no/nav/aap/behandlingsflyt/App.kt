@@ -158,6 +158,12 @@ internal object AppConfig {
      * Bruker kun 92 connections for å beholde noen til administrasjon.
      */
     const val hikariMaxPoolSize = 92 / 4 /* max connections / max antall pods */
+
+    /* PIP-endepunktene kalles av aap-tilgang mens andre requests venter på svar fra aap-tilgang.
+     * Uten dedikert pool konkurrerer PIP om de samme connectionene som de ventende requestene,
+     * noe som kan gi starvation og timeouts.
+     */
+    const val pipDataSourcePoolSize = 2
 }
 
 fun main() {
@@ -214,12 +220,17 @@ internal fun Application.server(
     val dedicatedMotorConnections = AppConfig.ANTALL_WORKERS_FOR_MOTOR * 2
     val fellesDataSource = initDatasource(
         dbConfig,
-        maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections,
+        maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections - AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
     )
     val motorDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = dedicatedMotorConnections,
+        prometheus = prometheus,
+    )
+    val pipDataSource = initDatasource(
+        dbConfig,
+        maximumPoolSize = AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
     )
     Migrering.migrate(fellesDataSource)
@@ -243,6 +254,7 @@ internal fun Application.server(
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
             fellesDataSource.close()
             motorDataSource.close()
+            pipDataSource.close()
         } catch (_: Exception) {
             // Ignorert
         }
@@ -289,7 +301,7 @@ internal fun Application.server(
                 avslag11_27GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 motorApi(fellesDataSource)
-                behandlingsflytPipApi(fellesDataSource, repositoryRegistry)
+                behandlingsflytPipApi(pipDataSource, repositoryRegistry)
                 auditlogApi(fellesDataSource, repositoryRegistry)
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
