@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -34,6 +35,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
@@ -71,17 +73,19 @@ import java.util.concurrent.atomic.AtomicLong
 class AvklaringsbehovValideringTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     private val løsningMock = mockk<PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto>>()
-
+    
     val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
+        register<LokalUnleash>()
     })
 
-    private fun lagFlytKontekst(behandlingId: BehandlingId): FlytKontekst =
-        FlytKontekst(
+    private fun lagFlytKontekst(sakId: SakId = opprettInMemorySak().id, behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId? = null): FlytKontekst {
+        return FlytKontekst(
             behandlingId = behandlingId,
-            sakId = SakId(1L),
-            forrigeBehandlingId = behandlingId,
+            sakId = sakId,
+            forrigeBehandlingId = forrigeBehandlingId,
             behandlingType = TypeBehandling.Førstegangsbehandling
         )
+    }
 
     private val idTeller = AtomicLong(90_000L)
     private val brukteBehandlingIder = mutableListOf<BehandlingId>()
@@ -106,7 +110,7 @@ class AvklaringsbehovValideringTest {
     @Test
     fun `Periodisert løsning må dekke periodene avklaringsbehovet ber om`() {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(9))
-        val flytKontekst = lagFlytKontekst(BehandlingId(9))
+        val flytKontekst = lagFlytKontekst(behandlingId = BehandlingId(9))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             funnetISteg = StegType.OVERGANG_ARBEID,
@@ -168,10 +172,10 @@ class AvklaringsbehovValideringTest {
 
     @Test
     fun `Avklaringsbehov med tom mengde med perioder som skal vurderes skal ikke bry seg om perioder`() {
-        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
+        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider,  createGatewayProvider { register<LokalUnleash>()
         })
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(10))
-        val flytKontekst = lagFlytKontekst(BehandlingId(10))
+        val flytKontekst = lagFlytKontekst(behandlingId = BehandlingId(10))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             funnetISteg = StegType.OVERGANG_ARBEID,
@@ -209,10 +213,10 @@ class AvklaringsbehovValideringTest {
 
     @Test
     fun `Avklaringsbehov med null-perioder som skal vurderes skal ikke bry seg om perioder`() {
-        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
+        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider,  createGatewayProvider { register<LokalUnleash>()
         })
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(11))
-        val flytKontekst = lagFlytKontekst(BehandlingId(11))
+        val flytKontekst = lagFlytKontekst(behandlingId = BehandlingId(11))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             funnetISteg = StegType.OVERGANG_ARBEID,
@@ -249,10 +253,10 @@ class AvklaringsbehovValideringTest {
 
     @Test
     fun `Periodisert løsning skal validere OK om periodene avklaringsbehovet ber om er dekket av tidligere vurderinger`() {
-        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
+        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider,  createGatewayProvider { register<LokalUnleash>()
         })
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(15))
-        val flytKontekst = lagFlytKontekst(BehandlingId(15))
+        val flytKontekst = lagFlytKontekst(behandlingId = BehandlingId(15), forrigeBehandlingId = BehandlingId(14))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             funnetISteg = StegType.OVERGANG_ARBEID,
@@ -295,7 +299,7 @@ class AvklaringsbehovValideringTest {
     fun `ingen krav mangler løsning når det ikke finnes kravgrunnlag for behandlingen`() {
         val behandlingId = nesteBehandlingId()
         val forrigeBehandlingId = nesteBehandlingId()
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         // Ingen lagring i kravRepository
 
         val gjeldendeVurderinger = tomLøsning().tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
@@ -309,7 +313,7 @@ class AvklaringsbehovValideringTest {
     fun `Krav mangler løsning selv om kravet ble vedtatt i forrige behandling`() {
         val behandlingId = nesteBehandlingId()
         val forrigeBehandlingId = nesteBehandlingId()
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         // Krav er vurdert i forrigeBehandlingId, ikke i inneværende behandlingId
         val nyttKrav = nyttKrav(forrigeBehandlingId, LocalDate.now())
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav))
@@ -328,7 +332,7 @@ class AvklaringsbehovValideringTest {
         val behandlingId = nesteBehandlingId()
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2024, 1, 1)
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
 
         val løsning = løsning(fom = muligRettFra)
@@ -346,7 +350,7 @@ class AvklaringsbehovValideringTest {
         val behandlingId = nesteBehandlingId()
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2024, 1, 1)
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
 
         val løsning = løsning(fom = muligRettFra.plusDays(2))
@@ -364,7 +368,7 @@ class AvklaringsbehovValideringTest {
         val behandlingId = nesteBehandlingId()
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2024, 6, 1)
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         val krav = nyttKrav(behandlingId, muligRettFra)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
@@ -386,7 +390,7 @@ class AvklaringsbehovValideringTest {
         val behandlingId = nesteBehandlingId()
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2024, 1, 1)
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         
         InMemoryKravRepository.lagre(behandlingId, setOf(gjenopptak(behandlingId, muligRettFra)))
         settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
@@ -412,7 +416,7 @@ class AvklaringsbehovValideringTest {
         val forrigeBehandlingId = nesteBehandlingId()
         val rettFørsteKrav = LocalDate.of(2024, 1, 1)
         val muligRettFra = LocalDate.of(2027, 1, 1)
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         InMemoryKravRepository.lagre(behandlingId, setOf(gjenopptak(behandlingId, muligRettFra)))
         settOppForrigeBehandling(
             forrigeBehandlingId,
@@ -447,7 +451,7 @@ class AvklaringsbehovValideringTest {
         val forrigeBehandlingId = nesteBehandlingId()
         val rettFørsteKrav = LocalDate.of(2024, 1, 1)
         val muligRettFra = LocalDate.of(2027, 1, 1)
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         InMemoryKravRepository.lagre(behandlingId, setOf(gjenopptak(behandlingId, muligRettFra)))
         settOppForrigeBehandling(
             forrigeBehandlingId,
@@ -482,7 +486,7 @@ class AvklaringsbehovValideringTest {
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2027, 1, 1)
         val rettFørsteKrav = LocalDate.of(2024, 1, 1)
-        val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         val krav = gjenopptak(behandlingId, muligRettFra)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
         settOppForrigeBehandling(
@@ -512,14 +516,6 @@ class AvklaringsbehovValideringTest {
             }
         )
     }
-
-
-    private fun kontekst(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?) = FlytKontekst(
-        sakId = SakId(1L),
-        behandlingId = behandlingId,
-        forrigeBehandlingId = forrigeBehandlingId,
-        behandlingType = TypeBehandling.Førstegangsbehandling,
-    )
 
     private fun løsning(fom: LocalDate) = AvklarSykdomLøsning(
         løsningerForPerioder = listOf(
