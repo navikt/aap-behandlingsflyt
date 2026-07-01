@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
@@ -25,6 +26,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.fla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -55,6 +57,8 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -70,7 +74,7 @@ class AvklaringsbehovValideringTest {
 
     val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
     })
-    
+
     private fun lagFlytKontekst(behandlingId: BehandlingId): FlytKontekst =
         FlytKontekst(
             behandlingId = behandlingId,
@@ -286,7 +290,7 @@ class AvklaringsbehovValideringTest {
             )
         }
     }
-    
+
     @Test
     fun `ingen krav mangler løsning når det ikke finnes kravgrunnlag for behandlingen`() {
         val behandlingId = nesteBehandlingId()
@@ -294,22 +298,29 @@ class AvklaringsbehovValideringTest {
         val kontekst = kontekst(behandlingId, forrigeBehandlingId)
         // Ingen lagring i kravRepository
 
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(tomLøsning(), kontekst)
+        val gjeldendeVurderinger = tomLøsning().tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val resultat =
+            avklaringsbehovValidering.nårKravHarLøsning(tomLøsning().definisjon(), gjeldendeVurderinger, kontekst)
 
-        assertThat(resultat).isEmpty()
+        assertThat(resultat.segmenter()).isEmpty()
     }
 
     @Test
-    fun `ingen krav mangler løsning når krav er vurdert i forrige behandling og ikke i inneværende`() {
+    fun `Krav mangler løsning selv om kravet ble vedtatt i forrige behandling`() {
         val behandlingId = nesteBehandlingId()
         val forrigeBehandlingId = nesteBehandlingId()
         val kontekst = kontekst(behandlingId, forrigeBehandlingId)
         // Krav er vurdert i forrigeBehandlingId, ikke i inneværende behandlingId
-        InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(forrigeBehandlingId, LocalDate.now())))
+        val nyttKrav = nyttKrav(forrigeBehandlingId, LocalDate.now())
+        InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav))
 
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(tomLøsning(), kontekst)
+        val gjeldendeVurderinger = tomLøsning().tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val resultat =
+            avklaringsbehovValidering.nårKravHarLøsning(tomLøsning().definisjon(), gjeldendeVurderinger, kontekst)
 
-        assertThat(resultat).isEmpty()
+        assertTidslinje(resultat,
+            Periode(nyttKrav.muligRettFra, Tid.MAKS) to {assertTrue(it)}
+            )
     }
 
     @Test
@@ -320,9 +331,14 @@ class AvklaringsbehovValideringTest {
         val kontekst = kontekst(behandlingId, forrigeBehandlingId)
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
 
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(løsning(fom = muligRettFra), kontekst)
+        val løsning = løsning(fom = muligRettFra)
+        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
 
-        assertThat(resultat).isEmpty()
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+        assertTidslinje(resultat,
+            Periode(muligRettFra, Tid.MAKS) to {assertTrue(it)}
+        )
     }
 
     @Test
@@ -333,9 +349,14 @@ class AvklaringsbehovValideringTest {
         val kontekst = kontekst(behandlingId, forrigeBehandlingId)
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
 
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(løsning(fom = muligRettFra.plusDays(1)), kontekst)
+        val løsning = løsning(fom = muligRettFra.plusDays(2))
+        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
 
-        assertThat(resultat).isEmpty()
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+        assertTidslinje(resultat,
+            Periode(muligRettFra, Tid.MAKS) to {assertTrue(it)}
+        )
     }
 
     @Test
@@ -347,9 +368,17 @@ class AvklaringsbehovValideringTest {
         val krav = nyttKrav(behandlingId, muligRettFra)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(løsning(fom = muligRettFra.minusDays(1)), kontekst)
+        val løsningFom = muligRettFra.minusDays(1)
+        val løsning = løsning(fom = løsningFom)
+        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
 
-        assertThat(resultat).containsExactly(krav)
+        assertTidslinje(
+            resultat,
+            Periode(krav.muligRettFra, Tid.MAKS) to {
+                assertFalse(it)
+            }
+        )
     }
 
     @Test
@@ -358,12 +387,22 @@ class AvklaringsbehovValideringTest {
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2024, 1, 1)
         val kontekst = kontekst(behandlingId, forrigeBehandlingId)
+        
         InMemoryKravRepository.lagre(behandlingId, setOf(gjenopptak(behandlingId, muligRettFra)))
         settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
 
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(løsning(fom = muligRettFra.minusDays(1)), kontekst)
+        val løsning = løsning(fom = muligRettFra.minusDays(1))
+        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
 
-        assertThat(resultat).isEmpty()
+
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to {
+                assertTrue(it)
+            }
+        )
     }
 
     @Test
@@ -378,13 +417,28 @@ class AvklaringsbehovValideringTest {
         settOppForrigeBehandling(
             forrigeBehandlingId,
             rettFørsteKrav,
-            StansOpphørGrunnlag(setOf(stansEntry(forrigeBehandlingId, muligRettFra, Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP))),
+            StansOpphørGrunnlag(
+                setOf(
+                    stansEntry(
+                        forrigeBehandlingId,
+                        muligRettFra,
+                        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
+                    )
+                )
+            ),
         )
 
-        // Løsning dekker ikke muligRettFra, men Stans betyr at kravet likevel er dekket
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(løsning(fom = muligRettFra.minusDays(30)), kontekst)
+        val løsningFom = muligRettFra.minusDays(30)
+        val løsning = løsning(fom = løsningFom)
+        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
 
-        assertThat(resultat).isEmpty()
+        // Løsning dekker ikke muligRettFra, men Stans betyr at kravet likevel er dekket
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to { assertTrue(it) }
+        )
     }
 
     @Test
@@ -398,12 +452,28 @@ class AvklaringsbehovValideringTest {
         settOppForrigeBehandling(
             forrigeBehandlingId,
             rettFørsteKrav,
-            StansOpphørGrunnlag(setOf(opphørEntry(forrigeBehandlingId, muligRettFra, Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP))),
+            StansOpphørGrunnlag(
+                setOf(
+                    opphørEntry(
+                        forrigeBehandlingId,
+                        muligRettFra,
+                        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
+                    )
+                )
+            ),
         )
 
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(løsning(fom = muligRettFra), kontekst)
+        val løsning = løsning(fom = muligRettFra)
+        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
 
-        assertThat(resultat).isEmpty()
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to {
+                assertTrue(it)
+            }
+        )
     }
 
     @Test
@@ -418,12 +488,29 @@ class AvklaringsbehovValideringTest {
         settOppForrigeBehandling(
             forrigeBehandlingId,
             rettFørsteKrav,
-            StansOpphørGrunnlag(setOf(opphørEntry(forrigeBehandlingId, muligRettFra, Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP))),
+            StansOpphørGrunnlag(
+                setOf(
+                    opphørEntry(
+                        forrigeBehandlingId,
+                        muligRettFra.minusMonths(1),
+                        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
+                    )
+                )
+            ),
         )
+        val løsningFom = muligRettFra.minusDays(1)
+        val løsning = løsning(løsningFom)
+        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
 
-        val resultat = avklaringsbehovValidering.kravSomManglerLøsning(løsning(fom = muligRettFra.minusDays(1)), kontekst)
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
 
-        assertThat(resultat).containsExactly(krav)
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to {
+                assertFalse(it)
+            }
+        )
     }
 
 

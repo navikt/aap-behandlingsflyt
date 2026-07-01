@@ -2,17 +2,21 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsningForKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -38,33 +42,47 @@ class AvklaringsbehovValidering(
             return
         }
 
-        val kravSomManglerLøsning = kravSomManglerLøsning(løsning, kontekst)
-        if (kravSomManglerLøsning.isNotEmpty()) {
-            val sisteKrav = kravSomManglerLøsning.maxBy { it.muligRettFra }
-            when (sisteKrav) {
-                is Gjenopptak -> throw UgyldigForespørselException("Du må sende inn en løsning fra og med eller etter ${sisteKrav.muligRettFra} i forbindelse med krav om gjennoptak")
-                is NyttKrav -> throw UgyldigForespørselException("Du må sende inn en løsning fra og med eller etter ${sisteKrav.muligRettFra} i forbindelse med nytt krav")
+        if (løsning is PeriodisertAvklaringsbehovLøsningForKrav) {
+            val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
+                løsning.hentVedtatteVurderinger(
+                    kontekst.forrigeBehandlingId,
+                    repositoryProvider
+                )
+            }.orEmpty()
+            val nye = løsning.tilPeriodiserteVurdering(kontekst.behandlingId) + vedtatteVurderinger
+            val kravMedUgyldigLøsning =
+                nårKravHarLøsning(løsning.definisjon(), nye.gjeldendeVurderinger(), kontekst)
+                    .segmenter()
+                    .filter { !it.verdi }
+            if (kravMedUgyldigLøsning.isNotEmpty()) {
+                throw UgyldigForespørselException(
+                    "Mangler vurderinger for krav i periodene ${
+                        kravMedUgyldigLøsning.map { it.periode }.toHumanReadable()
+                    }"
+                )
             }
         }
 
-        val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
-            .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
-            .map { true }.komprimer()
-
-        val perioderDekketAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
-            løsning.hentLagredeLøstePerioder(it, repositoryProvider)
-                .map { true }.komprimer()
-        }.orEmpty()
-
-        val perioderDekket = perioderDekketAvTidligereVurderinger.kombiner(
-            perioderDekketAvLøsning,
-            StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        ).komprimer()
-
+        // Dette bevarer eksisterende logikk, men ser egentlig feil ut
         val behovForDefinisjon = avklaringsbehovene.hentBehovForDefinisjon(løsning.definisjon())
         if (behovForDefinisjon != null) {
+            val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
+                .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
+                .map { true }.komprimer()
+
+            val lagredeVurderinger = kontekst.forrigeBehandlingId?.let {
+                løsning.hentLagredeLøstePerioder(it, repositoryProvider)
+            }.orEmpty()
+
             val perioderSomSkalLøses =
                 behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
+
+            val perioderDekketAvTidligereVurderinger = lagredeVurderinger.map { true }.komprimer()
+
+            val perioderDekket = perioderDekketAvTidligereVurderinger.kombiner(
+                perioderDekketAvLøsning,
+                StandardSammenslåere.prioriterHøyreSideCrossJoin()
+            ).komprimer()
 
             val perioderSomManglerLøsning =
                 perioderSomSkalLøses.leftJoin(perioderDekket) { _, periodeILøsning ->
@@ -77,42 +95,45 @@ class AvklaringsbehovValidering(
         }
     }
 
-    fun kravSomManglerLøsning(
-        løsning: PeriodisertAvklaringsbehovLøsning<*>,
+    fun nårKravHarLøsning(
+        definisjon: Definisjon,
+        gjeldendeVurderinger: Tidslinje<PeriodisertVurdering>,
         kontekst: FlytKontekst,
-    ): List<KravMedDato> {
-        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return emptyList()
+    ): Tidslinje<Boolean> {
+        val kravtidslinje =
+            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.kravtidslinjeMedDato() ?: Tidslinje.empty()
 
-        val nyeKravIDenneBehandlingen = kravGrunnlag
-            .gjeldendeVurderinger()
-            .filter { it.vurdertIBehandling == kontekst.behandlingId }
-            .filterIsInstance<KravMedDato>()
-
-        if (nyeKravIDenneBehandlingen.isEmpty()) return emptyList()
-
-        return nyeKravIDenneBehandlingen.filterNot { erKravDekketAvLøsning(kontekst, it, løsning) }
-
+        return kravtidslinje.map { segmentPeriode, krav ->
+            erKravDekketAvLøsning(segmentPeriode, definisjon, kontekst, krav, gjeldendeVurderinger)
+        }
     }
 
     private fun erKravDekketAvLøsning(
+        kravPeriode: Periode,
+        definisjon: Definisjon,
         kontekst: FlytKontekst,
         krav: KravMedDato,
-        løsning: PeriodisertAvklaringsbehovLøsning<*>,
+        gjeldendeVurderinger: Tidslinje<PeriodisertVurdering>,
     ): Boolean {
-        if (krav is NyttKrav) return validerDatoMotKrav(krav, løsning)
+        if (krav is NyttKrav) return gjeldendeVurderinger.segmenter().any { (vurderingPeriode, _) ->
+            kravPeriode.inneholder(vurderingPeriode.fom)
+        }
 
         if (kontekst.forrigeBehandlingId == null) {
+            /**
+             * Gir det mening å registrere gjenopptak i førstegangsbehandlingen?
+             * I så fall vet vi ikke noe om stans/opphør, og kan ikke validere 
+             */
             return true
         }
-        val stansEllerOpphør = stansOpphørService.vedtattStansOpphør(kontekst.forrigeBehandlingId).lastOrNull()
+        val stansEllerOpphør = stansOpphørService
+            .vedtattStansOpphør(kontekst.forrigeBehandlingId)
+            .lastOrNull { it.fom < krav.muligRettFra }
         return when (stansEllerOpphør?.vurdering) {
             null -> true
             is Stans -> true
-            is Opphør -> !løsning.definisjon().måRevurderesEtterOpphør || validerDatoMotKrav(krav, løsning)
+            is Opphør -> !definisjon.måRevurderesEtterOpphør || gjeldendeVurderinger.segmenter()
+                .any { (vurderingPeriode, _) -> kravPeriode.inneholder(vurderingPeriode.fom) }
         }
-    }
-
-    private fun validerDatoMotKrav(krav: KravMedDato, løsning: PeriodisertAvklaringsbehovLøsning<*>): Boolean {
-        return løsning.løsningerForPerioder.any { it.fom >= krav.muligRettFra }
     }
 }
