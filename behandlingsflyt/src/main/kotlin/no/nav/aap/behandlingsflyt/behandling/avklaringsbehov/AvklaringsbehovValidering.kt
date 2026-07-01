@@ -10,8 +10,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -30,7 +34,9 @@ class AvklaringsbehovValidering(
 ) {
     private val kravRepository: KravRepository = repositoryProvider.provide()
     private val stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider)
-
+    private val unleashGateway: UnleashGateway = gatewayProvider.provide()
+    private val sakRepository: SakRepository = repositoryProvider.provide()
+    
     fun validerPerioder(
         avklaringsbehovene: Avklaringsbehovene,
         løsning: PeriodisertAvklaringsbehovLøsning<*>,
@@ -99,6 +105,14 @@ class AvklaringsbehovValidering(
         gjeldendeVurderinger: Tidslinje<PeriodisertVurdering>,
         kontekst: FlytKontekst,
     ): Tidslinje<Boolean> {
+        if (!unleashGateway.erPåskruddForSak(
+                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+                "saksnumre"
+            ) { sakRepository.hent(kontekst.sakId).saksnummer }
+        ) {
+            return Tidslinje.empty()
+        }
+        
         val kravtidslinje =
             kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.kravtidslinjeMedDato() ?: Tidslinje.empty()
 
