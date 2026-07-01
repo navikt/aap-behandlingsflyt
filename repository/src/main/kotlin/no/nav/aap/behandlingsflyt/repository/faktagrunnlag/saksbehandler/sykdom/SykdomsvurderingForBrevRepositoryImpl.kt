@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import java.time.LocalDateTime
 
 class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection) : SykdomsvurderingForBrevRepository {
 
@@ -56,6 +57,28 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
         return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                toSykdomsvurderingForBrev(row)
+            }
+        }
+    }
+
+    override fun hentAktivPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): SykdomsvurderingForBrev? {
+        val query = """
+            SELECT * FROM SYKDOM_VURDERING_BREV
+        WHERE behandling_id = ?
+        AND opprettet_tid <= ?
+        ORDER BY opprettet_tid DESC
+        LIMIT 1
+        """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
             }
             setRowMapper { row ->
                 toSykdomsvurderingForBrev(row)

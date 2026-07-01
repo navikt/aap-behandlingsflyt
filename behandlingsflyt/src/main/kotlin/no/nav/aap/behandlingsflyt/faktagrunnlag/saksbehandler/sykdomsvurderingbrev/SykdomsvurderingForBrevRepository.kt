@@ -3,10 +3,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingb
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
+import java.time.LocalDateTime
 
 interface SykdomsvurderingForBrevRepository : Repository {
     fun lagre(behandlingId: BehandlingId, vurdering: SykdomsvurderingForBrev)
     fun hent(behandlingId: BehandlingId): SykdomsvurderingForBrev?
+    fun hentAktivPåTidspunkt(behandlingId: BehandlingId, tidspunkt: LocalDateTime): SykdomsvurderingForBrev?
     fun hent(sakId: SakId): List<SykdomsvurderingForBrev>
     fun deaktiverEksisterende(behandlingId: BehandlingId)
 }
