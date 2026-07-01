@@ -35,8 +35,8 @@ sealed interface PeriodisertAvklaringsbehovLøsning<LøsningPeriode : LøsningFo
 }
 
 interface PeriodisertAvklaringsbehovLøsningForKrav<LøsningPeriode : LøsningForPeriode>: PeriodisertAvklaringsbehovLøsning<LøsningPeriode> {
-    fun hentVedtatteVurderinger(
-        forrigeBehandlingId: BehandlingId,
+    fun hentVurderinger(
+        behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): List<PeriodisertVurdering>
 

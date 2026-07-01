@@ -43,11 +43,11 @@ class AvklarSykdomLøsning(
         return repository.hentHvisEksisterer(behandlingId)?.somSykdomsvurderingstidslinje() ?: Tidslinje<Unit>()
     }
 
-    override fun hentVedtatteVurderinger(
-        forrigeBehandlingId: BehandlingId,
+    override fun hentVurderinger(
+        behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): List<PeriodisertVurdering> {
         val repository = repositoryProvider.provide<SykdomRepository>()
-        return repository.hentHvisEksisterer(forrigeBehandlingId)?.sykdomsvurderinger.orEmpty()
+        return repository.hentHvisEksisterer(behandlingId)?.sykdomsvurderinger.orEmpty()
     }
 }

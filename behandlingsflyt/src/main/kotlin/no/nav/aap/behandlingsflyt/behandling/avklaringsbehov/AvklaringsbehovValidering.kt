@@ -44,7 +44,7 @@ class AvklaringsbehovValidering(
 
         if (løsning is PeriodisertAvklaringsbehovLøsningForKrav) {
             val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
-                løsning.hentVedtatteVurderinger(
+                løsning.hentVurderinger(
                     kontekst.forrigeBehandlingId,
                     repositoryProvider
                 )
