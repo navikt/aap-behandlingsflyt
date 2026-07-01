@@ -296,6 +296,7 @@ class TidligereVurderingerImpl(
 
         val listeMedSjekker = definerteSjekker
             .let { sjekker ->
+                // skip gammel student-sjekk når nytt steg er påskrudd
                 if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2))
                     sjekker.filterNot { it.steg == StegType.AVKLAR_STUDENT }
                 else sjekker
