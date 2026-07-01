@@ -319,7 +319,7 @@ class AvklaringsbehovValideringTest {
             avklaringsbehovValidering.nårKravHarLøsning(tomLøsning().definisjon(), gjeldendeVurderinger, kontekst)
 
         assertTidslinje(resultat,
-            Periode(nyttKrav.muligRettFra, Tid.MAKS) to {assertTrue(it)}
+            Periode(nyttKrav.muligRettFra, Tid.MAKS) to {assertFalse(it)}
             )
     }
 
