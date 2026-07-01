@@ -22,7 +22,6 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
-import java.time.LocalDate
 import java.time.ZoneId
 import javax.sql.DataSource
 
@@ -48,9 +47,8 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
             val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
             val kravGrunnlag = kravRepository.hentHvisEksisterer(behandling.id)
 
-            val kravMedDatoListe = kravGrunnlag?.vurderinger
+            val kravMedDatoListe = kravGrunnlag?.gjeldendeVurderinger()
                 ?.filterIsInstance<KravMedDato>()
-                ?.filter { it is NyttKrav || it is Gjenopptak }
                 .orEmpty()
 
             val kravListeDto = Avslag11_27KravDto.avslag11_27TilDto(kravMedDatoListe)
@@ -90,7 +88,7 @@ private fun mapVurderingerTilDto(
                 behandlingId = vurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(
                     ident = vurdering.vurdertAv.toString(),
-                    dato = vurdering.vurdertTidspunkt.atZone(ZoneId.systemDefault())?.toLocalDate() ?: LocalDate.now(),
+                    dato = vurdering.vurdertTidspunkt.atZone(ZoneId.systemDefault()).toLocalDate(),
                 )
             )
         )

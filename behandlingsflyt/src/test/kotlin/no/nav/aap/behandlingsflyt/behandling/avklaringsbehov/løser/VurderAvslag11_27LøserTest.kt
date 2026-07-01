@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.util.*
 
@@ -31,13 +32,15 @@ class VurderAvslag11_27LøserTest {
             BehandlingsflytFeature.Avslag11_27
         )
     )
+    private val unleashUtenAvslag1127 = FakeUnleashBaseWithDefaultDisabled(enabledFlags = emptyList())
+
     private val ref1 = Kravreferanse(UUID.randomUUID())
     private val ref2 = Kravreferanse(UUID.randomUUID())
 
-    private fun løser() = VurderAvslag11_27Løser(
+    private fun løser(unleash: FakeUnleashBaseWithDefaultDisabled = unleashMedAvslag1127) = VurderAvslag11_27Løser(
         behandlingRepository = InMemoryBehandlingRepository,
         avslag11_27repository = InMemoryAvslag11_27Repository,
-        unleashGateway = unleashMedAvslag1127
+        unleashGateway = unleash
     )
 
     private fun løsning(vararg vurderinger: Avslag11_27VurderingDto) = VurderAvslag11_27Løsning(
@@ -56,6 +59,20 @@ class VurderAvslag11_27LøserTest {
         harSykepengegrunnlagOver2G = null,
         skalAvslås1127 = skalAvslås,
     )
+
+    @Test
+    fun `kaster IllegalStateException når toggle er avskrudd`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2026)
+
+        assertThatThrownBy {
+            løser(unleashUtenAvslag1127).løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                løsning(vurderingDto(ref1))
+            )
+        }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("Avslag11_27-toggle er avskrudd")
+    }
 
     @Test
     fun `lagrer ny vurdering for behandling`() {

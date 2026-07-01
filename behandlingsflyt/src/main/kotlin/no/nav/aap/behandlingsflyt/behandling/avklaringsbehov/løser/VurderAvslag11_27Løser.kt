@@ -33,27 +33,25 @@ class VurderAvslag11_27Løser(
         kontekst: AvklaringsbehovKontekst,
         løsning: VurderAvslag11_27Løsning
     ): LøsningsResultat {
+        check(unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27)) {
+            "Avslag11_27-toggle er avskrudd, men løsningen ble kalt. Behandling: ${kontekst.behandlingId()}"
+        }
+
         val vurdertAv = kontekst.bruker.ident
         val forrigeBehandlingId = behandlingRepository.hent(kontekst.kontekst.behandlingId).forrigeBehandlingId
-        val vurderinger =
-            tilAvslag11_27Vurderinger(
-                løsning.avslag11_27Vurdering.vurderinger,
-                vurdertAv,
-                kontekst.behandlingId()
-            )
+        val vurderinger = tilAvslag11_27Vurderinger(
+            løsning.avslag11_27Vurdering.vurderinger,
+            vurdertAv,
+            kontekst.behandlingId()
+        )
 
         val gjeldendeVedtatte =
             forrigeBehandlingId?.let { avslag11_27repository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
-        val nyGjeldende = vurderinger + gjeldendeVedtatte
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27)) {
-            avslag11_27repository.lagre(
-                kontekst.behandlingId(),
-                nyGjeldende
-            )
-        }
-
+        avslag11_27repository.lagre(
+            kontekst.behandlingId(),
+            vurderinger + gjeldendeVedtatte
+        )
 
         return LøsningsResultat(løsning.avslag11_27Vurdering.vurderinger.joinToString(" ") { it.begrunnelse })
     }
