@@ -250,6 +250,7 @@ internal fun Application.server(
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
         try {
+            // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
             fellesDataSource.close()
             motorDataSource.close()
             pipDataSource.close()
