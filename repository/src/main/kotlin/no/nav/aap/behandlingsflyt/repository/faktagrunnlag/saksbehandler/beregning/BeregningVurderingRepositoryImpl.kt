@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -47,8 +49,8 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                     row.getLocalDateOrNull("YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO"),
                     row.getString("VURDERT_AV"),
                     row.getLocalDateTime("OPPRETTET_TID"),
-                    årsak = row.getStringOrNull("AARSAK_BEREGNINGSTIDSPUNKT"),
-                    ytterligereNedsattÅrsak = row.getStringOrNull("AARSAK_YTTERLIGERE_NEDSATT"),
+                    årsak = row.getStringOrNull("AARSAK_BEREGNINGSTIDSPUNKT")?.let { enumValueOf<ÅrsakBeregningstidspunkt>(it) },
+                    ytterligereNedsattÅrsak = row.getStringOrNull("AARSAK_YTTERLIGERE_NEDSATT")?.let { enumValueOf<ÅrsakYtterligereNedsatt>(it) },
                 )
             }
         }
@@ -279,8 +281,8 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 setLocalDate(3, vurdering.ytterligereNedsattArbeidsevneDato)
                 setString(4, vurdering.ytterligereNedsattBegrunnelse)
                 setString(5, vurdering.vurdertAv)
-                setString(6, vurdering.årsak)
-                setString(7, vurdering.ytterligereNedsattÅrsak)
+                setString(6, vurdering.årsak?.name)
+                setString(7, vurdering.ytterligereNedsattÅrsak?.name)
             }
         }
 
