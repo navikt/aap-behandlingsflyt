@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -684,7 +685,7 @@ class MeldekortApiTest : BaseApiTest() {
         val request = OppdaterMeldekortRequest(
             meldeperiode = meldeperiode,
             begrunnelse = "Korrigering av timer",
-            meldeDato = dag2.plusDays(1),
+            meldeDato = dag2.plusDays(20),
             dager = setOf(DagDto(dato = dag1, timerArbeidet = 3.0)),
         )
 
@@ -710,17 +711,20 @@ class MeldekortApiTest : BaseApiTest() {
 
     @Test
     fun `når kun meldeDato og ingen timer sendes inn, settes harDuArbeidet til null`() {
-        val request = OppdaterMeldekortRequest(
+        val oppdaterMeldekort = OppdaterMeldekort(
+            saksnummer = Saksnummer("1"),
             meldeperiode = Periode(6 januar 2025, 7 januar 2025),
             begrunnelse = "Korrigering av meldedato uten timer",
-            meldeDato = 6 januar 2025,
+            meldedato = 6 januar 2025,
             dager = emptySet(),
+            bruker = Bruker("saksbehandler")
         )
 
-        val meldekort = request.tilMeldekort(Bruker("saksbehandler"))
+        val meldekort = oppdaterMeldekort.tilMeldekort()
 
         assertThat(meldekort.harDuArbeidet).isNull()
         assertThat(meldekort.timerArbeidPerPeriode).isEmpty()
+        assertThat(oppdaterMeldekort.meldekortMedTimerRegistrert()).isFalse
     }
 
     private fun underveisperiode(utfall: Utfall, periode: Periode, meldePeriode: Periode = periode, trekk: Dagsatser = Dagsatser(0)) = Underveisperiode(
