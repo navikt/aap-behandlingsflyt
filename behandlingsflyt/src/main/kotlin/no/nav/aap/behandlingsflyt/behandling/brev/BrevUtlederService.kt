@@ -358,8 +358,9 @@ class BrevUtlederService(
         return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
 
-    private fun prioriterAvslagsårsakAvslagsTekst(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+    private fun prioriterAvslagsårsakAvslagsBrevType(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
         val prioritertRekkefølge = listOf(
+            Avslagsårsak.BRUKER_UNDER_18,
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
@@ -403,7 +404,8 @@ class BrevUtlederService(
         }
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
-        val yrkesSkadeISøknadIkkeIRegister = yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
+        val yrkesSkadeISøknadIkkeIRegister =
+            yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
 
         val yrkesskadeBeregning = utledYrkesskadeBeregning(behandling.id, yrkesskader)
 
@@ -430,10 +432,21 @@ class BrevUtlederService(
             .toSet()
     }
 
-    private fun brevBehovAvslag(behandling: Behandling): Avslag {
+    private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        val avslagsårsak = prioriterAvslagsårsakAvslagsTekst(hentAvslagsårsaker(behandling.id))
-        return Avslag(sykdomsvurdering = sykdomsvurdering, avslagsårsak = avslagsårsak)
+        val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(hentAvslagsårsaker(behandling.id))
+        if (Miljø.erDev() && avslagsårsak != null) {
+            if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
+                return AvslagBrev.AvslagUnder17År9Måneder
+            }
+            if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
+                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
+                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+            ) {
+                return AvslagBrev.AvslagSykdomsvilkåret
+            }
+        }
+        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {

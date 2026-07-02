@@ -1021,7 +1021,7 @@ class BrevUtlederServiceTest {
                 brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
             val resultatAndreBehandling = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
-            assertIs<Avslag>(resultatFørstegangsbehandling, "første behandling gir avslag")
+            assertIs<AvslagBrev.Avslag>(resultatFørstegangsbehandling, "første behandling gir avslag")
             assertIs<Innvilgelse>(resultatAndreBehandling, "revurdering er innvilgelse")
         }
     }
@@ -1114,7 +1114,7 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
-            assertIs<Avslag>(resultat, "brevbehov er av type Avslag")
+            assertIs<AvslagBrev.Avslag>(resultat, "brevbehov er av type Avslag")
             assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
         }
 
@@ -1125,7 +1125,7 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
-            assertIs<Avslag>(resultat, "brevbehov er av type Avslag")
+            assertIs<AvslagBrev.Avslag>(resultat, "brevbehov er av type Avslag")
             assertEquals(null, resultat.sykdomsvurdering)
         }
     }

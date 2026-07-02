@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
-import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
+import no.nav.aap.behandlingsflyt.behandling.brev.AvslagBrev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
@@ -342,6 +342,8 @@ class BrevGateway : BrevbestillingGateway {
 
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
+        TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER -> Brevtype.AVSLAG_UNDER_17_AAR_9_MAANEDER
+        TypeBrev.VEDTAK_AVSLAG_11_5 -> Brevtype.AVSLAG_11_5
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
         TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> Brevtype.VEDTAK_UTVID_VEDTAKSLENGDE
         TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
@@ -445,9 +447,6 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
-                    }
-                    brevBehov.avslagsårsak?.let { årsak ->
-                        add(mapAvslagsårsakTilFaktagrunnlag(årsak))
                     }
                 }
             }
@@ -612,21 +611,4 @@ class BrevGateway : BrevbestillingGateway {
             },
         )
     }
-
-    private fun mapAvslagsårsakTilFaktagrunnlag(
-        avslagsårsak: Avslagsårsak
-    ): Faktagrunnlag =
-        Faktagrunnlag.AvslagAarsak(
-            aarsak = avslagsårsak.tilKontrakt()
-        )
-
-
-
-    private fun Avslagsårsak.tilKontrakt(): no.nav.aap.brev.kontrakt.AvslagsÅrsak =
-        try {
-            no.nav.aap.brev.kontrakt.AvslagsÅrsak.valueOf(this.name)
-        } catch (_: IllegalArgumentException) {
-            log.warn("Avslagsårsak finnes ikke i brev: " + this.name)
-            no.nav.aap.brev.kontrakt.AvslagsÅrsak.MANGLENDE_DOKUMENTASJON
-        }
 }
