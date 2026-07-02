@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -44,6 +45,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -55,6 +57,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
@@ -62,6 +65,7 @@ import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
+import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -85,6 +89,31 @@ fun NormalOpenAPIRoute.driftApi(
     gatewayProvider: GatewayProvider,
 ) {
     route("/api/drift") {
+        route("/person") {
+            authorizedPost<Unit, PersonSøkDriftsinfoDto, IdentDto>(
+                AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { _, req ->
+                val saker = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val person = repositoryProvider.provide<PersonRepository>()
+                        .finn(Ident(req.ident))
+
+                    if (person == null) {
+                        throw VerdiIkkeFunnetException("Fant ikke person")
+                    }
+
+                    repositoryProvider.provide<SakRepository>()
+                        .finnSakerFor(person.id)
+                        .map { SaksnummerOgRettighetsperiode(it.saksnummer.toString(), it.rettighetsperiode) }
+                }
+
+                respond(PersonSøkDriftsinfoDto(saker))
+            }
+        }
+
         data class KjorFraSteg(val steg: StegType)
         route("/behandling/{referanse}/kjor-fra-steg") {
             authorizedPost<BehandlingReferanse, Unit, KjorFraSteg>(
@@ -490,6 +519,17 @@ private fun krevDtoErUtenFødselsnummer(dto: Any) {
         throw IkkeTillattException("DTO-en inneholder (potensielt) sensitive personopplysninger!")
     }
 }
+
+private data class IdentDto(val ident: String) : Personreferanse {
+    override fun hentPersonreferanse(): String = ident
+}
+
+private data class PersonSøkDriftsinfoDto(val saker: List<SaksnummerOgRettighetsperiode>)
+
+private data class SaksnummerOgRettighetsperiode(
+    val saksnummer: String,
+    val rettighetsperiode: Periode
+)
 
 private data class SakDriftsinfoDTO(
     val saksnummer: String,
