@@ -103,15 +103,14 @@ class AvklaringsbehovValidering(
 
     fun nårKravHarLøsning(
         definisjon: Definisjon,
-        gjeldendeVurderinger: Tidslinje<PeriodisertVurdering>,
+        gjeldendeVurderinger: Tidslinje<PeriodisertVurdering>? = null,
         kontekst: FlytKontekst,
     ): Tidslinje<Boolean> {
-        if (gjeldendeVurderinger.isEmpty()) {
+        if (gjeldendeVurderinger == null) {
             /**
-             * Siden det ikke går an å fjerne vurderinger, 
-             * og tilstrekkelig vurdert kjøres første gang etter man har mottatt en løsning,
-             * vil dette kun være tilfellet dersom vi ikke enda har sendt inn gjeldende vurderinger fra steget enda.
-             * Dette skal på sikt gjøres for alle periodiserte steg, og da kan denne casen fjernes.
+             * TODO: Fjern nullable gjeldendeVurderinger når alle steg er oppdatert
+             * Dette er caset der vi ikke har oppdatert steget til å sende inn gjeldende vurderinger inn i avklaringsbehovservice.
+             * Dette skal på sikt gjøres for alle periodiserte steg, og da skal denne casen fjernes.
              */
             return Tidslinje.empty()
         }
