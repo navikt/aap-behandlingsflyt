@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
@@ -12,14 +11,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 
 data class SamordningAnnenFullYtelseFaktagrunnlag(
     val rettighetsperiode: Periode,
-    val samordningTidslinje: Tidslinje<SamordningGradering>,
     val samordningGrunnlag: SamordningYtelseVurderingGrunnlag?,
     val uføreRegisterGrunnlag: UføreGrunnlag?,
     val uføreVurderingGrunnlag: SamordningUføreGrunnlag?,
@@ -32,10 +29,11 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
 
     override fun vurder(grunnlag: SamordningAnnenFullYtelseFaktagrunnlag) {
         val uføreTidslinje = grunnlag.uføreVurderingGrunnlag?.vurdering?.tilTidslinje().orEmpty()
+        val samordningTidslinje = grunnlag.samordningGrunnlag?.tilTidslinje().orEmpty()
 
         /* NB: bevisst valg å ikke gi avslag selv om summen av samordninger blir til 100%. */
         val vurderinger =
-            grunnlag.samordningTidslinje.outerJoinNotNull(uføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
+            samordningTidslinje.outerJoinNotNull(uføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
                 val samordningerYtelser =
                     andreYtelserSamordning?.ytelsesGraderinger.orEmpty()
                         .map { it.ytelse.toString() to it.gradering }
