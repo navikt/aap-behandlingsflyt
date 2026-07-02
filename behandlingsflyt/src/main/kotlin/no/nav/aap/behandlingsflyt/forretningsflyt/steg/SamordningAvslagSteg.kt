@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -9,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -24,6 +26,8 @@ class SamordningAvslagSteg(
     private val samordningService: SamordningService,
     private val uføreRepository: UføreRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
+    private val avslag1127repository: Avslag11_27Repository,
+    private val kravRepository: KravRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
@@ -31,6 +35,8 @@ class SamordningAvslagSteg(
         samordningService = SamordningService(repositoryProvider),
         uføreRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
+        avslag1127repository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
     )
@@ -60,6 +66,8 @@ class SamordningAvslagSteg(
             ),
             uføreRegisterGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId),
             uføreVurderingGrunnlag = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId),
+            avslag1127grunnlag = avslag1127repository.hentHvisEksisterer(kontekst.behandlingId),
+            kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
         )
 
     companion object : FlytSteg {
