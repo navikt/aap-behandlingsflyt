@@ -72,7 +72,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                     harAnnenFullYtelse = it.getBoolean("v_har_annen_full_ytelse"),
                     brukersYtelse = it.getStringOrNull("v_brukers_ytelse")?.let { Ytelse.valueOf(it) },
                     harSykepengegrunnlagOver2G = it.getBooleanOrNull("v_har_sykepengegrunnlag_over_2g"),
-                    skalAvslås1127 = it.getBoolean("v_skal_avslaas_1127"),
+                    skalAvslås1127 = it.getBooleanOrNull("v_skal_avslaas_1127"),
                     vurdertIBehandling = BehandlingId(it.getLong("v_vurdert_i_behandling")),
                     vurdertTidspunkt = it.getInstant("v_vurdert_tidspunkt"),
                     vurdertAv = Bruker(it.getString("v_vurdert_av"))

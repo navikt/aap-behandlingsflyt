@@ -69,7 +69,7 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
             }
 
         val avslag11_27Vurderinger = avslag11_27Tidslinje.map { vurdering ->
-            if (vurdering.skalAvslås1127)
+            if (vurdering.skalAvslås1127 == true)
                 Vilkårsvurdering(
                     utfall = Utfall.IKKE_OPPFYLT,
                     manuellVurdering = true,
