@@ -63,7 +63,7 @@ jobs:
                 **/build/reports/
                 **/build/test-results
 
-      - uses: nais/docker-build-push@f8bc7437f7549c2b08197152d781b98f8727a08a # v0
+      - uses: nais/docker-build-push@a0d5e435d1d07c02d39d46634660bb205e334017 # v0
         id: docker-push
         with:
             team: aap # required
