@@ -55,7 +55,7 @@ class FlytKontekstMedPeriodeService(
             vurderingsbehovRelevanteForStegMedPerioder = relevanteVurderingsbehovMedPerioder
         )
     }
-    
+
     companion object {
         fun prioritertType(vurderingTyper: Set<VurderingType>, typeBehandling: TypeBehandling): VurderingType {
             if (typeBehandling == TypeBehandling.Førstegangsbehandling) {
@@ -114,6 +114,7 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.DØDSFALL_BARN,
                 Vurderingsbehov.VEDTAKSLENGDE_MANUELT,
                 Vurderingsbehov.VURDER_KRAV,
+                Vurderingsbehov.VURDER_AVSLAG_11_27,
                 Vurderingsbehov.REVURDERING_AVBRUTT ->
                     REVURDERING
 
