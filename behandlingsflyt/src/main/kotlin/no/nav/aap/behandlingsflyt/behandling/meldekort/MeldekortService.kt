@@ -100,6 +100,13 @@ class MeldekortService(
         )
     }
 
+    fun harRegistrertTimerForMeldeperiode(saksnummer: Saksnummer, meldeperiode: Periode): Boolean {
+        return hentMeldeperioderMedMeldekort(saksnummer)
+            .meldeperioderMedMeldekort
+            .filter { it.meldeperiode == meldeperiode }
+            .any { it.meldekort?.dager?.isNotEmpty() == true }
+    }
+
     fun oppdaterMeldekort(oppdaterMeldekort: OppdaterMeldekort): OppdatertMeldekort {
         val sak = sakRepository.hent(oppdaterMeldekort.saksnummer)
         val behandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
