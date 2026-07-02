@@ -41,7 +41,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
 
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}/grunnlag/fatte-vedtak") {
-            getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
+            getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 påkrevdRolle = Definisjon.FATTE_VEDTAK.løsesAv
@@ -74,14 +74,14 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
                             }
                         }
 
-                    FatteVedtakGrunnlagDto(
+                    FatteVedtakGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
                             kanSaksbehandle(),
                             avklaringsbehovene,
                             bruker(),
                             gatewayProvider,
                         ),
-                        vurderinger = vurderinger.map { it.tilTotrinnsVurdering() },
+                        vurderinger = vurderinger,
                         historikk = historikk,
                         besluttetAv = beslutter,
                         harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
@@ -94,6 +94,8 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
             }
         }
 
+
+        // TODO: fjern v2-endepunkt når frontend er tilbake på v1
         route("/{referanse}/grunnlag/fatte-vedtak/v2") {
             getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),

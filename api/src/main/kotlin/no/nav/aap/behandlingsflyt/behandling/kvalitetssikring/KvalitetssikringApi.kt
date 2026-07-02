@@ -45,14 +45,14 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
 
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
-            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
+            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
                 modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))
             ) { req ->
 
-                val dto = dataSource.transaction(readOnly = true) { connection ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository =
@@ -68,14 +68,14 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                     val vurderinger =
                         kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt, vurderingEndretService)
 
-                    KvalitetssikringGrunnlagDto(
+                    KvalitetssikringGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
                             kanSaksbehandle(),
                             avklaringsbehovene,
                             bruker(),
                             unleashGateway
                         ),
-                        vurderinger = vurderinger.map { it.tilTotrinnsVurdering() },
+                        vurderinger = vurderinger,
                         historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
                         harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
                             avklaringsbehovene,
@@ -83,10 +83,11 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                         )
                     )
                 }
-                respond(dto)
+                respond(response)
             }
         }
 
+        // TODO: fjern v2-endepunkt når frontend er tilbake på v1
         route("/{referanse}/grunnlag/kvalitetssikring/v2") {
             getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -207,7 +208,8 @@ private fun kvalitetssikringsVurdering(
     flyt: BehandlingFlyt,
     vurderingEndretService: VurderingEndretService
 ): List<TotrinnsVurderingResponse> {
-    val sistKvalitetssikret = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
+    val sistKvalitetssikret =
+        avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
     return avklaringsbehovene.alle()
         .filter { it.erIkkeAvbrutt() }
         .filter { it.definisjon.kvalitetssikres }
