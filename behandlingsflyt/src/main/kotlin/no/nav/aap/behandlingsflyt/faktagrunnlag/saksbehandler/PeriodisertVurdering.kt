@@ -15,13 +15,6 @@ interface PeriodisertVurdering {
     val opprettet: Instant
 }
 
-data class EnkelPeriodisertVurdering(
-    override val fom: LocalDate,
-    override val tom: LocalDate?,
-    override val vurdertIBehandling: BehandlingId,
-    override val opprettet: Instant
-) : PeriodisertVurdering
-
 fun List<PeriodisertVurdering>.gjeldendeVurderinger(): Tidslinje<PeriodisertVurdering> {
     return this.groupBy { it.vurdertIBehandling }
         .values
