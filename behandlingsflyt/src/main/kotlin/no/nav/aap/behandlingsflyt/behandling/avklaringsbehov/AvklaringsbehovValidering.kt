@@ -49,6 +49,11 @@ class AvklaringsbehovValidering(
             return
         }
 
+        validerMotKravPerioder(bruker, kontekst, løsning)
+        validerMotPerioderVedtakBehøverVurdering(kontekst, løsning, avklaringsbehovene)
+    }
+
+    private fun validerMotKravPerioder(bruker: Bruker, kontekst: FlytKontekst, løsning: PeriodisertAvklaringsbehovLøsning<*>) {
         if (løsning is LøsningMedPeriodiserteVurderinger) {
             val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
                 løsning.hentVurderinger(
@@ -69,26 +74,31 @@ class AvklaringsbehovValidering(
                 )
             }
         }
+    }
 
+    private fun validerMotPerioderVedtakBehøverVurdering(
+        kontekst: FlytKontekst,
+        løsning: PeriodisertAvklaringsbehovLøsning<*>,
+        avklaringsbehovene: Avklaringsbehovene
+    ) {
         val behovForDefinisjon = avklaringsbehovene.hentBehovForDefinisjon(løsning.definisjon())
         if (behovForDefinisjon != null) {
+
             val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
                 .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
                 .map { true }.komprimer()
 
-            val lagredeVurderinger = kontekst.forrigeBehandlingId?.let {
+            val perioderDekketAvVedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
                 løsning.hentLagredeLøstePerioder(it, repositoryProvider)
-            }.orEmpty()
+            }.orEmpty().map { true }.komprimer()
 
-            val perioderSomSkalLøses =
-                behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
-
-            val perioderDekketAvTidligereVurderinger = lagredeVurderinger.map { true }.komprimer()
-
-            val perioderDekket = perioderDekketAvTidligereVurderinger.kombiner(
+            val perioderDekket = perioderDekketAvVedtatteVurderinger.kombiner(
                 perioderDekketAvLøsning,
                 StandardSammenslåere.prioriterHøyreSideCrossJoin()
             ).komprimer()
+
+            val perioderSomSkalLøses =
+                behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
 
             val perioderSomManglerLøsning =
                 perioderSomSkalLøses.leftJoin(perioderDekket) { _, periodeILøsning ->
@@ -114,7 +124,7 @@ class AvklaringsbehovValidering(
              */
             return Tidslinje.empty()
         }
-        
+
         if (!unleashGateway.erPåskruddForSak(
                 BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
                 "saksnumre"
