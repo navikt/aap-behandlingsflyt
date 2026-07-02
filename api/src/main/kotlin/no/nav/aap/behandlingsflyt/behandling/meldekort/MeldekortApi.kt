@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.meldekort
 
+import com.papsign.ktor.openapigen.annotations.parameters.PathParam
+import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
@@ -76,6 +78,26 @@ fun NormalOpenAPIRoute.meldekortApi(
             respond(response)
         }
 
+        route("har-registrert-timer").authorizedGet<HarRegistrertTimerParameter, HarRegistrertTimerResponse>(
+            AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                sakPathParam = SakPathParam("saksnummer")
+            ),
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
+        ) { req ->
+            val meldeperiode = Periode(req.meldeperiodeFom, req.meldeperiodeTom)
+            val response = dataSource.transaction(readOnly = true) { connection ->
+                val meldekortService =
+                    MeldekortService(repositoryRegistry.provider(connection), gatewayProvider, clock)
+                val harRegistrertTimer =
+                    meldekortService.harRegistrertTimerForMeldeperiode(Saksnummer(req.saksnummer), meldeperiode)
+
+                HarRegistrertTimerResponse(harRegistrertTimerForMeldeperioden = harRegistrertTimer)
+            }
+
+            respond(response)
+        }
+
         route("prosessering") {
             authorizedGet<SaksnummerParameter, MeldekortProsesseringResponse>(
                 AuthorizationParamPathConfig(
@@ -108,4 +130,14 @@ data class OppdaterMeldekortRequest(
     val meldeDato: LocalDate,
     val begrunnelse: String,
     val dager: Set<DagDto>,
+)
+
+data class HarRegistrertTimerParameter(
+    @param:PathParam("saksnummer") val saksnummer: String,
+    @param:QueryParam("Meldeperiodens fra-og-med-dato") val meldeperiodeFom: LocalDate,
+    @param:QueryParam("Meldeperiodens til-og-med-dato") val meldeperiodeTom: LocalDate,
+)
+
+data class HarRegistrertTimerResponse(
+    val harRegistrertTimerForMeldeperioden: Boolean,
 )

@@ -204,6 +204,128 @@ class MeldekortApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `har-registrert-timer returnerer true når meldekort har dager med timer for meldeperioden`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+        val meldeperiode = Periode(dag1, dag1.plusDays(13))
+        val meldekort = Meldekort(
+            journalpostId = JournalpostId("111"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("0.0"))),
+                ArbeidIPeriode(Periode(dag2, dag2), TimerArbeid(BigDecimal("3.0"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+        )
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryMeldekortRepository.lagre(behandling.id, setOf(meldekort))
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(meldekort, sak.id, behandling.id))
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}/har-registrert-timer") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                parameter("meldeperiodeFom", meldeperiode.fom)
+                parameter("meldeperiodeTom", meldeperiode.tom)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<HarRegistrertTimerResponse>()
+            assertThat(body.harRegistrertTimerForMeldeperioden).isTrue()
+        }
+    }
+
+    @Test
+    fun `har-registrert-timer returnerer false når meldeperiode ikke har innsendt meldekort`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val meldeperiode = Periode(6 januar 2025, 19 januar 2025)
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}/har-registrert-timer") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                parameter("meldeperiodeFom", meldeperiode.fom)
+                parameter("meldeperiodeTom", meldeperiode.tom)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<HarRegistrertTimerResponse>()
+            assertThat(body.harRegistrertTimerForMeldeperioden).isFalse()
+        }
+    }
+
+    @Test
+    fun `har-registrert-timer returnerer false når ingen meldeperiode matcher fom og tom`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val dag1 = 6 januar 2025
+        val meldeperiode = Periode(dag1, dag1.plusDays(13))
+        val meldekort = Meldekort(
+            journalpostId = JournalpostId("111"),
+            timerArbeidPerPeriode = setOf(
+                ArbeidIPeriode(Periode(dag1, dag1), TimerArbeid(BigDecimal("7.5"))),
+            ),
+            mottattTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0),
+            opprettetTidspunkt = LocalDateTime.of(2025, 1, 20, 9, 0)
+        )
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryMeldekortRepository.lagre(behandling.id, setOf(meldekort))
+        InMemoryMottattDokumentRepository.lagre(mottattMeldekortDokument(meldekort, sak.id, behandling.id))
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}/har-registrert-timer") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                parameter("meldeperiodeFom", meldeperiode.fom.plusWeeks(4))
+                parameter("meldeperiodeTom", meldeperiode.tom.plusWeeks(4))
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<HarRegistrertTimerResponse>()
+            assertThat(body.harRegistrertTimerForMeldeperioden).isFalse()
+        }
+    }
+
+    @Test
     fun `returnerer flere meldekort`() {
         val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
