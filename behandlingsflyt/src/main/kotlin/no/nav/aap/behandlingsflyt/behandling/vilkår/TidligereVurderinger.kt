@@ -126,10 +126,11 @@ class TidligereVurderingerImpl(
                 val avslag11_27Tidslinje = avslag11_27Grunnlag?.tilTidslinje(kravGrunnlag).orEmpty()
 
                 tidligereVurderinger.leftJoin(avslag11_27Tidslinje) { _, vurdering ->
-                    if (vurdering?.skalAvslås1127 == true)
-                        TidligereVurderinger.UunngåeligAvslag
-                    else
-                        TidligereVurderinger.PotensieltOppfylt(null)
+                    when {
+                        vurdering?.harAnnenFullYtelse == false -> TidligereVurderinger.PotensieltOppfylt(null)
+                        vurdering?.skalAvslås1127 == true -> TidligereVurderinger.UunngåeligAvslag
+                        else -> TidligereVurderinger.PotensieltOppfylt(null)
+                    }
                 }
             },
 
