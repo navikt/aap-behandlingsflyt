@@ -435,7 +435,7 @@ class BrevUtlederService(
     private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(hentAvslagsårsaker(behandling.id))
-        if (avslagsårsak != null) {
+        if (Miljø.erDev() && avslagsårsak != null) {
             if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
                 return AvslagBrev.AvslagUnder17År9Måneder
             }
