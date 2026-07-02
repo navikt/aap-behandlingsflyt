@@ -316,7 +316,7 @@ class AvklaringsbehovService(
                                     kontekst.tilFlytKontekst()
                                 )
                             ) { erRelevant, erGyldig, dekkerKrav ->
-                                erRelevant != true || erGyldig == true || dekkerKrav != false
+                                erRelevant != true || (erGyldig == true && dekkerKrav != false)
                             }
                                 .begrensetTil(kontekst.rettighetsperiode)
                                 .komprimer()

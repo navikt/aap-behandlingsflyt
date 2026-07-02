@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsningForKrav
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningMedPeriodiserteVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
-import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -24,6 +23,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.collections.orEmpty
@@ -36,8 +36,9 @@ class AvklaringsbehovValidering(
     private val stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider)
     private val unleashGateway: UnleashGateway = gatewayProvider.provide()
     private val sakRepository: SakRepository = repositoryProvider.provide()
-    
+
     fun validerPerioder(
+        bruker: Bruker,
         avklaringsbehovene: Avklaringsbehovene,
         løsning: PeriodisertAvklaringsbehovLøsning<*>,
         kontekst: FlytKontekst,
@@ -48,14 +49,14 @@ class AvklaringsbehovValidering(
             return
         }
 
-        if (løsning is PeriodisertAvklaringsbehovLøsningForKrav) {
+        if (løsning is LøsningMedPeriodiserteVurderinger) {
             val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
                 løsning.hentVurderinger(
                     kontekst.forrigeBehandlingId,
                     repositoryProvider
                 )
             }.orEmpty()
-            val nye = løsning.tilPeriodiserteVurdering(kontekst.behandlingId) + vedtatteVurderinger
+            val nye = løsning.somVurderinger(bruker, kontekst.behandlingId) + vedtatteVurderinger
             val kravMedUgyldigLøsning =
                 nårKravHarLøsning(løsning.definisjon(), nye.gjeldendeVurderinger(), kontekst)
                     .segmenter()
@@ -68,7 +69,7 @@ class AvklaringsbehovValidering(
                 )
             }
         }
-        
+
         val behovForDefinisjon = avklaringsbehovene.hentBehovForDefinisjon(løsning.definisjon())
         if (behovForDefinisjon != null) {
             val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
@@ -105,6 +106,16 @@ class AvklaringsbehovValidering(
         gjeldendeVurderinger: Tidslinje<PeriodisertVurdering>,
         kontekst: FlytKontekst,
     ): Tidslinje<Boolean> {
+        if (gjeldendeVurderinger.isEmpty()) {
+            /**
+             * Siden det ikke går an å fjerne vurderinger, 
+             * og tilstrekkelig vurdert kjøres første gang etter man har mottatt en løsning,
+             * vil dette kun være tilfellet dersom vi ikke enda har sendt inn gjeldende vurderinger fra steget enda.
+             * Dette skal på sikt gjøres for alle periodiserte steg, og da kan denne casen fjernes.
+             */
+            return Tidslinje.empty()
+        }
+        
         if (!unleashGateway.erPåskruddForSak(
                 BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
                 "saksnumre"
@@ -112,7 +123,7 @@ class AvklaringsbehovValidering(
         ) {
             return Tidslinje.empty()
         }
-        
+
         val kravtidslinje =
             kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.kravtidslinjeMedDato() ?: Tidslinje.empty()
 

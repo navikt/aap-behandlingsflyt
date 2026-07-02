@@ -57,7 +57,7 @@ class AvklaringsbehovOrkestrator(
         log.info("Forsøker å løse avklaringsbehov[$definisjon] på behandling[${behandling.referanse}]")
         avklaringsbehovene.validerTilstand(behandling, definisjon)
         if (avklaringsbehovLøsning is PeriodisertAvklaringsbehovLøsning<*>) {
-            avklaringsbehovValidering.validerPerioder(avklaringsbehovene, avklaringsbehovLøsning, kontekst)
+            avklaringsbehovValidering.validerPerioder(bruker, avklaringsbehovene, avklaringsbehovLøsning, kontekst)
         }
 
         // løses det behov som fremtvinger tilbakehopp?

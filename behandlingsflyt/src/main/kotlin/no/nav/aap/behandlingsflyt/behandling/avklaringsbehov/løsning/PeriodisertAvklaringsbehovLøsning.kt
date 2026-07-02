@@ -1,12 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.EnkelPeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.Instant
 import java.time.LocalDate
 
 /** Nye periodiserte vurderinger gjort av innlogget saksbehandler. */
@@ -34,15 +33,15 @@ sealed interface PeriodisertAvklaringsbehovLøsning<LøsningPeriode : LøsningFo
     ): Tidslinje<*>
 }
 
-interface PeriodisertAvklaringsbehovLøsningForKrav<LøsningPeriode : LøsningForPeriode>: PeriodisertAvklaringsbehovLøsning<LøsningPeriode> {
+// TODO: Skal bakes inn i PeriodisertAvklaringsbehovLøsning når alle har implementert dette interfacet
+interface LøsningMedPeriodiserteVurderinger {
     fun hentVurderinger(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): List<PeriodisertVurdering>
 
 
-    fun tilPeriodiserteVurdering(behandlingId: BehandlingId) =
-        this.løsningerForPerioder.map { it.tilPeriodisertVurdering(behandlingId) }
+    fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<PeriodisertVurdering>
 }
 
 /** En ny vurdering gjort av innlogget saksbehandler for en avgrenset periode. */
@@ -54,8 +53,4 @@ interface LøsningForPeriode {
     val tom: LocalDate?
 
     val begrunnelse: String
-
-    fun tilPeriodisertVurdering(behandlingId: BehandlingId) = EnkelPeriodisertVurdering(
-        this.fom, this.tom, behandlingId, Instant.now(),
-    )
 }

@@ -8,12 +8,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSykdom
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SYKDOM_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -26,7 +28,7 @@ class AvklarSykdomLøsning(
         required = true,
         defaultValue = AVKLAR_SYKDOM_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5003`
-) : PeriodisertAvklaringsbehovLøsningForKrav<SykdomsvurderingLøsningDto> {
+) : PeriodisertAvklaringsbehovLøsning<SykdomsvurderingLøsningDto>, LøsningMedPeriodiserteVurderinger {
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,
@@ -49,5 +51,9 @@ class AvklarSykdomLøsning(
     ): List<PeriodisertVurdering> {
         val repository = repositoryProvider.provide<SykdomRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.sykdomsvurderinger.orEmpty()
+    }
+
+    override fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<Sykdomsvurdering> {
+        return løsningerForPerioder.map { it.toSykdomsvurdering(bruker, behandlingId) }
     }
 }

@@ -73,12 +73,16 @@ import java.util.concurrent.atomic.AtomicLong
 class AvklaringsbehovValideringTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     private val løsningMock = mockk<PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto>>()
-    
+
     val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
         register<LokalUnleash>()
     })
 
-    private fun lagFlytKontekst(sakId: SakId = opprettInMemorySak().id, behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId? = null): FlytKontekst {
+    private fun lagFlytKontekst(
+        sakId: SakId = opprettInMemorySak().id,
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId? = null
+    ): FlytKontekst {
         return FlytKontekst(
             behandlingId = behandlingId,
             sakId = sakId,
@@ -143,6 +147,7 @@ class AvklaringsbehovValideringTest {
 
         val exception = assertThrows<UgyldigForespørselException> {
             avklaringsbehovValidering.validerPerioder(
+                Bruker("saksbehandler"),
                 avklaringsbehovene = avklaringsbehovene,
                 kontekst = flytKontekst,
                 løsning = løsningMock,
@@ -163,6 +168,7 @@ class AvklaringsbehovValideringTest {
 
         assertDoesNotThrow {
             avklaringsbehovValidering.validerPerioder(
+                Bruker("saksbehandler"),
                 avklaringsbehovene = avklaringsbehovene,
                 kontekst = flytKontekst,
                 løsning = løsningMock,
@@ -172,7 +178,8 @@ class AvklaringsbehovValideringTest {
 
     @Test
     fun `Avklaringsbehov med tom mengde med perioder som skal vurderes skal ikke bry seg om perioder`() {
-        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider,  createGatewayProvider { register<LokalUnleash>()
+        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
+            register<LokalUnleash>()
         })
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(10))
         val flytKontekst = lagFlytKontekst(behandlingId = BehandlingId(10))
@@ -204,6 +211,7 @@ class AvklaringsbehovValideringTest {
 
         assertDoesNotThrow {
             avklaringsbehovValidering.validerPerioder(
+                Bruker("saksbehandler"),
                 avklaringsbehovene = avklaringsbehovene,
                 kontekst = flytKontekst,
                 løsning = løsningMock,
@@ -213,7 +221,8 @@ class AvklaringsbehovValideringTest {
 
     @Test
     fun `Avklaringsbehov med null-perioder som skal vurderes skal ikke bry seg om perioder`() {
-        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider,  createGatewayProvider { register<LokalUnleash>()
+        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
+            register<LokalUnleash>()
         })
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(11))
         val flytKontekst = lagFlytKontekst(behandlingId = BehandlingId(11))
@@ -244,6 +253,7 @@ class AvklaringsbehovValideringTest {
 
         assertDoesNotThrow {
             avklaringsbehovValidering.validerPerioder(
+                Bruker("saksbehandler"),
                 avklaringsbehovene = avklaringsbehovene,
                 kontekst = flytKontekst,
                 løsning = løsningMock,
@@ -253,7 +263,8 @@ class AvklaringsbehovValideringTest {
 
     @Test
     fun `Periodisert løsning skal validere OK om periodene avklaringsbehovet ber om er dekket av tidligere vurderinger`() {
-        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider,  createGatewayProvider { register<LokalUnleash>()
+        val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
+            register<LokalUnleash>()
         })
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(15))
         val flytKontekst = lagFlytKontekst(behandlingId = BehandlingId(15), forrigeBehandlingId = BehandlingId(14))
@@ -288,6 +299,7 @@ class AvklaringsbehovValideringTest {
 
         assertDoesNotThrow {
             avklaringsbehovValidering.validerPerioder(
+                Bruker("saksbehandler"),
                 avklaringsbehovene = avklaringsbehovene,
                 kontekst = flytKontekst,
                 løsning = løsningMock,
@@ -302,7 +314,7 @@ class AvklaringsbehovValideringTest {
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         // Ingen lagring i kravRepository
 
-        val gjeldendeVurderinger = tomLøsning().tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = tomLøsning().somVurderinger(Bruker("saksbehandler"),forrigeBehandlingId).gjeldendeVurderinger()
         val resultat =
             avklaringsbehovValidering.nårKravHarLøsning(tomLøsning().definisjon(), gjeldendeVurderinger, kontekst)
 
@@ -318,13 +330,14 @@ class AvklaringsbehovValideringTest {
         val nyttKrav = nyttKrav(forrigeBehandlingId, LocalDate.now())
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav))
 
-        val gjeldendeVurderinger = tomLøsning().tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = tomLøsning().somVurderinger(Bruker("saksbehandler"),forrigeBehandlingId).gjeldendeVurderinger()
         val resultat =
             avklaringsbehovValidering.nårKravHarLøsning(tomLøsning().definisjon(), gjeldendeVurderinger, kontekst)
 
-        assertTidslinje(resultat,
-            Periode(nyttKrav.muligRettFra, Tid.MAKS) to {assertFalse(it)}
-            )
+        assertTidslinje(
+            resultat,
+            Periode(nyttKrav.muligRettFra, Tid.MAKS) to { assertFalse(it) }
+        )
     }
 
     @Test
@@ -336,12 +349,13 @@ class AvklaringsbehovValideringTest {
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
 
         val løsning = løsning(fom = muligRettFra)
-        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
 
         val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
 
-        assertTidslinje(resultat,
-            Periode(muligRettFra, Tid.MAKS) to {assertTrue(it)}
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to { assertTrue(it) }
         )
     }
 
@@ -354,12 +368,13 @@ class AvklaringsbehovValideringTest {
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
 
         val løsning = løsning(fom = muligRettFra.plusDays(2))
-        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = løsning.somVurderinger(Bruker("saksbehandler"),forrigeBehandlingId).gjeldendeVurderinger()
 
         val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
 
-        assertTidslinje(resultat,
-            Periode(muligRettFra, Tid.MAKS) to {assertTrue(it)}
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to { assertTrue(it) }
         )
     }
 
@@ -374,7 +389,7 @@ class AvklaringsbehovValideringTest {
 
         val løsningFom = muligRettFra.minusDays(1)
         val løsning = løsning(fom = løsningFom)
-        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = løsning.somVurderinger(Bruker("saksbehandler"),forrigeBehandlingId).gjeldendeVurderinger()
         val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
 
         assertTidslinje(
@@ -391,12 +406,12 @@ class AvklaringsbehovValideringTest {
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2024, 1, 1)
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
-        
+
         InMemoryKravRepository.lagre(behandlingId, setOf(gjenopptak(behandlingId, muligRettFra)))
         settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
 
         val løsning = løsning(fom = muligRettFra.minusDays(1))
-        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = løsning.somVurderinger(Bruker("saksbehandler"),forrigeBehandlingId).gjeldendeVurderinger()
 
 
         val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
@@ -434,7 +449,7 @@ class AvklaringsbehovValideringTest {
 
         val løsningFom = muligRettFra.minusDays(30)
         val løsning = løsning(fom = løsningFom)
-        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = løsning.somVurderinger(Bruker("saksbehandler"),forrigeBehandlingId).gjeldendeVurderinger()
 
         // Løsning dekker ikke muligRettFra, men Stans betyr at kravet likevel er dekket
         val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
@@ -468,7 +483,7 @@ class AvklaringsbehovValideringTest {
         )
 
         val løsning = løsning(fom = muligRettFra)
-        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = løsning.somVurderinger(Bruker("saksbehandler"),forrigeBehandlingId).gjeldendeVurderinger()
 
         val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
 
@@ -504,7 +519,7 @@ class AvklaringsbehovValideringTest {
         )
         val løsningFom = muligRettFra.minusDays(1)
         val løsning = løsning(løsningFom)
-        val gjeldendeVurderinger = løsning.tilPeriodiserteVurdering(forrigeBehandlingId).gjeldendeVurderinger()
+        val gjeldendeVurderinger = løsning.somVurderinger(Bruker("saksbehandler"),forrigeBehandlingId).gjeldendeVurderinger()
 
         val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
 

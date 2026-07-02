@@ -84,7 +84,7 @@ class RettighetsperiodeStegTest {
                 kravRepository,
                 mockk(),
                 gatewayProvider.provide(),
-                AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider { })
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider { register<AlleAvskruddUnleash>() })
             ),
             tidligereVurderinger,
             rettighetsperiodeRepository,

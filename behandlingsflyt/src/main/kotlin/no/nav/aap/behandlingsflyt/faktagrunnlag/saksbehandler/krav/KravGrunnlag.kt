@@ -4,7 +4,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
-import java.time.LocalDate
 
 data class KravGrunnlag(
     val vurderinger: Set<KravVurdering>,
@@ -29,7 +28,7 @@ data class KravGrunnlag(
             .filter { it is NyttKrav || it is Gjenopptak }
             .filterIsInstance<KravMedDato>()
             .sortedBy { (it as KravMedDato).muligRettFra }
-            .somTidslinje{ Periode((it as KravMedDato).muligRettFra, Tid.MAKS) }
+            .somTidslinje{ Periode((it).muligRettFra, Tid.MAKS) }
     }
 }
 
