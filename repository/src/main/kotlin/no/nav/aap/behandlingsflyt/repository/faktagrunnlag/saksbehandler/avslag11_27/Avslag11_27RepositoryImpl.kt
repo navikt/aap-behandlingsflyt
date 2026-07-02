@@ -178,8 +178,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         }
     }
 
-    private fun lagreAvslag11_27Vurderinger(vurderinger: List<Avslag11_27Vurdering>): Long? {
-        if (vurderinger.isEmpty()) return null
+    private fun lagreAvslag11_27Vurderinger(vurderinger: List<Avslag11_27Vurdering>): Long {
 
         val vuderingerId = connection.executeReturnKey(
             "INSERT INTO avslag_11_27_vurderinger (opprettet_tid) VALUES (?)"
