@@ -89,17 +89,22 @@ class UføreInntektUtlederTest {
     }
 
     @Test
-    fun `utledDelperioder returnerer kun perioder fra uføregrunnlaget`() {
+    fun `år med endring i uføregrad og manglende ligningsdata (POPP) for hele året krever manuell periodeinntekt`() {
         val uføregrader = setOf(
-            Uføre(virkningstidspunkt = LocalDate.of(2022, 3, 1), uføregrad = Prosent.`50_PROSENT`),
+            Uføre(virkningstidspunkt = LocalDate.of(2022, 3, 1), uføregrad = Prosent.`0_PROSENT`),
+            Uføre(virkningstidspunkt = LocalDate.of(2023, 2, 1), uføregrad = Prosent.`50_PROSENT`),
+        )
+        val månedsinntekter = emptySet<Månedsinntekt>()
+        val årsInntekter = emptySet<InntektPerÅr>()
+
+        val resultat = UføreInntektUtleder.finnÅrSomKreverManuellPeriodeinntekt(
+            uføregrader = uføregrader,
+            inntektPerMåned = månedsinntekter,
+            årsInntekter = årsInntekter,
+            ytterligereNedsattDato = LocalDate.of(2025, 5, 20),
         )
 
-        val delperioder = UføreInntektUtleder.utledDelperioder(uføregrader, Year.of(2022))
-
-        assertThat(delperioder).hasSize(1)
-        assertThat(delperioder.single().periode.fom).isEqualTo(LocalDate.of(2022, 3, 1))
-        assertThat(delperioder.single().periode.tom).isEqualTo(LocalDate.of(2022, 12, 31))
-        assertThat(delperioder.single().uføregrad).isEqualTo(Prosent.`50_PROSENT`)
+        assertThat(resultat).contains(Year.of(2023))
     }
 
     @Test

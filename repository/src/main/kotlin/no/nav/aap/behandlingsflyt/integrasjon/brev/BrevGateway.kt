@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
-import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
+import no.nav.aap.behandlingsflyt.behandling.brev.AvslagBrev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGatew
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -341,6 +342,8 @@ class BrevGateway : BrevbestillingGateway {
 
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
+        TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER -> Brevtype.AVSLAG_UNDER_17_AAR_9_MAANEDER
+        TypeBrev.VEDTAK_AVSLAG_11_5 -> Brevtype.AVSLAG_11_5
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
         TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> Brevtype.VEDTAK_UTVID_VEDTAKSLENGDE
         TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
@@ -406,7 +409,8 @@ class BrevGateway : BrevbestillingGateway {
                     }
                     brevBehov.meldepliktGrunnlag?.let {
                         add(
-                            fritakmeldepliktTilFaktagrunnlag(it))
+                            fritakmeldepliktTilFaktagrunnlag(it)
+                        )
                     }
                 }
 

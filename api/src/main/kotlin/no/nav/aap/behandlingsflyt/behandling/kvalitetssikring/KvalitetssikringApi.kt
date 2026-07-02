@@ -5,17 +5,20 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.VurderingEndretService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.behandling.totrinnsvurdering.TotrinnsVurderingResponse
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
@@ -24,15 +27,14 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDateTime
 import javax.sql.DataSource
-import kotlin.collections.any
 
 fun NormalOpenAPIRoute.kvalitetssikringApi(
     dataSource: DataSource,
@@ -61,8 +63,10 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                     val avklaringsbehovene =
                         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val flyt = behandling.flyt()
+                    val vurderingEndretService = VurderingEndretService(repositoryProvider)
 
-                    val vurderinger = kvalitetssikringsVurdering(avklaringsbehovene, flyt)
+                    val vurderinger =
+                        kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt, vurderingEndretService)
 
                     KvalitetssikringGrunnlagDto(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
@@ -71,12 +75,58 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                             bruker(),
                             unleashGateway
                         ),
-                        vurderinger = vurderinger,
+                        vurderinger = vurderinger.map { it.tilTotrinnsVurdering() },
                         historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
-                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker())
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
+                            avklaringsbehovene,
+                            bruker()
+                        )
                     )
                 }
                 respond(dto)
+            }
+        }
+
+        route("/{referanse}/grunnlag/kvalitetssikring/v2") {
+            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
+                modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))
+            ) { req ->
+
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository =
+                        repositoryProvider.provide<AvklaringsbehovRepository>()
+
+                    val behandling: Behandling =
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val avklaringsbehovene =
+                        avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val flyt = behandling.flyt()
+                    val vurderingEndretService = VurderingEndretService(repositoryProvider)
+
+                    val vurderinger =
+                        kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt, vurderingEndretService)
+
+                    KvalitetssikringGrunnlagResponse(
+                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
+                            kanSaksbehandle(),
+                            avklaringsbehovene,
+                            bruker(),
+                            unleashGateway
+                        ),
+                        vurderinger = vurderinger,
+                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
+                            avklaringsbehovene,
+                            bruker()
+                        )
+                    )
+                }
+                respond(response)
             }
         }
     }
@@ -95,7 +145,10 @@ private fun utledHarTilgangTilÅSaksbehandle(
     }
 }
 
-private fun brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene: Avklaringsbehovene, bruker: Bruker): Boolean {
+private fun brukerHarGjortVilkårsvurderingerPåBehandling(
+    avklaringsbehovene: Avklaringsbehovene,
+    bruker: Bruker
+): Boolean {
     return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
         .any { it.brukere().contains(bruker.ident) }
 }
@@ -134,7 +187,7 @@ private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehoven
 }
 
 private fun utledEndringerSidenSist(
-    alleBehov: List<no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov>,
+    alleBehov: List<Avklaringsbehov>,
     tidsstempelForrigeBehov: LocalDateTime,
     tidsstempel: LocalDateTime
 ): List<DefinisjonEndring> {
@@ -148,42 +201,57 @@ private fun utledEndringerSidenSist(
     }.flatten()
 }
 
-private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
+private fun kvalitetssikringsVurdering(
+    behandlingId: BehandlingId,
+    avklaringsbehovene: Avklaringsbehovene,
+    flyt: BehandlingFlyt,
+    vurderingEndretService: VurderingEndretService
+): List<TotrinnsVurderingResponse> {
+    val sistKvalitetssikret = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
     return avklaringsbehovene.alle()
         .filter { it.erIkkeAvbrutt() }
         .filter { it.definisjon.kvalitetssikres }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
-        .map { tilKvalitetssikring(it) }
+        .map { tilToTrinnsVurderingResponse(behandlingId, it, sistKvalitetssikret, vurderingEndretService) }
 }
 
-private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov): TotrinnsVurdering {
-    return if (it.harBlittKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
+private fun tilToTrinnsVurderingResponse(
+    behandlingId: BehandlingId,
+    avklaringsbehov: Avklaringsbehov,
+    sistKvalitetssikret: LocalDateTime?,
+    vurderingEndretService: VurderingEndretService
+): TotrinnsVurderingResponse {
+    return if (avklaringsbehov.harBlittKvalitetssikretTidligere() || avklaringsbehov.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
-            it.aktivHistorikk.lastOrNull {
+            avklaringsbehov.aktivHistorikk.lastOrNull {
                 it.status in setOf(
                     Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                     Status.KVALITETSSIKRET
                 )
             }
 
-        val godkjent = when (it.status()) {
-            Status.AVSLUTTET -> if (it.harBlittKvalitetssikretTidligere()) null else false
-            else -> it.status() == Status.KVALITETSSIKRET
+        val godkjent = when (avklaringsbehov.status()) {
+            Status.AVSLUTTET -> if (avklaringsbehov.harBlittKvalitetssikretTidligere()) null else false
+            else -> avklaringsbehov.status() == Status.KVALITETSSIKRET
         }
 
-        TotrinnsVurdering(
-            it.definisjon.kode,
-            godkjent,
-            sisteVurdering?.begrunnelse,
-            sisteVurdering?.årsakTilRetur.orEmpty(),
-            markeringer = emptyList(),
+        val endretSidenSist =
+            sistKvalitetssikret?.let { vurderingEndretService.endretSidenTidspunkt(behandlingId, avklaringsbehov, it) }
+
+        TotrinnsVurderingResponse(
+            definisjon = avklaringsbehov.definisjon.kode,
+            godkjent = godkjent,
+            begrunnelse = sisteVurdering?.begrunnelse,
+            endretSidenSist = endretSidenSist,
+            grunner = sisteVurdering?.årsakTilRetur.orEmpty(),
         )
     } else {
-        TotrinnsVurdering(
-            it.definisjon.kode,
-            null,
-            null,
-            emptyList(),
-            markeringer = emptyList())
+        TotrinnsVurderingResponse(
+            definisjon = avklaringsbehov.definisjon.kode,
+            godkjent = null,
+            begrunnelse = null,
+            endretSidenSist = null,
+            grunner = emptyList(),
+        )
     }
 }

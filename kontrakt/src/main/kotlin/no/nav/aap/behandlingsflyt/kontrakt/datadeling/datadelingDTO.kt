@@ -35,8 +35,10 @@ public data class PeriodeDTO(
 )
 
 public data class UnderveisperiodeDatadelingDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
+    @Deprecated("Fjernes. Bruk periode.") val fom: LocalDate,
+    @Deprecated("Fjernes. Bruk periode.") val tom: LocalDate,
+    val periode: PeriodeDTO,
+    val meldeperiode: PeriodeDTO,
     val meldepliktstatus: String?,
     val arbeidsgrad: Int,
     val overgrenseVerdi: Boolean,
@@ -105,6 +107,7 @@ public enum class AvslagsårsakDTO(
     ORDINÆRKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
     SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
     IKKE_SYKDOM_SKADE_LYTE(StansEllerOpphørEnumDTO.OPPHØR),
+    ANNEN_FULL_YTELSE_AVSLAG(StansEllerOpphørEnumDTO.OPPHØR)
 }
 
 

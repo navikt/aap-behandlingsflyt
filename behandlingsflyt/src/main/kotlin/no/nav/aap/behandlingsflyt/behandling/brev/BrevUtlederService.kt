@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -41,7 +42,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -107,6 +107,7 @@ class BrevUtlederService(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -134,6 +135,7 @@ class BrevUtlederService(
         yrkesskadeRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
     )
 
@@ -314,7 +316,7 @@ class BrevUtlederService(
 
         if (avslagsårsaker.isNotEmpty()) {
             // Støtter kun en avslagsårsak i brev - henter ut høyest prioritert
-            val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
+            val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsakUtvideVedtakslengde(avslagsårsaker)) {
                 "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
             }
 
@@ -344,7 +346,7 @@ class BrevUtlederService(
         else -> error("Uventet avslagsårsak for utvidelse under ett år: $avslagsårsak")
     }
 
-    private fun prioriterAvslagsårsak(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+    private fun prioriterAvslagsårsakUtvideVedtakslengde(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
         val prioritertRekkefølge = listOf(
             Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.IKKE_MEDLEM,
@@ -352,6 +354,16 @@ class BrevUtlederService(
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
             Avslagsårsak.ANNEN_FULL_YTELSE,
+        )
+        return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
+    }
+
+    private fun prioriterAvslagsårsakAvslagsBrevType(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+        val prioritertRekkefølge = listOf(
+            Avslagsårsak.BRUKER_UNDER_18,
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
         )
         return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
@@ -392,7 +404,8 @@ class BrevUtlederService(
         }
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
-        val yrkesSkadeISøknadIkkeIRegister = yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
+        val yrkesSkadeISøknadIkkeIRegister =
+            yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
 
         val yrkesskadeBeregning = utledYrkesskadeBeregning(behandling.id, yrkesskader)
 
@@ -411,9 +424,29 @@ class BrevUtlederService(
         )
     }
 
-    private fun brevBehovAvslag(behandling: Behandling): Avslag {
+    private fun hentAvslagsårsaker(behandlingId: BehandlingId): Set<Avslagsårsak> {
+        return vilkårsresultatRepository.hent(behandlingId)
+            .alle()
+            .flatMap { it.vilkårsperioder() }
+            .mapNotNull { it.avslagsårsak }
+            .toSet()
+    }
+
+    private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        return Avslag(sykdomsvurdering = sykdomsvurdering)
+        val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(hentAvslagsårsaker(behandling.id))
+        if (Miljø.erDev() && avslagsårsak != null) {
+            if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
+                return AvslagBrev.AvslagUnder17År9Måneder
+            }
+            if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
+                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
+                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+            ) {
+                return AvslagBrev.AvslagSykdomsvilkåret
+            }
+        }
+        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {

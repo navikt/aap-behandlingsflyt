@@ -491,6 +491,7 @@ class AvsluttetBehandlingTilStatistikk(
             Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON -> AvslagsårsakDTO.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> AvslagsårsakDTO.ORDINÆRKVOTE_BRUKT_OPP
             Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP -> AvslagsårsakDTO.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG -> AvslagsårsakDTO.ANNEN_FULL_YTELSE_AVSLAG
         }
 
 }

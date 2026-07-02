@@ -242,6 +242,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
             Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> null
             Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT -> null
             Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON -> null
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG -> AvslagsårsakDTO.ANNEN_FULL_YTELSE_AVSLAG
         }
     }
 
@@ -295,10 +296,14 @@ class ApiInternGatewayImpl : ApiInternGateway {
 }
 
 internal fun UnderveisperiodeDatadeling.tilDatadelingDTO() = UnderveisperiodeDatadelingDTO(
-    fom = fom,
-    tom = tom,
     meldepliktstatus = meldepliktstatus,
     arbeidsgrad = arbeidsgrad,
     overgrenseVerdi = overgrenseVerdi,
     timerArbeidet = timerArbeidet,
+    fom = periode.fom,
+    tom = periode.tom,
+    periode = periode.tilDatadelingDTO(),
+    meldeperiode = meldeperiode.tilDatadelingDTO()
 )
+
+internal fun Periode.tilDatadelingDTO() = PeriodeDTO(fom, tom)

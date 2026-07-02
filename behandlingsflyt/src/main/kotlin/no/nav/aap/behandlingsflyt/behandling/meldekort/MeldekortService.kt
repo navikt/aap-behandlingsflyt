@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -24,7 +25,6 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -100,44 +100,55 @@ class MeldekortService(
         )
     }
 
-    fun oppdaterMeldekort(
-        saksnummer: Saksnummer,
-        meldeperiode: Periode,
-        meldedato: LocalDate,
-        meldekort: MeldekortV0,
-        bruker: Bruker,
-    ): OppdatertMeldekort {
-        val sak = sakRepository.hent(saksnummer)
+    fun harRegistrertTimerForMeldeperiode(saksnummer: Saksnummer, meldeperiode: Periode): Boolean {
+        return hentMeldeperioderMedMeldekort(saksnummer)
+            .meldeperioderMedMeldekort
+            .filter { it.meldeperiode == meldeperiode }
+            .any { it.meldekort?.dager?.isNotEmpty() == true }
+    }
+
+    fun oppdaterMeldekort(oppdaterMeldekort: OppdaterMeldekort): OppdatertMeldekort {
+        val sak = sakRepository.hent(oppdaterMeldekort.saksnummer)
         val behandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
             ?: throw UgyldigForespørselException("Kan ikke opprette meldekort når ingen vedtak eksisterer i saken")
-
-        validerMeldeperiodeOgMeldedato(behandling, meldedato, meldeperiode)
-
         val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandling.id)
 
-        val journalpostId = journalføringService.journalfør(
-            sak = sak,
-            meldeperiode = meldeperiode,
-            meldekort = meldekort,
-            oppdatertAv = bruker,
-            enhet = ansattInfoService.hentAnsattEnhet(bruker.ident),
-            tidspunkt = Instant.now(clock),
-            meldeDato = meldedato,
-            korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(meldeperiode) != null
-        )
+        valider(behandling, meldekortGrunnlag, oppdaterMeldekort)
 
-        val mottattTidspunkt = utledetMottattTidspunkt(
-            meldedato,
-            meldekortGrunnlag?.nyesteForMeldeperiodePåDato(meldeperiode, meldedato)
-        )
+        val meldekort = oppdaterMeldekort.tilMeldekort()
 
-        // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
-        mottattHendelseService.registrerMottattHendelse(
-            tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)
-        )
+        try {
+            val journalpostId = journalføringService.journalfør(
+                sak = sak,
+                meldeperiode = oppdaterMeldekort.meldeperiode,
+                meldekort = meldekort,
+                oppdatertAv = oppdaterMeldekort.bruker,
+                enhet = ansattInfoService.hentAnsattEnhet(oppdaterMeldekort.bruker.ident),
+                tidspunkt = Instant.now(clock),
+                meldeDato = oppdaterMeldekort.meldedato,
+                korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(oppdaterMeldekort.meldeperiode) != null
+            )
 
-        logger.info("Saksbehandler har opprettet/korrigert meldekort for saksnummer $saksnummer")
-        return OppdatertMeldekort(journalpostId)
+            val mottattTidspunkt = utledetMottattTidspunkt(
+                oppdaterMeldekort.meldedato,
+                meldekortGrunnlag?.nyesteForMeldeperiodePåDato(oppdaterMeldekort.meldeperiode, oppdaterMeldekort.meldedato)
+            )
+
+            // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
+            mottattHendelseService.registrerMottattHendelse(
+                tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)
+            )
+
+            logger.info("Saksbehandler har opprettet/korrigert meldekort for saksnummer ${oppdaterMeldekort.saksnummer}")
+            return OppdatertMeldekort(journalpostId)
+
+        } catch (e: Exception) {
+            logger.error(
+                "En feil oppstod ved oppdatering av meldekort, dette må undersøkes da journalføring kan " +
+                        "være fullført, mens igangsetting av behandlingen ikke har startet", e
+            )
+            throw e
+        }
     }
 
     fun hentProsesseringStatus(saksnummer: Saksnummer): MeldekortProsesseringResponse {
@@ -147,13 +158,16 @@ class MeldekortService(
         )
     }
 
-    private fun validerMeldeperiodeOgMeldedato(
+    private fun valider(
         behandling: BehandlingMedVedtak,
-        meldedato: LocalDate,
-        meldeperiode: Periode,
+        meldekortGrunnlag: MeldekortGrunnlag?,
+        oppdaterMeldekort: OppdaterMeldekort,
     ) {
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
             ?: throw UgyldigForespørselException("Fant ikke underveisgrunnlag for behandlingen")
+
+        val meldedato = oppdaterMeldekort.meldedato
+        val meldeperiode = oppdaterMeldekort.meldeperiode
 
         if (meldedato <= meldeperiode.tom) {
             throw UgyldigForespørselException(
@@ -165,6 +179,18 @@ class MeldekortService(
 
         if (!aktuelleMeldeperioder.contains(meldeperiode)) {
             throw UgyldigForespørselException("Angitt meldeperiode $meldeperiode er ikke gyldig for vedtaket")
+        }
+
+        val nyesteMeldekort = meldekortGrunnlag?.nyesteForMeldeperiode(meldeperiode)
+
+        if (nyesteMeldekort != null && oppdaterMeldekort.meldekortMedTimerRegistrert()) {
+            val mottattDatoNyesteMeldekort = nyesteMeldekort.mottattTidspunkt.toLocalDate()
+            if (meldedato < mottattDatoNyesteMeldekort) {
+                throw UgyldigForespørselException(
+                    "Du har satt meldedato $meldedato som er før siste mottatte meldekort for perioden " +
+                            "som ble mottatt $mottattDatoNyesteMeldekort. Dette er ikke gyldig da det kun " +
+                            "er timene i det sist leverte meldekortet som er gjeldende.")
+            }
         }
     }
 
@@ -200,7 +226,7 @@ class MeldekortService(
     ): Map<Periode, OppfyltMeldeperiodeMedMeldepliktStatus> {
         return underveisGrunnlag.perioder
             .filter { it.utfall == Utfall.OPPFYLT && it.periode.fom < LocalDate.now(clock) }
-            .groupBy({ it.meldePeriode })
+            .groupBy { it.meldePeriode }
             .mapValues { (_, underveisPerioder) ->
                 val periodeMedMeldepliktStatus =
                     Tidslinje(underveisPerioder.map { Segment(it.periode, it.meldepliktStatus) })

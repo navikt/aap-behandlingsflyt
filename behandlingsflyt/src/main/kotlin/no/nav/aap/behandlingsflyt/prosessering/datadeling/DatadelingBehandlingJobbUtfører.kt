@@ -61,9 +61,8 @@ class DatadelingBehandlingJobbUtfører(
             return
         }
 
-        val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
-
-        val underveistidslinje = underveis?.somTidslinje().orEmpty()
+        val underveistidslinje = underveisRepository.hentHvisEksisterer(behandling.id)?.somTidslinje().orEmpty()
+            .filter { it.verdi.rettighetsType != null }
 
         val vilkårsresultatTidslinje = underveistidslinje
             .mapNotNull { it.rettighetsType }.komprimer()
@@ -100,7 +99,7 @@ class DatadelingBehandlingJobbUtfører(
             muligMaksdato = maksdato,
             stansOpphørGrunnlag = stansOpphør,
             perioderMedFritakMeldeplikt = perioderMedFritakMeldeplikt,
-            underveisperioder = underveis?.perioder.orEmpty().map { it.tilDatadeling() },
+            underveisperioder = underveistidslinje.map { it.tilDatadeling() }.komprimer().segmenter().map { it.verdi },
             arenavedtak = utledArenaVedtakstype.utledVedtak(sak),
         )
     }
@@ -135,10 +134,10 @@ class DatadelingBehandlingJobbUtfører(
 }
 
 internal fun Underveisperiode.tilDatadeling() = UnderveisperiodeDatadeling(
-    fom = periode.fom,
-    tom = periode.tom,
+    periode = periode,
     meldepliktstatus = meldepliktStatus?.name,
     arbeidsgrad = arbeidsgradering.andelArbeid.prosentverdi(),
     overgrenseVerdi = arbeidsgradering.andelArbeid.prosentverdi() > grenseverdi.prosentverdi(),
     timerArbeidet = arbeidsgradering.totaltAntallTimer.antallTimer,
+    meldeperiode = meldePeriode,
 )

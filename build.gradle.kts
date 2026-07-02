@@ -64,11 +64,11 @@ for (taskName in listOf<String>("clean", "build", "check")) {
 }
 
 // Merge Detekt reports from all subprojects
-val detektReportMergeSarif by tasks.registering(dev.detekt.gradle.report.ReportMergeTask::class) {
+val detektReportMergeSarif = tasks.register<dev.detekt.gradle.report.ReportMergeTask>("detektReportMergeSarif") {
     output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.sarif"))
 }
 
-val detektProjectBaseline by tasks.registering(dev.detekt.gradle.DetektCreateBaselineTask::class) {
+val detektProjectBaseline = tasks.register<dev.detekt.gradle.DetektCreateBaselineTask>("detektProjectBaseline") {
     description = "Overrides current baseline for all modules."
     buildUponDefaultConfig.set(true)
     ignoreFailures.set(true)

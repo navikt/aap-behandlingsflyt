@@ -55,7 +55,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             barnetillegg: Beløp,
             barnepensjonDagsats: Beløp,
             gradering: Prosent,
-        ) = maks(
+        ) = maxOf(
             Beløp(0),
             Beløp(
                 dagsats.multiplisert(gradering)
