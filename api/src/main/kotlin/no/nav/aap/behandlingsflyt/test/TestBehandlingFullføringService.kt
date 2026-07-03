@@ -11,8 +11,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -77,7 +77,6 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.time.Instant
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -267,7 +266,8 @@ class TestBehandlingFullføringService(
                     journalpostId = it.referanse.asJournalpostId,
                     begrunnelse = "Tilleggsopplysning",
                 )
-            }.toSet())
+            }.toSet()
+        )
 
         Definisjon.AVKLAR_STUDENT -> AvklarStudentLøsning(
             løsningerForPerioder = listOf(
@@ -351,7 +351,6 @@ class TestBehandlingFullføringService(
                         true,
                         "begrunnelse",
                         emptyList(),
-                        markeringer = emptyList()
                     )
                 }
         )
@@ -496,7 +495,6 @@ class TestBehandlingFullføringService(
                         true,
                         "begrunnelse",
                         emptyList(),
-                        markeringer = emptyList()
                     )
                 }
         )
