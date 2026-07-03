@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.*
 
 class PersonRepositoryImpl(private val connection: DBConnection) : PersonRepository {
@@ -72,7 +72,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             """.trimIndent()
             ) {
                 setParams {
-                    setLocalDateTime(1, LocalDateTime.now())
+                    setInstant(1, Instant.now())
                     setLong(2, person.id.id)
                 }
             }
@@ -91,7 +91,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             """.trimIndent()
             ) {
                 setParams {
-                    setLocalDateTime(1, LocalDateTime.now())
+                    setInstant(1, Instant.now())
                     setLong(2, person.id.id)
                     setString(3, nyPrimær.identifikator)
                 }
@@ -118,8 +118,8 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
                     setString(1, ident.identifikator)
                     setBoolean(2, ident.aktivIdent)
                     setLong(3, person.id.id)
-                    setLocalDateTime(4, LocalDateTime.now())
-                    setLocalDateTime(5, LocalDateTime.now())
+                    setInstant(4, Instant.now())
+                    setInstant(5, Instant.now())
                 }
             }
         }
@@ -193,8 +193,8 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
                 setString(1, ident.identifikator)
                 setBoolean(2, ident.aktivIdent)
                 setLong(3, personId)
-                setLocalDateTime(4, LocalDateTime.now())
-                setLocalDateTime(5, LocalDateTime.now())
+                setInstant(4, Instant.now())
+                setInstant(5, Instant.now())
             }
         }
 
