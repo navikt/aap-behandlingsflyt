@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
+import java.time.LocalDateTime
 import java.util.*
 
 class PersonRepositoryImpl(private val connection: DBConnection) : PersonRepository {
@@ -64,11 +65,15 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         if (oppdaterteIdenter.any { ident -> ident.aktivIdent }) {
             connection.execute(
                 """
-                UPDATE person_ident SET primaer = false WHERE person_id = ?
+                UPDATE person_ident
+                SET primaer = false,
+                    oppdatert_tid = ?
+                WHERE person_id = ?
             """.trimIndent()
             ) {
                 setParams {
-                    setLong(1, person.id.id)
+                    setLocalDateTime(1, LocalDateTime.now())
+                    setLong(2, person.id.id)
                 }
             }
         }
@@ -79,12 +84,16 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             val nyPrimær = oppdaterteIdenter.single { it.aktivIdent }
             connection.execute(
                 """
-                UPDATE person_ident SET primaer = true WHERE person_id = ? and ident = ?
+                UPDATE person_ident
+                SET primaer = true,
+                    oppdatert_tid = ?
+                WHERE person_id = ? AND ident = ?
             """.trimIndent()
             ) {
                 setParams {
-                    setLong(1, person.id.id)
-                    setString(2, nyPrimær.identifikator)
+                    setLocalDateTime(1, LocalDateTime.now())
+                    setLong(2, person.id.id)
+                    setString(3, nyPrimær.identifikator)
                 }
             }
         }
@@ -99,12 +108,18 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         }
         if (nyeIdenter.isNotEmpty()) {
             connection.executeBatch(
-                """INSERT INTO PERSON_IDENT (ident, primaer, person_id) VALUES (?, ?, ?)""", nyeIdenter
+                """
+                INSERT INTO PERSON_IDENT (ident, primaer, person_id, opprettet_tid, oppdatert_tid)
+                VALUES (?, ?, ?, ?, ?)
+                """.trimMargin(),
+                nyeIdenter
             ) {
                 setParams { ident ->
                     setString(1, ident.identifikator)
                     setBoolean(2, ident.aktivIdent)
                     setLong(3, person.id.id)
+                    setLocalDateTime(4, LocalDateTime.now())
+                    setLocalDateTime(5, LocalDateTime.now())
                 }
             }
         }
@@ -171,12 +186,15 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             }
         }
         connection.executeBatch(
-            """INSERT INTO PERSON_IDENT (ident, primaer, person_id) VALUES (?, ?, ?)""", identer
+            """INSERT INTO PERSON_IDENT (ident, primaer, person_id, opprettet_tid, oppdatert_tid) VALUES (?, ?, ?, ?, ?)""",
+            identer
         ) {
             setParams { ident ->
                 setString(1, ident.identifikator)
                 setBoolean(2, ident.aktivIdent)
                 setLong(3, personId)
+                setLocalDateTime(4, LocalDateTime.now())
+                setLocalDateTime(5, LocalDateTime.now())
             }
         }
 
