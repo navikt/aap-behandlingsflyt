@@ -344,7 +344,7 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering> = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon,
