@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -68,9 +69,9 @@ class AvklaringsbehovValidering(
                     .filter { !it.verdi }
             if (kravMedUgyldigLøsning.isNotEmpty()) {
                 throw UgyldigForespørselException(
-                    "Mangler vurderinger for krav i periodene ${
-                        kravMedUgyldigLøsning.map { it.periode }.toHumanReadable()
-                    }"
+                    "Mangler vurderinger på eller etter dato ${
+                        kravMedUgyldigLøsning.map { it.periode.fom.tilNorskFormat() }.joinToString(",")
+                    } på grunn av krav"
                 )
             }
         }
