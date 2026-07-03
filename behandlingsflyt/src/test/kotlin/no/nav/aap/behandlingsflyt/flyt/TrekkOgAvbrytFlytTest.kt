@@ -52,7 +52,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden"))
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).isEmpty()
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                assertThat(this.behandling.status().erAvsluttet()).isTrue()
                 dataSource.transaction {
                     assertThat(VedtakRepositoryImpl(it).hent(this.behandling.id)).isNull()
                 }
@@ -93,7 +93,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden"))
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).isEmpty()
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                assertThat(this.behandling.status().erAvsluttet()).isTrue()
             }
     }
 
