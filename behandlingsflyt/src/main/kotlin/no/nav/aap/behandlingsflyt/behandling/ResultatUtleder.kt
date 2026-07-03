@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -22,19 +23,21 @@ enum class Resultat {
 
 class ResultatUtleder(
     private val behandlingRepository: BehandlingRepository,
+    private val behandlingService: BehandlingService,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val underveisService: UnderveisService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         underveisService = UnderveisService(repositoryProvider, gatewayProvider),
     )
 
     fun utledResultat(behandling: Behandling): Resultat? {
-        return when (behandling.typeBehandling()) {
+        return when (behandlingService.utledFaktiskBehandlingstype(behandling)) {
             TypeBehandling.Førstegangsbehandling ->
                 utledResultatFørstegangsBehandling(behandling)
 
@@ -81,7 +84,7 @@ class ResultatUtleder(
 
     @WithSpan
     fun utledResultatFørstegangsBehandling(behandling: Behandling): Resultat {
-        require(behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+        require(behandlingService.utledFaktiskBehandlingstype(behandling) == TypeBehandling.Førstegangsbehandling) {
             "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
         }
 
@@ -95,7 +98,6 @@ class ResultatUtleder(
     }
 
     fun erRentAvslag(behandling: Behandling): Boolean {
-
         if (trukketSøknadService.søknadErTrukket(behandling.id)) {
             return false
         }
