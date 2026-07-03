@@ -151,8 +151,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         ))
     }
 
-    private var id: Long = 0
-
     private fun underveisperiode(
         periode: String,
         meldeperiode: String,
