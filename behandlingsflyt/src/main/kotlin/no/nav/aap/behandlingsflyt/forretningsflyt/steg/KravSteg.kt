@@ -61,8 +61,7 @@ class KravSteg(
         if (unleashGateway.isEnabled(BehandlingsflytFeature.KravAutomatiskVurdering)
             && !erManuellVurderingAktivertForSak
         ) {
-            val behandlingstype = behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId)
-            vurderHelautomatisk(kontekst, behandlingstype)
+            vurderHelautomatisk(kontekst)
         }
 
         if (erManuellVurderingAktivertForSak) {
@@ -152,7 +151,9 @@ class KravSteg(
         }
     }
 
-    private fun vurderHelautomatisk(kontekst: FlytKontekstMedPerioder, behandlingstype: TypeBehandling) {
+    private fun vurderHelautomatisk(kontekst: FlytKontekstMedPerioder) {
+        val behandlingstype = behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId)
+        
         val søknaderMottattIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
                 .sortedBy { it.mottattTidspunkt }
