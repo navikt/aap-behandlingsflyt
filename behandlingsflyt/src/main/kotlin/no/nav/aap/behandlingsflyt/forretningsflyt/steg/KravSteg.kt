@@ -53,7 +53,9 @@ class KravSteg(
             return Fullført
         }
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.KravAutomatiskVurdering)) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KravAutomatiskVurdering)
+            && unleashGateway.isDisabled(BehandlingsflytFeature.KravManuellVurdering)
+        ) {
             val behandlingstype = behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId)
             vurderHelautomatisk(kontekst, behandlingstype)
         }
