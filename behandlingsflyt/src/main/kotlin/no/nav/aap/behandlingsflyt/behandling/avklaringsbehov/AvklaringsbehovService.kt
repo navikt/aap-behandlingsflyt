@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVBRUTT
@@ -13,13 +14,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -38,7 +37,8 @@ class AvklaringsbehovService(
     private val trukketSøknadService: TrukketSøknadService,
     private val kravRepository: KravRepository,
     private val sakRepository: SakRepository,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val avklaringsbehovValidering: AvklaringsbehovValidering
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
@@ -48,7 +48,8 @@ class AvklaringsbehovService(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         kravRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
+        unleashGateway = gatewayProvider.provide(),
+        avklaringsbehovValidering = AvklaringsbehovValidering(repositoryProvider, gatewayProvider),
     )
 
     fun oppdaterAvklaringsbehov(
@@ -257,6 +258,7 @@ class AvklaringsbehovService(
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
     ) {
         val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
@@ -305,11 +307,18 @@ class AvklaringsbehovService(
                         if (nårVurderingErGyldigTidslinje == null) {
                             null
                         } else {
-                            nårVurderingErRelevant(kontekst)
+                            Tidslinje.map3(
+                                nårVurderingErRelevant(kontekst),
+                                nårVurderingErGyldigTidslinje,
+                                avklaringsbehovValidering.nårKravHarLøsning(
+                                    definisjon,
+                                    gjeldendeVurderinger(),
+                                    kontekst.tilFlytKontekst()
+                                )
+                            ) { erRelevant, erGyldig, dekkerKrav ->
+                                erRelevant != true || (erGyldig == true && dekkerKrav != false)
+                            }
                                 .begrensetTil(kontekst.rettighetsperiode)
-                                .leftJoin(nårVurderingErGyldigTidslinje) { erRelevant, erGyldig ->
-                                    !erRelevant || erGyldig == true
-                                }
                                 .komprimer()
                                 .filter { !it.verdi }
                                 .perioder()
@@ -334,7 +343,8 @@ class AvklaringsbehovService(
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
-        tilbakestillGrunnlag: () -> Unit
+        tilbakestillGrunnlag: () -> Unit,
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon,
@@ -343,7 +353,8 @@ class AvklaringsbehovService(
             kontekst,
             perioderSomIkkeErTilstrekkeligVurdert,
             { null },
-            tilbakestillGrunnlag
+            tilbakestillGrunnlag,
+            gjeldendeVurderinger
         )
     }
 
@@ -371,7 +382,8 @@ class AvklaringsbehovService(
          */
         nårVurderingErGyldig: () -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        tilbakestillGrunnlag: () -> Unit
+        tilbakestillGrunnlag: () -> Unit,
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -380,7 +392,8 @@ class AvklaringsbehovService(
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { null },
             nårVurderingErGyldig = nårVurderingErGyldig,
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            gjeldendeVurderinger = gjeldendeVurderinger
         )
     }
 

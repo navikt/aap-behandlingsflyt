@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -17,14 +19,14 @@ import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import kotlin.collections.orEmpty
 
 class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
-    private val behandlingId: BehandlingId
+    private val behandlingId: BehandlingId,
 ) : AvklaringsbehoveneDecorator {
     private val log = LoggerFactory.getLogger(javaClass)
     private val avklaringsbehovene: List<Avklaringsbehov>
@@ -294,47 +296,6 @@ class Avklaringsbehovene(
             avklaringsbehov = avklaringsbehov,
             eksisterendeAvklaringsbehov = avklaringsbehovene
         )
-    }
-
-    fun validerPerioder(
-        løsning: PeriodisertAvklaringsbehovLøsning<*>,
-        kontekst: FlytKontekst,
-        repositoryProvider: RepositoryProvider
-    ) {
-        if (løsning.definisjon().erFrivillig()
-            && løsning.løsningerForPerioder.isEmpty()
-        ) {
-            return
-        }
-
-        val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
-            .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
-            .map { true }.komprimer()
-
-        val perioderDekketAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
-            løsning.hentLagredeLøstePerioder(it, repositoryProvider)
-                .map { true }.komprimer()
-        }.orEmpty()
-
-        val perioderDekket = perioderDekketAvTidligereVurderinger.kombiner(
-            perioderDekketAvLøsning,
-            StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        ).komprimer()
-
-        val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
-        if (behovForDefinisjon != null) {
-            val perioderSomSkalLøses =
-                behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
-
-            val perioderSomManglerLøsning =
-                perioderSomSkalLøses.leftJoin(perioderDekket) { _, periodeILøsning ->
-                    periodeILøsning != null
-                }.filter { !it.verdi }.perioder().toSet()
-
-            if (perioderSomManglerLøsning.isNotEmpty()) {
-                throw UgyldigForespørselException("Du mangler vurdering for ${perioderSomManglerLøsning.toHumanReadable()}")
-            }
-        }
     }
 
     fun validerPlassering(behandling: Behandling) {

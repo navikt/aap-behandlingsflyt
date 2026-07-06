@@ -95,7 +95,14 @@ object LokalUnleash : FakeUnleashBase(
     }
 
     override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = true
-}
+
+    override fun erPåskruddForSak(
+        featureToggle: FeatureToggle,
+        variantName: String,
+        saksnummerResolver: () -> Saksnummer
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }}
 
 /** Unleash for bruk i tester - for å teste "prodlikt", hvor alle toggles er skrudd av
  * For det meste brukes denne i integrasjonstester og flyt-tester for å sjekke at ting som

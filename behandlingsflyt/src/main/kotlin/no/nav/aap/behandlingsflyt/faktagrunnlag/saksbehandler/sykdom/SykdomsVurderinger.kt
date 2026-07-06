@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -19,10 +20,13 @@ data class Sykdomsvurdering(
     val yrkesskadeBegrunnelse: String?,
     val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val diagnose: Diagnose?,
-    val vurdertIBehandling: BehandlingId,
-    val opprettet: Instant,
     val vurdertAv: Bruker,
-) {
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+) : PeriodisertVurdering {
+    override val fom: LocalDate = vurderingenGjelderFra
+    override val tom: LocalDate? = vurderingenGjelderTil
+
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
             return false
