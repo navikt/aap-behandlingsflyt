@@ -183,7 +183,14 @@ class BrevUtlederService(
                     }
 
                     Resultat.AVSLAG -> {
-                        brevBehovAvslag(behandling)
+                        val avslagBrevBehov = brevBehovAvslag(behandling)
+                        log.info(
+                            "Utledet brevbehov for AVSLAG i behandling {}: klasse={}, typeBrev={}",
+                            behandling.id,
+                            avslagBrevBehov::class.simpleName,
+                            avslagBrevBehov.typeBrev
+                        )
+                        avslagBrevBehov
                     }
 
                     Resultat.TRUKKET -> null
