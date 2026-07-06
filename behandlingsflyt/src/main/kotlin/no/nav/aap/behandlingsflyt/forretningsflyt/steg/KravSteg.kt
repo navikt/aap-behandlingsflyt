@@ -158,7 +158,7 @@ class KravSteg(
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
                 .sortedBy { it.mottattTidspunkt }
         val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
-
+        
         // Dersom vi har overstyrt rettighetsperioden i denne behandlingen, 
         // beholder vi denne som nytt krav uavhengig av mottattidspunkt for søknad.
         val overstyrteKravIDenneBehandlingen = kravGrunnlag?.vurderinger
@@ -179,8 +179,13 @@ class KravSteg(
                 }
             }
 
-        kravRepository.lagre(kontekst.behandlingId, overstyrteKravIDenneBehandlingen + vurderinger)
+        val vedtatteVurderinger =
+            kontekst.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
+        val resultat = vedtatteVurderinger + overstyrteKravIDenneBehandlingen + vurderinger
+        if (resultat.isNotEmpty()) {
+            kravRepository.lagre(kontekst.behandlingId, resultat)
+        }
     }
 
     private fun nyttKrav(behandlingId: BehandlingId, søknad: MottattDokument): NyttKrav {
