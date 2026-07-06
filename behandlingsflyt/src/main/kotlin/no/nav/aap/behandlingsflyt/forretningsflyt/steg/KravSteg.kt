@@ -53,14 +53,19 @@ class KravSteg(
             return Fullført
         }
 
+        val erManuellVurderingAktivertForSak = unleashGateway.erPåskruddForSak(
+            BehandlingsflytFeature.KravManuellVurdering,
+            "saksnumre"
+        ) { sakRepository.hent(kontekst.sakId).saksnummer }
+
         if (unleashGateway.isEnabled(BehandlingsflytFeature.KravAutomatiskVurdering)
-            && unleashGateway.isDisabled(BehandlingsflytFeature.KravManuellVurdering)
+            && !erManuellVurderingAktivertForSak
         ) {
             val behandlingstype = behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId)
             vurderHelautomatisk(kontekst, behandlingstype)
         }
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.KravManuellVurdering)) {
+        if (erManuellVurderingAktivertForSak) {
             when (kontekst.behandlingType) {
                 TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                     when (kontekst.vurderingType) {
