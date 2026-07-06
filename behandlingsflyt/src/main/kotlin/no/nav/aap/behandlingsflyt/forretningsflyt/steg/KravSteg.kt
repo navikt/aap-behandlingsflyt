@@ -42,44 +42,48 @@ class KravSteg(
      * For "resten": Alle søknader er ikke et eget "krav". Opphør/stans og gjeninntreden kan trolig holdes unna for backfill
      */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (!unleashGateway.erPåskruddForSak(
-                BehandlingsflytFeature.KravSteg,
-                "saksnumre"
-            ) { sakRepository.hent(kontekst.sakId).saksnummer }
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.KravSteg)
         ) {
             return Fullført
         }
+        
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KravAutomatiskVurdering)) {
+            /** TODO: Implementer nedlagring i henhold til backfilling-logikk.
+             * Den automatiske vurderingen under kan kun gjøres når manuell vurdering skal skrus på
+             */
+        }
 
-        when (kontekst.behandlingType) {
-            TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
-                when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KravManuellVurdering)) {
+            when (kontekst.behandlingType) {
+                TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
+                    when (kontekst.vurderingType) {
+                        VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+                            vurderAutomatiskHvisMulig(kontekst)
 
-                        vurderAutomatiskHvisMulig(kontekst)
+                            avklaringsbehovService.oppdaterAvklaringsbehov(
+                                definisjon = Definisjon.VURDER_KRAV,
+                                vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
+                                erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst) },
+                                tilbakestillGrunnlag = { },
+                                kontekst = kontekst
+                            )
+                        }
 
-                        avklaringsbehovService.oppdaterAvklaringsbehov(
-                            definisjon = Definisjon.VURDER_KRAV,
-                            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
-                            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst) },
-                            tilbakestillGrunnlag = { },
-                            kontekst = kontekst
-                        )
-                    }
-
-                    VurderingType.OVERGANG_UFORE_STANS,
-                    VurderingType.MELDEKORT,
-                    VurderingType.UTVID_VEDTAKSLENGDE,
-                    VurderingType.MIGRER_RETTIGHETSPERIODE,
-                    VurderingType.AUTOMATISK_BREV,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                    VurderingType.G_REGULERING,
-                    VurderingType.IKKE_RELEVANT -> {
+                        VurderingType.OVERGANG_UFORE_STANS,
+                        VurderingType.MELDEKORT,
+                        VurderingType.UTVID_VEDTAKSLENGDE,
+                        VurderingType.MIGRER_RETTIGHETSPERIODE,
+                        VurderingType.AUTOMATISK_BREV,
+                        VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                        VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                        VurderingType.G_REGULERING,
+                        VurderingType.IKKE_RELEVANT -> {
+                        }
                     }
                 }
-            }
 
-            else -> {}
+                else -> {}
+            }
         }
 
         return Fullført

@@ -76,8 +76,12 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
+        // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
+        BehandlingsflytFeature.KravManuellVurdering to true,
+        BehandlingsflytFeature.KravAutomatiskVurdering to true,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
+        // ------
         BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true,
         BehandlingsflytFeature.ManuellInntektDelvisUfore to true,
         BehandlingsflytFeature.Avslag11_27 to true,
