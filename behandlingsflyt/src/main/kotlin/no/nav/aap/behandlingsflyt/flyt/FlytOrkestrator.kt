@@ -346,6 +346,10 @@ class FlytOrkestrator(
         behandlingFlyt: BehandlingFlyt,
         avklaringsbehovene: Avklaringsbehovene
     ) {
+        if (behandling.status().erAvsluttet()) {
+            throw IllegalStateException("Prøvde å tilbakeføre avsluttet eller iverksatt behandling")
+        }
+        
         if (behandlingFlyt.erTom()) {
             return
         }

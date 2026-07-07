@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
@@ -177,12 +178,12 @@ fun NormalOpenAPIRoute.behandlingApi(
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandling = behandling(repositoryProvider.provide(), req)
-                    if (behandling.status().erAvsluttet()) {
+                    if (behandling.status() == Status.AVSLUTTET) {
                         return@transaction
                     }
                     val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                     val lås = taSkriveLåsRepository.lås(req.referanse)
-                    if (!behandling.status().erAvsluttet()
+                    if (behandling.status() != Status.AVSLUTTET
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                     ) {
                         ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(
