@@ -134,10 +134,10 @@ class FlytOrkestrator(
         if (avklaringsbehovene.erSattPåVent()) {
             val behovSomBleLøst = ventebehovEvaluererService.løsVentebehov(kontekst, avklaringsbehovene)
 
-            // Hvis fortsatt på vent
             if (!avklaringsbehovene.erSattPåVent()) {
                 // Behandlingen er tatt av vent og flyten flyttes tilbake til steget hvor den sto på vent
                 val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomBleLøst)
+
                 if (!tilbakeflyt.erTom()) {
                     log.info(
                         "Tilbakeført etter tatt av vent fra '${behandling.aktivtSteg()}' til '${
@@ -147,6 +147,12 @@ class FlytOrkestrator(
                 }
                 tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
             }
+        }
+
+        // Ikke sjekk informasjonskrav og tilbakeføring etter iverksetting 
+        if (behandling.status().erAvsluttet()) {
+            log.info("")
+            return
         }
 
         førTilbakeTilTidligsteÅpneAvklaringsbehov(avklaringsbehovene, behandlingFlyt, behandling, kontekst)
@@ -346,13 +352,15 @@ class FlytOrkestrator(
         behandlingFlyt: BehandlingFlyt,
         avklaringsbehovene: Avklaringsbehovene
     ) {
-        if (behandling.status().erAvsluttet()) {
-            throw IllegalStateException("Prøvde å tilbakeføre avsluttet eller iverksatt behandling")
-        }
-        
         if (behandlingFlyt.erTom()) {
             return
         }
+
+        if (behandling.status().erAvsluttet()) {
+            log.warn("Prøvde å tilbakeføre avsluttet eller iverksatt behandling")
+            return
+        }
+
 
         log.info(
             "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${
