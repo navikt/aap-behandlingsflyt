@@ -151,7 +151,6 @@ class FlytOrkestrator(
 
         // Ikke sjekk informasjonskrav og tilbakeføring etter iverksetting 
         if (behandling.status().erAvsluttet()) {
-            log.info("")
             return
         }
 
