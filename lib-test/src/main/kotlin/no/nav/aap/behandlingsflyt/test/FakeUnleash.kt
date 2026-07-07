@@ -98,7 +98,7 @@ object LokalUnleash : FakeUnleashBase(
         }
     }
 
-    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = true
+    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = isEnabled(featureToggle)
 
     override fun erPåskruddForSak(
         featureToggle: FeatureToggle,
