@@ -105,7 +105,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val flyt = behandling.flyt()
 
                     val skalViseKravSteg =
-                        unleashGateway.erPåskruddForSak(BehandlingsflytFeature.KravSteg, "saksnumre", sak.saksnummer)
+                        unleashGateway.isEnabled(BehandlingsflytFeature.KravSteg)
                     val skalViseAvslag11_27 = unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27)
 
                     val stegGrupper =
