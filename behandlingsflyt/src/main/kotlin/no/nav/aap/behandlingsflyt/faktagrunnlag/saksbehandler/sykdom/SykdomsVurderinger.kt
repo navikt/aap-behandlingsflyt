@@ -94,6 +94,24 @@ data class Sykdomsvurdering(
     }
 }
 
+fun List<Sykdomsvurdering>.erFunksjoneltLik(annen: List<Sykdomsvurdering>): Boolean {
+    if (this.size != annen.size) return false
+
+    // sammenlikner alle felter unntat vurdertAv og tidsstempel
+    return this.zip(annen).all { (første, andre) ->
+        første.begrunnelse == andre.begrunnelse &&
+                første.vurderingenGjelderFra == andre.vurderingenGjelderFra &&
+                første.vurderingenGjelderTil == andre.vurderingenGjelderTil &&
+                første.harSkadeSykdomEllerLyte == andre.harSkadeSykdomEllerLyte &&
+                første.erSkadeSykdomEllerLyteVesentligdel == andre.erSkadeSykdomEllerLyteVesentligdel &&
+                første.erNedsettelseIArbeidsevneMerEnnHalvparten == andre.erNedsettelseIArbeidsevneMerEnnHalvparten &&
+                første.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == andre.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense &&
+                første.yrkesskadeBegrunnelse == andre.yrkesskadeBegrunnelse &&
+                første.harNedsattArbeidsevne == andre.harNedsattArbeidsevne &&
+                første.diagnose == andre.diagnose
+    }
+}
+
 /**
  * @param relevanteSaker Liste over saksnumre til yrkesskadesaker fra register.
  */
