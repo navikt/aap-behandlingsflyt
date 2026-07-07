@@ -310,7 +310,7 @@ internal fun Application.server(
                 tidligereVurderingerApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                kravGrunnlagApi(fellesDataSource, repositoryRegistry)
+                kravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)

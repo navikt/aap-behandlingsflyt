@@ -11,9 +11,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -21,7 +25,8 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.kravGrunnlagApi(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
 ) {
     route("api/behandling/{referanse}/grunnlag/krav") {
         getGrunnlag<BehandlingReferanse, KravGrunnlagDto>(
@@ -54,9 +59,13 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                     mottattDokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
                         .filter { søknad -> nyeVurderinger.none { it.journalpostId == søknad.referanse.asJournalpostId } }
                         .map { it.tilSøknadUtenKravDto() }
+                
+                val saksnummer = repositoryProvider.provide<SakRepository>().hent(behandling.sakId).saksnummer 
+                val erManuellVurderingPåskrudd = gatewayProvider.provide<UnleashGateway>().erPåskruddForSak(
+                    BehandlingsflytFeature.KravManuellVurdering, "saksnummer", saksnummer)
 
                 KravGrunnlagDto(
-                    harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                    harTilgangTilÅSaksbehandle = kanSaksbehandle() && erManuellVurderingPåskrudd,
                     nyeVurderinger = nyeVurderinger,
                     vedtatteVurderinger = sisteVedtatte,
                     søknaderUtenKravvurdering = søknaderUtenKravvurdering,
