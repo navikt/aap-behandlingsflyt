@@ -183,14 +183,7 @@ class BrevUtlederService(
                     }
 
                     Resultat.AVSLAG -> {
-                        val avslagBrevBehov = brevBehovAvslag(behandling)
-                        log.info(
-                            "Utledet brevbehov for AVSLAG i behandling {}: klasse={}, typeBrev={}",
-                            behandling.id,
-                            avslagBrevBehov::class.simpleName,
-                            avslagBrevBehov.typeBrev
-                        )
-                        avslagBrevBehov
+                        brevBehovAvslag(behandling)
                     }
 
                     Resultat.TRUKKET -> null
@@ -445,8 +438,6 @@ class BrevUtlederService(
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
 
         if (Miljø.erDev() && avslagsårsak != null) {
-            log.info("Avslagsårsak på brev er ${avslagsårsak.name}")
-            log.info("Alle avslagsårsaker for behandling {}: {}", behandling.id, alleAvslagsårsaker)
             if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
                 return AvslagBrev.AvslagUnder17År9Måneder
             }
