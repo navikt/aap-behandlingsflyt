@@ -14,6 +14,8 @@ import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import java.math.BigDecimal
 
 data class UnderveisperiodeDto(
     val periode: Periode,
@@ -52,7 +54,10 @@ data class GraderingDto(
     constructor(arbeidsGradering: ArbeidsGradering, grenseverdi: Prosent) : this(
         gradering = arbeidsGradering.gradering.prosentverdi(),
         andelArbeid = arbeidsGradering.andelArbeid.prosentverdi(),
-        fastsattArbeidsevne = arbeidsGradering.fastsattArbeidsevne.prosentverdi(),
+        fastsattArbeidsevne = if (arbeidsGradering.andelArbeid == `0_PROSENT` && arbeidsGradering.totaltAntallTimer.antallTimer == BigDecimal.ZERO)
+            0
+        else
+            arbeidsGradering.fastsattArbeidsevne.prosentverdi(),
         grenseverdi = grenseverdi.prosentverdi()
     )
 }
@@ -63,7 +68,8 @@ data class RettighetsTypeDto(
 ) {
     constructor(rettighetsType: RettighetsType) : this(
         rettighetsType = rettighetsType,
-        hjemmel = rettighetsType.hjemmel)
+        hjemmel = rettighetsType.hjemmel
+    )
 }
 
 fun UnderveisGrunnlag.tilDto() = perioder.map { UnderveisperiodeDto(it) }
