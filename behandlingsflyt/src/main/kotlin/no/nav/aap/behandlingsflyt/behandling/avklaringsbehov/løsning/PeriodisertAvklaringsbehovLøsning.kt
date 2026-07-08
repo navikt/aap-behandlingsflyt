@@ -15,10 +15,10 @@ sealed interface PeriodisertAvklaringsbehovLøsning<LøsningPeriode : LøsningFo
      * vurderinger.
      *
      * Rekkefølgen på vurderingene har ingen betydning. Listen vil alltid behandles
-     * som om den var sortert på [fom].
+     * som om den var sortert på [LøsningForPeriode.fom].
      *
      * UgyldigForespørselException hvis to vurderinger overlapper i tid.  Når overlappet sjekkes, så vil
-     * implisitte [tom]-datoer anses å være dagen før neste [fom].
+     * implisitte [LøsningForPeriode.tom]-datoer anses å være dagen før neste [LøsningForPeriode.fom].
      **/
     val løsningerForPerioder: List<LøsningPeriode>
 

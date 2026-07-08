@@ -282,14 +282,14 @@ class AvklaringsbehovService(
                 }
             }
 
-            VurderingType.MELDEKORT -> Pair(false, emptySet())
-            VurderingType.AUTOMATISK_BREV -> Pair(false, emptySet())
-            VurderingType.UTVID_VEDTAKSLENGDE -> Pair(false, emptySet())
-            VurderingType.MIGRER_RETTIGHETSPERIODE -> Pair(false, emptySet())
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> Pair(false, emptySet())
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Pair(false, emptySet())
-            VurderingType.G_REGULERING -> Pair(false, emptySet())
-            VurderingType.OVERGANG_UFORE_STANS -> Pair(false, emptySet())
+            VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())
         }
 
