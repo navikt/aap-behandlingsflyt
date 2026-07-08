@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning.SamordningAnnenLovgivningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning.SamordningAnnenLovgivningVilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -42,14 +43,15 @@ class SykestipendSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         val sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId)
-        
+
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                                && studentGrunnlag.skalVurdereStudent()
+                                && (studentGrunnlag.skalVurdereStudent() || studentGrunnlag?.gjeldendeStudentvurderinger()
+                            ?.any { it.erOppfylt() } == true)
 
                     VurderingType.REVURDERING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
