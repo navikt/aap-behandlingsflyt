@@ -50,8 +50,8 @@ data class Vedtak11_18OpphørFullUfør(
 
 
 sealed class AvslagBrev(typeBrev: TypeBrev) : BrevBehov(typeBrev) {
-    object AvslagUnder17År9Måneder : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER)
-    object AvslagSykdomsvilkåret : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_5)
+    data class AvslagUnder17År9Måneder(val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER)
+    data class AvslagSykdomsvilkåret(val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_5)
     data class Avslag(val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak? = null) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG)
 }
 
