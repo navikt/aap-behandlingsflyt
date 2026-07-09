@@ -438,9 +438,9 @@ class BrevUtlederService(
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
 
         if (Miljø.erDev() && avslagsårsak != null) {
-            if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
+            /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
                 return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
-            }
+            }*/
             if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
