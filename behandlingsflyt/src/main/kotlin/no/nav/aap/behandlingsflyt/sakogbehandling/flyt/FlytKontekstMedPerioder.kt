@@ -47,4 +47,13 @@ data class FlytKontekstMedPerioder(
         val nyesteVurderingsbehov = vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
         return nyesteVurderingsbehov != null && (oppdatert == null || nyesteVurderingsbehov > oppdatert.tidOppdatert)
     }
+    
+    fun tilFlytKontekst(): FlytKontekst{
+        return FlytKontekst(
+            sakId = sakId,
+            behandlingId = behandlingId,
+            forrigeBehandlingId = forrigeBehandlingId,
+            behandlingType = behandlingType
+        )
+    }
 }

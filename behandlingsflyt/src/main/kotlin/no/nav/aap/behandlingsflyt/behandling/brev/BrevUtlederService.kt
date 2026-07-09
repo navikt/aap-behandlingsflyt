@@ -434,16 +434,18 @@ class BrevUtlederService(
 
     private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(hentAvslagsårsaker(behandling.id))
+        val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id)
+        val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
+
         if (Miljø.erDev() && avslagsårsak != null) {
             if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
-                return AvslagBrev.AvslagUnder17År9Måneder
+                return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
             }
             if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
             ) {
-                return AvslagBrev.AvslagSykdomsvilkåret
+                return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)

@@ -110,7 +110,9 @@ object FakeServers : AutoCloseable {
         System.setProperty("NAIS_APP_NAME", "behandlingsflyt")
 
         // Brev
-        System.setProperty("INTEGRASJON_BREV_URL", "http://localhost:${brev.port()}")
+        if (System.getenv("INTEGRASJON_BREV_URL").isNullOrEmpty()) {
+            System.setProperty("INTEGRASJON_BREV_URL", "http://localhost:${brev.port()}")
+        }
         System.setProperty("INTEGRASJON_BREV_SCOPE", "brev")
 
         // Pdl

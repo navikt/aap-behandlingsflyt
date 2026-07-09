@@ -5,6 +5,7 @@ import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -44,6 +45,7 @@ class BarnetilleggStegTest {
     private lateinit var trukketSøknadService: TrukketSøknadService
     private lateinit var kravRepository: KravRepository
     private lateinit var sakRepository: SakRepository
+    private lateinit var avklaringsbehovValidering: AvklaringsbehovValidering
     private val behandlingId = BehandlingId(Random().nextLong())
 
     @BeforeEach
@@ -69,6 +71,7 @@ class BarnetilleggStegTest {
         behandlingRepository = mockk()
         kravRepository = mockk()
         sakRepository = mockk()
+        avklaringsbehovValidering = mockk()
 
         avklaringsbehovService = AvklaringsbehovService(
             avbrytRevurderingService,
@@ -78,7 +81,8 @@ class BarnetilleggStegTest {
             trukketSøknadService,
             kravRepository,
             sakRepository,
-            AlleAvskruddUnleash
+            AlleAvskruddUnleash,
+            avklaringsbehovValidering
         )
         steg = BarnetilleggSteg(
             barnetilleggService = mockk(),

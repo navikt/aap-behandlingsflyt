@@ -28,6 +28,7 @@ class AvklaringsbehovOrkestrator(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val gatewayProvider: GatewayProvider,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
+    private val avklaringsbehovValidering: AvklaringsbehovValidering
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         repositoryProvider = repositoryProvider,
@@ -38,6 +39,7 @@ class AvklaringsbehovOrkestrator(
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         gatewayProvider = gatewayProvider,
         mellomlagretVurderingRepository = repositoryProvider.provide(),
+        avklaringsbehovValidering = AvklaringsbehovValidering(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -55,7 +57,7 @@ class AvklaringsbehovOrkestrator(
         log.info("Forsøker å løse avklaringsbehov[$definisjon] på behandling[${behandling.referanse}]")
         avklaringsbehovene.validerTilstand(behandling, definisjon)
         if (avklaringsbehovLøsning is PeriodisertAvklaringsbehovLøsning<*>) {
-            avklaringsbehovene.validerPerioder(avklaringsbehovLøsning, kontekst, repositoryProvider)
+            avklaringsbehovValidering.validerPerioder(bruker, avklaringsbehovene, avklaringsbehovLøsning, kontekst)
         }
 
         // løses det behov som fremtvinger tilbakehopp?

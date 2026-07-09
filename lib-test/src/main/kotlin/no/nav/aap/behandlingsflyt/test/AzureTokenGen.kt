@@ -39,6 +39,10 @@ class AzureTokenGen(private val audience: String) {
                     "roles", listOf(
                         "opprett-sak",
                         "hent-personinfo",
+                        "hent-brev",
+                        "bestill-brev",
+                        "hent-distribusjoninfo",
+                        "dokumentinnhenting-api",
                         "bestill-varselbrev",
                         "brev",
                         "pip-api",

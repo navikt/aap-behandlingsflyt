@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
-import no.nav.aap.behandlingsflyt.behandling.brev.AvslagBrev.Avslag
+import no.nav.aap.behandlingsflyt.behandling.brev.AvslagBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
@@ -442,7 +442,7 @@ class BrevGateway : BrevbestillingGateway {
                 }
             }
 
-            is Avslag -> {
+            is AvslagBrev -> {
                 buildSet {
                     if (brevBehov.sykdomsvurdering != null) {
                         add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
