@@ -54,6 +54,7 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                 val sisteVedtatte =
                     vedtattKravGrunnlag?.gjeldendeVurderinger().orEmpty().map { it.somDto() }
 
+                val søknaderISak =   mottattDokumentRepository.hentDokumenterAvType(behandling.sakId, InnsendingType.SØKNAD)
 
                 val søknaderUtenKravvurdering =
                     mottattDokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
@@ -69,6 +70,7 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                     nyeVurderinger = nyeVurderinger,
                     vedtatteVurderinger = sisteVedtatte,
                     søknaderUtenKravvurdering = søknaderUtenKravvurdering,
+                    søknader = søknaderISak.map { it.tilSøknadUtenKravDto() }
                 )
 
             }
