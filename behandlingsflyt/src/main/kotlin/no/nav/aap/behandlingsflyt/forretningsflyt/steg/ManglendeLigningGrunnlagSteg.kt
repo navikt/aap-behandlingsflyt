@@ -53,7 +53,8 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
-                    VurderingType.REVURDERING -> {
+                    VurderingType.REVURDERING,
+                    VurderingType.MIGERING_FRA_ARENA -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false

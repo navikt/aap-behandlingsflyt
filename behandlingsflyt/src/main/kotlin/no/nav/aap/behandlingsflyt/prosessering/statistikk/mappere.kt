@@ -76,6 +76,7 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING
         Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID
         Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE
+        Vurderingsbehov.MIGRERING_FRA_ARENA -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MIGRERING_FRA_ARENA
     }
 
 
@@ -122,5 +123,6 @@ fun ÅrsakTilOpprettelse?.tilKontrakt(): no.nav.aap.behandlingsflyt.kontrakt.beh
         ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
         ÅrsakTilOpprettelse.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.G_REGULERING
         ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
+        ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
         null -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UDEFINERT
     }

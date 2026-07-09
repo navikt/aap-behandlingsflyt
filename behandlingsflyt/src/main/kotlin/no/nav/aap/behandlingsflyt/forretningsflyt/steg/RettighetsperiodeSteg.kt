@@ -49,6 +49,7 @@ class RettighetsperiodeSteg(
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.MIGERING_FRA_ARENA,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
@@ -69,7 +70,8 @@ class RettighetsperiodeSteg(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA, -> {
                 if (tidligereVurderinger.muligMedRettTilAAP(
                         kontekst,
                         type()

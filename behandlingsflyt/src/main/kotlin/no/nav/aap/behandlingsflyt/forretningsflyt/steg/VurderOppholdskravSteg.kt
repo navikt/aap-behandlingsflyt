@@ -55,7 +55,8 @@ class VurderOppholdskravSteg private constructor(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
-            VurderingType.REVURDERING -> {
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Oppholdskravvilkår(vilkårsresultat).vurder(OppholdskravvilkårGrunnlag(
                     oppholdskravGrunnlag = oppholdskravGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId),

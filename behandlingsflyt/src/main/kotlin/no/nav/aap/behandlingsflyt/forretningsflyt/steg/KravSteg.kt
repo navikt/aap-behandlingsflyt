@@ -68,7 +68,7 @@ class KravSteg(
             when (kontekst.behandlingType) {
                 TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                     when (kontekst.vurderingType) {
-                        VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+                        VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGERING_FRA_ARENA -> {
                             vurderAutomatiskHvisMulig(kontekst)
 
                             avklaringsbehovService.oppdaterAvklaringsbehov(

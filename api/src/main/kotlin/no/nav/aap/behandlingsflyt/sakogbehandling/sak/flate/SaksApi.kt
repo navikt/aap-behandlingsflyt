@@ -5,12 +5,20 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArenaV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.medAzureTokenGen
@@ -21,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
@@ -42,6 +51,9 @@ import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("api.sak")
@@ -196,6 +208,72 @@ fun NormalOpenAPIRoute.saksApi(
                     )
                 }
                 respond(saken)
+            }
+        }
+
+        route("/migrerFraArena") {
+            authorizedPost<Unit, SaksinfoDTO, MigrerArenasakDTO>(
+                modules = arrayOf(TagModule(listOf(Tags.Sak))), routeConfig = AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = false,
+                    påkrevdRolle = Definisjon.VURDER_RETTIGHETSPERIODE.løsesAv
+                )
+            ) { _, dto ->
+                val eksisterendeSaker: List<Sak> = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val personOgSakService = PersonOgSakService(gatewayProvider, repositoryProvider)
+                    val ident = Ident(dto.ident)
+
+                    personOgSakService.finnSakerFor(ident)
+                }
+
+                // TODO: I tillegg til å verifisere dette må vi sjekke at Arenasaken er i riktig status og kan migreres
+
+                if (eksisterendeSaker.isNotEmpty()) {
+                    return@authorizedPost respondWithStatus(HttpStatusCode.BadRequest)
+                }
+
+                val nySak: SaksinfoDTO = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val personOgSakService = PersonOgSakService(gatewayProvider, repositoryProvider)
+                    val mottattHendelseService = MottattHendelseService(repositoryProvider)
+
+                    val ident = Ident(dto.ident)
+
+                    // TODO: Perioden må beregnes. Dette burde nok være kuttet til å matche med vedtakslengden i Arena ikke hardkodes til 1 år.
+                    val periode = Periode(
+                        LocalDate.now(), LocalDate.now().plusYears(1).minusDays(1)
+                    )
+
+                    val sak = personOgSakService.finnEllerOpprett(
+                        ident = ident,
+                        søknadsdato = LocalDate.now(),
+                    )
+
+                    // TODO: Vi må på en eller annen måte knytte saken mot arena-saken man migrerer fra!
+
+                    mottattHendelseService.registrerMottattHendelse(
+                        Innsending(
+                            saksnummer = sak.saksnummer,
+                            referanse = InnsendingReferanse(
+                                type = InnsendingReferanse.Type.MIGRERING_FRA_ARENA,
+                                verdi = UUID.randomUUID().toString()
+                            ),
+                            type = InnsendingType.MIGRERING_FRA_ARENA,
+                            mottattTidspunkt = LocalDateTime.now(),
+                            melding = MigreringFraArenaV0("Migrering av Arenasak ${dto.saksnummer}"),
+                        )
+                    )
+
+                    SaksinfoDTO(
+                        saksnummer = sak.saksnummer.toString(),
+                        opprettetTidspunkt = sak.opprettetTidspunkt,
+                        periode = periode,
+                        ident = sak.person.aktivIdent().identifikator
+                    )
+                }
+
+                respond(nySak)
             }
         }
 

@@ -56,7 +56,8 @@ class UnderveisSteg(
 
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA -> {
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN in kontekst.vurderingsbehovRelevanteForSteg
             }
             VurderingType.UTVID_VEDTAKSLENGDE,
