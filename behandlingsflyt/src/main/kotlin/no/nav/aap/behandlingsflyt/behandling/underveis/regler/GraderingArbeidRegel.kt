@@ -218,7 +218,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             requireNotNull(arbeid.grenseverdi) {
                 "grenseverdi for hvor mye medlemmet har lov til å jobbe må være satt for å kunne gradere basert på timer arbeidet"
             }
-            val fastsattArbeidsevne = arbeid.arbeidsevne ?: `0_PROSENT`
+            val fastsattArbeidsevne = if (arbeid.harLevertTimer()) arbeid.arbeidsevne ?: `0_PROSENT` else `0_PROSENT`
             val andelArbeidGittLeverteTimer = if (arbeid.harLevertTimer()) andelArbeid else `0_PROSENT`
             ArbeidsGradering(
                 totaltAntallTimer = arbeid.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
