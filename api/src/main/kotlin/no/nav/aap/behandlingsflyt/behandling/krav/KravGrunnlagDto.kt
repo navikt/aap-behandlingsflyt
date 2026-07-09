@@ -21,6 +21,7 @@ data class KravGrunnlagDto(
     val nyeVurderinger: List<KravVurderingDto>,
     val vedtatteVurderinger: List<KravVurderingDto>,
     val søknaderUtenKravvurdering: List<SøknadUtenKravDto>,
+    val søknader: List<SøknadUtenKravDto>,
 )
 
 sealed interface KravVurderingDto {
