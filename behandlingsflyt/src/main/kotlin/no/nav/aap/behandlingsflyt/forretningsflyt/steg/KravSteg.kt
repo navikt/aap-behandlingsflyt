@@ -55,7 +55,7 @@ class KravSteg(
 
         val erManuellVurderingAktivertForSak = unleashGateway.erPåskruddForSak(
             BehandlingsflytFeature.KravManuellVurdering,
-            "saksnumre"
+            "saksnummer"
         ) { sakRepository.hent(kontekst.sakId).saksnummer }
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.KravAutomatiskVurdering)
