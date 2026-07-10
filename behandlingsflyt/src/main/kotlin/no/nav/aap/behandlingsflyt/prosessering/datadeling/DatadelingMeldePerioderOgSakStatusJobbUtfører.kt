@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
@@ -11,6 +13,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
+import org.slf4j.LoggerFactory
 
 class DatadelingMeldePerioderOgSakStatusJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
@@ -19,16 +22,31 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val underveisRepository: UnderveisRepository,
     private val sakstatusDatadelingService: SakstatusDatadelingService,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
 ) : JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(input: JobbInput) {
         val referanse = input.payload<BehandlingReferanse>()
         val behandling = behandlingRepository.hent(referanse)
         val sak = sakRepository.hent(behandling.sakId)
         val personIdent = sak.person.aktivIdent()
 
+        if (trukketSøknadService.søknadErTrukket(behandling.id)) {
+            log.info("Søknad er trukket, sender tom liste til api-intern")
+            apiInternGateway.sendPerioder(personIdent.identifikator, emptyList())
+            return
+        } else if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
+            log.info("Revurdering er avbrutt, sender ingenting til api-intern.")
+            return
+        }
+
         val aktuellPeriode = underveisRepository.hentHvisEksisterer(behandling.id)?.somTidslinje()?.helePerioden()
             ?: sak.rettighetsperiodeEttÅrFraStartDato()
         val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandling.id, aktuellPeriode)
+
         apiInternGateway.sendPerioder(personIdent.identifikator, meldeperioder)
 
         val sakstatus = sakstatusDatadelingService.utledSakstatus(referanse)
@@ -51,6 +69,8 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
                 meldeperiodeRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 sakstatusDatadelingService = SakstatusDatadelingService(repositoryProvider, gatewayProvider),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
             )
         }
     }
