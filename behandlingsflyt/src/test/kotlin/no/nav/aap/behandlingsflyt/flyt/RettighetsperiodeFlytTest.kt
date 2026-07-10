@@ -311,8 +311,8 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
                     val kravGrunnlag = repositoryProvider.provide<KravRepository>().hentHvisEksisterer(behandling.id)
-                    assertThat(kravGrunnlag?.vurderinger).hasSize(2)
-                    assertThat(kravGrunnlag?.vurderinger?.first { it.vurdertAv != SYSTEMBRUKER })
+                    assertThat(kravGrunnlag?.vurderinger).hasSize(1)
+                    assertThat(kravGrunnlag?.vurderinger?.first())
                         .usingRecursiveComparison()
                         .ignoringFields("opprettet")
                         .ignoringFields("referanse")
