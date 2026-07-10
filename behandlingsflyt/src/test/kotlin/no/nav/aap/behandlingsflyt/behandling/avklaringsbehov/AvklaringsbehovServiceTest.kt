@@ -287,7 +287,7 @@ class AvklaringsbehovServiceTest {
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal avbryte avklaringsbehov når vurdering ikke lenger er relevant`() {
         val sak = opprettInMemorySak()
-        
+
         val behandlingId = BehandlingId(2003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -768,6 +768,42 @@ class AvklaringsbehovServiceTest {
         avklaringsbehovene.hentBehovForDefinisjon(AVKLAR_BISTANDSBEHOV).also {
             assertThat(it?.status()).isEqualTo(Status.OPPRETTET)
         }
+    }
+
+    @Test
+    fun `skal kunne tvinge avklaringsbehov for frivillige behov`() {
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(2008)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.FASTSETT_ARBEIDSEVNE
+
+        val startDato = LocalDate.of(2024, 6, 1)
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje.empty()
+        }
+        val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
+
+        val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.FASTSETT_ARBEIDSEVNE)
+        }
+
+        avklaringsbehovService.oppdaterFrivilligAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.FASTSETT_ARBEIDSEVNE),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            nårVurderingErGyldig = { Tidslinje() },
+            tilbakestillGrunnlag = { },
+            gjeldendeVurderinger = { Tidslinje() },
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
     }
 
     private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): NyttKrav {

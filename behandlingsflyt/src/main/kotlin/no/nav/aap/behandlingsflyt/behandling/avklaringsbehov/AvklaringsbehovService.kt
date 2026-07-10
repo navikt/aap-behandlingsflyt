@@ -68,7 +68,6 @@ class AvklaringsbehovService(
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
-
     }
 
     /** Oppdater tilstanden på avklaringsbehovet [definisjon], slik at kvalitetssikring,
@@ -81,6 +80,8 @@ class AvklaringsbehovService(
      * For at flyten skal bli riktig hvis man beveger seg fram og tilbake i flyten,
      * så er det viktig at et steg rydder opp etter seg når det viser seg at steget
      * ikke er relevant allikevel. Denne funksjonen hjelper også med det.
+     *
+     * @throws IllegalStateException Hvis avklaringsbehovet løses i et udefinert steg.
      */
     private fun oppdaterAvklaringsbehov(
         definisjon: Definisjon,
@@ -258,7 +259,9 @@ class AvklaringsbehovService(
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null }, // TODO: Gjør required når alle steg er oppdatert
+        behøverVurderingNårTvunget: (perioderVilkåretErRelevant: Tidslinje<Boolean>) -> Boolean =
+            { it.segmenter().any { s -> s.verdi } }
     ) {
         val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
@@ -272,7 +275,7 @@ class AvklaringsbehovService(
                         nårVurderingErRelevant
                     )
 
-                if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
+                if (behøverVurderingNårTvunget(perioderVilkåretErRelevant)
                     && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
                 ) {
                     // Vi behøver vurdering, men har ikke nødvendigvis noen obligatoriske perioder
@@ -333,9 +336,9 @@ class AvklaringsbehovService(
     }
 
     /**
-     * Her sender man inn eksplistte perioderSomIkkeErTilstrekkeligVurdert.
+     * Her sender man inn eksplistte [perioderSomIkkeErTilstrekkeligVurdert].
      * Dette kan være nyttig dersom man må se på perioder som befinner seg utenfor perioder som behøver vurdering;
-     * for eksempel hvis man ikke skal tillate vurderinger utenfor nårVurderingErRelevant
+     * for eksempel hvis man ikke skal tillate vurderinger utenfor [nårVurderingErRelevant].
      */
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
         definisjon: Definisjon,
@@ -347,14 +350,14 @@ class AvklaringsbehovService(
         gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            definisjon,
-            tvingerAvklaringsbehov,
-            nårVurderingErRelevant,
-            kontekst,
-            perioderSomIkkeErTilstrekkeligVurdert,
-            { null },
-            tilbakestillGrunnlag,
-            gjeldendeVurderinger
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            nårVurderingErGyldig = { null },
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            gjeldendeVurderinger = gjeldendeVurderinger
         )
     }
 
@@ -394,6 +397,37 @@ class AvklaringsbehovService(
             nårVurderingErGyldig = nårVurderingErGyldig,
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             gjeldendeVurderinger = gjeldendeVurderinger
+        )
+    }
+
+
+    fun oppdaterFrivilligAvklaringsbehovForPeriodisertYtelsesvilkår(
+        definisjon: Definisjon,
+        tvingerAvklaringsbehov: Set<Vurderingsbehov>,
+        /**
+         * Hvilke perioder vurdering er relevant.
+         * Brukes til å utlede hvorvidt vedtaket behøver vurdering.
+         */
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        /**
+         * Hvilke perioder behandlingen har en god nok vurdering for.
+         * Det vil løftes avklaringsbehov for relevante perioder som mangler gyldig vurdering.
+         */
+        nårVurderingErGyldig: () -> Tidslinje<Boolean>,
+        kontekst: FlytKontekstMedPerioder,
+        tilbakestillGrunnlag: () -> Unit,
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+    ) {
+        oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { null },
+            nårVurderingErGyldig = nårVurderingErGyldig,
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            gjeldendeVurderinger = gjeldendeVurderinger,
+            behøverVurderingNårTvunget = { true }
         )
     }
 

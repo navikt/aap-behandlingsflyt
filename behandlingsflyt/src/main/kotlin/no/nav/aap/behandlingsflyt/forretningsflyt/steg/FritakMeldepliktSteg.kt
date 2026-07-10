@@ -25,7 +25,7 @@ class FritakMeldepliktSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vurderinger = meldepliktRepository.hentHvisEksisterer(kontekst.behandlingId)?.tilTidslinje().orEmpty()
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        avklaringsbehovService.oppdaterFrivilligAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.FRITAK_MELDEPLIKT),
             nårVurderingErRelevant = {
