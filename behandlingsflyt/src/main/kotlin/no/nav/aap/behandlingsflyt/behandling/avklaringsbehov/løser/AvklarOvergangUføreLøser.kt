@@ -70,7 +70,23 @@ class AvklarOvergangUføreLøser(
             vurderinger = nyeVurderinger + vedtatteVurderinger
         ).somOvergangUforevurderingstidslinje()
         valider(behandlingId, rettighetsperiode.fom, nyTidslinje)
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId).hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
+        validerVurderingsPerioder(behandlingId, nyTidslinje)
+        overgangUforeRepository.lagre(
+            behandlingId = behandlingId,
+            overgangUføreVurderinger = nyeVurderinger + vedtatteVurderinger
+        )
+
+        return LøsningsResultat(
+            begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
+        )
+    }
+
+    private fun validerVurderingsPerioder(
+        behandlingId: BehandlingId,
+        nyTidslinje: Tidslinje<OvergangUføreVurdering>
+    ) {
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+            .hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
         val perioderVedtaketBehøverVurdering = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty()
             .somTidslinje { it }
 
@@ -82,14 +98,6 @@ class AvklarOvergangUføreLøser(
         if (perioderSomManglerLøsning.isNotEmpty()) {
             throw UgyldigForespørselException("Du mangler vurdering for ${perioderSomManglerLøsning.toHumanReadable()}")
         }
-        overgangUforeRepository.lagre(
-            behandlingId = behandlingId,
-            overgangUføreVurderinger = nyeVurderinger + vedtatteVurderinger
-        )
-
-        return LøsningsResultat(
-            begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
-        )
     }
 
     override fun forBehov(): Definisjon {
