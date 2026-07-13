@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
@@ -17,7 +16,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import kotlin.collections.orEmpty
@@ -27,7 +25,6 @@ class AvklarOvergangUføreLøser(
     private val sakRepository: SakRepository,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -35,7 +32,6 @@ class AvklarOvergangUføreLøser(
         sakRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
     )
 
     override fun løs(
@@ -70,7 +66,7 @@ class AvklarOvergangUføreLøser(
             vurderinger = nyeVurderinger + vedtatteVurderinger
         ).somOvergangUforevurderingstidslinje()
         valider(behandlingId, rettighetsperiode.fom, nyTidslinje)
-        validerVurderingsPerioder(behandlingId, nyTidslinje)
+
         overgangUforeRepository.lagre(
             behandlingId = behandlingId,
             overgangUføreVurderinger = nyeVurderinger + vedtatteVurderinger
@@ -79,25 +75,6 @@ class AvklarOvergangUføreLøser(
         return LøsningsResultat(
             begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
         )
-    }
-
-    private fun validerVurderingsPerioder(
-        behandlingId: BehandlingId,
-        nyTidslinje: Tidslinje<OvergangUføreVurdering>
-    ) {
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-            .hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
-        val perioderVedtaketBehøverVurdering = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty()
-            .somTidslinje { it }
-
-        val perioderDekket = nyTidslinje.map { true }.komprimer()
-        val perioderSomManglerLøsning = perioderVedtaketBehøverVurdering
-            .leftJoin(perioderDekket) { _, dekket -> dekket != null }
-            .filter { !it.verdi }.perioder().toSet()
-
-        if (perioderSomManglerLøsning.isNotEmpty()) {
-            throw UgyldigForespørselException("Du mangler vurdering for ${perioderSomManglerLøsning.toHumanReadable()}")
-        }
     }
 
     override fun forBehov(): Definisjon {
