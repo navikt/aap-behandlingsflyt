@@ -85,7 +85,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
+        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG_11_5)
 
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
@@ -162,7 +162,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
+        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG_11_5)
 
         behandling =
             løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
