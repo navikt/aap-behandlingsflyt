@@ -80,14 +80,15 @@ private fun opprettBarnetilleggDto(
     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
 
-    var folkeregisterBarn = barnGrunnlag?.registerbarn?.barn.orEmpty().filtrerBortMigrerteBarn()
+
     val personRepository = repositoryProvider.provide<PersonopplysningRepository>()
     val brukerPersonOpplysninger = personRepository.hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
-    if (brukerPersonOpplysninger?.fødselsdato?.toLocalDate() != null)
-    {
-        folkeregisterBarn = folkeregisterBarn.filtrerBortBarnEldreEnnBruker(brukerPersonOpplysninger.fødselsdato.toLocalDate())
-    }
-
+    val folkeregisterBarn = barnGrunnlag?.registerbarn?.barn.orEmpty().filtrerBortMigrerteBarn().let {
+        if (brukerPersonOpplysninger?.fødselsdato?.toLocalDate() != null) {
+            it.filtrerBortBarnEldreEnnBruker(brukerPersonOpplysninger.fødselsdato.toLocalDate())
+        } else {
+            it
+        }}
     log.info("Fant ${folkeregisterBarn.size} folkeregister-barn for behandling ${behandling.referanse}.")
 
     val saksbehandlerOppgittBarn = barnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
