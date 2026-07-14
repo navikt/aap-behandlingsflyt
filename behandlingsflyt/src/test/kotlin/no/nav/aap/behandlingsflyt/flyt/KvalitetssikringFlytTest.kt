@@ -352,7 +352,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(
             .bekreftVurderinger()
             .kvalitetssikre()
             .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG_11_5)
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
         assertThat(hentÅpneAvklaringsbehov(behandlingMedAvslag)).isEmpty()
 
