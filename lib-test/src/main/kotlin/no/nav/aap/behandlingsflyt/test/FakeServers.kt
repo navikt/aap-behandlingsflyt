@@ -108,6 +108,7 @@ object FakeServers : AutoCloseable {
     private fun setProperties() {
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
         System.setProperty("NAIS_APP_NAME", "behandlingsflyt")
+        System.setProperty("NAIS_TEAM_AAP", "NAIS_TEAM_AAP")
 
         // Brev
         if (System.getenv("INTEGRASJON_BREV_URL").isNullOrEmpty()) {
