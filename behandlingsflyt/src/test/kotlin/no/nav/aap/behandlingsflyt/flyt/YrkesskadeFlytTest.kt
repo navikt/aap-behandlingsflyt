@@ -81,7 +81,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG_11_5)
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
     }
