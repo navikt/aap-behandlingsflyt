@@ -7,8 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Kand
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationBodyPathConfig
-import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
@@ -17,11 +16,7 @@ fun NormalOpenAPIRoute.purringApi(
 ) {
     route("/api/dokumentinnhenting/purring") {
         authorizedGet<Unit, List<BehandlingReferanse>>(
-            AuthorizationBodyPathConfig(
-                applicationRole = "finn-kandidater-for-purring",
-                applicationsOnly = true,
-                operasjon = Operasjon.SAKSBEHANDLE,
-            )
+            AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-kandidater-for-purring"))
         ) { _ ->
             val behandlingsreferanser = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
