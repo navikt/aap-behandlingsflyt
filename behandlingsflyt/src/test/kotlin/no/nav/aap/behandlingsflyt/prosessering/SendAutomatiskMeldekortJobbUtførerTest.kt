@@ -1,196 +1,146 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.TestAutomatiskMeldekortSakRepository
 import no.nav.aap.behandlingsflyt.test.fixedClock
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.UUID
 
 class SendAutomatiskMeldekortJobbUtførerTest {
 
     private val sakId = SakId(12345L)
-    private val behandlingId = BehandlingId(456L)
     private val jobbInput = JobbInput(SendAutomatiskMeldekortJobbUtfører).forSak(sakId.toLong())
+
+    private val sakRepository = FakeTestAutomatiskMeldekortSakRepository()
+    private val underveisRepository = FakeUnderveisRepository()
+    private val flytJobbRepository = FlytJobbFake()
 
     @BeforeEach
     fun setup() {
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     }
 
-    private val automatiskMeldekortSakRepository = mockk<TestAutomatiskMeldekortSakRepository>()
-    private val behandlingService = mockk<BehandlingService>()
-    private val rettighetstypeRepository = mockk<RettighetstypeRepository>()
-    private val meldeperiodeRepository = mockk<MeldeperiodeRepository>()
-    private val flytJobbRepository = mockk<FlytJobbRepository>()
-
     @Test
-    fun `sender meldekort når sak har aktiv rettighetstype i dag`() {
+    fun `sender meldekort for ubesvart meldeperiode`() {
         val idag = LocalDate.of(2026, 6, 9)
-        val førstePeriode = Periode(idag.minusDays(14), idag.minusDays(1))
-        val utfører = lagUtfører(idag)
+        val periode = Periode(idag.minusDays(14), idag.minusDays(1))
+        sakRepository.leggTil(sakId)
+        underveisRepository.settUbesvarte(sakId, listOf(periode))
 
-        every { automatiskMeldekortSakRepository.hentAlle() } returns listOf(sakId)
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns lagBehandling()
-        every { rettighetstypeRepository.hentHvisEksisterer(behandlingId) } returns lagRettighetstypeGrunnlag(
-            fom = idag.minusDays(30),
-            tom = idag.plusDays(30),
-        )
-        every { meldeperiodeRepository.hentFørsteMeldeperiode(behandlingId) } returns førstePeriode
-        every { meldeperiodeRepository.hentMeldeperioder(behandlingId, any()) } returns listOf(førstePeriode)
-        every { flytJobbRepository.leggTil(any()) } just Runs
+        lagUtfører(idag).utfør(jobbInput)
 
-        utfører.utfør(jobbInput)
-
-        verify(exactly = 1) { flytJobbRepository.leggTil(any()) }
+        assertThat(flytJobbRepository.hentJobberForSak(sakId.toLong())).hasSize(1)
     }
 
     @Test
-    fun `sender ikke meldekort når rettighetstidslinja ikke dekker i dag`() {
+    fun `sender ikke meldekort når det ikke finnes ubesvarte meldeperioder`() {
         val idag = LocalDate.of(2026, 6, 9)
-        val utfører = lagUtfører(idag)
+        sakRepository.leggTil(sakId)
 
-        every { automatiskMeldekortSakRepository.hentAlle() } returns listOf(sakId)
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns lagBehandling()
-        every { rettighetstypeRepository.hentHvisEksisterer(behandlingId) } returns lagRettighetstypeGrunnlag(
-            fom = idag.minusDays(60),
-            tom = idag.minusDays(1),
-        )
+        lagUtfører(idag).utfør(jobbInput)
 
-        utfører.utfør(jobbInput)
-
-        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+        assertThat(flytJobbRepository.hentJobberForSak(sakId.toLong())).isEmpty()
     }
 
     @Test
     fun `meldekort-jobb opprettes med referanse av type JOURNALPOST`() {
         val idag = LocalDate.of(2026, 6, 9)
-        val førstePeriode = Periode(idag.minusDays(14), idag.minusDays(1))
-        val utfører = lagUtfører(idag)
+        val periode = Periode(idag.minusDays(14), idag.minusDays(1))
+        sakRepository.leggTil(sakId)
+        underveisRepository.settUbesvarte(sakId, listOf(periode))
 
-        every { automatiskMeldekortSakRepository.hentAlle() } returns listOf(sakId)
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns lagBehandling()
-        every { rettighetstypeRepository.hentHvisEksisterer(behandlingId) } returns lagRettighetstypeGrunnlag(
-            fom = idag.minusDays(30),
-            tom = idag.plusDays(30),
-        )
-        every { meldeperiodeRepository.hentFørsteMeldeperiode(behandlingId) } returns førstePeriode
-        every { meldeperiodeRepository.hentMeldeperioder(behandlingId, any()) } returns listOf(førstePeriode)
-        every { flytJobbRepository.leggTil(any()) } just Runs
+        lagUtfører(idag).utfør(jobbInput)
 
-        utfører.utfør(jobbInput)
-
-        val slot = slot<JobbInput>()
-        verify(exactly = 1) { flytJobbRepository.leggTil(capture(slot)) }
-        val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(slot.captured.parameter("referanse"))
+        val jobb = flytJobbRepository.hentJobberForSak(sakId.toLong()).single()
+        val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(jobb.parameter("referanse"))
         assertThat(referanse.type).isEqualTo(InnsendingReferanse.Type.JOURNALPOST)
     }
 
     @Test
-    fun `sender ett meldekort per meldeperiode når søknad ble sendt langt tilbake i tid`() {
+    fun `sender ett meldekort per ubesvart meldeperiode`() {
         val idag = LocalDate.of(2026, 6, 9)
-        val utfører = lagUtfører(idag)
         val periode1 = Periode(idag.minusDays(42), idag.minusDays(29))
         val periode2 = Periode(idag.minusDays(28), idag.minusDays(15))
         val periode3 = Periode(idag.minusDays(14), idag.minusDays(1))
+        sakRepository.leggTil(sakId)
+        underveisRepository.settUbesvarte(sakId, listOf(periode1, periode2, periode3))
 
-        every { automatiskMeldekortSakRepository.hentAlle() } returns listOf(sakId)
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns lagBehandling()
-        every { rettighetstypeRepository.hentHvisEksisterer(behandlingId) } returns lagRettighetstypeGrunnlag(
-            fom = idag.minusDays(60),
-            tom = idag.plusDays(30),
-        )
-        every { meldeperiodeRepository.hentFørsteMeldeperiode(behandlingId) } returns periode1
-        every { meldeperiodeRepository.hentMeldeperioder(behandlingId, any()) } returns listOf(periode1, periode2, periode3)
-        every { flytJobbRepository.leggTil(any()) } just Runs
+        lagUtfører(idag).utfør(jobbInput)
 
-        utfører.utfør(jobbInput)
-
-        verify(exactly = 3) { flytJobbRepository.leggTil(any()) }
+        assertThat(flytJobbRepository.hentJobberForSak(sakId.toLong())).hasSize(3)
     }
 
     @Test
     fun `sender meldekort for flere saker`() {
         val idag = LocalDate.of(2026, 6, 9)
         val annenSakId = SakId(99999L)
-        val annenBehandlingId = BehandlingId(777L)
-        val utfører = lagUtfører(idag)
-        val førstePeriode = Periode(idag.minusDays(14), idag.minusDays(1))
+        val periode = Periode(idag.minusDays(14), idag.minusDays(1))
+        sakRepository.leggTil(sakId)
+        sakRepository.leggTil(annenSakId)
+        underveisRepository.settUbesvarte(sakId, listOf(periode))
+        underveisRepository.settUbesvarte(annenSakId, listOf(periode))
 
-        every { automatiskMeldekortSakRepository.hentAlle() } returns listOf(sakId, annenSakId)
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns lagBehandling()
-        every { behandlingService.finnSisteYtelsesbehandlingFor(annenSakId) } returns lagBehandling(annenBehandlingId, annenSakId)
-        every { rettighetstypeRepository.hentHvisEksisterer(behandlingId) } returns lagRettighetstypeGrunnlag(
-            fom = idag.minusDays(30),
-            tom = idag.plusDays(30),
-        )
-        every { rettighetstypeRepository.hentHvisEksisterer(annenBehandlingId) } returns lagRettighetstypeGrunnlag(
-            fom = idag.minusDays(10),
-            tom = idag.plusDays(10),
-        )
-        every { meldeperiodeRepository.hentFørsteMeldeperiode(any()) } returns førstePeriode
-        every { meldeperiodeRepository.hentMeldeperioder(any(), any()) } returns listOf(førstePeriode)
-        every { flytJobbRepository.leggTil(any()) } just Runs
+        lagUtfører(idag).utfør(jobbInput)
 
-        utfører.utfør(jobbInput)
-
-        verify(exactly = 2) { flytJobbRepository.leggTil(any()) }
+        assertThat(flytJobbRepository.hentJobberForSak(sakId.toLong())).hasSize(1)
+        assertThat(flytJobbRepository.hentJobberForSak(annenSakId.toLong())).hasSize(1)
     }
 
     private fun lagUtfører(idag: LocalDate) = SendAutomatiskMeldekortJobbUtfører(
-        automatiskMeldekortSakRepository = automatiskMeldekortSakRepository,
-        behandlingService = behandlingService,
-        rettighetstypeRepository = rettighetstypeRepository,
-        meldeperiodeRepository = meldeperiodeRepository,
+        automatiskMeldekortSakRepository = sakRepository,
+        underveisRepository = underveisRepository,
         flytJobbRepository = flytJobbRepository,
         clock = fixedClock(idag),
     )
 
-    private fun lagBehandling(
-        id: BehandlingId = behandlingId,
-        sakId: SakId = this.sakId,
-    ) = Behandling(
-        id = id,
-        forrigeBehandlingId = null,
-        referanse = BehandlingReferanse(UUID.randomUUID()),
-        sakId = sakId,
-        typeBehandling = TypeBehandling.Førstegangsbehandling,
-        status = Status.AVSLUTTET,
-        vurderingsbehov = emptyList(),
-        stegTilstand = null,
-        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-        versjon = 0L,
-    )
+    private class FakeTestAutomatiskMeldekortSakRepository : TestAutomatiskMeldekortSakRepository {
+        private val saker = mutableListOf<SakId>()
 
-    private fun lagRettighetstypeGrunnlag(fom: LocalDate, tom: LocalDate) = RettighetstypeGrunnlag(
-        rettighetstypeTidslinje = Tidslinje(
-            listOf(Segment(Periode(fom, tom), RettighetsType.BISTANDSBEHOV))
-        )
-    )
+        override fun leggTil(sakId: SakId) { saker.add(sakId) }
+        override fun eksisterer(sakId: SakId) = sakId in saker
+        override fun hentAlle() = saker.toList()
+        override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) = Unit
+        override fun slett(behandlingId: BehandlingId) = Unit
+    }
+
+    private class FakeUnderveisRepository : UnderveisRepository {
+        private val ubesvarte = mutableMapOf<SakId, List<Periode>>()
+
+        fun settUbesvarte(sakId: SakId, perioder: List<Periode>) { ubesvarte[sakId] = perioder }
+
+        override fun hentUbesvarteMeldeperioderForDollyJobb(sakIds: List<SakId>, idag: LocalDate) =
+            ubesvarte.filterKeys { it in sakIds }
+
+        override fun hent(behandlingId: BehandlingId): UnderveisGrunnlag = TODO()
+        override fun hentHvisEksisterer(behandlingId: BehandlingId): UnderveisGrunnlag? = null
+        override fun lagre(behandlingId: BehandlingId, underveisperioder: List<Underveisperiode>, input: Faktagrunnlag) = Unit
+        override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> = emptySet()
+        override fun hentSakerForGRegulering(datoForGJustering: LocalDate, nyttGrunnbeløp: Beløp): Set<SakId> = emptySet()
+        override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) = Unit
+        override fun slett(behandlingId: BehandlingId) = Unit
+    }
+
+    private class FlytJobbFake : FlytJobbRepository {
+        private val jobber = mutableListOf<JobbInput>()
+
+        override fun leggTil(jobbInput: JobbInput) { jobber.add(jobbInput) }
+        override fun hentJobberForBehandling(id: Long) = jobber.filter { it.behandlingIdOrNull() == id }
+        override fun hentJobberForSak(id: Long) = jobber.filter { it.sakId() == id }
+        override fun hentFeilmeldingForOppgave(id: Long) = ""
+    }
 }
+
+
