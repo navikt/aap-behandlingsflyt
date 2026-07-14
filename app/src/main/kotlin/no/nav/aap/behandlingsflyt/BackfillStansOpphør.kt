@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.utledStansEllerOpphør
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetstypeSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -113,6 +115,7 @@ class BackfillStansOpphør(
         val vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection)
         val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
         val sakRepository = SakRepositoryImpl(connection)
+        val underveisRepository = UnderveisRepositoryImpl(connection)
         val rettighetstypeService = RettighetstypeService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
         val grunnlag = stansOpphørGrunnlagRepository.hentHvisEksisterer(behandling.id)
 
@@ -128,6 +131,13 @@ class BackfillStansOpphør(
             /* sjekk igjen nå som vi har låst behandlignen. */
             if (grunnlag?.stansOpphørV2 != null) {
                 /* verdi satt, ingen behov for backfill. */
+                return@withLåstBehandling
+            }
+
+            if (underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty().any { it.avslagsårsak == UnderveisÅrsak.SONER_STRAFF }) {
+                /* Det finnes ingen eksempler på avslagsårsak = SONER_STRAFF i produksjon. I produksjon er dette et eget vilkår.  Vi kommer til å
+                 * regne ut feil rettighetstype her, siden nåværende kode ikke håndterer dette caset som bare finnes i test-miljøet. Hopper derfor over.
+                 */
                 return@withLåstBehandling
             }
 
