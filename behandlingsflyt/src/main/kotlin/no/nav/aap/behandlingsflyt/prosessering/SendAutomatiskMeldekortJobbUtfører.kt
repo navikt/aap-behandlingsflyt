@@ -44,9 +44,16 @@ class SendAutomatiskMeldekortJobbUtfører(
         }
 
         val idag = LocalDate.now(clock)
-        val saker = automatiskMeldekortSakRepository.hentAlle()
+        val kunForSakId = input.optionalParameter(KUN_FOR_SAK_ID)?.let { SakId(it.toLong()) }
 
-        log.info("Behandler ${saker.size} saker for automatisk meldekort")
+        val saker = if (kunForSakId != null) {
+            log.info("Behandler kun sak $kunForSakId for automatisk meldekort")
+            listOf(kunForSakId)
+        } else {
+            val alle = automatiskMeldekortSakRepository.hentAlle()
+            log.info("Behandler ${alle.size} saker for automatisk meldekort")
+            alle
+        }
 
         saker.forEach { sendMeldekortHvisAktiv(it, idag) }
     }
@@ -114,6 +121,13 @@ class SendAutomatiskMeldekortJobbUtfører(
     }
 
     companion object : ProvidersJobbSpesifikasjon {
+        const val KUN_FOR_SAK_ID = "kunForSakId"
+
+        fun nyEngangsJobb(sakId: SakId): JobbInput =
+            JobbInput(SendAutomatiskMeldekortJobbUtfører)
+                .forSak(sakId.toLong())
+                .medParameter(KUN_FOR_SAK_ID, sakId.toLong().toString())
+
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører =
             SendAutomatiskMeldekortJobbUtfører(
                 automatiskMeldekortSakRepository = repositoryProvider.provide(),

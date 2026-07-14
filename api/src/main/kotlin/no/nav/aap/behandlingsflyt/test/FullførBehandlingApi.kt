@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.prosessering.SendAutomatiskMeldekortJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -22,6 +23,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -69,7 +71,17 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                 }
                 thread(
                     isDaemon = true,
-                    block = withMdc { service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling) },
+                    block = withMdc {
+                        service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling)
+                        if (req.automatiskMeldekort) {
+                            log.info("Planlegger umiddelbar automatisk meldekort-kjøring for sak ${resultat.sak.saksnummer}")
+                            dataSource.transaction { connection ->
+                                repositoryRegistry.provider(connection)
+                                    .provide<FlytJobbRepository>()
+                                    .leggTil(SendAutomatiskMeldekortJobbUtfører.nyEngangsJobb(resultat.sak.id))
+                            }
+                        }
+                    },
                 )
                 respond(OpprettOgFullforBehandlingRespons(resultat.sak.saksnummer.toString()))
             } catch (e: OpprettTestSakException) {
