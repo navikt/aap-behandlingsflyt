@@ -9,7 +9,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.filtrerBortBarnEldreEnnBruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.filtrerBortMigrerteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator.BarnIdent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
@@ -78,8 +80,15 @@ private fun opprettBarnetilleggDto(
     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
 
-    val folkeregister = barnGrunnlag?.registerbarn?.barn.orEmpty().filtrerBortMigrerteBarn()
-    log.info("Fant ${folkeregister.size} folkeregister-barn for behandling ${behandling.referanse}.")
+    var folkeregisterBarn = barnGrunnlag?.registerbarn?.barn.orEmpty().filtrerBortMigrerteBarn()
+    val personRepository = repositoryProvider.provide<PersonopplysningRepository>()
+    val brukerPersonOpplysninger = personRepository.hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
+    if (brukerPersonOpplysninger?.fødselsdato?.toLocalDate() != null)
+    {
+        folkeregisterBarn = folkeregisterBarn.filtrerBortBarnEldreEnnBruker(brukerPersonOpplysninger.fødselsdato.toLocalDate())
+    }
+
+    log.info("Fant ${folkeregisterBarn.size} folkeregister-barn for behandling ${behandling.referanse}.")
 
     val saksbehandlerOppgittBarn = barnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
     val uavklarteBarn = filtrerUavklarteBarn(barnetilleggTidslinje, saksbehandlerOppgittBarn)
@@ -90,7 +99,7 @@ private fun opprettBarnetilleggDto(
     }
 
     val oppgitteBarn = barnGrunnlag?.oppgitteBarn?.oppgitteBarn.orEmpty()
-    val vurderteFolkeregisterBarnDto = filtrerFolkeregisterBarn(vurderteBarnDto, folkeregister)
+    val vurderteFolkeregisterBarnDto = filtrerFolkeregisterBarn(vurderteBarnDto, folkeregisterBarn)
     val vurderteSaksbehandlerOppgittBarnDto =
         filtrerSaksbehandlerOppgittBarn(vurderteBarnDto, saksbehandlerOppgittBarn, barnRepository, behandling)
     val vurderteOppgittBarnDto = filtrerOppgitteBarn(vurderteBarnDto, oppgitteBarn)
@@ -98,7 +107,7 @@ private fun opprettBarnetilleggDto(
     return BarnetilleggDto(
         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
         søknadstidspunkt = SakService(repositoryProvider, gatewayProvider).hentSakFor(behandling.id).rettighetsperiode.fom,
-        folkeregisterbarn = folkeregister.map { hentBarn(it.ident, barnGrunnlag) },
+        folkeregisterbarn = folkeregisterBarn.map { hentBarn(it.ident, barnGrunnlag) },
         saksbehandlerOppgitteBarn = saksbehandlerOppgittBarn.map { hentBarn(it.identifikator(), barnGrunnlag) },
         vurderteBarn = vurderteOppgittBarnDto,
         vurderingerMeta = vurderteBarn?.let {

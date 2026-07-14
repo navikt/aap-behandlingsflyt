@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.filtrerBortBarnEldreEnnBruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.filtrerBortMigrerteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag. saksbehandler.barn.BarnIdentifikator
@@ -144,5 +145,65 @@ class RegisterBarnTest {
         val resultat = barnListe.filtrerBortMigrerteBarn()
 
         assertThat(resultat).isEmpty()
+    }
+
+    @Test
+    fun `filtrerBortBarnEldreEnnBruker skal filtrere bort barn som er født før bruker`() {
+        val brukerFødselsdato = LocalDate.of(1990, 1, 1)
+
+        val eldreEnnBruker = Barn(
+            ident = BarnIdentifikator.BarnIdent(
+                ident = Ident("12345678911"),
+                navn = "ELDRE BARN",
+                fødselsdato = Fødselsdato(LocalDate.of(1988, 5, 10))
+            ),
+            fødselsdato = Fødselsdato(LocalDate.of(1988, 5, 10)),
+            navn = "ELDRE BARN"
+        )
+
+        val yngreEnnBruker = Barn(
+            ident = BarnIdentifikator.BarnIdent(
+                ident = Ident("22345678911"),
+                navn = "YNGRE BARN",
+                fødselsdato = Fødselsdato(LocalDate.of(2015, 5, 20))
+            ),
+            fødselsdato = Fødselsdato(LocalDate.of(2015, 5, 20)),
+            navn = "YNGRE BARN"
+        )
+
+        val resultat = listOf(eldreEnnBruker, yngreEnnBruker)
+            .filtrerBortBarnEldreEnnBruker(brukerFødselsdato)
+
+        assertThat(resultat).containsExactly(yngreEnnBruker)
+    }
+
+    @Test
+    fun `filtrerBortBarnEldreEnnBruker skal kun beholde barn som er født etter bruker`() {
+        val brukerFødselsdato = LocalDate.of(1990, 1, 1)
+
+        val sammeDagSomBruker = Barn(
+            ident = BarnIdentifikator.BarnIdent(
+                ident = Ident("12345678911"),
+                navn = "SAMME DAG",
+                fødselsdato = Fødselsdato(LocalDate.of(1990, 1, 1))
+            ),
+            fødselsdato = Fødselsdato(LocalDate.of(1990, 1, 1)),
+            navn = "SAMME DAG"
+        )
+
+        val yngreEnnBruker = Barn(
+            ident = BarnIdentifikator.BarnIdent(
+                ident = Ident("22345678911"),
+                navn = "YNGRE BARN",
+                fødselsdato = Fødselsdato(LocalDate.of(2012, 3, 4))
+            ),
+            fødselsdato = Fødselsdato(LocalDate.of(2012, 3, 4)),
+            navn = "YNGRE BARN"
+        )
+
+        val resultat = listOf(sammeDagSomBruker, yngreEnnBruker)
+            .filtrerBortBarnEldreEnnBruker(brukerFødselsdato)
+
+        assertThat(resultat).containsExactly(yngreEnnBruker)
     }
 }
