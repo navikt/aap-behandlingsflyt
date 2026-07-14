@@ -264,7 +264,7 @@ fun NormalOpenAPIRoute.driftApi(
                     operasjon = Operasjon.DRIFTE
                 )
             ) { behandlingReferanse ->
-                val yrkesskader = dataSource.transaction { connection ->
+                val yrkesskader = dataSource.transaction(readonly= true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
                     val behandling = repositoryProvider.provide<BehandlingRepository>()
