@@ -334,6 +334,7 @@ internal fun Application.server(
                 // Flytt
                 brevApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                purringApi(fellesDataSource, repositoryRegistry)
                 mottattHendelseApi(fellesDataSource, repositoryRegistry)
                 underveisVurderingerApi(fellesDataSource, repositoryRegistry)
                 lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry)
