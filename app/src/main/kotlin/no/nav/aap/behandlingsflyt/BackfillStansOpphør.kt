@@ -100,7 +100,11 @@ class BackfillStansOpphør(
                         UTREDES,
                         IVERKSETTES,
                         AVSLUTTET -> {
-                            backfillBehandling(connection, behandling)
+                            try {
+                                backfillBehandling(connection, behandling)
+                            } catch (e: Exception) {
+                                throw RuntimeException("backfill feilet $behandling ${behandling.aktivtSteg()}", e)
+                            }
                         }
                     }
                 }
