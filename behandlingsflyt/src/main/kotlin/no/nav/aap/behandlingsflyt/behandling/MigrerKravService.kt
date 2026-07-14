@@ -41,7 +41,7 @@ class MigrerKravService(
 
         // Antar at det nyeste kravet med type NyttKrav som skal overstyres
         // Vi kan få flere ved rent avslag
-        val nyesteKrav = eksisterendeKravGrunnlag?.kravtidslinje()?.segmenter()?.maxBy { it.fom() }?.verdi
+        val nyesteKrav = eksisterendeKravGrunnlag?.kravtidslinje()?.segmenter()?.maxByOrNull { it.fom() }?.verdi
 
         if (nyesteKrav == null) {
             log.info("Fant ikke NyttKrav for sak ${sakId}, lagrer ikke ned kravvurdering for rettighetsperiodeløsning")
@@ -90,7 +90,7 @@ class MigrerKravService(
         val kravSomSkalTilbakestilles = eksisterendeKravGrunnlag?.vurderinger
             ?.filterIsInstance<NyttKrav>()
             ?.filter { it.erRettighetsperiodeVurdering() }
-            ?.maxBy { it.opprettet }
+            ?.maxByOrNull { it.opprettet }
 
         if (kravSomSkalTilbakestilles == null) {
             log.info("Det finnes ingen krav å tilbakestille")
@@ -108,19 +108,12 @@ class MigrerKravService(
             overstyrMuligRettFra = null,
             muligRettFra = kravSomSkalTilbakestilles.muligRettFra,
         )
-
-        /** Så lenge vi skrur av rettighetsperiodesteget før vi skrur på manuell løsning av krav, 
-         * kan vi anta at alle overstyrte krav i inneværende behandling kan fjernes fra grunnlaget.
-         * Det kan ha kommet andre automatiske kravurderinger i mellomtiden, og vi må legge til et nytt krav med datoer lik første krav,
-         * i tilfelle det finnes overstyrte krav i vedtatte behandlinger.
-         * */
         val nyeVurderinger = eksisterendeKravGrunnlag.vurderinger
-            .filterNot { it.vurdertIBehandling == behandlingId && it.referanse == kravSomSkalTilbakestilles.referanse }
-            .toSet() + nyttKrav
+            .filterNot { it.vurdertIBehandling == behandlingId && it.referanse == kravSomSkalTilbakestilles.referanse } + nyttKrav
 
         kravRepository.lagre(
             behandlingId = behandlingId,
-            vurderinger = nyeVurderinger
+            vurderinger = nyeVurderinger.toSet()
         )
     }
 
