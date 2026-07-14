@@ -45,11 +45,13 @@ tasks {
 }
 
 tasks.register<JavaExec>("runTestApp") {
+    description = "Kjør TestApp,."
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
 }
 
 tasks.register<JavaExec>("runTestAppMotOppgave") {
+    description = "Kjør TestApp mot Oppgave. Forventer at db kjører på port 5438, og oppgave-app på port 8084."
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
     environment("NAIS_CLUSTER_NAME", "LOCAL")
@@ -60,6 +62,7 @@ tasks.register<JavaExec>("runTestAppMotOppgave") {
 }
 
 tasks.register<JavaExec>("genererOpenApiJson") {
+    description = "Kjør generering av OpenAPI JSON-fil. Filen blir skrevet til openapi.json"
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.GenererOpenApiJsonKt")
 }

@@ -72,14 +72,18 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                 thread(
                     isDaemon = true,
                     block = withMdc {
-                        service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling)
-                        if (req.automatiskMeldekort) {
-                            log.info("Planlegger umiddelbar automatisk meldekort-kjøring for sak ${resultat.sak.saksnummer}")
-                            dataSource.transaction { connection ->
-                                repositoryRegistry.provider(connection)
-                                    .provide<FlytJobbRepository>()
-                                    .leggTil(SendAutomatiskMeldekortJobbUtfører.nyEngangsJobb(resultat.sak.id))
+                        try {
+                            service.fullførBehandling(resultat.sak, resultat.ventPåNyBehandling)
+                            if (req.automatiskMeldekort) {
+                                log.info("Planlegger umiddelbar automatisk meldekort-kjøring for sak ${resultat.sak.saksnummer}")
+                                dataSource.transaction { connection ->
+                                    repositoryRegistry.provider(connection)
+                                        .provide<FlytJobbRepository>()
+                                        .leggTil(SendAutomatiskMeldekortJobbUtfører.nyEngangsJobb(resultat.sak.id))
+                                }
                             }
+                        } catch (e: Exception) {
+                            log.error("Feil i bakgrunnstråd for sak ${resultat.sak.saksnummer}", e)
                         }
                     },
                 )
