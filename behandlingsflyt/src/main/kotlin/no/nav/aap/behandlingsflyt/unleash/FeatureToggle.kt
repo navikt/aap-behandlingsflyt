@@ -14,18 +14,19 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MigrerStansOgOpphor,
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
-    RevurderingEtterAvslagSkalKvalitetssikres,
     MeldekortEndretAvSaksbehandler,
     AutomatiskStans1118,
     StudentV2,
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
+
     // --- Krav ---
     KravSteg, // Visning
     LagreVurderRettighetsperiodeSomKrav, // Double write
     KravAutomatiskVurdering, // Double write
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
+
     // ------
     OppfoelgingsoppgaveSynligMedEnGang,
     ManuellInntektDelvisUfore,
