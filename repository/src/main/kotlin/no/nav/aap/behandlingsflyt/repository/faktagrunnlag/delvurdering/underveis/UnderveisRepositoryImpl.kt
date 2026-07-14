@@ -166,14 +166,14 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 JOIN underveis_periode up ON ug.perioder_id = up.perioder_id
                 JOIN gjeldende_vedtatte_behandlinger gvb ON gvb.behandling_id = ug.behandling_id
             WHERE ug.aktiv = true
-                AND up.meldeplikt_status = 'IKKE_MELDT_SEG'
+                AND up.meldeplikt_status IN ('IKKE_MELDT_SEG', 'FØR_VEDTAK')
                 AND upper(up.meldeperiode) <= ?
                 AND gvb.sak_id = ANY(?)
         """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
-                setLocalDate(1, idag)
+                setLocalDate(1, idag.plusDays(1))
                 setLongArray(2, sakIds.map { it.toLong() })
             }
             setRowMapper {

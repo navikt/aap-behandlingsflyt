@@ -47,7 +47,7 @@ object InMemoryUnderveisRepository : UnderveisRepository {
                 val sakId = InMemoryBehandlingRepository.hent(behandlingId).sakId
                 if (sakId !in sakIdSet) return@mapNotNull null
                 val ubesvartePerioder = underveisGrunnlag.perioder
-                    .filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG && it.meldePeriode.tom < idag }
+                    .filter { it.meldepliktStatus in setOf(MeldepliktStatus.IKKE_MELDT_SEG, MeldepliktStatus.FØR_VEDTAK) && it.meldePeriode.tom <= idag }
                     .map { it.meldePeriode }
                     .distinct()
                 if (ubesvartePerioder.isEmpty()) null else sakId to ubesvartePerioder

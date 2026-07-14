@@ -21,7 +21,7 @@ interface UnderveisRepository : Repository {
 
     /**
      * Returnerer ubesvarte meldeperioder per sak for de angitte sakene.
-     * En meldeperiode regnes som ubesvart når meldepliktStatus er IKKE_MELDT_SEG og meldeperioden er avsluttet.
+     * En meldeperiode regnes som ubesvart når meldepliktStatus er IKKE_MELDT_SEG eller FØR_VEDTAK og meldeperioden er avsluttet.
      */
     fun hentUbesvarteMeldeperioderForDollyJobb(sakIds: List<SakId>, idag: LocalDate): Map<SakId, List<Periode>>
 
