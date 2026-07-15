@@ -116,7 +116,7 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.VURDER_KRAV,
                 Vurderingsbehov.VURDER_AVSLAG_11_27,
                 Vurderingsbehov.FASTSETT_ARBEIDSEVNE,
-                Vurderingsbehov.FRITAK_MELDEPLIKT,
+                Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT,
                 Vurderingsbehov.REVURDERING_AVBRUTT ->
                     REVURDERING
 
@@ -130,7 +130,8 @@ class FlytKontekstMedPeriodeService(
                     REVURDERING
 
                 Vurderingsbehov.MOTTATT_MELDEKORT,
-                Vurderingsbehov.FASTSATT_PERIODE_PASSERT-> MELDEKORT
+                Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
+                Vurderingsbehov.FRITAK_MELDEPLIKT -> MELDEKORT
 
                 Vurderingsbehov.MOTATT_KLAGE,
                 Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE,

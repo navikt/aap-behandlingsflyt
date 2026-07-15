@@ -33,7 +33,7 @@ class FritakMeldepliktStegTest {
 
         val kontekst = flytKontekstMedPerioder {
             this.behandling = behandling
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.FRITAK_MELDEPLIKT)
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT)
         }
 
         steg.utfør(kontekst)
@@ -62,7 +62,7 @@ class FritakMeldepliktStegTest {
             this.vurderingsbehovRelevanteForStegMedPerioder =
                 setOf(
                     VurderingsbehovMedPeriode(
-                        Vurderingsbehov.FRITAK_MELDEPLIKT,
+                        Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT,
                         oppdatertTid = LocalDateTime.now().minusDays(1)
                     )
                 )

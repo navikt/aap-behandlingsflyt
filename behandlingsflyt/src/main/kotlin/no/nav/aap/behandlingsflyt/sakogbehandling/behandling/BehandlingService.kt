@@ -135,6 +135,7 @@ class BehandlingService(
     ) : OpprettetBehandling
 
     private val fasttrackKandidater = listOf(
+        Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
         Vurderingsbehov.UTVID_VEDTAKSLENGDE,
         Vurderingsbehov.MIGRER_RETTIGHETSPERIODE,

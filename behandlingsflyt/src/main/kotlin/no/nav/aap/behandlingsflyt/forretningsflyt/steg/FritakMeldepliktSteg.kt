@@ -29,7 +29,7 @@ class FritakMeldepliktSteg internal constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.FRITAK_MELDEPLIKT),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT),
             nårVurderingErRelevant = { nårVurderingErRelevant(it) },
             nårVurderingErGyldig = {
                 val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, kontekst.behandlingId)
@@ -39,7 +39,7 @@ class FritakMeldepliktSteg internal constructor(
 
                 val datoVurderingsbehov =
                     kontekst.vurderingsbehovRelevanteForStegMedPerioder
-                        .filter { it.type == Vurderingsbehov.FRITAK_MELDEPLIKT }
+                        .filter { it.type == Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT }
                         .maxByOrNull { it.oppdatertTid }
                         ?.oppdatertTid ?: LocalDateTime.MIN
 
@@ -63,7 +63,7 @@ class FritakMeldepliktSteg internal constructor(
         kontekst: FlytKontekstMedPerioder
     ): Tidslinje<Boolean> {
         val finnesVurderingsbehov =
-            kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.FRITAK_MELDEPLIKT }
+            kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT }
 
         return tidligereVurderinger.behandlingsutfall(kontekst, type()).map { utfall ->
             when (utfall) {

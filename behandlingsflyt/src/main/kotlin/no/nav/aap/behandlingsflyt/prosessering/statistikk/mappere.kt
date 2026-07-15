@@ -70,6 +70,7 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.VURDER_KRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_KRAV
         Vurderingsbehov.VURDER_AVSLAG_11_27 -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_AVSLAG_11_27
         Vurderingsbehov.FASTSETT_ARBEIDSEVNE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FASTSETT_ARBEIDSEVNE
+        Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT
     }
 
 

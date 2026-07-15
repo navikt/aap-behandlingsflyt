@@ -103,7 +103,16 @@ public enum class Vurderingsbehov {
     VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden
     SØKNAD_TRUKKET,
     REVURDERING_AVBRUTT,
+
+    /**
+     * Opprettes av [no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingFritakMeldepliktJobbUtfører].
+     */
     FRITAK_MELDEPLIKT,
+
+    /**
+     * For trigging av saksbehandler i frontend.
+     */
+    VURDER_FRITAK_MELDEPLIKT,
     FASTSETT_ARBEIDSEVNE,
     KLAGE_TRUKKET,
     REVURDER_MANUELL_INNTEKT,

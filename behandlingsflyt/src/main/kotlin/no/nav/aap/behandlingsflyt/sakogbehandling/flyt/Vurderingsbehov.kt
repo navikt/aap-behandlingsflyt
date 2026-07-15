@@ -53,7 +53,16 @@ enum class Vurderingsbehov {
     REFUSJONSKRAV,
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     FASTSATT_PERIODE_PASSERT,
+
+    /**
+     * Blir trigget av [no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingFritakMeldepliktJobbUtfører].
+     */
     FRITAK_MELDEPLIKT,
+
+    /**
+     * For trigging av saksbehandler i frontend.
+     */
+    VURDER_FRITAK_MELDEPLIKT,
     FASTSETT_ARBEIDSEVNE,
     VURDER_RETTIGHETSPERIODE,
     MOTTATT_KABAL_HENDELSE,
@@ -134,6 +143,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.SØKNAD_TRUKKET -> Vurderingsbehov.SØKNAD_TRUKKET
         EksponertÅrsak.REVURDERING_AVBRUTT -> Vurderingsbehov.REVURDERING_AVBRUTT
         EksponertÅrsak.FRITAK_MELDEPLIKT -> Vurderingsbehov.FRITAK_MELDEPLIKT
+        EksponertÅrsak.VURDER_FRITAK_MELDEPLIKT -> Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT
         EksponertÅrsak.KLAGE_TRUKKET -> Vurderingsbehov.KLAGE_TRUKKET
         EksponertÅrsak.REVURDER_MANUELL_INNTEKT -> Vurderingsbehov.REVURDER_MANUELL_INNTEKT
         EksponertÅrsak.MOTTATT_KABAL_HENDELSE -> Vurderingsbehov.MOTTATT_KABAL_HENDELSE
