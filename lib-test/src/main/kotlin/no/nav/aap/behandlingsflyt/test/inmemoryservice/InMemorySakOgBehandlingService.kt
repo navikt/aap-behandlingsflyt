@@ -27,7 +27,7 @@ val InMemoryBehandlingService = BehandlingService(
     trukketSøknadService = TrukketSøknadService(
         InMemoryTrukketSøknadRepository
     ),
-    underveisService = UnderveisService(inMemoryRepositoryProvider, minimalGatewayProvider {  }),
+    underveisService = UnderveisService(inMemoryRepositoryProvider, minimalGatewayProvider()),
     avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(
         InMemoryAvbrytAktivitetspliktbehandlingRepository
     )

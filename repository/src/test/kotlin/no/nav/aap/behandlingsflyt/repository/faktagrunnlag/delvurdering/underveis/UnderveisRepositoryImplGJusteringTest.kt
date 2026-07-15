@@ -42,7 +42,7 @@ import java.time.LocalDateTime
 class UnderveisRepositoryImplGJusteringTest {
 
     private lateinit var dataSource: TestDataSource
-    private val gatewayProvider = minimalGatewayProvider {  }
+    private val gatewayProvider = minimalGatewayProvider()
 
     @BeforeEach
     fun setUp() {
