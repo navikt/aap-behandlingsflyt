@@ -10,7 +10,6 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -95,7 +94,6 @@ fun NormalOpenAPIRoute.behandlingApi(
                             log.warn("Feil ved utleding av virkningstidspunkt for behandling ${behandling.id}", it)
                             null
                         }
-                    val flyt = behandling.flyt()
 
                     val kravMottatt = finnKravMottatt(repositoryProvider, behandling)
                     val tilhørendeKlagebehandling = tilhørendeKlagebehandling(
@@ -120,16 +118,15 @@ fun NormalOpenAPIRoute.behandlingApi(
                         opprettet = behandling.opprettetTidspunkt,
                         skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status()
                             .erAvsluttet(),
-                        avklaringsbehov = FrivilligeAvklaringsbehov(
-                            avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id),
-                            flyt,
-                            behandling.aktivtSteg()
-                        ).alle().map { avklaringsbehov ->
-                            AvklaringsbehovDTO(
-                                avklaringsbehov = avklaringsbehov,
-                                kravdato = sak.rettighetsperiode.fom
-                            )
-                        },
+                        avklaringsbehov =
+                            avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                                .allePlussFrivillige(behandling)
+                                .map { avklaringsbehov ->
+                                    AvklaringsbehovDTO(
+                                        avklaringsbehov = avklaringsbehov,
+                                        kravdato = sak.rettighetsperiode.fom
+                                    )
+                                },
                         vilkår = vilkårResultat(vilkårsresultatRepository, behandling.id).alle()
                             .map { vilkår ->
                                 VilkårDTO(
