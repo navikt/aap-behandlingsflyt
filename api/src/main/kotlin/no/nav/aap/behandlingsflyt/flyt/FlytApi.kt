@@ -8,12 +8,10 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.BehandlingTilstandValidator
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.DynamiskStegGruppeVisningService
 import no.nav.aap.behandlingsflyt.flyt.flate.visning.ProsesseringStatus
@@ -58,7 +56,7 @@ import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("flytApi")
@@ -89,7 +87,7 @@ fun NormalOpenAPIRoute.flytApi(
 
                     var behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sak = sakRepository.hent(behandling.sakId)
-                    val avklaringsbehovene = lazy { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) }
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
                     val gruppeVisningService = DynamiskStegGruppeVisningService(repositoryProvider, gatewayProvider)
                     val avbrytAktivitetspliktbehandlingService =
@@ -111,18 +109,14 @@ fun NormalOpenAPIRoute.flytApi(
                     val stegGrupper =
                         flyt.stegene().groupBy { steg -> steg.gruppe }
                             .filter { it.key != StegGruppe.KRAV || skalViseKravSteg }
-                            .filter { it.key != StegGruppe.AVSLAG_11_27 || skalViseAvslag11_27}
-                                val aktivtSteg = behandling.aktivtSteg()
+                            .filter { it.key != StegGruppe.AVSLAG_11_27 || skalViseAvslag11_27 }
+                    val aktivtSteg = behandling.aktivtSteg()
                     val aktivtStegDefinisjon = Definisjon.fraStegType(aktivtSteg)
                     var erFullført = true
 
-                    val alleAvklaringsbehovInkludertFrivillige = FrivilligeAvklaringsbehov(
-                        avklaringsbehovene.value,
-                        flyt, aktivtSteg
-                    )
                     val vurdertStegPair =
-                        utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene.value)
-                    val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
+                        utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
+                    val alleAvklaringsbehov = avklaringsbehovene.allePlussFrivillige(behandling)
                     val resultatKode = when {
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
                             behandling
@@ -178,10 +172,9 @@ fun NormalOpenAPIRoute.flytApi(
                         visning = utledVisning(
                             aktivtSteg = aktivtSteg,
                             flyt = flyt,
-                            alleAvklaringsbehovInkludertFrivillige = alleAvklaringsbehovInkludertFrivillige,
+                            avklaringsbehovene = avklaringsbehovene,
                             status = prosessering.status,
                             typeBehandling = behandling.typeBehandling(),
-                            avklaringsbehov = alleAvklaringsbehov,
                             bruker = bruker(),
                             behandlingStatus = behandling.status(),
                             unleashGateway = unleashGateway,
@@ -440,10 +433,9 @@ private fun lagProsessering(
 private fun utledVisning(
     aktivtSteg: StegType,
     flyt: BehandlingFlyt,
-    alleAvklaringsbehovInkludertFrivillige: FrivilligeAvklaringsbehov,
+    avklaringsbehovene: Avklaringsbehovene,
     status: ProsesseringStatus,
     typeBehandling: TypeBehandling,
-    avklaringsbehov: List<Avklaringsbehov>,
     bruker: Bruker,
     behandlingStatus: Status,
     unleashGateway: UnleashGateway,
@@ -451,16 +443,14 @@ private fun utledVisning(
 ): Visning {
     val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
 
-    val brukerHarKvalitetssikret = avklaringsbehov.filter { it.definisjon === Definisjon.KVALITETSSIKRING }
-        .any { it.brukere().contains(bruker.ident) }
-    val brukerHarBesluttet =
-        avklaringsbehov.filter { it.definisjon === Definisjon.FATTE_VEDTAK }.any { it.brukere().contains(bruker.ident) }
+    val brukerHarKvalitetssikret = avklaringsbehovene.erLøstAv(bruker, Definisjon.KVALITETSSIKRING)
+    val brukerHarBesluttet = avklaringsbehovene.erLøstAv(bruker, Definisjon.FATTE_VEDTAK)
 
     val jobberEllerFeilet = status in listOf(ProsesseringStatus.JOBBER, ProsesseringStatus.FEILET)
-    val påVent = alleAvklaringsbehovInkludertFrivillige.erSattPåVent()
+    val påVent = avklaringsbehovene.erSattPåVent()
     val beslutterReadOnly = aktivtSteg != StegType.FATTE_VEDTAK
     val erTilKvalitetssikring =
-        harÅpentKvalitetssikringsAvklaringsbehov(alleAvklaringsbehovInkludertFrivillige) && aktivtSteg == StegType.KVALITETSSIKRING
+        avklaringsbehovene.erÅpent(Definisjon.KVALITETSSIKRING) && aktivtSteg == StegType.KVALITETSSIKRING
 
     val saksbehandlerReadOnly = if (brukerHarIngenValidering) {
         erTilKvalitetssikring || erEtterBeslutterstegetHvisEksisterer(
@@ -475,13 +465,11 @@ private fun utledVisning(
     }
 
     val visBeslutterKort =
-        !beslutterReadOnly || (!saksbehandlerReadOnly && alleAvklaringsbehovInkludertFrivillige.harVærtSendtTilbakeFraBeslutterTidligere())
-    val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(alleAvklaringsbehovInkludertFrivillige)
+        !beslutterReadOnly || (!saksbehandlerReadOnly && avklaringsbehovene.harVærtSendtTilbakeFraBeslutterTidligere())
+    val visKvalitetssikringKort = utledVisningAvKvalitetsikrerKort(avklaringsbehovene)
     val kvalitetssikringReadOnly = visKvalitetssikringKort && flyt.erStegFør(aktivtSteg, StegType.KVALITETSSIKRING)
-    val visBrevkort =
-        alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-            ?.erÅpent() == true || alleAvklaringsbehovInkludertFrivillige.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
-            ?.erÅpent() == true
+    val visBrevkort = avklaringsbehovene.erÅpent(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+            || avklaringsbehovene.erÅpent(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
 
     if (jobberEllerFeilet) {
         return Visning(
@@ -523,19 +511,16 @@ private fun utledVisning(
 }
 
 private fun utledVisningAvKvalitetsikrerKort(
-    avklaringsbehovene: FrivilligeAvklaringsbehov
+    avklaringsbehovene: Avklaringsbehovene
 ): Boolean {
     if (avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
         return true
     }
-    if (harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene)) {
+    if (avklaringsbehovene.erÅpent(Definisjon.KVALITETSSIKRING)) {
         return true
     }
     return false
 }
-
-private fun harÅpentKvalitetssikringsAvklaringsbehov(avklaringsbehovene: FrivilligeAvklaringsbehov): Boolean =
-    avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.erÅpent() == true
 
 private fun erEtterBeslutterstegetHvisEksisterer(flyt: BehandlingFlyt, aktivtSteg: StegType): Boolean {
     return flyt.stegene().contains(StegType.FATTE_VEDTAK) && !flyt.erStegFør(
