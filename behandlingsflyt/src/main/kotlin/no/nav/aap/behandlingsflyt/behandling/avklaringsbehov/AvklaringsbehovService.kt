@@ -399,37 +399,6 @@ class AvklaringsbehovService(
         )
     }
 
-
-    fun oppdaterFrivilligAvklaringsbehovForPeriodisertYtelsesvilkår(
-        definisjon: Definisjon,
-        tvingerAvklaringsbehov: Set<Vurderingsbehov>,
-        /**
-         * Hvilke perioder vurdering er relevant.
-         * Brukes til å utlede hvorvidt vedtaket behøver vurdering.
-         */
-        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
-        /**
-         * Hvilke perioder behandlingen har en god nok vurdering for.
-         * Det vil løftes avklaringsbehov for relevante perioder som mangler gyldig vurdering.
-         */
-        nårVurderingErGyldig: () -> Tidslinje<Boolean>,
-        kontekst: FlytKontekstMedPerioder,
-        tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
-    ) {
-        oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            definisjon = definisjon,
-            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
-            nårVurderingErRelevant = nårVurderingErRelevant,
-            kontekst = kontekst,
-            perioderSomIkkeErTilstrekkeligVurdert = { null },
-            nårVurderingErGyldig = nårVurderingErGyldig,
-            tilbakestillGrunnlag = tilbakestillGrunnlag,
-            gjeldendeVurderinger = gjeldendeVurderinger,
-            kreverRelevansForÅTvinge = false
-        )
-    }
-
     private fun perioderSomBehøverVurdering(
         kontekst: FlytKontekstMedPerioder,
         perioderVilkåretErRelevant: Tidslinje<Boolean>,

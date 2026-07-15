@@ -40,11 +40,7 @@ class FritakMeldepliktLøsning(
         løsningerForPerioder = periodisertFritaksvurdering
     )
 
-    override fun løs(
-        repositoryProvider: RepositoryProvider,
-        kontekst: AvklaringsbehovKontekst,
-        gatewayProvider: GatewayProvider
-    ): LøsningsResultat {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FritakFraMeldepliktLøser(repositoryProvider).løs(kontekst, løsning)
     }
 }
@@ -60,11 +56,7 @@ class PeriodisertFritakMeldepliktLøsning(
     override val løsningerForPerioder: List<PeriodisertFritaksvurderingDto>
 ) : PeriodisertAvklaringsbehovLøsning<PeriodisertFritaksvurderingDto> {
 
-    override fun løs(
-        repositoryProvider: RepositoryProvider,
-        kontekst: AvklaringsbehovKontekst,
-        gatewayProvider: GatewayProvider
-    ): LøsningsResultat {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FritakFraMeldepliktLøser(repositoryProvider).løs(kontekst, this)
     }
 

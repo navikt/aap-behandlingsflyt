@@ -26,7 +26,7 @@ class FastsettArbeidsevneSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vurderinger = arbeidsevneRepository.hentHvisEksisterer(kontekst.behandlingId)?.tilTidslinje().orEmpty()
 
-        avklaringsbehovService.oppdaterFrivilligAvklaringsbehovForPeriodisertYtelsesvilkår(
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.FASTSETT_ARBEIDSEVNE,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.FASTSETT_ARBEIDSEVNE),
             nårVurderingErRelevant = {

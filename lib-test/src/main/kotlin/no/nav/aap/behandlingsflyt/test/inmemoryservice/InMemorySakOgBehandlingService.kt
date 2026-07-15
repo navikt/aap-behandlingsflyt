@@ -31,7 +31,7 @@ val InMemoryBehandlingService = BehandlingService(
     avbrytRevurderingService = AvbrytRevurderingService(
         InMemoryAvbrytRevurderingRepository
     ),
-    underveisService = UnderveisService(inMemoryRepositoryProvider, minimalGatewayProvider {  }),
+    underveisService = UnderveisService(inMemoryRepositoryProvider, minimalGatewayProvider()),
     avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(
         InMemoryAvbrytAktivitetspliktbehandlingRepository
     )
