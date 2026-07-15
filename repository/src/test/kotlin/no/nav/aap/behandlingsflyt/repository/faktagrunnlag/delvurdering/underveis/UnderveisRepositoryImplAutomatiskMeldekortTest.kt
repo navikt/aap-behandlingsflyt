@@ -31,7 +31,7 @@ import java.time.LocalDateTime
 class UnderveisRepositoryImplAutomatiskMeldekortTest {
 
     private lateinit var dataSource: TestDataSource
-    private val gatewayProvider = minimalGatewayProvider { }
+    private val gatewayProvider = minimalGatewayProvider()
 
     private val idag = LocalDate.of(2026, 6, 9)
 

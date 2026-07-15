@@ -52,6 +52,9 @@ class AzureTokenGen(private val audience: String) {
                         "syfo-api"
                     )
                 )
+                // Lokalt er NAIS_TEAM_AAP satt til strengen "NAIS_TEAM_AAP".
+                // Nødvendig for å kalle drift-endepunkter som krever team-tilgang (f.eks. motorApi).
+                .claim("groups", listOf(System.getProperty("NAIS_TEAM_AAP", "NAIS_TEAM_AAP")))
                 .claim(
                     "azp", azp
                 )

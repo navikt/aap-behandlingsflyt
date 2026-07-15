@@ -68,7 +68,6 @@ class AvklaringsbehovService(
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
-
     }
 
     /** Oppdater tilstanden på avklaringsbehovet [definisjon], slik at kvalitetssikring,
@@ -81,6 +80,8 @@ class AvklaringsbehovService(
      * For at flyten skal bli riktig hvis man beveger seg fram og tilbake i flyten,
      * så er det viktig at et steg rydder opp etter seg når det viser seg at steget
      * ikke er relevant allikevel. Denne funksjonen hjelper også med det.
+     *
+     * @throws IllegalStateException Hvis avklaringsbehovet løses i et udefinert steg.
      */
     private fun oppdaterAvklaringsbehov(
         definisjon: Definisjon,
@@ -258,7 +259,7 @@ class AvklaringsbehovService(
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null }, // TODO: Gjør required når alle steg er oppdatert
     ) {
         val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
@@ -282,14 +283,14 @@ class AvklaringsbehovService(
                 }
             }
 
-            VurderingType.MELDEKORT -> Pair(false, emptySet())
-            VurderingType.AUTOMATISK_BREV -> Pair(false, emptySet())
-            VurderingType.UTVID_VEDTAKSLENGDE -> Pair(false, emptySet())
-            VurderingType.MIGRER_RETTIGHETSPERIODE -> Pair(false, emptySet())
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> Pair(false, emptySet())
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Pair(false, emptySet())
-            VurderingType.G_REGULERING -> Pair(false, emptySet())
-            VurderingType.OVERGANG_UFORE_STANS -> Pair(false, emptySet())
+            VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())
         }
 
@@ -333,9 +334,9 @@ class AvklaringsbehovService(
     }
 
     /**
-     * Her sender man inn eksplistte perioderSomIkkeErTilstrekkeligVurdert.
+     * Her sender man inn eksplistte [perioderSomIkkeErTilstrekkeligVurdert].
      * Dette kan være nyttig dersom man må se på perioder som befinner seg utenfor perioder som behøver vurdering;
-     * for eksempel hvis man ikke skal tillate vurderinger utenfor nårVurderingErRelevant
+     * for eksempel hvis man ikke skal tillate vurderinger utenfor [nårVurderingErRelevant].
      */
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
         definisjon: Definisjon,
@@ -347,14 +348,14 @@ class AvklaringsbehovService(
         gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            definisjon,
-            tvingerAvklaringsbehov,
-            nårVurderingErRelevant,
-            kontekst,
-            perioderSomIkkeErTilstrekkeligVurdert,
-            { null },
-            tilbakestillGrunnlag,
-            gjeldendeVurderinger
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            nårVurderingErGyldig = { null },
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            gjeldendeVurderinger = gjeldendeVurderinger
         )
     }
 
