@@ -71,44 +71,48 @@ class ForeldrepengevedtakHendelseKafkaKonsumentTest {
 
     @Test
     fun `Foreldrepengevedtakhendelse konsumeres av kafka`() {
-
-        val foreldrepengevedtakhendelse = ForeldrepengevedtakKafkaMelding(
-            personidentifikator = "12345678901",
-            tidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
-            tema = "FOR",
-        )
-        val producerProps = Properties().apply {
-            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
-            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
-            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
-        }
-
-        KafkaProducer<String, String>(producerProps).use { producer ->
-            val value = DefaultJsonMapper.toJson(foreldrepengevedtakhendelse)
-            producer.send(
-                ProducerRecord(
-                    FORELDREPENGEVEDTAK_EVENT_TOPIC,
-                    foreldrepengevedtakhendelse.personidentifikator,
-                    value
-                )
-            )
-            producer.flush()
-        }
-
-
-        val pollThread = thread(start = true) {
+        val pollThread = thread(start = true, isDaemon = true) {
             konsument.konsumer()
         }
 
-        while (konsument.antallMeldinger == 0) {
-            Thread.sleep(100)
+        try {
+            val foreldrepengevedtakhendelse = ForeldrepengevedtakKafkaMelding(
+                personidentifikator = "12345678901",
+                tidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
+                tema = "FOR",
+            )
+
+            val producerProps = Properties().apply {
+                put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
+                put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
+                put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
+            }
+
+            KafkaProducer<String, String>(producerProps).use { producer ->
+                val value = DefaultJsonMapper.toJson(foreldrepengevedtakhendelse)
+                producer.send(
+                    ProducerRecord(
+                        FORELDREPENGEVEDTAK_EVENT_TOPIC,
+                        foreldrepengevedtakhendelse.personidentifikator,
+                        value
+                    )
+                ).get()
+                producer.flush()
+            }
+
+            val timeoutMs = 10_000L
+            val start = System.currentTimeMillis()
+            while (konsument.antallMeldinger == 0 && System.currentTimeMillis() - start < timeoutMs) {
+                Thread.sleep(50)
+            }
+
+            assertThat(konsument.antallMeldinger)
+                .withFailMessage("Forventet 1 melding innen ${timeoutMs}ms, fikk ${konsument.antallMeldinger}")
+                .isEqualTo(1)
+        } finally {
+            konsument.lukk()
+            pollThread.join(2_000)
         }
-
-        assertThat(konsument.antallMeldinger).isEqualTo(1)
-
-        konsument.lukk()
-        kafka.stop()
-        pollThread.join()
     }
 
 
