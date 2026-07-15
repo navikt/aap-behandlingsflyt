@@ -20,8 +20,7 @@ class FastsettArbeidsevneSteg private constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val arbeidsevneRepository: ArbeidsevneRepository,
-) :
-    BehandlingSteg {
+) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vurderinger = arbeidsevneRepository.hentHvisEksisterer(kontekst.behandlingId)?.tilTidslinje().orEmpty()
@@ -33,8 +32,8 @@ class FastsettArbeidsevneSteg private constructor(
                 tidligereVurderinger.behandlingsutfall(kontekst, type())
                     .leftJoin(vurderinger) { utfall, arbeidsevnevurdering ->
                         when (utfall) {
-                            TidligereVurderinger.IkkeBehandlingsgrunnlag,
-                            TidligereVurderinger.UunngåeligAvslag -> false
+                            TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+
                             is TidligereVurderinger.PotensieltOppfylt -> arbeidsevnevurdering != null
                         }
                     }
@@ -48,13 +47,11 @@ class FastsettArbeidsevneSteg private constructor(
 
     companion object : FlytSteg {
         override fun konstruer(
-            repositoryProvider: RepositoryProvider,
-            gatewayProvider: GatewayProvider
+            repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return FastsettArbeidsevneSteg(
                 avklaringsbehovService = AvklaringsbehovService(
-                    repositoryProvider,
-                    gatewayProvider
+                    repositoryProvider, gatewayProvider
                 ),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 arbeidsevneRepository = repositoryProvider.provide(),
