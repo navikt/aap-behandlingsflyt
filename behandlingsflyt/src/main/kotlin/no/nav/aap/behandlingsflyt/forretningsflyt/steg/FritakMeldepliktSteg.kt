@@ -30,7 +30,7 @@ class FritakMeldepliktSteg internal constructor(
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.FRITAK_MELDEPLIKT),
-            nårVurderingErRelevant = { nårVurderingErRelevant(kontekst) },
+            nårVurderingErRelevant = { nårVurderingErRelevant(it) },
             nårVurderingErGyldig = {
                 val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, kontekst.behandlingId)
                     .hentBehovForDefinisjon(Definisjon.FRITAK_MELDEPLIKT)
