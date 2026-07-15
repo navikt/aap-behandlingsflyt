@@ -76,7 +76,7 @@ class FritakMeldepliktSteg internal constructor(
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
 
-                is TidligereVurderinger.PotensieltOppfylt, null -> meldepliktvurdering != null || finnesVurderingsbehov
+                is TidligereVurderinger.PotensieltOppfylt, null -> finnesVurderingsbehov
             }
         }
     }

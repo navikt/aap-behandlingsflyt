@@ -260,7 +260,6 @@ class AvklaringsbehovService(
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null }, // TODO: Gjør required når alle steg er oppdatert
-        kreverRelevansForÅTvinge: Boolean = true
     ) {
         val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
@@ -274,7 +273,7 @@ class AvklaringsbehovService(
                         nårVurderingErRelevant
                     )
 
-                if ((!kreverRelevansForÅTvinge || perioderVilkåretErRelevant.segmenter().any { it.verdi })
+                if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
                     && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
                 ) {
                     // Vi behøver vurdering, men har ikke nødvendigvis noen obligatoriske perioder
