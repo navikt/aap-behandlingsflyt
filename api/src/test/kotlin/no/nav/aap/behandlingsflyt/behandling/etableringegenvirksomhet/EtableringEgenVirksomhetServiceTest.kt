@@ -68,7 +68,7 @@ class EtableringEgenVirksomhetServiceTest {
                     overgangBegrunnelse = null,
                     skalVurdereAapIOvergangTilArbeid = false,
                     vurdertAv = "saks",
-                    vurderingenGjelderFra = LocalDate.of(2026, 1, 1),
+                    fom = LocalDate.of(2026, 1, 1),
                     tom = LocalDate.of(2026, 1, 3),
                     opprettet = Instant.now(),
                     vurdertIBehandling = behandling.id
@@ -81,7 +81,7 @@ class EtableringEgenVirksomhetServiceTest {
                     overgangBegrunnelse = null,
                     skalVurdereAapIOvergangTilArbeid = false,
                     vurdertAv = "saks",
-                    vurderingenGjelderFra = LocalDate.of(2026, 1, 4),
+                    fom = LocalDate.of(2026, 1, 4),
                     tom = LocalDate.of(2026, 1, 6),
                     opprettet = Instant.now(),
                     vurdertIBehandling = behandling.id
@@ -134,7 +134,7 @@ class EtableringEgenVirksomhetServiceTest {
                     overgangBegrunnelse = null,
                     skalVurdereAapIOvergangTilArbeid = false,
                     vurdertAv = "saks",
-                    vurderingenGjelderFra = LocalDate.now(),
+                    fom = LocalDate.now(),
                     tom = LocalDate.now().plusMonths(6),
                     opprettet = Instant.now(),
                     vurdertIBehandling = behandling.id

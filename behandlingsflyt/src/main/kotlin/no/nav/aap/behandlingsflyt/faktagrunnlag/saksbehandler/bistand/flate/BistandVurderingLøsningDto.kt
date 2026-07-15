@@ -24,7 +24,7 @@ data class BistandLøsningDto(
             erBehovForAktivBehandling = erBehovForAktivBehandling,
             erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
             erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
-            vurderingenGjelderFra = fom,
+            fom = fom,
             overgangBegrunnelse = overgangBegrunnelse,
             skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
             vurdertAv = bruker.ident,

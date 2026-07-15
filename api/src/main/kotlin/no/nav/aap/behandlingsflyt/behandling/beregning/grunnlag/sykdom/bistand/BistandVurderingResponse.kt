@@ -42,7 +42,7 @@ data class BistandVurderingResponse(
         fun fraDomene(
             bistandsvurdering: Bistandsvurdering,
             vurdertAvService: VurdertAvService,
-            fom: LocalDate = bistandsvurdering.vurderingenGjelderFra,
+            fom: LocalDate = bistandsvurdering.fom,
             tom: LocalDate? = null
         ) = BistandVurderingResponse(
             begrunnelse = bistandsvurdering.begrunnelse,
