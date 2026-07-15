@@ -89,7 +89,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val query = """
             SELECT bg.bistand_vurderinger_id
             FROM bistand_grunnlag bg
-            JOIN behandling b on b.id = bg.behandling_id
             WHERE bg.behandling_id = ?
                 AND bg.opprettet_tid <= ?
             ORDER BY bg.opprettet_tid DESC
