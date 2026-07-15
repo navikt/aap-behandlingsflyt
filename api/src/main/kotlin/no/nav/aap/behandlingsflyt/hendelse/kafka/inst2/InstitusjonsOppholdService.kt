@@ -14,20 +14,29 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class InstitusjonsOppholdService(
-    private val repositoryProvider: RepositoryProvider,
-    private val gatewayProvider: GatewayProvider,
+    private val sakRepository: SakRepository,
+    private val personRepository: PersonRepository,
+    private val hendelseService: MottattHendelseService,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val behandlingService: BehandlingService,
     private val institusjonsoppholdKlient: InstitusjonsoppholdGateway,
 ) {
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider,
+    ) : this(
+        sakRepository = repositoryProvider.provide(),
+        personRepository = repositoryProvider.provide(),
+        hendelseService = MottattHendelseService(repositoryProvider),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+        institusjonsoppholdKlient = gatewayProvider.provide(),
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     fun håndter(meldingKey: String, meldingVerdi: InstitusjonsOppholdHendelseKafkaMelding) {
-        val sakRepository: SakRepository = repositoryProvider.provide()
-        val personRepository: PersonRepository = repositoryProvider.provide()
-        val hendelseService = MottattHendelseService(repositoryProvider)
-        val trukketSøknadService = TrukketSøknadService(repositoryProvider)
-        val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
-
         val person = personRepository.finn(Ident(meldingVerdi.norskident))
         secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} $person")
 

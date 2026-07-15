@@ -46,12 +46,8 @@ class InstitusjonsOppholdKafkaKonsument(
         val meldingKey = "${melding.partition()}-${melding.offset()}"
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
-            val institusjonsOppholdservice = InstitusjonsOppholdService(
-                repositoryProvider = repositoryProvider,
-                gatewayProvider = gatewayProvider,
-                institusjonsoppholdKlient = institusjonsoppholdKlient
-            )
-            institusjonsOppholdservice.håndter(meldingKey, melding.value())
+            val institusjonsoppholdService = InstitusjonsOppholdService(repositoryProvider, gatewayProvider)
+            institusjonsoppholdService.håndter(meldingKey, melding.value())
         }
     }
 
