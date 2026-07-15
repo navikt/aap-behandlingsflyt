@@ -136,14 +136,19 @@ class KabalKafkaKonsumentTest {
             konsument.konsumer()
         }
 
-        while (konsument.antallMeldinger == 0) {
-            Thread.sleep(100)
+        produserHendelse(
+            listOf("1" to DefaultJsonMapper.toJson(hendelse)),
+            testTopic
+        )
+
+        ventTil(feilmelding = "Timeout for konsumert melding") {
+            konsument.antallMeldinger == 1
         }
 
         assertThat(konsument.antallMeldinger).isEqualTo(1)
 
         konsument.lukk()
-        pollThread.join()
+        pollThread.join(2_000)
         assertThat(konsument.antallMeldinger).isEqualTo(1)
 
         motor.kjørJobber()
@@ -210,11 +215,11 @@ class KabalKafkaKonsumentTest {
         }
 
         // Konsumenten forventes å lukke seg selv pga. exception ved parsing av ugyldig melding
-        while (!konsument.erLukket()) {
-            Thread.sleep(100)
+        ventTil(feilmelding = "Timeout waiting for consumer to close after parse error") {
+            konsument.erLukket()
         }
 
-        pollThread.join()
+        pollThread.join(2_000)
 
         assertThat(konsument.antallMeldinger).isEqualTo(0)
     }
@@ -306,6 +311,21 @@ class KabalKafkaKonsumentTest {
                     row.getString("parameters")
                 )
             }
+        }
+    }
+
+    private fun ventTil(
+        timeoutMs: Long = 10_000,
+        pollMs: Long = 50,
+        feilmelding: String,
+        condition: () -> Boolean,
+    ) {
+        val start = System.currentTimeMillis()
+        while (!condition()) {
+            if (System.currentTimeMillis() - start > timeoutMs) {
+                throw AssertionError(feilmelding)
+            }
+            Thread.sleep(pollMs)
         }
     }
 }
