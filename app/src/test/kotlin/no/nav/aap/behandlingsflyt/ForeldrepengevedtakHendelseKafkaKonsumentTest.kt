@@ -36,7 +36,6 @@ class ForeldrepengevedtakHendelseKafkaKonsumentTest {
     companion object {
         private val logger = LoggerFactory.getLogger(ForeldrepengevedtakKafkaKonsument::class.java)
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
             .withLogConsumer { Slf4jLogConsumer(logger) }
@@ -107,7 +106,6 @@ class ForeldrepengevedtakHendelseKafkaKonsumentTest {
         assertThat(konsument.antallMeldinger).isEqualTo(1)
 
         konsument.lukk()
-        kafka.stop()
         pollThread.join()
     }
 
