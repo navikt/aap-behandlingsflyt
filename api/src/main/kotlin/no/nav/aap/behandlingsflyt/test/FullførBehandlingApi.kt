@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.prosessering.SendAutomatiskMeldekortJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.SendAutomatiskMeldekortEngangsJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -79,7 +79,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                                 dataSource.transaction { connection ->
                                     repositoryRegistry.provider(connection)
                                         .provide<FlytJobbRepository>()
-                                        .leggTil(SendAutomatiskMeldekortJobbUtfører.nyEngangsJobb(resultat.sak.id))
+                                        .leggTil(SendAutomatiskMeldekortEngangsJobbUtfører.nyEngangsJobb(resultat.sak.id))
                                 }
                             }
                         } catch (e: Exception) {
