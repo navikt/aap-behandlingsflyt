@@ -66,6 +66,8 @@ spec:
         extra:
           - "NAVident"
           - "azp_name"
+        groups:
+          - id: ee2a0374-97a6-462e-9a05-3cb7be3d8fc5 #NAIS_TEAM_AAP
   envFrom:
     - secret: kelvin-unleash-api-token
   accessPolicy:
@@ -271,3 +273,5 @@ spec:
       value: http://saksbehandling-pdfgen
     - name: INTEGRASJON_PDFGEN_SCOPE
       value: api://prod-gcp.aap.saksbehandling-pdfgen/.default
+    - name: NAIS_TEAM_AAP
+      value: ee2a0374-97a6-462e-9a05-3cb7be3d8fc5
