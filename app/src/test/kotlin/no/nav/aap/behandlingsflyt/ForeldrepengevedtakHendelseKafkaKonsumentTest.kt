@@ -99,11 +99,13 @@ class ForeldrepengevedtakHendelseKafkaKonsumentTest {
             konsument.konsumer()
         }
 
-        while (konsument.antallMeldinger == 0) {
+        while (konsument.antallMeldinger == 0 && pollThread.isAlive) {
             Thread.sleep(100)
         }
 
-        assertThat(konsument.antallMeldinger).isEqualTo(1)
+        assertThat(konsument.antallMeldinger)
+            .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
+            .isEqualTo(1)
 
         konsument.lukk()
         pollThread.join()

@@ -26,7 +26,8 @@ import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.time.LocalDate
-import java.util.*
+import java.util.Properties
+import java.util.UUID
 import kotlin.concurrent.thread
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
@@ -103,11 +104,13 @@ class UførevedtakHendelseKafkaKonsumentTest {
             konsument.konsumer()
         }
 
-        while (konsument.antallMeldinger == 0) {
+        while (konsument.antallMeldinger == 0 && pollThread.isAlive) {
             Thread.sleep(100)
         }
 
-        assertThat(konsument.antallMeldinger).isEqualTo(1)
+        assertThat(konsument.antallMeldinger)
+            .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
+            .isEqualTo(1)
 
         konsument.lukk()
         pollThread.join()
@@ -116,7 +119,7 @@ class UførevedtakHendelseKafkaKonsumentTest {
 
 
 private fun testConfig(brokers: String) = KafkaConsumerConfig<String, String>(
-    applicationId = "behandlingsflyt-test-${java.util.UUID.randomUUID()}",
+    applicationId = "behandlingsflyt-test-${UUID.randomUUID()}",
     brokers = brokers,
     ssl = null,
     schemaRegistry = SchemaRegistryConfig(
