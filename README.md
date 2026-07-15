@@ -52,17 +52,6 @@ Eller på en spesifikk modul:
 
 Detekt-konfigurasjonen finnes i `config/detekt/detekt.yml`.
 
-### Laste ned private pakker
-
-For at Gradle skal finne private pakker på Github, legg dette i `~/.gradle/gradle.properties`
-
-```
-githubUser=<github-brukernavn>
-githubPassword=<github-token>
-```
-
-Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.
-
 ### Kjøre lokalt
 
 Appen har ulike run-konfigurasjoner i IntelliJ for å kjøre mot "fake" data eller mot dev-gcp.

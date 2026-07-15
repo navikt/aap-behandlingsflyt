@@ -548,7 +548,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val query = """
             SELECT sg.sykdom_vurderinger_id
             FROM sykdom_grunnlag sg
-            JOIN behandling b on b.id = sg.behandling_id
             WHERE sg.behandling_id = ?
                 AND sg.opprettet_tid <= ?
             ORDER BY sg.opprettet_tid DESC

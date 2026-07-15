@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryBistandRepository : BistandRepository {
@@ -23,6 +24,13 @@ object InMemoryBistandRepository : BistandRepository {
         bistandsvurderinger: List<Bistandsvurdering>
     ) {
         bistandsvurderingerMap[behandlingId] = bistandsvurderinger
+    }
+
+    override fun hentBistandsvurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<Bistandsvurdering> {
+        return emptyList()
     }
 
     override fun kopier(

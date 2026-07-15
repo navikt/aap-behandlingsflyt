@@ -46,12 +46,18 @@ class BehandlingService(
         unleashGateway = gatewayProvider.provide()
     )
 
-    /**
-     * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
+    /** Alle ytelsesbehandlinger for sak, sortert basert på behandling.forrigeBehandlingId. */
+    fun alleYtelsesbehandlinger(sakId: SakId): List<Behandling> {
+        val ytelsesbehandlinger = behandlingRepository.hentAlleIkkeAvbrutteYtelsesbehandlinger(sakId)
+        return ytelsesbehandlinger.sortedWith(comparator(ytelsesbehandlinger))
+    }
+
+    /** Siste ikke-avbrutte ytelsesbehandling, uavhengig av om den er åpen eller vedtatt.
+     *
+     * Er du sikker på at du ikke bryr deg om behandlingen du får er siste vedtatte eller en åpen behandling?
      */
     fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
-        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
-        return ytelsesbehandlinger.sortedWith(comparator(ytelsesbehandlinger)).lastOrNull()
+        return alleYtelsesbehandlinger(sakId).lastOrNull()
     }
 
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
@@ -392,7 +398,8 @@ class BehandlingService(
         }
     }
 
-    fun comparator(ytelsesbehandlinger: List<Behandling>): Comparator<Behandling> {
+    /** Antagelse som kaller må ivareta: ingen avbrutte behandlinger finnes i [ytelsesbehandlinger]. */
+    private fun comparator(ytelsesbehandlinger: List<Behandling>): Comparator<Behandling> {
         /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
          * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
          * så vi regner ut bakover-pekerne.
@@ -400,11 +407,6 @@ class BehandlingService(
 
         val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
         for (behandling in ytelsesbehandlinger) {
-            // Hopp over hvis behandlingen er avbrutt
-            if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
-                continue
-            }
-
             nesteId[behandling.forrigeBehandlingId ?: continue] = behandling.id
         }
 

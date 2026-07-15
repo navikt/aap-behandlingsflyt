@@ -129,7 +129,6 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = AlleAvskruddUnleash,
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
             behandlingRepository = inMemoryRepositoryProvider.provide(),
             behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())

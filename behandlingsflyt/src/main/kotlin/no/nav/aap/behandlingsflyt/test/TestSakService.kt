@@ -47,7 +47,7 @@ class TestSakService(
         harYrkesskade: Boolean,
         harMedlemskap: Boolean,
         andreUtbetalinger: AndreUtbetalingerDto?,
-        søknadsdato: LocalDate? = null,
+        søknadsdato: LocalDate?
     ): OpprettTestSakResultat {
         if (Miljø.erProd()) {
             error("Man kan ikke opprette testsaker i produksjon")

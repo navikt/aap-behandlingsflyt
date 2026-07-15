@@ -22,3 +22,19 @@ data class Bistandsvurdering(
     }
 }
 
+fun List<Bistandsvurdering>.erFunksjoneltLik(annen: List<Bistandsvurdering>): Boolean {
+    if (this.size != annen.size) return false
+
+    // sammenlikner alle felter unntat vurdertAv og tidsstempel
+    return this.zip(annen).all { (første, andre) ->
+        første.begrunnelse == andre.begrunnelse &&
+                første.erBehovForAktivBehandling == andre.erBehovForAktivBehandling &&
+                første.erBehovForArbeidsrettetTiltak == andre.erBehovForArbeidsrettetTiltak &&
+                første.erBehovForAnnenOppfølging == andre.erBehovForAnnenOppfølging &&
+                første.overgangBegrunnelse == andre.overgangBegrunnelse &&
+                første.skalVurdereAapIOvergangTilArbeid == andre.skalVurdereAapIOvergangTilArbeid &&
+                første.vurderingenGjelderFra == andre.vurderingenGjelderFra &&
+                første.tom == andre.tom
+    }
+}
+

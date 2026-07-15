@@ -7,10 +7,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -94,6 +96,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon")),
             meldepliktStatus = it.getEnumOrNull("meldeplikt_status"),
             meldepliktGradering = it.getIntOrNull("meldeplikt_gradering")?.let { Prosent(it) },
+            unleashGateway = UnleashGatewayImpl,
         )
     }
 
@@ -152,6 +155,33 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 SakId(it.getLong("sakId"))
             }
         }.toSet()
+    }
+
+    override fun hentUbesvarteMeldeperioderForDollyJobb(sakIds: List<SakId>, idag: LocalDate): Map<SakId, List<Periode>> {
+        if (sakIds.isEmpty()) return emptyMap()
+
+        val query = """
+            SELECT DISTINCT gvb.sak_id, up.meldeperiode
+            FROM underveis_grunnlag ug
+                JOIN underveis_periode up ON ug.perioder_id = up.perioder_id
+                JOIN gjeldende_vedtatte_behandlinger gvb ON gvb.behandling_id = ug.behandling_id
+            WHERE ug.aktiv = true
+                AND up.meldeplikt_status IN ('IKKE_MELDT_SEG', 'FØR_VEDTAK')
+                AND upper(up.meldeperiode) <= ?
+                AND gvb.sak_id = ANY(?)
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLocalDate(1, idag.plusDays(1))
+                setLongArray(2, sakIds.map { it.toLong() })
+            }
+            setRowMapper {
+                val sakId = SakId(it.getLong("sak_id"))
+                val meldeperiode = it.getPeriode("meldeperiode")
+                sakId to meldeperiode
+            }
+        }.groupBy({ it.first }, { it.second })
     }
 
     override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> {
@@ -220,7 +250,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         """
                     SELECT perioder_id
                     FROM underveis_grunnlag
-                    WHERE behandling_id = ? AND perioder_id is not null
+                    WHERE behandling_id = ? AND perioder_id IS NOT NULL
                  
                 """.trimIndent()
     ) {
