@@ -64,7 +64,7 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    override fun hentAktivPåTidspunkt(
+    override fun hentSykdomsvurderingForBrevPåTidspunkt(
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime
     ): SykdomsvurderingForBrev? {
