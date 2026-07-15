@@ -1,16 +1,9 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Inst2KafkaDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -41,7 +34,6 @@ class InstitusjonsOppholdKafkaKonsument(
     consumerName = "AapBehandlingsflytInstitusjonsOppholdHendelse",
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun håndter(meldinger: ConsumerRecords<String, InstitusjonsOppholdHendelseKafkaMelding>) {
         meldinger.forEach(::håndter)
@@ -52,52 +44,15 @@ class InstitusjonsOppholdKafkaKonsument(
             "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: $topic"
         )
         val meldingKey = "${melding.partition()}-${melding.offset()}"
-        håndter(meldingKey, melding.value())
-    }
-
-    fun håndter(meldingKey: String, meldingVerdi: InstitusjonsOppholdHendelseKafkaMelding) {
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
-            val sakRepository: SakRepository = repositoryProvider.provide()
-            val personRepository: PersonRepository = repositoryProvider.provide()
-            val hendelseService =
-                MottattHendelseService(repositoryProvider)
-            val trukketSøknadService =
-                TrukketSøknadService(repositoryProvider)
-            val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
-            val person = personRepository.finn(Ident(meldingVerdi.norskident))
-            secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} $person")
-            if (person != null) {
-
-                val saker = sakRepository.finnSakerFor(person.id)
-
-                for (saken in saker) {
-                    val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)
-                    if (sisteYtelsesBehandling != null) {
-                        val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
-                        if (søknadErTrukket) {
-                            log.info("Institusjonsopphold oppdateres ikke, da sak med ${saken.id} er trukket")
-                            continue
-                        }
-                    }
-                        val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
-                        val beriketInstitusjonsopphold = Inst2KafkaDto(
-                            startdato = institusjonsopphold.startdato,
-                            sluttdato = institusjonsopphold.sluttdato,
-                        )
-                        meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
-
-                        hendelseService.registrerMottattHendelse(
-                            dto = meldingVerdi.tilInnsending(
-                                meldingKey,
-                                saken.saksnummer
-                            )
-                        )
-                        log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
-                    }
-            }
+            val institusjonsOppholdservice = InstitusjonsOppholdService(
+                repositoryProvider = repositoryProvider,
+                gatewayProvider = gatewayProvider,
+                institusjonsoppholdKlient = institusjonsoppholdKlient
+            )
+            institusjonsOppholdservice.håndter(meldingKey, melding.value())
         }
-
     }
 
 }
