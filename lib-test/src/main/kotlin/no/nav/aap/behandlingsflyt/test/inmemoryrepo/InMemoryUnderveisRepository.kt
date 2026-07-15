@@ -16,6 +16,11 @@ import java.util.concurrent.atomic.AtomicLong
 object InMemoryUnderveisRepository : UnderveisRepository {
     private val grunnlag = ConcurrentHashMap<BehandlingId, UnderveisGrunnlag>()
     private val id = AtomicLong(0)
+    private val ubesvartePerioder = ConcurrentHashMap<SakId, List<Periode>>()
+
+    fun settUbesvarte(sakId: SakId, perioder: List<Periode>) {
+        ubesvartePerioder[sakId] = perioder
+    }
 
     override fun hent(behandlingId: BehandlingId): UnderveisGrunnlag {
         return hentHvisEksisterer(behandlingId)!!
@@ -41,18 +46,7 @@ object InMemoryUnderveisRepository : UnderveisRepository {
     }
 
     override fun hentUbesvarteMeldeperioderForDollyJobb(sakIds: List<SakId>, idag: LocalDate): Map<SakId, List<Periode>> {
-        val sakIdSet = sakIds.toSet()
-        return grunnlag.entries
-            .mapNotNull { (behandlingId, underveisGrunnlag) ->
-                val sakId = InMemoryBehandlingRepository.hent(behandlingId).sakId
-                if (sakId !in sakIdSet) return@mapNotNull null
-                val ubesvartePerioder = underveisGrunnlag.perioder
-                    .filter { it.meldepliktStatus in setOf(MeldepliktStatus.IKKE_MELDT_SEG, MeldepliktStatus.FØR_VEDTAK) && it.meldePeriode.tom <= idag }
-                    .map { it.meldePeriode }
-                    .distinct()
-                if (ubesvartePerioder.isEmpty()) null else sakId to ubesvartePerioder
-            }
-            .toMap()
+        return ubesvartePerioder.filterKeys { it in sakIds }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
