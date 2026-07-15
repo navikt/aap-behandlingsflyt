@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
@@ -36,6 +38,21 @@ object InMemoryUnderveisRepository : UnderveisRepository {
 
     override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> {
         TODO("Not yet implemented")
+    }
+
+    override fun hentUbesvarteMeldeperioderForDollyJobb(sakIds: List<SakId>, idag: LocalDate): Map<SakId, List<Periode>> {
+        val sakIdSet = sakIds.toSet()
+        return grunnlag.entries
+            .mapNotNull { (behandlingId, underveisGrunnlag) ->
+                val sakId = InMemoryBehandlingRepository.hent(behandlingId).sakId
+                if (sakId !in sakIdSet) return@mapNotNull null
+                val ubesvartePerioder = underveisGrunnlag.perioder
+                    .filter { it.meldepliktStatus in setOf(MeldepliktStatus.IKKE_MELDT_SEG, MeldepliktStatus.FØR_VEDTAK) && it.meldePeriode.tom <= idag }
+                    .map { it.meldePeriode }
+                    .distinct()
+                if (ubesvartePerioder.isEmpty()) null else sakId to ubesvartePerioder
+            }
+            .toMap()
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
