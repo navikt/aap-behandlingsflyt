@@ -21,7 +21,7 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
     override fun vurder(grunnlag: OvergangUføreFaktagrunnlag) {
         val vurderinger =
             grunnlag.overgangUføreGrunnlag
-                ?.somOvergangUforevurderingstidslinje(grunnlag.rettighetsperiode.tom)
+                ?.somOvergangUforevurderingstidslinje()
                 .orEmpty()
                 .mapMedDatoTilDatoVarighet(
                     harBegrensetVarighet = { it.harRettPåAAPMedOvergangUføre() },
