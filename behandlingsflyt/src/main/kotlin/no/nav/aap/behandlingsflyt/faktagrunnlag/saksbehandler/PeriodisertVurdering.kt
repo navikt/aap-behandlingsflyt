@@ -15,7 +15,7 @@ interface PeriodisertVurdering {
     val opprettet: Instant
 }
 
-fun List<PeriodisertVurdering>.gjeldendeVurderinger(): Tidslinje<PeriodisertVurdering> {
+fun <T: PeriodisertVurdering> List<T>.gjeldendeVurderinger(): Tidslinje<T> {
     return this.groupBy { it.vurdertIBehandling }
         .values
         .sortedBy { it[0].opprettet }
