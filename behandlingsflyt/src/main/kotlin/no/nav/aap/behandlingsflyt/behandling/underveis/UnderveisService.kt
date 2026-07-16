@@ -116,7 +116,7 @@ class UnderveisService(
             )
         }
 
-        fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
+        internal fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
             .map {
                 Underveisperiode(
                     periode = it.periode,
