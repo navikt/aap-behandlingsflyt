@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -33,7 +34,7 @@ class AvklarSykdomLøserTest {
     private val behandlingMock = mockk<BehandlingRepository>()
     private val sykdomMock = mockk<SykdomRepository>(relaxed = true)
     private val yrkesskadeMock = mockk<YrkesskadeRepository>()
-
+    private val unleashGateway = mockk<UnleashGateway>()
     @AfterEach
     fun tearDown() {
         checkUnnecessaryStub(behandlingMock, sykdomMock, yrkesskadeMock)
@@ -65,7 +66,7 @@ class AvklarSykdomLøserTest {
                     )
                 )
 
-        val sykdomLøser = AvklarSykdomLøser(behandlingMock, sykdomMock, yrkesskadeMock)
+        val sykdomLøser = AvklarSykdomLøser(behandlingMock, sykdomMock, yrkesskadeMock, unleashGateway)
         sykdomLøser.løs(
             lagAvklaringsbehovKontekst(), løsning = AvklarSykdomLøsning(
                 løsningerForPerioder = listOf(
