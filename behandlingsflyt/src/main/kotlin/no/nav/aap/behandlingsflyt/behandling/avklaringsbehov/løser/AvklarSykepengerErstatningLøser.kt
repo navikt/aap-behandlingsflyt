@@ -52,8 +52,8 @@ class AvklarSykepengerErstatningLøser(
         vurdertIBehandling = behandlingId,
         vurdertAv = vurdertAv,
         vurdertTidspunkt = LocalDateTime.now(),
-        gjelderFra = dto.fom,
-        gjelderTom = dto.tom,
+        fom = dto.fom,
+        tom = dto.tom,
     )
 
     override fun forBehov(): Definisjon {
