@@ -1264,13 +1264,13 @@ class BrevUtlederServiceTest {
     ) = listOf(
         ArbeidsopptrappingVurdering(
             begrunnelse = "...",
-            vurderingenGjelderFra = fraDato,
+            fom = fraDato,
             reellMulighetTilOpptrapping = true,
             rettPaaAAPIOpptrapping = true,
             vurdertAv = "Bruker",
-            opprettetTid = Instant.now(),
+            opprettet = Instant.now(),
             vurdertIBehandling = revurdering.id,
-            vurderingenGjelderTil = tilDato
+            tom = tilDato
         )
     )
 

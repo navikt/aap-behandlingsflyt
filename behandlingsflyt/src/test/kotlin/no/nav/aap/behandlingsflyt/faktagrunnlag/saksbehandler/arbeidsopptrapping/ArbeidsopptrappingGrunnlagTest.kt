@@ -14,22 +14,22 @@ class ArbeidsopptrappingGrunnlagTest {
             listOf(
                 ArbeidsopptrappingVurdering(
                     begrunnelse = "test1",
-                    vurderingenGjelderFra = LocalDate.of(2024, 1, 1),
-                    vurderingenGjelderTil = null,
+                    fom = LocalDate.of(2024, 1, 1),
+                    tom = null,
                     reellMulighetTilOpptrapping = false,
                     rettPaaAAPIOpptrapping = true,
                     vurdertAv = "aa",
-                    opprettetTid = Instant.now(),
+                    opprettet = Instant.now(),
                     vurdertIBehandling = BehandlingId(1L)
                 ),
                 ArbeidsopptrappingVurdering(
                     begrunnelse = "test2",
-                    vurderingenGjelderFra = LocalDate.of(2024, 2, 1),
-                    vurderingenGjelderTil = null,
+                    fom = LocalDate.of(2024, 2, 1),
+                    tom = null,
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
                     vurdertAv = "bb",
-                    opprettetTid = Instant.now().plusNanos(123),
+                    opprettet = Instant.now().plusNanos(123),
                     vurdertIBehandling = BehandlingId(1L)
                 )
             )
@@ -48,22 +48,22 @@ class ArbeidsopptrappingGrunnlagTest {
             listOf(
                 ArbeidsopptrappingVurdering(
                     begrunnelse = "test",
-                    vurderingenGjelderFra = LocalDate.of(2024, 1, 1),
-                    vurderingenGjelderTil = null,
+                    fom = LocalDate.of(2024, 1, 1),
+                    tom = null,
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
                     vurdertAv = "aa",
-                    opprettetTid = Instant.now(),
+                    opprettet = Instant.now(),
                     vurdertIBehandling = BehandlingId(1L)
                 ),
                 ArbeidsopptrappingVurdering(
                     begrunnelse = "test",
-                    vurderingenGjelderFra = LocalDate.of(2024, 3, 1),
-                    vurderingenGjelderTil = null,
+                    fom = LocalDate.of(2024, 3, 1),
+                    tom = null,
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
                     vurdertAv = "bb",
-                    opprettetTid = Instant.now(),
+                    opprettet = Instant.now(),
                     vurdertIBehandling = BehandlingId(2L)
                 )
             )
@@ -82,12 +82,12 @@ class ArbeidsopptrappingGrunnlagTest {
             listOf(
                 ArbeidsopptrappingVurdering(
                     begrunnelse = "test",
-                    vurderingenGjelderFra = LocalDate.of(2024, 6, 1),
-                    vurderingenGjelderTil = null,
+                    fom = LocalDate.of(2024, 6, 1),
+                    tom = null,
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
                     vurdertAv = "aa",
-                    opprettetTid = Instant.now(),
+                    opprettet = Instant.now(),
                     vurdertIBehandling = BehandlingId(1L)
                 )
             )
