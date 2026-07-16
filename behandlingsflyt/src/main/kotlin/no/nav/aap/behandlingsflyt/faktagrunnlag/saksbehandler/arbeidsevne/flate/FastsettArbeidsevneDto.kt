@@ -17,10 +17,10 @@ data class PeriodisertFastsettArbeidsevneDto(
         ArbeidsevneVurdering(
             begrunnelse = begrunnelse,
             arbeidsevne = Prosent(arbeidsevne),
-            fraDato = fom,
-            tilDato = tom,
             vurdertIBehandling = kontekst.behandlingId(),
             opprettetTid = LocalDateTime.now(),
-            vurdertAv = kontekst.bruker.ident
+            vurdertAv = kontekst.bruker.ident,
+            fom = fom,
+            tom = tom
         )
 }

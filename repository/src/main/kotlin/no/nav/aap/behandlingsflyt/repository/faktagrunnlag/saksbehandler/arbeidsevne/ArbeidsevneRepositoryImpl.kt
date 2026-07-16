@@ -108,8 +108,8 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         ) {
             setParams {
                 setLong(1, arbeidsevneId)
-                setLocalDate(2, it.fraDato)
-                setLocalDate(3, it.tilDato)
+                setLocalDate(2, it.fom)
+                setLocalDate(3, it.tom)
                 setString(4, it.begrunnelse)
                 setInt(5, it.arbeidsevne.prosentverdi())
                 setLong(6, it.vurdertIBehandling.id)

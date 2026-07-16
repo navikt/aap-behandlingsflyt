@@ -29,7 +29,7 @@ class ArbeidsevneGrunnlagTest {
         val vurdering2 = arbeidsevneVurdering(Prosent.`50_PROSENT`, 5 januar 2025)
 
         val vurderinger = listOf(vurdering1, vurdering2)
-        val vurderingerResultat = listOf(vurdering1.copy(tilDato = 4 januar 2025), vurdering2)
+        val vurderingerResultat = listOf(vurdering1.copy(tom = 4 januar 2025), vurdering2)
 
         assertThat(ArbeidsevneGrunnlag(vurderinger).tilTidslinje()).isEqualTo(ArbeidsevneGrunnlag(vurderingerResultat).tilTidslinje())
     }
@@ -60,7 +60,7 @@ class ArbeidsevneGrunnlagTest {
         val nyeVurderinger = listOf(nyVurdering)
 
         val alleVurderinger = eksisterendeVurderinger + nyeVurderinger
-        val forventetResultat = listOf(vurdering1.copy(tilDato = 2 januar 2025), nyVurdering)
+        val forventetResultat = listOf(vurdering1.copy(tom = 2 januar 2025), nyVurdering)
 
         assertThat(ArbeidsevneGrunnlag(alleVurderinger).tilTidslinje()).isEqualTo(ArbeidsevneGrunnlag(forventetResultat).tilTidslinje())
     }
@@ -68,7 +68,7 @@ class ArbeidsevneGrunnlagTest {
     @Test
     fun `to like vurderinger med hver sin fra-dato som overlapper blir komprimert til en vurdering`() {
         val vurdering = arbeidsevneVurdering(Prosent.`100_PROSENT`, 2 januar 2025, null, BehandlingId(1))
-        val vurderinger = listOf(vurdering, vurdering.copy(fraDato = 5 januar 2025))
+        val vurderinger = listOf(vurdering, vurdering.copy(tom = 5 januar 2025))
 
         assertThat(ArbeidsevneGrunnlag(vurderinger).tilTidslinje()).isEqualTo(ArbeidsevneGrunnlag(listOf(vurdering)).tilTidslinje())
     }
