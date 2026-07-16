@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -55,7 +56,7 @@ class GraderingArbeidRegel : UnderveisRegel {
     }
 
     /** § 11-23 tredje ledd */
-    class OpplysningerOmArbeid(
+    private data class OpplysningerOmArbeid(
         /** null representerer fravær av opplysninger */
         val timerArbeid: TimerArbeid? = null,
         /** null representerer fravær av opplysninger */
@@ -228,8 +229,8 @@ class GraderingArbeidRegel : UnderveisRegel {
                     !arbeid.harLevertTimer() -> `0_PROSENT`
                     arbeid.grenseverdi < andelArbeid -> `0_PROSENT`
                     else -> Prosent.`100_PROSENT`.minus(
-                            Prosent.max(andelArbeid, fastsattArbeidsevne)
-                        )
+                        Prosent.max(andelArbeid, fastsattArbeidsevne)
+                    )
 
                 },
                 opplysningerMottatt =
