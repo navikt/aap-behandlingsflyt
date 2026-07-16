@@ -144,7 +144,7 @@ class BistandsvilkåretTest {
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = false,
-                vurderingenGjelderFra = sak.rettighetsperiode.fom,
+                fom = sak.rettighetsperiode.fom,
                 tom = null,
                 vurdertAv = "Z00000",
                 skalVurdereAapIOvergangTilArbeid = null,
@@ -271,7 +271,7 @@ class BistandsvilkåretTest {
             overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = null,
             vurdertAv = "O146060",
-            vurderingenGjelderFra = LocalDate.of(2025, 11, 25),
+            fom = LocalDate.of(2025, 11, 25),
             tom = null,
             opprettet = Instant.parse("2025-11-20T10:23:52.051Z"),
             vurdertIBehandling = BehandlingId(5441)
@@ -285,7 +285,7 @@ class BistandsvilkåretTest {
             overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = false,
             vurdertAv = "S108601",
-            vurderingenGjelderFra = LocalDate.of(2026, 4, 21),
+            fom = LocalDate.of(2026, 4, 21),
             tom = null,
             opprettet = Instant.parse("2026-05-20T10:23:52.051Z"),
             vurdertIBehandling = BehandlingId(70608)
@@ -333,7 +333,7 @@ class BistandsvilkåretTest {
         overgangBegrunnelse = overgangBegrunnelse,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
-        vurderingenGjelderFra = vurderingenGjelderFra,
+        fom = vurderingenGjelderFra,
         tom = null,
         vurdertIBehandling = vurdertIBehandling,
         opprettet = opprettet
