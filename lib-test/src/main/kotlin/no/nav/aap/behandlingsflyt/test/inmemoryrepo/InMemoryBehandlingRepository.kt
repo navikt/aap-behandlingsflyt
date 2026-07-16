@@ -198,6 +198,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 )
             }.orEmpty()
             memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
+            memory[behandlingId]!!.oppdaterSteg(tilstand)
         }
     }
 
