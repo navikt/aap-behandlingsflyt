@@ -41,8 +41,8 @@ fun Tidslinje<ArbeidsevneVurdering>.toResponse(
 
 fun ArbeidsevneVurdering.toResponse(
     vurdertAvService: VurdertAvService,
-    fom: LocalDate = this.fraDato,
-    tom: LocalDate? = this.tilDato,
+    fom: LocalDate = this.fom,
+    tom: LocalDate? = this.tom,
 ) =
     PeriodisertArbeidsevneVurderingDto(
         fom = fom,
