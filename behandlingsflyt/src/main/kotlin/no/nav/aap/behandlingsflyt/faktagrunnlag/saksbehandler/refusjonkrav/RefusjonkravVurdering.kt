@@ -34,3 +34,13 @@ data class NavKontorPeriodeDto(
 fun navKontorEnhetsNummer(input: String?): String? {
     return input?.substringAfterLast(" - ")
 }
+
+fun List<RefusjonkravVurdering>.erFunksjoneltLik(other: List<RefusjonkravVurdering>): Boolean {
+    if (this.size != other.size) return false
+    return this.zip(other).all { (a, b) ->
+        a.harKrav == b.harKrav &&
+                a.fom == b.fom &&
+                a.tom == b.tom &&
+                a.navKontor == b.navKontor
+    }
+}

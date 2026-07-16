@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class RefusjonkravRepositoryImpl(private val connection: DBConnection) : RefusjonkravRepository {
 
@@ -55,6 +56,29 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 )
             }
         }
+    }
+
+    override fun hentRefusjonkravPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<RefusjonkravVurdering>? {
+        val vurderingerId = connection.queryFirstOrNull(
+            """
+            SELECT refusjonkrav_vurderinger_id
+            FROM REFUSJONKRAV_GRUNNLAG g
+            WHERE g.BEHANDLING_ID = ? AND g.opprettet_tid <= ?
+            ORDER BY g.opprettet_tid DESC
+            LIMIT 1
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row -> row.getLongOrNull("refusjonkrav_vurderinger_id") }
+        }
+
+        return vurderingerId?.let { hentRefusjonkrav(it) }
     }
 
     override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<RefusjonkravVurdering> {

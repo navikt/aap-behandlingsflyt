@@ -6,6 +6,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.erFunksjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.erFunksjoneltLik
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.erFunksjoneltLik
@@ -20,13 +23,15 @@ class VurderingEndretService(
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
-    private val meldepliktRepository: MeldepliktRepository
+    private val meldepliktRepository: MeldepliktRepository,
+    private val refusjonkravRepository: RefusjonkravRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
+        refusjonkravRepository = repositoryProvider.provide(),
     )
 
     private val sjekker: Map<Definisjon, EndretSjekk<*>> = mapOf(
@@ -50,7 +55,12 @@ class VurderingEndretService(
             hentPåTidspunkt = meldepliktRepository::hentFritaksvurderingPåTidspunkt,
             hentNåværende = { meldepliktRepository.hentHvisEksisterer(it)?.vurderinger },
             erLik = List<Fritaksvurdering>::erFunksjoneltLik,
-        )
+        ),
+        Definisjon.REFUSJON_KRAV to EndretSjekk(
+            hentPåTidspunkt = refusjonkravRepository::hentRefusjonkravPåTidspunkt,
+            hentNåværende = refusjonkravRepository::hentHvisEksisterer,
+            erLik = List<RefusjonkravVurdering>::erFunksjoneltLik,
+        ),
     )
 
     fun endretSidenTidspunkt(
@@ -67,25 +77,22 @@ private class EndretSjekk<T>(
     val hentPåTidspunkt: (BehandlingId, LocalDateTime) -> T?,
     val hentNåværende: (BehandlingId) -> T?,
     val erLik: (T, T) -> Boolean,
-)
+) {
+    fun harEndring(behandlingId: BehandlingId, tidspunkt: LocalDateTime): Boolean {
+        val aktivPåTidspunkt = hentPåTidspunkt(behandlingId, tidspunkt)
+        val aktivVurderingNå = hentNåværende(behandlingId)
 
-private fun <T> EndretSjekk<T>.harEndring(
-    behandlingId: BehandlingId,
-    tidspunkt: LocalDateTime
-): Boolean {
-    val aktivPåTidspunkt = hentPåTidspunkt(behandlingId, tidspunkt)
-    val aktivVurderingNå = hentNåværende(behandlingId)
+        if (aktivVurderingNå == null && aktivPåTidspunkt == null) {
+            // vurdering fantes verken sist eller nå -> ingen endring
+            return false
+        }
 
-    if (aktivVurderingNå == null && aktivPåTidspunkt == null) {
-        // vurdering fantes verken sist eller nå -> ingen endring
-        return false
+        if (aktivVurderingNå == null || aktivPåTidspunkt == null) {
+            // vurdering fantes før men ikke nå, eller motsatt -> endring
+            return true
+        }
+
+        return !erLik(aktivVurderingNå, aktivPåTidspunkt)
     }
-
-    if (aktivVurderingNå == null || aktivPåTidspunkt == null) {
-        // vurdering fantes før men ikke nå, eller motsatt -> endring
-        return true
-    }
-
-    return !erLik(aktivVurderingNå, aktivPåTidspunkt)
 }
 
