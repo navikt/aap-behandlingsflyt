@@ -7,6 +7,8 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 data class MeldepliktGrunnlag(
     val vurderinger: List<Fritaksvurdering>
 ) {
+    fun gjeldendeVurderinger() = vurderinger.gjeldendeVurderinger()
+
     fun tilTidslinje(): Tidslinje<FritaksvurderingData> =
         vurderinger.gjeldendeVurderinger()
             .map { it.toFritaksvurderingData() }

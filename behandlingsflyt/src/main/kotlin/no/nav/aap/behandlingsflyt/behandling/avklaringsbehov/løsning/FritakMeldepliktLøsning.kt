@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FritakFraMeldepliktLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.PeriodisertFritaksvurderingDto
@@ -75,6 +74,6 @@ class PeriodisertFritakMeldepliktLøsning(
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<MeldepliktRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.vurderinger?.gjeldendeVurderinger().orEmpty()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger().orEmpty()
     }
 }
