@@ -52,9 +52,6 @@ data class Sykdomsvurdering(
     }
 
     fun erKonsistentForSykdomVisAlleSykdomssteg(harYrkesskadeRegistrert: Boolean): Boolean {
-        if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
-            return false
-        }
 
         if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
             return false
