@@ -103,7 +103,7 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
                 setLong(1, sakId.toLong())
             }
             setRowMapper {
-                SakSkrivelås(sakId, it.getLong("versjon"))
+                SakSkrivelås(sakId, it.getLong("versjon"), this@TaSkriveLåsRepositoryImpl)
             }
         }
     }

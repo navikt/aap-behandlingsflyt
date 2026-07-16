@@ -3,11 +3,16 @@ package no.nav.aap.behandlingsflyt.prosessering
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.help.StubTaSkrivelåsRepository
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -28,14 +33,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.Test
 
 class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
-
     private val sakId = SakId(123L)
 
     @Test
@@ -80,7 +88,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         val sakServiceMock = mockk<SakService>()
         val behandlingRepositoryMock = mockk<BehandlingRepository>()
         val meldeperiodeRepositoryMock = mockk<MeldeperiodeRepository>()
-        val meldepliktRepositoryMock = mockk<MeldepliktRepository>()
+        val underveisRepositoryMock = mockk<UnderveisRepository>(relaxed = true)
 
         every { sakServiceMock.hent(any<SakId>()) } returns Sak(
             id = sakId,
@@ -158,28 +166,63 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now()),
         )
 
-        every { meldepliktRepositoryMock.hentHvisEksisterer(any()) } returns MeldepliktGrunnlag(
-            vurderinger = listOf(
-                Fritaksvurdering(
-                    harFritak = fritak,
-                    fraDato = LocalDate.now(),
-                    begrunnelse = "bla bla",
-                    vurdertAv = "saksbehandler1",
-                    opprettetTid = LocalDateTime.now(),
-                    vurdertIBehandling = fakeBehandling.id,
+        val nå = LocalDate.now()
+        val meldeperiode = Periode(nå, nå.plusDays(13))
+        val forrigeMeldeperiode = Periode(nå.minusDays(14), nå.minusDays(1))
+        every { underveisRepositoryMock.hentHvisEksisterer(any()) } returns UnderveisGrunnlag(
+            id = 0L,
+            perioder = listOf(
+                Underveisperiode(
+                    periode = meldeperiode,
+                    meldePeriode = meldeperiode,
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                    avslagsårsak = null,
+                    grenseverdi = Prosent.`0_PROSENT`,
+                    institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+                    arbeidsgradering = ArbeidsGradering(
+                        totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
+                        andelArbeid = Prosent.`0_PROSENT`,
+                        fastsattArbeidsevne = Prosent.`0_PROSENT`,
+                        gradering = Prosent.`100_PROSENT`,
+                        opplysningerMottatt = nå,
+                    ),
+                    trekk = Dagsatser(0),
+                    brukerAvKvoter = setOf(),
+                    meldepliktStatus = if (fritak) MeldepliktStatus.FRITAK else MeldepliktStatus.IKKE_MELDT_SEG,
+                    meldepliktGradering = null,
+                ),
+                Underveisperiode(
+                    periode = forrigeMeldeperiode,
+                    meldePeriode = forrigeMeldeperiode,
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                    avslagsårsak = null,
+                    grenseverdi = Prosent.`0_PROSENT`,
+                    institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+                    arbeidsgradering = ArbeidsGradering(
+                        totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
+                        andelArbeid = Prosent.`0_PROSENT`,
+                        fastsattArbeidsevne = Prosent.`0_PROSENT`,
+                        gradering = Prosent.`100_PROSENT`,
+                        opplysningerMottatt = nå,
+                    ),
+                    trekk = Dagsatser(0),
+                    brukerAvKvoter = setOf(),
+                    meldepliktStatus = if (fritak) MeldepliktStatus.FRITAK else MeldepliktStatus.IKKE_MELDT_SEG,
+                    meldepliktGradering = null,
                 )
-            )
+            ),
         )
-
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,
             behandlingRepository = behandlingRepositoryMock,
             meldeperiodeRepository = meldeperiodeRepositoryMock,
-            meldepliktRepository = meldepliktRepositoryMock,
             behandlingService = behandlingServiceMock,
             prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true),
-            underveisRepository = mockk(relaxed = true),
+            underveisRepository = underveisRepositoryMock,
+            taSkriveLåsRepository = StubTaSkrivelåsRepository,
         )
     }
 }
