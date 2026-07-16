@@ -53,7 +53,7 @@ internal class ArbeidsopptrappingRepositoryImplTest {
             val actual = repository.hentHvisEksisterer(behandling.id)
             assertThat(actual?.vurderinger)
                 .usingRecursiveComparison()
-                .ignoringFields("opprettetTid")
+                .ignoringFields("opprettet")
                 .isEqualTo(listOf(vurdering))
         }
     }
