@@ -70,7 +70,7 @@ class AvklaringsbehovValidering(
             if (kravMedUgyldigLøsning.isNotEmpty()) {
                 throw UgyldigForespørselException(
                     "Mangler vurderinger på eller etter dato ${
-                        kravMedUgyldigLøsning.map { it.periode.fom.tilNorskFormat() }.joinToString(",")
+                        kravMedUgyldigLøsning.joinToString(",") { it.periode.fom.tilNorskFormat() }
                     } på grunn av krav"
                 )
             }

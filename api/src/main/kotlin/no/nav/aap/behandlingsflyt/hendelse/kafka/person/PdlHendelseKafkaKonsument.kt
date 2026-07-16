@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 const val PDL_HENDELSE_TOPIC = "pdl.leesah-v1"
 
 class PdlHendelseKafkaKonsument(
-    config: KafkaConsumerConfig<String, Personhendelse>,
+    config: KafkaConsumerConfig,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,

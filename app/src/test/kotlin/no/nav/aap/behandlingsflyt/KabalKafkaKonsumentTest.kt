@@ -276,7 +276,7 @@ class KabalKafkaKonsumentTest {
         }
     }
 
-    private fun testConfig(brokers: String) = KafkaConsumerConfig<String, String>(
+    private fun testConfig(brokers: String) = KafkaConsumerConfig(
         applicationId = "behandlingsflyt-test-${UUID.randomUUID()}",
         brokers = brokers,
         ssl = null,
