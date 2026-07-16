@@ -16,11 +16,11 @@ data class OvergangArbeidVurderingLøsningDto(
         return OvergangArbeidVurdering(
             begrunnelse = begrunnelse,
             brukerRettPåAAP = brukerRettPåAAP,
-            vurderingenGjelderFra = fom,
+            fom = fom,
             vurdertAv = avklaringsbehovKontekst.bruker.ident,
             opprettet = Instant.now(),
             vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
-            vurderingenGjelderTil = tom,
+            tom = tom,
         )
     }
 }
