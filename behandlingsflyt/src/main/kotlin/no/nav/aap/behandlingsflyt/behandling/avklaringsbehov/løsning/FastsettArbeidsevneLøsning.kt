@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettArbe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.PeriodisertFastsettArbeidsevneDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_ARBEIDSEVNE_KODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -41,6 +40,6 @@ class PeriodisertFastsettArbeidsevneLøsning(
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<ArbeidsevneRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.vurderinger?.gjeldendeVurderinger().orEmpty()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger().orEmpty()
     }
 }

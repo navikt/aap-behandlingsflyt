@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -58,7 +57,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
                     kanVurderes = listOf(sak.rettighetsperiode),
                     behøverVurderinger = emptyList(),
                     nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
-                    sisteVedtatteVurderinger = forrigeGrunnlag?.vurderinger?.gjeldendeVurderinger().orEmpty()
+                    sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty()
                         .toResponse(vurdertAvService),
                     ikkeRelevantePerioder = emptyList(/* Er et frivillig avklaringsbehov, så vi har ikke disse opplysningene lett tilgjengelig i steget. */),
                 )
