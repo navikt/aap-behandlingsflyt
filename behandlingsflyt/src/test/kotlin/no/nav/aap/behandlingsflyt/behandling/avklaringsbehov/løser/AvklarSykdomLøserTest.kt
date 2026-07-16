@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -50,7 +51,7 @@ class AvklarSykdomLøserTest {
         }
 
         every { yrkesskadeMock.hentHvisEksisterer(any()) } returns null
-
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.SkalViseAlleSykdomssteg) } returns false
         every { sykdomMock.hentHvisEksisterer(any()) } returns
                 SykdomGrunnlag(
                     yrkesskadevurdering = null, sykdomsvurderinger = listOf(
