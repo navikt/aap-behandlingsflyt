@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FritakFraMeldepliktLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.PeriodisertFritaksvurderingDto
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FRITAK_MELDEPLIKT_KOD
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,7 +42,11 @@ class FritakMeldepliktLøsning(
         løsningerForPerioder = periodisertFritaksvurdering
     )
 
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
         return FritakFraMeldepliktLøser(repositoryProvider).løs(kontekst, løsning)
     }
 }
@@ -56,7 +62,11 @@ class PeriodisertFritakMeldepliktLøsning(
     override val løsningerForPerioder: List<PeriodisertFritaksvurderingDto>
 ) : PeriodisertAvklaringsbehovLøsning<PeriodisertFritaksvurderingDto> {
 
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
         return FritakFraMeldepliktLøser(repositoryProvider).løs(kontekst, this)
     }
 
@@ -65,6 +75,6 @@ class PeriodisertFritakMeldepliktLøsning(
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<MeldepliktRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
+        return repository.hentHvisEksisterer(behandlingId)?.vurderinger?.gjeldendeVurderinger().orEmpty()
     }
 }

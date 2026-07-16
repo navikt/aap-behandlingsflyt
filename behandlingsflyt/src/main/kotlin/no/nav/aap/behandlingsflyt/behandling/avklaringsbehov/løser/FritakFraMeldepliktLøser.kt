@@ -47,8 +47,8 @@ class FritakFraMeldepliktLøser(
         kontekst: AvklaringsbehovKontekst
     ): Fritaksvurdering = Fritaksvurdering(
         harFritak = dto.harFritak,
-        fraDato = dto.fom,
-        tilDato = dto.tom,
+        fom = dto.fom,
+        tom = dto.tom,
         begrunnelse = dto.begrunnelse,
         vurdertAv = kontekst.bruker.ident,
         vurdertIBehandling = kontekst.behandlingId(),

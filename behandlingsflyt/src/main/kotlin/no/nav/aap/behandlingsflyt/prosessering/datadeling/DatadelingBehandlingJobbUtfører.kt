@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.Sa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
@@ -83,7 +84,7 @@ class DatadelingBehandlingJobbUtfører(
         val maksdato = rettighetstypeService.sisteDagMedRett(sak.saksnummer)
 
         val perioderMedFritakMeldeplikt = meldepliktRepository.hentHvisEksisterer(behandling.id)
-            ?.gjeldendeVurderinger().orEmpty()
+            ?.vurderinger?.gjeldendeVurderinger().orEmpty()
             .map { it.harFritak }.segmenter()
             .filter { it.verdi }.map { it.periode }
 

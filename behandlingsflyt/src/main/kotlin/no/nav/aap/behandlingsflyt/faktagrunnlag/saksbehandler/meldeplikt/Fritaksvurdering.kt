@@ -1,18 +1,21 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 data class Fritaksvurdering(
     val harFritak: Boolean,
-    val fraDato: LocalDate,
-    val tilDato: LocalDate? = null,
+    override val fom: LocalDate,
+    override val tom: LocalDate? = null,
     val begrunnelse: String,
     val vurdertAv: String,
     val opprettetTid: LocalDateTime,
-    val vurdertIBehandling: BehandlingId,
-) {
+    override val vurdertIBehandling: BehandlingId,
+) : PeriodisertVurdering {
     fun toFritaksvurderingData(): FritaksvurderingData {
         return FritaksvurderingData(
             harFritak = harFritak,
@@ -22,6 +25,8 @@ data class Fritaksvurdering(
             vurdertIBehandling = vurdertIBehandling,
         )
     }
+
+    override val opprettet: Instant = opprettetTid.atZone(ZoneId.of("Europe/Oslo")).toInstant()
 
     data class FritaksvurderingData(
         val harFritak: Boolean,
@@ -36,8 +41,8 @@ fun List<Fritaksvurdering>.erFunksjoneltLik(other: List<Fritaksvurdering>): Bool
     if (this.size != other.size) return false
     return this.zip(other).all { (a, b) ->
         a.harFritak == b.harFritak &&
-                a.fraDato == b.fraDato &&
-                a.tilDato == b.tilDato &&
+                a.fom == b.fom &&
+                a.tom == b.tom &&
                 a.begrunnelse == b.begrunnelse
     }
 }

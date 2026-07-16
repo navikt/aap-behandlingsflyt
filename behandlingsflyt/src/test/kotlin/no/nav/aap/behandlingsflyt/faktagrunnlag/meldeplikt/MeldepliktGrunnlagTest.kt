@@ -28,7 +28,7 @@ class MeldepliktGrunnlagTest {
         val vurdering2 = fritaksvurdering(false, 3 januar 2025)
 
         val vurderinger = listOf(vurdering1, vurdering2)
-        val vurderingerResultat = listOf(vurdering1.copy(tilDato = 2 januar 2025), vurdering2)
+        val vurderingerResultat = listOf(vurdering1.copy(tom = 2 januar 2025), vurdering2)
 
         assertThat(MeldepliktGrunnlag(vurderinger).tilTidslinje()).isEqualTo(MeldepliktGrunnlag(vurderingerResultat).tilTidslinje())
     }
@@ -59,7 +59,7 @@ class MeldepliktGrunnlagTest {
         val nyeVurderinger = listOf(nyVurdering)
 
         val alleVurderinger = eksisterendeVurderinger + nyeVurderinger
-        val forventetResultat = listOf(vurdering1.copy(tilDato = 2 januar 2025), nyVurdering)
+        val forventetResultat = listOf(vurdering1.copy(tom = 2 januar 2025), nyVurdering)
 
         assertThat(MeldepliktGrunnlag(alleVurderinger).tilTidslinje()).isEqualTo(MeldepliktGrunnlag(forventetResultat).tilTidslinje())
     }
@@ -67,15 +67,15 @@ class MeldepliktGrunnlagTest {
     @Test
     fun `to like vurderinger med hver sin fra-dato som overlapper blir komprimert til en vurdering`() {
         val vurdering = fritaksvurdering(true, 1 januar 2025)
-        val vurderinger = listOf(vurdering, vurdering.copy(fraDato = 2 januar 2025))
+        val vurderinger = listOf(vurdering, vurdering.copy(fom = 2 januar 2025))
 
         assertThat(MeldepliktGrunnlag(vurderinger).tilTidslinje()).isEqualTo(MeldepliktGrunnlag(listOf(vurdering)).tilTidslinje())
     }
 
     private fun fritaksvurdering(harFritak: Boolean, fraDato: LocalDate, tilDato: LocalDate? = null, vurdertIBehandling: BehandlingId = BehandlingId(1)) = Fritaksvurdering(
         harFritak = harFritak,
-        fraDato = fraDato,
-        tilDato = tilDato,
+        fom = fraDato,
+        tom = tilDato,
         begrunnelse = "begrunnelse",
         vurdertAv = "saksbehandler",
         opprettetTid = LocalDateTime.now(),

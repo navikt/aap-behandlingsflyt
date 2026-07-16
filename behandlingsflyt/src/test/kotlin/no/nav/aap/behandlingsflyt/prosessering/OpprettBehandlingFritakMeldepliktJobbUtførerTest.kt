@@ -162,7 +162,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             vurderinger = listOf(
                 Fritaksvurdering(
                     harFritak = fritak,
-                    fraDato = LocalDate.now(),
+                    fom = LocalDate.now(),
                     begrunnelse = "bla bla",
                     vurdertAv = "saksbehandler1",
                     opprettetTid = LocalDateTime.now(),

@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -54,7 +55,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = emptyList(),
                         nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
-                        sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty()
+                        sisteVedtatteVurderinger = forrigeGrunnlag?.vurderinger?.gjeldendeVurderinger().orEmpty()
                             .toResponse(vurdertAvService),
                         ikkeRelevantePerioder = emptyList(/* Dette avklaringsbehovet er frivillig, og vi har per nå ikke disse opplysningene lett tilgjengelig. */),
                     )
