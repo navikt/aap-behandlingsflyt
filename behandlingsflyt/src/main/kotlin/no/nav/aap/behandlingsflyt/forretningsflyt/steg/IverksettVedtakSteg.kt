@@ -110,11 +110,12 @@ class IverksettVedtakSteg private constructor(
             // TODO: Opprett egen jobb-kjøring for å opprette gosysoppgave
             if (navKontor.enhetsNummer.isNotEmpty()) {
                 log.info("Oppretter Gosysoppgave for $navKontor")
-                gosysService.opprettOppgave(
+                gosysService.opprettRefusjonskravOppgave(
                     aktivIdent,
                     kontekst.behandlingId.toString(),
                     kontekst.behandlingId,
-                    navKontor
+                    navKontor,
+                    navKontorerSomSkalHaOppgave.isNotEmpty()
                 )
             }
         }

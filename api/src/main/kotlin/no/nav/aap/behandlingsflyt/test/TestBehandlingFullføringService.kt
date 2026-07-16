@@ -11,8 +11,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TjenestepensjonRefusjonskravLøsning
@@ -77,7 +78,6 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.time.Instant
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -267,7 +267,8 @@ class TestBehandlingFullføringService(
                     journalpostId = it.referanse.asJournalpostId,
                     begrunnelse = "Tilleggsopplysning",
                 )
-            }.toSet())
+            }.toSet()
+        )
 
         Definisjon.AVKLAR_STUDENT -> AvklarStudentLøsning(
             løsningerForPerioder = listOf(
@@ -351,7 +352,6 @@ class TestBehandlingFullføringService(
                         true,
                         "begrunnelse",
                         emptyList(),
-                        markeringer = emptyList()
                     )
                 }
         )
@@ -496,27 +496,37 @@ class TestBehandlingFullføringService(
                         true,
                         "begrunnelse",
                         emptyList(),
-                        markeringer = emptyList()
                     )
                 }
         )
 
         Definisjon.SKRIV_VEDTAKSBREV -> {
-            val brevbestilling = dataSource.transaction(readOnly = true) { connection ->
-                repositoryRegistry.provider(connection)
-                    .provide<BrevbestillingRepository>()
-                    .hent(behandlingId)
-                    .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
-                    ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
-            }
+            val brevbestilling = hentVedtaksbrev(behandlingId)
             SkrivVedtaksbrevLøsning(
                 brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
-                handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
+            )
+        }
+
+        Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
+            val brevbestilling = hentVedtaksbrev(behandlingId)
+            SkrivVedtaksbrevKlageLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
             )
         }
 
         else -> null
     }
+
+    private fun hentVedtaksbrev(behandlingId: BehandlingId) =
+        dataSource.transaction(readOnly = true) { connection ->
+            repositoryRegistry.provider(connection)
+                .provide<BrevbestillingRepository>()
+                .hent(behandlingId)
+                .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
+                ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
+        }
 
     private fun hentFørsteYrkesskade(behandlingId: BehandlingId) =
         dataSource.transaction(readOnly = true) { connection ->

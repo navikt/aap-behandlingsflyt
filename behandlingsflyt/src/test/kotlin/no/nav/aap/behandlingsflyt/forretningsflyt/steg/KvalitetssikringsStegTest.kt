@@ -129,7 +129,6 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = AlleAvskruddUnleash,
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
             behandlingRepository = inMemoryRepositoryProvider.provide(),
             behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
@@ -172,7 +171,6 @@ class KvalitetssikringsStegTest {
                             godkjent = it in godkjente,
                             begrunnelse = if (it in underkjente) "Ikke godkjent" else null,
                             grunner = emptyList(),
-                            markeringer = emptyList()
                         )
                     }
                 )

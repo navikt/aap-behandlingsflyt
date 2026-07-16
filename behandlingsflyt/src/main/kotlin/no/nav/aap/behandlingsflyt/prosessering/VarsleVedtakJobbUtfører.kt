@@ -108,6 +108,7 @@ class VarsleVedtakJobbUtfører(
             log.info("Varsler ikke SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}, tpYtelser=${tpYtelser.size}")
         }
 
+        // Trigger henting av samordnings-ID, som igjen trigger datadelingsjobb. Chainet, fordi datadelingsjobben trenger sam-id.
         flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id).forSak(sak.id.id))
     }
 

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevRepository {
@@ -18,6 +19,13 @@ object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevReposi
 
     override fun hent(behandlingId: BehandlingId): SykdomsvurderingForBrev? {
         return grunnlag[behandlingId]
+    }
+
+    override fun hentSykdomsvurderingForBrevPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): SykdomsvurderingForBrev? {
+        return null
     }
 
     override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {

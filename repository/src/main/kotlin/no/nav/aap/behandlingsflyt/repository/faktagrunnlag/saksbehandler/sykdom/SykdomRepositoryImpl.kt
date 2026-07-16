@@ -16,9 +16,10 @@ import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomRepository {
 
@@ -310,7 +311,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val yrkesskadeBegrunnelse: String?,
         val kodeverk: String?,
         val diagnose: String?,
-        val opprettetTid: java.time.Instant,
+        val opprettetTid: Instant,
         val vurdertAv: Bruker,
         val vurdertIBehandling: BehandlingId,
         val vurderingenGjelderTil: LocalDate?,
@@ -505,7 +506,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
     override fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId> {
         val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
-        
+
         val rader = connection.queryList(
             """
             SELECT id,
@@ -537,6 +538,30 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 id = rad.id,
                 sykdomsvurdering = sykdomsvurderingRowmapper(rad, bidiagnoserMap)
             )
+        }
+    }
+
+    override fun hentSykdomsvurderingerPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<Sykdomsvurdering>? {
+        val query = """
+            SELECT sg.sykdom_vurderinger_id
+            FROM sykdom_grunnlag sg
+            WHERE sg.behandling_id = ?
+                AND sg.opprettet_tid <= ?
+            ORDER BY sg.opprettet_tid DESC
+            LIMIT 1
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row ->
+                mapSykdommer(row.getLongOrNull("sykdom_vurderinger_id"))
+            }
         }
     }
 

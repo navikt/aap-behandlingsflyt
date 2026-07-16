@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -13,7 +15,9 @@ import org.slf4j.LoggerFactory
 
 class DatadelingMeldekortJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
-    private val datadelingMeldekortService: DatadelingMeldekortService
+    private val datadelingMeldekortService: DatadelingMeldekortService,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -21,6 +25,15 @@ class DatadelingMeldekortJobbUtfører(
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
         val behandlingId = BehandlingId(input.behandlingId())
+
+        if (trukketSøknadService.søknadErTrukket(behandlingId)) {
+            log.info("Søknad er trukket, sender tom liste til api-intern")
+            apiInternGateway.sendDetaljertMeldekortListe(emptyList(), sakId, behandlingId)
+            return
+        } else if (avbrytRevurderingService.revurderingErAvbrutt(behandlingId)) {
+            log.info("Revurdering er avbrutt, sender ingenting til api-intern.")
+            return
+        }
 
         val kontraktObjekter = datadelingMeldekortService.opprettKontraktObjekter(sakId, behandlingId)
 
@@ -41,7 +54,9 @@ class DatadelingMeldekortJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return DatadelingMeldekortJobbUtfører(
                 apiInternGateway = gatewayProvider.provide(ApiInternGateway::class),
-                datadelingMeldekortService = DatadelingMeldekortService(repositoryProvider, gatewayProvider)
+                datadelingMeldekortService = DatadelingMeldekortService(repositoryProvider, gatewayProvider),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
             )
         }
 

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -39,8 +40,16 @@ object UføreInntektUtleder {
     }
 
     fun utledDelperioder(uføregrader: Set<Uføre>, år: Year): List<UføregradDelperiode> {
-        return uføregrader.tilTidslinje()
-            .begrensetTil(årsperiode(år))
+        val periode = årsperiode(år)
+        val uføreTidslinje = uføregrader.tilTidslinje()
+
+        val fyltTidslinje = uføreTidslinje.kombiner(
+            uføreTidslinje.komplement(periode) { Prosent.`0_PROSENT` },
+            StandardSammenslåere.prioriterVenstreSideCrossJoin()
+        )
+
+        return fyltTidslinje
+            .begrensetTil(periode)
             .komprimer()
             .segmenter()
             .map { UføregradDelperiode(it.periode, it.verdi) }
@@ -70,7 +79,7 @@ object UføreInntektUtleder {
         inntektPerMåned: Set<Månedsinntekt>,
         årsInntekter: Set<InntektPerÅr>,
     ): Boolean {
-        val årsInntekt = årsInntekter.firstOrNull { it.år == år }?.beløp ?: return false
+        val årsInntekt = årsInntekter.firstOrNull { it.år == år }?.beløp ?: return true
         val summertMåned = inntektPerMåned
             .filter { Year.of(it.årMåned.year) == år }
             .sumOf { it.beløp.verdi }

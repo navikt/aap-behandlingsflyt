@@ -69,18 +69,22 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
-        BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true,
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
         BehandlingsflytFeature.AutomatiskStans1118 to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
+        // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
+        BehandlingsflytFeature.KravManuellVurdering to true,
+        BehandlingsflytFeature.KravAutomatiskVurdering to true,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
+        // ------
         BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true,
-        BehandlingsflytFeature.ManuellInntektDelvisUfore to true
-        )
+        BehandlingsflytFeature.ManuellInntektDelvisUfore to true,
+        BehandlingsflytFeature.Avslag11_27 to true,
+    )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
         return when (Pair(featureToggle, variantName)) {
@@ -93,8 +97,15 @@ object LokalUnleash : FakeUnleashBase(
         }
     }
 
-    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = true
-}
+    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = isEnabled(featureToggle)
+
+    override fun erPåskruddForSak(
+        featureToggle: FeatureToggle,
+        variantName: String,
+        saksnummerResolver: () -> Saksnummer
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }}
 
 /** Unleash for bruk i tester - for å teste "prodlikt", hvor alle toggles er skrudd av
  * For det meste brukes denne i integrasjonstester og flyt-tester for å sjekke at ting som

@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaks
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.LocalDateTime
+
 object InMemoryMeldepliktRepository : MeldepliktRepository {
     private val meldepliktGrunnlag = mutableMapOf<BehandlingId, MeldepliktGrunnlag>()
 
@@ -15,6 +17,13 @@ object InMemoryMeldepliktRepository : MeldepliktRepository {
         vurderinger: List<Fritaksvurdering>
     ) {
         meldepliktGrunnlag[behandlingId] = MeldepliktGrunnlag(vurderinger)
+    }
+
+    override fun hentFritaksvurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<Fritaksvurdering> {
+        return emptyList()
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

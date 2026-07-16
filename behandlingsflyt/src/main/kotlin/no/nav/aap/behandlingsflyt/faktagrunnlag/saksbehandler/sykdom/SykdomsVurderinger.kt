@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -19,10 +20,13 @@ data class Sykdomsvurdering(
     val yrkesskadeBegrunnelse: String?,
     val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val diagnose: Diagnose?,
-    val vurdertIBehandling: BehandlingId,
-    val opprettet: Instant,
     val vurdertAv: Bruker,
-) {
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+) : PeriodisertVurdering {
+    override val fom: LocalDate = vurderingenGjelderFra
+    override val tom: LocalDate? = vurderingenGjelderTil
+
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
             return false
@@ -87,6 +91,24 @@ data class Sykdomsvurdering(
             return periodenVurderingenGjelderFor.inneholder(kravdato)
         }
 
+    }
+}
+
+fun List<Sykdomsvurdering>.erFunksjoneltLik(annen: List<Sykdomsvurdering>): Boolean {
+    if (this.size != annen.size) return false
+
+    // sammenlikner alle felter unntat vurdertAv og tidsstempel
+    return this.zip(annen).all { (første, andre) ->
+        første.begrunnelse == andre.begrunnelse &&
+                første.vurderingenGjelderFra == andre.vurderingenGjelderFra &&
+                første.vurderingenGjelderTil == andre.vurderingenGjelderTil &&
+                første.harSkadeSykdomEllerLyte == andre.harSkadeSykdomEllerLyte &&
+                første.erSkadeSykdomEllerLyteVesentligdel == andre.erSkadeSykdomEllerLyteVesentligdel &&
+                første.erNedsettelseIArbeidsevneMerEnnHalvparten == andre.erNedsettelseIArbeidsevneMerEnnHalvparten &&
+                første.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == andre.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense &&
+                første.yrkesskadeBegrunnelse == andre.yrkesskadeBegrunnelse &&
+                første.harNedsattArbeidsevne == andre.harNedsattArbeidsevne &&
+                første.diagnose == andre.diagnose
     }
 }
 

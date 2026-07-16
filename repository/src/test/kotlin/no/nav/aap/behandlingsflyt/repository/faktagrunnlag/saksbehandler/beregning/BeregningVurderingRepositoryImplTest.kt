@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -49,7 +51,9 @@ class BeregningVurderingRepositoryImplTest {
             nedsattArbeidsevneEllerStudieevneDato = LocalDate.now(),
             ytterligereNedsattBegrunnelse = "Dette er en ytterligere begrunnelse",
             ytterligereNedsattArbeidsevneDato = LocalDate.now().plusDays(30),
-            vurdertAv = "saksbehandler"
+            vurdertAv = "saksbehandler",
+            årsak = ÅrsakBeregningstidspunkt.KRAVDATO,
+            ytterligereNedsattÅrsak = ÅrsakYtterligereNedsatt.UFØRETIDSPUNKT,
         )
 
         val yrkesskadeVurderinger = listOf(
@@ -93,13 +97,17 @@ class BeregningVurderingRepositoryImplTest {
                     { it!!.begrunnelse },
                     { it!!.nedsattArbeidsevneEllerStudieevneDato },
                     { it!!.ytterligereNedsattBegrunnelse },
-                    { it!!.ytterligereNedsattArbeidsevneDato }
+                    { it!!.ytterligereNedsattArbeidsevneDato },
+                    { it!!.årsak },
+                    { it!!.ytterligereNedsattÅrsak },
                 )
                 .containsExactly(
                     tidspunktVurdering.begrunnelse,
                     tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
                     tidspunktVurdering.ytterligereNedsattBegrunnelse,
-                    tidspunktVurdering.ytterligereNedsattArbeidsevneDato
+                    tidspunktVurdering.ytterligereNedsattArbeidsevneDato,
+                    tidspunktVurdering.årsak,
+                    tidspunktVurdering.ytterligereNedsattÅrsak,
                 )
 
             // Verifiser yrkesskadeVurderinger

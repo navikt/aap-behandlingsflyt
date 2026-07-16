@@ -385,6 +385,32 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    override fun hentAlleIkkeAvbrutteYtelsesbehandlinger(sakId: SakId): List<Behandling> {
+        val query = """
+            with avbrutt_behandling as (
+                select avbryt_revurdering_grunnlag.behandling_id as behandling_id
+                from avbryt_revurdering_grunnlag
+                join avbryt_revurdering_vurdering on avbryt_revurdering_grunnlag.vurdering_id = avbryt_revurdering_vurdering.id
+                where avbryt_revurdering_grunnlag.aktiv
+            )
+            select behandling.*
+            from behandling
+            left join avbrutt_behandling on avbrutt_behandling.behandling_id = behandling.id
+            where sak_id = ?
+            and type in (${TypeBehandling.ytelseBehandlingstyper().joinToString { "'${it.identifikator()}'"} })
+            and avbrutt_behandling.behandling_id is null
+            """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper {
+                mapBehandling(it)
+            }
+        }
+    }
+
     override fun hentAlleMedVedtakFor(
         personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling>

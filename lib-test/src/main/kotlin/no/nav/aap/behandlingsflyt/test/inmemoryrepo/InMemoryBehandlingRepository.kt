@@ -83,6 +83,11 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    override fun hentAlleIkkeAvbrutteYtelsesbehandlinger(sakId: SakId): List<Behandling> {
+        return hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
+            .filter { InMemoryAvbrytRevurderingRepository.hentHvisEksisterer(it.id)?.vurdering == null }
+    }
+
     override fun hent(behandlingId: BehandlingId): Behandling {
         synchronized(lock) {
             return memory.getValue(behandlingId)

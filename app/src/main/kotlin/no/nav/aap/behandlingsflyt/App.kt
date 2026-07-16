@@ -44,6 +44,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
+import no.nav.aap.behandlingsflyt.behandling.grunnlag.avslag_11_27.avslag11_27GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
@@ -116,6 +117,8 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.tilgang.RollerConfig
+import no.nav.aap.tilgang.TeamAap
 import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
@@ -157,6 +160,12 @@ internal object AppConfig {
      * Bruker kun 92 connections for å beholde noen til administrasjon.
      */
     const val hikariMaxPoolSize = 92 / 4 /* max connections / max antall pods */
+
+    /* PIP-endepunktene kalles av aap-tilgang mens andre requests venter på svar fra aap-tilgang.
+     * Uten dedikert pool konkurrerer PIP om de samme connectionene som de ventende requestene,
+     * noe som kan gi starvation og timeouts.
+     */
+    const val pipDataSourcePoolSize = 2
 }
 
 fun main() {
@@ -213,12 +222,17 @@ internal fun Application.server(
     val dedicatedMotorConnections = AppConfig.ANTALL_WORKERS_FOR_MOTOR * 2
     val fellesDataSource = initDatasource(
         dbConfig,
-        maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections,
+        maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections - AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
     )
     val motorDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = dedicatedMotorConnections,
+        prometheus = prometheus,
+    )
+    val pipDataSource = initDatasource(
+        dbConfig,
+        maximumPoolSize = AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
     )
     Migrering.migrate(fellesDataSource)
@@ -242,6 +256,7 @@ internal fun Application.server(
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
             fellesDataSource.close()
             motorDataSource.close()
+            pipDataSource.close()
         } catch (_: Exception) {
             // Ignorert
         }
@@ -285,9 +300,10 @@ internal fun Application.server(
                 beregningVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(fellesDataSource, repositoryRegistry)
                 aldersGrunnlagApi(fellesDataSource, repositoryRegistry)
+                avslag11_27GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                motorApi(fellesDataSource)
-                behandlingsflytPipApi(fellesDataSource, repositoryRegistry)
+                motorApi(fellesDataSource, listOf(TeamAap.id))
+                behandlingsflytPipApi(pipDataSource, repositoryRegistry)
                 auditlogApi(fellesDataSource, repositoryRegistry)
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -296,7 +312,7 @@ internal fun Application.server(
                 tidligereVurderingerApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                kravGrunnlagApi(fellesDataSource, repositoryRegistry)
+                kravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)

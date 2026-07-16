@@ -18,7 +18,8 @@ data class MeldekortPdfRequest(
     val begrunnelse: String?,
     val sammenlagtArbeidIPerioden: Int,
     val meldeperiode: MeldekortMeldeperiode,
-    val meldekort: MeldekortPdfData
+    val meldekort: MeldekortPdfData,
+    val korrigert: Boolean
 )
 
 data class MeldekortMeldeperiode(
@@ -49,20 +50,20 @@ fun MeldekortV0.tilPdfRequest(
     utførtAv: String,
     tidspunkt: Instant,
     meldeDato: LocalDate,
+    korrigert: Boolean,
 ): MeldekortPdfRequest {
     val ukeFields = WeekFields.of(Locale.of("nb", "NO"))
     val datoFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     val norsk = Locale.of("nb", "NO")
 
     val uker = timerArbeidPerPeriode
-        .filter { it.timerArbeid > 0}
         .groupBy { it.fraOgMedDato.get(ukeFields.weekOfWeekBasedYear()) }
         .map { (ukenummer, dager) ->
             MeldekortUke(
                 ukenummer = ukenummer.toString(),
                 fraOgMedDato = dager.minOf { it.fraOgMedDato }.format(datoFormatter),
                 tilOgMedDato = dager.maxOf { it.tilOgMedDato }.format(datoFormatter),
-                dager = dager.map { dag ->
+                dager = dager.sortedBy { it.fraOgMedDato }.map { dag ->
                     MeldekortDag(
                         dag = dag.fraOgMedDato.dayOfWeek.getDisplayName(TextStyle.FULL, norsk),
                         timerArbeid = formaterTimer(dag.timerArbeid)
@@ -79,6 +80,7 @@ fun MeldekortV0.tilPdfRequest(
         sendtInnDato = tidspunkt.atZone(ZoneId.of("Europe/Oslo")).toLocalDate().format(datoFormatter),
         meldeDato = meldeDato.format(datoFormatter),
         utførtAv = utførtAv,
+        korrigert = korrigert,
         sammenlagtArbeidIPerioden = timerArbeidPerPeriode.sumOf { it.timerArbeid }.toInt(),
         meldeperiode = MeldekortMeldeperiode(
             fraOgMedDato = meldeperiode.fom.format(datoFormatter),
