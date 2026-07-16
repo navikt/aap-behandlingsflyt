@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -13,10 +14,11 @@ class FrivilligeAvklaringsbehovTest {
 
     @Test
     fun `skal få frem frivillige avklaringsbehov mellom aktivt steg og start`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(133L))
-        val frivilligeAvklaringsbehov =
-            FrivilligeAvklaringsbehov(avklaringsbehovene, Førstegangsbehandling.flyt(), StegType.VURDER_SYKEPENGEERSTATNING)
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandling.id)
 
-        assertThat(frivilligeAvklaringsbehov.alle()).isNotEmpty
+        behandling.oppdaterSteg(StegTilstand(stegStatus = StegStatus.START, stegType = StegType.VURDER_SYKEPENGEERSTATNING, aktiv = true))
+
+        assertThat(avklaringsbehovene.allePlussFrivillige(behandling)).isNotEmpty
     }
 }

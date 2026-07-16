@@ -31,7 +31,7 @@ class PåklagetBehandlingSteg private constructor(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return PåklagetBehandlingSteg(
                 trekkKlageService = TrekkKlageService(repositoryProvider),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
             )
         }
 

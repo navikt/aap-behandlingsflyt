@@ -6,13 +6,16 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -24,9 +27,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -41,8 +48,12 @@ class RettighetsperiodeStegTest {
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var rettighetsperiodeRepository: VurderRettighetsperiodeRepository
     private lateinit var steg: RettighetsperiodeSteg
+    private lateinit var kravRepository: KravRepository
     private val behandlingRepository = InMemoryBehandlingRepository
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
+    private val gatewayProvider = createGatewayProvider {
+        register<AlleAvskruddUnleash>()
+    }
 
     @BeforeEach
     fun setup() {
@@ -59,6 +70,7 @@ class RettighetsperiodeStegTest {
         val avbrytRevurderingService: AvbrytRevurderingService = mockk {
             every { revurderingErAvbrutt(any()) } returns false
         }
+        kravRepository = mockk()
 
         steg = RettighetsperiodeSteg(
             vilkårsresultatRepository,
@@ -68,7 +80,11 @@ class RettighetsperiodeStegTest {
                 avklaringsbehovRepository,
                 behandlingRepository,
                 vilkårsresultatRepository,
-                TrukketSøknadService(trukketSøknadRepository)
+                TrukketSøknadService(trukketSøknadRepository),
+                kravRepository,
+                mockk(),
+                gatewayProvider.provide(),
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider { register<AlleAvskruddUnleash>() })
             ),
             tidligereVurderinger,
             rettighetsperiodeRepository,

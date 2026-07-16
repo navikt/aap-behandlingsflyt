@@ -2,30 +2,22 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.utils.toHumanReadable
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
-import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
-    private val behandlingId: BehandlingId
-) : AvklaringsbehoveneDecorator {
+    private val behandlingId: BehandlingId,
+) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val avklaringsbehovene: List<Avklaringsbehov>
         get() = repository.hent(behandlingId)
@@ -208,11 +200,11 @@ class Avklaringsbehovene(
     }
 
 
-    override fun alle(): List<Avklaringsbehov> {
+    fun alle(): List<Avklaringsbehov> {
         return avklaringsbehovene
     }
 
-    override fun alleEkskludertAvbruttOgVentebehov(): List<Avklaringsbehov> {
+    fun alleEkskludertAvbruttOgVentebehov(): List<Avklaringsbehov> {
         return avklaringsbehovene
             .filterNot { it.status() == Status.AVBRUTT || it.definisjon.erVentebehov() }
     }
@@ -221,7 +213,7 @@ class Avklaringsbehovene(
         return alle().filter { it.erÅpent() }.toList()
     }
 
-    override fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
+    fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
         return tilbakeførtFraKvalitetssikrer().isNotEmpty()
     }
 
@@ -229,7 +221,7 @@ class Avklaringsbehovene(
         return alle().filter { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }.toList()
     }
 
-    override fun hentBehovForDefinisjon(definisjon: Definisjon): Avklaringsbehov? {
+    fun hentBehovForDefinisjon(definisjon: Definisjon): Avklaringsbehov? {
         return alle().singleOrNull { it.definisjon == definisjon }
     }
 
@@ -270,6 +262,10 @@ class Avklaringsbehovene(
         return alle().any { avklaringsbehov -> avklaringsbehov.harVærtSendtTilbakeFraBeslutterTidligere() }
     }
 
+    fun erLøstAv(bruker: Bruker, definisjon: Definisjon): Boolean {
+        return bruker.ident in hentBehovForDefinisjon(definisjon)?.brukere().orEmpty()
+    }
+
     fun hentNyesteKvalitetssikringGittDefinisjon(definisjon: Definisjon): Endring? {
         return hentBehovForDefinisjon(definisjon)?.historikk?.filter {
             it.status in setOf(
@@ -296,47 +292,6 @@ class Avklaringsbehovene(
         )
     }
 
-    fun validerPerioder(
-        løsning: PeriodisertAvklaringsbehovLøsning<*>,
-        kontekst: FlytKontekst,
-        repositoryProvider: RepositoryProvider
-    ) {
-        if (løsning.definisjon().erFrivillig()
-            && løsning.løsningerForPerioder.isEmpty()
-        ) {
-            return
-        }
-
-        val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
-            .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
-            .map { true }.komprimer()
-
-        val perioderDekketAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
-            løsning.hentLagredeLøstePerioder(it, repositoryProvider)
-                .map { true }.komprimer()
-        }.orEmpty()
-
-        val perioderDekket = perioderDekketAvTidligereVurderinger.kombiner(
-            perioderDekketAvLøsning,
-            StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        ).komprimer()
-
-        val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
-        if (behovForDefinisjon != null) {
-            val perioderSomSkalLøses =
-                behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
-
-            val perioderSomManglerLøsning =
-                perioderSomSkalLøses.leftJoin(perioderDekket) { _, periodeILøsning ->
-                    periodeILøsning != null
-                }.filter { !it.verdi }.perioder().toSet()
-
-            if (perioderSomManglerLøsning.isNotEmpty()) {
-                throw UgyldigForespørselException("Du mangler vurdering for ${perioderSomManglerLøsning.toHumanReadable()}")
-            }
-        }
-    }
-
     fun validerPlassering(behandling: Behandling) {
         val nesteSteg = behandling.aktivtSteg()
         val behandlingFlyt = behandling.flyt()
@@ -353,7 +308,7 @@ class Avklaringsbehovene(
         }
     }
 
-    override fun erSattPåVent(): Boolean {
+    fun erSattPåVent(): Boolean {
         return alle().any { avklaringsbehov -> avklaringsbehov.erVentepunkt() && avklaringsbehov.erÅpent() }
     }
 
@@ -361,12 +316,42 @@ class Avklaringsbehovene(
         return alle().filter { it.erVentepunkt() && it.erÅpent() }
     }
 
-    override fun erVurdertTidligereIBehandlingen(definisjon: Definisjon): Boolean {
+    fun erVurdertTidligereIBehandlingen(definisjon: Definisjon): Boolean {
         val avklaringsbehov = hentBehovForDefinisjon(definisjon)
         return avklaringsbehov != null && avklaringsbehov.harAvsluttetStatusIHistorikken()
     }
 
     override fun toString(): String {
         return "Behov[${avklaringsbehovene.joinToString { it.toString() }}. For ID $behandlingId.]"
+    }
+
+    fun allePlussFrivillige(behandling: Behandling): List<Avklaringsbehov> {
+        val eksisterendeBehov = alle()
+        val flyt = behandling.flyt()
+        val list = flyt.frivilligeAvklaringsbehovRelevantForFlyten(behandling.aktivtSteg())
+            .filter { definisjon -> eksisterendeBehov.none { behov -> behov.definisjon == definisjon } }
+            .map { definisjon ->
+                Avklaringsbehov(
+                    id = Long.MAX_VALUE,
+                    definisjon = definisjon,
+                    historikk = mutableListOf(
+                        Endring(
+                            status = Status.OPPRETTET,
+                            tidsstempel = LocalDateTime.now(),
+                            begrunnelse = "",
+                            endretAv = SYSTEMBRUKER.ident
+                        )
+                    ),
+                    funnetISteg = definisjon.løsesISteg,
+                    kreverToTrinn = null
+                )
+            }.toMutableList()
+        list.addAll(eksisterendeBehov)
+
+        return list.sortedWith(flyt.avklaringsbehovComparator)
+    }
+
+    fun erÅpent(definisjon: Definisjon): Boolean {
+        return hentBehovForDefinisjon(definisjon)?.erÅpent() == true
     }
 }

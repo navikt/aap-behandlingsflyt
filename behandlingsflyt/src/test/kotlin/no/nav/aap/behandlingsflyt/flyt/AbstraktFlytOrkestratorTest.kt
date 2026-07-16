@@ -1284,7 +1284,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         behov.definisjon !in underkjennVurderinger,
                         "begrunnelse",
                         emptyList(),
-                        markeringer = emptyList()
                     )
                 }),
             bruker,
@@ -1380,7 +1379,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                             behov.definisjon !in underkjennVurderinger,
                             "begrunnelse",
                             emptyList(),
-                            markeringer = emptyList()
                         )
                     }),
             Bruker("BESLUTTER")

@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -22,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
@@ -37,6 +39,10 @@ import java.time.Instant
 import java.time.LocalDate
 
 class OvergangArbeidStegTest {
+    private val gatewayProvider = createGatewayProvider {
+        register<AlleAvskruddUnleash>()
+    }
+    
     @Test
     fun `Overgang arbeid skal vurderes ved forutgående ordinær aap + nei 11-5`() {
         val søknadsdato = 1 januar 2020
@@ -75,7 +81,7 @@ class OvergangArbeidStegTest {
                 )
             ),
             uføreRepository = uføreMock,
-            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
         )
 
         steg.utfør(kontekstMedPerioder)
@@ -116,7 +122,7 @@ class OvergangArbeidStegTest {
                     )
                 )
             ),
-            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
             uføreRepository = mockk<UføreRepository> {
                 every { hentHvisEksisterer(any()) } returns UføreGrunnlag(
                     vurderinger = setOf(Uføre(virkningstidspunkt = 1 januar 2010, uføregrad = Prosent(50)))
@@ -171,7 +177,7 @@ class OvergangArbeidStegTest {
                 )
             ),
             uføreRepository = uføreMock,
-            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
         )
 
         // skal ikke åpne avklaringsbehov, 11-5 og 11-6 er oppfylt

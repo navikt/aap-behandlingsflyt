@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.utils.tilTidslinje
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.filterNotNull
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -88,8 +89,9 @@ class UtledArenaVedtakstype(
         var forrigeStansOgOpphør = mapOf<LocalDate, StansEllerOpphør>()
 
         for (behandling in behandlinger) {
-            val behandlingensRettighetsTyper = underveisRepository.hent(behandling.id)
-                .somTidslinje()
+            val behandlingensRettighetsTyper = underveisRepository.hentHvisEksisterer(behandling.id)
+                ?.somTidslinje()
+                .orEmpty()
                 .mapNotNull { it.rettighetsType }
                 .komprimer()
 
@@ -99,7 +101,7 @@ class UtledArenaVedtakstype(
             eksisterendeVedtak = utledVedtak(
                 eksisterendeVedtak = eksisterendeVedtak,
                 behandling = behandling,
-                søknader = søknader.filter { it.mottattTidspunkt <= behandling.opprettetTidspunkt }.toSet(),
+                søknader = søknader,
                 rettighetsTyper = diffTidslinjer(forrigeRettighetsTyper, behandlingensRettighetsTyper),
                 stansOgOpphør = diffMap(forrigeStansOgOpphør, behandlingensStansOgOpphør),
             )

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -19,6 +20,16 @@ open class FakeUnleashBase(
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
+
+    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = false
+
+    override fun erPåskruddForSak(
+        featureToggle: FeatureToggle,
+        variantName: String,
+        saksnummerResolver: () -> Saksnummer
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }
 }
 
 open class FakeUnleashBaseWithDefaultDisabled(
@@ -34,6 +45,16 @@ open class FakeUnleashBaseWithDefaultDisabled(
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
+
+    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = false
+
+    override fun erPåskruddForSak(
+        featureToggle: FeatureToggle,
+        variantName: String,
+        saksnummerResolver: () -> Saksnummer
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }
 }
 
 
@@ -48,20 +69,43 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
-        BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres to true,
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
         BehandlingsflytFeature.AutomatiskStans1118 to true,
-        BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
-        BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true
-        )
+        BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
+        // --- Krav ---
+        BehandlingsflytFeature.KravSteg to true,
+        BehandlingsflytFeature.KravManuellVurdering to true,
+        BehandlingsflytFeature.KravAutomatiskVurdering to true,
+        BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
+        // ------
+        BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true,
+        BehandlingsflytFeature.ManuellInntektDelvisUfore to true,
+        BehandlingsflytFeature.Avslag11_27 to true,
+    )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
-        return "1,100"
+        return when (Pair(featureToggle, variantName)) {
+            Pair(
+                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+                "saksnumre"
+            ) -> "LoCAL_4LDW2A8"
+
+            else -> "1,100"
+        }
     }
-}
+
+    override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) = isEnabled(featureToggle)
+
+    override fun erPåskruddForSak(
+        featureToggle: FeatureToggle,
+        variantName: String,
+        saksnummerResolver: () -> Saksnummer
+    ): Boolean {
+        return erPåskruddForSak(featureToggle, variantName, saksnummerResolver())
+    }}
 
 /** Unleash for bruk i tester - for å teste "prodlikt", hvor alle toggles er skrudd av
  * For det meste brukes denne i integrasjonstester og flyt-tester for å sjekke at ting som

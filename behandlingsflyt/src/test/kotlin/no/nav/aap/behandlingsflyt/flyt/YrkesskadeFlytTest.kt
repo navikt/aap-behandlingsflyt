@@ -763,6 +763,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         )
                     )
             }
+            .kvalitetssikre()
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)

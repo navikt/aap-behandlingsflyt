@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.kvalitetssikring
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.behandling.totrinnsvurdering.TotrinnsVurderingResponse
 
-data class KvalitetssikringGrunnlagDto(
+data class KvalitetssikringGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val harGjortVilkårsvurderingerPåBehandling: Boolean,
-    val vurderinger: List<TotrinnsVurdering>,
+    val vurderinger: List<TotrinnsVurderingResponse>,
     val historikk: List<Historikk>
 )

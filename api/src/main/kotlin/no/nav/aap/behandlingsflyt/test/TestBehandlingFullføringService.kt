@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -24,6 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TjenestepensjonRefusjonskravLøsning
@@ -36,12 +38,15 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
@@ -49,9 +54,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TilleggsopplysningKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
@@ -76,7 +78,6 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.time.Instant
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -266,7 +267,8 @@ class TestBehandlingFullføringService(
                     journalpostId = it.referanse.asJournalpostId,
                     begrunnelse = "Tilleggsopplysning",
                 )
-            }.toSet())
+            }.toSet()
+        )
 
         Definisjon.AVKLAR_STUDENT -> AvklarStudentLøsning(
             løsningerForPerioder = listOf(
@@ -350,7 +352,6 @@ class TestBehandlingFullføringService(
                         true,
                         "begrunnelse",
                         emptyList(),
-                        markeringer = emptyList()
                     )
                 }
         )
@@ -461,6 +462,8 @@ class TestBehandlingFullføringService(
             )
         )
 
+        Definisjon.AVKLAR_SAMORDNING_UFØRE -> lagSamordningUføreLøsning(sak, behandlingId)
+
         Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER -> AvklarSamordningAndreStatligeYtelserLøsning(
             SamordningAndreStatligeYtelserVurderingDto(
                 "Ingen andre statlige ytelser",
@@ -493,27 +496,37 @@ class TestBehandlingFullføringService(
                         true,
                         "begrunnelse",
                         emptyList(),
-                        markeringer = emptyList()
                     )
                 }
         )
 
         Definisjon.SKRIV_VEDTAKSBREV -> {
-            val brevbestilling = dataSource.transaction(readOnly = true) { connection ->
-                repositoryRegistry.provider(connection)
-                    .provide<BrevbestillingRepository>()
-                    .hent(behandlingId)
-                    .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
-                    ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
-            }
+            val brevbestilling = hentVedtaksbrev(behandlingId)
             SkrivVedtaksbrevLøsning(
                 brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
-                handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
+            )
+        }
+
+        Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
+            val brevbestilling = hentVedtaksbrev(behandlingId)
+            SkrivVedtaksbrevKlageLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
             )
         }
 
         else -> null
     }
+
+    private fun hentVedtaksbrev(behandlingId: BehandlingId) =
+        dataSource.transaction(readOnly = true) { connection ->
+            repositoryRegistry.provider(connection)
+                .provide<BrevbestillingRepository>()
+                .hent(behandlingId)
+                .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
+                ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
+        }
 
     private fun hentFørsteYrkesskade(behandlingId: BehandlingId) =
         dataSource.transaction(readOnly = true) { connection ->
@@ -523,5 +536,31 @@ class TestBehandlingFullføringService(
                 ?.yrkesskader
                 ?.yrkesskader
                 ?.firstOrNull { it.skadedato != null }
+        }
+
+    private fun lagSamordningUføreLøsning(sak: Sak, behandlingId: BehandlingId) = AvklarSamordningUføreLøsning(
+        samordningUføreVurdering = SamordningUføreVurderingDto(
+            begrunnelse = "Samordning uføre",
+            vurderingPerioder = hentUføreperioderTilSamordning(sak, behandlingId)
+                .map {
+                    SamordningUføreVurderingPeriodeDto(
+                        virkningstidspunkt = it.virkningstidspunkt,
+                        uføregradTilSamordning = it.uføregrad.prosentverdi()
+                    )
+                }
+        )
+    )
+
+    private fun hentUføreperioderTilSamordning(sak: Sak, behandlingId: BehandlingId) =
+        dataSource.transaction(readOnly = true) { connection ->
+            repositoryRegistry.provider(connection)
+                .provide<UføreRepository>()
+                .hentHvisEksisterer(behandlingId)
+                ?.vurderinger
+                .orEmpty()
+                .filter {
+                    val uføregradTom = it.uføregradTom
+                    uføregradTom == null || uføregradTom >= sak.rettighetsperiode.fom
+                }
         }
 }

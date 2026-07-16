@@ -55,6 +55,7 @@ class JournalføringService(
             utførtAv = oppdatertAv.ident,
             tidspunkt = tidspunkt,
             meldeDato = meldeDato,
+            korrigert = korrigert,
         )
 
         val pdf = pdfgenGateway.genererMeldekortPdf(
@@ -66,7 +67,6 @@ class JournalføringService(
             enhet = enhet ?: "9999",
             meldeperiode = meldeperiode,
             meldekort = meldekort,
-            tidspunkt = tidspunkt,
             pdf = pdf,
             sak = sak,
             korrigert = korrigert
@@ -86,7 +86,6 @@ class JournalføringService(
         enhet: String,
         meldeperiode: Periode,
         meldekort: Meldekort,
-        tidspunkt: Instant,
         pdf: ByteArray,
         sak: Sak,
         korrigert: Boolean,
@@ -113,7 +112,6 @@ class JournalføringService(
             tema = Tema.AAP,
             tittel = tittel,
             eksternReferanseId = UUID.randomUUID().toString(),
-            datoMottatt = tidspunkt.toString(),
             // Overstyrer for å vise notat på Mine AAP
             overstyrInnsynsregler = OverstyrInnsynsregler.VISES_MANUELT_GODKJENT,
             dokumenter = listOf(

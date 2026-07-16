@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMeta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -32,7 +33,7 @@ class VurderSykdomSteg(
         sykdomRepository = repositoryProvider.provide(),
         overgangArbeidRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -42,7 +43,7 @@ class VurderSykdomSteg(
             tvingerAvklaringsbehov = tvingerAvklaringsbehov(kontekst),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
-            kontekst,
+            kontekst = kontekst,
             tilbakestillGrunnlag = {
                 val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId
                     ?.let { sykdomRepository.hentHvisEksisterer(it) }
@@ -50,8 +51,14 @@ class VurderSykdomSteg(
                     ?: emptyList()
                 sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
             },
+            gjeldendeVurderinger = { hentGjeldendeVurderinger(kontekst) }
         )
         return Fullført
+    }
+
+    private fun hentGjeldendeVurderinger(kontekst: FlytKontekstMedPerioder): Tidslinje<PeriodisertVurdering> {
+        return sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje()
+            ?.mapValue { it as PeriodisertVurdering }.orEmpty()
     }
 
     private fun tvingerAvklaringsbehov(kontekst: FlytKontekstMedPerioder): Set<Vurderingsbehov> {

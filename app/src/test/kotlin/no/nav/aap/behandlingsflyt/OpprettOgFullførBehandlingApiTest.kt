@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AfpDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.AndreUtbetalingerApiDto
@@ -40,6 +42,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -135,6 +138,14 @@ class OpprettOgFullførBehandlingApiTest {
                 afp = AfpDto("Nav"),
                 stoenad = listOf(AndreUtbetalingerYtelserApiDto.AFP)
             )
+        )
+    }
+
+    @Test
+    fun `oppretter og fullfører behandling automatisk når personen har uføregrad`() {
+        opprettOgVerifiserBehandling(
+            testPerson = standardTestPerson("10107099960").medUføre(Prosent(50)),
+            erStudent = false,
         )
     }
 
@@ -372,6 +383,59 @@ class OpprettOgFullførBehandlingApiTest {
             assertThat(behandlinger.last().status()).isEqualTo(Status.AVSLUTTET)
         }
     }
+    @Test
+    fun `meldekort-jobb kjøres automatisk etter at behandling er avsluttet`() {
+        val ident = "10107099961"
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(Ident(ident)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
+            ).medInntekter(defaultInntekt()),
+        )
+
+        val respons: OpprettOgFullforBehandlingRespons? = ccClient.post(
+            URI.create("http://localhost:$port/api/test/opprettOgFullfoerBehandling"),
+            PostRequest(
+                body = OpprettOgFullforBehandlingRequest(
+                    ident = ident,
+                    erStudent = false,
+                    harYrkesskade = false,
+                    harMedlemskap = true,
+                    andreUtbetalinger = null,
+                    soeknadsdato = LocalDate.now().minusMonths(3),
+                    automatiskMeldekort = true,
+                )
+            )
+        )
+        requireNotNull(respons) { "Ingen respons fra opprettOgFullforBehandling" }
+
+        val behandlingStatus = pollBehandlingStatus(ident)
+        assertThat(behandlingStatus?.ferdig).isTrue()
+        assertThat(behandlingStatus?.behandlingStatus).isEqualTo(BehandlingStatusEnum.AVSLUTTET)
+
+        val meldekortDokumenter = pollMeldekortDokumenter(respons.saksnummer)
+        assertThat(meldekortDokumenter).isNotEmpty()
+    }
+
+    private fun pollMeldekortDokumenter(saksnummer: String) = runBlocking {
+        val dataSource = initDatasource(dbConfig)
+        repeat(60) {
+            try {
+                val dokumenter = dataSource.transaction(readOnly = true) { connection ->
+                    val provider = postgresRepositoryRegistry.provider(connection)
+                    val sak = provider.provide<SakRepository>().hent(Saksnummer(saksnummer))
+                    provider.provide<MottattDokumentRepository>()
+                        .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
+                }
+                if (dokumenter.isNotEmpty()) return@runBlocking dokumenter
+            } catch (e: Exception) {
+                log.info("pollMeldekortDokumenter exception: $e")
+            }
+            delay(1000.milliseconds)
+        }
+        emptySet<Any>()
+    }
+
     private fun standardTestPerson(ident: String) = TestPerson(
         identer = setOf(Ident(ident)),
         fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),

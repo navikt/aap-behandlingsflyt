@@ -34,7 +34,9 @@ class FastsettBeregningstidspunktLøser(
                     nedsattArbeidsevneEllerStudieevneDato = it.nedsattArbeidsevneDato,
                     ytterligereNedsattBegrunnelse = it.ytterligereNedsattBegrunnelse,
                     ytterligereNedsattArbeidsevneDato = it.ytterligereNedsattArbeidsevneDato,
-                    vurdertAv = kontekst.bruker.ident
+                    vurdertAv = kontekst.bruker.ident,
+                    årsak = it.årsak,
+                    ytterligereNedsattÅrsak = it.ytterligereNedsattÅrsak,
                 )
             }
         )

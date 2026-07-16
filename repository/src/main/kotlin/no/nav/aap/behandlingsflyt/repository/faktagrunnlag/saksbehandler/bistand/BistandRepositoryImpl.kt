@@ -8,6 +8,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -78,6 +79,30 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 deaktiverEksisterende(behandlingId)
             }
             lagre(behandlingId, nyttGrunnlag)
+        }
+    }
+
+    override fun hentBistandsvurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<Bistandsvurdering>? {
+        val query = """
+            SELECT bg.bistand_vurderinger_id
+            FROM bistand_grunnlag bg
+            WHERE bg.behandling_id = ?
+                AND bg.opprettet_tid <= ?
+            ORDER BY bg.opprettet_tid DESC
+            LIMIT 1
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row ->
+                mapBistandsvurderinger(row.getLongOrNull("bistand_vurderinger_id"))
+            }
         }
     }
 

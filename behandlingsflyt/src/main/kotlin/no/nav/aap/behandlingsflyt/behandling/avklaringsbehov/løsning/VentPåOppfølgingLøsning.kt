@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VENT_PÅ_OPPFØLGING
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
+@Deprecated("Erstattes av VentPåOppfølgingNyLøsning")
 @JsonTypeName(value = VENT_PÅ_OPPFØLGING)
 class VentPåOppfølgingLøsning(
     @param:JsonProperty(

@@ -201,6 +201,10 @@ class Avklaringsbehov(
         return historikk.filter { it.status == Status.AVSLUTTET }.maxOf { it.tidsstempel }
     }
 
+    fun sistAvsluttetOrNull(): LocalDateTime? {
+        return historikk.filter { it.status == Status.AVSLUTTET }.maxOfOrNull { it.tidsstempel }
+    }
+
     fun status(): Status {
         return historikk.maxOf { it }.status
     }

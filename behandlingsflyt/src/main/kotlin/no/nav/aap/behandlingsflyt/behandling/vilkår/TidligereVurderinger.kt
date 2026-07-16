@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -9,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
@@ -67,6 +69,8 @@ class TidligereVurderingerImpl(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
+    private val avslag11_27repository: Avslag11_27Repository,
+    private val kravRepository: KravRepository,
     private val unleashGateway: UnleashGateway
 ) : TidligereVurderinger {
 
@@ -80,6 +84,8 @@ class TidligereVurderingerImpl(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
+        avslag11_27repository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -112,6 +118,19 @@ class TidligereVurderingerImpl(
 
             Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
+            },
+
+            Sjekk(StegType.VURDER_AVSLAG_11_27) { _, kontekst, tidligereVurderinger ->
+                val avslag11_27Grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId)
+                val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+                val avslag11_27Tidslinje = avslag11_27Grunnlag?.tilTidslinje(kravGrunnlag).orEmpty()
+
+                tidligereVurderinger.leftJoin(avslag11_27Tidslinje) { _, vurdering ->
+                    if (vurdering?.skalAvslås1127 == true)
+                        TidligereVurderinger.UunngåeligAvslag
+                    else
+                        TidligereVurderinger.PotensieltOppfylt(null)
+                }
             },
 
             Sjekk(StegType.AVKLAR_STUDENT) { vilkårsresultat, _, _ ->
@@ -202,7 +221,11 @@ class TidligereVurderingerImpl(
                         overgangArbeidVilkåret?.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
                             RettighetsType.ARBEIDSSØKER
                         )
-                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && skalIkkeVurderesForStudentEllerSykepengeerstatning(sykdomsvurdering) -> TidligereVurderinger.UunngåeligAvslag
+
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && skalIkkeVurderesForStudentEllerSykepengeerstatning(
+                            sykdomsvurdering
+                        ) -> TidligereVurderinger.UunngåeligAvslag
+
                         else -> TidligereVurderinger.PotensieltOppfylt(
                             null,
                             mapSykdomsvurderingTilMuligRettighetstypeFraNavKontor(sykdomsvurdering)
@@ -271,12 +294,19 @@ class TidligereVurderingerImpl(
     private fun lagSjekker(definerteSjekker: List<Sjekk>) = buildList {
         val førstegangsbehandling = Førstegangsbehandling.flyt()
 
-        val listeMedSjekker = if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)) {
-            // skip gammel student-sjekk når nytt steg er påskrudd
-            definerteSjekker.filterNot { it.steg == StegType.AVKLAR_STUDENT }
-        } else {
-            definerteSjekker
-        }
+        val listeMedSjekker = definerteSjekker
+            .let { sjekker ->
+                // skip gammel student-sjekk når nytt steg er påskrudd
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2))
+                    sjekker.filterNot { it.steg == StegType.AVKLAR_STUDENT }
+                else sjekker
+            }
+            .let { sjekker ->
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27))
+                    sjekker
+                else
+                    sjekker.filterNot { it.steg == StegType.VURDER_AVSLAG_11_27 }
+            }
 
         listeMedSjekker.windowed(2).forEach { (sjekk1, sjekk2) ->
             require(førstegangsbehandling.erStegFør(sjekk1.steg, sjekk2.steg)) {
@@ -287,7 +317,6 @@ class TidligereVurderingerImpl(
         val sjekker = listeMedSjekker.iterator()
         var sjekk: Sjekk? = sjekker.next()
 
-        /* legg på default sjekk der det mangler. */
         for (steg in Førstegangsbehandling.flyt().stegene()) {
             if (steg == sjekk?.steg) {
                 add(sjekk)

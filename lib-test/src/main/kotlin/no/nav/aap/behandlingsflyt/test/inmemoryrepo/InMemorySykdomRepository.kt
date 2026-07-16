@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemorySykdomRepository : SykdomRepository {
@@ -83,6 +84,13 @@ object InMemorySykdomRepository : SykdomRepository {
     }
 
     override fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId> {
+        return emptyList()
+    }
+
+    override fun hentSykdomsvurderingerPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<Sykdomsvurdering> {
         return emptyList()
     }
 }

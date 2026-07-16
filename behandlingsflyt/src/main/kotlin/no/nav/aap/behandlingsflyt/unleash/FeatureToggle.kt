@@ -14,14 +14,23 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MigrerStansOgOpphor,
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
-    RevurderingEtterAvslagSkalKvalitetssikres,
-    KravSteg,
     MeldekortEndretAvSaksbehandler,
     AutomatiskStans1118,
     StudentV2,
     BackfillStansOpphor,
-    LagreVurderRettighetsperiodeSomKrav,
-    VentStatusForTilbakekrevingIBehandlingsflyt
+    VentStatusForTilbakekrevingIBehandlingsflyt,
+
+    // --- Krav ---
+    KravSteg, // Visning
+    LagreVurderRettighetsperiodeSomKrav, // Double write
+    KravAutomatiskVurdering, // Double write
+    KravManuellVurdering,
+    NyttKravPeriodiserteAvklaringsbehov,
+
+    // ------
+    OppfoelgingsoppgaveSynligMedEnGang,
+    ManuellInntektDelvisUfore,
+    Avslag11_27
     ;
 
     override fun key(): String = name

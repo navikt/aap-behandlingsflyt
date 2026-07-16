@@ -34,10 +34,6 @@ data class FlytKontekstMedPerioder(
         return vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
     }
 
-    fun erFørstegangsbehandling(): Boolean {
-        return vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
-    }
-
     fun erRevurderingMedVurderingsbehov(behov: Vurderingsbehov): Boolean {
         return vurderingType == VurderingType.REVURDERING
                 && vurderingsbehovRelevanteForSteg.contains(behov)
@@ -46,5 +42,14 @@ data class FlytKontekstMedPerioder(
     fun erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert: InformasjonskravOppdatert?): Boolean {
         val nyesteVurderingsbehov = vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
         return nyesteVurderingsbehov != null && (oppdatert == null || nyesteVurderingsbehov > oppdatert.tidOppdatert)
+    }
+    
+    fun tilFlytKontekst(): FlytKontekst{
+        return FlytKontekst(
+            sakId = sakId,
+            behandlingId = behandlingId,
+            forrigeBehandlingId = forrigeBehandlingId,
+            behandlingType = behandlingType
+        )
     }
 }

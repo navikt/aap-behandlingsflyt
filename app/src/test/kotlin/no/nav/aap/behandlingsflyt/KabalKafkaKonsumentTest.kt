@@ -68,7 +68,6 @@ class KabalKafkaKonsumentTest {
         private lateinit var motor: ManuellMotorImpl
 
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
             .withLogConsumer { Slf4jLogConsumer(logger) }
@@ -110,8 +109,8 @@ class KabalKafkaKonsumentTest {
 
     @Test
     fun `Kan motta og lagre ned hendelse fra Kabal`() {
-        val testTopic = KABAL_EVENT_TOPIC + "test2"
-        
+        val testTopic = "$KABAL_EVENT_TOPIC-${UUID.randomUUID()}"
+
         val sak = dataSource.transaction { sak(it, periode.fom) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
@@ -132,18 +131,20 @@ class KabalKafkaKonsumentTest {
             topic = testTopic,
         )
 
-        val thread = thread(start = true) {
-            while (true) {
-                if (konsument.antallMeldinger > 0) {
-                    konsument.lukk()
-                    return@thread
-                }
-                Thread.sleep(500L)
-            }
+        val pollThread = thread(start = true) {
+            konsument.konsumer()
         }
-        konsument.konsumer()
 
-        thread.join()
+        while (konsument.antallMeldinger == 0 && pollThread.isAlive) {
+            Thread.sleep(100)
+        }
+
+        assertThat(konsument.antallMeldinger)
+            .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
+            .isEqualTo(1)
+
+        konsument.lukk()
+        pollThread.join()
         assertThat(konsument.antallMeldinger).isEqualTo(1)
 
         motor.kjørJobber()
@@ -183,6 +184,8 @@ class KabalKafkaKonsumentTest {
 
     @Test
     fun `Skal ikke konsumere neste melding dersom håndtering feiler`() {
+        val testTopic = "$KABAL_EVENT_TOPIC-${UUID.randomUUID()}"
+
         val sak = dataSource.transaction { sak(it, periode.fom) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
@@ -192,7 +195,7 @@ class KabalKafkaKonsumentTest {
         val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
         produserHendelse(
             listOf(Pair("1", "blabla"), Pair("2", DefaultJsonMapper.toJson(hendelse))),
-            KABAL_EVENT_TOPIC
+            testTopic
         )
 
         val konsument = KabalKafkaKonsument(
@@ -200,26 +203,20 @@ class KabalKafkaKonsumentTest {
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
             pollTimeout = 50.milliseconds,
+            topic = testTopic,
         )
 
-        val thread = thread(start = true) {
-            while (true) {
-                // Denne vil ikke ha noe relevans med mindre vi får en regresjon der neste melding blir behandlet
-                if (konsument.antallMeldinger > 0) {
-                    konsument.lukk()
-                    return@thread
-                }
-                // Det forventes konsumenten lukkes pga. exception
-                if (konsument.erLukket()) {
-                    return@thread
-                }
-                Thread.sleep(500L)
-            }
+        val pollThread = thread(start = true) {
+            konsument.konsumer()
         }
-        konsument.konsumer()
 
-        thread.join()
-        
+        // Konsumenten forventes å lukke seg selv pga. exception ved parsing av ugyldig melding
+        while (!konsument.erLukket()) {
+            Thread.sleep(100)
+        }
+
+        pollThread.join()
+
         assertThat(konsument.antallMeldinger).isEqualTo(0)
     }
 
@@ -280,7 +277,7 @@ class KabalKafkaKonsumentTest {
     }
 
     private fun testConfig(brokers: String) = KafkaConsumerConfig<String, String>(
-        applicationId = "behandlingsflyt-test",
+        applicationId = "behandlingsflyt-test-${UUID.randomUUID()}",
         brokers = brokers,
         ssl = null,
         schemaRegistry = SchemaRegistryConfig(

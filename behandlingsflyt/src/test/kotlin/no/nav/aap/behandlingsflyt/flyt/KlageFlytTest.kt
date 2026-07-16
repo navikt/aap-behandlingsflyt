@@ -245,21 +245,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
                         grunner = emptyList(),
-                        markeringer = emptyList()
                     ),
                     TotrinnsVurdering(
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
                         grunner = emptyList(),
-                        markeringer = emptyList()
                     ),
                     TotrinnsVurdering(
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_FORMKRAV.kode,
                         grunner = emptyList(),
-                        markeringer = emptyList()
                     )
                 )
             ),
@@ -466,21 +463,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                             godkjent = true,
                             definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
                             grunner = emptyList(),
-                            markeringer = emptyList()
                         ),
                         TotrinnsVurdering(
                             begrunnelse = "Begrunnelse",
                             godkjent = true,
                             definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
                             grunner = emptyList(),
-                            markeringer = emptyList()
                         ),
                         TotrinnsVurdering(
                             begrunnelse = "Begrunnelse",
                             godkjent = true,
                             definisjon = Definisjon.VURDER_FORMKRAV.kode,
                             grunner = emptyList(),
-                            markeringer = emptyList()
                         )
                     )
                 ),
@@ -682,21 +676,18 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
                         grunner = emptyList(),
-                        markeringer = emptyList()
                     ),
                     TotrinnsVurdering(
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_KLAGE_KONTOR.kode,
                         grunner = emptyList(),
-                        markeringer = emptyList()
                     ),
                     TotrinnsVurdering(
                         begrunnelse = "Begrunnelse",
                         godkjent = true,
                         definisjon = Definisjon.VURDER_FORMKRAV.kode,
                         grunner = emptyList(),
-                        markeringer = emptyList()
                     )
                 )
             ),
@@ -1018,14 +1009,12 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                             godkjent = false,
                             definisjon = Definisjon.VURDER_FORMKRAV.kode,
                             grunner = listOf(ÅrsakTilRetur(ÅrsakTilReturKode.ANNET, "Formkrav ikke oppfylt")),
-                            markeringer = emptyList()
                         ),
                         TotrinnsVurdering(
                             begrunnelse = "Begrunneøse",
                             godkjent = true,
                             definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
                             grunner = emptyList(),
-                            markeringer = emptyList()
                         ),
                     )
                 ),

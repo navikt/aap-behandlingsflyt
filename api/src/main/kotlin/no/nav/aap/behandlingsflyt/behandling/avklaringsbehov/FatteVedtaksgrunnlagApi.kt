@@ -9,10 +9,9 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.behandling.totrinnsvurdering.TotrinnsVurderingResponse
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FATTE_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -24,9 +23,9 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -42,7 +41,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
 
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}/grunnlag/fatte-vedtak") {
-            getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
+            getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 påkrevdRolle = Definisjon.FATTE_VEDTAK.løsesAv
@@ -75,7 +74,63 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
                             }
                         }
 
-                    FatteVedtakGrunnlagDto(
+                    FatteVedtakGrunnlagResponse(
+                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
+                            kanSaksbehandle(),
+                            avklaringsbehovene,
+                            bruker(),
+                            gatewayProvider,
+                        ),
+                        vurderinger = vurderinger,
+                        historikk = historikk,
+                        besluttetAv = beslutter,
+                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
+                            avklaringsbehovene,
+                            bruker()
+                        )
+                    )
+                }
+                respond(dto)
+            }
+        }
+
+
+        // TODO: fjern v2-endepunkt når frontend er tilbake på v1
+        route("/{referanse}/grunnlag/fatte-vedtak/v2") {
+            getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                påkrevdRolle = Definisjon.FATTE_VEDTAK.løsesAv
+            ) { req ->
+
+                val dto = dataSource.transaction(readOnly = true) { connection ->
+
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+
+                    val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val flyt = behandling.flyt()
+
+                    val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
+                    val historikk = utledHistorikk(avklaringsbehovene)
+
+                    val beslutter = historikk
+                        .filter { it.aksjon == Aksjon.FATTET_VEDTAK }
+                        .maxByOrNull { it.tidspunkt }
+                        ?.let { historikkInnlslag ->
+                            ansattInfoService.hentAnsattNavnOgEnhet(historikkInnlslag.avIdent)?.let {
+                                BeslutterDto(
+                                    navn = it.navn,
+                                    kontor = it.enhet,
+                                    tidspunkt = historikkInnlslag.tidspunkt,
+                                    ident = historikkInnlslag.avIdent
+                                )
+                            }
+                        }
+
+                    FatteVedtakGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
                             kanSaksbehandle(),
                             avklaringsbehovene,
@@ -120,7 +175,7 @@ private fun brukerHarGjortVilkårsvurderingerPåBehandling(
 }
 
 
-fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
+private fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
     val relevanteBehov =
         avklaringsbehovene.hentBehovForDefinisjon(listOf(Definisjon.FORESLÅ_VEDTAK, Definisjon.FATTE_VEDTAK))
     val alleBehov = avklaringsbehovene.alle()
@@ -168,15 +223,18 @@ private fun utledEndringerSidenSist(
     }.flatten()
 }
 
-private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
+private fun beslutterVurdering(
+    avklaringsbehovene: Avklaringsbehovene,
+    flyt: BehandlingFlyt
+): List<TotrinnsVurderingResponse> {
     return avklaringsbehovene.alle()
         .filter { it.erIkkeAvbrutt() }
         .filter { it.erTotrinn() }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
-        .map { tilKvalitetssikring(it) }
+        .map { tilTotrinnsVurderingResponse(it) }
 }
 
-private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
+private fun tilTotrinnsVurderingResponse(it: Avklaringsbehov): TotrinnsVurderingResponse {
     return if (it.erTotrinnsVurdert() || it.harVærtSendtTilbakeFraBeslutterTidligere()) {
         val sisteVurdering =
             it.aktivHistorikk.lastOrNull {
@@ -188,19 +246,20 @@ private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
 
         val godkjent = it.status() == Status.TOTRINNS_VURDERT
 
-        TotrinnsVurdering(
-            it.definisjon.kode,
-            godkjent,
-            sisteVurdering?.begrunnelse,
-            sisteVurdering?.årsakTilRetur.orEmpty(),
-            markeringer = emptyList(),
+        TotrinnsVurderingResponse(
+            definisjon = it.definisjon.kode,
+            godkjent = godkjent,
+            begrunnelse = sisteVurdering?.begrunnelse,
+            endretSidenSist = null, // brukes foreløpig bare i KS-vurderinger
+            grunner = sisteVurdering?.årsakTilRetur.orEmpty(),
         )
     } else {
-        TotrinnsVurdering(
+        TotrinnsVurderingResponse(
             it.definisjon.kode,
             null,
             null,
-            emptyList(),
-            markeringer = emptyList())
+            null,
+            emptyList()
+        )
     }
 }

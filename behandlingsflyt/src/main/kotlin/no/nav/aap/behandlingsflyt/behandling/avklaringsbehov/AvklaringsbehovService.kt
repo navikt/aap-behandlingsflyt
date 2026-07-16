@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVBRUTT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
@@ -17,6 +19,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
@@ -28,14 +34,22 @@ class AvklaringsbehovService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val trukketSøknadService: TrukketSøknadService
+    private val trukketSøknadService: TrukketSøknadService,
+    private val kravRepository: KravRepository,
+    private val sakRepository: SakRepository,
+    private val unleashGateway: UnleashGateway,
+    private val avklaringsbehovValidering: AvklaringsbehovValidering
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        trukketSøknadService = TrukketSøknadService(repositoryProvider)
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        kravRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
+        avklaringsbehovValidering = AvklaringsbehovValidering(repositoryProvider, gatewayProvider),
     )
 
     fun oppdaterAvklaringsbehov(
@@ -54,7 +68,6 @@ class AvklaringsbehovService(
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
-
     }
 
     /** Oppdater tilstanden på avklaringsbehovet [definisjon], slik at kvalitetssikring,
@@ -67,6 +80,8 @@ class AvklaringsbehovService(
      * For at flyten skal bli riktig hvis man beveger seg fram og tilbake i flyten,
      * så er det viktig at et steg rydder opp etter seg når det viser seg at steget
      * ikke er relevant allikevel. Denne funksjonen hjelper også med det.
+     *
+     * @throws IllegalStateException Hvis avklaringsbehovet løses i et udefinert steg.
      */
     private fun oppdaterAvklaringsbehov(
         definisjon: Definisjon,
@@ -244,43 +259,19 @@ class AvklaringsbehovService(
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
     ) {
         val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
                 val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
-                val perioderVilkåretErVurdert = kontekst.forrigeBehandlingId
-                    ?.let { forrigeBehandlingId ->
-                        val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                        val forrigeRettighetsperiode =
-                            /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                            vilkårsresultatRepository.hent(forrigeBehandlingId)
-                                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                                .tidslinje()
-                                .helePerioden()
-
-                        nårVurderingErRelevant(
-                            kontekst.copy(
-                                /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                                behandlingId = forrigeBehandlingId,
-                                forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                                rettighetsperiode = forrigeRettighetsperiode,
-                                behandlingType = forrigeBehandling.typeBehandling(),
-                            )
-                        )
-                    }
-                    .orEmpty()
 
                 val perioderSomBehøverVurdering =
-                    perioderVilkåretErRelevant
-                        .begrensetTil(kontekst.rettighetsperiode)
-                        .leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
-                            erRelevant && erVurdert != true
-                        }
-                        .filter { it.verdi }
-                        .komprimer()
-                        .perioder()
-                        .toSet()
+                    perioderSomBehøverVurdering(
+                        kontekst,
+                        perioderVilkåretErRelevant,
+                        nårVurderingErRelevant
+                    )
 
                 if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
                     && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
@@ -292,14 +283,14 @@ class AvklaringsbehovService(
                 }
             }
 
-            VurderingType.MELDEKORT -> Pair(false, emptySet())
-            VurderingType.AUTOMATISK_BREV -> Pair(false, emptySet())
-            VurderingType.UTVID_VEDTAKSLENGDE -> Pair(false, emptySet())
-            VurderingType.MIGRER_RETTIGHETSPERIODE -> Pair(false, emptySet())
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> Pair(false, emptySet())
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Pair(false, emptySet())
-            VurderingType.G_REGULERING -> Pair(false, emptySet())
-            VurderingType.OVERGANG_UFORE_STANS -> Pair(false, emptySet())
+            VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())
         }
 
@@ -317,11 +308,18 @@ class AvklaringsbehovService(
                         if (nårVurderingErGyldigTidslinje == null) {
                             null
                         } else {
-                            nårVurderingErRelevant(kontekst)
+                            Tidslinje.map3(
+                                nårVurderingErRelevant(kontekst),
+                                nårVurderingErGyldigTidslinje,
+                                avklaringsbehovValidering.nårKravHarLøsning(
+                                    definisjon,
+                                    gjeldendeVurderinger(),
+                                    kontekst.tilFlytKontekst()
+                                )
+                            ) { erRelevant, erGyldig, dekkerKrav ->
+                                erRelevant != true || (erGyldig == true && dekkerKrav != false)
+                            }
                                 .begrensetTil(kontekst.rettighetsperiode)
-                                .leftJoin(nårVurderingErGyldigTidslinje) { erRelevant, erGyldig ->
-                                    !erRelevant || erGyldig == true
-                                }
                                 .komprimer()
                                 .filter { !it.verdi }
                                 .perioder()
@@ -336,9 +334,9 @@ class AvklaringsbehovService(
     }
 
     /**
-     * Her sender man inn eksplistte perioderSomIkkeErTilstrekkeligVurdert.
+     * Her sender man inn eksplistte [perioderSomIkkeErTilstrekkeligVurdert].
      * Dette kan være nyttig dersom man må se på perioder som befinner seg utenfor perioder som behøver vurdering;
-     * for eksempel hvis man ikke skal tillate vurderinger utenfor nårVurderingErRelevant
+     * for eksempel hvis man ikke skal tillate vurderinger utenfor [nårVurderingErRelevant].
      */
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
         definisjon: Definisjon,
@@ -346,16 +344,18 @@ class AvklaringsbehovService(
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
-        tilbakestillGrunnlag: () -> Unit
+        tilbakestillGrunnlag: () -> Unit,
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            definisjon,
-            tvingerAvklaringsbehov,
-            nårVurderingErRelevant,
-            kontekst,
-            perioderSomIkkeErTilstrekkeligVurdert,
-            { null },
-            tilbakestillGrunnlag
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = tvingerAvklaringsbehov,
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            nårVurderingErGyldig = { null },
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            gjeldendeVurderinger = gjeldendeVurderinger
         )
     }
 
@@ -383,7 +383,8 @@ class AvklaringsbehovService(
          */
         nårVurderingErGyldig: () -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        tilbakestillGrunnlag: () -> Unit
+        tilbakestillGrunnlag: () -> Unit,
+        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -392,7 +393,78 @@ class AvklaringsbehovService(
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { null },
             nårVurderingErGyldig = nårVurderingErGyldig,
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            gjeldendeVurderinger = gjeldendeVurderinger
         )
+    }
+
+    private fun perioderSomBehøverVurdering(
+        kontekst: FlytKontekstMedPerioder,
+        perioderVilkåretErRelevant: Tidslinje<Boolean>,
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+    ): Set<Periode> {
+        return Tidslinje.map3(
+            perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
+            perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant),
+            nårEndringIKrav(kontekst)
+        ) { erRelevant, erVurdert, erKravEndret ->
+            erRelevant == true && (erVurdert != true || erKravEndret == true)
+        }
+            .filter { it.verdi }
+            .komprimer().perioder().toSet()
+    }
+
+    private fun nårEndringIKrav(
+        kontekst: FlytKontekstMedPerioder,
+    ): Tidslinje<Boolean> {
+        if (!unleashGateway.erPåskruddForSak(
+                BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
+                "saksnumre"
+            ) { sakRepository.hent(kontekst.sakId).saksnummer }
+        ) {
+            return Tidslinje.empty()
+        }
+
+        val forrigeVedtatteNyeKravEllerGjenopptak = kontekst.forrigeBehandlingId?.let {
+            kravRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId)?.kravtidslinje()
+        }.orEmpty()
+
+        val gjeldendeNyeKravEllerGjenopptak =
+            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.kravtidslinje().orEmpty()
+
+
+        return Tidslinje.map2(
+            gjeldendeNyeKravEllerGjenopptak,
+            forrigeVedtatteNyeKravEllerGjenopptak
+        ) { vedtatte, gjeldende ->
+            vedtatte?.referanse != gjeldende?.referanse
+        }
+    }
+
+    private fun perioderVilkåretErVurdert(
+        kontekst: FlytKontekstMedPerioder,
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>
+    ): Tidslinje<Boolean> {
+        return kontekst.forrigeBehandlingId
+            ?.let { forrigeBehandlingId ->
+                val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
+                val forrigeRettighetsperiode =
+                    /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
+                    vilkårsresultatRepository.hent(forrigeBehandlingId)
+                        .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+                        .tidslinje()
+                        .helePerioden()
+
+                nårVurderingErRelevant(
+                    kontekst.copy(
+                        /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
+                        behandlingId = forrigeBehandlingId,
+                        forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
+                        rettighetsperiode = forrigeRettighetsperiode,
+                        behandlingType = forrigeBehandling.typeBehandling(),
+                    )
+                )
+            }
+            .orEmpty()
     }
 }

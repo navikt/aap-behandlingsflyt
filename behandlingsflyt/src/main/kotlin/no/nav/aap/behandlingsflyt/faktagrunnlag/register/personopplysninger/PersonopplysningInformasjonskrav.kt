@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -21,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import kotlin.collections.mapNotNull
 
 class PersonopplysningInformasjonskrav private constructor(
     private val sakService: SakService,
@@ -37,7 +39,9 @@ class PersonopplysningInformasjonskrav private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
-                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert))
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.erVurderingsbehovEndretEtterOppdatertInformasjonskrav(
+            oppdatert
+        ))
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
@@ -76,7 +80,7 @@ class PersonopplysningInformasjonskrav private constructor(
         val eksisterendeData =
             personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandlingId)
         val personopplysninger = hentPersonopplysninger(behandlingId)
-        return if (personopplysninger != eksisterendeData) {
+        return if (harRelevantEndringForLovvalgOgMedlemskap(eksisterendeData, personopplysninger)) {
             listOf(
                 VurderingsbehovMedPeriode(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
             )
@@ -107,4 +111,45 @@ class PersonopplysningInformasjonskrav private constructor(
             )
         }
     }
+}
+
+internal fun harRelevantEndringForLovvalgOgMedlemskap(
+    eksisterendeData: Personopplysning?,
+    oppdatertData: Personopplysning
+): Boolean {
+    val eksisterendeUtenUnntaksFelter = eksisterendeData?.copy(
+        statsborgerskap = emptyList(),
+        utenlandsAddresser = emptyList()
+    )
+
+    val oppdatertUtenUnntaksFelter = oppdatertData.copy(
+        statsborgerskap = emptyList(),
+        utenlandsAddresser = emptyList()
+    )
+    if (eksisterendeUtenUnntaksFelter != oppdatertUtenUnntaksFelter) {
+        return true
+    }
+
+    val harMistetEøsEllerNorskStatsborgerskap =
+        eksisterendeData.statsborgerskap.eøsLand().isNotEmpty() && oppdatertData.statsborgerskap.eøsLand().isEmpty()
+
+    val harNyUtenlandskAdresseIettNyttLand =
+        harNyUtenlandskAdresseIettNyttLand(eksisterendeData.utenlandsAddresser, oppdatertData.utenlandsAddresser)
+
+    return harMistetEøsEllerNorskStatsborgerskap || harNyUtenlandskAdresseIettNyttLand
+}
+
+private fun harNyUtenlandskAdresseIettNyttLand(
+    eksisterendeAdresser: List<UtenlandsAdresse>,
+    oppdatertAdresser: List<UtenlandsAdresse>
+): Boolean {
+    val eksisterendeLandkoder = eksisterendeAdresser.mapNotNull { it.landkode?.uppercase() }
+    val oppdatertLandkoder = oppdatertAdresser.mapNotNull { it.landkode?.uppercase() }
+
+    return oppdatertLandkoder.any { it !in eksisterendeLandkoder }
+}
+
+private fun List<Statsborgerskap>.eøsLand(): Set<String> {
+    val gyldigeLand = EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name }
+    return map { it.land.uppercase() }.filter { it in gyldigeLand }.toSet()
 }

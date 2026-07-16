@@ -10,8 +10,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningUføreRepository
@@ -19,11 +21,14 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.komponenter.gateway.GatewayProvider.Companion.provide
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class SamordningUføreStegTest {
+    
+    val gatewayProvider = createGatewayProvider { register<AlleAvskruddUnleash>()}
 
     @Test
     fun `skal kreve vurdering`() {
@@ -108,7 +113,7 @@ class SamordningUføreStegTest {
         InMemorySamordningUføreRepository,
         InMemoryUføreRepository,
         FakeTidligereVurderinger(),
-        AvklaringsbehovService(inMemoryRepositoryProvider)
+        AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider)
     )
 
     private fun løsBehov(

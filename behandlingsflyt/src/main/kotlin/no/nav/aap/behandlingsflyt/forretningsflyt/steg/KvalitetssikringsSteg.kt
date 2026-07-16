@@ -17,8 +17,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -30,17 +28,15 @@ class KvalitetssikringsSteg(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val behandlingRepository: BehandlingRepository,
     private val behandlingService: BehandlingService,
-    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         trekkKlageService = TrekkKlageService(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
-        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide()
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -70,13 +66,7 @@ class KvalitetssikringsSteg(
         }
 
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val behandlingstype =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres)) {
-                behandlingService.utledFaktiskBehandlingstype(behandling)
-            } else {
-                kontekst.behandlingType
-            }
-        return when (behandlingstype) {
+        return when (behandlingService.utledFaktiskBehandlingstype(behandling)) {
             TypeBehandling.Førstegangsbehandling,
             TypeBehandling.Klage -> {
                 avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()

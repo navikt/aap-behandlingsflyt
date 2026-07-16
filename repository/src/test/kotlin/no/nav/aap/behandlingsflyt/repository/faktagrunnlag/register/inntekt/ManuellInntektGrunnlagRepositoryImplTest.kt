@@ -6,12 +6,14 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.Year
 
 class ManuellInntektGrunnlagRepositoryImplTest {
@@ -43,7 +45,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         dataSource.transaction {
             val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            manuellInntektGrunnlagRepo.lagre(behandling.id, manuellVurdering)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, setOf(manuellVurdering))
         }
 
         dataSource.transaction {
@@ -51,7 +53,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
             val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
-            assertThat(uthentet).isNotNull.extracting { it!!.manuelleInntekter }
+            assertThat(uthentet).isNotNull.extracting { grunnlag -> grunnlag!!.manuelleInntekter }
                 .usingRecursiveComparison().withEqualsForType(
                     { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
                     BigDecimal::class.java
@@ -64,9 +66,12 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         dataSource.transaction {
             val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            manuellInntektGrunnlagRepo.lagre(behandling.id, manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp)))
+            manuellInntektGrunnlagRepo.lagre(
+                behandling.id,
+                setOf(manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp)))
+            )
             val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
-            assertThat(uthentet).isNotNull.extracting { it!!.manuelleInntekter }
+            assertThat(uthentet).isNotNull.extracting { grunnlag -> grunnlag!!.manuelleInntekter }
                 .usingRecursiveComparison().withEqualsForType(
                     { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
                     BigDecimal::class.java
@@ -81,6 +86,47 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             manuellInntektGrunnlagRepo.slett(behandling.id)
             val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
             assertThat(uthentet).isNull()
+        }
+    }
+
+    @Test
+    fun `lagre og hente ut igjen flere delperioder for samme år`() {
+        val behandling = dataSource.transaction {
+            val sak = sak(it, 1 januar 2023)
+            finnEllerOpprettBehandling(it, sak)
+        }
+
+        val janFeb = ManuellInntektVurdering(
+            år = Year.of(2022),
+            begrunnelse = "endring i uføregrad",
+            belop = BigDecimal(100_000).let(::Beløp),
+            vurdertAv = "saksbehandler",
+            månedsPeriode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 2, 28)),
+        )
+        val marDes = ManuellInntektVurdering(
+            år = Year.of(2022),
+            begrunnelse = "endring i uføregrad",
+            belop = BigDecimal(500_000).let(::Beløp),
+            eøsBeløp = BigDecimal(25_000).let(::Beløp),
+            vurdertAv = "saksbehandler",
+            månedsPeriode = Periode(LocalDate.of(2022, 3, 1), LocalDate.of(2022, 12, 31)),
+        )
+
+        dataSource.transaction {
+            ManuellInntektGrunnlagRepositoryImpl(it).lagre(behandling.id, setOf(janFeb, marDes))
+        }
+
+        dataSource.transaction {
+            val uthentet = ManuellInntektGrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id)
+            assertThat(uthentet?.manuelleInntekter)
+                .hasSize(2)
+                .usingRecursiveComparison()
+                .withEqualsForType(
+                    { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
+                    BigDecimal::class.java
+                )
+                .ignoringFields("opprettet")
+                .isEqualTo(setOf(janFeb, marDes))
         }
     }
 
@@ -174,8 +220,8 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
         dataSource.transaction {
             val repo = ManuellInntektGrunnlagRepositoryImpl(it)
-            repo.lagre(behandlingSomSlettes.id, vurdering)
-            repo.lagre(behandlingSomBeholdes.id, vurderingBeholdt)
+            repo.lagre(behandlingSomSlettes.id, setOf(vurdering))
+            repo.lagre(behandlingSomBeholdes.id, setOf(vurderingBeholdt))
         }
 
         dataSource.transaction {

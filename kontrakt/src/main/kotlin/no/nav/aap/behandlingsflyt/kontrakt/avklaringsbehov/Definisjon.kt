@@ -24,7 +24,8 @@ public enum class Definisjon(
     @param:JsonProperty("løsesISteg") public val løsesISteg: StegType = StegType.UDEFINERT,
     public val kreverToTrinn: Boolean = false,
     public val kvalitetssikres: Boolean = false,
-    public val løsesAv: List<Rolle>
+    public val løsesAv: List<Rolle>,
+    public val måRevurderesEtterOpphør: Boolean = true
 ) {
     MANUELT_SATT_PÅ_VENT(
         kode = AvklaringsbehovKode.`9001`,
@@ -194,14 +195,16 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        måRevurderesEtterOpphør = false
     ),
     FASTSETT_YRKESSKADEINNTEKT(
         kode = AvklaringsbehovKode.`5014`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        måRevurderesEtterOpphør = false
     ),
     VURDER_INNTEKTSBORTFALL(
         kode = AvklaringsbehovKode.`5040`,
@@ -218,6 +221,13 @@ public enum class Definisjon(
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
+    ),
+
+    VURDER_AVSLAG_11_27(
+        kode = AvklaringsbehovKode.`5042`,
+        løsesISteg = StegType.VURDER_AVSLAG_11_27,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
     ),
     
     SKRIV_SYKDOMSVURDERING_BREV(
@@ -574,10 +584,20 @@ public enum class Definisjon(
         løsesISteg = StegType.AVKLAR_OPPFØLGING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
     ),
+
+    @Deprecated("Brukt i tidligere behandlinger, erstattet av VENT_PÅ_OPPFØLGING_NY")
     VENT_PÅ_OPPFØLGING(
         kode = AvklaringsbehovKode.`8003`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.START_OPPFØLGINGSBEHANDLING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL),
+        defaultFrist = Period.ofWeeks(4),
+    ),
+
+    VENT_PÅ_OPPFØLGING_NY(
+        kode = AvklaringsbehovKode.`8004`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.AVKLAR_OPPFØLGING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofWeeks(4),
     ),

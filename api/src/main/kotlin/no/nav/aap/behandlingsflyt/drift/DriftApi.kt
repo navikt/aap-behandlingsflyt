@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -37,6 +38,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -44,6 +46,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -55,6 +58,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
@@ -62,6 +66,7 @@ import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
+import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -85,6 +90,31 @@ fun NormalOpenAPIRoute.driftApi(
     gatewayProvider: GatewayProvider,
 ) {
     route("/api/drift") {
+        route("/person") {
+            authorizedPost<Unit, PersonSøkDriftsinfoDto, IdentDto>(
+                AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { _, req ->
+                val saker = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val person = repositoryProvider.provide<PersonRepository>()
+                        .finn(Ident(req.ident))
+
+                    if (person == null) {
+                        throw VerdiIkkeFunnetException("Fant ikke person")
+                    }
+
+                    repositoryProvider.provide<SakRepository>()
+                        .finnSakerFor(person.id)
+                        .map { SaksnummerOgRettighetsperiode(it.saksnummer.toString(), it.rettighetsperiode) }
+                }
+
+                respond(PersonSøkDriftsinfoDto(saker))
+            }
+        }
+
         data class KjorFraSteg(val steg: StegType)
         route("/behandling/{referanse}/kjor-fra-steg") {
             authorizedPost<BehandlingReferanse, Unit, KjorFraSteg>(
@@ -133,7 +163,7 @@ fun NormalOpenAPIRoute.driftApi(
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.DRIFTE
                 )
-            ) { params, request ->
+            ) { params, _ ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -227,18 +257,54 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/behandling/{referanse}/yrkesskade") {
+            authorizedGet<BehandlingReferanse, List<YrkesskadeDriftsinfoDto>>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { behandlingReferanse ->
+                val yrkesskader = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val behandling = repositoryProvider.provide<BehandlingRepository>()
+                        .hent(behandlingReferanse)
+
+                    repositoryProvider.provide<YrkesskadeRepository>()
+                        .hentHvisEksisterer(behandling.id)
+                        ?.yrkesskader
+                        ?.yrkesskader
+                        ?.map {
+                            YrkesskadeDriftsinfoDto(
+                                ref = it.ref,
+                                saksnummer = it.saksnummer,
+                                kildesystem = it.kildesystem,
+                                skadedato = it.skadedato,
+                                vedtaksdato = it.vedtaksdato,
+                            )
+                        }
+                        ?.also { krevDtoErUtenFødselsnummer(it) }
+                        .orEmpty()
+                }
+
+                respond(yrkesskader)
+            }
+        }
+
         @Suppress("unused")
         class StansOpphørDTO(
             val fom: LocalDate,
             val stansOpphør: String,
             val årsaker: List<String>,
         )
+
         @Suppress("unused")
         class RettighetstypePeriodeDto(
             val periode: Periode,
             val rettighetstypeUnderveis: RettighetsType?,
             val rettighetstypeGrunnlag: RettighetsType?,
         )
+
         @Suppress("unused")
         class DriftRettighetsinfoDto(
             val sisteDagMedRett: LocalDate?,
@@ -381,6 +447,7 @@ fun NormalOpenAPIRoute.driftApi(
                                             definisjon = avklaringsbehov.definisjon,
                                             status = endring.status,
                                             årsakTilSettPåVent = endring.grunn,
+                                            fristSettPåVent = endring.frist,
                                             perioderUgyldigVurdering = endring.perioderSomIkkeErTilstrekkeligVurdert,
                                             perioderKreverVurdering = endring.perioderVedtaketBehøverVurdering,
                                             tidsstempel = endring.tidsstempel,
@@ -395,6 +462,10 @@ fun NormalOpenAPIRoute.driftApi(
 
                     SakDriftsinfoDTO(
                         saksnummer = sak.saksnummer.toString(),
+                        person = PersonDriftsinfo(
+                            personId = sak.person.id.id,
+                            antallIdenter = sak.person.identer().size,
+                        ),
                         status = sak.status(),
                         rettighetsperiode = sak.rettighetsperiode,
                         opprettetTidspunkt = sak.opprettetTidspunkt,
@@ -461,6 +532,23 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/sak/{saksnummer}/oppdater-meldeperioder") {
+            authorizedPost<SaksnummerParameter, String, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, _ ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val driftfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
+
+                    driftfunksjoner.oppdaterMeldeperioderMeldekortbackend(Saksnummer(params.saksnummer))
+                }
+                respond("Jobb for oppdatering av meldeperioder er startet")
+            }
+        }
+
     }
 }
 
@@ -470,13 +558,30 @@ private fun krevDtoErUtenFødselsnummer(dto: Any) {
     }
 }
 
+private data class IdentDto(val ident: String) : Personreferanse {
+    override fun hentPersonreferanse(): String = ident
+}
+
+private data class PersonSøkDriftsinfoDto(val saker: List<SaksnummerOgRettighetsperiode>)
+
+private data class SaksnummerOgRettighetsperiode(
+    val saksnummer: String,
+    val rettighetsperiode: Periode
+)
+
 private data class SakDriftsinfoDTO(
     val saksnummer: String,
+    val person: PersonDriftsinfo,
     val status: SakStatus,
     val rettighetsperiode: Periode,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
     val behandlinger: List<BehandlingDriftsinfo>,
     val andreSakerPåBruker: List<String>,
+)
+
+private data class PersonDriftsinfo(
+    val personId: Long,
+    val antallIdenter: Int,
 )
 
 private data class BehandlingDriftsinfo(
@@ -511,7 +616,8 @@ private data class ForenkletAvklaringsbehov(
     val perioderKreverVurdering: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val endretAv: String,
-    val årsakTilSettPåVent: ÅrsakTilSettPåVent?
+    val årsakTilSettPåVent: ÅrsakTilSettPåVent?,
+    val fristSettPåVent: LocalDate?,
 )
 
 private data class VilkårDriftsinfoDTO(
@@ -534,6 +640,14 @@ private data class MottattDokumentDriftsinfoDTO(
     val type: InnsendingType,
     val kanal: Kanal,
     val status: MottattDokumentStatus = MottattDokumentStatus.MOTTATT,
+)
+
+private data class YrkesskadeDriftsinfoDto(
+    val ref: String,
+    val saksnummer: Int?,
+    val kildesystem: String,
+    val skadedato: LocalDate?,
+    val vedtaksdato: LocalDate?,
 )
 
 fun behandlingFraBrevbestilling(

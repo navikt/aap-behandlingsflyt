@@ -212,22 +212,26 @@ class TestScenarioOrkestrator(
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
-                        behov.definisjon.kode, true, "begrunnelse", emptyList(), markeringer = emptyList()
+                        behov.definisjon.kode, true, "begrunnelse", emptyList()
                     )
                 }),
             bruker
         )
     }
 
-    fun løsBeregningstidspunkt(behandling: Behandling, dato: LocalDate = LocalDate.now()): Behandling {
+    fun løsBeregningstidspunkt(
+        behandling: Behandling,
+        dato: LocalDate = LocalDate.now(),
+        ytterligereNedsattArbeidsevneDato: LocalDate? = null,
+    ): Behandling {
         return løsAvklaringsBehov(
             behandling,
             FastsettBeregningstidspunktLøsning(
                 beregningVurdering = BeregningstidspunktVurderingDto(
                     begrunnelse = "Trenger hjelp fra Nav",
                     nedsattArbeidsevneDato = dato,
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
+                    ytterligereNedsattArbeidsevneDato = ytterligereNedsattArbeidsevneDato,
+                    ytterligereNedsattBegrunnelse = ytterligereNedsattArbeidsevneDato?.let { "Satt ned enda mer, må sitte" },
                 ),
             ),
         )
@@ -460,8 +464,7 @@ class TestScenarioOrkestrator(
                             behov.definisjon.kode,
                             behov.definisjon != returVed,
                             "begrunnelse",
-                            emptyList(),
-                            markeringer = emptyList()
+                            emptyList()
                         )
                     }),
             Bruker("BESLUTTER")
