@@ -436,7 +436,7 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = rettighetsperiode.fom,
+                        fom = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -481,7 +481,7 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 20 april 2020,
+                        fom = 20 april 2020,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -866,7 +866,7 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 4 mai 2020,
+                        fom = 4 mai 2020,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -874,7 +874,7 @@ class MeldepliktRegelTest {
                     ),
                     Fritaksvurdering(
                         harFritak = false,
-                        fraDato = 18 mai 2020,
+                        fom = 18 mai 2020,
                         begrunnelse = "kan",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -928,7 +928,7 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 4 mai 2020,
+                        fom = 4 mai 2020,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -936,7 +936,7 @@ class MeldepliktRegelTest {
                     ),
                     Fritaksvurdering(
                         harFritak = false,
-                        fraDato = 18 mai 2020,
+                        fom = 18 mai 2020,
                         begrunnelse = "kan",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -1031,7 +1031,7 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 14 mai 2020,
+                        fom = 14 mai 2020,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -1039,7 +1039,7 @@ class MeldepliktRegelTest {
                     ),
                     Fritaksvurdering(
                         harFritak = false,
-                        fraDato = 15 mai 2020,
+                        fom = 15 mai 2020,
                         begrunnelse = "kan",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
@@ -1207,7 +1207,7 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 28 mai 2020,
+                        fom = 28 mai 2020,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = LocalDateTime.now(),

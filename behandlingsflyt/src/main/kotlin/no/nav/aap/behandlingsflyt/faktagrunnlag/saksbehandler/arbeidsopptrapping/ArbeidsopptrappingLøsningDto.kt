@@ -19,9 +19,9 @@ data class ArbeidsopptrappingLøsningDto(
             reellMulighetTilOpptrapping = reellMulighetTilOpptrapping,
             rettPaaAAPIOpptrapping = rettPaaAAPIOpptrapping,
             vurdertAv = avklaringsbehovKontekst.bruker.ident,
-            opprettetTid = Instant.now(),
-            vurderingenGjelderFra = fom,
+            opprettet = Instant.now(),
+            fom = fom,
             vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
-            vurderingenGjelderTil = tom,
+            tom = tom,
         )
 }

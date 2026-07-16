@@ -318,7 +318,7 @@ class GraderingArbeidRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = rettighetsperiode.fom,
+                        fom = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         vurdertIBehandling = BehandlingId(1),

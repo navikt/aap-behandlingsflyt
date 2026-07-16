@@ -517,8 +517,8 @@ class BrevGateway : BrevbestillingGateway {
             fritakMeldepliktGrunnlag = meldepliktGrunnlag.vurderinger.map { vurdering ->
                 Faktagrunnlag.FritakMeldepliktGrunnlag.FritakMeldepliktVurdering(
                     harFritak = vurdering.harFritak,
-                    fraDato = vurdering.fraDato,
-                    tilDato = vurdering.tilDato,
+                    fraDato = vurdering.fom,
+                    tilDato = vurdering.tom,
                 )
             }
         )

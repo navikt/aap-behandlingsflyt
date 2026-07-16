@@ -61,8 +61,8 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         fun toFritaksvurdering(): Fritaksvurdering {
             return Fritaksvurdering(
                 harFritak = harFritak,
-                fraDato = fraDato,
-                tilDato = tilDato,
+                fom = fraDato,
+                tom = tilDato,
                 begrunnelse = begrunnelse,
                 vurdertAv = vurdertAv,
                 opprettetTid = vurderingOpprettet,
@@ -100,8 +100,8 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setLong(1, meldepliktId)
                 setString(2, it.begrunnelse)
                 setBoolean(3, it.harFritak)
-                setLocalDate(4, it.fraDato)
-                setLocalDate(5, it.tilDato)
+                setLocalDate(4, it.fom)
+                setLocalDate(5, it.tom)
                 setString(6, it.vurdertAv)
                 setLocalDateTime(7, it.opprettetTid)
                 setLong(8, it.vurdertIBehandling.id)
