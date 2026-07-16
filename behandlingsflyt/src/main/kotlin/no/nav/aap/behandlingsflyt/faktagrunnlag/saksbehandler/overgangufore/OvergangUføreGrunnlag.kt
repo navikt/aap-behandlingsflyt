@@ -29,9 +29,8 @@ data class OvergangUføreGrunnlag(
 
     fun vedtattOvergangUførevurderingstidslinje(
         behandlingId: BehandlingId,
-        maksDato: LocalDate = Tid.MAKS
     ): Tidslinje<OvergangUføreVurdering> {
-        return filtrertOvergangUføreTidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
+        return filtrertOvergangUføreTidslinje() { it.vurdertIBehandling != behandlingId }
     }
 
     private fun filtrertOvergangUføreTidslinje(
@@ -51,8 +50,8 @@ data class OvergangUføreGrunnlag(
 
     fun kravdatoUføretrygd() : LocalDate? {
         return somOvergangUforevurderingstidslinje()
-            ?.segmenter()
-            ?.firstOrNull()
+            .segmenter()
+            .firstOrNull()
             ?.fom()
     }
 
