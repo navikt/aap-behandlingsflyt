@@ -40,10 +40,10 @@ class EtableringEgenVirksomhetRepositoryTest {
             val vurdering =
                 EtableringEgenVirksomhetVurdering(
                     begrunnelse = "test",
-                    vurderingenGjelderFra = LocalDate.now(),
-                    vurderingenGjelderTil = null,
+                    fom = LocalDate.now(),
+                    tom = null,
                     vurdertAv = Bruker("1234"),
-                    opprettetTid = Instant.now(),
+                    opprettet = Instant.now(),
                     vurdertIBehandling = behandling.id,
                     virksomhetNavn = "Kattepensjonatet",
                     orgNr = "12344311234",
@@ -60,7 +60,7 @@ class EtableringEgenVirksomhetRepositoryTest {
             val actual = repository.hentHvisEksisterer(behandling.id)
             assertThat(actual?.vurderinger)
                 .usingRecursiveComparison()
-                .ignoringFields("opprettetTid")
+                .ignoringFields("opprettet")
                 .isEqualTo(listOf(vurdering))
         }
     }
@@ -77,10 +77,10 @@ class EtableringEgenVirksomhetRepositoryTest {
                 listOf(
                     EtableringEgenVirksomhetVurdering(
                         begrunnelse = "test",
-                        vurderingenGjelderFra = LocalDate.now(),
-                        vurderingenGjelderTil = null,
+                        fom = LocalDate.now(),
+                        tom = null,
                         vurdertAv = Bruker("1234"),
-                        opprettetTid = Instant.now(),
+                        opprettet = Instant.now(),
                         vurdertIBehandling = behandling.id,
                         virksomhetNavn = "Kattepensjonatet",
                         orgNr = "12344311234",
