@@ -26,7 +26,8 @@ import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.time.LocalDate
-import java.util.*
+import java.util.Properties
+import java.util.UUID
 import kotlin.concurrent.thread
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
@@ -38,7 +39,6 @@ class UførevedtakHendelseKafkaKonsumentTest {
         private const val UFØRE_KAFKA_TOPIC = "lokal.kafkatopic.ufore-vedtak"
         private val logger = LoggerFactory.getLogger(UførevedtakKafkaKonsument::class.java)
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
             .withLogConsumer { Slf4jLogConsumer(logger) }
@@ -104,21 +104,22 @@ class UførevedtakHendelseKafkaKonsumentTest {
             konsument.konsumer()
         }
 
-        while (konsument.antallMeldinger == 0) {
+        while (konsument.antallMeldinger == 0 && pollThread.isAlive) {
             Thread.sleep(100)
         }
 
-        assertThat(konsument.antallMeldinger).isEqualTo(1)
+        assertThat(konsument.antallMeldinger)
+            .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
+            .isEqualTo(1)
 
         konsument.lukk()
-        kafka.stop()
         pollThread.join()
     }
 }
 
 
 private fun testConfig(brokers: String) = KafkaConsumerConfig<String, String>(
-    applicationId = "behandlingsflyt-test-${java.util.UUID.randomUUID()}",
+    applicationId = "behandlingsflyt-test-${UUID.randomUUID()}",
     brokers = brokers,
     ssl = null,
     schemaRegistry = SchemaRegistryConfig(
