@@ -36,7 +36,6 @@ class ForeldrepengevedtakHendelseKafkaKonsumentTest {
     companion object {
         private val logger = LoggerFactory.getLogger(ForeldrepengevedtakKafkaKonsument::class.java)
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
             .withLogConsumer { Slf4jLogConsumer(logger) }
@@ -100,14 +99,15 @@ class ForeldrepengevedtakHendelseKafkaKonsumentTest {
             konsument.konsumer()
         }
 
-        while (konsument.antallMeldinger == 0) {
+        while (konsument.antallMeldinger == 0 && pollThread.isAlive) {
             Thread.sleep(100)
         }
 
-        assertThat(konsument.antallMeldinger).isEqualTo(1)
+        assertThat(konsument.antallMeldinger)
+            .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
+            .isEqualTo(1)
 
         konsument.lukk()
-        kafka.stop()
         pollThread.join()
     }
 

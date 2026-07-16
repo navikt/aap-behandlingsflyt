@@ -109,16 +109,60 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         }
     }
 
+    override fun hentFritaksvurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<Fritaksvurdering>? {
+        val fritakIdQuery = """
+            SELECT meldeplikt_id
+            FROM MELDEPLIKT_FRITAK_GRUNNLAG g
+            WHERE g.BEHANDLING_ID = ? AND g.opprettet_tid <= ?
+            ORDER BY g.opprettet_tid DESC
+            LIMIT 1
+            """.trimIndent()
+
+        val fritakId = connection.queryFirstOrNull(
+            query = fritakIdQuery,
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
+            }
+
+            setRowMapper { row ->
+                row.getString("meldeplikt_id")
+            }
+        }
+
+        if (fritakId == null) {
+            return null
+        }
+
+        val meldepliktVurderingerQuery = """
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING 
+            FROM MELDEPLIKT_FRITAK f
+            INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
+            WHERE f.ID = ?
+            """.trimIndent()
+
+        return connection.queryList(meldepliktVurderingerQuery) {
+            setParams { setLong(1, fritakId.toLong()) }
+            setRowMapper(::toMeldepliktInternal)
+        }.map { it.toFritaksvurdering() }.ifEmpty { null }
+    }
+
     override fun slett(behandlingId: BehandlingId) {
 
         val meldepliktIds = getMeldepiktIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from meldeplikt_fritak_grunnlag where behandling_id = ?; 
             delete from meldeplikt_fritak_vurdering where meldeplikt_id = ANY(?::bigint[]);
             delete from meldeplikt_fritak where id = ANY(?::bigint[]);
           
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, meldepliktIds)
