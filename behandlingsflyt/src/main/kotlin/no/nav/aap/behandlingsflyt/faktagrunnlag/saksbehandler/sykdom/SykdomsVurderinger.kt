@@ -37,14 +37,16 @@ data class Sykdomsvurdering(
             return false
         }
 
-        if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)) {
+        if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI
+            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
+        ) {
             return false
         }
 
-        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
-            !erNedsettelseIArbeidsevneMerEnnHalvparten &&
-            harYrkesskadeRegistrert &&
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
+            && !erNedsettelseIArbeidsevneMerEnnHalvparten
+            && harYrkesskadeRegistrert
+            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
         ) {
             return false
         }
@@ -57,18 +59,22 @@ data class Sykdomsvurdering(
             return false
         }
 
-        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT) && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)) {
+        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
+            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
+        ) {
             return false
         }
 
-        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT) && (erSkadeSykdomEllerLyteVesentligdel == true)) {
+        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
+            && (erSkadeSykdomEllerLyteVesentligdel == true)
+        ) {
             return false
         }
 
-        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
-            !erNedsettelseIArbeidsevneMerEnnHalvparten &&
-            harYrkesskadeRegistrert &&
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
+            && !erNedsettelseIArbeidsevneMerEnnHalvparten
+            && harYrkesskadeRegistrert
+            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
         ) {
             return false
         }
