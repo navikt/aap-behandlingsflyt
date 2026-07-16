@@ -31,3 +31,13 @@ data class Fritaksvurdering(
         val vurdertIBehandling: BehandlingId,
     )
 }
+
+fun List<Fritaksvurdering>.erFunksjoneltLik(other: List<Fritaksvurdering>): Boolean {
+    if (this.size != other.size) return false
+    return this.zip(other).all { (a, b) ->
+        a.harFritak == b.harFritak &&
+                a.fraDato == b.fraDato &&
+                a.tilDato == b.tilDato &&
+                a.begrunnelse == b.begrunnelse
+    }
+}

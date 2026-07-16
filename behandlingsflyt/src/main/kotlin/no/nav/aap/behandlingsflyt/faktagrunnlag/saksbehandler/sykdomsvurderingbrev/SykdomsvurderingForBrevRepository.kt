@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 interface SykdomsvurderingForBrevRepository : Repository {
     fun lagre(behandlingId: BehandlingId, vurdering: SykdomsvurderingForBrev)
     fun hent(behandlingId: BehandlingId): SykdomsvurderingForBrev?
-    fun hentAktivPåTidspunkt(behandlingId: BehandlingId, tidspunkt: LocalDateTime): SykdomsvurderingForBrev?
+    fun hentSykdomsvurderingForBrevPåTidspunkt(behandlingId: BehandlingId, tidspunkt: LocalDateTime): SykdomsvurderingForBrev?
     fun hent(sakId: SakId): List<SykdomsvurderingForBrev>
     fun deaktiverEksisterende(behandlingId: BehandlingId)
 }
