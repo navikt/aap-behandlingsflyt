@@ -7,6 +7,20 @@ dependencies {
     rootProject.subprojects.forEach { subproject ->
         dokka(project(":" + subproject.name))
     }
+    implementation(project(":kontrakt"))
+    implementation(libs.tilgangKontrakt)
+}
+
+val generateAvklaringsbehovHtml =  tasks.register<JavaExec>("generateAvklaringsbehovHtml") {
+    val outputFile = layout.buildDirectory.file("dokka/html/avklaringsbehov.html")
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("no.nav.aap.docs.DefinisjonHtmlGeneratorKt")
+    args(outputFile.get().asFile.absolutePath)
+    outputs.file(outputFile)
+}
+
+tasks.named("dokkaGenerate") {
+    finalizedBy(generateAvklaringsbehovHtml)
 }
 
 dokka {
