@@ -53,7 +53,7 @@ class SykepengeerstatningVilkårTest {
                                 vurdertAv = "abc123",
                                 vurdertTidspunkt = LocalDateTime.now(),
                                 vurdertIBehandling = BehandlingId(1L),
-                                gjelderFra = startDato
+                                fom = startDato
                             )
                         )
                     ),
@@ -102,7 +102,7 @@ class SykepengeerstatningVilkårTest {
                             vurdertAv = "abc123",
                             vurdertTidspunkt = LocalDateTime.now(),
                             vurdertIBehandling = BehandlingId(1L),
-                            gjelderFra = startDato,
+                            fom = startDato,
                         ),
                         SykepengerVurdering(
                             begrunnelse = "",
@@ -111,7 +111,7 @@ class SykepengeerstatningVilkårTest {
                             vurdertAv = "abc123",
                             vurdertTidspunkt = LocalDateTime.now(),
                             vurdertIBehandling = BehandlingId(1L),
-                            gjelderFra = startDato.plusDays(10),
+                            fom = startDato.plusDays(10),
                         )
                     )
                 ),

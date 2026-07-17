@@ -71,9 +71,9 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setLong(10, vurderingerId)
                 setLong(11, it.vurdertIBehandling.id)
                 setString(12, it.vurdertAv.ident)
-                setLocalDate(13, it.vurderingenGjelderFra)
-                setLocalDate(14, it.vurderingenGjelderTil)
-                setInstant(15, it.opprettetTid)
+                setLocalDate(13, it.fom)
+                setLocalDate(14, it.tom)
+                setInstant(15, it.opprettet)
             }
         }
 
@@ -137,10 +137,10 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     oppstartsPerioder = row.getLongOrNull("EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID")
                         .let(::hentVirksomhetOppstartsperioder),
                     vurdertAv = Bruker(row.getString("VURDERT_AV")),
-                    opprettetTid = row.getInstant("OPPRETTET_TID"),
+                    opprettet = row.getInstant("OPPRETTET_TID"),
                     vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
-                    vurderingenGjelderFra = row.getLocalDate("GJELDER_FRA"),
-                    vurderingenGjelderTil = row.getLocalDateOrNull("GJELDER_TIL")
+                    fom = row.getLocalDate("GJELDER_FRA"),
+                    tom = row.getLocalDateOrNull("GJELDER_TIL")
                 )
             }
         }
