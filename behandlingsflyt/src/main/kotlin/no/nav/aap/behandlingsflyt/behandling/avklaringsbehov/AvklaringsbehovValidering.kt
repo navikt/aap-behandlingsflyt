@@ -149,13 +149,18 @@ class AvklaringsbehovValidering(
         definisjon: Definisjon, gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
     ): Boolean {
         return when (kravType) {
-            RelevantKravType.NYTT_KRAV -> gjeldendeVurderinger.segmenter().any { (vurderingPeriode, _) ->
-                kravPeriode.inneholder(vurderingPeriode.fom)
-            }
+            RelevantKravType.NYTT_KRAV -> harVurderingPåEllerEtterMuligRettFra(gjeldendeVurderinger, kravPeriode)
 
             RelevantKravType.GJENOPPTAK_ETTER_STANS -> true
             RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> !definisjon.måRevurderesEtterOpphør || gjeldendeVurderinger.segmenter()
                 .any { (vurderingPeriode, _) -> kravPeriode.inneholder(vurderingPeriode.fom) }
         }
+    }
+
+    private fun harVurderingPåEllerEtterMuligRettFra(
+        gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
+        kravPeriode: Periode
+    ): Boolean = gjeldendeVurderinger.segmenter().any { (vurderingPeriode, _) ->
+        kravPeriode.inneholder(vurderingPeriode.fom)
     }
 }
