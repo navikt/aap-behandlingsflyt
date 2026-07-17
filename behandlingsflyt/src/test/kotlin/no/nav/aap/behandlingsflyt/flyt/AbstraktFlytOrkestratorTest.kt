@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertFritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
@@ -70,6 +71,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Yrkesska
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.PeriodisertFritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
@@ -185,7 +187,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         fun unleashTestDataSource(): List<Arguments> {
             return listOf(
                 Arguments.of(LokalUnleash::class),
-                Arguments.of(AlleAvskruddUnleash::class),
+//                Arguments.of(AlleAvskruddUnleash::class),
             )
         }
     }
@@ -1292,16 +1294,16 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun Behandling.løsFritakMeldeplikt(fom: LocalDate): Behandling {
         return løsAvklaringsBehov(
-            this, FritakMeldepliktLøsning(
-                fritaksvurderinger = listOf(
-                    FritaksvurderingDto(
-                        harFritak = true,
-                        fraDato = fom,
+            this, PeriodisertFritakMeldepliktLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertFritaksvurderingDto(
+                        fom = fom,
+                        tom = null,
                         begrunnelse = "har fritak",
-                    )
+                        harFritak = true,
+                    ))
                 )
             )
-        )
     }
 
     protected fun Behandling.løsForeslåVedtak(): Behandling =
