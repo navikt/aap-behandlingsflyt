@@ -13,9 +13,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -33,6 +36,7 @@ import java.time.LocalDate
 
 class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val sakService: SakService,
+    private val behandlingService: BehandlingService,
     private val meldekortGateway: MeldekortGateway,
     private val behandlingRepository: BehandlingRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
@@ -40,15 +44,30 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val meldepliktRepository: MeldepliktRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val vedtakService: VedtakService,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
-        val behandlingId = BehandlingId(input.behandlingId())
+        val inputBehandlingId = BehandlingId(input.behandlingId())
         val sak = sakService.hent(sakId)
-        val behandling = behandlingRepository.hent(behandlingId)
+        val behandling =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaSisteFattedeVedtak)) {
+                behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)?.let { sisteFattedeVedtakBehandling ->
+                    behandlingRepository.hent(sisteFattedeVedtakBehandling.id)
+                } ?: behandlingRepository.hent(inputBehandlingId)
+            } else {
+                behandlingRepository.hent(inputBehandlingId)
+            }
+
+        if (behandling.id != inputBehandlingId) {
+            log.warn(
+                "Overfører meldeperioder til meldekort-backend for annen behandling [${behandling.id}] enn den som trigget jobben [$inputBehandlingId] for sak $sakId. " +
+                        "Det som trolig har skjedd er at behandlingen som trigget jobben ble iverksatt før, men avsluttet etter den andre behandlingen som har siste fattede vedtak."
+            )
+        }
 
         val opplysningerTilMeldekortBackend = when {
             trukketSøknadService.søknadErTrukket(behandling.id) ->
@@ -58,7 +77,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
                 val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden()
                     ?: error("Skal ha underveisperiode for avsluttet behandling ${behandling.id}")
-                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, underveisperiode)
+                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandling.id, underveisperiode)
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
@@ -70,7 +89,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
             behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling -> {
                 val meldeperioder =
-                    meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiodeEttÅrFraStartDato())
+                    meldeperiodeRepository.hentMeldeperioder(behandling.id, sak.rettighetsperiodeEttÅrFraStartDato())
                 opplysningerFørVedtak(sak, meldeperioder)
             }
 
@@ -80,7 +99,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         if (opplysningerTilMeldekortBackend != null) {
             val antallMeldePerioder = opplysningerTilMeldekortBackend.meldeperioder.size
             val antallOpplysningsbehov = opplysningerTilMeldekortBackend.opplysningsbehov.size
-            log.info("Sender $antallMeldePerioder meldeperioder og $antallOpplysningsbehov opplysningsbehov til meldekort-backend for behandling $behandlingId")
+            log.info("Sender $antallMeldePerioder meldeperioder og $antallOpplysningsbehov opplysningsbehov til meldekort-backend for behandling ${behandling.id}d")
             meldekortGateway.oppdaterMeldeperioder(opplysningerTilMeldekortBackend)
         }
     }
@@ -96,6 +115,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return MeldeperiodeTilMeldekortBackendJobbUtfører(
                 sakService = SakService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 meldekortGateway = gatewayProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide(),
@@ -103,6 +123,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 meldepliktRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 
