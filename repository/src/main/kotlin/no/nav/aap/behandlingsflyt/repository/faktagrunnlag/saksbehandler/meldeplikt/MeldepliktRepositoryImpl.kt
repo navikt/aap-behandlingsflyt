@@ -8,7 +8,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class MeldepliktRepositoryImpl(private val connection: DBConnection) : MeldepliktRepository {
@@ -22,8 +21,20 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
+        val harGrunnlag = connection.queryFirstOrNull(
+            "SELECT 1 FROM MELDEPLIKT_FRITAK_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?"
+        ) {
+            setParams { setLong(1, behandlingId.toLong()) }
+            setRowMapper { 1 }
+        } != null
+
+        if (!harGrunnlag) return null
+        return MeldepliktGrunnlag(hentAktiveVurderinger(behandlingId))
+    }
+
+    private fun hentAktiveVurderinger(behandlingId: BehandlingId): List<Fritaksvurdering> {
         val query = """
-            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING 
+            SELECT v.id as v_id, v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING 
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
@@ -32,51 +43,20 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
         return connection.queryList(query) {
             setParams { setLong(1, behandlingId.toLong()) }
-            setRowMapper(::toMeldepliktInternal)
-        }.grupperOgMapTilGrunnlag().firstOrNull()
-    }
-
-    fun toMeldepliktInternal(row: Row): MeldepliktInternal = MeldepliktInternal(
-        meldepliktId = row.getLong("MELDEPLIKT_ID"),
-        harFritak = row.getBoolean("HAR_FRITAK"),
-        fraDato = row.getLocalDate("FRA_DATO"),
-        tilDato = row.getLocalDateOrNull("TIL_DATO"),
-        begrunnelse = row.getString("BEGRUNNELSE"),
-        vurdertAv = row.getString("VURDERT_AV"),
-        vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
-        vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING"))
-    )
-
-
-    data class MeldepliktInternal(
-        val meldepliktId: Long,
-        val harFritak: Boolean,
-        val fraDato: LocalDate,
-        val tilDato: LocalDate?,
-        val begrunnelse: String,
-        val vurdertAv: String,
-        val vurderingOpprettet: LocalDateTime,
-        val vurdertIBehandling: BehandlingId,
-    ) {
-        fun toFritaksvurdering(): Fritaksvurdering {
-            return Fritaksvurdering(
-                harFritak = harFritak,
-                fom = fraDato,
-                tom = tilDato,
-                begrunnelse = begrunnelse,
-                vurdertAv = vurdertAv,
-                opprettetTid = vurderingOpprettet,
-                vurdertIBehandling = vurdertIBehandling
-            )
+            setRowMapper(::rowToFritaksvurdering)
         }
     }
 
-    private fun Iterable<MeldepliktInternal>.grupperOgMapTilGrunnlag(): List<MeldepliktGrunnlag> {
-        return groupBy(MeldepliktInternal::meldepliktId) { it.toFritaksvurdering() }
-            .map { (_, fritaksvurderinger) ->
-                MeldepliktGrunnlag(fritaksvurderinger)
-            }
-    }
+    private fun rowToFritaksvurdering(row: Row): Fritaksvurdering =
+        Fritaksvurdering(
+            harFritak = row.getBoolean("HAR_FRITAK"),
+            fom = row.getLocalDate("FRA_DATO"),
+            tom = row.getLocalDateOrNull("TIL_DATO"),
+            begrunnelse = row.getString("BEGRUNNELSE"),
+            vurdertAv = row.getString("VURDERT_AV"),
+            opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
+            vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING"))
+        )
 
     override fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {
         deaktiverEksisterende(behandlingId)
@@ -139,7 +119,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         }
 
         val meldepliktVurderingerQuery = """
-            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING 
+            SELECT v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING 
             FROM MELDEPLIKT_FRITAK f
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
             WHERE f.ID = ?
@@ -147,8 +127,8 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
         return connection.queryList(meldepliktVurderingerQuery) {
             setParams { setLong(1, fritakId.toLong()) }
-            setRowMapper(::toMeldepliktInternal)
-        }.map { it.toFritaksvurdering() }.ifEmpty { null }
+            setRowMapper(::rowToFritaksvurdering)
+        }
     }
 
     override fun slett(behandlingId: BehandlingId) {
@@ -176,7 +156,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         """
                     SELECT meldeplikt_id
                     FROM meldeplikt_fritak_grunnlag
-                    WHERE behandling_id = ? AND meldeplikt_id is not null
+                    WHERE behandling_id = ?
                  
                 """.trimIndent()
     ) {
