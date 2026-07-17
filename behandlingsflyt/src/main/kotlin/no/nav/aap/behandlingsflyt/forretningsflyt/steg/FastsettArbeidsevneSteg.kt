@@ -30,7 +30,7 @@ class FastsettArbeidsevneSteg private constructor(
             nårVurderingErRelevant = {
                 nårVurderingErRelevant(it)
             },
-            nårVurderingErGyldig = { nårVurderingErRelevant(kontekst) },
+            nårVurderingErGyldig = { nårVurderingErRelevant(kontekst).mapValue { true } },
             tilbakestillGrunnlag = {
                 kontekst.forrigeBehandlingId?.let {
                     arbeidsevneRepository.lagre(
