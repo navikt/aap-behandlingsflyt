@@ -41,11 +41,10 @@ class KravService(
         erEksisterendeStønadsperiode: Boolean,
         vedtattStansOpphør: List<GjeldendeStansEllerOpphør>
     ): RelevantKravType {
-        if (!erEksisterendeStønadsperiode
-            || vedtattStansOpphør.isEmpty() // Må vi støtte gjeninntreden hvis vi ikke har en vedtatt behandling, eller kan vi anta nytt krav?
-        ) {
+        if (!erEksisterendeStønadsperiode) {
             return RelevantKravType.NYTT_KRAV
         } else {
+            // TODO: Send inn vurdering av hva man gjeninntrer etter i stedet for å prøve å utlede  
             val stansEllerOpphør = vedtattStansOpphør.lastOrNull { it.fom < krav.muligRettFra }
             return when (stansEllerOpphør?.vurdering) {
                 null -> throw IllegalStateException("Forventet å finne stans/opphør-årsak ved inntredelse i eksisterende stønadsperiode")
@@ -59,7 +58,7 @@ class KravService(
         krav: RelevantKrav,
         gjeldendeStønadsperiodeVurderinger: Set<Boolean>
     ): Boolean {
-        // TODO: Sjekk § 12-vurdering for krav
+        // TODO: Sjekk § 12-vurdering for krav + stans/opphør-årsak
         return false
     }
 }
