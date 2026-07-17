@@ -83,23 +83,53 @@ class FritakMeldepliktStegTest {
         assertThat(behov!!.erÅpent()).isFalse
     }
 
+    @Test
+    fun `sende inn tom løsning`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
+        val steg = konstruerSteg()
+
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingsbehovRelevanteForStegMedPerioder =
+                setOf(
+                    VurderingsbehovMedPeriode(
+                        Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT,
+                        oppdatertTid = LocalDateTime.now().minusDays(1)
+                    )
+                )
+        }
+
+        val behovFørLøsning = hentAvklaringsbehovet(behandling)
+        assertThat(behovFørLøsning?.erÅpent()).isNull()
+
+        sendInnLøsning(behandling, sak, emptyList())
+        steg.utfør(kontekst)
+
+
+        val behov = hentAvklaringsbehovet(behandling)
+
+        assertThat(behov).isNotNull
+        assertThat(behov!!.erÅpent()).isFalse
+    }
+
     private fun sendInnLøsning(
         behandling: Behandling,
-        sak: Sak
+        sak: Sak,
+        perioder: List<PeriodisertFritaksvurderingDto> = listOf(
+            PeriodisertFritaksvurderingDto(
+                begrunnelse = "...",
+                fom = sak.rettighetsperiode.fom,
+                tom = null,
+                harFritak = true
+            )
+        )
     ) {
         FritakFraMeldepliktLøser(inMemoryRepositoryProvider).løs(
             AvklaringsbehovKontekst(
                 Bruker("SAKSBEHANDLER"),
                 behandling.flytKontekst()
             ), PeriodisertFritakMeldepliktLøsning(
-                løsningerForPerioder = listOf(
-                    PeriodisertFritaksvurderingDto(
-                        begrunnelse = "...",
-                        fom = sak.rettighetsperiode.fom,
-                        tom = null,
-                        harFritak = true
-                    )
-                )
+                løsningerForPerioder = perioder
             )
         )
 
