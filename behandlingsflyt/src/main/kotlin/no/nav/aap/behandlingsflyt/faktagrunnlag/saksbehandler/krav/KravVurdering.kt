@@ -29,13 +29,7 @@ sealed interface KravVurdering {
     }
 }
 
-interface KravMedDato {
-    val søknadsdato: Søknadsdato
-    val overstyrMuligRettFra: OverstyrMuligRettFra?
-    val muligRettFra: LocalDate
-}
-
-data class NyttKrav(
+data class RelevantKrav(
     override val referanse: Kravreferanse,
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
@@ -43,10 +37,10 @@ data class NyttKrav(
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 
-    override val søknadsdato: Søknadsdato,
-    override val overstyrMuligRettFra: OverstyrMuligRettFra?,
-    override val muligRettFra: LocalDate,
-) : KravVurdering, KravMedDato
+    val søknadsdato: Søknadsdato,
+    val overstyrMuligRettFra: OverstyrMuligRettFra?,
+    val muligRettFra: LocalDate,
+) : KravVurdering
 
 data class TrukketSøknad(
     override val referanse: Kravreferanse,
@@ -56,19 +50,6 @@ data class TrukketSøknad(
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 ) : KravVurdering
-
-data class Gjenopptak(
-    override val referanse: Kravreferanse,
-    override val journalpostId: JournalpostId,
-    override val vurdertAv: Bruker,
-    override val begrunnelse: String,
-    override val vurdertIBehandling: BehandlingId,
-    override val opprettet: Instant,
-
-    override val søknadsdato: Søknadsdato,
-    override val overstyrMuligRettFra: OverstyrMuligRettFra?,
-    override val muligRettFra: LocalDate,
-) : KravVurdering, KravMedDato
 
 data class Klage(
     override val referanse: Kravreferanse,
@@ -89,9 +70,8 @@ data class Tilleggsopplysning(
 ) : KravVurdering
 
 enum class KravType {
-    NYTT_KRAV_AAP,
+    RELEVANT_KRAV,
     TRUKKET_SØKNAD,
-    GJENOPPTAK,
     KLAGE,
     TILLEGGSOPPLYSNING,
 }

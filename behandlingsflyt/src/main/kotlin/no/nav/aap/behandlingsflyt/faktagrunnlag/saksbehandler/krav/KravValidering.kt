@@ -11,8 +11,8 @@ object KravValidering {
         return erAlleSøknaderIBehandlingVurdert
     }
 
-    fun validerKravMedDato(
-        vurdering: KravMedDato,
+    fun validerRelevantKrav(
+        vurdering: RelevantKrav,
         søknadForVurdering: MottattDokument?
     ) {
         if (søknadForVurdering != null) {

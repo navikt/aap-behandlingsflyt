@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
@@ -84,7 +84,7 @@ class MigrerKravServiceTest {
 
         assertThat(InMemoryKravRepository.hent(behandlingId).vurderinger).hasSize(antallFør)
         assertThat(
-            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<NyttKrav>()
+            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>()
                 .single().overstyrMuligRettFra
         ).isNull()
     }
@@ -105,7 +105,7 @@ class MigrerKravServiceTest {
         service.oppdaterKravForOverstyrtMuligRett(sakId, behandlingId, oppdaterVurdering)
 
         val etterOppdatering =
-            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<NyttKrav>().single()
+            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(etterOppdatering.overstyrMuligRettFra).isNotNull
         assertThat(etterOppdatering.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
         assertThat(etterOppdatering.overstyrMuligRettFra!!.årsak).isEqualTo(OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere)
@@ -118,7 +118,7 @@ class MigrerKravServiceTest {
         service.reverserKravForOverstyrtMuligRett(behandlingId, reverserVurdering)
 
         val etterReversering =
-            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<NyttKrav>().single()
+            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(etterReversering.overstyrMuligRettFra).isNull()
         assertThat(etterReversering.muligRettFra).isEqualTo(overstyrtDato)
     }
@@ -145,7 +145,7 @@ class MigrerKravServiceTest {
         )
 
         val etterReversering =
-            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<NyttKrav>().single()
+            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(etterReversering.overstyrMuligRettFra).isNull()
     }
 
@@ -170,7 +170,7 @@ class MigrerKravServiceTest {
             rettighetsperiodeVurdering
         )
         
-        val forventetReversertVurdering = NyttKrav(
+        val forventetReversertVurdering = RelevantKrav(
             referanse = vedtattOverstyrtKrav.referanse,
             journalpostId = vedtattOverstyrtKrav.journalpostId,
             vurdertAv = Bruker(rettighetsperiodeVurdering.vurdertAv),
@@ -212,7 +212,7 @@ class MigrerKravServiceTest {
         )
 
         // etter oppdater: muligRettFra = overstyrtDato
-        val etterOppdater = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<NyttKrav>().single()
+        val etterOppdater = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(etterOppdater.muligRettFra).isEqualTo(overstyrtDato)
 
         service.reverserKravForOverstyrtMuligRett(
@@ -221,7 +221,7 @@ class MigrerKravServiceTest {
         )
 
         // etter reverser: muligRettFra bevares fra det overstyrt kravet (ikke tilbakestilt til original søknadsdato)
-        val reversert = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<NyttKrav>().single()
+        val reversert = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(reversert.overstyrMuligRettFra).isNull()
         assertThat(reversert.muligRettFra).isEqualTo(overstyrtDato)
     }
@@ -259,7 +259,7 @@ class MigrerKravServiceTest {
         søknadsdato: java.time.LocalDate = 15 januar 2024,
         muligRettFra: java.time.LocalDate = søknadsdato,
         overstyrMuligRettFra: OverstyrMuligRettFra? = null,
-    ) = NyttKrav(
+    ) = RelevantKrav(
         referanse = Kravreferanse.ny(),
         journalpostId = JournalpostId("JP-${behandlingId.id}"),
         vurdertAv = SYSTEMBRUKER,

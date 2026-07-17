@@ -16,19 +16,11 @@ data class KravGrunnlag(
             .toSet()
     }
 
-    fun kravtidslinje(): Tidslinje<KravVurdering> {
+    fun kravtidslinje(): Tidslinje<RelevantKrav> {
         return gjeldendeVurderinger()
-            .filter { it is NyttKrav || it is Gjenopptak }
-            .sortedBy { (it as KravMedDato).muligRettFra }
-            .somTidslinje { Periode((it as KravMedDato).muligRettFra, Tid.MAKS) }
-    }
-
-    fun kravtidslinjeMedDato(): Tidslinje<KravMedDato> {
-        return gjeldendeVurderinger()
-            .filter { it is NyttKrav || it is Gjenopptak }
-            .filterIsInstance<KravMedDato>()
+            .filterIsInstance<RelevantKrav>()
             .sortedBy { it.muligRettFra }
-            .somTidslinje{ Periode((it).muligRettFra, Tid.MAKS) }
+            .somTidslinje { Periode(it.muligRettFra, Tid.MAKS) }
     }
 }
 
