@@ -29,3 +29,16 @@ enum class UføreSøknadVedtakResultat(val verdi: String) {
     JA_INNVILGET_FULL("JA_INNVILGET_FULL"),
     NEI("NEI")
 }
+
+fun List<OvergangUføreVurdering>.erFunksjoneltLik(other: List<OvergangUføreVurdering>): Boolean {
+    if (this.size != other.size) return false
+    return this.zip(other).all { (a, b) ->
+        a.begrunnelse == b.begrunnelse &&
+                a.brukerHarSøktOmUføretrygd == b.brukerHarSøktOmUføretrygd &&
+                a.brukerHarFåttVedtakOmUføretrygd == b.brukerHarFåttVedtakOmUføretrygd &&
+                a.brukerRettPåAAP == b.brukerRettPåAAP &&
+                a.fom == b.fom &&
+                a.tom == b.tom &&
+                a.vurdertIBehandling == b.vurdertIBehandling
+    }
+}
