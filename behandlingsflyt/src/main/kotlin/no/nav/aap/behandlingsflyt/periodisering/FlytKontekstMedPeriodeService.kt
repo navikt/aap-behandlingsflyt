@@ -115,6 +115,8 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.VEDTAKSLENGDE_MANUELT,
                 Vurderingsbehov.VURDER_KRAV,
                 Vurderingsbehov.VURDER_AVSLAG_11_27,
+                Vurderingsbehov.FASTSETT_ARBEIDSEVNE,
+                Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT,
                 Vurderingsbehov.REVURDERING_AVBRUTT ->
                     REVURDERING
 
