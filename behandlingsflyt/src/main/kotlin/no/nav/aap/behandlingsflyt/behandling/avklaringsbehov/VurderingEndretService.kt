@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.erFunksjoneltLik
@@ -20,13 +23,15 @@ class VurderingEndretService(
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
-    private val meldepliktRepository: MeldepliktRepository
+    private val meldepliktRepository: MeldepliktRepository,
+    private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
+        arbeidsopptrappingRepository = repositoryProvider.provide(),
     )
 
     private val sjekker: Map<Definisjon, EndretSjekk<*>> = mapOf(
@@ -50,6 +55,11 @@ class VurderingEndretService(
             hentPåTidspunkt = meldepliktRepository::hentFritaksvurderingPåTidspunkt,
             hentNåværende = { meldepliktRepository.hentHvisEksisterer(it)?.vurderinger },
             erLik = List<Fritaksvurdering>::erFunksjoneltLik,
+        ),
+        Definisjon.ARBEIDSOPPTRAPPING to EndretSjekk(
+            hentPåTidspunkt = arbeidsopptrappingRepository::hentArbeidsopptrappingVurderingPåTidspunkt,
+            hentNåværende = { arbeidsopptrappingRepository.hentHvisEksisterer(it)?.vurderinger },
+            erLik = List<ArbeidsopptrappingVurdering>::erFunksjoneltLik,
         )
     )
 
