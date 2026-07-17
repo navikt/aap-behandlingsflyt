@@ -343,7 +343,7 @@ class AvklaringsbehovService(
                             Tidslinje.map3(
                                 nårVurderingErRelevant(kontekst),
                                 nårVurderingErGyldigTidslinje,
-                                avklaringsbehovValidering.nårKravHarLøsning(
+                                if (definisjon.erFrivillig() && definisjon !in ikkeEkteFrivillig) Tidslinje.empty() else avklaringsbehovValidering.nårKravHarLøsning(
                                     definisjon,
                                     gjeldendeVurderinger(),
                                     kontekst.tilFlytKontekst()
