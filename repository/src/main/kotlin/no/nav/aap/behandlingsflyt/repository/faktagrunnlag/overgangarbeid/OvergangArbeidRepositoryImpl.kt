@@ -55,8 +55,8 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
         return OvergangArbeidVurdering(
             begrunnelse = row.getString("BEGRUNNELSE"),
             brukerRettPåAAP = row.getBoolean("BRUKER_RETT_PAA_AAP"),
-            vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
-            vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
+            fom = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
+            tom = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
@@ -134,8 +134,8 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
                 setBoolean(2, vurdering.brukerRettPåAAP)
                 setString(3, vurdering.vurdertAv)
                 setLong(4, overgangarbeidvurderingerId)
-                setLocalDate(5, vurdering.vurderingenGjelderFra)
-                setLocalDate(6, vurdering.vurderingenGjelderTil)
+                setLocalDate(5, vurdering.fom)
+                setLocalDate(6, vurdering.tom)
                 setLong(7, vurdering.vurdertIBehandling.id)
                 setInstant(8, vurdering.opprettet)
             }

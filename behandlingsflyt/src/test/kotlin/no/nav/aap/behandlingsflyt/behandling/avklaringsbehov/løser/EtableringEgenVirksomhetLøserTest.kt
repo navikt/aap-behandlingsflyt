@@ -196,7 +196,7 @@ class EtableringEgenVirksomhetLøserTest {
                     overgangBegrunnelse = null,
                     skalVurdereAapIOvergangTilArbeid = false,
                     vurdertAv = "saks",
-                    vurderingenGjelderFra = LocalDate.now(),
+                    fom = LocalDate.now(),
                     tom = LocalDate.now().plusMonths(6),
                     opprettet = Instant.now(),
                     vurdertIBehandling = behandling.id

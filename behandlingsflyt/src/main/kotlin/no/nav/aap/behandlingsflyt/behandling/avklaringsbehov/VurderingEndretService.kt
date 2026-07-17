@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.erFunksjoneltLik
@@ -25,6 +28,7 @@ class VurderingEndretService(
     private val bistandRepository: BistandRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
+    private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
@@ -32,6 +36,7 @@ class VurderingEndretService(
         bistandRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         refusjonkravRepository = repositoryProvider.provide(),
+        arbeidsopptrappingRepository = repositoryProvider.provide()
     )
 
     private val sjekker: Map<Definisjon, EndretSjekk<*>> = mapOf(
@@ -61,6 +66,11 @@ class VurderingEndretService(
             hentNåværende = refusjonkravRepository::hentHvisEksisterer,
             erLik = List<RefusjonkravVurdering>::erFunksjoneltLik,
         ),
+        Definisjon.ARBEIDSOPPTRAPPING to EndretSjekk(
+            hentPåTidspunkt = arbeidsopptrappingRepository::hentArbeidsopptrappingVurderingPåTidspunkt,
+            hentNåværende = { arbeidsopptrappingRepository.hentHvisEksisterer(it)?.vurderinger },
+            erLik = List<ArbeidsopptrappingVurdering>::erFunksjoneltLik,
+        )
     )
 
     fun endretSidenTidspunkt(

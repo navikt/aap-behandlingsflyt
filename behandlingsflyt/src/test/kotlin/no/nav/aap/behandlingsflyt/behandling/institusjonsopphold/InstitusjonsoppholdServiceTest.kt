@@ -23,18 +23,14 @@ import java.time.LocalDateTime
 
 internal class InstitusjonsoppholdUtlederServiceTest {
 
+    private val institusjonsoppholdRepository = InMemoryInstitusjonsoppholdRepository()
+
     val utlederService = InstitusjonsoppholdUtlederService(
         InMemoryBarnetilleggRepository,
-        InMemoryInstitusjonsoppholdRepository,
+        institusjonsoppholdRepository,
         InMemorySakRepository,
         InMemoryBehandlingRepository
     )
-
-    @BeforeEach
-    fun reset() {
-        InMemoryBarnetilleggRepository.reset()
-        InMemoryInstitusjonsoppholdRepository.reset()
-    }
 
     // --- Hjelpefunksjoner ---
 

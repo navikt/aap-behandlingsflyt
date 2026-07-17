@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
@@ -12,11 +13,11 @@ data class Bistandsvurdering(
     val overgangBegrunnelse: String?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurdertAv: String,
-    val vurderingenGjelderFra: LocalDate,
-    val tom: LocalDate?,
-    val opprettet: Instant,
-    val vurdertIBehandling: BehandlingId
-) {
+    override val fom: LocalDate,
+    override val tom: LocalDate?,
+    override val opprettet: Instant,
+    override val vurdertIBehandling: BehandlingId
+): PeriodisertVurdering {
     fun erBehovForBistand(): Boolean {
         return (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)
     }
@@ -33,7 +34,7 @@ fun List<Bistandsvurdering>.erFunksjoneltLik(annen: List<Bistandsvurdering>): Bo
                 første.erBehovForAnnenOppfølging == andre.erBehovForAnnenOppfølging &&
                 første.overgangBegrunnelse == andre.overgangBegrunnelse &&
                 første.skalVurdereAapIOvergangTilArbeid == andre.skalVurdereAapIOvergangTilArbeid &&
-                første.vurderingenGjelderFra == andre.vurderingenGjelderFra &&
+                første.fom == andre.fom &&
                 første.tom == andre.tom
     }
 }

@@ -24,8 +24,8 @@ class SykepengerErstatningGrunnlagTest {
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                 vurdertAv = "ident",
                 vurdertTidspunkt = vurdertTidspunkt,
-                gjelderFra = 1 januar 2020,
-                gjelderTom = 31 januar 2020,
+                fom = 1 januar 2020,
+                tom = 31 januar 2020,
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering2",
@@ -34,8 +34,8 @@ class SykepengerErstatningGrunnlagTest {
                 grunn = null,
                 vurdertAv = "ident",
                 vurdertTidspunkt = vurdertTidspunkt,
-                gjelderFra = 1 februar 2020,
-                gjelderTom = null,
+                fom = 1 februar 2020,
+                tom = null,
             )
         )
 
@@ -68,8 +68,8 @@ class SykepengerErstatningGrunnlagTest {
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                 vurdertAv = "ident",
                 vurdertTidspunkt = vurdertTidspunkt1,
-                gjelderFra = 1 januar 2020,
-                gjelderTom = 31 mai 2020,
+                fom = 1 januar 2020,
+                tom = 31 mai 2020,
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering2",
@@ -78,8 +78,8 @@ class SykepengerErstatningGrunnlagTest {
                 grunn = null,
                 vurdertAv = "ident",
                 vurdertTidspunkt = vurdertTidspunkt1,
-                gjelderFra = 1 juni 2020,
-                gjelderTom = null,
+                fom = 1 juni 2020,
+                tom = null,
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering3",
@@ -88,8 +88,8 @@ class SykepengerErstatningGrunnlagTest {
                 grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
                 vurdertAv = "ident",
                 vurdertTidspunkt = vurdertTidspunkt2,
-                gjelderFra = 15 april 2020,
-                gjelderTom = 15 juni 2020,
+                fom = 15 april 2020,
+                tom = 15 juni 2020,
             )
         )
 
@@ -128,8 +128,8 @@ class SykepengerErstatningGrunnlagTest {
                 grunn = null,
                 vurdertAv = "ident",
                 vurdertTidspunkt = vurdertTidspunkt,
-                gjelderFra = 1 februar 2020,
-                gjelderTom = null,
+                fom = 1 februar 2020,
+                tom = null,
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering1",
@@ -138,8 +138,8 @@ class SykepengerErstatningGrunnlagTest {
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                 vurdertAv = "ident",
                 vurdertTidspunkt = vurdertTidspunkt,
-                gjelderFra = 1 januar 2020,
-                gjelderTom = 31 januar 2020,
+                fom = 1 januar 2020,
+                tom = 31 januar 2020,
             )
         )
 

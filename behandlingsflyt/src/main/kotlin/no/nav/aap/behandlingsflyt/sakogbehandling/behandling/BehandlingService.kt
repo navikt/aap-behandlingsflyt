@@ -398,8 +398,10 @@ class BehandlingService(
 
     private fun validerAtSisteStegstatusErAvsluttet(behandlingId: BehandlingId) {
         val oppdatertBehandling = behandlingRepository.hent(behandlingId)
-        val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
-        require(sisteSteg.status() == StegStatus.AVSLUTTER)
+        val aktivtSteg = oppdatertBehandling.aktivtStegTilstand()
+        require(aktivtSteg.status() == StegStatus.AVSLUTTER) {
+            "Aktivt steg ${aktivtSteg.steg()} har status ${aktivtSteg.status()}, men forventet status ${StegStatus.AVSLUTTER}"
+        }
     }
 
 

@@ -6,9 +6,9 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somTidslinje
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -60,7 +60,7 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                     val perioderSomTrengerVurdering = avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)?.perioderVedtaketBehøverVurdering().orEmpty()
 
                     val sisteVedtatteVurderinger = vedtatteVurderinger
-                        .somTidslinje()
+                        .gjeldendeVurderinger()
                         .segmenter()
                         .map { it.verdi.tilResponse(vurdertAvService) }
 
@@ -89,18 +89,18 @@ private fun SykepengerVurdering.tilResponse(vurdertAvService: VurdertAvService):
         begrunnelse = begrunnelse,
         harRettPå = harRettPå,
         grunn = grunn,
-        fom = gjelderFra,
-        tom = gjelderTom,
-        gjelderFra = gjelderFra,
-        gjelderTom = gjelderTom,
-        opprettet = vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering"),
+        fom = fom,
+        tom = tom,
+        gjelderFra = fom,
+        gjelderTom = tom,
+        opprettet = vurdertTidspunkt,
         vurdertIBehandling = vurdertIBehandling,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(
                 ident = vurdertAv,
-                vurdertTidspunkt ?: error("Mangler dato for sykepengervurdering"),
+                vurdertTidspunkt,
             ),
         ),
     )

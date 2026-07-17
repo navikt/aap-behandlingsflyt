@@ -251,6 +251,22 @@ class AvklaringsbehovService(
         return vurderingsbehovErNyere
     }
 
+    /* Disse avklaringsbehovene er ikke rene frivillige avklaringsbehov, men er noen
+     * ganger frivillige og andre ganger påkrevd.  Kan derfor ikke bruke den nye koden
+     * for å håndtere frivillige avklaringsbehov for disse.
+     */
+    private val ikkeEkteFrivillig = listOf(
+        Definisjon.AVKLAR_VEDTAKSLENGDE,
+        Definisjon.ETABLERING_EGEN_VIRKSOMHET,
+        Definisjon.AVKLAR_SAMORDNING_GRADERING,
+        Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
+        Definisjon.AVKLAR_SAMORDNING_UFØRE,
+        Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
+        Definisjon.SAMORDNING_ARBEIDSGIVER,
+        Definisjon.SAMORDNING_BARNEPENSJON,
+        Definisjon.SAMORDNING_REFUSJONS_KRAV,
+    )
+
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
@@ -261,43 +277,59 @@ class AvklaringsbehovService(
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
     ) {
-        val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
-                val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
+        val perioderVilkåretErRelevant by lazy { nårVurderingErRelevant(kontekst) }
 
-                val perioderSomBehøverVurdering =
-                    perioderSomBehøverVurdering(
-                        kontekst,
-                        perioderVilkåretErRelevant,
-                        nårVurderingErRelevant
-                    )
-
-                if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
-                    && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
-                ) {
-                    // Vi behøver vurdering, men har ikke nødvendigvis noen obligatoriske perioder
-                    Pair(true, perioderSomBehøverVurdering)
-                } else {
-                    Pair(perioderSomBehøverVurdering.isNotEmpty(), perioderSomBehøverVurdering)
-                }
-            }
-
-            VurderingType.MELDEKORT,
-            VurderingType.AUTOMATISK_BREV,
-            VurderingType.UTVID_VEDTAKSLENGDE,
-            VurderingType.MIGRER_RETTIGHETSPERIODE,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-            VurderingType.G_REGULERING,
-            VurderingType.OVERGANG_UFORE_STANS,
-            VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())
+        val perioderSomBehøverVurdering by lazy {
+            perioderSomBehøverVurdering(
+                kontekst,
+                perioderVilkåretErRelevant,
+                nårVurderingErRelevant
+            )
         }
 
         oppdaterAvklaringsbehov(
             definisjon = definisjon,
-            vedtakBehøverVurdering = { behøverVurdering },
-            perioderVedtaketBehøverVurdering = { perioderVedtaketBehøverVurdering },
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING -> {
+                        when {
+                            /* Felles guard: Har ikke avklaringsbehov for vilkår som ikke er relevante */
+                            perioderVilkåretErRelevant.segmenter().none { it.verdi } -> false
+
+                            kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov } -> true
+
+                            /* For frivillige avklaringsbehov, så kan ikke Kelvin, ut fra opplysningene i saken, se om
+                              * det er riktig at avklaringsbehovet ble løftet. Vi må bare stole på saksbehandler, og
+                              * svare at at vedtaket behøver en vurdering, fordi saksbehandler har gjort en vurdering.
+                              * Uten denne sjekken, så ville `oppdaterAvklaringsbehov` avbrutt avklaringsbehovet
+                              * rett etter at saksbehandler sendte inn løsningen sin, fordi Kelvin ikke ser noen grunn
+                              * til at behovet skal være åpent.
+                             */
+                            definisjon.erFrivillig() && definisjon !in ikkeEkteFrivillig -> {
+                                val gjeldendeVurderinger = requireNotNull(gjeldendeVurderinger()) {
+                                    "For at AvklaringsbehovService skal kunne håndtere frivillig avklaringsbehov $definisjon, må gjeldendeVurderinger sendes med."
+                                }
+                                gjeldendeVurderinger.segmenter()
+                                    .any { it.verdi.vurdertIBehandling == kontekst.behandlingId /* TODO: løstAv != Kelvin */ }
+                            }
+
+                            else -> perioderSomBehøverVurdering.isNotEmpty()
+                        }
+                    }
+
+                    VurderingType.OVERGANG_UFORE_STANS,
+                    VurderingType.MELDEKORT,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.AUTOMATISK_BREV,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.IKKE_RELEVANT -> false
+                }
+            },
+            perioderVedtaketBehøverVurdering = { perioderSomBehøverVurdering },
             perioderSomIkkeErTilstrekkeligVurdert =
                 {
                     val perioderSomIkkeErTilstrekkeligVurdertEvaluert = perioderSomIkkeErTilstrekkeligVurdert()

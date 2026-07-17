@@ -9,7 +9,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -17,12 +21,14 @@ class AvklarSykdomLøser(
     private val behandlingRepository: BehandlingRepository,
     private val sykdomRepository: SykdomRepository,
     private val yrkersskadeRepository: YrkesskadeRepository,
+    private val unleashGateway: UnleashGateway,
 ) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkersskadeRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -66,22 +72,37 @@ class AvklarSykdomLøser(
 
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
         sykdomLøsning.segmenter().forEach {
-            if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
-                log.warn(
-                    "Sykdomsvurderingen er ikke konsistent med yrkesskade. " +
-                            "harYrkesskade: $harYrkesskade, " +
-                            "typeBehandling: ${behandling.typeBehandling()}, " +
-                            "sykdomsvurdering: ${
-                                it.verdi.copy(
-                                    begrunnelse = "",
-                                    yrkesskadeBegrunnelse = "",
-                                    diagnose = null,
-                                )
-                            }"
-                )
-                throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.SkalViseAlleSykdomssteg)) {
+                if (!it.verdi.erKonsistentForSykdomVisAlleSykdomssteg(harYrkesskade)) {
+                    logWarning(harYrkesskade, behandling, it)
+                    throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
+                }
+            } else {
+                if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
+                    logWarning(harYrkesskade, behandling, it)
+                    throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
+                }
             }
         }
+    }
+
+    private fun logWarning(
+        harYrkesskade: Boolean,
+        behandling: Behandling,
+        segment: Segment<Sykdomsvurdering>
+    ) {
+        log.warn(
+            "Sykdomsvurderingen er ikke konsistent med yrkesskade. " +
+                    "harYrkesskade: $harYrkesskade, " +
+                    "typeBehandling: ${behandling.typeBehandling()}, " +
+                    "sykdomsvurdering: ${
+                        segment.verdi.copy(
+                            begrunnelse = "",
+                            yrkesskadeBegrunnelse = "",
+                            diagnose = null,
+                        )
+                    }"
+        )
     }
 
     override fun forBehov(): Definisjon {

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -17,11 +18,11 @@ data class EtableringEgenVirksomhetVurdering(
     val utviklingsPerioder: List<Periode>,
     val oppstartsPerioder: List<Periode>,
     val vurdertAv: Bruker,
-    val opprettetTid: Instant,
-    val vurdertIBehandling: BehandlingId,
-    val vurderingenGjelderFra: LocalDate,
-    val vurderingenGjelderTil: LocalDate?
-)
+    override val opprettet: Instant,
+    override val vurdertIBehandling: BehandlingId,
+    override val fom: LocalDate,
+    override val tom: LocalDate?
+) : PeriodisertVurdering
 
 enum class EierVirksomhet{
     EIER_MINST_50_PROSENT,

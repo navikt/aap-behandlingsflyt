@@ -165,11 +165,7 @@ class ManglendeLigningGrunnlagStegTest {
     @Test
     fun `oppretter avklaringsbehov ved manuell revurdering og tidligere vurdering tilsier mulig rett til AAP`() {
         val (_, behandling) = opprettInMemorySakOgBehandling(
-            vurderingsbehov = listOf(
-                VurderingsbehovMedPeriode(
-                    Vurderingsbehov.BARNETILLEGG
-                )
-            )
+            vurderingsbehov = listOf(Vurderingsbehov.BARNETILLEGG)
         )
         val flytKontekst = flytKontekstMedPerioder {
             this.behandling = behandling

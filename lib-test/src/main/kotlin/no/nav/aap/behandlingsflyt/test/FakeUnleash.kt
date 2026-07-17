@@ -84,6 +84,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true,
         BehandlingsflytFeature.ManuellInntektDelvisUfore to true,
         BehandlingsflytFeature.Avslag11_27 to true,
+        BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

@@ -93,62 +93,6 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
                 respond(dto)
             }
         }
-
-
-        // TODO: fjern v2-endepunkt når frontend er tilbake på v1
-        route("/{referanse}/grunnlag/fatte-vedtak/v2") {
-            getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagResponse>(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                påkrevdRolle = Definisjon.FATTE_VEDTAK.løsesAv
-            ) { req ->
-
-                val dto = dataSource.transaction(readOnly = true) { connection ->
-
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-
-                    val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val flyt = behandling.flyt()
-
-                    val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
-                    val historikk = utledHistorikk(avklaringsbehovene)
-
-                    val beslutter = historikk
-                        .filter { it.aksjon == Aksjon.FATTET_VEDTAK }
-                        .maxByOrNull { it.tidspunkt }
-                        ?.let { historikkInnlslag ->
-                            ansattInfoService.hentAnsattNavnOgEnhet(historikkInnlslag.avIdent)?.let {
-                                BeslutterDto(
-                                    navn = it.navn,
-                                    kontor = it.enhet,
-                                    tidspunkt = historikkInnlslag.tidspunkt,
-                                    ident = historikkInnlslag.avIdent
-                                )
-                            }
-                        }
-
-                    FatteVedtakGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
-                            kanSaksbehandle(),
-                            avklaringsbehovene,
-                            bruker(),
-                            gatewayProvider,
-                        ),
-                        vurderinger = vurderinger,
-                        historikk = historikk,
-                        besluttetAv = beslutter,
-                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
-                            avklaringsbehovene,
-                            bruker()
-                        )
-                    )
-                }
-                respond(dto)
-            }
-        }
     }
 }
 
