@@ -61,7 +61,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             tom = row.getLocalDateOrNull("TOM"),
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
             overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
         )
@@ -165,7 +165,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setBoolean(3, vurdering.erBehovForArbeidsrettetTiltak)
                 setBoolean(4, vurdering.erBehovForAnnenOppfølging)
                 setLocalDate(5, vurdering.fom)
-                setString(6, vurdering.vurdertAv)
+                setBruker(6, vurdering.vurdertAv)
                 setString(7, vurdering.overgangBegrunnelse)
                 setBoolean(8, vurdering.skalVurdereAapIOvergangTilArbeid)
                 setLong(9, bistandvurderingerId)

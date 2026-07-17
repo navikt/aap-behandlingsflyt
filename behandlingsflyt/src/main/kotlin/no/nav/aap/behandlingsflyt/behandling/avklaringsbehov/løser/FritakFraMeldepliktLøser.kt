@@ -50,7 +50,7 @@ class FritakFraMeldepliktLøser(
         fom = dto.fom,
         tom = dto.tom,
         begrunnelse = dto.begrunnelse,
-        vurdertAv = kontekst.bruker.ident,
+        vurdertAv = kontekst.bruker,
         vurdertIBehandling = kontekst.behandlingId(),
         opprettetTid = LocalDateTime.now()
     )

@@ -22,7 +22,7 @@ class RefusjonkravLøser(
             RefusjonkravVurdering(
                 harKrav = refusjonkrav.harKrav,
                 navKontor = refusjonkrav.navKontor,
-                vurdertAv = kontekst.bruker.ident
+                vurdertAv = kontekst.bruker
             )
         }
 

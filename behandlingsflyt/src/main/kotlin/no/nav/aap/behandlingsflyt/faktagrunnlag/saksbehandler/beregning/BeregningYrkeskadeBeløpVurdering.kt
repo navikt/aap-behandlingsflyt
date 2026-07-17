@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime
 
 data class BeregningYrkeskaderBeløpVurdering(
@@ -16,7 +17,7 @@ data class YrkesskadeBeløpVurdering(
     val antattÅrligInntekt: Beløp,
     val referanse: String,
     val begrunnelse: String,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime? = null
 )
 

@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -192,11 +193,11 @@ class ManglendeLigningGrunnlagStegTest {
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(behandling: Behandling) {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
         avklaringsbehovene.leggTil(Definisjon.FASTSETT_MANUELL_INNTEKT, StegType.MANGLENDE_LIGNING, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", "saksbehandler")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", Bruker("saksbehandler"))
         avklaringsbehovene.løsAvklaringsbehov(
             Definisjon.FASTSETT_MANUELL_INNTEKT,
             begrunnelse = "",
-            endretAv = "Krongov"
+            endretAv = Bruker("Krongov")
         )
     }
 
@@ -217,7 +218,7 @@ class ManglendeLigningGrunnlagStegTest {
                 nedsattArbeidsevneEllerStudieevneDato = sisteÅr.plusYears(1).atDay(1),
                 ytterligereNedsattBegrunnelse = "...",
                 ytterligereNedsattArbeidsevneDato = null,
-                vurdertAv = "..."
+                vurdertAv = Bruker("...")
             )
         )
     }
@@ -242,19 +243,19 @@ class ManglendeLigningGrunnlagStegTest {
             år = sisteÅr,
             begrunnelse = "begrunnelse",
             belop = Beløp(350_000),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             opprettet = LocalDateTime.now()
         ), ManuellInntektVurdering(
             år = sisteÅr.minusYears(1),
             begrunnelse = "begrunnelse",
             belop = Beløp(350_000),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             opprettet = LocalDateTime.now()
         ), ManuellInntektVurdering(
             år = sisteÅr.minusYears(2),
             begrunnelse = "begrunnelse",
             belop = Beløp(350_000),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             opprettet = LocalDateTime.now()
         )
     )

@@ -29,7 +29,7 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
             setParams {
                 setLong(1, behandlingId.toLong())
                 setString(2, vurdering.vurdering)
-                setString(3, vurdering.vurdertAv)
+                setBruker(3, vurdering.vurdertAv)
                 setLocalDateTime(4, vurdering.vurdertTidspunkt)
             }
             setResultValidator { rowsUpdated ->
@@ -109,7 +109,7 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
     private fun toSykdomsvurderingForBrev(row: Row): SykdomsvurderingForBrev = SykdomsvurderingForBrev(
         behandlingId = BehandlingId(row.getLong("BEHANDLING_ID")),
         vurdering = row.getStringOrNull("VURDERING"),
-        vurdertAv = row.getString("VURDERT_AV"),
+        vurdertAv = row.getBruker("VURDERT_AV"),
         vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
     )
 

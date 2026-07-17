@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.komponenter.verdityper.Bruker
 
 @Fakes
 class OvergangUforeGrunnlagApiTest : BaseApiTest() {
@@ -41,7 +42,7 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             brukerRettPåAAP = true,
             fom = LocalDate.now(),
             tom = null,
-            vurdertAv = "abc123",
+            vurdertAv = Bruker("abc123"),
             vurdertIBehandling = behandling.id,
             opprettet = Instant.now()
         )
@@ -68,7 +69,7 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             fom = vurdering.fom,
             tom = vurdering.tom,
             vurderingerMeta = VurderingerMetaResponse(
-                vurdertAv = VurdertAvResponse(vurdering.vurdertAv, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
+                vurdertAv = VurdertAvResponse(vurdering.vurdertAv.ident, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
                 kvalitetssikretAv = null,
                 besluttetAv = null,
             ),

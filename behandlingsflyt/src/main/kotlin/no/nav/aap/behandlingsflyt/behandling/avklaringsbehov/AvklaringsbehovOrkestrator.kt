@@ -69,7 +69,7 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovene.løsAvklaringsbehov(
             avklaringsbehovLøsning.definisjon(),
             løsningsResultat.begrunnelse,
-            bruker.ident,
+            bruker,
             løsningsResultat.kreverToTrinn
         )
         log.info("Løste avklaringsbehov[$definisjon] på behandling[${behandling.referanse}]")

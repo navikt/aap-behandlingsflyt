@@ -25,6 +25,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -98,7 +99,7 @@ internal class SamordningServiceTest {
             opprettVurderingData(
                 ytelseVurderingRepo, behandlingId, vurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     vurderinger = setOf(
                         SamordningVurdering(
                             ytelseType = Ytelse.SYKEPENGER,
@@ -177,7 +178,7 @@ internal class SamordningServiceTest {
 
             val vurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
@@ -260,7 +261,7 @@ internal class SamordningServiceTest {
         behandlingId: BehandlingId,
         vurderinger: SamordningVurderingGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "En god begrunnelse",
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurderinger = setOf(
                 SamordningVurdering(
                     Ytelse.SYKEPENGER,

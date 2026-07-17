@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -45,7 +46,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         arbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE")),
         vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
         opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
-        vurdertAv = row.getString("VURDERT_AV")
+        vurdertAv = row.getBruker("VURDERT_AV")
     )
 
     data class ArbeidsevneInternal(
@@ -56,7 +57,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         val arbeidsevne: Prosent,
         val vurdertIBehandling: BehandlingId,
         val opprettetTid: LocalDateTime,
-        val vurdertAv: String
+        val vurdertAv: Bruker
     ) {
         fun toArbeidsevnevurdering(): ArbeidsevneVurdering {
             return ArbeidsevneVurdering(
@@ -114,7 +115,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
                 setInt(5, it.arbeidsevne.prosentverdi())
                 setLong(6, it.vurdertIBehandling.id)
                 setLocalDateTime(7, it.opprettetTid)
-                setString(8, it.vurdertAv)
+                setBruker(8, it.vurdertAv)
             }
         }
     }

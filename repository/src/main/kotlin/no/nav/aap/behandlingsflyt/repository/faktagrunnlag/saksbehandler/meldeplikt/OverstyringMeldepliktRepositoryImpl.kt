@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
 import java.util.*
@@ -44,7 +45,7 @@ class OverstyringMeldepliktRepositoryImpl(private val connection: DBConnection) 
                     meldepliktOverstyringStatus = row.getEnum("MELDEPLIKT_OVERSTYRING_STATUS"),
                     periode = row.getPeriode("PERIODE"),
                     begrunnelse = row.getString("BEGRUNNELSE"),
-                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertAv = row.getBruker("VURDERT_AV"),
                     vurdertIBehandling = row.getUUID("VURDERT_I_BEHANDLING"),
                     vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
                 )
@@ -155,7 +156,7 @@ class OverstyringMeldepliktRepositoryImpl(private val connection: DBConnection) 
         }
     }
 
-    private fun insertVurderingMedPerioder(grunnlagId: Long, vurdertAv: String, vurdertI: BehandlingReferanse, perioder: List<OverstyringMeldepliktVurderingPeriode>) {
+    private fun insertVurderingMedPerioder(grunnlagId: Long, vurdertAv: Bruker, vurdertI: BehandlingReferanse, perioder: List<OverstyringMeldepliktVurderingPeriode>) {
         val queryGetBehandlingId = """
             SELECT id
             FROM behandling
@@ -184,7 +185,7 @@ class OverstyringMeldepliktRepositoryImpl(private val connection: DBConnection) 
 
         val vurderingId = connection.executeReturnKey(queryInsertVurdering) {
             setParams {
-                setString(1, vurdertAv)
+                setBruker(1, vurdertAv)
                 setLong(2, behadlingId)
             }
         }
@@ -258,7 +259,7 @@ class OverstyringMeldepliktRepositoryImpl(private val connection: DBConnection) 
         val meldepliktOverstyringStatus: MeldepliktOverstyringStatus,
         val periode: Periode,
         val begrunnelse: String,
-        val vurdertAv: String,
+        val vurdertAv: Bruker,
         val vurderingOpprettet: LocalDateTime,
     )
 

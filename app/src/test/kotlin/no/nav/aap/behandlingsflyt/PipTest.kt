@@ -32,6 +32,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -138,7 +139,7 @@ class PipTest {
             )
             barnRepository.lagreVurderinger(
                 behandling.id,
-                "ident",
+                Bruker("ident"),
                 listOf(
                     VurdertBarn(
                         BarnIdentifikator.BarnIdent("vurdertbarn"),
@@ -218,7 +219,7 @@ class PipTest {
             )
             barnRepository.lagreVurderinger(
                 behandling.id,
-                "ident",
+                Bruker("ident"),
                 listOf(
                     VurdertBarn(
                         BarnIdentifikator.BarnIdent("vurdertbarn"),
@@ -252,7 +253,7 @@ class PipTest {
 
             barnRepository.lagreVurderinger(
                 behandling2.id,
-                "ident",
+                Bruker("ident"),
                 listOf(
                     VurdertBarn(
                         BarnIdentifikator.BarnIdent("vurdertbar2"),

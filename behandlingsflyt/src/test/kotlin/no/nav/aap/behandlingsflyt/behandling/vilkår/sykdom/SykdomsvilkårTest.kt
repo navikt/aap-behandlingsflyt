@@ -101,7 +101,7 @@ class SykdomsvilkårTest {
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
                 overgangBegrunnelse = "...",
                 skalVurdereAapIOvergangTilArbeid = null,
-                vurdertAv = "Foffer",
+                vurdertAv = Bruker("Foffer"),
                 fom = startDato,
                 opprettet = Instant.now(),
                 tom = sluttDato
@@ -179,7 +179,7 @@ class SykdomsvilkårTest {
                     relevanteSaker = emptyList(),
                     erÅrsakssammenheng = true,
                     andelAvNedsettelsen = Prosent(50),
-                    vurdertAv = "Z00000",
+                    vurdertAv = Bruker("Z00000"),
                     vurdertTidspunkt = opprettet
                 ),
                 sykdomsvurderinger = listOf(
@@ -242,7 +242,7 @@ class SykdomsvilkårTest {
                     relevanteSaker = emptyList(),
                     erÅrsakssammenheng = true,
                     andelAvNedsettelsen = Prosent(50),
-                    vurdertAv = "Z00000",
+                    vurdertAv = Bruker("Z00000"),
                     vurdertTidspunkt = opprettet
                 ),
                 sykdomsvurderinger = listOf(

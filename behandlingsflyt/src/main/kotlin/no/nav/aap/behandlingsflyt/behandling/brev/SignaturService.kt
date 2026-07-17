@@ -127,7 +127,7 @@ class SignaturService(
 
     private data class UtledetSignatur(
         val definisjon: Definisjon,
-        val navIdent: String,
+        val navIdent: Bruker,
         val rolle: Rolle,
         val enhet: String?,
         val harLøstAvklaringsbehov: Boolean,
@@ -135,7 +135,7 @@ class SignaturService(
 
     private fun UtledetSignatur.tilGrunnlag(): SignaturGrunnlag {
         return SignaturGrunnlag(
-            navIdent = navIdent,
+            navIdent = navIdent.ident,
             rolle = mapRolle(rolle),
             enhet = enhet,
         )
@@ -176,7 +176,7 @@ class SignaturService(
                 val enhet = enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)
                 UtledetSignatur(
                     definisjon = avklaringsbehov.definisjon,
-                    navIdent = innloggetBruker.ident,
+                    navIdent = innloggetBruker,
                     rolle = rolle,
                     enhet = enhet,
                     harLøstAvklaringsbehov = false,
@@ -209,9 +209,5 @@ class SignaturService(
             Rolle.BESLUTTER -> SignaturRolle.BESLUTTER
             else -> null
         }
-    }
-
-    private fun String.erNavIdent(): Boolean {
-        return this.matches(Regex("\\w\\d{6}"))
     }
 }

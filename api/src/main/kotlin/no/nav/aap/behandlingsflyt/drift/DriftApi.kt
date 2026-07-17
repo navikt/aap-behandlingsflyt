@@ -58,6 +58,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -615,7 +616,7 @@ private data class ForenkletAvklaringsbehov(
     val perioderUgyldigVurdering: Set<Periode>?,
     val perioderKreverVurdering: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
-    val endretAv: String,
+    val endretAv: Bruker,
     val årsakTilSettPåVent: ÅrsakTilSettPåVent?,
     val fristSettPåVent: LocalDate?,
 )

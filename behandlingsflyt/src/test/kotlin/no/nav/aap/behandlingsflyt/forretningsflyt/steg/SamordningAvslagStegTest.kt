@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -77,7 +78,7 @@ class SamordningAvslagStegTest {
             vurdering = SamordningUføreVurdering(
                 begrunnelse = "begrunnelse",
                 vurderingPerioder = listOf(samordningUføreVurderingPeriode),
-                vurdertAv = "test"
+                vurdertAv = Bruker("test")
             )
         )
     }

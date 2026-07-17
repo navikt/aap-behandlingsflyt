@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.Instant
 import java.time.LocalDate
@@ -15,7 +16,7 @@ data class ArbeidsevneVurdering(
     override val tom: LocalDate?,
     override val vurdertIBehandling: BehandlingId,
     val opprettetTid: LocalDateTime,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
 ) : PeriodisertVurdering {
     fun toArbeidsevneVurderingData(): ArbeidsevneVurderingData {
         return ArbeidsevneVurderingData(
@@ -33,7 +34,7 @@ data class ArbeidsevneVurdering(
         val begrunnelse: String,
         val arbeidsevne: Prosent,
         val opprettetTid: LocalDateTime,
-        val vurdertAv: String,
+        val vurdertAv: Bruker,
         val vurdertIBehandling: BehandlingId,
     )
 }

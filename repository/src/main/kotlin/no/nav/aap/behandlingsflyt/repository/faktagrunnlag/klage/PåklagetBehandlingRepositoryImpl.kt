@@ -99,7 +99,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
             setParams {
                 setEnumName(1, vurdering.påklagetVedtakType)
                 setLong(2, vurdering.påklagetBehandling?.id)
-                setString(3, vurdering.vurdertAv)
+                setBruker(3, vurdering.vurdertAv)
                 setInstant(4, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
@@ -159,7 +159,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
         return PåklagetBehandlingVurdering(
             påklagetVedtakType = row.getEnum("type_vedtak"),
             påklagetBehandling = row.getLongOrNull("PAAKLAGET_BEHANDLING_ID")?.let { BehandlingId(it) },
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant(
                 "OPPRETTET_TID"
             )
@@ -170,7 +170,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
         return PåklagetBehandlingVurderingMedReferanse(
             påklagetVedtakType = row.getEnum("TYPE_VEDTAK"),
             påklagetBehandling = row.getLongOrNull("PAAKLAGET_BEHANDLING_ID")?.let { BehandlingId(it) },
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             referanse = row.getUUIDOrNull("REFERANSE")?.let { BehandlingReferanse(it) },
             opprettet = row.getInstant(
                 "OPPRETTET_TID"

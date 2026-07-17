@@ -85,7 +85,7 @@ private fun mapVurderingerTilDto(
                 definisjon = Definisjon.VURDER_AVSLAG_11_27,
                 behandlingId = vurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(
-                    ident = vurdering.vurdertAv.toString(),
+                    ident = vurdering.vurdertAv,
                     dato = vurdering.vurdertTidspunkt.atZone(ZoneId.systemDefault()).toLocalDate(),
                 )
             )

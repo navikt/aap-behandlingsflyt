@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate
 
@@ -12,7 +13,7 @@ data class OvergangUføreVurdering(
     val brukerRettPåAAP: Boolean?,
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 ): PeriodisertVurdering {

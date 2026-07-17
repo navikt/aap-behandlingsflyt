@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryInstitusjonsoppholdR
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -71,7 +72,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         forsoergerEktefelle = forsoergerEktefelle,
         harFasteUtgifter = harFasteUtgifter,
         vurdertIBehandling = BehandlingId(1L),
-        vurdertAv = "ident",
+        vurdertAv = Bruker("ident"),
         vurdertTidspunkt = vurdertTidspunkt,
     )
 
@@ -769,7 +770,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     forsoergerEktefelle = false,
                     harFasteUtgifter = false,
                     vurdertIBehandling = BehandlingId(1L),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     vurdertTidspunkt = LocalDateTime.now().minusMonths(8)
 
                 )
@@ -1016,7 +1017,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     forsoergerEktefelle = true,
                     harFasteUtgifter = true,
                     vurdertIBehandling = BehandlingId(1L),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     vurdertTidspunkt = LocalDateTime.now().plusMonths(1)
                 )
             ),

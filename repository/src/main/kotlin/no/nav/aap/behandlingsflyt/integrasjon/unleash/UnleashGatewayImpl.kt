@@ -5,10 +5,10 @@ import io.getunleash.UnleashContext
 import io.getunleash.util.UnleashConfig
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer.Companion.fra
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.verdityper.Bruker
 import kotlin.text.split
 
 object UnleashGatewayImpl : UnleashGateway {
@@ -22,14 +22,14 @@ object UnleashGatewayImpl : UnleashGateway {
     )
 
     override fun isEnabled(featureToggle: FeatureToggle): Boolean = unleash.isEnabled(featureToggle.key())
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String): Boolean =
-        unleash.isEnabled(featureToggle.key(), UnleashContext.builder().userId(ident).build())
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker): Boolean =
+        unleash.isEnabled(featureToggle.key(), UnleashContext.builder().userId(ident.ident).build())
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev): Boolean =
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev): Boolean =
         unleash.isEnabled(
             featureToggle.key(),
             UnleashContext.builder()
-                .userId(ident)
+                .userId(ident.ident)
                 .addProperty("typeBrev", typeBrev.name)
                 .build()
         )

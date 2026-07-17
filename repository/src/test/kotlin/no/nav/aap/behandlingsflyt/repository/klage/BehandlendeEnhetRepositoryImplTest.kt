@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.BehandlendeEnhe
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -39,7 +40,7 @@ internal class BehandlendeEnhetRepositoryImplTest {
             val vurdering = BehandlendeEnhetVurdering(
                 skalBehandlesAvNay = true,
                 skalBehandlesAvKontor = false,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 opprettet = java.time.Instant.now()
             )
 
@@ -47,7 +48,7 @@ internal class BehandlendeEnhetRepositoryImplTest {
             val grunnlag = behandlendeEnhetRepository.hentHvisEksisterer(klageBehandling.id)!!
             assertThat(grunnlag.vurdering.skalBehandlesAvNay).isTrue()
             assertThat(grunnlag.vurdering.skalBehandlesAvKontor).isFalse()
-            assertThat(grunnlag.vurdering.vurdertAv).isEqualTo("ident")
+            assertThat(grunnlag.vurdering.vurdertAv).isEqualTo(Bruker("ident"))
             assertNotNull(grunnlag.vurdering.opprettet)
         }
     }

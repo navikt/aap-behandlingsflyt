@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -34,14 +35,14 @@ class MeldepliktOverstyringGrunnlagTest {
 
 
         val vurdering1 = OverstyringMeldepliktVurdering(
-            vurdertAv = "bruker1",
+            vurdertAv = Bruker("bruker1"),
             opprettetTid = LocalDateTime.now(),
             perioder = listOf(periode1, periode2),
             vurdertIBehandling = BehandlingReferanse()
         )
 
         val vurdering2 = OverstyringMeldepliktVurdering(
-            vurdertAv = "bruker2",
+            vurdertAv = Bruker("bruker2"),
             opprettetTid = LocalDateTime.now(),
             perioder = listOf(periode3),
             vurdertIBehandling = BehandlingReferanse()
@@ -78,14 +79,14 @@ class MeldepliktOverstyringGrunnlagTest {
 
 
         val vurdering1 = OverstyringMeldepliktVurdering(
-            vurdertAv = "bruker1",
+            vurdertAv = Bruker("bruker1"),
             opprettetTid = LocalDateTime.now().minusDays(2),
             perioder = listOf(periode1, periode2),
             vurdertIBehandling = BehandlingReferanse()
         )
 
         val vurdering2 = OverstyringMeldepliktVurdering(
-            vurdertAv = "bruker2",
+            vurdertAv = Bruker("bruker2"),
             opprettetTid = LocalDateTime.now().minusDays(1),
             perioder = listOf(periode3),
             vurdertIBehandling = BehandlingReferanse()
@@ -134,14 +135,14 @@ class MeldepliktOverstyringGrunnlagTest {
 
 
         val vurdering1 = OverstyringMeldepliktVurdering(
-            vurdertAv = "bruker1",
+            vurdertAv = Bruker("bruker1"),
             opprettetTid = LocalDateTime.now().minusDays(2),
             perioder = listOf(periode1, periode2),
             vurdertIBehandling = BehandlingReferanse()
         )
 
         val vurdering2 = OverstyringMeldepliktVurdering(
-            vurdertAv = "bruker2",
+            vurdertAv = Bruker("bruker2"),
             opprettetTid = LocalDateTime.now().minusDays(1),
             perioder = listOf(periode3),
             vurdertIBehandling = BehandlingReferanse()

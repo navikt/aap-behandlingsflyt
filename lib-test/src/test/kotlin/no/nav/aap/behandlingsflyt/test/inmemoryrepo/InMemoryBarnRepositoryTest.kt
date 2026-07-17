@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvFo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -64,7 +65,7 @@ class InMemoryBarnRepositoryTest {
             behandling.id,
             OppgitteBarn(oppgitteBarn = listOf(OppgitteBarn.OppgittBarn(Ident("1"))))
         )
-        barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
+        barnRepository.lagreVurderinger(behandling.id, Bruker("ident"), vurderteBarn)
 
 
         val barn = barnRepository.hent(behandling.id)

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -12,7 +13,7 @@ data class SykepengerVurdering(
     val harRettPå: Boolean,
     override val vurdertIBehandling: BehandlingId,
     val grunn: SykepengerGrunn? = null,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime,
     override val fom: LocalDate,
     override val tom: LocalDate? = null,

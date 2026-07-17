@@ -29,7 +29,7 @@ class FastsettYrkesskadeInntektLøser(
                         antattÅrligInntekt = it.antattÅrligInntekt,
                         referanse = it.referanse,
                         begrunnelse = it.begrunnelse,
-                        vurdertAv = kontekst.bruker.ident
+                        vurdertAv = kontekst.bruker
                     )
                 }
         )

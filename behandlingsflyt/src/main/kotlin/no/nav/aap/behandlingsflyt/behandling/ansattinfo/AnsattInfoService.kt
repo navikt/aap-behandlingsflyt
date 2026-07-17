@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.ansattinfo
 
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.slf4j.LoggerFactory
 
 class AnsattInfoService(private val ansattInfoGateway: AnsattInfoGateway, private val enhetGateway: EnhetGateway) {
@@ -11,7 +12,7 @@ class AnsattInfoService(private val ansattInfoGateway: AnsattInfoGateway, privat
         gatewayProvider.provide()
     )
 
-    fun hentAnsattNavnOgEnhet(navIdent: String): AnsattNavnOgEnhet? {
+    fun hentAnsattNavnOgEnhet(navIdent: Bruker): AnsattNavnOgEnhet? {
         try {
             val ansattInfo = ansattInfoGateway.hentAnsattInfo(navIdent)
             val enhet = enhetGateway.hentEnhet(ansattInfo.enhetsnummer)
@@ -22,7 +23,7 @@ class AnsattInfoService(private val ansattInfoGateway: AnsattInfoGateway, privat
         }
     }
 
-    fun hentAnsatteVisningsnavn(navIdenter: List<String>): List<AnsattVisningsnavn?> {
+    fun hentAnsatteVisningsnavn(navIdenter: List<Bruker>): List<AnsattVisningsnavn?> {
         try {
             return ansattInfoGateway.hentAnsatteVisningsnavn(navIdenter)
         } catch (e: Exception) {
@@ -31,7 +32,7 @@ class AnsattInfoService(private val ansattInfoGateway: AnsattInfoGateway, privat
         }
     }
 
-    fun hentAnsattEnhet(navIdent: String): String? {
+    fun hentAnsattEnhet(navIdent: Bruker): String? {
         return try {
             val ansattInfo = ansattInfoGateway.hentAnsattInfo(navIdent)
             ansattInfo.enhetsnummer

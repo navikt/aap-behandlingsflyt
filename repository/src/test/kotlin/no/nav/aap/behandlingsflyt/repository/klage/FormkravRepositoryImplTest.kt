@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -45,7 +46,7 @@ internal class FormkravRepositoryImplTest {
                 erFristOverholdt = true,
                 erKonkret = true,
                 erSignert = true,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 opprettet = Instant.parse("2023-01-01T12:00:00Z"),
                 likevelBehandles = null
             )
@@ -72,7 +73,7 @@ internal class FormkravRepositoryImplTest {
                 erFristOverholdt = true,
                 erKonkret = true,
                 erSignert = true,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 opprettet = Instant.parse("2023-01-01T12:00:00Z"),
                 likevelBehandles = null
             )

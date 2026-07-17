@@ -4,13 +4,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Helsei
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Repository
 
 interface InstitusjonsoppholdRepository: Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag?
     fun hent(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag
     fun lagreOpphold(behandlingId: BehandlingId, institusjonsopphold: List<Institusjonsopphold>)
-    fun lagreSoningsVurdering(behandlingId: BehandlingId, vurdertAv: String, soningsvurderinger: List<Soningsvurdering>)
+    fun lagreSoningsVurdering(behandlingId: BehandlingId, vurdertAv: Bruker, soningsvurderinger: List<Soningsvurdering>)
     fun lagreHelseVurdering(behandlingId: BehandlingId, helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>)
     fun hentVurderingerGruppertPerOpphold(behandlingId: BehandlingId): Map<Periode, List<HelseinstitusjonVurdering>>
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

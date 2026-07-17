@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeids
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime
 
 data class SamordningArbeidsgiverGrunnlag(
@@ -16,7 +17,7 @@ data class SamordningArbeidsgiverGrunnlag(
 data class SamordningArbeidsgiverVurdering(
     val begrunnelse: String,
     val perioder: List<Periode>,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime? = null,
     val opprettetTid: LocalDateTime? = null,
 )

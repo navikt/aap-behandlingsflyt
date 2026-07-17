@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -339,7 +340,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             tom = tom,
             lovvalg = LovvalgDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
             medlemskap = MedlemskapDto(begrunnelse, true),
-            vurdertAv = "SAKSBEHANDLER",
+            vurdertAv = Bruker("SAKSBEHANDLER"),
             vurdertDato = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling
         )

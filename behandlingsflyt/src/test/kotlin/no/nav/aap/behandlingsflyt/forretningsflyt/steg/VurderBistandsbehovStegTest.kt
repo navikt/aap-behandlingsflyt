@@ -55,7 +55,7 @@ class VurderBistandsbehovStegTest {
                         erBehovForArbeidsrettetTiltak = true,
                         erBehovForAnnenOppfølging = false,
                         fom = søknadsdato.plusDays(10),
-                        vurdertAv = "Z00000",
+                        vurdertAv = Bruker("Z00000"),
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         opprettet = Instant.now(),
@@ -118,7 +118,7 @@ class VurderBistandsbehovStegTest {
             "..."
         )
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "...", "meg")
+            .løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "...", Bruker("meg"))
     }
 
     private fun hentBistandsbehov(behandling: Behandling): Avklaringsbehov? =

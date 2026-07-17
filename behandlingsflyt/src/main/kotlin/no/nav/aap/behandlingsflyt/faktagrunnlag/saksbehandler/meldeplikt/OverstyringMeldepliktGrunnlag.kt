@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -40,7 +41,7 @@ fun OverstyringMeldepliktVurdering.tilTidslinje(): Tidslinje<OverstyringMeldepli
     )
 }
 
-fun OverstyringMeldepliktVurderingPeriode.tilTidslinjeSegment(vurdertAv: String, vurdertIBehandling: BehandlingReferanse, opprettetTid: LocalDateTime?): Segment<OverstyringMeldepliktData> {
+fun OverstyringMeldepliktVurderingPeriode.tilTidslinjeSegment(vurdertAv: Bruker, vurdertIBehandling: BehandlingReferanse, opprettetTid: LocalDateTime?): Segment<OverstyringMeldepliktData> {
     return Segment(
         periode = Periode(fom = fom, tom = tom),
         verdi = OverstyringMeldepliktData(
@@ -70,12 +71,12 @@ data class OverstyringMeldepliktVurderingPeriode(
 data class OverstyringMeldepliktVurdering(
     val perioder: List<OverstyringMeldepliktVurderingPeriode>,
     val vurdertIBehandling: BehandlingReferanse,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val opprettetTid: LocalDateTime?
 )
 
 data class OverstyringMeldepliktData(
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertIBehandling: BehandlingReferanse,
     val opprettetTid: LocalDateTime,
     val begrunnelse: String,

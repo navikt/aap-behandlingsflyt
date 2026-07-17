@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -52,7 +53,7 @@ class AvklaringsbehovRepositoryTest {
             avklaringsbehovene.løsAvklaringsbehov(
                 definisjon = Definisjon.AVKLAR_SYKDOM,
                 begrunnelse = "Godkjent",
-                endretAv = "Saksbehandler",
+                endretAv = Bruker("Saksbehandler"),
                 kreverToTrinn = true
             )
 

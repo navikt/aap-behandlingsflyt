@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -33,7 +34,7 @@ class OppholdskravRegelTest {
             vurderinger = listOf(
                 OppholdskravVurdering(
                     opprettet = LocalDateTime.now(),
-                    vurdertAv = "123",
+                    vurdertAv = Bruker("123"),
                     vurdertIBehandling = BehandlingId(1L),
                     perioder = listOf(
                         OppholdskravPeriode(

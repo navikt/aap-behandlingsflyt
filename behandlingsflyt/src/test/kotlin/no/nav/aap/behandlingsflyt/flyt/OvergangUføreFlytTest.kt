@@ -406,10 +406,10 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == overgangUførDato }
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER && it.fom == overgangUførDato }
 
             assertThat(vurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
-            assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER.ident)
+            assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER)
             assertThat(vurdering.fom).isEqualTo(overgangUførDato)
             assertThat(vurdering.brukerRettPåAAP).isFalse()
             assertThat(vurdering.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT)
@@ -420,7 +420,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val automatiskVurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == overgangUførDato }
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER && it.fom == overgangUførDato }
 
             assertThat(automatiskVurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
             assertThat(automatiskVurdering.fom).isEqualTo(overgangUførDato)
@@ -514,7 +514,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER.ident && it.fom == overgangUførDato }
+                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER && it.fom == overgangUførDato }
             assertThat(vurdering).isNotNull
             assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
         }

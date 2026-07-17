@@ -81,7 +81,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
                 definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                 behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(
-                    etableringEgenVirksomhetVurdering.vurdertAv.ident,
+                    etableringEgenVirksomhetVurdering.vurdertAv,
                     etableringEgenVirksomhetVurdering.opprettet,
                 ),
             ),

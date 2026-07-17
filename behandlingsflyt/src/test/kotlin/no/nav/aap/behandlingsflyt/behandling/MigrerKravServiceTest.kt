@@ -173,7 +173,7 @@ class MigrerKravServiceTest {
         val forventetReversertVurdering = RelevantKrav(
             referanse = vedtattOverstyrtKrav.referanse,
             journalpostId = vedtattOverstyrtKrav.journalpostId,
-            vurdertAv = Bruker(rettighetsperiodeVurdering.vurdertAv),
+            vurdertAv = rettighetsperiodeVurdering.vurdertAv,
             vurdertIBehandling = behandlingIdB,
             opprettet = rettighetsperiodeVurdering.vurdertDato.toInstant(
                 ZoneOffset.UTC),
@@ -278,7 +278,7 @@ class MigrerKravServiceTest {
         startDato = startDato,
         begrunnelse = "Testbegrunnelse",
         harRettUtoverSøknadsdato = harRett,
-        vurdertAv = "Z999999",
+        vurdertAv = Bruker("Z999999"),
         vurdertDato = LocalDateTime.of(2024, 6, 1, 12, 0),
     )
 }

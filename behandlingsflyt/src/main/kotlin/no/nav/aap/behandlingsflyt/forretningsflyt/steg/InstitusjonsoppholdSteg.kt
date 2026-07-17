@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
@@ -74,7 +75,7 @@ class InstitusjonsoppholdSteg(
                 val aktiveVurderinger =
                     institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.soningsVurderinger?.vurderinger.orEmpty()
                 if (vedtatteVurderinger == null && aktiveVurderinger.isNotEmpty()) {
-                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, "Kelvin", listOf())
+                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, SYSTEMBRUKER, listOf())
                 } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreSoningsVurdering(
                         kontekst.behandlingId,

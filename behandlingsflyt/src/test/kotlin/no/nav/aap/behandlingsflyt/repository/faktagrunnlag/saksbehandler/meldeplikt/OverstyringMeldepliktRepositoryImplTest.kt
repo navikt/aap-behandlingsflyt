@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -55,7 +56,7 @@ class OverstyringMeldepliktRepositoryImplTest {
             val meldepliktOverstyringRepository = OverstyringMeldepliktRepositoryImpl(connection)
             val periode = OverstyringMeldepliktVurderingPeriode(fom = 13 august 2023, tom = 26 august 2023, begrunnelse = "en begrunnelse", meldepliktOverstyringStatus = MeldepliktOverstyringStatus.RIMELIG_GRUNN)
             val overstyringMeldepliktVurdering = OverstyringMeldepliktVurdering(
-                vurdertAv = "veileder",
+                vurdertAv = Bruker("veileder"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(periode)
@@ -66,7 +67,7 @@ class OverstyringMeldepliktRepositoryImplTest {
             assertThat(meldepliktOverstyringGrunnlag?.vurderinger).hasSize(1)
 
             val vurdering = meldepliktOverstyringGrunnlag?.vurderinger?.first()
-            assertThat(vurdering?.vurdertAv).isEqualTo("veileder")
+            assertThat(vurdering?.vurdertAv).isEqualTo(Bruker("veileder"))
             assertThat(vurdering?.perioder).hasSize(1)
             assertThat(vurdering?.perioder?.first()).isEqualTo(periode)
         }
@@ -84,14 +85,14 @@ class OverstyringMeldepliktRepositoryImplTest {
             val periode3 = OverstyringMeldepliktVurderingPeriode(fom = 9 september  2023, tom = 26 september 2023, begrunnelse = "mer begrunnelse", meldepliktOverstyringStatus = MeldepliktOverstyringStatus.HAR_MELDT_SEG)
 
             val overstyringMeldepliktVurdering1 = OverstyringMeldepliktVurdering(
-                vurdertAv = "veileder1",
+                vurdertAv = Bruker("veileder1"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(periode1, periode2)
             )
 
             val overstyringMeldepliktVurdering2 = OverstyringMeldepliktVurdering(
-                vurdertAv = "veileder2",
+                vurdertAv = Bruker("veileder2"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(periode3)
@@ -103,7 +104,7 @@ class OverstyringMeldepliktRepositoryImplTest {
             assertThat(meldepliktOverstyringGrunnlag?.vurderinger).hasSize(1)
 
             val vurdering = meldepliktOverstyringGrunnlag?.vurderinger?.first()
-            assertThat(vurdering?.vurdertAv).isEqualTo("veileder2")
+            assertThat(vurdering?.vurdertAv).isEqualTo(Bruker("veileder2"))
             assertThat(vurdering?.perioder).hasSize(1)
             assertThat(vurdering?.perioder).contains(periode3)
         }
@@ -124,14 +125,14 @@ class OverstyringMeldepliktRepositoryImplTest {
             val periode3 = OverstyringMeldepliktVurderingPeriode(fom = 9 september  2023, tom = 26 september 2023, begrunnelse = "mer begrunnelse", meldepliktOverstyringStatus = MeldepliktOverstyringStatus.HAR_MELDT_SEG)
 
             val overstyringMeldepliktVurdering1 = OverstyringMeldepliktVurdering(
-                vurdertAv = "veileder1",
+                vurdertAv = Bruker("veileder1"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(periode1, periode2)
             )
 
             val overstyringMeldepliktVurdering2 = OverstyringMeldepliktVurdering(
-                vurdertAv = "veileder2",
+                vurdertAv = Bruker("veileder2"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(periode3)
@@ -144,7 +145,7 @@ class OverstyringMeldepliktRepositoryImplTest {
             assertThat(meldepliktOverstyringGrunnlag?.vurderinger).hasSize(1)
 
             val vurdering = meldepliktOverstyringGrunnlag?.vurderinger?.first()
-            assertThat(vurdering?.vurdertAv).isEqualTo("veileder2")
+            assertThat(vurdering?.vurdertAv).isEqualTo(Bruker("veileder2"))
             assertThat(vurdering?.perioder).hasSize(1)
             assertThat(vurdering?.perioder).contains(periode3)
         }
@@ -179,7 +180,7 @@ class OverstyringMeldepliktRepositoryImplTest {
             )
 
             val originalVurdering = OverstyringMeldepliktVurdering(
-                vurdertAv = "veilederOriginal",
+                vurdertAv = Bruker("veilederOriginal"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(origPeriode1, origPeriode2)
@@ -196,7 +197,7 @@ class OverstyringMeldepliktRepositoryImplTest {
                 meldepliktOverstyringStatus = MeldepliktOverstyringStatus.HAR_MELDT_SEG
             )
             val firstRevVurdering = OverstyringMeldepliktVurdering(
-                vurdertAv = "veilederRevurdering1",
+                vurdertAv = Bruker("veilederRevurdering1"),
                 opprettetTid = null,
                 vurdertIBehandling = revurdering.referanse,
                 perioder = listOf(revPeriodeA1)
@@ -211,7 +212,7 @@ class OverstyringMeldepliktRepositoryImplTest {
                 meldepliktOverstyringStatus = MeldepliktOverstyringStatus.RIMELIG_GRUNN
             )
             val secondRevVurdering = OverstyringMeldepliktVurdering(
-                vurdertAv = "veilederRevurdering2",
+                vurdertAv = Bruker("veilederRevurdering2"),
                 opprettetTid = null,
                 vurdertIBehandling = revurdering.referanse,
                 perioder = listOf(revPeriodeB1)
@@ -222,13 +223,13 @@ class OverstyringMeldepliktRepositoryImplTest {
             assertThat(grunnlagForRevurdering).isNotNull()
 
             // Forvent at original vurderinger fortsatt er med
-            assertThat(grunnlagForRevurdering!!.vurderinger.any { it.vurdertAv == "veilederOriginal" && it.perioder.containsAll(listOf(origPeriode1, origPeriode2)) }).isTrue()
+            assertThat(grunnlagForRevurdering!!.vurderinger.any { it.vurdertAv == Bruker("veilederOriginal") && it.perioder.containsAll(listOf(origPeriode1, origPeriode2)) }).isTrue()
 
             // Forvent at første lagring på revurdering IKKE er med lenger 
-            assertThat(grunnlagForRevurdering.vurderinger.any { it.vurdertAv == "veilederRevurdering1" || it.perioder.contains(revPeriodeA1) }).isFalse()
+            assertThat(grunnlagForRevurdering.vurderinger.any { it.vurdertAv == Bruker("veilederRevurdering1") || it.perioder.contains(revPeriodeA1) }).isFalse()
 
             // Forvent at siste lagring på revurdering er med
-            assertThat(grunnlagForRevurdering.vurderinger.any { it.vurdertAv == "veilederRevurdering2" && it.perioder.contains(revPeriodeB1) }).isTrue()
+            assertThat(grunnlagForRevurdering.vurderinger.any { it.vurdertAv == Bruker("veilederRevurdering2") && it.perioder.contains(revPeriodeB1) }).isTrue()
         }
     }
 
@@ -244,14 +245,14 @@ class OverstyringMeldepliktRepositoryImplTest {
             val periode3 = OverstyringMeldepliktVurderingPeriode(fom = 9 september  2023, tom = 26 september 2023, begrunnelse = "mer begrunnelse", meldepliktOverstyringStatus = MeldepliktOverstyringStatus.HAR_MELDT_SEG)
 
             val overstyringMeldepliktVurdering1 = OverstyringMeldepliktVurdering(
-                vurdertAv = "veileder1",
+                vurdertAv = Bruker("veileder1"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(periode1, periode2)
             )
 
             val overstyringMeldepliktVurdering2 = OverstyringMeldepliktVurdering(
-                vurdertAv = "veileder2",
+                vurdertAv = Bruker("veileder2"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(periode3)
@@ -280,7 +281,7 @@ class OverstyringMeldepliktRepositoryImplTest {
             val periode2 = OverstyringMeldepliktVurderingPeriode(fom = 27 august 2023, tom = 7 september 2023, begrunnelse = "en til befunnelse", meldepliktOverstyringStatus = MeldepliktOverstyringStatus.IKKE_MELDT_SEG)
 
             val overstyringMeldepliktVurdering1 = OverstyringMeldepliktVurdering(
-                vurdertAv = "veileder1",
+                vurdertAv = Bruker("veileder1"),
                 opprettetTid = null,
                 vurdertIBehandling = behandling.referanse,
                 perioder = listOf(periode1, periode2)

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Repository
 import java.time.LocalDate
 
@@ -22,7 +23,7 @@ interface AvklaringsbehovOperasjonerRepository : Repository {
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
-        endretAv: String = SYSTEMBRUKER.ident,
+        endretAv: Bruker = SYSTEMBRUKER,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
         perioderVedtaketBehøverVurdering: Set<Periode>? = null,
     )

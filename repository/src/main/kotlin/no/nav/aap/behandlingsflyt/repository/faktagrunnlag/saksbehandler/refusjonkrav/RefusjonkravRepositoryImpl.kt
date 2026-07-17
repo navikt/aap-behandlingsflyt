@@ -49,7 +49,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                     harKrav = it.getBoolean("har_krav"),
                     fom = it.getLocalDateOrNull("fom"),
                     tom = it.getLocalDateOrNull("tom"),
-                    vurdertAv = it.getString("vurdert_av"),
+                    vurdertAv = it.getBruker("vurdert_av"),
                     navKontor = it.getString("navkontor"),
                     opprettetTid = it.getLocalDateTime("opprettet_tid")
                 )
@@ -152,7 +152,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
                 setBoolean(1, vurdering.harKrav)
                 setLocalDate(2, vurdering.fom)
                 setLocalDate(3, vurdering.tom)
-                setString(4, vurdering.vurdertAv)
+                setBruker(4, vurdering.vurdertAv)
                 setString(5, vurdering.navKontor ?: "")
                 setLong(6, vurderingerId)
             }

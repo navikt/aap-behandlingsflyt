@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -98,7 +99,7 @@ class ForeslåVedtakStegTest {
             definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -128,7 +129,7 @@ class ForeslåVedtakStegTest {
             definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             funnetISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -163,8 +164,8 @@ class ForeslåVedtakStegTest {
             definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", Bruker("TESTEN"))
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -195,7 +196,7 @@ class ForeslåVedtakStegTest {
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             funnetISteg = StegType.VURDER_LOVVALG, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -227,14 +228,14 @@ class ForeslåVedtakStegTest {
             funnetISteg = StegType.VURDER_LOVVALG,
             null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", Bruker("TESTEN"))
         avklaringsbehovene.leggTil(
             definisjon = Definisjon.FORESLÅ_VEDTAK,
             funnetISteg = StegType.FORESLÅ_VEDTAK,
             null, null
         )
 
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -247,7 +248,7 @@ class ForeslåVedtakStegTest {
         assertThat(avklaringsbehovene.åpne()).isEmpty()
 
         // Gjør om på et NAY-avklaringsbehov
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "gjorde om på noe", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "gjorde om på noe", Bruker("TESTEN"))
 
         val resultatEtterTilbakehopp = steg.utfør(kontekstMedPerioder)
         assertThat(resultatEtterTilbakehopp).isEqualTo(Fullført)
