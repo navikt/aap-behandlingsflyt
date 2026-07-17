@@ -329,6 +329,8 @@ class AvklaringsbehovValideringTest {
         // Krav er vurdert i forrigeBehandlingId, ikke i inneværende behandlingId
         val nyttKrav = nyttKrav(forrigeBehandlingId, LocalDate.now())
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav))
+        settOppForrigeBehandling(forrigeBehandlingId, muligRettFra = nyttKrav.muligRettFra, StansOpphørGrunnlag())
+        
 
         val gjeldendeVurderinger =
             tomLøsning().somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
