@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.Instant
 
 class SamordningUføreRepositoryImpl(private val connection: DBConnection) : SamordningUføreRepository {
 
@@ -89,29 +90,31 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         }
 
         val samordingUføreVurderingQuery = """
-            INSERT INTO SAMORDNING_UFORE_VURDERING (begrunnelse, vurdert_av) VALUES (?, ?)
+            INSERT INTO SAMORDNING_UFORE_VURDERING (begrunnelse, vurdert_av, opprettet_tid) VALUES (?, ?, ?)
         """.trimIndent()
 
         val vurderingId = connection.executeReturnKey(samordingUføreVurderingQuery) {
             setParams {
                 setString(1, vurdering.begrunnelse)
                 setString(2, vurdering.vurdertAv)
+                setLocalDateTime(3, vurdering.vurdertTidspunkt)
             }
         }
 
         val samordingUføreGrunnlagQuery = """
-            INSERT INTO SAMORDNING_UFORE_GRUNNLAG (behandling_id, vurdering_id) VALUES (?, ?)
+            INSERT INTO SAMORDNING_UFORE_GRUNNLAG (behandling_id, vurdering_id, opprettet_tid) VALUES (?, ?, ?)
         """.trimIndent()
 
         connection.execute(samordingUføreGrunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, Instant.now())
             }
         }
 
         val periodeQuery = """
-                INSERT INTO SAMORDNING_UFORE_VURDERING_PERIODE (virkningstidspunkt, vurdering_id, uforegrad) VALUES (?, ?, ?)
+                INSERT INTO SAMORDNING_UFORE_VURDERING_PERIODE (virkningstidspunkt, vurdering_id, uforegrad, opprettet_tid) VALUES (?, ?, ?, ?)
                 """.trimIndent()
 
         connection.executeBatch(periodeQuery, vurdering.vurderingPerioder) {
@@ -119,6 +122,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
                 setLocalDate(1, it.virkningstidspunkt)
                 setLong(2, vurderingId)
                 setInt(3, it.uføregradTilSamordning.prosentverdi())
+                setInstant(4, Instant.now())
             }
         }
 
@@ -128,12 +132,14 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
 
         val samordningUforeVurderingIds = getSamordningUforeVurderingIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from samordning_ufore_grunnlag where behandling_id = ?; 
             delete from samordning_ufore_vurdering_periode where vurdering_id = ANY(?::bigint[]);
             delete from samordning_ufore_vurdering where id = ANY(?::bigint[]);
           
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, samordningUforeVurderingIds)
@@ -171,10 +177,11 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         tilBehandling: BehandlingId
     ) {
         require(fraBehandling != tilBehandling)
-        connection.execute("INSERT INTO SAMORDNING_UFORE_GRUNNLAG (BEHANDLING_ID, VURDERING_ID) SELECT ?, VURDERING_ID FROM SAMORDNING_UFORE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
+        connection.execute("INSERT INTO SAMORDNING_UFORE_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, OPPRETTET_TID) SELECT ?, VURDERING_ID, ? FROM SAMORDNING_UFORE_GRUNNLAG WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
         }
     }
