@@ -792,7 +792,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         val manuellSkadedato = LocalDate.now().minusYears(3)
         val manuellReferanse = "MANUELL-REF-1"
 
-        val (sak, behandling) = sendInnFørsteSøknad(
+        val (_, behandling) = sendInnFørsteSøknad(
             mottattTidspunkt = søknadsdato.atStartOfDay(),
             person = person,
             søknad = TestSøknader.STANDARD_SØKNAD

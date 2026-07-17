@@ -12,6 +12,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.erFunks
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.erFunksjoneltLik
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.erFunksjoneltLik
@@ -28,7 +31,8 @@ class VurderingEndretService(
     private val bistandRepository: BistandRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
-    private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository
+    private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
+    private val overgangUføreRepository: OvergangUføreRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
@@ -36,7 +40,8 @@ class VurderingEndretService(
         bistandRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         refusjonkravRepository = repositoryProvider.provide(),
-        arbeidsopptrappingRepository = repositoryProvider.provide()
+        arbeidsopptrappingRepository = repositoryProvider.provide(),
+        overgangUføreRepository = repositoryProvider.provide()
     )
 
     private val sjekker: Map<Definisjon, EndretSjekk<*>> = mapOf(
@@ -70,6 +75,11 @@ class VurderingEndretService(
             hentPåTidspunkt = arbeidsopptrappingRepository::hentArbeidsopptrappingVurderingPåTidspunkt,
             hentNåværende = { arbeidsopptrappingRepository.hentHvisEksisterer(it)?.vurderinger },
             erLik = List<ArbeidsopptrappingVurdering>::erFunksjoneltLik,
+        ),
+        Definisjon.AVKLAR_OVERGANG_UFORE to EndretSjekk(
+            hentPåTidspunkt = overgangUføreRepository::hentOvergangUføreVurderingPåTidspunkt,
+            hentNåværende = { overgangUføreRepository.hentHvisEksisterer(it)?.vurderinger },
+            erLik = List<OvergangUføreVurdering>::erFunksjoneltLik
         )
     )
 

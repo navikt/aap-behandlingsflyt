@@ -190,6 +190,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT,
                 )
             )
             .medSteg(
@@ -199,6 +200,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.FASTSETT_ARBEIDSEVNE,
                 )
             )
             .medSteg(

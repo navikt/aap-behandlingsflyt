@@ -203,7 +203,7 @@ internal class OvergangUføreRepositoryImplTest {
 
             overgangUføreRepo.lagre(revurdering.id, listOf(overgangUføreVurdering3(revurdering.id)))
 
-            val historikk = overgangUføreRepo.hentHistoriskeOvergangUforeVurderinger(revurdering.sakId, revurdering.id)
+            val historikk = overgangUføreRepo.hentHistoriskeOvergangUføreVurderinger(revurdering.sakId, revurdering.id)
             assertThat(historikk)
                 .usingRecursiveComparison()
                 .ignoringFields("opprettet")
