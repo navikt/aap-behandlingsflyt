@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
@@ -9,12 +10,12 @@ data class OvergangUføreVurdering(
     val brukerHarSøktOmUføretrygd: Boolean,
     val brukerHarFåttVedtakOmUføretrygd: UføreSøknadVedtakResultat?,
     val brukerRettPåAAP: Boolean?,
-    val fom: LocalDate,
-    val tom: LocalDate?,
+    override val fom: LocalDate,
+    override val tom: LocalDate?,
     val vurdertAv: String,
-    val vurdertIBehandling: BehandlingId,
-    val opprettet: Instant? = null
-) {
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+): PeriodisertVurdering {
     fun harRettPåAAPMedOvergangUføre(): Boolean {
         return brukerHarSøktOmUføretrygd
                 && brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtakResultat.NEI
