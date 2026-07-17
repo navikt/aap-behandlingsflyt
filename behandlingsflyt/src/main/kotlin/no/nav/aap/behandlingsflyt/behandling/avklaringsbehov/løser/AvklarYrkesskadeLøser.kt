@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklarYrkesskadeLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -53,6 +54,7 @@ class AvklarYrkesskadeLøser(
                 erÅrsakssammenheng = løsning.yrkesskadesvurdering.erÅrsakssammenheng,
                 andelAvNedsettelsen = løsning.yrkesskadesvurdering.andelAvNedsettelsen?.let { Prosent(it) },
                 vurdertAv = kontekst.bruker.ident,
+                vurdertTidspunkt = LocalDateTime.now(),
             ),
         )
 

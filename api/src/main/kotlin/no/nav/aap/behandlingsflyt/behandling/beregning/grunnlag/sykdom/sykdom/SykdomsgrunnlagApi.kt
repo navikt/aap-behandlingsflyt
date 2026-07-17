@@ -152,7 +152,7 @@ private fun Yrkesskadevurdering.toResponse(ansattInfoService: AnsattInfoService)
         vurderingerMeta = VurderingerMetaResponse(
             vurdertAv = VurdertAvResponse(
                 ident = vurdertAv,
-                dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
+                dato = vurdertTidspunkt.toLocalDate(),
                 ansattnavn = navnOgEnhet?.navn,
                 enhetsnavn = navnOgEnhet?.enhet,
             )

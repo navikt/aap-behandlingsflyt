@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
+import java.time.LocalDateTime
 
 class BeregningTest {
     @Test
@@ -111,6 +112,7 @@ class BeregningTest {
                 erÅrsakssammenheng = true,
                 andelAvNedsettelsen = Prosent(70),
                 vurdertAv = "Jojo Joyes",
+                vurdertTidspunkt = LocalDateTime.now()
             ),
             registrerteYrkesskader = Yrkesskader(
                 listOf(
