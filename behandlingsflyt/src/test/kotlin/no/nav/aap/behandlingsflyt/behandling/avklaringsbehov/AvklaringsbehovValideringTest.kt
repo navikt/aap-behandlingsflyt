@@ -312,6 +312,8 @@ class AvklaringsbehovValideringTest {
         val forrigeBehandlingId = nesteBehandlingId()
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         // Ingen lagring i kravRepository
+        settOppForrigeBehandling(forrigeBehandlingId, 1 januar 2020, StansOpphørGrunnlag())
+
 
         val gjeldendeVurderinger =
             tomLøsning().somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
@@ -329,6 +331,8 @@ class AvklaringsbehovValideringTest {
         // Krav er vurdert i forrigeBehandlingId, ikke i inneværende behandlingId
         val nyttKrav = nyttKrav(forrigeBehandlingId, LocalDate.now())
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav))
+        settOppForrigeBehandling(forrigeBehandlingId, muligRettFra = nyttKrav.muligRettFra, StansOpphørGrunnlag())
+        
 
         val gjeldendeVurderinger =
             tomLøsning().somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
@@ -348,6 +352,7 @@ class AvklaringsbehovValideringTest {
         val muligRettFra = LocalDate.of(2024, 1, 1)
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
+        settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
 
         val løsning = løsning(fom = muligRettFra)
         val gjeldendeVurderinger =
@@ -368,6 +373,7 @@ class AvklaringsbehovValideringTest {
         val muligRettFra = LocalDate.of(2024, 1, 1)
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
+        settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
 
         val løsning = løsning(fom = muligRettFra.plusDays(2))
         val gjeldendeVurderinger =
@@ -389,6 +395,7 @@ class AvklaringsbehovValideringTest {
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         val krav = nyttKrav(behandlingId, muligRettFra)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
 
         val løsningFom = muligRettFra.minusDays(1)
         val løsning = løsning(fom = løsningFom)
