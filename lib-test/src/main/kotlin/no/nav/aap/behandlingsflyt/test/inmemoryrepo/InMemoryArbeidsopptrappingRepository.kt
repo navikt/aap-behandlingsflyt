@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryArbeidsopptrappingRepository : ArbeidsopptrappingRepository {
@@ -20,6 +21,13 @@ object InMemoryArbeidsopptrappingRepository : ArbeidsopptrappingRepository {
         store[behandlingId] = ArbeidsopptrappingGrunnlag(
             vurderinger = arbeidsopptrappingVurderinger
         )
+    }
+
+    override fun hentArbeidsopptrappingVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<ArbeidsopptrappingVurdering>? {
+        return null
     }
 
     override fun slett(behandlingId: BehandlingId) {
