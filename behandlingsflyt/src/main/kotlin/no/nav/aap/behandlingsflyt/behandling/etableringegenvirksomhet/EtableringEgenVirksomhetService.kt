@@ -50,7 +50,7 @@ class EtableringEgenVirksomhetService(
         }
 
         if (nyeVurderinger.any { vurdering ->
-                gyldighetPeriode.none { gyldighetPeriode -> gyldighetPeriode.inneholder(vurdering.vurderingenGjelderFra) }
+                gyldighetPeriode.none { gyldighetPeriode -> gyldighetPeriode.inneholder(vurdering.fom) }
             }
         ) {
             return VirksomhetEtableringIkkeGyldig(
@@ -66,7 +66,7 @@ class EtableringEgenVirksomhetService(
             )
         }
 
-        if (alleVurderinger.isNotEmpty() && alleVurderinger.none { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) }) {
+        if (alleVurderinger.isNotEmpty() && alleVurderinger.none { it.fom.isAfter(førsteMuligeDato) }) {
             return VirksomhetEtableringIkkeGyldig(
                 "Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP"
             )

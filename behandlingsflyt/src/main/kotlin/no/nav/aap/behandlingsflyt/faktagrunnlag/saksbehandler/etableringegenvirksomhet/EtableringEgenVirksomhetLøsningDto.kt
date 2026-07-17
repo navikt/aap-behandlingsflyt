@@ -30,10 +30,10 @@ data class EtableringEgenVirksomhetLøsningDto(
             utviklingsPerioder = utviklingsPerioder,
             oppstartsPerioder = oppstartsPerioder,
             vurdertAv = avklaringsbehovKontekst.bruker,
-            opprettetTid = Instant.now(),
+            opprettet = Instant.now(),
             vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
-            vurderingenGjelderFra = fom,
-            vurderingenGjelderTil = tom,
+            fom = fom,
+            tom = tom,
             virksomhetNavn = virksomhetNavn,
             orgNr = orgNr
         )
