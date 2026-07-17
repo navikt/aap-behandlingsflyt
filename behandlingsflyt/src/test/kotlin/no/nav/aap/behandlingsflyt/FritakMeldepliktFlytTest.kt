@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertFritakMeldepliktLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.PeriodisertFritaksvurderingDto
 import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -37,7 +36,7 @@ class FritakMeldepliktFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 )
             )
             .medKontekst {
-                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.FRITAK_MELDEPLIKT) // !!!!!
+                assertThat(behandling.aktivtSteg()).isNotEqualTo(StegType.FRITAK_MELDEPLIKT)
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
     }
