@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FritakMeldepliktSteg internal constructor(
@@ -35,6 +36,9 @@ class FritakMeldepliktSteg internal constructor(
                         meldepliktRepository.hentHvisEksisterer(it)?.vurderinger.orEmpty()
                     )
                 }
+            },
+            gjeldendeVurderinger = {
+                meldepliktRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeVurderinger().orEmpty()
             },
             kontekst = kontekst,
         )
