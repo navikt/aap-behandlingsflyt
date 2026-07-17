@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
@@ -58,7 +57,7 @@ class MigrerKravService(
             begrunnelse = rettighetsperiodeVurdering.begrunnelse,
             vurdertIBehandling = behandlingId,
             opprettet = rettighetsperiodeVurdering.vurdertDato.toInstant(ZoneOffset.UTC),
-            søknadsdato = (nyesteKrav as KravMedDato).søknadsdato,
+            søknadsdato = nyesteKrav.søknadsdato,
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 dato = rettighetsperiodeVurdering.startDato,
                 årsak = rettighetsperiodeVurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak()
