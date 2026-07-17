@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerV
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 
 class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
@@ -60,8 +59,8 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                         setBoolean(2, vurdering.harRettPå)
                         setEnumName(3, vurdering.grunn)
                         setString(4, vurdering.vurdertAv)
-                        setLocalDate(5, vurdering.gjelderFra)
-                        setLocalDate(6, vurdering.gjelderTom)
+                        setLocalDate(5, vurdering.fom)
+                        setLocalDate(6, vurdering.tom)
                         setLong(7, vurderingerId)
                         setLong(8, vurdering.vurdertIBehandling.toLong())
                         setLocalDateTime(9, vurdering.vurdertTidspunkt)
@@ -131,8 +130,8 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                     vurdertAv = row.getString("vurdert_av"),
                     vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
-                    gjelderFra = row.getLocalDate("gjelder_fra"),
-                    gjelderTom = row.getLocalDateOrNull("gjelder_tom"),
+                    fom = row.getLocalDate("gjelder_fra"),
+                    tom = row.getLocalDateOrNull("gjelder_tom"),
                 )
             }
         }

@@ -114,7 +114,7 @@ class AvklaringsbehovValidering(
 
     fun nårKravHarLøsning(
         definisjon: Definisjon,
-        gjeldendeVurderinger: Tidslinje<PeriodisertVurdering>? = null,
+        gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>? = null,
         kontekst: FlytKontekst,
     ): Tidslinje<Boolean> {
         if (gjeldendeVurderinger == null) {
@@ -147,7 +147,7 @@ class AvklaringsbehovValidering(
         definisjon: Definisjon,
         kontekst: FlytKontekst,
         krav: KravMedDato,
-        gjeldendeVurderinger: Tidslinje<PeriodisertVurdering>,
+        gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
     ): Boolean {
         if (krav is NyttKrav) return gjeldendeVurderinger.segmenter().any { (vurderingPeriode, _) ->
             kravPeriode.inneholder(vurderingPeriode.fom)

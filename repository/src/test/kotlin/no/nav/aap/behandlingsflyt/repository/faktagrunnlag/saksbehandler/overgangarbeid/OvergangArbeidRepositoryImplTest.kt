@@ -54,9 +54,9 @@ internal class OvergangArbeidRepositoryImplTest {
             val expected = OvergangArbeidVurdering(
                 begrunnelse = "test",
                 brukerRettPåAAP = true,
-                vurderingenGjelderFra = testDate,
+                fom = testDate,
                 vurdertAv = "Saks behandler",
-                vurderingenGjelderTil = null,
+                tom = null,
                 opprettet = Instant.now(),
                 vurdertIBehandling = behandling.id
             )
@@ -84,9 +84,9 @@ internal class OvergangArbeidRepositoryImplTest {
                         OvergangArbeidVurdering(
                             begrunnelse = "test",
                             brukerRettPåAAP = true,
-                            vurderingenGjelderFra = LocalDate.now(),
+                            fom = LocalDate.now(),
                             vurdertAv = "Saks behandler",
-                            vurderingenGjelderTil = null,
+                            tom = null,
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,
                         )
@@ -98,9 +98,9 @@ internal class OvergangArbeidRepositoryImplTest {
                         OvergangArbeidVurdering(
                             begrunnelse = "test",
                             brukerRettPåAAP = true,
-                            vurderingenGjelderFra = LocalDate.now(),
+                            fom = LocalDate.now(),
                             vurdertAv = "Saks behandler",
-                            vurderingenGjelderTil = LocalDate.now().plusDays(2),
+                            tom = LocalDate.now().plusDays(2),
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,
                         )

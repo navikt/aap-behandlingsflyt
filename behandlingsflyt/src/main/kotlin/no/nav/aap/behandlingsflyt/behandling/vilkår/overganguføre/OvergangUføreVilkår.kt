@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangUføreFaktagrunnlag> {
     companion object {
-        fun utledVarighetSluttdato(fraDato: LocalDate) = fraDato.plusMonths(8).minusDays(1)
+        fun utledVarighetSluttdato(fraDato: LocalDate): LocalDate = fraDato.plusMonths(8).minusDays(1)
     }
 
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET)

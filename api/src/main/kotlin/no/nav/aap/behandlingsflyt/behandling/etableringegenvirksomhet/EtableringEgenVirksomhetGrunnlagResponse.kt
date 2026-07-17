@@ -52,9 +52,9 @@ data class EtableringEgenVirksomhetVurderingResponse(
                         etableringEgenVirksomhetVurdering = segment.verdi,
                         vurdertAvService = vurdertAvService,
                         etableringEgenVirksomhetService = etableringEgenVirksomhetService,
-                        fom = segment.verdi.vurderingenGjelderFra,
+                        fom = segment.verdi.fom,
                         tom = if (index == segmenter.size - 1)
-                            segment.verdi.vurderingenGjelderTil
+                            segment.verdi.tom
                         else
                             segment.tom(),
                     )
@@ -65,8 +65,8 @@ data class EtableringEgenVirksomhetVurderingResponse(
             etableringEgenVirksomhetVurdering: EtableringEgenVirksomhetVurdering,
             vurdertAvService: VurdertAvService,
             etableringEgenVirksomhetService: EtableringEgenVirksomhetService,
-            fom: LocalDate = etableringEgenVirksomhetVurdering.vurderingenGjelderFra,
-            tom: LocalDate? = etableringEgenVirksomhetVurdering.vurderingenGjelderTil
+            fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
+            tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
         ) = EtableringEgenVirksomhetVurderingResponse(
             begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
             virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
@@ -82,7 +82,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
                 behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(
                     etableringEgenVirksomhetVurdering.vurdertAv.ident,
-                    etableringEgenVirksomhetVurdering.opprettetTid,
+                    etableringEgenVirksomhetVurdering.opprettet,
                 ),
             ),
             fom = fom,

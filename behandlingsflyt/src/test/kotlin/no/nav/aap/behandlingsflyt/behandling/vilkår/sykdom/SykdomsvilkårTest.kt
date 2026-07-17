@@ -102,7 +102,7 @@ class SykdomsvilkårTest {
                 overgangBegrunnelse = "...",
                 skalVurdereAapIOvergangTilArbeid = null,
                 vurdertAv = "Foffer",
-                vurderingenGjelderFra = startDato,
+                fom = startDato,
                 opprettet = Instant.now(),
                 tom = sluttDato
             )

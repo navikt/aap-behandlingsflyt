@@ -46,13 +46,13 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
             setRowMapper { row ->
                 ArbeidsopptrappingVurdering(
                     begrunnelse = row.getString("BEGRUNNELSE"),
-                    vurderingenGjelderFra = row.getLocalDate("GJELDER_FRA"),
+                    fom = row.getLocalDate("GJELDER_FRA"),
                     reellMulighetTilOpptrapping = row.getBoolean("MULIGHET_TIL_OPPTRAPPING"),
                     rettPaaAAPIOpptrapping = row.getBoolean("RETT_PAA_AAP"),
                     vurdertAv = row.getString("VURDERT_AV"),
-                    opprettetTid = row.getInstant("OPPRETTET_TID"),
+                    opprettet = row.getInstant("OPPRETTET_TID"),
                     vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
-                    vurderingenGjelderTil = row.getLocalDateOrNull("GJELDER_TIL")
+                    tom = row.getLocalDateOrNull("GJELDER_TIL")
                 )
             }
         }
@@ -82,8 +82,8 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                 setLong(4, vurderingerId)
                 setLong(5, it.vurdertIBehandling.id)
                 setString(6, it.vurdertAv)
-                setLocalDate(7, it.vurderingenGjelderFra)
-                setLocalDate(8, it.vurderingenGjelderTil)
+                setLocalDate(7, it.fom)
+                setLocalDate(8, it.tom)
             }
         }
 

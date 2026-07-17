@@ -54,7 +54,7 @@ class VurderBistandsbehovStegTest {
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = true,
                         erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = søknadsdato.plusDays(10),
+                        fom = søknadsdato.plusDays(10),
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,

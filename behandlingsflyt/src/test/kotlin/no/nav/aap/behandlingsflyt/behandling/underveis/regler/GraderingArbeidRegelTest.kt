@@ -233,8 +233,8 @@ class GraderingArbeidRegelTest {
                     ArbeidsevneVurdering(
                         begrunnelse = "",
                         arbeidsevne = `50_PROSENT`,
-                        fraDato = fom.minusDays(1), /* viktig at vi tester vurderinger fra før rettighetsperioden */
-                        tilDato = null,
+                        fom = fom.minusDays(1), /* viktig at vi tester vurderinger fra før rettighetsperioden */
+                        tom = null,
                         vurdertIBehandling = BehandlingId(1),
                         opprettetTid = LocalDateTime.now(),
                         "vurdertAv"
@@ -318,7 +318,7 @@ class GraderingArbeidRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = rettighetsperiode.fom,
+                        fom = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         vurdertIBehandling = BehandlingId(1),
@@ -409,8 +409,8 @@ class GraderingArbeidRegelTest {
                 ArbeidsevneVurdering(
                     begrunnelse = "",
                     arbeidsevne = it,
-                    fraDato = rettighetsperiode.fom,
-                    tilDato = null,
+                    fom = rettighetsperiode.fom,
+                    tom = null,
                     vurdertIBehandling = BehandlingId(1),
                     opprettetTid = LocalDateTime.now(),
                     "vurdertAv"

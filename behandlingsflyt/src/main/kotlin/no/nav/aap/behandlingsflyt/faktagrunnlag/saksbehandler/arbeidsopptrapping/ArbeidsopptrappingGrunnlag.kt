@@ -2,26 +2,17 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrappin
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Varighetsvurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.mapMedDatoTilDatoVarighet
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.filterNotNull
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
-import java.time.LocalDate
 
 data class ArbeidsopptrappingGrunnlag(
     val vurderinger: List<ArbeidsopptrappingVurdering>
 ) {
-    fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<ArbeidsopptrappingVurdering> {
-        return vurderinger
-            .groupBy { it.vurdertIBehandling }
-            .values
-            .sortedBy { it[0].opprettetTid }
-            .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: Tid.MAKS) }
-            .komprimer()
-            .begrensetTil(Periode(Tid.MIN, maksDato))
+    fun gjeldendeVurderinger(): Tidslinje<ArbeidsopptrappingVurdering> {
+        return vurderinger.gjeldendeVurderinger()
     }
 }
 

@@ -483,16 +483,16 @@ class BrevGateway : BrevbestillingGateway {
 
     private fun tilkjentYtelseTilFaktagrunnlag(tilkjentYtelse: TilkjentYtelse): Faktagrunnlag {
         return Faktagrunnlag.TilkjentYtelse(
-            dagsats = tilkjentYtelse.dagsats?.verdi,
-            gradertDagsats = tilkjentYtelse.gradertDagsats?.verdi,
-            barnetilleggSats = tilkjentYtelse.barnetilleggsats?.verdi,
-            gradertBarnetillegg = tilkjentYtelse.gradertBarnetillegg?.verdi,
-            gradertDagsatsInkludertBarnetillegg = tilkjentYtelse.gradertDagsatsInkludertBarnetillegg?.verdi,
-            barnetillegg = tilkjentYtelse.barnetillegg?.verdi,
+            dagsats = tilkjentYtelse.dagsats.verdi,
+            gradertDagsats = tilkjentYtelse.gradertDagsats.verdi,
+            barnetilleggSats = tilkjentYtelse.barnetilleggsats.verdi,
+            gradertBarnetillegg = tilkjentYtelse.gradertBarnetillegg.verdi,
+            gradertDagsatsInkludertBarnetillegg = tilkjentYtelse.gradertDagsatsInkludertBarnetillegg.verdi,
+            barnetillegg = tilkjentYtelse.barnetillegg.verdi,
             antallBarn = tilkjentYtelse.antallBarn,
-            minsteÅrligYtelse = tilkjentYtelse.minsteÅrligYtelse?.heltallverdi(),
-            minsteÅrligYtelseUnder25 = tilkjentYtelse.minsteÅrligYtelseUnder25?.heltallverdi(),
-            årligYtelse = tilkjentYtelse.årligYtelse?.heltallverdi()
+            minsteÅrligYtelse = tilkjentYtelse.minsteÅrligYtelse.heltallverdi(),
+            minsteÅrligYtelseUnder25 = tilkjentYtelse.minsteÅrligYtelseUnder25.heltallverdi(),
+            årligYtelse = tilkjentYtelse.årligYtelse.heltallverdi()
         )
     }
 
@@ -517,8 +517,8 @@ class BrevGateway : BrevbestillingGateway {
             fritakMeldepliktGrunnlag = meldepliktGrunnlag.vurderinger.map { vurdering ->
                 Faktagrunnlag.FritakMeldepliktGrunnlag.FritakMeldepliktVurdering(
                     harFritak = vurdering.harFritak,
-                    fraDato = vurdering.fraDato,
-                    tilDato = vurdering.tilDato,
+                    fraDato = vurdering.fom,
+                    tilDato = vurdering.tom,
                 )
             }
         )

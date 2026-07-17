@@ -50,11 +50,15 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
                 val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
 
                 ArbeidsevneGrunnlagDto(
-                    harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg, behandling),
+                    harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
+                        Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg,
+                        behandling
+                    ),
                     kanVurderes = listOf(sak.rettighetsperiode),
                     behøverVurderinger = emptyList(),
                     nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
-                    sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService),
+                    sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty()
+                        .toResponse(vurdertAvService),
                     ikkeRelevantePerioder = emptyList(/* Er et frivillig avklaringsbehov, så vi har ikke disse opplysningene lett tilgjengelig i steget. */),
                 )
             }

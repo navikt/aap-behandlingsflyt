@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
@@ -43,7 +42,7 @@ data class ArbeidsopptrappingVurderingResponse(
                         vurdertAvService = vurdertAvService,
                         fom = segment.fom(),
                         tom = if (index == segmenter.size - 1)
-                            segment.verdi.vurderingenGjelderTil
+                            segment.verdi.tom
                         else
                             segment.tom(),
                     )
@@ -53,8 +52,8 @@ data class ArbeidsopptrappingVurderingResponse(
         fun fraDomene(
             arbeidsopptrappingVurdering: ArbeidsopptrappingVurdering,
             vurdertAvService: VurdertAvService,
-            fom: LocalDate = arbeidsopptrappingVurdering.vurderingenGjelderFra,
-            tom: LocalDate? = arbeidsopptrappingVurdering.vurderingenGjelderTil,
+            fom: LocalDate = arbeidsopptrappingVurdering.fom,
+            tom: LocalDate? = arbeidsopptrappingVurdering.tom,
         ) = ArbeidsopptrappingVurderingResponse(
             begrunnelse = arbeidsopptrappingVurdering.begrunnelse,
             reellMulighetTilOpptrapping = arbeidsopptrappingVurdering.reellMulighetTilOpptrapping,
@@ -66,7 +65,7 @@ data class ArbeidsopptrappingVurderingResponse(
                 behandlingId = arbeidsopptrappingVurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(
                     arbeidsopptrappingVurdering.vurdertAv,
-                    arbeidsopptrappingVurdering.opprettetTid,
+                    arbeidsopptrappingVurdering.opprettet,
                 ),
             ),
         )

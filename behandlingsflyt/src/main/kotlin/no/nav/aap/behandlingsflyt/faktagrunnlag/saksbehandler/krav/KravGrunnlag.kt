@@ -27,7 +27,7 @@ data class KravGrunnlag(
         return gjeldendeVurderinger()
             .filter { it is NyttKrav || it is Gjenopptak }
             .filterIsInstance<KravMedDato>()
-            .sortedBy { (it as KravMedDato).muligRettFra }
+            .sortedBy { it.muligRettFra }
             .somTidslinje{ Periode((it).muligRettFra, Tid.MAKS) }
     }
 }

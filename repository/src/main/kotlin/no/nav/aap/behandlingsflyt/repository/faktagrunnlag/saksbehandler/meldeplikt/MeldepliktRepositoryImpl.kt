@@ -61,8 +61,8 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         fun toFritaksvurdering(): Fritaksvurdering {
             return Fritaksvurdering(
                 harFritak = harFritak,
-                fraDato = fraDato,
-                tilDato = tilDato,
+                fom = fraDato,
+                tom = tilDato,
                 begrunnelse = begrunnelse,
                 vurdertAv = vurdertAv,
                 opprettetTid = vurderingOpprettet,
@@ -100,8 +100,8 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setLong(1, meldepliktId)
                 setString(2, it.begrunnelse)
                 setBoolean(3, it.harFritak)
-                setLocalDate(4, it.fraDato)
-                setLocalDate(5, it.tilDato)
+                setLocalDate(4, it.fom)
+                setLocalDate(5, it.tom)
                 setString(6, it.vurdertAv)
                 setLocalDateTime(7, it.opprettetTid)
                 setLong(8, it.vurdertIBehandling.id)
@@ -109,16 +109,60 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         }
     }
 
+    override fun hentFritaksvurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<Fritaksvurdering>? {
+        val fritakIdQuery = """
+            SELECT meldeplikt_id
+            FROM MELDEPLIKT_FRITAK_GRUNNLAG g
+            WHERE g.BEHANDLING_ID = ? AND g.opprettet_tid <= ?
+            ORDER BY g.opprettet_tid DESC
+            LIMIT 1
+            """.trimIndent()
+
+        val fritakId = connection.queryFirstOrNull(
+            query = fritakIdQuery,
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
+            }
+
+            setRowMapper { row ->
+                row.getString("meldeplikt_id")
+            }
+        }
+
+        if (fritakId == null) {
+            return null
+        }
+
+        val meldepliktVurderingerQuery = """
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING 
+            FROM MELDEPLIKT_FRITAK f
+            INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
+            WHERE f.ID = ?
+            """.trimIndent()
+
+        return connection.queryList(meldepliktVurderingerQuery) {
+            setParams { setLong(1, fritakId.toLong()) }
+            setRowMapper(::toMeldepliktInternal)
+        }.map { it.toFritaksvurdering() }.ifEmpty { null }
+    }
+
     override fun slett(behandlingId: BehandlingId) {
 
         val meldepliktIds = getMeldepiktIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from meldeplikt_fritak_grunnlag where behandling_id = ?; 
             delete from meldeplikt_fritak_vurdering where meldeplikt_id = ANY(?::bigint[]);
             delete from meldeplikt_fritak where id = ANY(?::bigint[]);
           
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, meldepliktIds)
