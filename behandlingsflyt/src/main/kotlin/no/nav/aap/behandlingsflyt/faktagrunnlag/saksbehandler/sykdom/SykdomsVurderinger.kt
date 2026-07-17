@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
+
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -36,14 +37,44 @@ data class Sykdomsvurdering(
             return false
         }
 
-        if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)) {
+        if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI
+            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
+        ) {
             return false
         }
 
-        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
-            !erNedsettelseIArbeidsevneMerEnnHalvparten &&
-            harYrkesskadeRegistrert &&
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
+            && !erNedsettelseIArbeidsevneMerEnnHalvparten
+            && harYrkesskadeRegistrert
+            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        ) {
+            return false
+        }
+        return true
+    }
+
+    fun erKonsistentForSykdomVisAlleSykdomssteg(harYrkesskadeRegistrert: Boolean): Boolean {
+
+        if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
+            return false
+        }
+
+        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
+            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
+        ) {
+            return false
+        }
+
+        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
+            && (erSkadeSykdomEllerLyteVesentligdel == true)
+        ) {
+            return false
+        }
+
+        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
+            && !erNedsettelseIArbeidsevneMerEnnHalvparten
+            && harYrkesskadeRegistrert
+            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
         ) {
             return false
         }

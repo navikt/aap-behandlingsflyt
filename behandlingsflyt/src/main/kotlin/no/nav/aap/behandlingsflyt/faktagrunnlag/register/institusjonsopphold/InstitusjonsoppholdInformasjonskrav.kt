@@ -133,7 +133,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
             eksisterendeGrunnlag: InstitusjonsoppholdGrunnlag?,
             institusjonsopphold: List<Institusjonsopphold>
         ): Boolean {
-            val oppholdeneFraRegister = Oppholdene(null, institusjonsopphold.map { it.tilInstitusjonSegment() })
+            val oppholdeneFraRegister = Oppholdene(opphold = institusjonsopphold.map { it.tilInstitusjonSegment() })
             return eksisterendeGrunnlag == null || eksisterendeGrunnlag.oppholdene != oppholdeneFraRegister
         }
     }

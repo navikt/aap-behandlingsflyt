@@ -357,6 +357,7 @@ class BrevUtlederServiceTest {
                         tom = sisteDagMedYtelse,
                         vurdertAv = "meg",
                         vurdertIBehandling = behandling.id,
+                        opprettet = Instant.now(),
                     )
                 )
             )
@@ -438,6 +439,7 @@ class BrevUtlederServiceTest {
                         tom = sisteDagMedYtelse,
                         vurdertAv = "meg",
                         vurdertIBehandling = revurdering.id,
+                        opprettet = Instant.now(),
                     )
                 )
             )
@@ -547,6 +549,7 @@ class BrevUtlederServiceTest {
                         tom = 31 desember 2023,
                         vurdertAv = SYSTEMBRUKER.ident,
                         vurdertIBehandling = revurdering.id,
+                        opprettet = Instant.now(),
                     )
                 )
             )
@@ -759,6 +762,7 @@ class BrevUtlederServiceTest {
                         tom = sisteDag,
                         vurdertAv = "meg",
                         vurdertIBehandling = revurdering.id,
+                        opprettet = Instant.now(),
                     )
                 )
             )
@@ -1054,6 +1058,7 @@ class BrevUtlederServiceTest {
                     tom = sisteDagMedYtelse,
                     vurdertAv = "Veileder",
                     vurdertIBehandling = behandling.id,
+                    opprettet = Instant.now(),
                 )
             )
         )
@@ -1093,6 +1098,7 @@ class BrevUtlederServiceTest {
                     tom = 31 august 2025,
                     vurdertAv = "meg",
                     vurdertIBehandling = behandling.id,
+                    opprettet = Instant.now(),
                 )
             )
         )
