@@ -146,7 +146,7 @@ class BistandsvilkåretTest {
                 erBehovForAnnenOppfølging = false,
                 fom = sak.rettighetsperiode.fom,
                 tom = null,
-                vurdertAv = "Z00000",
+                vurdertAv = Bruker("Z00000"),
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
                 opprettet = Instant.now()
@@ -225,7 +225,7 @@ class BistandsvilkåretTest {
             avklaringsbehovene.leggTil(
                 definisjon = Definisjon.AVKLAR_BISTANDSBEHOV, funnetISteg = AVKLAR_SYKDOM, null, null
             )
-            avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", "", false)
+            avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", Bruker(""), false)
 
             VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), gatewayProvider).utfør(
                 flytKontekstMedPerioder {
@@ -270,7 +270,7 @@ class BistandsvilkåretTest {
             erBehovForAnnenOppfølging = null,
             overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = null,
-            vurdertAv = "O146060",
+            vurdertAv = Bruker("O146060"),
             fom = LocalDate.of(2025, 11, 25),
             tom = null,
             opprettet = Instant.parse("2025-11-20T10:23:52.051Z"),
@@ -284,7 +284,7 @@ class BistandsvilkåretTest {
             erBehovForAnnenOppfølging = false,
             overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = false,
-            vurdertAv = "S108601",
+            vurdertAv = Bruker("S108601"),
             fom = LocalDate.of(2026, 4, 21),
             tom = null,
             opprettet = Instant.parse("2026-05-20T10:23:52.051Z"),
@@ -332,7 +332,7 @@ class BistandsvilkåretTest {
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         overgangBegrunnelse = overgangBegrunnelse,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-        vurdertAv = vurdertAv,
+        vurdertAv = Bruker(vurdertAv),
         fom = vurderingenGjelderFra,
         tom = null,
         vurdertIBehandling = vurdertIBehandling,

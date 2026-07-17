@@ -32,7 +32,7 @@ class AvklarSamordningArbeidsgiverLøser(
                 SamordningArbeidsgiverVurdering(
                     begrunnelse = løsning.samordningArbeidsgiverVurdering.begrunnelse,
                     perioder =  løsning.samordningArbeidsgiverVurdering.perioder,
-                    vurdertAv = kontekst.bruker.ident,
+                    vurdertAv = kontekst.bruker,
                 )
             )
 

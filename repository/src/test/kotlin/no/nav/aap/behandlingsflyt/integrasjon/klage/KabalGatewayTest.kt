@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
@@ -44,7 +45,7 @@ class KabalGatewayTest {
                             landkode = "NO"
                         )
                     ),
-                    vurdertAv = "Saksbehandler",
+                    vurdertAv = Bruker("Saksbehandler"),
                     opprettet = Instant.now(),
                 )
             )

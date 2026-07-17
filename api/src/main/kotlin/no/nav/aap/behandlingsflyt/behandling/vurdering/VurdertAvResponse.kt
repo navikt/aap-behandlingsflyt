@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vurdering
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -14,7 +15,7 @@ data class VurdertAvResponse(
 ) {
     companion object {
         fun fraIdent(
-            ident: String?,
+            ident: Bruker?,
             dato: LocalDate?,
             ansattInfoService: AnsattInfoService,
             erRetur: Boolean? = null
@@ -23,7 +24,7 @@ data class VurdertAvResponse(
 
             val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(ident)
             return VurdertAvResponse(
-                ident = ident,
+                ident = ident.ident,
                 dato = dato,
                 ansattnavn = navnOgEnhet?.navn,
                 enhetsnavn = navnOgEnhet?.enhet,
@@ -32,7 +33,7 @@ data class VurdertAvResponse(
         }
 
         fun fraIdent(
-            ident: String?,
+            ident: Bruker?,
             dato: Instant?,
             ansattInfoService: AnsattInfoService,
             erRetur: Boolean? = null

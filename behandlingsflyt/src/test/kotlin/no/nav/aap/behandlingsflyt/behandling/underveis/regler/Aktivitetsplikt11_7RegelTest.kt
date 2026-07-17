@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -35,7 +36,7 @@ class Aktivitetsplikt11_7RegelTest {
                     begrunnelse = "Stans",
                     erOppfylt = false,
                     utfall = Utfall.STANS,
-                    vurdertAv = "1234",
+                    vurdertAv = Bruker("1234"),
                     opprettet = (7 februar 2020).atStartOfDay().toInstant(ZoneOffset.UTC),
                     skalIgnorereVarselFrist = false,
                     vurdertIBehandling = behandlingId
@@ -44,7 +45,7 @@ class Aktivitetsplikt11_7RegelTest {
                     fom = 14 februar 2020,
                     begrunnelse = "Oppfylt",
                     erOppfylt = true,
-                    vurdertAv = "1234",
+                    vurdertAv = Bruker("1234"),
                     opprettet = (15 februar 2020).atStartOfDay().toInstant(ZoneOffset.UTC),
                     skalIgnorereVarselFrist = false,
                     vurdertIBehandling = behandlingId
@@ -54,7 +55,7 @@ class Aktivitetsplikt11_7RegelTest {
                     begrunnelse = "Opphør",
                     erOppfylt = false,
                     utfall = Utfall.OPPHØR,
-                    vurdertAv = "1234",
+                    vurdertAv = Bruker("1234"),
                     opprettet = (15 juni 2021).atStartOfDay().toInstant(ZoneOffset.UTC),
                     skalIgnorereVarselFrist = false,
                     vurdertIBehandling = behandlingId

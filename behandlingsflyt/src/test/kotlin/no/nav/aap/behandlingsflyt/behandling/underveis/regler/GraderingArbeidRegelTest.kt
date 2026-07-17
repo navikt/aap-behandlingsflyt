@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`50_PROSENT`
@@ -237,7 +238,7 @@ class GraderingArbeidRegelTest {
                         tom = null,
                         vurdertIBehandling = BehandlingId(1),
                         opprettetTid = LocalDateTime.now(),
-                        "vurdertAv"
+                        Bruker("vurdertAv")
                     )
                 )
             )
@@ -320,7 +321,7 @@ class GraderingArbeidRegelTest {
                         harFritak = true,
                         fom = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         vurdertIBehandling = BehandlingId(1),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     )
@@ -413,7 +414,7 @@ class GraderingArbeidRegelTest {
                     tom = null,
                     vurdertIBehandling = BehandlingId(1),
                     opprettetTid = LocalDateTime.now(),
-                    "vurdertAv"
+                    Bruker("vurdertAv")
                 )
             })
         )

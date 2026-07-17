@@ -48,6 +48,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -262,7 +263,7 @@ class AktivitetspliktFlytTest :
                 erOppfylt = false,
                 utfall = Utfall.STANS,
                 fom = bruddFom,
-                vurdertAv = "Saksbehandler",
+                vurdertAv = Bruker("Saksbehandler"),
                 opprettet = sak.rettighetsperiode.fom.plusWeeks(20).atStartOfDay().toInstant(ZoneOffset.UTC),
                 vurdertIBehandling = behandlingId,
                 skalIgnorereVarselFrist = false

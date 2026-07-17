@@ -78,7 +78,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -156,7 +156,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -417,7 +417,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -485,7 +485,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -552,7 +552,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -619,7 +619,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -693,14 +693,14 @@ class BeregnTilkjentYtelseServiceTest {
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`30_PROSENT`),
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 2 august 2023, Prosent.`0_PROSENT`)
                 ),
-                "ident"
+                Bruker("ident")
             )
         )
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -811,14 +811,14 @@ class BeregnTilkjentYtelseServiceTest {
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 mars 2023, Prosent.`50_PROSENT`),
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`70_PROSENT`)
                 ),
-                "ident"
+                Bruker("ident")
             )
         )
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -905,7 +905,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1059,7 +1059,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1174,7 +1174,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "Har fått sluttpakke",
-                listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))), vurdertAv = "ident"
+                listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1243,14 +1243,14 @@ class BeregnTilkjentYtelseServiceTest {
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent.`30_PROSENT`)
                 ),
-                "ident"
+                Bruker("ident")
             )
         )
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1344,7 +1344,7 @@ class BeregnTilkjentYtelseServiceTest {
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent(uforegrad))
                 ),
-                "ident"
+                Bruker("ident")
             )
         )
 
@@ -1426,7 +1426,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1592,12 +1592,12 @@ class BeregnTilkjentYtelseServiceTest {
     private fun utenBarnetillegg(): BarnetilleggGrunnlag = BarnetilleggGrunnlag(emptyList())
 
     private fun utenSamordningUføre(): SamordningUføreGrunnlag =
-        SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident"))
+        SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), Bruker("ident")))
 
     private fun utenSamordningArbeidsgiver(): SamordningArbeidsgiverGrunnlag = SamordningArbeidsgiverGrunnlag(
         vurdering = SamordningArbeidsgiverVurdering(
             "",
-            emptyList(), vurdertAv = "ident"
+            emptyList(), vurdertAv = Bruker("ident")
         )
     )
     private fun utenBarnepensjon() = null

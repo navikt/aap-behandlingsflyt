@@ -125,7 +125,7 @@ private fun RefusjonkravVurdering.tilResponse(ansattInfoService: AnsattInfoServi
         tom = tom,
         vurderingerMeta = VurderingerMetaResponse(
             vurdertAv = VurdertAvResponse(
-                ident = vurdertAv,
+                ident = vurdertAv.ident,
                 dato = opprettetTid?.toLocalDate() ?: error("Fant ikke opprettet tid for refusjonkrav vurdering"),
                 ansattnavn = navnOgEnhet?.navn,
                 enhetsnavn = navnOgEnhet?.enhet,

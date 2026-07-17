@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -1007,7 +1008,7 @@ class AvklarHelseinstitusjonLøserTest {
         harFasteUtgifter = harFasteUtgifter,
         periode = periode,
         vurdertIBehandling = behandlingId,
-        vurdertAv = "saksbehandler",
+        vurdertAv = Bruker("saksbehandler"),
         vurdertTidspunkt = LocalDateTime.of(2025, 1, 1, 12, 0)
     )
 

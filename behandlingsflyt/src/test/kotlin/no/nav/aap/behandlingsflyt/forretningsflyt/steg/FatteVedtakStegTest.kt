@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -171,25 +172,25 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.SENDT_TILBAKE_FRA_BESLUTTER,
                     tidsstempel = nå.plusMinutes(5),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.TOTRINNS_VURDERT,
                     tidsstempel = nå.plusMinutes(7),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 )
             )
         )
@@ -202,25 +203,25 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(3),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(4),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(6),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(8),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -255,13 +256,13 @@ class FatteVedtakStegTest {
                     status = Status.SENDT_TILBAKE_FRA_BESLUTTER,
                     tidsstempel = nå.plusMinutes(3),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(4),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -274,13 +275,13 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -309,13 +310,13 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -368,7 +369,7 @@ class FatteVedtakStegTest {
             definisjon = definisjon,
             funnetISteg = definisjon.løsesISteg,
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov =

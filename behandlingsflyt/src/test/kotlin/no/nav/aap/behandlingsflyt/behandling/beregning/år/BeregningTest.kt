@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -110,7 +111,7 @@ class BeregningTest {
                 relevanteSaker = listOf(YrkesskadeSak("123", LocalDate.of(2023, 1, 1))),
                 erÅrsakssammenheng = true,
                 andelAvNedsettelsen = Prosent(70),
-                vurdertAv = "Jojo Joyes",
+                vurdertAv = Bruker("Jojo Joyes"),
             ),
             registrerteYrkesskader = Yrkesskader(
                 listOf(
@@ -125,7 +126,7 @@ class BeregningTest {
                     antattÅrligInntekt = Beløp(1234),
                     referanse = "123",
                     begrunnelse = "...",
-                    vurdertAv = "meg",
+                    vurdertAv = Bruker("meg"),
                 )
             ),
             inntektsPerioder = emptySet()
@@ -142,7 +143,7 @@ class BeregningTest {
                 nedsattArbeidsevneEllerStudieevneDato = 1 januar 2025,
                 ytterligereNedsattBegrunnelse = null,
                 ytterligereNedsattArbeidsevneDato = 1 januar 2025,
-                vurdertAv = "saksbehandler",
+                vurdertAv = Bruker("saksbehandler"),
             ), yrkesskadeBeløpVurdering = null
         )
 

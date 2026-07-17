@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
@@ -317,7 +318,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 VurderteBarn(
                     id = id,
                     barn = hentBarnVurderinger(id),
-                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertAv = row.getBruker("VURDERT_AV"),
                     vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
@@ -558,7 +559,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>) {
+    override fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: Bruker, vurderteBarn: List<VurdertBarn>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
@@ -648,7 +649,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         log.info("Slettet $deletedRows rader fra barnopplysning_grunnlag")
     }
 
-    private fun opprettVurderteBarnId(vurdertAv: String, vurderteBarn: List<VurdertBarn>): Long? {
+    private fun opprettVurderteBarnId(vurdertAv: Bruker, vurderteBarn: List<VurdertBarn>): Long? {
         return if (vurderteBarn.isNotEmpty()) {
             connection.executeReturnKey(
                 """
@@ -657,7 +658,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 """.trimIndent()
             ) {
                 setParams {
-                    setString(1, vurdertAv)
+                    setBruker(1, vurdertAv)
                 }
             }
         } else {
@@ -806,7 +807,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
         lagreVurderinger(
             behandlingId = behandlingId,
-            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
+            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER,
             vurderteBarn = vurderteBarn
         )
 

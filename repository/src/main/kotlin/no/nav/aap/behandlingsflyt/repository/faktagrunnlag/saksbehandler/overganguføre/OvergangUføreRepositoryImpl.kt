@@ -62,7 +62,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
             vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
             fom = row.getLocalDate("VIRKNINGSDATO"), // Virkningsdato er 'vurderingen gjelder fra'
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             tom = row.getLocalDateOrNull("TOM")
         )
@@ -191,7 +191,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setEnumName(3, vurdering.brukerHarFåttVedtakOmUføretrygd)
                 setBoolean(4, vurdering.brukerRettPåAAP)
                 setLocalDate(5, vurdering.fom)
-                setString(6, vurdering.vurdertAv)
+                setBruker(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
                 setLong(8, vurdering.vurdertIBehandling?.toLong())
                 setLocalDate(9, vurdering.tom)

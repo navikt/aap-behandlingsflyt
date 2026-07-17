@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -240,7 +241,7 @@ class RettighetsperiodeStegTest {
             null,
             null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", "saksbehandler")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", Bruker("saksbehandler"))
     }
 
     private fun flytKontekstMedPerioder(

@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.ZoneOffset
@@ -53,7 +52,7 @@ class MigrerKravService(
         val nyVurdering = RelevantKrav(
             referanse = nyesteKrav.referanse,
             journalpostId = nyesteKrav.journalpostId,
-            vurdertAv = Bruker(rettighetsperiodeVurdering.vurdertAv),
+            vurdertAv = rettighetsperiodeVurdering.vurdertAv,
             begrunnelse = rettighetsperiodeVurdering.begrunnelse,
             vurdertIBehandling = behandlingId,
             opprettet = rettighetsperiodeVurdering.vurdertDato.toInstant(ZoneOffset.UTC),
@@ -99,7 +98,7 @@ class MigrerKravService(
         val relevantKrav = RelevantKrav(
             referanse = kravSomSkalTilbakestilles.referanse,
             journalpostId = kravSomSkalTilbakestilles.journalpostId,
-            vurdertAv = Bruker(rettighetsperiodeVurdering.vurdertAv),
+            vurdertAv = rettighetsperiodeVurdering.vurdertAv,
             begrunnelse = rettighetsperiodeVurdering.begrunnelse,
             vurdertIBehandling = behandlingId,
             opprettet = rettighetsperiodeVurdering.vurdertDato.toInstant(ZoneOffset.UTC),

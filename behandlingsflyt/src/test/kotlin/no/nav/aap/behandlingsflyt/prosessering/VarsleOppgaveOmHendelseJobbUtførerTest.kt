@@ -255,7 +255,7 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
         harBehovForBehandling = oppfylt,
         avbruttStudieDato = LocalDate.now(),
         avbruddMerEnn6Måneder = true,
-        vurdertAv = "Z00000",
+        vurdertAv = Bruker("Z00000"),
         vurdertIBehandling = behandlingId,
         diagnose = null,
     )

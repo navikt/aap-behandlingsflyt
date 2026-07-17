@@ -72,7 +72,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 fom = testDate,
                 tom = null,
-                vurdertAv = "Saks behandler",
+                vurdertAv = Bruker("Saks behandler"),
                 vurdertIBehandling = behandling.id,
                 opprettet = Instant.now(),
             )
@@ -104,7 +104,7 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
                             tom = null,
-                            vurdertAv = "Saks behandler",
+                            vurdertAv = Bruker("Saks behandler"),
                             vurdertIBehandling = behandling.id,
                             opprettet = Instant.now(),
                         )
@@ -120,7 +120,7 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
                             tom = null,
-                            vurdertAv = "Saks behandler",
+                            vurdertAv = Bruker("Saks behandler"),
                             vurdertIBehandling = behandling.id,
                             opprettet = Instant.now(),
                             )
@@ -141,7 +141,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 5, 22),
                 tom = null,
-                vurdertAv = "Z00000",
+                vurdertAv = Bruker("Z00000"),
                 vurdertIBehandling = vurdertIBehandling,
                 opprettet = Instant.now(),
             )
@@ -154,7 +154,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 5, 1),
                 tom = null,
-                vurdertAv = "Z00001",
+                vurdertAv = Bruker("Z00001"),
                 vurdertIBehandling = vurdertIBehandling,
                 opprettet = Instant.now(),
             )
@@ -167,7 +167,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 4, 15),
                 tom = null,
-                vurdertAv = "Z00002",
+                vurdertAv = Bruker("Z00002"),
                 vurdertIBehandling = vurdertIBehandling,
                 opprettet = Instant.now(),
             )

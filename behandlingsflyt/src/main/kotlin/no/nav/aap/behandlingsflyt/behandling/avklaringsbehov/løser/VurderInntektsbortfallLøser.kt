@@ -29,7 +29,7 @@ class VurderInntektsbortfallLøser(
             vurdering = InntektsbortfallVurdering(
                 begrunnelse = løsning.vurdering.begrunnelse,
                 rettTilUttak = løsning.vurdering.rettTilUttak,
-                vurdertAv = kontekst.bruker.ident,
+                vurdertAv = kontekst.bruker,
                 vurdertIBehandling = kontekst.behandlingId(),
                 opprettetTid = LocalDateTime.now(),
             )

@@ -138,7 +138,7 @@ fun NormalOpenAPIRoute.brevApi(
                             harIkkeGjortNoenVurderinger = avklaringsbehovene
                                 .alle()
                             .filter { it.erTotrinn() }
-                            .none { it.brukere().contains(bruker().ident) },
+                            .none { bruker() in it.brukere() },
                             brevGrunnlag = brevbestillinger.map { brevbestilling ->
                                 val brevbestillingResponse =
                                     brevbestillingService.hentBrevbestilling(brevbestilling.referanse)
@@ -372,7 +372,7 @@ private suspend fun utledHarTilgangTilÅSendeBrev(
     return when (definisjon) {
         Definisjon.SKRIV_VEDTAKSBREV -> {
             val harTilgang = harTilgang(definisjon)
-            if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+            if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)) {
                 harTilgang && harIkkeGjortNoenVurderinger
             } else {
                 harTilgang

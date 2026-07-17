@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -9,7 +10,7 @@ data class RettighetsperiodeVurdering(
     val startDato: LocalDate?,
     val begrunnelse: String,
     val harRettUtoverSøknadsdato: RettighetsperiodeHarRett,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertDato: LocalDateTime
 )
 

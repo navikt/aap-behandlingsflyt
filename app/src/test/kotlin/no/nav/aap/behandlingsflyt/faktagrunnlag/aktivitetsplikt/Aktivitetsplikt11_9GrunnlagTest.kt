@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.junit.jupiter.api.Assertions.*
 import java.time.Instant
 import kotlin.test.Test
@@ -17,7 +18,7 @@ class Aktivitetsplikt11_9GrunnlagTest {
                     begrunnelse = "Begrunnelse 2",
                     grunn = Grunn.RIMELIG_GRUNN,
                     brudd = Brudd.IKKE_MØTT_TIL_MØTE,
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                     vurdertIBehandling = BehandlingId(1),
                 ),
@@ -26,7 +27,7 @@ class Aktivitetsplikt11_9GrunnlagTest {
                     begrunnelse = "Begrunnelse 1",
                     grunn = Grunn.IKKE_RIMELIG_GRUNN,
                     brudd = Brudd.IKKE_MØTT_TIL_MØTE,
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     opprettet = Instant.parse("2023-01-01T12:00:00Z"),
                     vurdertIBehandling = BehandlingId(2),
                 ),
@@ -35,7 +36,7 @@ class Aktivitetsplikt11_9GrunnlagTest {
                     begrunnelse = "Begrunnelse 3",
                     grunn = Grunn.IKKE_RIMELIG_GRUNN,
                     brudd = Brudd.IKKE_MØTT_TIL_MØTE,
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     opprettet = Instant.parse("2023-01-02T12:00:00Z"),
                     vurdertIBehandling = BehandlingId(1),
                 ),
@@ -44,7 +45,7 @@ class Aktivitetsplikt11_9GrunnlagTest {
                     begrunnelse = "Begrunnelse 4",
                     grunn = Grunn.IKKE_RIMELIG_GRUNN,
                     brudd = Brudd.IKKE_MØTT_TIL_TILTAK,
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     opprettet = Instant.parse("2023-01-02T13:00:00Z"),
                     vurdertIBehandling = BehandlingId(2),
                 )

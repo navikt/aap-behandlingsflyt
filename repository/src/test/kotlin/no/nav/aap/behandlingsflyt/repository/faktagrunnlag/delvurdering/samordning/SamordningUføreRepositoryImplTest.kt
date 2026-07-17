@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -50,7 +51,7 @@ internal class SamordningUføreRepositoryImplTest {
                     uføregradTilSamordning = Prosent.`70_PROSENT`
                 )
             ),
-            "ident"
+            Bruker("ident"),
         )
         dataSource.transaction {
             SamordningUføreRepositoryImpl(it).lagre(behandling.id, vurdering)
@@ -84,7 +85,7 @@ internal class SamordningUføreRepositoryImplTest {
                                 uføregradTilSamordning = Prosent.`70_PROSENT`
                             )
                         ),
-                        vurdertAv = "ident"
+                        vurdertAv = Bruker("ident"),
                     )
                 )
                 samordningUføreRepository.lagre(
@@ -100,7 +101,7 @@ internal class SamordningUføreRepositoryImplTest {
                                 uføregradTilSamordning = Prosent.`70_PROSENT`
                             )
                         ),
-                        vurdertAv = "ident"
+                        vurdertAv = Bruker("ident"),
                     )
                 )
                 assertDoesNotThrow {

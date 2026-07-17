@@ -27,7 +27,7 @@ data class OvergangUføreLøsningDto(
             vurdertIBehandling = vurdertIBehandling,
             fom = fom,
             tom = tom,
-            vurdertAv = bruker.ident,
+            vurdertAv = bruker,
             opprettet = Instant.now()
         )
 }

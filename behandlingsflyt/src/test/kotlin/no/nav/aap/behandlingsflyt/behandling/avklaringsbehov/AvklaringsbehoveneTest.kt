@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -69,7 +70,7 @@ class AvklaringsbehoveneTest {
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, begrunnelse = "Derfor", endretAv = "Meg")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, begrunnelse = "Derfor", endretAv = Bruker("Meg"))
 
         assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)!!.erÅpent()).isFalse()
     }
@@ -93,7 +94,7 @@ class AvklaringsbehoveneTest {
                 avklaringsbehovene.løsAvklaringsbehov(
                     Definisjon.MANUELT_SATT_PÅ_VENT,
                     begrunnelse = "Derfor",
-                    endretAv = "Meg"
+                    endretAv = Bruker("Meg")
                 )
             }
         )
@@ -123,7 +124,7 @@ class AvklaringsbehoveneTest {
 
         assertThat(avklaringsbehovene.åpne()).hasSize(2)
 
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, begrunnelse = "Derfor", endretAv = "Meg")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, begrunnelse = "Derfor", endretAv = Bruker("Meg"))
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
     }

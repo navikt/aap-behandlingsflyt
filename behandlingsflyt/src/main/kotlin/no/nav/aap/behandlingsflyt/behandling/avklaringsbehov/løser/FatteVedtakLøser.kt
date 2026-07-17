@@ -45,7 +45,7 @@ class FatteVedtakLøser(
                     begrunnelse = vurdering.begrunnelse(),
                     godkjent = vurdering.godkjent!!,
                     årsakTilRetur = vurdering.grunner.orEmpty(),
-                    vurdertAv = kontekst.bruker.ident
+                    vurdertAv = kontekst.bruker
                 )
             }
         } else {
@@ -54,7 +54,7 @@ class FatteVedtakLøser(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     godkjent = vurdering.godkjent!!,
                     begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker.ident
+                    vurdertAv = kontekst.bruker
                 )
             }
         }
@@ -64,10 +64,8 @@ class FatteVedtakLøser(
     }
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
-        if (!unleashGateway.isEnabled(
-                BehandlingsflytFeature.IngenValidering,
-                bruker.ident
-            ) && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)
+            && avklaringsbehovene.any { bruker in it.brukere() }
         ) {
             throw KanIkkeVurdereEgneVurderingerException()
         }

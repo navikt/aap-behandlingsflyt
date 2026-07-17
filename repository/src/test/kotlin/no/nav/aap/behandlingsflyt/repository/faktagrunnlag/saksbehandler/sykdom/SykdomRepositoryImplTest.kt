@@ -161,7 +161,7 @@ internal class SykdomRepositoryImplTest {
                 ),
                 erÅrsakssammenheng = true,
                 andelAvNedsettelsen = Prosent(70),
-                vurdertAv = "Grokki Grokk",
+                vurdertAv = Bruker("Grokki Grokk"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
             sykdomRepo.lagre(behandling.id, vurdering)

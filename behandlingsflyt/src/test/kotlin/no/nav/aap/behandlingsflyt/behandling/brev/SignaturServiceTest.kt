@@ -545,7 +545,7 @@ class SignaturServiceTest {
                 status = status,
                 tidsstempel = tidsstempel,
                 begrunnelse = "",
-                endretAv = endretAv
+                endretAv = Bruker(endretAv)
             )
         )
 

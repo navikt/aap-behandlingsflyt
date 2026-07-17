@@ -77,7 +77,7 @@ class FullmektigRepositoryImpl(private val connection: DBConnection) : Fullmekti
                 setString(2, vurdering.fullmektigIdent?.ident)
                 setEnumName(3, vurdering.fullmektigIdent?.type)
                 setString(4, vurdering.fullmektigNavnOgAdresse?.let { DefaultJsonMapper.toJson(it) })
-                setString(5, vurdering.vurdertAv)
+                setBruker(5, vurdering.vurdertAv)
                 setInstant(6, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
@@ -142,7 +142,7 @@ class FullmektigRepositoryImpl(private val connection: DBConnection) : Fullmekti
                 ?.let { DefaultJsonMapper.fromJson<NavnOgAdresse>(it) },
             fullmektigIdent = row.getStringOrNull("fullmektig_ident")
                 ?.let { IdentMedType(it, row.getEnum("fullmektig_ident_type")) },
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("opprettet_tid"),
         )
     }

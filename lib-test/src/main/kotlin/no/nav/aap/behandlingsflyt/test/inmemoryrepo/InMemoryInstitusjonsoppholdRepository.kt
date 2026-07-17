@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import java.time.Clock
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
 
@@ -45,7 +46,7 @@ class InMemoryInstitusjonsoppholdRepository(private val clock: Clock = Clock.sys
 
     override fun lagreSoningsVurdering(
         behandlingId: BehandlingId,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         soningsvurderinger: List<Soningsvurdering>
     ) = synchronized(lock) {
         val eksisterende = memory[behandlingId] ?: InstitusjonsoppholdGrunnlag()

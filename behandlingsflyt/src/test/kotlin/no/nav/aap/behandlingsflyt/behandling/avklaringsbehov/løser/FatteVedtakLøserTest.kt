@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -44,7 +45,7 @@ class FatteVedtakLøserTest {
             frist = null,
             begrunnelse = "ddd",
             grunn = null,
-            endretAv = "Fredrik"
+            endretAv = Bruker("Fredrik")
         )
 
         // Oppretter og løser et avklaringsbehov på sykdom
@@ -54,12 +55,12 @@ class FatteVedtakLøserTest {
             frist = null,
             begrunnelse = "ddd",
             grunn = null,
-            endretAv = "Fredrik"
+            endretAv = Bruker("Fredrik")
         )
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).løsAvklaringsbehov(
             definisjon = Definisjon.AVKLAR_SYKDOM,
             begrunnelse = "...",
-            endretAv = "xxx",
+            endretAv = Bruker("xxx"),
         )
 
         val fatteVedtakLøser = MockDataSource().transaction {

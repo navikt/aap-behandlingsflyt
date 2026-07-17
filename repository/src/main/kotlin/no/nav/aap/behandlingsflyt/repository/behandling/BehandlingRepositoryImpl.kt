@@ -21,6 +21,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
 
@@ -67,7 +68,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
-                setString(5, vurderingsbehovOgÅrsak.opprettetAv)
+                setBruker(5, vurderingsbehovOgÅrsak.opprettetAv)
             }
         }
 
@@ -224,7 +225,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             val vurderingsbehovOppdatertTid: LocalDateTime,
             val årsak: ÅrsakTilOpprettelse,
             val opprettet: LocalDateTime,
-            val opprettetAv: String?,
+            val opprettetAv: Bruker?,
             val beskrivelse: String?
         )
 
@@ -247,7 +248,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     årsak = row.getEnum("aarsak"),
                     beskrivelse = row.getStringOrNull("begrunnelse"),
                     opprettet = row.getLocalDateTime("opprettet_tid"),
-                    opprettetAv = row.getStringOrNull("opprettet_av"),
+                    opprettetAv = row.getBrukerOrNull("opprettet_av"),
                     vurderingsbehovType = row.getEnum("vurderingsbehov"),
                     vurderingsbehovOppdatertTid = row.getLocalDateTimeOrNull("vb_oppdatert_tid")
                         ?: row.getLocalDateTime("vb_opprettet_Tid")
@@ -527,7 +528,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
-                setString(5, vurderingsbehovOgÅrsak.opprettetAv)
+                setBruker(5, vurderingsbehovOgÅrsak.opprettetAv)
             }
         }
 

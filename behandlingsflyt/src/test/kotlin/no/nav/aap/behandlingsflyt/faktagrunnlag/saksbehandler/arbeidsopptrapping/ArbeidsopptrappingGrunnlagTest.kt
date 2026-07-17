@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrappin
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -18,7 +19,7 @@ class ArbeidsopptrappingGrunnlagTest {
                     tom = null,
                     reellMulighetTilOpptrapping = false,
                     rettPaaAAPIOpptrapping = true,
-                    vurdertAv = "aa",
+                    vurdertAv = Bruker("aa"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = BehandlingId(1L)
                 ),
@@ -28,7 +29,7 @@ class ArbeidsopptrappingGrunnlagTest {
                     tom = null,
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
-                    vurdertAv = "bb",
+                    vurdertAv = Bruker("bb"),
                     opprettet = Instant.now().plusNanos(123),
                     vurdertIBehandling = BehandlingId(1L)
                 )
@@ -52,7 +53,7 @@ class ArbeidsopptrappingGrunnlagTest {
                     tom = null,
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
-                    vurdertAv = "aa",
+                    vurdertAv = Bruker("aa"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = BehandlingId(1L)
                 ),
@@ -62,7 +63,7 @@ class ArbeidsopptrappingGrunnlagTest {
                     tom = null,
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
-                    vurdertAv = "bb",
+                    vurdertAv = Bruker("bb"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = BehandlingId(2L)
                 )
@@ -86,7 +87,7 @@ class ArbeidsopptrappingGrunnlagTest {
                     tom = null,
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
-                    vurdertAv = "aa",
+                    vurdertAv = Bruker("aa"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = BehandlingId(1L)
                 )

@@ -38,7 +38,7 @@ class InntektsbortfallRepositoryImpl(private val connection: DBConnection) : Inn
                 setBoolean(2, vurdering.rettTilUttak)
                 setLong(3, vurderingerId)
                 setLong(4, vurdering.vurdertIBehandling.id)
-                setString(5, vurdering.vurdertAv)
+                setBruker(5, vurdering.vurdertAv)
                 setLocalDateTime(6, vurdering.opprettetTid)
             }
         }
@@ -87,7 +87,7 @@ class InntektsbortfallRepositoryImpl(private val connection: DBConnection) : Inn
                 InntektsbortfallVurdering(
                     row.getString("BEGRUNNELSE"),
                     row.getBoolean("RETT_TIL_ALDERSPENSJON_UTTAK"),
-                    row.getString("VURDERT_AV"),
+                    row.getBruker("VURDERT_AV"),
                     BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
                     opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
                 )

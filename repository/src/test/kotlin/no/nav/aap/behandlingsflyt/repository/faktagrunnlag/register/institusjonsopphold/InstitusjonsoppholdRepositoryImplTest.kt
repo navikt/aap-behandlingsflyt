@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -64,7 +65,7 @@ class InstitusjonsoppholdRepositoryImplTest {
             harFasteUtgifter = harFasteUtgifter,
             periode = periode,
             vurdertIBehandling = vurdertIBehandling,
-            vurdertAv = "SAKSBEHANDLER",
+            vurdertAv = Bruker("SAKSBEHANDLER"),
             vurdertTidspunkt = LocalDateTime.now(),
         )
     }

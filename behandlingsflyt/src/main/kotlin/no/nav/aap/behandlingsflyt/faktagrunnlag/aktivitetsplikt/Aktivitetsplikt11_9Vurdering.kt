@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate
 
@@ -9,7 +10,7 @@ data class Aktivitetsplikt11_9Vurdering(
     val begrunnelse: String,
     val grunn: Grunn,
     val brudd: Brudd,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val opprettet: Instant,
     val vurdertIBehandling: BehandlingId,
 )

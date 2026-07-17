@@ -121,7 +121,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
                 setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
                 setBoolean(5, overstyrt)
-                setString(6, manuellVurdering.vurdertAv)
+                setBruker(6, manuellVurdering.vurdertAv)
                 setLocalDateTime(7, manuellVurdering.vurdertTidspunkt)
                 setLocalDate(8, manuellVurdering.fom)
                 setLocalDate(9, manuellVurdering.tom)
@@ -361,7 +361,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             varMedlemMedNedsattArbeidsevne = row.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
             medlemMedUnntakAvMaksFemAar = row.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar"),
             overstyrt = row.getBoolean("overstyrt"),
-            vurdertAv = row.getString("vurdert_av"),
+            vurdertAv = row.getBruker("vurdert_av"),
             vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
             vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
             fom = row.getLocalDate("fom"),

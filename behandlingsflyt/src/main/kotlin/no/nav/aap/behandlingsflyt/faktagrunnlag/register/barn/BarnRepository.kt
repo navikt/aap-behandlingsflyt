@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Repository
 
 interface BarnRepository : Repository {
@@ -30,7 +31,7 @@ interface BarnRepository : Repository {
     /**
      * Lagre vurderinger på barn. Gjøres i løseren, [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBarnetilleggLøser].
      */
-    fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>)
+    fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: Bruker, vurderteBarn: List<VurdertBarn>)
     fun finnFødselsdatoForRegisterBarn(ident: Ident): Fødselsdato?
     fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident): List<BehandlingId>
     fun hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(ident: Ident): List<BehandlingId>

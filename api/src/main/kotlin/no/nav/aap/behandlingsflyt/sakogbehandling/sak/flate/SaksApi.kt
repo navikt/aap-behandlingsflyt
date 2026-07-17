@@ -33,6 +33,7 @@ import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -349,11 +350,11 @@ fun NormalOpenAPIRoute.saksApi(
                 saksHistorikkService.utledSaksHistorikk(sak)
             }
             val navidenterIHistorikk = historikk.flatMap { it.hendelser.mapNotNull { it.utførtAv } }
-            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk).mapNotNull { it }
+            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk.map(::Bruker)).mapNotNull { it }
             val visningsnavnMap = visningsnavn.associateBy({ it.navident }, { it.visningsnavn })
             val historikkMedVisningsnavn = historikk.map {
                 val nyeHendelser = it.hendelser.map {
-                    val navn = visningsnavnMap[it.utførtAv] ?: it.utførtAv
+                    val navn = visningsnavnMap[it.utførtAv?.let(::Bruker)] ?: it.utførtAv
                     it.copy(utførtAv = navn)
                 }
                 it.copy(hendelser = nyeHendelser)

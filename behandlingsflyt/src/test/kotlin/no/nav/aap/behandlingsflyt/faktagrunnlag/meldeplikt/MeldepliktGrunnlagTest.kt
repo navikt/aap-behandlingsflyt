@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaks
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -77,7 +78,7 @@ class MeldepliktGrunnlagTest {
         fom = fraDato,
         tom = tilDato,
         begrunnelse = "begrunnelse",
-        vurdertAv = "saksbehandler",
+        vurdertAv = Bruker("saksbehandler"),
         opprettetTid = LocalDateTime.now(),
         vurdertIBehandling = vurdertIBehandling
     )

@@ -130,7 +130,7 @@ class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : 
                 setString(1, vurdering.begrunnelse)
                 setEnumName(2, vurdering.grunn)
                 setEnumName(3, vurdering.brudd)
-                setString(4, vurdering.vurdertAv)
+                setBruker(4, vurdering.vurdertAv)
                 setLocalDate(5, vurdering.dato)
                 setInstant(6, vurdering.opprettet)
                 setLong(7, vurderingerId)
@@ -158,7 +158,7 @@ class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : 
             dato = row.getLocalDate("dato"),
             grunn = row.getEnum("grunn"),
             brudd = row.getEnum("brudd"),
-            vurdertAv = row.getString("vurdert_av"),
+            vurdertAv = row.getBruker("vurdert_av"),
             opprettet = row.getInstant("opprettet_tid"),
             vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
         )

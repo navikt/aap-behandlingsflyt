@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.overgangarbeid.OvergangArbeidRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -55,7 +56,7 @@ internal class OvergangArbeidRepositoryImplTest {
                 begrunnelse = "test",
                 brukerRettPåAAP = true,
                 fom = testDate,
-                vurdertAv = "Saks behandler",
+                vurdertAv = Bruker("Saks behandler"),
                 tom = null,
                 opprettet = Instant.now(),
                 vurdertIBehandling = behandling.id
@@ -85,7 +86,7 @@ internal class OvergangArbeidRepositoryImplTest {
                             begrunnelse = "test",
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
-                            vurdertAv = "Saks behandler",
+                            vurdertAv = Bruker("Saks behandler"),
                             tom = null,
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,
@@ -99,7 +100,7 @@ internal class OvergangArbeidRepositoryImplTest {
                             begrunnelse = "test",
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
-                            vurdertAv = "Saks behandler",
+                            vurdertAv = Bruker("Saks behandler"),
                             tom = LocalDate.now().plusDays(2),
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,

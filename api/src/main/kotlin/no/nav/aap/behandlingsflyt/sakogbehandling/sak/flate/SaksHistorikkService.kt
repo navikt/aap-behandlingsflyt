@@ -93,7 +93,7 @@ class SaksHistorikkService(
                                             BehandlingHendelseDTO(
                                                 hendelse = BehandlingHendelseType.VEDTAK_FATTET,
                                                 tidspunkt = it.tidsstempel,
-                                                utførtAv = it.endretAv,
+                                                utførtAv = it.endretAv.ident,
                                             )
                                         )
                                     }
@@ -112,7 +112,7 @@ class SaksHistorikkService(
                                 BehandlingHendelseDTO(
                                     hendelse = type,
                                     tidspunkt = h.tidsstempel,
-                                    utførtAv = h.endretAv,
+                                    utførtAv = h.endretAv.ident,
                                     årsakTilSattPåVent = h.grunn,
                                     begrunnelse = h.begrunnelse
                                 )
@@ -126,7 +126,7 @@ class SaksHistorikkService(
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.SENDT_TIL_BESLUTTER,
                                         tidspunkt = h.tidsstempel,
-                                        utførtAv = h.endretAv,
+                                        utførtAv = h.endretAv.ident,
                                     )
                                 }
                         }
@@ -138,7 +138,7 @@ class SaksHistorikkService(
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.BREV_SENDT,
                                         tidspunkt = h.tidsstempel,
-                                        utførtAv = h.endretAv,
+                                        utførtAv = h.endretAv.ident,
                                         begrunnelse = h.begrunnelse
                                     )
                                 }
@@ -151,7 +151,7 @@ class SaksHistorikkService(
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.SENDT_TIL_KVALITETSSIKRER,
                                         tidspunkt = h.tidsstempel,
-                                        utførtAv = h.endretAv,
+                                        utførtAv = h.endretAv.ident,
                                         begrunnelse = h.begrunnelse
                                     )
                                 }
@@ -164,7 +164,7 @@ class SaksHistorikkService(
                                             BehandlingHendelseDTO(
                                                 hendelse = BehandlingHendelseType.KVALITETSSIKRET,
                                                 tidspunkt = it.tidsstempel,
-                                                utførtAv = it.endretAv,
+                                                utførtAv = it.endretAv.ident,
                                             )
                                         )
                                     }.orEmpty()
@@ -180,7 +180,7 @@ class SaksHistorikkService(
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.BESTILT_LEGEERKLÆRING,
                                         tidspunkt = h.tidsstempel,
-                                        utførtAv = h.endretAv,
+                                        utførtAv = h.endretAv.ident,
                                         begrunnelse = h.begrunnelse
                                     )
                                 }
@@ -198,7 +198,7 @@ class SaksHistorikkService(
                                         BehandlingHendelseDTO(
                                             hendelse = BehandlingHendelseType.SØKNAD_TRUKKET,
                                             tidspunkt = h.tidsstempel,
-                                            utførtAv = h.endretAv,
+                                            utførtAv = h.endretAv.ident,
                                         )
                                     }
                             } else emptyList()
@@ -237,7 +237,7 @@ class SaksHistorikkService(
                             BehandlingHendelseDTO(
                                 hendelse = typeRetur,
                                 tidspunkt = hendelse.tidsstempel,
-                                utførtAv = hendelse.endretAv,
+                                utførtAv = hendelse.endretAv.ident,
                                 årsakerTilRetur = hendelse.årsakTilRetur,
                                 begrunnelse = hendelse.begrunnelse,
                             )

@@ -76,7 +76,7 @@ class SamordningAnnenFullYtelseVilkårTest {
                     Prosent.Companion.`100_PROSENT`
                 )
             ),
-            vurdertAv = "testBruker"
+            vurdertAv = Bruker("testBruker")
         )
     )
 

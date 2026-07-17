@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -57,5 +58,5 @@ data class EndringDTO(
     val status: Status,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val begrunnelse: String?,
-    val endretAv: String
+    val endretAv: Bruker
 )

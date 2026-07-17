@@ -123,7 +123,7 @@ class MeldekortService(
                 meldeperiode = oppdaterMeldekort.meldeperiode,
                 meldekort = meldekort,
                 oppdatertAv = oppdaterMeldekort.bruker,
-                enhet = ansattInfoService.hentAnsattEnhet(oppdaterMeldekort.bruker.ident),
+                enhet = ansattInfoService.hentAnsattEnhet(oppdaterMeldekort.bruker),
                 tidspunkt = Instant.now(clock),
                 meldeDato = oppdaterMeldekort.meldedato,
                 korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(oppdaterMeldekort.meldeperiode) != null

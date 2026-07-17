@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrappin
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate
 
@@ -11,7 +12,7 @@ data class ArbeidsopptrappingVurdering(
     override val tom: LocalDate?,
     val reellMulighetTilOpptrapping: Boolean,
     val rettPaaAAPIOpptrapping: Boolean,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
 ) : PeriodisertVurdering

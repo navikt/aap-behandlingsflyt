@@ -62,7 +62,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(
                                 behandlingId = behandling.id,
                                 avklaringsbehovKode = avklaringsbehovKode,
                                 data = request.data,
-                                vurdertAv = ansattInfoService.hentAnsattNavnOgEnhet(bruker().ident)?.navn
+                                vurdertAv = ansattInfoService.hentAnsattNavnOgEnhet(bruker())?.navn
                                     ?: bruker().ident,
                                 vurdertDato = LocalDateTime.now()
                             )

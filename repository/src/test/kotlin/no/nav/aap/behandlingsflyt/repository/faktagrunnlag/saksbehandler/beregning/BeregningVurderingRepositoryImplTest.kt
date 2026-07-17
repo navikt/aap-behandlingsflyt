@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -51,7 +52,7 @@ class BeregningVurderingRepositoryImplTest {
             nedsattArbeidsevneEllerStudieevneDato = LocalDate.now(),
             ytterligereNedsattBegrunnelse = "Dette er en ytterligere begrunnelse",
             ytterligereNedsattArbeidsevneDato = LocalDate.now().plusDays(30),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             årsak = ÅrsakBeregningstidspunkt.KRAVDATO,
             ytterligereNedsattÅrsak = ÅrsakYtterligereNedsatt.UFØRETIDSPUNKT,
         )
@@ -61,13 +62,13 @@ class BeregningVurderingRepositoryImplTest {
                 antattÅrligInntekt = Beløp(BigDecimal("450000")),
                 referanse = "Referanse 1",
                 begrunnelse = "Begrunnelse for yrkesskade 1",
-                vurdertAv = "saksbehandler"
+                vurdertAv = Bruker("saksbehandler")
             ),
             YrkesskadeBeløpVurdering(
                 antattÅrligInntekt = Beløp(BigDecimal("500000")),
                 referanse = "Referanse 2",
                 begrunnelse = "Begrunnelse for yrkesskade 2",
-                vurdertAv = "saksbehandler"
+                vurdertAv = Bruker("saksbehandler")
             )
         )
 
@@ -133,7 +134,7 @@ class BeregningVurderingRepositoryImplTest {
                 antattÅrligInntekt = Beløp(beløp),
                 referanse = "Referanse 1",
                 begrunnelse = "Begrunnelse for yrkesskade 1",
-                vurdertAv = "saksbehandler"
+                vurdertAv = Bruker("saksbehandler")
             )
         )
 

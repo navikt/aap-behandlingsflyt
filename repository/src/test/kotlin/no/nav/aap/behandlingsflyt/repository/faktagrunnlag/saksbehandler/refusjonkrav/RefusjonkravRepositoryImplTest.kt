@@ -57,21 +57,21 @@ class RefusjonkravRepositoryImplTest {
                 harKrav = true,
                 fom = periode.fom,
                 tom = periode.tom,
-                vurdertAv = "saksbehandler",
+                vurdertAv = Bruker("saksbehandler"),
                 navKontor = "Nav Hamar",
             ),
             RefusjonkravVurdering(
                 harKrav = true,
                 fom = periode.fom,
                 tom = periode.tom,
-                vurdertAv = "veileder",
+                vurdertAv = Bruker("veileder"),
                 navKontor = "Nav Kongsvinger",
             ),
             RefusjonkravVurdering(
                 harKrav = true,
                 fom = periode.fom,
                 tom = periode.tom,
-                vurdertAv = "kvalitetssikrer",
+                vurdertAv = Bruker("kvalitetssikrer"),
                 navKontor = "Nav Flisa,"
             )
         )
@@ -126,7 +126,7 @@ class RefusjonkravRepositoryImplTest {
             harKrav = true,
             fom = LocalDate.of(2023, 1, 1),
             tom = LocalDate.of(2023, 6, 20),
-            vurdertAv = "Z00001",
+            vurdertAv = Bruker("Z00001"),
             navKontor = "Nav Hamar",
         )
 
@@ -134,7 +134,7 @@ class RefusjonkravRepositoryImplTest {
             harKrav = true,
             fom = LocalDate.of(2022, 1, 1),
             tom = LocalDate.of(2023, 10, 15),
-            vurdertAv = "Z00002",
+            vurdertAv = Bruker("Z00002"),
             navKontor = "Nav Oslo",
         )
 
@@ -142,7 +142,7 @@ class RefusjonkravRepositoryImplTest {
             harKrav = true,
             fom = LocalDate.of(2023, 7, 1),
             tom = LocalDate.of(2023, 12, 5),
-            vurdertAv = "Z00003",
+            vurdertAv = Bruker("Z00003"),
             navKontor = "Nav Fredikstad",
         )
 

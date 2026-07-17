@@ -69,7 +69,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
                                     navn = it.navn,
                                     kontor = it.enhet,
                                     tidspunkt = historikkInnlslag.tidspunkt,
-                                    ident = historikkInnlslag.avIdent
+                                    ident = historikkInnlslag.avIdent.ident
                                 )
                             }
                         }
@@ -103,7 +103,7 @@ private fun utledHarTilgangTilÅSaksbehandle(
     gatewayProvider: GatewayProvider
 ): Boolean {
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)) {
         kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
         kanSaksbehandle
@@ -115,7 +115,7 @@ private fun brukerHarGjortVilkårsvurderingerPåBehandling(
     bruker: Bruker
 ): Boolean {
     return avklaringsbehovene.alle().filter { it.erTotrinn() }
-        .any { it.brukere().contains(bruker.ident) }
+        .any { bruker in it.brukere() }
 }
 
 

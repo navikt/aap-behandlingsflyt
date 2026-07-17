@@ -31,6 +31,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -338,7 +339,7 @@ class SamordningYtelseVurderingServiceTest {
                         )
                     )
                 ),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
             )
         )

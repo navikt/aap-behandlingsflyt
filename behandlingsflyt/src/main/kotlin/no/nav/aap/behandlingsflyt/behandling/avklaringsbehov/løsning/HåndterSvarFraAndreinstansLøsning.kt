@@ -38,7 +38,7 @@ data class HåndterSvarFraAndreinstansLøsningDto(
 
     ) {
     fun tilVurdering(vurdertAv: Bruker) = SvarFraAndreinstansVurdering(
-        vurdertAv = vurdertAv.ident,
+        vurdertAv = vurdertAv,
         begrunnelse = begrunnelse,
         konsekvens = konsekvens,
         vilkårSomOmgjøres = vilkårSomOmgjøres,

@@ -50,7 +50,7 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                     fom = row.getLocalDate("GJELDER_FRA"),
                     reellMulighetTilOpptrapping = row.getBoolean("MULIGHET_TIL_OPPTRAPPING"),
                     rettPaaAAPIOpptrapping = row.getBoolean("RETT_PAA_AAP"),
-                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertAv = row.getBruker("VURDERT_AV"),
                     opprettet = row.getInstant("OPPRETTET_TID"),
                     vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
                     tom = row.getLocalDateOrNull("GJELDER_TIL")
@@ -82,7 +82,7 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                 setBoolean(3, it.rettPaaAAPIOpptrapping)
                 setLong(4, vurderingerId)
                 setLong(5, it.vurdertIBehandling.id)
-                setString(6, it.vurdertAv)
+                setBruker(6, it.vurdertAv)
                 setLocalDate(7, it.fom)
                 setLocalDate(8, it.tom)
             }

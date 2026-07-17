@@ -138,7 +138,7 @@ class FritakMeldepliktStegTest {
         avklaringsbehovene.løsAvklaringsbehov(
             Definisjon.FRITAK_MELDEPLIKT,
             begrunnelse = "...",
-            endretAv = "...",
+            endretAv = Bruker("..."),
             kreverToTrinn = false,
         )
     }

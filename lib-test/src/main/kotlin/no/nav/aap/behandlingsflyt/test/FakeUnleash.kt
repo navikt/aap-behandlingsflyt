@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.verdityper.Bruker
 
 open class FakeUnleashBase(
     private val flags: Map<BehandlingsflytFeature, Boolean>,
@@ -13,9 +14,9 @@ open class FakeUnleashBase(
         "feature toggle $featureToggle ikke definert for fake"
     }
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker) = isEnabled(featureToggle)
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev) = isEnabled(featureToggle)
 
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
@@ -38,9 +39,9 @@ open class FakeUnleashBaseWithDefaultDisabled(
     override fun isEnabled(featureToggle: FeatureToggle) =
         enabledFlags.contains(featureToggle)
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker) = isEnabled(featureToggle)
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev) = isEnabled(featureToggle)
 
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
