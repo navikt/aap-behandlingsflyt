@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -131,7 +131,7 @@ class KravSteg(
                 val søknad = søknaderMottattIBehandling.first()
                 kravRepository.lagre(
                     kontekst.behandlingId, vurderinger = setOf(
-                        NyttKrav(
+                        RelevantKrav(
                             referanse = Kravreferanse.ny(),
                             journalpostId = søknad.referanse.asJournalpostId,
                             vurdertAv = SYSTEMBRUKER,
@@ -162,7 +162,7 @@ class KravSteg(
         // Dersom vi har overstyrt rettighetsperioden i denne behandlingen, 
         // beholder vi denne som nytt krav uavhengig av mottattidspunkt for søknad.
         val overstyrteKravIDenneBehandlingen = kravGrunnlag?.vurderinger
-            ?.filterIsInstance<NyttKrav>()
+            ?.filterIsInstance<RelevantKrav>()
             ?.filter { it.overstyrMuligRettFra != null }
             ?.filter { it.vurdertIBehandling == kontekst.behandlingId }
             .orEmpty().toSet()
@@ -188,8 +188,8 @@ class KravSteg(
         }
     }
 
-    private fun nyttKrav(behandlingId: BehandlingId, søknad: MottattDokument): NyttKrav {
-        return NyttKrav(
+    private fun nyttKrav(behandlingId: BehandlingId, søknad: MottattDokument): RelevantKrav {
+        return RelevantKrav(
             referanse = Kravreferanse.ny(),
             journalpostId = søknad.referanse.asJournalpostId,
             vurdertAv = SYSTEMBRUKER,

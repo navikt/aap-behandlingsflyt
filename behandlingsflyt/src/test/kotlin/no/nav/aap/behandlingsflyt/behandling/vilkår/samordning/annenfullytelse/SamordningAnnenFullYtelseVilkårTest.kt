@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -81,7 +81,7 @@ class SamordningAnnenFullYtelseVilkårTest {
     )
 
     private fun avslag1127(skalAvslås: Boolean, periode: Periode = rettighetsperiode): Avslag11_27Grunnlag {
-        val krav = NyttKrav(
+        val krav = RelevantKrav(
             referanse = ref1,
             journalpostId = JournalpostId("jp"),
             vurdertAv = Bruker("testBruker"),
@@ -108,7 +108,7 @@ class SamordningAnnenFullYtelseVilkårTest {
 
     private fun kravGrunnlag(periode: Periode = rettighetsperiode) = KravGrunnlag(
         vurderinger = setOf(
-            NyttKrav(
+            RelevantKrav(
                 referanse = ref1,
                 journalpostId = JournalpostId("jp"),
                 vurdertAv = Bruker("testBruker"),

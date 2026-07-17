@@ -7,9 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -135,7 +134,7 @@ class AvklaringsbehovValidering(
         }
 
         val kravtidslinje =
-            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.kravtidslinjeMedDato() ?: Tidslinje.empty()
+            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.kravtidslinje() ?: Tidslinje.empty()
 
         return kravtidslinje.map { segmentPeriode, krav ->
             erKravDekketAvLøsning(segmentPeriode, definisjon, kontekst, krav, gjeldendeVurderinger)
@@ -146,13 +145,17 @@ class AvklaringsbehovValidering(
         kravPeriode: Periode,
         definisjon: Definisjon,
         kontekst: FlytKontekst,
-        krav: KravMedDato,
+        krav: RelevantKrav,
         gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
     ): Boolean {
-        if (krav is NyttKrav) return gjeldendeVurderinger.segmenter().any { (vurderingPeriode, _) ->
+        // TODO: Her må vi sjekke forskrift § 12 for å finne ut om det er ny stønadsperiode
+        
+        // Nytt krav
+        if (krav is RelevantKrav) return gjeldendeVurderinger.segmenter().any { (vurderingPeriode, _) ->
             kravPeriode.inneholder(vurderingPeriode.fom)
         }
-
+        
+        // Gjenopptak
         if (kontekst.forrigeBehandlingId == null) {
             /**
              * Gir det mening å registrere gjenopptak i førstegangsbehandlingen?

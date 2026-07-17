@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.GjenopptakKravLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKravLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
@@ -43,7 +43,7 @@ class VurderKravLøserTest {
 
         val løsning = VurderKravLøsning(
             kravVurderinger = setOf(
-                NyttKravLøsningDto(
+                RelevantKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
                     søknadsdato = Søknadsdato(16 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
@@ -69,7 +69,7 @@ class VurderKravLøserTest {
 
         val løsning = VurderKravLøsning(
             kravVurderinger = setOf(
-                NyttKravLøsningDto(
+                RelevantKravLøsningDto(
                     journalpostId = JournalpostId("111122224"),
                     begrunnelse = "Ny søknad",
                     søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
@@ -94,7 +94,7 @@ class VurderKravLøserTest {
 
         val løsning = VurderKravLøsning(
             kravVurderinger = setOf(
-                NyttKravLøsningDto(
+                RelevantKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
                     søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
@@ -145,7 +145,7 @@ class VurderKravLøserTest {
 
         val løsning = VurderKravLøsning(
             kravVurderinger = setOf(
-                NyttKravLøsningDto(
+                RelevantKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "Gyldig krav",
                     søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
@@ -156,7 +156,7 @@ class VurderKravLøserTest {
 
         val resultat = løser.løs(kontekst(sakId, behandlingId), løsning)
 
-        val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as NyttKrav
+        val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as RelevantKrav
         assertThat(lagretVurdering.journalpostId).isEqualTo(JournalpostId("1112223"))
         assertThat(lagretVurdering.søknadsdato.dato).isEqualTo(15 januar 2026)
         assertThat(lagretVurdering.begrunnelse).isEqualTo("Gyldig krav")

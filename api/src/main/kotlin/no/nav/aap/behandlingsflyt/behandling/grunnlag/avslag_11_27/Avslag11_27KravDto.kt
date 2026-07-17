@@ -2,10 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.grunnlag.avslag_11_27
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import java.time.LocalDate
 
 data class Avslag11_27KravDto(
@@ -16,11 +14,10 @@ data class Avslag11_27KravDto(
     val muligRettighetFra: LocalDate
 ) {
     companion object {
-        fun avslag11_27TilDto(kravListe: List<KravMedDato>): List<Avslag11_27KravDto> {
+        fun avslag11_27TilDto(kravListe: List<RelevantKrav>): List<Avslag11_27KravDto> {
             return kravListe.map { krav ->
                 val (referanse, journalpostId, kravType) = when (krav) {
-                    is NyttKrav -> Triple(krav.referanse, krav.journalpostId, KravType.NYTT_KRAV_AAP)
-                    is Gjenopptak -> Triple(krav.referanse, krav.journalpostId, KravType.GJENOPPTAK)
+                    is RelevantKrav -> Triple(krav.referanse, krav.journalpostId, KravType.RELEVANT_KRAV)
                     else -> error("Ustøttet kravtype: ${krav::class.simpleName}")
                 }
                 Avslag11_27KravDto(
