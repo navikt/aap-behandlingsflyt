@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
@@ -17,11 +15,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDateTime
 
 class FritakMeldepliktSteg internal constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val avklaringsbehovRepository: AvklaringsbehovOperasjonerRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val meldepliktRepository: MeldepliktRepository,
 ) : BehandlingSteg {
@@ -31,21 +27,7 @@ class FritakMeldepliktSteg internal constructor(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT),
             nårVurderingErRelevant = { nårVurderingErRelevant(it) },
-            nårVurderingErGyldig = {
-                val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, kontekst.behandlingId)
-                    .hentBehovForDefinisjon(Definisjon.FRITAK_MELDEPLIKT)
-
-                val sisteLøsning = avklaringsbehovene?.sistAvsluttetOrNull()
-
-                val datoVurderingsbehov =
-                    kontekst.vurderingsbehovRelevanteForStegMedPerioder
-                        .filter { it.type == Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT }
-                        .maxByOrNull { it.oppdatertTid }
-                        ?.oppdatertTid ?: LocalDateTime.MIN
-
-                nårVurderingErRelevant(kontekst)
-                    .map { it && sisteLøsning != null && datoVurderingsbehov >= datoVurderingsbehov }
-            },
+            nårVurderingErGyldig = { nårVurderingErRelevant(kontekst) },
             tilbakestillGrunnlag = {
                 kontekst.forrigeBehandlingId?.let {
                     meldepliktRepository.lagre(
@@ -62,14 +44,11 @@ class FritakMeldepliktSteg internal constructor(
     private fun nårVurderingErRelevant(
         kontekst: FlytKontekstMedPerioder
     ): Tidslinje<Boolean> {
-        val finnesVurderingsbehov =
-            kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT }
-
         return tidligereVurderinger.behandlingsutfall(kontekst, type()).map { utfall ->
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
 
-                is TidligereVurderinger.PotensieltOppfylt -> finnesVurderingsbehov
+                is TidligereVurderinger.PotensieltOppfylt -> true
             }
         }
     }
@@ -81,7 +60,6 @@ class FritakMeldepliktSteg internal constructor(
             return FritakMeldepliktSteg(
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-                avklaringsbehovRepository = repositoryProvider.provide(),
                 meldepliktRepository = repositoryProvider.provide(),
             )
         }

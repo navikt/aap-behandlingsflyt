@@ -120,7 +120,6 @@ class FritakMeldepliktStegTest {
 
     private fun konstruerSteg(): FritakMeldepliktSteg = FritakMeldepliktSteg(
         AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
-        avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
         tidligereVurderinger = FakeTidligereVurderinger(),
         meldepliktRepository = InMemoryMeldepliktRepository
     )

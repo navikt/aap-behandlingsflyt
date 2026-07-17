@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FastsettArbeidsevneSteg private constructor(
@@ -23,26 +23,34 @@ class FastsettArbeidsevneSteg private constructor(
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val vurderinger = arbeidsevneRepository.hentHvisEksisterer(kontekst.behandlingId)?.tilTidslinje().orEmpty()
-
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.FASTSETT_ARBEIDSEVNE,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.FASTSETT_ARBEIDSEVNE),
             nårVurderingErRelevant = {
-                tidligereVurderinger.behandlingsutfall(kontekst, type())
-                    .leftJoin(vurderinger) { utfall, arbeidsevnevurdering ->
-                        when (utfall) {
-                            TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
-
-                            is TidligereVurderinger.PotensieltOppfylt -> arbeidsevnevurdering != null
-                        }
-                    }
+                nårVurderingErRelevant(it)
             },
-            nårVurderingErGyldig = { vurderinger.mapValue { true } },
-            tilbakestillGrunnlag = {},
+            nårVurderingErGyldig = { nårVurderingErRelevant(kontekst) },
+            tilbakestillGrunnlag = {
+                kontekst.forrigeBehandlingId?.let {
+                    arbeidsevneRepository.lagre(
+                        kontekst.behandlingId,
+                        arbeidsevneRepository.hentHvisEksisterer(it)?.vurderinger.orEmpty()
+                    )
+                }
+            },
             kontekst = kontekst,
         )
         return Fullført
+    }
+
+    private fun nårVurderingErRelevant(
+        kontekst: FlytKontekstMedPerioder
+    ): Tidslinje<Boolean> = tidligereVurderinger.behandlingsutfall(kontekst, type()).map { utfall ->
+        when (utfall) {
+            TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+
+            is TidligereVurderinger.PotensieltOppfylt -> true
+        }
     }
 
     companion object : FlytSteg {
