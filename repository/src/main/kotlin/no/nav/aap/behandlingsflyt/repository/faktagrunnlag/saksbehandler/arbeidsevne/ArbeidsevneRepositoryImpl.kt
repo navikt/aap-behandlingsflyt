@@ -78,6 +78,39 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
             ?.single()
     }
 
+    override fun hentArbeidsevneVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<ArbeidsevneVurdering>? {
+        val arbeidsevneId: Long = connection.queryFirstOrNull(
+            """
+            SELECT arbeidsevne_id
+            FROM ARBEIDSEVNE_GRUNNLAG
+            WHERE behandling_id = ? AND opprettet_tid <= ?
+            ORDER BY opprettet_tid DESC
+            LIMIT 1
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row -> row.getLong("arbeidsevne_id") }
+        } ?: return null
+
+        return connection.queryList(
+            """
+            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.TIL_DATO, v.ANDEL_ARBEIDSEVNE, v.VURDERT_I_BEHANDLING, v.OPPRETTET_TID, v.VURDERT_AV
+            FROM ARBEIDSEVNE a
+            INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
+            WHERE a.ID = ?
+            """.trimIndent()
+        ) {
+            setParams { setLong(1, arbeidsevneId) }
+            setRowMapper(::toArbeidsevneInternal)
+        }.map { it.toArbeidsevnevurdering() }.takeIf { it.isNotEmpty() }
+    }
+
     override fun lagre(behandlingId: BehandlingId, vurderinger: List<ArbeidsevneVurdering>) {
         deaktiverEksisterende(behandlingId)
 

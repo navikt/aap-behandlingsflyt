@@ -6,9 +6,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.repository.RepositoryFactory
+import java.time.LocalDateTime
 
 class InMemoryArbeidsevneRepository: ArbeidsevneRepository {
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsevneGrunnlag? = TODO()
+
+    override fun hentArbeidsevneVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<ArbeidsevneVurdering>? = null
 
     override fun lagre(
         behandlingId: BehandlingId,

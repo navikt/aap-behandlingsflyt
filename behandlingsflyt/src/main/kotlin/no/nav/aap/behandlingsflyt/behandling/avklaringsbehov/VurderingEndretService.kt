@@ -1,11 +1,20 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.erFunksjoneltLik
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.erFunksjoneltLik
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.erFunksjoneltLik
@@ -32,7 +41,10 @@ class VurderingEndretService(
     private val meldepliktRepository: MeldepliktRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
-    private val overgangUføreRepository: OvergangUføreRepository
+    private val overgangUføreRepository: OvergangUføreRepository,
+    private val etableringEgenVirksomhetRepository: EtableringEgenVirksomhetRepository,
+    private val arbeidsevneRepository: ArbeidsevneRepository,
+    private val overgangArbeidRepository: OvergangArbeidRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
@@ -41,7 +53,10 @@ class VurderingEndretService(
         meldepliktRepository = repositoryProvider.provide(),
         refusjonkravRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
-        overgangUføreRepository = repositoryProvider.provide()
+        overgangUføreRepository = repositoryProvider.provide(),
+        etableringEgenVirksomhetRepository = repositoryProvider.provide(),
+        arbeidsevneRepository = repositoryProvider.provide(),
+        overgangArbeidRepository = repositoryProvider.provide()
     )
 
     private val sjekker: Map<Definisjon, EndretSjekk<*>> = mapOf(
@@ -80,6 +95,21 @@ class VurderingEndretService(
             hentPåTidspunkt = overgangUføreRepository::hentOvergangUføreVurderingPåTidspunkt,
             hentNåværende = { overgangUføreRepository.hentHvisEksisterer(it)?.vurderinger },
             erLik = List<OvergangUføreVurdering>::erFunksjoneltLik
+        ),
+        Definisjon.ETABLERING_EGEN_VIRKSOMHET to EndretSjekk(
+            hentPåTidspunkt = etableringEgenVirksomhetRepository::hentEtableringEgenVirksomhetVurderingPåTidspunkt,
+            hentNåværende = { etableringEgenVirksomhetRepository.hentHvisEksisterer(it)?.vurderinger },
+            erLik = List<EtableringEgenVirksomhetVurdering>::erFunksjoneltLik
+        ),
+        Definisjon.FASTSETT_ARBEIDSEVNE to EndretSjekk(
+            hentPåTidspunkt = arbeidsevneRepository::hentArbeidsevneVurderingPåTidspunkt,
+            hentNåværende = { arbeidsevneRepository.hentHvisEksisterer(it)?.vurderinger },
+            erLik = List<ArbeidsevneVurdering>::erFunksjoneltLik
+        ),
+        Definisjon.AVKLAR_OVERGANG_ARBEID to EndretSjekk(
+            hentPåTidspunkt = overgangArbeidRepository::hentOvergangArbeidVurderingPåTidspunkt,
+            hentNåværende = { overgangArbeidRepository.hentHvisEksisterer(it)?.vurderinger },
+            erLik = List<OvergangArbeidVurdering>::erFunksjoneltLik
         )
     )
 
@@ -93,7 +123,7 @@ class VurderingEndretService(
     }
 }
 
-private class EndretSjekk<T>(
+internal class EndretSjekk<T>(
     val hentPåTidspunkt: (BehandlingId, LocalDateTime) -> T?,
     val hentNåværende: (BehandlingId) -> T?,
     val erLik: (T, T) -> Boolean,
