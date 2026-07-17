@@ -152,8 +152,10 @@ class AvklaringsbehovValidering(
             RelevantKravType.NYTT_KRAV -> harVurderingPåEllerEtterMuligRettFra(gjeldendeVurderinger, kravPeriode)
 
             RelevantKravType.GJENOPPTAK_ETTER_STANS -> true
-            RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> !definisjon.måRevurderesEtterOpphør || gjeldendeVurderinger.segmenter()
-                .any { (vurderingPeriode, _) -> kravPeriode.inneholder(vurderingPeriode.fom) }
+            RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> !definisjon.måRevurderesEtterOpphør || harVurderingPåEllerEtterMuligRettFra(
+                gjeldendeVurderinger,
+                kravPeriode
+            )
         }
     }
 
