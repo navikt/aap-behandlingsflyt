@@ -47,6 +47,19 @@ class MeldepliktRepositoryImplTest {
     }
 
     @Test
+    fun `lagring av tom liste returnerer tomt grunnlag`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
+            meldepliktRepository.lagre(behandling.id, emptyList())
+            val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
+            assertThat(meldepliktGrunnlag?.vurderinger).isEmpty()
+        }
+    }
+
+    @Test
     fun `Lagrer og henter fritaksvurderinger`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
@@ -54,8 +67,24 @@ class MeldepliktRepositoryImplTest {
 
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurderinger = listOf(
-                Fritaksvurdering(true, 13 august 2023, 25 august 2023, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling.id),
-                Fritaksvurdering(false, 26 august 2023, null, "annen begrunnelse", "saksbehandler", LocalDateTime.now(), behandling.id),
+                Fritaksvurdering(
+                    true,
+                    13 august 2023,
+                    25 august 2023,
+                    "en begrunnelse",
+                    "saksbehandler",
+                    LocalDateTime.now(),
+                    behandling.id
+                ),
+                Fritaksvurdering(
+                    false,
+                    26 august 2023,
+                    null,
+                    "annen begrunnelse",
+                    "saksbehandler",
+                    LocalDateTime.now(),
+                    behandling.id
+                ),
             )
             meldepliktRepository.lagre(behandling.id, fritaksvurderinger)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
@@ -69,14 +98,20 @@ class MeldepliktRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling1.id)
+            val fritaksvurdering = Fritaksvurdering(
+                true,
+                13 august 2023,
+                null,
+                "en begrunnelse",
+                "saksbehandler",
+                LocalDateTime.now(),
+                behandling1.id
+            )
 
             meldepliktRepository.lagre(
-                behandling1.id,
-                listOf(fritaksvurdering)
+                behandling1.id, listOf(fritaksvurdering)
             )
-            val behandling1Grunnlag =
-                meldepliktRepository.hentHvisEksisterer(behandling1.id)?.vurderinger.orEmpty()
+            val behandling1Grunnlag = meldepliktRepository.hentHvisEksisterer(behandling1.id)?.vurderinger.orEmpty()
 
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
@@ -104,7 +139,15 @@ class MeldepliktRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling1.id)
+            val fritaksvurdering = Fritaksvurdering(
+                true,
+                13 august 2023,
+                null,
+                "en begrunnelse",
+                "saksbehandler",
+                LocalDateTime.now(),
+                behandling1.id
+            )
 
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -119,7 +162,7 @@ class MeldepliktRepositoryImplTest {
         }
         dataSource.transaction { connection ->
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val sakService = SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  })
+            val sakService = SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { })
             val sak = sakService.hentSakFor(behandling1.id)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
             assertThat(behandling1.id).isNotEqualTo(behandling2.id)
@@ -142,7 +185,15 @@ class MeldepliktRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling.id)
+            val fritaksvurdering = Fritaksvurdering(
+                true,
+                13 august 2023,
+                null,
+                "en begrunnelse",
+                "saksbehandler",
+                LocalDateTime.now(),
+                behandling.id
+            )
 
             meldepliktRepository.lagre(
                 behandling.id,
@@ -211,7 +262,7 @@ class MeldepliktRepositoryImplTest {
 
             val nyttGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
 
-            assertThat(nyttGrunnlag?.vurderinger?.firstOrNull()?.begrunnelse ).isEqualTo("annen begrunnelse")
+            assertThat(nyttGrunnlag?.vurderinger?.firstOrNull()?.begrunnelse).isEqualTo("annen begrunnelse")
         }
     }
 
@@ -222,7 +273,15 @@ class MeldepliktRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null,  "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling.id)
+            val fritaksvurdering = Fritaksvurdering(
+                true,
+                13 august 2023,
+                null,
+                "en begrunnelse",
+                "saksbehandler",
+                LocalDateTime.now(),
+                behandling.id
+            )
 
             meldepliktRepository.lagre(
                 behandling.id,
@@ -247,7 +306,15 @@ class MeldepliktRepositoryImplTest {
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling1.id)
+            val fritaksvurdering = Fritaksvurdering(
+                true,
+                13 august 2023,
+                null,
+                "en begrunnelse",
+                "saksbehandler",
+                LocalDateTime.now(),
+                behandling1.id
+            )
 
             meldepliktRepository.lagre(
                 behandling1.id,
