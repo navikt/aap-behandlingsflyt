@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
@@ -101,9 +103,16 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         behandlingstypeFilter: List<TypeBehandling>
     ): Behandling? {
         val query = """
-            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
             FROM BEHANDLING b
-            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN (
+                SELECT behandling_id,
+                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                GROUP BY behandling_id
+            ) vb_agg ON vb_agg.behandling_id = b.id
             WHERE b.sak_id = ? AND b.type = ANY(?::text[])
             ORDER BY b.opprettet_tid DESC LIMIT 1
             """.trimIndent()
@@ -165,6 +174,18 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    private data class VurderingsbehovJson(val aarsak: String, val tid: String)
+
+    private fun mapVurderingsbehov(row: Row): List<VurderingsbehovMedPeriode> {
+        val json = row.getStringOrNull("vb_json") ?: return emptyList()
+        return DefaultJsonMapper.fromJson<List<VurderingsbehovJson>>(json).map {
+            VurderingsbehovMedPeriode(
+                type = Vurderingsbehov.valueOf(it.aarsak),
+                oppdatertTid = LocalDateTime.parse(it.tid)
+            )
+        }.distinct()
+    }
+
     private fun mapBehandling(row: Row): Behandling {
         val behandlingId = BehandlingId(row.getLong("id"))
         return Behandling(
@@ -173,16 +194,16 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             sakId = SakId(row.getLong("sak_id")),
             typeBehandling = TypeBehandling.from(row.getString("type")),
             status = row.getEnum("status"),
-            stegTilstand = row.getStringOrNull("sh_steg")?.let {
+            stegTilstand = row.getEnumOrNull<StegType, StegType>("sh_steg")?.let {
                 StegTilstand(
                     tidspunkt = row.getLocalDateTime("sh_opprettet_tid"),
-                    stegType = row.getEnum("sh_steg"),
+                    stegType = it,
                     stegStatus = row.getEnum("sh_status"),
                     aktiv = true,
                 )
             },
             versjon = row.getLong("versjon"),
-            vurderingsbehov = hentVurderingsbehov(behandlingId).distinct(),
+            vurderingsbehov = mapVurderingsbehov(row),
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             årsakTilOpprettelse = row.getEnumOrNull("aarsak_til_opprettelse"),
             forrigeBehandlingId = row.getLongOrNull("forrige_id")?.let { BehandlingId(it) }
@@ -201,27 +222,10 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             vedtakstidspunkt = row.getLocalDateTime("vedtakstidspunkt"),
             virkningstidspunkt = row.getLocalDateOrNull("virkningstidspunkt"),
-            vurderingsbehov = hentVurderingsbehov(behandlingId).map { it.type }.toSet(),
+            vurderingsbehov = mapVurderingsbehov(row).map { it.type }.toSet(),
             årsakTilOpprettelse = row.getEnumOrNull("aarsak_til_opprettelse"),
             vedtakId = VedtakId(row.getLong("vedtak_id")),
         )
-    }
-
-    private fun hentVurderingsbehov(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
-        val query = """
-            SELECT * FROM vurderingsbehov WHERE behandling_id = ? ORDER BY opprettet_tid DESC
-        """.trimIndent()
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, behandlingId.id)
-            }
-            setRowMapper {
-                VurderingsbehovMedPeriode(
-                    it.getEnum("aarsak"),
-                    it.getLocalDateTimeOrNull("oppdatert_tid") ?: it.getLocalDateTime("opprettet_tid")
-                )
-            }
-        }
     }
 
     /**
@@ -347,14 +351,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    fun hentAktivtSteg(behandlingId: BehandlingId): StegTilstand? {
-        val query = """
-            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? AND AKTIV = true
-        """.trimIndent()
-
-        return connection.queryFirstOrNull(query, setStegtilstand(behandlingId))
-    }
-
     private fun setStegtilstand(behandlingId: BehandlingId): Query<StegTilstand>.() -> Unit {
         return {
             setParams {
@@ -381,9 +377,16 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         val query = """
-            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
             FROM BEHANDLING b
             LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            LEFT JOIN (
+                SELECT behandling_id,
+                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                GROUP BY behandling_id
+            ) vb_agg ON vb_agg.behandling_id = b.id
             WHERE b.sak_id = ?
              AND b.type = ANY(?::text[])
              ORDER BY b.opprettet_tid DESC
@@ -408,10 +411,17 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 join avbryt_revurdering_vurdering on avbryt_revurdering_grunnlag.vurdering_id = avbryt_revurdering_vurdering.id
                 where avbryt_revurdering_grunnlag.aktiv
             )
-            select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
             from behandling b
             left join avbrutt_behandling on avbrutt_behandling.behandling_id = b.id
             left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv = true
+            left join (
+                select behandling_id,
+                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                from vurderingsbehov
+                group by behandling_id
+            ) vb_agg on vb_agg.behandling_id = b.id
             where b.sak_id = ?
             and b.type in (${TypeBehandling.ytelseBehandlingstyper().joinToString { "'${it.identifikator()}'"} })
             and avbrutt_behandling.behandling_id is null
@@ -443,17 +453,23 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 B.AARSAK_TIL_OPPRETTELSE,
                 V.VEDTAKSTIDSPUNKT,
                 V.VIRKNINGSTIDSPUNKT,
-                V.ID AS VEDTAK_ID
+                V.ID AS VEDTAK_ID,
+                vb_agg.vb_json
             FROM
                 SAK S
                 INNER JOIN BEHANDLING B ON B.SAK_ID = S.ID
                 INNER JOIN VEDTAK V ON V.BEHANDLING_ID = B.ID
+                LEFT JOIN (
+                    SELECT behandling_id,
+                           json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                    FROM vurderingsbehov
+                    GROUP BY behandling_id
+                ) vb_agg ON vb_agg.behandling_id = B.ID
             WHERE
                 S.PERSON_ID = ?
                 AND TYPE = ANY(?::TEXT[])
             ORDER BY
                 OPPRETTET_TID DESC
-
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -469,9 +485,16 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hent(behandlingId: BehandlingId): Behandling {
         val query = """
-            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
             FROM BEHANDLING b
             LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            LEFT JOIN (
+                SELECT behandling_id,
+                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                GROUP BY behandling_id
+            ) vb_agg ON vb_agg.behandling_id = b.id
             WHERE b.id = ?
             """.trimIndent()
 
@@ -485,26 +508,18 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling {
-        val query = """
-            SELECT type FROM BEHANDLING WHERE id = ?
-            """.trimIndent()
-
-        return connection.queryFirst(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper { row ->
-                TypeBehandling.from(row.getString("type"))
-            }
-        }
-    }
-
     override fun hent(referanse: BehandlingReferanse): Behandling {
         val query = """
-            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
             FROM BEHANDLING b
             LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            LEFT JOIN (
+                SELECT behandling_id,
+                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                GROUP BY behandling_id
+            ) vb_agg ON vb_agg.behandling_id = b.id
             WHERE b.referanse = ?
             """.trimIndent()
 
@@ -520,9 +535,16 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun finnFørstegangsbehandling(sakId: SakId): Behandling {
         val query = """
-            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
             FROM BEHANDLING b
             LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            LEFT JOIN (
+                SELECT behandling_id,
+                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                GROUP BY behandling_id
+            ) vb_agg ON vb_agg.behandling_id = b.id
             WHERE b.sak_id = ? AND b.type = ?
             """.trimIndent()
 
@@ -602,9 +624,16 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     fun hentKandidatForStansOpphørBackfill(behandlingId: Long): Behandling? {
         return connection.queryFirstOrNull("""
-            select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
             from behandling b
             left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv = true
+            left join (
+                select behandling_id,
+                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                from vurderingsbehov
+                group by behandling_id
+            ) vb_agg on vb_agg.behandling_id = b.id
             where
             b.id = ?
             and b.type IN ('ae0034', 'ae0028')

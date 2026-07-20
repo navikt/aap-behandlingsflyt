@@ -38,38 +38,33 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): UnderveisGrunnlag? {
         val query = """
-            SELECT * FROM UNDERVEIS_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+            SELECT ug.id AS grunnlag_id, up.*
+            FROM UNDERVEIS_GRUNNLAG ug
+            LEFT JOIN UNDERVEIS_PERIODER ups ON ug.perioder_id = ups.id
+            LEFT JOIN UNDERVEIS_PERIODE up ON up.perioder_id = ups.id
+            WHERE ug.behandling_id = ?
+              AND ug.aktiv = true
+            ORDER BY up.periode
         """.trimIndent()
-        return connection.queryFirstOrNull(query) {
+
+        val rows = connection.queryList(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setRowMapper {
-                mapGrunnlag(it)
+            setRowMapper { row ->
+                row.getLong("grunnlag_id") to mapPeriode(row)
             }
         }
+
+        if (rows.isEmpty()) return null
+
+        val grunnlagId = rows.first().first
+        val perioder = rows.mapNotNull { it.second }
+        return UnderveisGrunnlag(grunnlagId, perioder)
     }
 
-    private fun mapGrunnlag(row: Row): UnderveisGrunnlag {
-        val periodeneId = row.getLong("perioder_id")
-
-        val query = """
-            SELECT * FROM UNDERVEIS_PERIODE WHERE perioder_id = ? ORDER BY periode
-        """.trimIndent()
-
-        val underveisperioder = connection.queryList(query) {
-            setParams {
-                setLong(1, periodeneId)
-            }
-            setRowMapper {
-                mapPeriode(it)
-            }
-        }.toList()
-
-        return UnderveisGrunnlag(row.getLong("id"), underveisperioder)
-    }
-
-    private fun mapPeriode(it: Row): Underveisperiode {
+    private fun mapPeriode(it: Row): Underveisperiode? {
+        if (it.getStringOrNull("utfall") == null) return null
 
         val antallTimer = it.getBigDecimal("timer_arbeid")
         val graderingProsent = it.getInt("gradering")
@@ -157,7 +152,10 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }.toSet()
     }
 
-    override fun hentUbesvarteMeldeperioderForDollyJobb(sakIds: List<SakId>, idag: LocalDate): Map<SakId, List<Periode>> {
+    override fun hentUbesvarteMeldeperioderForDollyJobb(
+        sakIds: List<SakId>,
+        idag: LocalDate
+    ): Map<SakId, List<Periode>> {
         if (sakIds.isEmpty()) return emptyMap()
 
         val query = """
@@ -215,13 +213,15 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
         val sporingIds = getSporingIds(behandlingId)
         val periodeIds = getPerioderIds(behandlingId)
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from underveis_grunnlag where behandling_id = ?; 
             delete from underveis_periode where perioder_id = ANY(?::bigint[]);
             delete from underveis_perioder where id = ANY(?::bigint[]);
             delete from underveis_sporing where id = ANY(?::bigint[]);
           
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, periodeIds)
@@ -250,7 +250,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         """
                     SELECT perioder_id
                     FROM underveis_grunnlag
-                    WHERE behandling_id = ? AND perioder_id IS NOT NULL
+                    WHERE behandling_id = ?
                  
                 """.trimIndent()
     ) {
