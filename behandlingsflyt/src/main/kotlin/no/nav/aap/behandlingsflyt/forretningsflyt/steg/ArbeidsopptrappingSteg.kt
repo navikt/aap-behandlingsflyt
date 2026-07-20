@@ -48,7 +48,7 @@ class ArbeidsopptrappingSteg private constructor(
     private fun nårVurderingErRelevant(
         kontekst: FlytKontekstMedPerioder
     ): Tidslinje<Boolean> {
-        return tidligereVurderinger.behandlingsutfall(kontekst, FritakMeldepliktSteg.type()).map { utfall ->
+        return tidligereVurderinger.behandlingsutfall(kontekst, type()).map { utfall ->
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
 
