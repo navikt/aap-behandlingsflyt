@@ -100,8 +100,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVSLUTTER,
-                stegType = StegType.IVERKSETT_VEDTAK,
-                aktiv = true
+                stegType = StegType.IVERKSETT_VEDTAK
             ),
             årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
             opprettetTidspunkt = LocalDateTime.now(),
@@ -119,8 +118,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,
-                stegType = StegType.FORESLÅ_VEDTAK,
-                aktiv = true
+                stegType = StegType.FORESLÅ_VEDTAK
             ),
             opprettetTidspunkt = LocalDateTime.now(),
             versjon = 0L

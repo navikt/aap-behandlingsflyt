@@ -7,8 +7,7 @@ import java.time.LocalDateTime
 class StegTilstand(
     private val tidspunkt: LocalDateTime = LocalDateTime.now(),
     private val stegStatus: StegStatus,
-    private val stegType: StegType,
-    var aktiv: Boolean
+    private val stegType: StegType
 ) : Comparable<StegTilstand> {
 
     fun status(): StegStatus {
@@ -17,10 +16,6 @@ class StegTilstand(
 
     fun steg(): StegType {
         return stegType
-    }
-
-    fun deaktiver() {
-        this.aktiv = false
     }
 
     fun tidspunkt(): LocalDateTime {
@@ -32,7 +27,7 @@ class StegTilstand(
     }
 
     override fun toString(): String {
-        return "StegTilstand(tidspunkt=$tidspunkt, stegStatus=$stegStatus, stegType=$stegType, aktiv=$aktiv)"
+        return "StegTilstand(tidspunkt=$tidspunkt, stegStatus=$stegStatus, stegType=$stegType)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -43,7 +38,6 @@ class StegTilstand(
 
         if (stegStatus != other.stegStatus) return false
         if (stegType != other.stegType) return false
-        if (aktiv != other.aktiv) return false
 
         return true
     }
@@ -51,7 +45,6 @@ class StegTilstand(
     override fun hashCode(): Int {
         var result = stegStatus.hashCode()
         result = 31 * result + stegType.hashCode()
-        result = 31 * result + aktiv.hashCode()
         return result
     }
 }

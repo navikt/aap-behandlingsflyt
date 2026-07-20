@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.prosessering.MeldekortGateway
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -96,7 +95,6 @@ class Driftfunksjoner(
                 behandling.id, StegTilstand(
                     stegType = stegType,
                     stegStatus = StegStatus.START,
-                    aktiv = true,
                 )
             )
 
@@ -154,7 +152,6 @@ class Driftfunksjoner(
                 behandling.id, StegTilstand(
                     stegType = stegType,
                     stegStatus = StegStatus.START,
-                    aktiv = true,
                 )
             )
 
