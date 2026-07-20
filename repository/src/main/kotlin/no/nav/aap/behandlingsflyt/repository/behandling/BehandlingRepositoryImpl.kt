@@ -101,7 +101,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         behandlingstypeFilter: List<TypeBehandling>
     ): Behandling? {
         val query = """
-            SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ANY(?::text[]) ORDER BY opprettet_tid DESC LIMIT 1
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            WHERE b.sak_id = ? AND b.type = ANY(?::text[])
+            ORDER BY b.opprettet_tid DESC LIMIT 1
             """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
@@ -169,7 +173,14 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             sakId = SakId(row.getLong("sak_id")),
             typeBehandling = TypeBehandling.from(row.getString("type")),
             status = row.getEnum("status"),
-            stegTilstand = hentAktivtSteg(behandlingId),
+            stegTilstand = row.getStringOrNull("sh_steg")?.let {
+                StegTilstand(
+                    tidspunkt = row.getLocalDateTime("sh_opprettet_tid"),
+                    stegType = row.getEnum("sh_steg"),
+                    stegStatus = row.getEnum("sh_status"),
+                    aktiv = true,
+                )
+            },
             versjon = row.getLong("versjon"),
             vurderingsbehov = hentVurderingsbehov(behandlingId).distinct(),
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
@@ -370,9 +381,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         val query = """
-            SELECT * FROM BEHANDLING WHERE sak_id = ?
-             AND type = ANY(?::text[])
-             ORDER BY opprettet_tid DESC
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            WHERE b.sak_id = ?
+             AND b.type = ANY(?::text[])
+             ORDER BY b.opprettet_tid DESC
             """.trimIndent()
 
         return connection.queryList(query) {
@@ -394,11 +408,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 join avbryt_revurdering_vurdering on avbryt_revurdering_grunnlag.vurdering_id = avbryt_revurdering_vurdering.id
                 where avbryt_revurdering_grunnlag.aktiv
             )
-            select behandling.*
-            from behandling
-            left join avbrutt_behandling on avbrutt_behandling.behandling_id = behandling.id
-            where sak_id = ?
-            and type in (${TypeBehandling.ytelseBehandlingstyper().joinToString { "'${it.identifikator()}'"} })
+            select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            from behandling b
+            left join avbrutt_behandling on avbrutt_behandling.behandling_id = b.id
+            left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv = true
+            where b.sak_id = ?
+            and b.type in (${TypeBehandling.ytelseBehandlingstyper().joinToString { "'${it.identifikator()}'"} })
             and avbrutt_behandling.behandling_id is null
             """.trimIndent()
 
@@ -454,7 +469,10 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hent(behandlingId: BehandlingId): Behandling {
         val query = """
-            SELECT * FROM BEHANDLING WHERE id = ?
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            WHERE b.id = ?
             """.trimIndent()
 
         return connection.queryFirst(query) {
@@ -484,7 +502,10 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hent(referanse: BehandlingReferanse): Behandling {
         val query = """
-            SELECT * FROM BEHANDLING WHERE referanse = ?
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            WHERE b.referanse = ?
             """.trimIndent()
 
         return connection.queryFirst(query) {
@@ -499,7 +520,10 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun finnFørstegangsbehandling(sakId: SakId): Behandling {
         val query = """
-            SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ?
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
+            WHERE b.sak_id = ? AND b.type = ?
             """.trimIndent()
 
         return connection.queryFirst(query) {
@@ -578,13 +602,14 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     fun hentKandidatForStansOpphørBackfill(behandlingId: Long): Behandling? {
         return connection.queryFirstOrNull("""
-            select *
-            from behandling
+            select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid
+            from behandling b
+            left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv = true
             where
-            id = ? 
-            and type IN ('ae0034', 'ae0028')
-            and (type <> 'ae0034' or status <> 'OPPRETTET')
-            ${if (Miljø.erDev()) "and opprettet_tid >= '2025-04-01'::date" else ""}
+            b.id = ?
+            and b.type IN ('ae0034', 'ae0028')
+            and (b.type <> 'ae0034' or b.status <> 'OPPRETTET')
+            ${if (Miljø.erDev()) "and b.opprettet_tid >= '2025-04-01'::date" else ""}
             """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId)
