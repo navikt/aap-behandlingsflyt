@@ -29,7 +29,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class SamordningAnnenFullYtelseVilkårTest {
 
@@ -163,15 +163,28 @@ class SamordningAnnenFullYtelseVilkårTest {
         Assertions.assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
     }
 
+    @Test
+    fun `avslag11_27 skalAvslås false og ingen samordning - gir OPPFYLT`() {
+        val resultat = vurder(
+            grunnlag(avslag1127 = avslag1127(false), kravGrunnlag = kravGrunnlag())
+        )
+        val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
+        Assertions.assertThat(segmenter).hasSize(1)
+        Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.OPPFYLT)
+        Assertions.assertThat(segmenter.first().verdi.avslagsårsak).isNull()
+    }
+
     // ── prioritering: avslag11_27 vs samordning ───────────────────────────────
 
     @Test
     fun `avslag11_27 IKKE_OPPFYLT prioriteres over samordning IKKE_OPPFYLT`() {
-        val resultat = vurder(grunnlag(
-            samordningTidslinje = samordning100Prosent(),
-            avslag1127 = avslag1127(true),
-            kravGrunnlag = kravGrunnlag(),
-        ))
+        val resultat = vurder(
+            grunnlag(
+                samordningTidslinje = samordning100Prosent(),
+                avslag1127 = avslag1127(true),
+                kravGrunnlag = kravGrunnlag(),
+            )
+        )
         val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
         Assertions.assertThat(segmenter).hasSize(1)
         Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -181,11 +194,13 @@ class SamordningAnnenFullYtelseVilkårTest {
 
     @Test
     fun `avslag11_27 OPPFYLT, samordning IKKE_OPPFYLT - samordning gir IKKE_OPPFYLT`() {
-        val resultat = vurder(grunnlag(
-            samordningTidslinje = samordning100Prosent(),
-            avslag1127 = avslag1127(false),
-            kravGrunnlag = kravGrunnlag(),
-        ))
+        val resultat = vurder(
+            grunnlag(
+                samordningTidslinje = samordning100Prosent(),
+                avslag1127 = avslag1127(false),
+                kravGrunnlag = kravGrunnlag(),
+            )
+        )
         val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
         Assertions.assertThat(segmenter).hasSize(1)
         Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -195,9 +210,11 @@ class SamordningAnnenFullYtelseVilkårTest {
     @Test
     fun `begrenset til rettighetsperiode - perioder utenfor fjernes`() {
         val periodeUtenforRettighetsperiode = Periode(1 januar 2027, 1 februar 2027)
-        val resultat = vurder(grunnlag(
-            samordningTidslinje = samordning100Prosent(periodeUtenforRettighetsperiode),
-        ))
+        val resultat = vurder(
+            grunnlag(
+                samordningTidslinje = samordning100Prosent(periodeUtenforRettighetsperiode),
+            )
+        )
         val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
         Assertions.assertThat(segmenter.all { it.periode.fom >= rettighetsperiode.fom }).isTrue()
         Assertions.assertThat(segmenter.all { it.periode.tom <= rettighetsperiode.tom }).isTrue()

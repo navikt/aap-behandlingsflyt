@@ -48,6 +48,6 @@ data class Avslag11_27VurderingDto(
     val harAnnenFullYtelse: Boolean,
     val brukersYtelse: Ytelse? = null,
     val harSykepengegrunnlagOver2G: Boolean? = null, // Kun for sykepenger
-    val skalAvslås1127: Boolean,
+    val skalAvslås1127: Boolean? = null,
     val vurderingerMeta: VurderingerMetaResponse?,
 )
