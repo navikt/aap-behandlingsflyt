@@ -86,7 +86,7 @@ private fun mapVurderingerTilDto(
                 behandlingId = vurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(
                     ident = vurdering.vurdertAv,
-                    dato = vurdering.vurdertTidspunkt.atZone(ZoneId.systemDefault()).toLocalDate(),
+                    dato = vurdering.opprettet.atZone(ZoneId.systemDefault()).toLocalDate(),
                 )
             )
         )

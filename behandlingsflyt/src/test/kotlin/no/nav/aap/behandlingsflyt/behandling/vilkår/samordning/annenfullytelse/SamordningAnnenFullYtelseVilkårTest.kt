@@ -100,7 +100,7 @@ class SamordningAnnenFullYtelseVilkårTest {
             harSykepengegrunnlagOver2G = null,
             skalAvslås1127 = skalAvslås,
             vurdertIBehandling = behandlingId,
-            vurdertTidspunkt = Instant.now(),
+            opprettet = Instant.now(),
             vurdertAv = Bruker("testBruker"),
         )
         return Avslag11_27Grunnlag(listOf(vurdering))

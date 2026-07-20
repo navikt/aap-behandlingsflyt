@@ -74,7 +74,7 @@ class VurderAvslag11_27Løser(
             begrunnelse = vurdering.begrunnelse,
             vurdertIBehandling = behandlingId,
             vurdertAv = Bruker(vurdertAv),
-            vurdertTidspunkt = Instant.now(),
+            opprettet = Instant.now(),
         )
     }
 }

@@ -50,7 +50,7 @@ class Avslag11_27RepositoryImplTest {
         harSykepengegrunnlagOver2G = null,
         skalAvslås1127 = skalAvslås,
         vurdertIBehandling = behandlingId,
-        vurdertTidspunkt = Instant.now(),
+        opprettet = Instant.now(),
         vurdertAv = Bruker("test"),
     )
 
@@ -206,7 +206,7 @@ class Avslag11_27RepositoryImplTest {
             harSykepengegrunnlagOver2G = true,
             skalAvslås1127 = true,
             vurdertIBehandling = behandlingId,
-            vurdertTidspunkt = Instant.now(),
+            opprettet = Instant.now(),
             vurdertAv = Bruker("test"),
         )
 

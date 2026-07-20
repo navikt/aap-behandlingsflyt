@@ -74,7 +74,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                     harSykepengegrunnlagOver2G = it.getBooleanOrNull("v_har_sykepengegrunnlag_over_2g"),
                     skalAvslås1127 = it.getBoolean("v_skal_avslaas_1127"),
                     vurdertIBehandling = BehandlingId(it.getLong("v_vurdert_i_behandling")),
-                    vurdertTidspunkt = it.getInstant("v_vurdert_tidspunkt"),
+                    opprettet = it.getInstant("v_vurdert_tidspunkt"),
                     vurdertAv = Bruker(it.getString("v_vurdert_av"))
                 )
             }
@@ -203,7 +203,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                 setBoolean(5, vurdering.harSykepengegrunnlagOver2G)
                 setBoolean(6, vurdering.skalAvslås1127)
                 setLong(7, vurdering.vurdertIBehandling.toLong())
-                setInstant(8, vurdering.vurdertTidspunkt)
+                setInstant(8, vurdering.opprettet)
                 setString(9, vurdering.vurdertAv.toString())
                 setLong(10, vuderingerId)
             }

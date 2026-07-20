@@ -36,7 +36,7 @@ class Avslag11_27GrunnlagTest {
         harSykepengegrunnlagOver2G = null,
         skalAvslås1127 = skalAvslås,
         vurdertIBehandling = behandlingId,
-        vurdertTidspunkt = vurdertTidspunkt,
+        opprettet = vurdertTidspunkt,
         vurdertAv = Bruker("testBruker"),
     )
 
@@ -60,7 +60,7 @@ class Avslag11_27GrunnlagTest {
     @Test
     fun `nyesteVurderingPerKrav - én vurdering per referanse returneres`() {
         val grunnlag = Avslag11_27Grunnlag(listOf(vurdering(ref1)))
-        assertThat(grunnlag.nyesteVurderingPerKrav()).hasSize(1)
+        assertThat(grunnlag.gjeldendeVurderinger()).hasSize(1)
     }
 
     @Test
@@ -69,7 +69,7 @@ class Avslag11_27GrunnlagTest {
         val ny = vurdering(ref1, skalAvslås = true, vurdertTidspunkt = Instant.now())
         val grunnlag = Avslag11_27Grunnlag(listOf(gammel, ny))
 
-        val resultat = grunnlag.nyesteVurderingPerKrav()
+        val resultat = grunnlag.gjeldendeVurderinger()
         assertThat(resultat).hasSize(1)
         assertThat(resultat.first().skalAvslås1127).isTrue()
     }
@@ -77,12 +77,12 @@ class Avslag11_27GrunnlagTest {
     @Test
     fun `nyesteVurderingPerKrav - to ulike referanser gir to vurderinger`() {
         val grunnlag = Avslag11_27Grunnlag(listOf(vurdering(ref1), vurdering(ref2)))
-        assertThat(grunnlag.nyesteVurderingPerKrav()).hasSize(2)
+        assertThat(grunnlag.gjeldendeVurderinger()).hasSize(2)
     }
 
     @Test
     fun `nyesteVurderingPerKrav - tom liste gir tom liste`() {
-        assertThat(Avslag11_27Grunnlag(emptyList()).nyesteVurderingPerKrav()).isEmpty()
+        assertThat(Avslag11_27Grunnlag(emptyList()).gjeldendeVurderinger()).isEmpty()
     }
 
     // ── tilTidslinje ─────────────────────────────────────────────────────────
