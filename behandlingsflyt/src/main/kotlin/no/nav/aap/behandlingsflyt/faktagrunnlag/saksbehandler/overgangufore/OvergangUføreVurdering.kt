@@ -39,7 +39,6 @@ fun List<OvergangUføreVurdering>.erFunksjoneltLik(other: List<OvergangUføreVur
                 a.brukerHarFåttVedtakOmUføretrygd == b.brukerHarFåttVedtakOmUføretrygd &&
                 a.brukerRettPåAAP == b.brukerRettPåAAP &&
                 a.fom == b.fom &&
-                a.tom == b.tom &&
-                a.vurdertIBehandling == b.vurdertIBehandling
+                a.tom == b.tom
     }
 }

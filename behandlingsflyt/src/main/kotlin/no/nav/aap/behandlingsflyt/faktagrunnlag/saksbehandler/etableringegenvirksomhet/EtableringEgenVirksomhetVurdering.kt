@@ -29,3 +29,21 @@ enum class EierVirksomhet{
     EIER_MINST_50_PROSENT_MED_FLER,
     NEI
 }
+
+fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<EtableringEgenVirksomhetVurdering>): Boolean {
+    if (this.size != other.size) return false
+
+    return this.zip(other).all { (a, b) ->
+        a.begrunnelse == b.begrunnelse &&
+                a.virksomhetNavn == b.virksomhetNavn &&
+                a.orgNr == b.orgNr &&
+                a.foreliggerFagligVurdering == b.foreliggerFagligVurdering &&
+                a.virksomhetErNy == b.virksomhetErNy &&
+                a.brukerEierVirksomheten == b.brukerEierVirksomheten &&
+                a.kanFøreTilSelvforsørget == b.kanFøreTilSelvforsørget &&
+                a.utviklingsPerioder == b.utviklingsPerioder &&
+                a.oppstartsPerioder == b.oppstartsPerioder &&
+                a.fom == b.fom &&
+                a.tom == b.tom
+    }
+}

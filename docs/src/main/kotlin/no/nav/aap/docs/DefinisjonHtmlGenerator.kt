@@ -29,6 +29,7 @@ private fun genererHtml(): String {
           <td>${definisjon.løsesISteg.name}</td>
           <td>$stegGruppe</td>
           <td>${if (definisjon.kreverToTrinn) "✓" else ""}</td>
+          <td>${if (definisjon.kvalitetssikres) "✓" else ""}</td>
           <td>$roller</td>
         </tr>"""
     }
@@ -52,7 +53,8 @@ private fun genererHtml(): String {
     col.col-steg   { width: 18%; }
     col.col-gruppe { width: 12%; }
     col.col-totrinn { width: 7%; }
-    col.col-roller { width: 21%; }
+    col.col-kval { width: 7%; }
+    col.col-roller { width: 14%; }
     th:hover { background: #1558b0; }
     th.asc::after { content: " ▲"; }
     th.desc::after { content: " ▼"; }
@@ -72,7 +74,7 @@ private fun genererHtml(): String {
   <table id="tabell">
     <colgroup>
       <col class="col-navn"><col class="col-kode"><col class="col-type">
-      <col class="col-steg"><col class="col-gruppe"><col class="col-totrinn"><col class="col-roller">
+      <col class="col-steg"><col class="col-gruppe"><col class="col-totrinn"><col class="col-kval"><col class="col-roller">
     </colgroup>
     <thead>
       <tr>
@@ -82,7 +84,8 @@ private fun genererHtml(): String {
         <th onclick="sorterKolonne(3)">løsesISteg</th>
         <th onclick="sorterKolonne(4)">StegGruppe</th>
         <th onclick="sorterKolonne(5)">kreverToTrinn</th>
-        <th onclick="sorterKolonne(6)">Roller (løsesAv)</th>
+        <th onclick="sorterKolonne(6)">kvalitetssikres</th>
+        <th onclick="sorterKolonne(7)">Roller (løsesAv)</th>
       </tr>
     </thead>
     <tbody>

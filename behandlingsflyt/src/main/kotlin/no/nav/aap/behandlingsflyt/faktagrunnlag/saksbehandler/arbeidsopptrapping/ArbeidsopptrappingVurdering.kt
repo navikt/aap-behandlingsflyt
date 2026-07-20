@@ -25,7 +25,6 @@ fun List<ArbeidsopptrappingVurdering>.erFunksjoneltLik(other: List<Arbeidsopptra
                 a.fom == b.fom &&
                 a.tom == b.tom &&
                 a.rettPaaAAPIOpptrapping == b.rettPaaAAPIOpptrapping &&
-                a.reellMulighetTilOpptrapping == b.reellMulighetTilOpptrapping &&
-                a.vurdertIBehandling == b.vurdertIBehandling
+                a.reellMulighetTilOpptrapping == b.reellMulighetTilOpptrapping
     }
 }

@@ -15,3 +15,14 @@ data class OvergangArbeidVurdering(
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
 ) : PeriodisertVurdering
+
+fun List<OvergangArbeidVurdering>.erFunksjoneltLik(other: List<OvergangArbeidVurdering>): Boolean {
+    if (this.size != other.size) return false
+
+    return this.zip(other).all { (a, b) ->
+        a.begrunnelse == b.begrunnelse &&
+                a.brukerRettPåAAP == b.brukerRettPåAAP &&
+                a.fom == b.fom &&
+                a.tom == b.tom
+    }
+}

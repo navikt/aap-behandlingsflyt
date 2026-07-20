@@ -38,3 +38,14 @@ data class ArbeidsevneVurdering(
         val vurdertIBehandling: BehandlingId,
     )
 }
+
+fun List<ArbeidsevneVurdering>.erFunksjoneltLik(other: List<ArbeidsevneVurdering>): Boolean {
+    if (this.size != other.size) return false
+
+    return this.zip(other).all { (a, b) ->
+        a.begrunnelse == b.begrunnelse &&
+                a.arbeidsevne == b.arbeidsevne &&
+                a.fom == b.fom &&
+                a.tom == b.tom
+    }
+}

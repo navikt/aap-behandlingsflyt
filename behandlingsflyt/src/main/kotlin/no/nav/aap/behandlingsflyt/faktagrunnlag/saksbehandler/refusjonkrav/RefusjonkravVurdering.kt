@@ -12,9 +12,10 @@ data class RefusjonkravVurdering(
     val vurdertAv: Bruker,
     val opprettetTid: LocalDateTime? = null,
 ) {
-    fun tilNavKontorPeriodeDto( virkningsdato : LocalDate,vedtaksdato: LocalDate): NavKontorPeriodeDto {
+    fun tilNavKontorPeriodeDto(virkningsdato: LocalDate, vedtaksdato: LocalDate): NavKontorPeriodeDto {
         return NavKontorPeriodeDto(
-            enhetsNummer = navKontorEnhetsNummer(navKontor) ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
+            enhetsNummer = navKontorEnhetsNummer(navKontor)
+                ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
             virkingsdato = virkningsdato,
             vedtaksdato = vedtaksdato
         )
