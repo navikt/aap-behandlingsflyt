@@ -25,7 +25,7 @@ class ArbeidsopptrappingSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            definisjon = Definisjon.FRITAK_MELDEPLIKT,
+            definisjon = Definisjon.ARBEIDSOPPTRAPPING,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING),
             nårVurderingErRelevant = { nårVurderingErRelevant(it) },
             nårVurderingErGyldig = { nårVurderingErRelevant(kontekst) },
