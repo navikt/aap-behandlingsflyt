@@ -117,15 +117,14 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.VURDER_AVSLAG_11_27,
                 Vurderingsbehov.FASTSETT_ARBEIDSEVNE,
                 Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT,
-                Vurderingsbehov.REVURDERING_AVBRUTT ->
-                    REVURDERING
-
+                Vurderingsbehov.REVURDERING_AVBRUTT,
                 Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
                 Vurderingsbehov.OVERGANG_UFORE,
                 Vurderingsbehov.OVERGANG_ARBEID,
                 Vurderingsbehov.OPPHOLDSKRAV,
                 Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
+                Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING,
                 Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                     REVURDERING
 
