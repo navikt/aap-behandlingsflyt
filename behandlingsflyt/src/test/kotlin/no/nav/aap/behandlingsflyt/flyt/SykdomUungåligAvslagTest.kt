@@ -44,7 +44,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
 
         val person = TestPersoner.STANDARD_PERSON()
 
-        var (_, behandling) = sendInnFørsteSøknad(
+        val (_, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
         )
@@ -76,20 +76,21 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+                val vedtak = hentVedtak()
+                assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+                val resultat =
+                    ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                        behandling.id
+                    )
+
+                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
-
-        val vedtak = hentVedtak(behandling.id)
-        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
-
-        val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
-        }
-        assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
-
-        behandling =
-            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
 
         val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
@@ -100,7 +101,6 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         behandling.medKontekst {
             assertThat(åpneAvklaringsbehov).isEmpty()
         }
-
     }
 
     @Test
@@ -153,20 +153,21 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+                val vedtak = hentVedtak()
+                assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+                val resultat =
+                    ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                        behandling.id
+                    )
+
+                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
-
-        val vedtak = hentVedtak(behandling.id)
-        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
-
-        val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
-        }
-        assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
-
-        behandling =
-            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
 
         val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
@@ -184,16 +185,18 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
     fun `Oppfyller 11-5 med YS og kun 30% nedsatt, 11-6 OK, 11-22 YS ikke årsaksammenhengende`() {
         val søknadsdato = 1 april 2025
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
-        var (_, behandling) = sendInnFørsteSøknad(
+        sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
-        behandling = behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).isNotEmpty()
-            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-        }.medKontekst {
-            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-        }
+            .second
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
             .løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
@@ -239,31 +242,28 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+                assertThat(hentVedtak().vedtakstidspunkt.toLocalDate()).isToday
+
+                val resultat =
+                    ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                        behandling.id
+                    )
+
+                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
+            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        val vedtak = hentVedtak(behandling.id)
-        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+                val vilkårsresultat = hentVilkårsresultat()
+                val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
-        }
-        assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
+                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
+                    .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
 
-        behandling =
-            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
-            .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
-
-        behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).isEmpty()
-        }
-
+                assertThat(åpneAvklaringsbehov).isEmpty()
+            }
     }
 
     @Test
@@ -323,7 +323,10 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
         val resultat = dataSource.transaction {
-            ResultatUtleder(postgresRepositoryRegistry.provider(it), minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
+            ResultatUtleder(
+                postgresRepositoryRegistry.provider(it),
+                minimalGatewayProvider()
+            ).utledResultatFørstegangsBehandling(behandling.id)
         }
         assertThat(resultat).isEqualTo(Resultat.AVSLAG)
     }
