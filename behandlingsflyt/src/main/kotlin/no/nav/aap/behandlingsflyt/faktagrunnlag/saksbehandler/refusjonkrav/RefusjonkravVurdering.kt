@@ -11,9 +11,10 @@ data class RefusjonkravVurdering(
     val vurdertAv: String,
     val opprettetTid: LocalDateTime? = null,
 ) {
-    fun tilNavKontorPeriodeDto( virkningsdato : LocalDate,vedtaksdato: LocalDate): NavKontorPeriodeDto {
+    fun tilNavKontorPeriodeDto(virkningsdato: LocalDate, vedtaksdato: LocalDate): NavKontorPeriodeDto {
         return NavKontorPeriodeDto(
-            enhetsNummer = navKontorEnhetsNummer(navKontor) ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
+            enhetsNummer = navKontorEnhetsNummer(navKontor)
+                ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
             virkingsdato = virkningsdato,
             vedtaksdato = vedtaksdato
         )
@@ -33,14 +34,4 @@ data class NavKontorPeriodeDto(
 
 fun navKontorEnhetsNummer(input: String?): String? {
     return input?.substringAfterLast(" - ")
-}
-
-fun List<RefusjonkravVurdering>.erFunksjoneltLik(other: List<RefusjonkravVurdering>): Boolean {
-    if (this.size != other.size) return false
-    return this.zip(other).all { (a, b) ->
-        a.harKrav == b.harKrav &&
-                a.fom == b.fom &&
-                a.tom == b.tom &&
-                a.navKontor == b.navKontor
-    }
 }

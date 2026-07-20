@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import java.time.LocalDateTime
 
 object InMemoryRefusjonKravRepository : RefusjonkravRepository {
     override fun hentHvisEksisterer(behandlingId: BehandlingId): List<RefusjonkravVurdering>? {
@@ -23,13 +22,6 @@ object InMemoryRefusjonKravRepository : RefusjonkravRepository {
         behandlingId: BehandlingId,
         refusjonkravVurderinger: List<RefusjonkravVurdering>
     ) {
-    }
-
-    override fun hentRefusjonkravPåTidspunkt(
-        behandlingId: BehandlingId,
-        tidspunkt: LocalDateTime
-    ): List<RefusjonkravVurdering>? {
-        return null
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {}

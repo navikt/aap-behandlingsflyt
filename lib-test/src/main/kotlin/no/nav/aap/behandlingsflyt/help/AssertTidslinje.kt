@@ -15,7 +15,7 @@ inline fun <reified T> Tidslinje<T>.assertTidslinje(assertions: Tidslinje<(T) ->
         Assertions.assertNotNull(assertion, "Assert mangler for periode $periode (verdi ${tsegment!!.verdi})")
 
         try {
-            assertion!!.verdi.invoke(tsegment!!.verdi)
+            assertion!!.verdi.invoke(tsegment.verdi)
         } catch (e: java.lang.AssertionError) {
             throw java.lang.AssertionError("for periode $periode: ${e.message}", e)
         } catch (e: AssertionFailedError) {

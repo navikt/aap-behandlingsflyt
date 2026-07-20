@@ -6,9 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.erFunk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.erFunksjoneltLik
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.erFunksjoneltLik
@@ -18,9 +15,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.erFunksjoneltLik
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.erFunksjoneltLik
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.erFunksjoneltLik
@@ -39,7 +36,6 @@ class VurderingEndretService(
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val refusjonkravRepository: RefusjonkravRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
     private val etableringEgenVirksomhetRepository: EtableringEgenVirksomhetRepository,
@@ -51,7 +47,6 @@ class VurderingEndretService(
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
-        refusjonkravRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
@@ -80,11 +75,6 @@ class VurderingEndretService(
             hentPåTidspunkt = meldepliktRepository::hentFritaksvurderingPåTidspunkt,
             hentNåværende = { meldepliktRepository.hentHvisEksisterer(it)?.vurderinger },
             erLik = List<Fritaksvurdering>::erFunksjoneltLik,
-        ),
-        Definisjon.REFUSJON_KRAV to EndretSjekk(
-            hentPåTidspunkt = refusjonkravRepository::hentRefusjonkravPåTidspunkt,
-            hentNåværende = refusjonkravRepository::hentHvisEksisterer,
-            erLik = List<RefusjonkravVurdering>::erFunksjoneltLik,
         ),
         Definisjon.ARBEIDSOPPTRAPPING to EndretSjekk(
             hentPåTidspunkt = arbeidsopptrappingRepository::hentArbeidsopptrappingVurderingPåTidspunkt,
