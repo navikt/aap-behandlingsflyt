@@ -47,7 +47,7 @@ class Avslag11_27VisningUtlederTest {
                     harSykepengegrunnlagOver2G = null,
                     skalAvslås1127 = true,
                     vurdertIBehandling = behandling.id,
-                    vurdertTidspunkt = Instant.now(),
+                    opprettet = Instant.now(),
                     vurdertAv = Bruker("test"),
                 )
             )
