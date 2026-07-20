@@ -259,26 +259,26 @@ fun NormalOpenAPIRoute.saksApi(
                 SøkPåSakService(repositoryProvider).søkEtterSaker(søkDto.søketekst.trim())
             }
 
-            if (saker.isNotEmpty()) {
-                respond(
-                    saker.map { sak ->
-                        SøkPåSakDTO(
-                            ident = sak.person.aktivIdent().identifikator,
-                            navn = pdlGateway.hentPersoninfoForIdent(sak.person.aktivIdent(), token()).fulltNavn(),
+
+            respond(
+                saker.map { sak ->
+                    SøkPåSakDTO(
+                        ident = sak.person.aktivIdent().identifikator,
+                        navn = pdlGateway.hentPersoninfoForIdent(sak.person.aktivIdent(), token()).fulltNavn(),
+                        saksnummer = sak.saksnummer,
+                        opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
+                        harTilgang = tilgangGateway.sjekkTilgangTilSak(
                             saksnummer = sak.saksnummer,
-                            opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
-                            harTilgang = tilgangGateway.sjekkTilgangTilSak(
-                                saksnummer = sak.saksnummer,
-                                token(),
-                                Operasjon.SE,
-                                relevanteIdenter = relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer.toString())
+                            token(),
+                            Operasjon.SE,
+                            relevanteIdenter = relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(
+                                sak.saksnummer.toString()
                             )
                         )
-                    }
-                )
-            } else {
-                throw VerdiIkkeFunnetException("Fant ingen saker knyttet til søketeksten.")
-            }
+                    )
+                }
+            )
+
         }
 
         route("/{saksnummer}/finnBehandlingerAvType") {
