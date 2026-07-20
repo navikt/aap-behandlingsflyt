@@ -76,6 +76,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
+        BehandlingsflytFeature.MotorV2 to true,
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
