@@ -107,12 +107,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                    vb_agg.vb_json
             FROM BEHANDLING b
             LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
-            LEFT JOIN (
-                SELECT behandling_id,
-                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
                 FROM vurderingsbehov
-                GROUP BY behandling_id
-            ) vb_agg ON vb_agg.behandling_id = b.id
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
             WHERE b.sak_id = ? AND b.type = ANY(?::text[])
             ORDER BY b.opprettet_tid DESC LIMIT 1
             """.trimIndent()
@@ -194,10 +193,10 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             sakId = SakId(row.getLong("sak_id")),
             typeBehandling = TypeBehandling.from(row.getString("type")),
             status = row.getEnum("status"),
-            stegTilstand = row.getEnumOrNull<StegType, StegType>("sh_steg")?.let {
+            stegTilstand = row.getEnumOrNull<StegType, StegType>("sh_steg")?.let { stegType ->
                 StegTilstand(
                     tidspunkt = row.getLocalDateTime("sh_opprettet_tid"),
-                    stegType = it,
+                    stegType = stegType,
                     stegStatus = row.getEnum("sh_status"),
                     aktiv = true,
                 )
@@ -369,7 +368,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
         val query = """
-            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? ORDER BY opprettet_tid
+            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? ORDER BY opprettet_tid, id
         """.trimIndent()
 
         return connection.queryList(query, setStegtilstand(behandlingId))
@@ -380,13 +379,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
                    vb_agg.vb_json
             FROM BEHANDLING b
-            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
-            LEFT JOIN (
-                SELECT behandling_id,
-                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
                 FROM vurderingsbehov
-                GROUP BY behandling_id
-            ) vb_agg ON vb_agg.behandling_id = b.id
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
             WHERE b.sak_id = ?
              AND b.type = ANY(?::text[])
              ORDER BY b.opprettet_tid DESC
@@ -415,7 +413,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                    vb_agg.vb_json
             from behandling b
             left join avbrutt_behandling on avbrutt_behandling.behandling_id = b.id
-            left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv = true
+            left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv
             left join (
                 select behandling_id,
                        json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
@@ -459,12 +457,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 SAK S
                 INNER JOIN BEHANDLING B ON B.SAK_ID = S.ID
                 INNER JOIN VEDTAK V ON V.BEHANDLING_ID = B.ID
-                LEFT JOIN (
-                    SELECT behandling_id,
-                           json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                LEFT JOIN LATERAL (
+                    SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
                     FROM vurderingsbehov
-                    GROUP BY behandling_id
-                ) vb_agg ON vb_agg.behandling_id = B.ID
+                    WHERE behandling_id = B.ID
+                ) vb_agg ON true
             WHERE
                 S.PERSON_ID = ?
                 AND TYPE = ANY(?::TEXT[])
@@ -488,13 +485,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
                    vb_agg.vb_json
             FROM BEHANDLING b
-            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
-            LEFT JOIN (
-                SELECT behandling_id,
-                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
                 FROM vurderingsbehov
-                GROUP BY behandling_id
-            ) vb_agg ON vb_agg.behandling_id = b.id
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
             WHERE b.id = ?
             """.trimIndent()
 
@@ -513,13 +509,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
                    vb_agg.vb_json
             FROM BEHANDLING b
-            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
-            LEFT JOIN (
-                SELECT behandling_id,
-                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
                 FROM vurderingsbehov
-                GROUP BY behandling_id
-            ) vb_agg ON vb_agg.behandling_id = b.id
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
             WHERE b.referanse = ?
             """.trimIndent()
 
@@ -538,13 +533,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
                    vb_agg.vb_json
             FROM BEHANDLING b
-            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv = true
-            LEFT JOIN (
-                SELECT behandling_id,
-                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
                 FROM vurderingsbehov
-                GROUP BY behandling_id
-            ) vb_agg ON vb_agg.behandling_id = b.id
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
             WHERE b.sak_id = ? AND b.type = ?
             """.trimIndent()
 
@@ -627,7 +621,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
                    vb_agg.vb_json
             from behandling b
-            left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv = true
+            left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv
             left join (
                 select behandling_id,
                        json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
