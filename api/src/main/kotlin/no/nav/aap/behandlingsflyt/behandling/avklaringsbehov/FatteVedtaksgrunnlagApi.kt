@@ -157,14 +157,14 @@ private fun utledEndringerSidenSist(
     tidsstempelForrigeBehov: LocalDateTime,
     tidsstempel: LocalDateTime
 ): List<DefinisjonEndring> {
-    return alleBehov.map { behov ->
+    return alleBehov.flatMap { behov ->
         behov.historikk.filter {
             Interval(
                 tidsstempelForrigeBehov,
                 tidsstempel
             ).inneholder(it.tidsstempel)
         }.map { endring -> DefinisjonEndring(behov.definisjon, endring) }
-    }.flatten()
+    }
 }
 
 private fun beslutterVurdering(
