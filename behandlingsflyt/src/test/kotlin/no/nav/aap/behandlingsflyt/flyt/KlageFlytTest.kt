@@ -1211,7 +1211,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             ))
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).isEmpty()
-                assertThat(svarFraAndreinstansBehandling.status()).isEqualTo(Status.AVSLUTTET)
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
         val revurdering = hentSisteOpprettedeBehandlingForSak(svarFraAndreinstansBehandling.sakId)
