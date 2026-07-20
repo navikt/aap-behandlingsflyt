@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 
-class Avslag11_27Vurdering (
+data class Avslag11_27Vurdering (
     override val referanse: Kravreferanse,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
