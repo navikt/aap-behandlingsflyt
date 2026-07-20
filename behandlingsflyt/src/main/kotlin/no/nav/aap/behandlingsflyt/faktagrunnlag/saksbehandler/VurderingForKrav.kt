@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.filterNotNull
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 
 interface VurderingForKravGrunnlag<T : VurderingForKrav> {
@@ -23,6 +24,7 @@ interface VurderingForKravGrunnlag<T : VurderingForKrav> {
 interface VurderingForKrav {
     val referanse: Kravreferanse
     val vurdertIBehandling: BehandlingId
+    val vurdertAv: Bruker
     val opprettet: Instant
 }
 
