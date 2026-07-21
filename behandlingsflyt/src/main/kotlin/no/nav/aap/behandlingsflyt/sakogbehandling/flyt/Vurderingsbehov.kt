@@ -80,7 +80,8 @@ enum class Vurderingsbehov {
     REVURDER_SYKESTIPEND,
     ETABLERING_EGEN_VIRKSOMHET,
     AKTIVITETSPLIKTBEHANDLING_AVBRUTT,
-    VURDER_AVSLAG_11_27
+    VURDER_AVSLAG_11_27,
+    VURDER_ARBEIDSOPPTRAPPING
     ;
 
     companion object {
@@ -170,4 +171,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.VURDER_KRAV -> Vurderingsbehov.VURDER_KRAV
         EksponertÅrsak.VURDER_AVSLAG_11_27 -> Vurderingsbehov.VURDER_AVSLAG_11_27
         EksponertÅrsak.FASTSETT_ARBEIDSEVNE -> Vurderingsbehov.FASTSETT_ARBEIDSEVNE
+        EksponertÅrsak.VURDER_ARBEIDSOPPTRAPPING -> Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING
     }
