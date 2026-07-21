@@ -82,7 +82,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KravAutomatiskVurdering to true,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
         // ------
-        BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true,
         BehandlingsflytFeature.ManuellInntektDelvisUfore to true,
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
