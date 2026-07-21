@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
@@ -47,12 +48,14 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             ORDER BY up.periode
         """.trimIndent()
 
+        val backfillStansOpphorEnabled = UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.BackfillStansOpphor)
+
         val rows = connection.queryList(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                row.getLong("grunnlag_id") to mapPeriode(row)
+                row.getLong("grunnlag_id") to mapPeriode(row, backfillStansOpphorEnabled)
             }
         }
 
@@ -63,7 +66,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         return UnderveisGrunnlag(grunnlagId, perioder)
     }
 
-    private fun mapPeriode(it: Row): Underveisperiode? {
+    private fun mapPeriode(it: Row, backfillStansOpphorEnabled: Boolean): Underveisperiode? {
         if (it.getStringOrNull("utfall") == null) return null
 
         val antallTimer = it.getBigDecimal("timer_arbeid")
@@ -91,7 +94,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon")),
             meldepliktStatus = it.getEnumOrNull("meldeplikt_status"),
             meldepliktGradering = it.getIntOrNull("meldeplikt_gradering")?.let { Prosent(it) },
-            unleashGateway = UnleashGatewayImpl,
+            backFillStansOpphorEnabled = backfillStansOpphorEnabled,
         )
     }
 
