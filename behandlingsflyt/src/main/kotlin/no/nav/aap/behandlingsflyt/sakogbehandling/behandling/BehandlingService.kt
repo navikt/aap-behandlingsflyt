@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
@@ -62,12 +63,14 @@ class BehandlingService(
      *
      * Er du sikker på at du ikke bryr deg om behandlingen du får er siste vedtatte eller en åpen behandling?
      */
-    @Deprecated("""
+    @Deprecated(
+        """
         Navnet på denne metoden er ikke tydelig på hva du egentlig ser etter. Bytt ut metodekallet med en av følgende:
             - Hvis du ønsker å finne gjeldende, vedtatte ytelsesbehandling: finnGjeldendeYtelsesbehandling 
             - Hvis du ønsker å finne en åpen behandling: finnÅpenYtelsesbehandling 
             - Hvis du ikke bryr deg om du får den gjeldende behandlingen eller en åpen (les: ikke-gjeldende) ytelsesbehandling: finnSisteGjeldendeEllerÅpneYtelsesbehandling
-    """)
+    """
+    )
     fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
         return alleYtelsesbehandlinger(sakId).lastOrNull()
     }
@@ -83,6 +86,7 @@ class BehandlingService(
         return utledFaktiskBehandlingstype(behandlingRepository.hent(behandling))
     }
 
+    @WithSpan
     fun utledFaktiskBehandlingstype(behandling: Behandling): TypeBehandling {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Revurdering -> {
