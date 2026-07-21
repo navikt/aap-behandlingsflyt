@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 
 interface Avslag11_27Repository : Repository {
-    fun lagre(behandlingId: BehandlingId, vurderinger: List<Avslag11_27Vurdering>)
+    fun lagre(behandlingId: BehandlingId, vurderinger: Set<Avslag11_27Vurdering>)
     fun hentHvisEksisterer(behandlingId: BehandlingId): Avslag11_27Grunnlag?
     fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

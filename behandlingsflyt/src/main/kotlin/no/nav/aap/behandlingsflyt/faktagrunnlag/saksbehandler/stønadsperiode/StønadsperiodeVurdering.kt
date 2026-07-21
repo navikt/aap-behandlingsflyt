@@ -8,7 +8,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 
 data class StønadsperiodeGrunnlag(
-    override val vurderinger: List<StønadsperiodeVurdering>
+    override val vurderinger: Set<StønadsperiodeVurdering>
 ) : VurderingForKravGrunnlag<StønadsperiodeVurdering>
 
 data class StønadsperiodeVurdering(

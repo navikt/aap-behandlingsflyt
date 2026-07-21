@@ -38,7 +38,7 @@ class Avslag11_27VisningUtlederTest {
         val ref = Kravreferanse(UUID.randomUUID())
 
         InMemoryAvslag11_27Repository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 Avslag11_27Vurdering(
                     referanse = ref,
                     begrunnelse = "b",

@@ -103,7 +103,7 @@ class SamordningAnnenFullYtelseVilkårTest {
             opprettet = Instant.now(),
             vurdertAv = Bruker("testBruker"),
         )
-        return Avslag11_27Grunnlag(listOf(vurdering))
+        return Avslag11_27Grunnlag(setOf(vurdering))
     }
 
     private fun kravGrunnlag(periode: Periode = rettighetsperiode) = KravGrunnlag(

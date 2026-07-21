@@ -71,7 +71,7 @@ class StønadsperiodeRepositoryImplTest {
 
         dataSource.transaction { connection ->
             StønadsperiodeRepositoryImpl(connection).lagre(
-                behandlingId, listOf(vurdering(behandlingId, ref))
+                behandlingId, setOf(vurdering(behandlingId, ref))
             )
         }
 
@@ -91,7 +91,7 @@ class StønadsperiodeRepositoryImplTest {
 
         dataSource.transaction { connection ->
             StønadsperiodeRepositoryImpl(connection).lagre(
-                behandlingId, listOf(
+                behandlingId, setOf(
                     vurdering(behandlingId),
                     vurdering(behandlingId),
                 )
@@ -112,12 +112,12 @@ class StønadsperiodeRepositoryImplTest {
 
         dataSource.transaction { connection ->
             StønadsperiodeRepositoryImpl(connection).lagre(
-                behandlingId, listOf(vurdering(behandlingId, ref, RelevantKravType.AVSLAG))
+                behandlingId, setOf(vurdering(behandlingId, ref, RelevantKravType.AVSLAG))
             )
         }
         dataSource.transaction { connection ->
             StønadsperiodeRepositoryImpl(connection).lagre(
-                behandlingId, listOf(vurdering(behandlingId, ref, RelevantKravType.NY_STØNADSPERIODE))
+                behandlingId, setOf(vurdering(behandlingId, ref, RelevantKravType.NY_STØNADSPERIODE))
             )
         }
 
@@ -136,7 +136,7 @@ class StønadsperiodeRepositoryImplTest {
 
         dataSource.transaction { connection ->
             StønadsperiodeRepositoryImpl(connection).lagre(
-                fraBehandlingId, listOf(vurdering(fraBehandlingId))
+                fraBehandlingId, setOf(vurdering(fraBehandlingId))
             )
         }
         dataSource.transaction { connection ->
@@ -157,7 +157,7 @@ class StønadsperiodeRepositoryImplTest {
 
         dataSource.transaction { connection ->
             StønadsperiodeRepositoryImpl(connection).lagre(
-                behandlingId, listOf(vurdering(behandlingId))
+                behandlingId, setOf(vurdering(behandlingId))
             )
         }
         dataSource.transaction { connection ->
@@ -178,7 +178,7 @@ class StønadsperiodeRepositoryImplTest {
 
         dataSource.transaction { connection ->
             StønadsperiodeRepositoryImpl(connection).lagre(
-                forrigeBehandlingId, listOf(vurdering(forrigeBehandlingId))
+                forrigeBehandlingId, setOf(vurdering(forrigeBehandlingId))
             )
         }
         dataSource.transaction { connection ->
@@ -210,7 +210,7 @@ class StønadsperiodeRepositoryImplTest {
             )
 
             dataSource.transaction { connection ->
-                StønadsperiodeRepositoryImpl(connection).lagre(behandlingId, listOf(vurdering))
+                StønadsperiodeRepositoryImpl(connection).lagre(behandlingId, setOf(vurdering))
             }
 
             val lagret = dataSource.transaction(readOnly = true) { connection ->

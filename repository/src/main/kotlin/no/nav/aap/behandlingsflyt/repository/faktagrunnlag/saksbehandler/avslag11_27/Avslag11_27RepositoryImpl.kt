@@ -22,7 +22,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, vurderinger: List<Avslag11_27Vurdering>) {
+    override fun lagre(behandlingId: BehandlingId, vurderinger: Set<Avslag11_27Vurdering>) {
         if (hentHvisEksisterer(behandlingId) != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
@@ -45,7 +45,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): Avslag11_27Grunnlag? {
-        val vurderinger = connection.queryList(
+        val vurderinger = connection.querySet(
             """
             SELECT
                 v.referanse                       AS v_referanse,
@@ -178,7 +178,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         }
     }
 
-    private fun lagreAvslag11_27Vurderinger(vurderinger: List<Avslag11_27Vurdering>): Long {
+    private fun lagreAvslag11_27Vurderinger(vurderinger: Set<Avslag11_27Vurdering>): Long {
 
         val vuderingerId = connection.executeReturnKey(
             "INSERT INTO avslag_11_27_vurderinger (opprettet_tid) VALUES (?)"
