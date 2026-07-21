@@ -88,26 +88,44 @@ class BehandlingService(
 
     @WithSpan
     fun utledFaktiskBehandlingstype(behandling: Behandling): TypeBehandling {
-        return when (behandling.typeBehandling()) {
-            TypeBehandling.Revurdering -> {
-                val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
-                    "Revurdering skal alltid ha forrigeBehandling"
-                }
-
-                val erAktuellVurderingtype = prioritertType(
-                    vurderingTyper = behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet(),
-                    typeBehandling = behandling.typeBehandling()
-                ) in listOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
-
-                if (!underveisService.harRett(forrigeBehandlingId) && erAktuellVurderingtype) {
-                    TypeBehandling.Førstegangsbehandling
-                } else {
-                    TypeBehandling.Revurdering
-                }
-            }
-
-            else -> behandling.typeBehandling()
+        val harRett = when (behandling.typeBehandling()) {
+            TypeBehandling.Revurdering -> underveisService.harRett(
+                requireNotNull(behandling.forrigeBehandlingId) { "Revurdering skal alltid ha forrigeBehandling" }
+            )
+            else -> return behandling.typeBehandling()
         }
+        return utledTypeForRevurdering(behandling, harRett)
+    }
+
+    fun utledFaktiskBehandlingstyper(behandlinger: List<Behandling>): Map<BehandlingId, TypeBehandling> {
+        val forrigeIds = behandlinger
+            .filter { it.typeBehandling() == TypeBehandling.Revurdering }
+            .mapNotNull { it.forrigeBehandlingId }
+
+        val harRettMap = underveisService.harRettForBehandlinger(forrigeIds)
+
+        return behandlinger.associate { behandling ->
+            val type = when (behandling.typeBehandling()) {
+                TypeBehandling.Revurdering -> {
+                    val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
+                        "Revurdering skal alltid ha forrigeBehandling"
+                    }
+                    utledTypeForRevurdering(behandling, harRettMap[forrigeBehandlingId] ?: false)
+                }
+                else -> behandling.typeBehandling()
+            }
+            behandling.id to type
+        }
+    }
+
+    private fun utledTypeForRevurdering(behandling: Behandling, harRett: Boolean): TypeBehandling {
+        val erAktuellVurderingtype = prioritertType(
+            vurderingTyper = behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet(),
+            typeBehandling = behandling.typeBehandling()
+        ) in listOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
+
+        return if (!harRett && erAktuellVurderingtype) TypeBehandling.Førstegangsbehandling
+        else TypeBehandling.Revurdering
     }
 
     sealed interface OpprettetBehandling {

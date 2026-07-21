@@ -30,6 +30,10 @@ object InMemoryUnderveisRepository : UnderveisRepository {
         return grunnlag[behandlingId]
     }
 
+    override fun hentBulk(behandlingIds: List<BehandlingId>): Map<BehandlingId, UnderveisGrunnlag> {
+        return grunnlag.filterKeys { it in behandlingIds }
+    }
+
     override fun lagre(behandlingId: BehandlingId, underveisperioder: List<Underveisperiode>, input: Faktagrunnlag) {
         grunnlag[behandlingId] = UnderveisGrunnlag(
             id = id.getAndIncrement(),
