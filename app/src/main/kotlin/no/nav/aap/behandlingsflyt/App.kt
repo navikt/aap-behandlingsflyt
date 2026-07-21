@@ -105,6 +105,8 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -457,6 +459,8 @@ fun Application.startMotor(
     gatewayProvider: GatewayProvider,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
     val motor = Motor(
         dataSource = dataSource,
         antallKammer = AppConfig.ANTALL_WORKERS_FOR_MOTOR,
@@ -465,6 +469,7 @@ fun Application.startMotor(
         prometheus = prometheus,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider,
+        enableV2 = { unleashGateway.isEnabled(BehandlingsflytFeature.MotorV2) },
     )
 
     dataSource.transaction { dbConnection ->
