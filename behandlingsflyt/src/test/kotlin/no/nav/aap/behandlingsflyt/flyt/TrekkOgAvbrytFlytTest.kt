@@ -100,9 +100,9 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
     @Test
     fun `trukket søknad blokkerer nye ytelsesbehandlinger`() {
         // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad()
+        val (sak, behandling) = sendInnFørsteSøknad()
 
-        løsSykdom(behandling, sak.rettighetsperiode.fom)
+        behandling.løsSykdom(sak.rettighetsperiode.fom)
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov)
@@ -115,7 +115,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        behandling = sak.sendInnSøknad(
+        val revurdering = sak.sendInnSøknad(
             SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
@@ -124,8 +124,8 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             ),
         )
 
-        assertThat(behandling.forrigeBehandlingId).isNull()
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(revurdering.forrigeBehandlingId).isNull()
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
@@ -151,26 +151,27 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
         revurdering1.leggTilVurderingsbehov(
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
         ).medKontekst {
-            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }.contains(Definisjon.AVBRYT_REVURDERING)
+            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                .contains(Definisjon.AVBRYT_REVURDERING)
         }
-
-        løsAvklaringsBehov(
-            revurdering1,
-            AvbrytRevurderingLøsning(
-                vurdering = AvbrytRevurderingVurderingDto(
-                    årsak = AvbrytRevurderingÅrsakDto.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
-                    begrunnelse = "Fordi den ikke er aktuell lenger"
-                ),
+            .løsAvklaringsBehov(
+                AvbrytRevurderingLøsning(
+                    vurdering = AvbrytRevurderingVurderingDto(
+                        årsak = AvbrytRevurderingÅrsakDto.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
+                        begrunnelse = "Fordi den ikke er aktuell lenger"
+                    ),
+                )
             )
-        )
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                assertThat(åpneAvklaringsbehov).isEmpty()
 
-        val avklaringsbehovene: List<Avklaringsbehov> = hentAlleAvklaringsbehov(revurdering1)
-        val revurdering1FraRepo = hentBehandling(revurdering1.referanse)
-        assertThat(revurdering1FraRepo.status()).isEqualTo(Status.AVSLUTTET)
-        assertThat(avklaringsbehovene.none { it.erÅpent() }).isTrue()
-        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVBRYT_REVURDERING, AvklaringsbehovStatus.AVSLUTTET)
-        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
-        assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_BISTANDSBEHOV, AvklaringsbehovStatus.AVBRUTT)
+                val avklaringsbehovene: List<Avklaringsbehov> = hentAlleAvklaringsbehov(revurdering1)
+                assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVBRYT_REVURDERING, AvklaringsbehovStatus.AVSLUTTET)
+                assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
+                assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_BISTANDSBEHOV, AvklaringsbehovStatus.AVBRUTT)
+
+            }
 
         // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
         val revurdering2 = sak.opprettManuellRevurdering(
