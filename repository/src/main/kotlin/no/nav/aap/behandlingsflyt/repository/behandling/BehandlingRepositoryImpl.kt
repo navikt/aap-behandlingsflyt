@@ -414,12 +414,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             from behandling b
             left join avbrutt_behandling on avbrutt_behandling.behandling_id = b.id
             left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv
-            left join (
-                select behandling_id,
-                       json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+            left join lateral (
+                select json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
                 from vurderingsbehov
-                group by behandling_id
-            ) vb_agg on vb_agg.behandling_id = b.id
+                where behandling_id = b.id
+            ) vb_agg on true
             where b.sak_id = ?
             and b.type in (${TypeBehandling.ytelseBehandlingstyper().joinToString { "'${it.identifikator()}'"} })
             and avbrutt_behandling.behandling_id is null
