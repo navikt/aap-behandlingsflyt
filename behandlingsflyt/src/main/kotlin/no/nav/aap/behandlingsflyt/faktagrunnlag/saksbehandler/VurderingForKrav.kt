@@ -10,9 +10,9 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 
 interface VurderingForKravGrunnlag<T : VurderingForKrav> {
-    val vurderinger: List<T>
+    val vurderinger: Set<T>
 
-    fun gjeldendeVurderinger(): List<T> {
+    fun gjeldendeVurderinger(): Set<T> {
         return this.vurderinger.gjeldendeVurderinger()
     }
 
@@ -28,14 +28,14 @@ interface VurderingForKrav {
     val opprettet: Instant
 }
 
-fun <T : VurderingForKrav> List<T>.gjeldendeVurderinger(): List<T> {
+fun <T : VurderingForKrav> Set<T>.gjeldendeVurderinger(): Set<T> {
     return this
         .groupBy { it.referanse }
         .values
-        .map { vurderingerForKrav -> vurderingerForKrav.maxBy { it.opprettet } }
+        .map { vurderingerForKrav -> vurderingerForKrav.maxBy { it.opprettet } }.toSet()
 }
 
-fun <T : VurderingForKrav> List<T>.tilTidslinje(kravGrunnlag: KravGrunnlag?): Tidslinje<T> {
+fun <T : VurderingForKrav> Set<T>.tilTidslinje(kravGrunnlag: KravGrunnlag?): Tidslinje<T> {
     val nyesteVurderingPerKrav = gjeldendeVurderinger().associateBy { it.referanse }
 
     return kravGrunnlag?.kravtidslinje()

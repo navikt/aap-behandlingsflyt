@@ -21,7 +21,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, vurderinger: List<StønadsperiodeVurdering>) {
+    override fun lagre(behandlingId: BehandlingId, vurderinger: Set<StønadsperiodeVurdering>) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = StønadsperiodeGrunnlag(vurderinger)
 
@@ -62,7 +62,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
         val vurderingerId = row.getLongOrNull("stonadsperiode_vurderinger_id")
 
         return StønadsperiodeGrunnlag(
-            connection.queryList(
+            connection.querySet(
                 """
             SELECT
                 v.referanse                         AS v_referanse,
@@ -178,7 +178,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
         }
     }
 
-    private fun lagreStønadsperiodeVurderinger(vurderinger: List<StønadsperiodeVurdering>): Long {
+    private fun lagreStønadsperiodeVurderinger(vurderinger: Set<StønadsperiodeVurdering>): Long {
         val vurderingerId = connection.executeReturnKey(
             "INSERT INTO stonadsperiode_vurderinger (opprettet_tid) VALUES (?)"
         ) {
