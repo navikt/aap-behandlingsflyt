@@ -49,9 +49,12 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -509,6 +512,49 @@ internal class BehandlingRepositoryImplTest {
             oppdatertBehandling2.vurderingsbehov().first { it.type == Vurderingsbehov.REVURDER_MEDLEMSKAP }
 
         assertThat(vurderingsbehov.oppdatertTid).isAfter(vurderingsbehovFørOppdatering.oppdatertTid)
+    }
+
+    @Test
+    fun `hentSakId returnerer sakId for behandling`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = BehandlingRepositoryImpl(connection)
+
+            val sakId = repo.hentSakId(behandling.referanse)
+
+            assertThat(sakId).usingRecursiveComparison().isEqualTo(sak.id)
+        }
+    }
+
+    @Test
+    fun `leggTilNyttAktivtSteg erstatter forrige aktive steg`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = BehandlingRepositoryImpl(connection)
+
+            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.START, aktiv = true))
+            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = true))
+
+            assertThat(repo.hent(behandling.id).aktivtStegTilstand().steg()).isEqualTo(StegType.AVKLAR_SYKDOM)
+        }
+    }
+
+    @Test
+    fun `hentStegHistorikk returnerer alle steg i kronologisk rekkefølge`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = BehandlingRepositoryImpl(connection)
+
+            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.START, aktiv = true))
+            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = true))
+
+            val historikk = repo.hentStegHistorikk(behandling.id)
+
+            assertThat(historikk.map { it.steg() }).containsExactly(StegType.START_BEHANDLING, StegType.AVKLAR_SYKDOM)
+        }
     }
 }
 
