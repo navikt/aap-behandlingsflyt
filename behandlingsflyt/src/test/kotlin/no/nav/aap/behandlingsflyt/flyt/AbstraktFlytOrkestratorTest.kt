@@ -126,7 +126,6 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -806,26 +805,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     /**
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
-     *
-     * Bruk i stedet: [BehandlingService.finnSisteYtelsesbehandlingFor]
      */
     protected fun hentSisteOpprettedeBehandlingForSak(
         sakId: SakId
     ): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
-            BehandlingService(
-                postgresRepositoryRegistry.provider(connection),
-                minimalGatewayProvider { }).alleYtelsesbehandlinger(
-                sakId
-            ).maxBy { it.opprettetTidspunkt }
+            BehandlingRepositoryImpl(connection).hentAlleFor(sakId).maxBy { it.opprettetTidspunkt }
         }
     }
 
     /**
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
-     *
-     * Bruk i stedet: [BehandlingService.finnSisteYtelsesbehandlingFor]
      */
     protected fun hentSisteOpprettedeBehandlingForSak(
         saksnummer: Saksnummer
