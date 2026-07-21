@@ -90,7 +90,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             opprettetTidspunkt = LocalDateTime.now(),
         )
 
-        every { behandlingServiceMock.finnSisteGjeldendeEllerÅpneYtelsesbehandling(any()) } returns Behandling(
+        every { behandlingServiceMock.finnÅpenYtelsesbehandling(any()) } returns Behandling(
             id = BehandlingId(457L),
             forrigeBehandlingId = BehandlingId(456L),
             referanse = BehandlingReferanse(UUID.randomUUID()),
