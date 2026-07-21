@@ -5,7 +5,7 @@ import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
@@ -91,8 +91,8 @@ class KravStegTest {
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
         assertThat(vurderinger).hasSize(1)
         val krav = vurderinger.single()
-        assertThat(krav).isInstanceOf(NyttKrav::class.java)
-        assertThat((krav as NyttKrav).muligRettFra).isEqualTo(søknadsdato)
+        assertThat(krav).isInstanceOf(RelevantKrav::class.java)
+        assertThat((krav as RelevantKrav).muligRettFra).isEqualTo(søknadsdato)
         assertThat(krav.overstyrMuligRettFra).isNull()
     }
 
@@ -110,9 +110,9 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        assertThat(vurderinger.filterIsInstance<NyttKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(2)
-        assertThat(vurderinger.filterIsInstance<NyttKrav>().single().muligRettFra).isEqualTo(eldsteDato)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().muligRettFra).isEqualTo(eldsteDato)
     }
 
     @Test
@@ -141,14 +141,14 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = forrigeBehandling })
         val vurderingerFørstegangsbehandling = InMemoryKravRepository.hent(forrigeBehandling.id).vurderinger
         assertThat(vurderingerFørstegangsbehandling).hasSize(1)
-        assertThat(vurderingerFørstegangsbehandling.single()).isInstanceOf(NyttKrav::class.java)
+        assertThat(vurderingerFørstegangsbehandling.single()).isInstanceOf(RelevantKrav::class.java)
         
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
         assertThat(vurderinger).hasSize(2)
-        assertThat(vurderinger.filterIsInstance<NyttKrav>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<NyttKrav>().first().vurdertIBehandling).isEqualTo(forrigeBehandling.id)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>().first().vurdertIBehandling).isEqualTo(forrigeBehandling.id)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>().first().vurdertIBehandling).isEqualTo(behandling.id)
     }
@@ -172,9 +172,9 @@ class KravStegTest {
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
         assertThat(vurderinger.filter{it.vurdertIBehandling == forrigeBehandling.id}).hasSize(1)
         assertThat(vurderinger.filter{it.vurdertIBehandling == behandling.id}).hasSize(2)
-        assertThat(vurderinger.filterIsInstance<NyttKrav>()).hasSize(2)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(2)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<NyttKrav>().map { it.referanse }).contains(gammeltNyttKrav.referanse)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>().map { it.referanse }).contains(gammeltNyttKrav.referanse)
     }
 
     @Test
@@ -200,8 +200,8 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        assertThat(vurderinger.filterIsInstance<NyttKrav>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<NyttKrav>().single().referanse).isEqualTo(overstyrtKrav.referanse)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().referanse).isEqualTo(overstyrtKrav.referanse)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
     }
 
@@ -229,9 +229,9 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        val nyttKravIInneværende = vurderinger.filterIsInstance<NyttKrav>()
+        val relevantKravIInneværende = vurderinger.filterIsInstance<RelevantKrav>()
             .filter { it.vurdertIBehandling == behandling.id }
-        assertThat(nyttKravIInneværende).hasSize(1)
+        assertThat(relevantKravIInneværende).hasSize(1)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).isEmpty()
     }
 
@@ -249,7 +249,7 @@ class KravStegTest {
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
         assertThat(vurderinger).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<NyttKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
     }
 
     private fun opprettFørstegangsbehandling(sakId: SakId) =
@@ -293,7 +293,7 @@ class KravStegTest {
         journalpostId: JournalpostId,
         mottattDato: LocalDate,
         overstyrMuligRettFra: OverstyrMuligRettFra? = null,
-    ) = NyttKrav(
+    ) = RelevantKrav(
         referanse = Kravreferanse.ny(),
         journalpostId = journalpostId,
         vurdertAv = SYSTEMBRUKER,

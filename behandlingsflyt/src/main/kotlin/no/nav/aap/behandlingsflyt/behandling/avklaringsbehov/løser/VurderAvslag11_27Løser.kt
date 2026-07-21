@@ -64,7 +64,7 @@ class VurderAvslag11_27Løser(
         nyeVurderinger: List<Avslag11_27VurderingDto>,
         vurdertAv: String,
         behandlingId: BehandlingId
-    ): List<Avslag11_27Vurdering> = nyeVurderinger.map { vurdering ->
+    ): Set<Avslag11_27Vurdering> = nyeVurderinger.map { vurdering ->
         Avslag11_27Vurdering(
             referanse = Kravreferanse(UUID.fromString(vurdering.referanse)),
             skalAvslås1127 = vurdering.skalAvslås1127,
@@ -74,7 +74,7 @@ class VurderAvslag11_27Løser(
             begrunnelse = vurdering.begrunnelse,
             vurdertIBehandling = behandlingId,
             vurdertAv = Bruker(vurdertAv),
-            vurdertTidspunkt = Instant.now(),
+            opprettet = Instant.now(),
         )
-    }
+    }.toSet()
 }

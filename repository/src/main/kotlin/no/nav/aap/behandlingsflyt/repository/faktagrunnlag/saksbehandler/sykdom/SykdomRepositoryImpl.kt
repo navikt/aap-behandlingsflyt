@@ -184,7 +184,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.erÅrsakssammenheng)
                 setInt(3, vurdering.andelAvNedsettelsen?.prosentverdi())
-                setString(4, vurdering.vurdertAv)
+                setBruker(4, vurdering.vurdertAv)
             }
         }
 
@@ -428,7 +428,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     erÅrsakssammenheng = row.getBoolean("ARSAKSSAMMENHENG"),
                     andelAvNedsettelsen = row.getIntOrNull("ANDEL_AV_NEDSETTELSE")?.let(::Prosent),
                     relevanteSaker = hentRelevanteSaker(id),
-                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertAv = row.getBruker("VURDERT_AV"),
                     // sjekk dette tidsssonemessig
                     vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
                 )

@@ -85,7 +85,7 @@ data class SykdomsvurderingResponse(
             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_SYKDOM,
                 behandlingId = sykdomsvurdering.vurdertIBehandling,
-                vurdertAv = vurdertAvService.medNavnOgEnhet(sykdomsvurdering.vurdertAv.ident, sykdomsvurdering.opprettet),
+                vurdertAv = vurdertAvService.medNavnOgEnhet(sykdomsvurdering.vurdertAv, sykdomsvurdering.opprettet),
             ),
         )
     }

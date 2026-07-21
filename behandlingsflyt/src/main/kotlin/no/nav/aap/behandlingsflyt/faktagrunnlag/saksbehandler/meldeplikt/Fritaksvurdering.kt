@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -12,7 +13,7 @@ data class Fritaksvurdering(
     override val fom: LocalDate,
     override val tom: LocalDate? = null,
     val begrunnelse: String,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val opprettetTid: LocalDateTime,
     override val vurdertIBehandling: BehandlingId,
 ) : PeriodisertVurdering {
@@ -31,7 +32,7 @@ data class Fritaksvurdering(
     data class FritaksvurderingData(
         val harFritak: Boolean,
         val begrunnelse: String,
-        val vurdertAv: String,
+        val vurdertAv: Bruker,
         val opprettetTid: LocalDateTime,
         val vurdertIBehandling: BehandlingId,
     )

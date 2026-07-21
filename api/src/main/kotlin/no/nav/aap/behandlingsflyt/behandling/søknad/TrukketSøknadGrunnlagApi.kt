@@ -60,7 +60,7 @@ fun NormalOpenAPIRoute.trukketSøknadGrunnlagApi(
                             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                                 definisjon = Definisjon.VURDER_TREKK_AV_SØKNAD,
                                 behandlingId = behandlingId,
-                                vurdertAv = vurdertAvService.medNavnOgEnhet(it.vurdertAv.ident, it.vurdert),
+                                vurdertAv = vurdertAvService.medNavnOgEnhet(it.vurdertAv, it.vurdert),
                             ),
                         )
                     }

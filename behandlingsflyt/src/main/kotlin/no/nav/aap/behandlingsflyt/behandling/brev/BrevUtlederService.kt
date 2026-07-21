@@ -157,7 +157,7 @@ class BrevUtlederService(
             it.brukerHarFåttVedtakOmUføretrygd in setOf(
                 UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
                 UføreSøknadVedtakResultat.JA_INNVILGET_FULL
-            ) && it.vurdertAv == SYSTEMBRUKER.ident && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
+            ) && it.vurdertAv == SYSTEMBRUKER && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
         }
 
         when (behandling.typeBehandling()) {

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -43,7 +44,7 @@ internal class ArbeidsopptrappingRepositoryImplTest {
                 tom = LocalDate.of(2025, 1, 31),
                 reellMulighetTilOpptrapping = true,
                 rettPaaAAPIOpptrapping = true,
-                vurdertAv = "Saksbehandler",
+                vurdertAv = Bruker("Saksbehandler"),
                 opprettet = Instant.now(),
                 vurdertIBehandling = behandling.id
             )
@@ -74,7 +75,7 @@ internal class ArbeidsopptrappingRepositoryImplTest {
                         tom = null,
                         reellMulighetTilOpptrapping = true,
                         rettPaaAAPIOpptrapping = true,
-                        vurdertAv = "aa",
+                        vurdertAv = Bruker("aa"),
                         opprettet = Instant.now(),
                         vurdertIBehandling = behandling.id
                     )

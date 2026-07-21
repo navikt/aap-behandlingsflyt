@@ -2,12 +2,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 
 data class PåklagetBehandlingVurdering(
     val påklagetVedtakType: PåklagetVedtakType,
     val påklagetBehandling: BehandlingId?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val opprettet: Instant
 ) {
     init {
@@ -21,7 +22,7 @@ data class PåklagetBehandlingVurderingMedReferanse(
     val påklagetVedtakType: PåklagetVedtakType,
     val påklagetBehandling: BehandlingId?,
     val referanse: BehandlingReferanse?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val opprettet: Instant
 ) {
     init {

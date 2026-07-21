@@ -77,7 +77,7 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
         )
@@ -120,7 +120,7 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
         )
@@ -162,7 +162,7 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
         )
@@ -220,7 +220,7 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
         )
@@ -268,7 +268,7 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
         )
@@ -316,7 +316,7 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
         )
@@ -358,7 +358,7 @@ class SamordningStegTest {
                         )
                     )
                 ),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
         )
@@ -385,7 +385,7 @@ class SamordningStegTest {
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).løsAvklaringsbehov(
             Definisjon.AVKLAR_SAMORDNING_GRADERING,
             begrunnelse = "...",
-            endretAv = "meg"
+            endretAv = Bruker("meg")
         )
     }
 

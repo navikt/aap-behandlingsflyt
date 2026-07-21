@@ -24,28 +24,46 @@ enum class Vurderingsbehov {
     REVURDER_INNTEKTSBORTFALL, // 11-4 2. ledd - inntektsbortfall
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
     REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
-    REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,  // Samordning andre folketrygdytelser
-    REVURDER_SAMORDNING_UFØRE,                    // Samordning uføre
-    REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,   // Samordning andre statlige ytelser
-    REVURDER_SAMORDNING_ARBEIDSGIVER,             // Samordning arbeidsgiver
-    REVURDER_SAMORDNING_BARNEPENSJON,             
-    REVURDER_SAMORDNING_TJENESTEPENSJON,          // Samordning tjenestepensjon
+    REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+    REVURDER_SAMORDNING_UFØRE,
+    REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
+    REVURDER_SAMORDNING_ARBEIDSGIVER,
+    REVURDER_SAMORDNING_BARNEPENSJON,
+    REVURDER_SAMORDNING_TJENESTEPENSJON,
     G_REGULERING,
-    UTVID_VEDTAKSLENGDE, // Skal kjøre igjennom behandlinger uten å trigge avklaringsbehov og vilkårsvurderinger
+
+    /**
+     * Skal kjøre gjennom behandlinger uten å trigge avklaringsbehov og vilkårsvurderinger
+     */
+    UTVID_VEDTAKSLENGDE,
     VEDTAKSLENGDE_MANUELT,
-    MIGRER_RETTIGHETSPERIODE, // Skal kjøre igjennom behandlinger uten å trigge avklaringsbehov
-    LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
-    FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
+
+    /**
+     * Skal kjøre gjennom behandlinger uten å trigge avklaringsbehov
+     */
+    MIGRER_RETTIGHETSPERIODE,
+    LOVVALG_OG_MEDLEMSKAP,
+    FORUTGAENDE_MEDLEMSKAP,
     OPPHOLDSKRAV,
     SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, // Sykdom, arbeidsevne og behov for bistand
     REVURDER_SYKEPENGEERSTATNING, // Sykdomstegene, men de som ligger på på NAY og ikke kontor
-    BARNETILLEGG,               // Barnetillegg
-    INSTITUSJONSOPPHOLD,        // Institusjonsopphold
-    SAMORDNING_OG_AVREGNING,    // Samordning og avregning
-    REFUSJONSKRAV,              // Refusjonskrav
+    BARNETILLEGG,
+    INSTITUSJONSOPPHOLD,
+    SAMORDNING_OG_AVREGNING,
+    REFUSJONSKRAV,
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     FASTSATT_PERIODE_PASSERT,
+
+    /**
+     * Blir trigget av [no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingFritakMeldepliktJobbUtfører].
+     */
     FRITAK_MELDEPLIKT,
+
+    /**
+     * For trigging av saksbehandler i frontend.
+     */
+    VURDER_FRITAK_MELDEPLIKT,
+    FASTSETT_ARBEIDSEVNE,
     VURDER_RETTIGHETSPERIODE,
     MOTTATT_KABAL_HENDELSE,
     OPPFØLGINGSOPPGAVE,
@@ -62,7 +80,8 @@ enum class Vurderingsbehov {
     REVURDER_SYKESTIPEND,
     ETABLERING_EGEN_VIRKSOMHET,
     AKTIVITETSPLIKTBEHANDLING_AVBRUTT,
-    VURDER_AVSLAG_11_27
+    VURDER_AVSLAG_11_27,
+    VURDER_ARBEIDSOPPTRAPPING
     ;
 
     companion object {
@@ -125,6 +144,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.SØKNAD_TRUKKET -> Vurderingsbehov.SØKNAD_TRUKKET
         EksponertÅrsak.REVURDERING_AVBRUTT -> Vurderingsbehov.REVURDERING_AVBRUTT
         EksponertÅrsak.FRITAK_MELDEPLIKT -> Vurderingsbehov.FRITAK_MELDEPLIKT
+        EksponertÅrsak.VURDER_FRITAK_MELDEPLIKT -> Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT
         EksponertÅrsak.KLAGE_TRUKKET -> Vurderingsbehov.KLAGE_TRUKKET
         EksponertÅrsak.REVURDER_MANUELL_INNTEKT -> Vurderingsbehov.REVURDER_MANUELL_INNTEKT
         EksponertÅrsak.MOTTATT_KABAL_HENDELSE -> Vurderingsbehov.MOTTATT_KABAL_HENDELSE
@@ -150,4 +170,6 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.AKTIVITETSPLIKTBEHANDLING_AVBRUTT -> Vurderingsbehov.AKTIVITETSPLIKTBEHANDLING_AVBRUTT
         EksponertÅrsak.VURDER_KRAV -> Vurderingsbehov.VURDER_KRAV
         EksponertÅrsak.VURDER_AVSLAG_11_27 -> Vurderingsbehov.VURDER_AVSLAG_11_27
+        EksponertÅrsak.FASTSETT_ARBEIDSEVNE -> Vurderingsbehov.FASTSETT_ARBEIDSEVNE
+        EksponertÅrsak.VURDER_ARBEIDSOPPTRAPPING -> Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING
     }

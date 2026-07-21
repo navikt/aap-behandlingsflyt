@@ -95,7 +95,7 @@ private fun utledHarTilgangTilÅSaksbehandle(
     bruker: Bruker,
     unleashGateway: UnleashGateway
 ): Boolean {
-    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)) {
         kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
         kanSaksbehandle
@@ -107,7 +107,7 @@ private fun brukerHarGjortVilkårsvurderingerPåBehandling(
     bruker: Bruker
 ): Boolean {
     return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
-        .any { it.brukere().contains(bruker.ident) }
+        .any { bruker in it.brukere() }
 }
 
 private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {

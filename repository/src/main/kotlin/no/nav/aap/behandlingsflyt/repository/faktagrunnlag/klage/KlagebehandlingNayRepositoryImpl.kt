@@ -76,7 +76,7 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
                 setEnumName(3, vurdering.innstilling)
                 setArray(4, vurdering.vilkårSomOmgjøres.map { it.hjemmel })
                 setArray(5, vurdering.vilkårSomOpprettholdes.map { it.hjemmel })
-                setString(6, vurdering.vurdertAv)
+                setBruker(6, vurdering.vurdertAv)
                 setInstant(7, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
@@ -140,7 +140,7 @@ class KlagebehandlingNayRepositoryImpl(private val connection: DBConnection) : K
                 .mapNotNull { Hjemmel.fraHjemmel(it) },
             vilkårSomOpprettholdes = row.getArray("vilkaar_som_skal_opprettholdes", String::class)
                 .mapNotNull { Hjemmel.fraHjemmel(it) },
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("opprettet_tid")
         )
     }

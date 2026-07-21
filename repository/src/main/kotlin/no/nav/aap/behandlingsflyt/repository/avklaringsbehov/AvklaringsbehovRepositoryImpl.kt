@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -57,7 +58,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         frist: LocalDate?,
         begrunnelse: String,
         grunn: ÅrsakTilSettPåVent?,
-        endretAv: String,
+        endretAv: Bruker,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?
     ) {
@@ -172,7 +173,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setEnumName(2, endring.status)
                 setString(3, endring.begrunnelse)
                 setLocalDate(4, endring.frist)
-                setString(5, opprettetAv)
+                setBruker(5, opprettetAv)
                 setLocalDateTime(6, LocalDateTime.now())
                 setEnumName(7, endring.grunn)
                 setPeriodeArray(8, endring.perioderSomIkkeErTilstrekkeligVurdert?.toList())
@@ -187,7 +188,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setLong(1, key)
                 setEnumName(2, it.årsak)
                 setString(3, it.årsakFritekst)
-                setString(4, opprettetAv)
+                setBruker(4, opprettetAv)
             }
         }
     }
@@ -362,7 +363,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             status = row.getEnum("status"),
             tidsstempel = row.getLocalDateTime("opprettet_tid"),
             begrunnelse = row.getString("begrunnelse"),
-            endretAv = row.getString("opprettet_av"),
+            endretAv = row.getBruker("opprettet_av"),
             frist = row.getLocalDateOrNull("frist"),
             grunn = row.getEnumOrNull("venteaarsak"),
             perioderSomIkkeErTilstrekkeligVurdert = row.getPeriodeArrayOrNull("perioder_ugyldig_vurdering")?.toSet(),
@@ -392,7 +393,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         val status: Status,
         val tidsstempel: LocalDateTime,
         val begrunnelse: String,
-        val endretAv: String,
+        val endretAv: Bruker,
         val frist: LocalDate?,
         val grunn: ÅrsakTilSettPåVent?,
         val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,

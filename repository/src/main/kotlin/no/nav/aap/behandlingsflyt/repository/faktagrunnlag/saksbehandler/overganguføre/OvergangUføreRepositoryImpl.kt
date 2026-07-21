@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.LocalDateTime
 
 class OvergangUføreRepositoryImpl(private val connection: DBConnection) : OvergangUføreRepository {
 
@@ -61,13 +62,13 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
             vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
             fom = row.getLocalDate("VIRKNINGSDATO"), // Virkningsdato er 'vurderingen gjelder fra'
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             tom = row.getLocalDateOrNull("TOM")
         )
     }
 
-    override fun hentHistoriskeOvergangUforeVurderinger(
+    override fun hentHistoriskeOvergangUføreVurderinger(
         sakId: SakId,
         behandlingId: BehandlingId
     ): List<OvergangUføreVurdering> {
@@ -90,6 +91,28 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setLong(2, behandlingId.id)
             }
             setRowMapper(::overgangUforevurderingRowMapper)
+        }
+    }
+
+    override fun hentOvergangUføreVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<OvergangUføreVurdering> {
+        return connection.queryFirst(
+            """
+            SELECT VURDERINGER_ID
+            FROM OVERGANG_UFORE_GRUNNLAG
+            WHERE behandling_id = ? and opprettet_tid <= ?
+            ORDER BY opprettet_tid DESC LIMIT 1
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row ->
+                mapOvergangUforevurderinger(row.getLongOrNull("VURDERINGER_ID"))
+            }
         }
     }
 
@@ -168,7 +191,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setEnumName(3, vurdering.brukerHarFåttVedtakOmUføretrygd)
                 setBoolean(4, vurdering.brukerRettPåAAP)
                 setLocalDate(5, vurdering.fom)
-                setString(6, vurdering.vurdertAv)
+                setBruker(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
                 setLong(8, vurdering.vurdertIBehandling?.toLong())
                 setLocalDate(9, vurdering.tom)

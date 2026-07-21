@@ -112,7 +112,7 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
             setParams {
                 setBoolean(1, vurdering.skalBehandlesAvNay)
                 setBoolean(2, vurdering.skalBehandlesAvKontor)
-                setString(3, vurdering.vurdertAv)
+                setBruker(3, vurdering.vurdertAv)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
@@ -130,7 +130,7 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
         return BehandlendeEnhetVurdering(
             skalBehandlesAvNay = row.getBoolean("skal_behandles_av_nay"),
             skalBehandlesAvKontor = row.getBoolean("skal_behandles_av_kontor"),
-            vurdertAv = row.getString("vurdert_av"),
+            vurdertAv = row.getBruker("vurdert_av"),
             opprettet = row.getInstant("opprettet_tid")
         )
     }

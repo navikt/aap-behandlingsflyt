@@ -27,6 +27,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
@@ -527,7 +528,7 @@ class TilkjentYtelseGrunnlagTest {
                     SamordningUføreVurdering(
                         begrunnelse = "",
                         vurderingPerioder = listOf(),
-                        vurdertAv = "Z00000",
+                        vurdertAv = Bruker("Z00000"),
                     )
                 ),
                 barnepensjonGrunnlag = null,
@@ -535,7 +536,7 @@ class TilkjentYtelseGrunnlagTest {
                     vurdering = SamordningArbeidsgiverVurdering(
                         begrunnelse = "",
                         perioder = listOf(),
-                        vurdertAv = "Z00000",
+                        vurdertAv = Bruker("Z00000"),
                     )
                 ),
             ),

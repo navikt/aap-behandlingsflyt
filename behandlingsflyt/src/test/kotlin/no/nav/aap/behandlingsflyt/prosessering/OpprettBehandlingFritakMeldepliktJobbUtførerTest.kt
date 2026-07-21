@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.JobbInput
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -164,7 +165,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
                     harFritak = fritak,
                     fom = LocalDate.now(),
                     begrunnelse = "bla bla",
-                    vurdertAv = "saksbehandler1",
+                    vurdertAv = Bruker("saksbehandler1"),
                     opprettetTid = LocalDateTime.now(),
                     vurdertIBehandling = fakeBehandling.id,
                 )

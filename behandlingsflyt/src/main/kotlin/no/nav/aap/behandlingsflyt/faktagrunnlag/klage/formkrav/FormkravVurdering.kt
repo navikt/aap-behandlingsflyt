@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav
 
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 
 data class FormkravVurdering(
@@ -9,7 +10,7 @@ data class FormkravVurdering(
     val likevelBehandles: Boolean?,
     val erKonkret: Boolean,
     val erSignert: Boolean,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val opprettet: Instant
 ) {
     fun erOppfylt() = erBrukerPart

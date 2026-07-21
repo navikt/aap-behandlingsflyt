@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -74,6 +75,6 @@ class ArbeidsevneGrunnlagTest {
     }
 
     private fun arbeidsevneVurdering(arbeidsevne: Prosent, fraDato: LocalDate, tilDato: LocalDate? = null, vurdertIBehandling: BehandlingId = BehandlingId(1)) = ArbeidsevneVurdering(
-        UUID.randomUUID().toString(), arbeidsevne, fraDato, tilDato, vurdertIBehandling, LocalDateTime.now(), "vurdertAv"
+        UUID.randomUUID().toString(), arbeidsevne, fraDato, tilDato, vurdertIBehandling, LocalDateTime.now(), Bruker("vurdertAv")
     )
 }

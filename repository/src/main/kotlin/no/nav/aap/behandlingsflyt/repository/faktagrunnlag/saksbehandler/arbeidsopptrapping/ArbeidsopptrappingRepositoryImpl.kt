@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : ArbeidsopptrappingRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -49,7 +50,7 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                     fom = row.getLocalDate("GJELDER_FRA"),
                     reellMulighetTilOpptrapping = row.getBoolean("MULIGHET_TIL_OPPTRAPPING"),
                     rettPaaAAPIOpptrapping = row.getBoolean("RETT_PAA_AAP"),
-                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertAv = row.getBruker("VURDERT_AV"),
                     opprettet = row.getInstant("OPPRETTET_TID"),
                     vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
                     tom = row.getLocalDateOrNull("GJELDER_TIL")
@@ -81,7 +82,7 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                 setBoolean(3, it.rettPaaAAPIOpptrapping)
                 setLong(4, vurderingerId)
                 setLong(5, it.vurdertIBehandling.id)
-                setString(6, it.vurdertAv)
+                setBruker(6, it.vurdertAv)
                 setLocalDate(7, it.fom)
                 setLocalDate(8, it.tom)
             }
@@ -97,6 +98,27 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                 setLong(2, vurderingerId)
             }
         }
+    }
+
+    override fun hentArbeidsopptrappingVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<ArbeidsopptrappingVurdering>? {
+        return connection.queryFirstOrNull(
+            """
+                SELECT vurderinger_id
+                FROM ARBEIDSOPPTRAPPING_GRUNNLAG
+                WHERE BEHANDLING_ID = ? AND opprettet_tid <= ?
+            ORDER BY opprettet_tid DESC
+            LIMIT 1
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row -> mapVurdering(row.getLong("vurderinger_id")) }
+        }?.ifEmpty { null }
     }
 
     override fun kopier(

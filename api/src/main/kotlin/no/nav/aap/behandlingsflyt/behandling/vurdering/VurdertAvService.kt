@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
 import java.time.LocalDate
@@ -60,19 +61,19 @@ class VurdertAvService(
         besluttetAv = besluttetAv(definisjon, behandlingId),
     )
 
-    fun medNavnOgEnhet(ident: String, dato: LocalDate): VurdertAvResponse {
+    fun medNavnOgEnhet(ident: Bruker, dato: LocalDate): VurdertAvResponse {
         val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(ident)
         return VurdertAvResponse(
-            ident = ident,
+            ident = ident.ident,
             dato = dato,
             ansattnavn = ansattNavnOgEnhet?.navn,
             enhetsnavn = ansattNavnOgEnhet?.enhet,
         )
     }
 
-    fun medNavnOgEnhet(ident: String, tidspunkt: LocalDateTime) =
+    fun medNavnOgEnhet(ident: Bruker, tidspunkt: LocalDateTime) =
         medNavnOgEnhet(ident, tidspunkt.toLocalDate())
 
-    fun medNavnOgEnhet(ident: String, instant: Instant) =
+    fun medNavnOgEnhet(ident: Bruker, instant: Instant) =
         medNavnOgEnhet(ident, instant.atZone(ZoneId.of("Europe/Oslo")).toLocalDate())
 }

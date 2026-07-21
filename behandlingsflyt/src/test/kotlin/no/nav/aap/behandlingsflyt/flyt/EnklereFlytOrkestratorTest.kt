@@ -310,7 +310,7 @@ class EnklereFlytOrkestratorTest {
             kontekst = behandling.flytKontekst(),
             bruker = Bruker("Z123456")
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "asdf", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "asdf", Bruker("TESTEN"))
 
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
@@ -339,7 +339,7 @@ class EnklereFlytOrkestratorTest {
         avklaringsbehovene.leggTil(
             definisjon = Definisjon.AVKLAR_STUDENT, funnetISteg = AVKLAR_STUDENT, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", Bruker("TESTEN"))
         avklaringsbehovene.leggTil(
             definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null
         )
@@ -555,7 +555,7 @@ class EnklereFlytOrkestratorTest {
             kontekst = behandling.flytKontekst(),
             bruker = Bruker("Z123456")
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", Bruker("TESTEN"))
 
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
 

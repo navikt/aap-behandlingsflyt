@@ -37,7 +37,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
@@ -46,8 +45,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.mars
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -192,13 +189,15 @@ class AvklarOppfølgingStegTest {
 
         val resultat = steg.utfør(kontekst)
 
-        assertThat(resultat).isEqualTo(FantVentebehov(
-            ventebehov = Ventebehov(
-                definisjon = Definisjon.VENT_PÅ_OPPFØLGING_NY,
-                frist = LocalDate.now().plusDays(7),
-                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
+        assertThat(resultat).isEqualTo(
+            FantVentebehov(
+                ventebehov = Ventebehov(
+                    definisjon = Definisjon.VENT_PÅ_OPPFØLGING_NY,
+                    frist = LocalDate.now().plusDays(7),
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
                 )
-        ))
+            )
+        )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandling.id)
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)?.status()
@@ -218,7 +217,6 @@ class AvklarOppfølgingStegTest {
             mottaDokumentService = mottaDokumentService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = avklaringsbehovRepository,
-            unleashGateway = unleashMedNyOppfølgingsbehandling,
         )
 
         val kontekst = flytKontekstMedPerioder {
@@ -229,9 +227,3 @@ class AvklarOppfølgingStegTest {
         return Pair(steg, kontekst)
     }
 }
-
-val unleashMedNyOppfølgingsbehandling = FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(
-        BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang
-    )
-)

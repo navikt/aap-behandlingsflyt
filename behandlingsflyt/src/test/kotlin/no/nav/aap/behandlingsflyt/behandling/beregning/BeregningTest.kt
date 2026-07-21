@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -117,7 +118,7 @@ class BeregningTest {
                 andelAvNedsettelsen = Prosent(40),
                 erÅrsakssammenheng = true,
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                vurdertAv = "saksbehandler"
+                vurdertAv = Bruker("saksbehandler")
             ),
             ytterligereNedsettelsesDato = null,
             yrkesskadeBeløpVurderinger = listOf(
@@ -125,7 +126,7 @@ class BeregningTest {
                     antattÅrligInntekt = Beløp(500000),
                     referanse = "yrkesskadesaken",
                     begrunnelse = "asdf",
-                    vurdertAv = "saksbehandler"
+                    vurdertAv = Bruker("saksbehandler")
                 )
             ),
             registrerteYrkesskader = Yrkesskader(
@@ -164,7 +165,7 @@ class BeregningTest {
                 andelAvNedsettelsen = Prosent(30),
                 erÅrsakssammenheng = true,
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                vurdertAv = "saksbehandler"
+                vurdertAv = Bruker("saksbehandler")
             ),
             ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
             yrkesskadeBeløpVurderinger = listOf(
@@ -172,7 +173,7 @@ class BeregningTest {
                     antattÅrligInntekt = Beløp(500000),
                     referanse = "yrkesskadesaken",
                     begrunnelse = "asdf",
-                    vurdertAv = "saksbehandler"
+                    vurdertAv = Bruker("saksbehandler")
                 )
             ),
             registrerteYrkesskader = Yrkesskader(

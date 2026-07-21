@@ -152,7 +152,7 @@ data class Yrkesskadevurdering(
     val relevanteSaker: List<YrkesskadeSak>,
     val erÅrsakssammenheng: Boolean,
     val andelAvNedsettelsen: Prosent?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime? = null,
 )
 

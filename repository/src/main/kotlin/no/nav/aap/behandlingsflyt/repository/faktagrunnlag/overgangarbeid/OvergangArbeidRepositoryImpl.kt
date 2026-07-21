@@ -8,6 +8,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : OvergangArbeidRepository {
 
@@ -38,6 +39,27 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
         }
     }
 
+    override fun hentOvergangArbeidVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<OvergangArbeidVurdering>? {
+        return connection.queryFirstOrNull(
+            """
+            SELECT vurderinger_id
+            FROM OVERGANG_ARBEID_GRUNNLAG
+            WHERE behandling_id = ? AND opprettet_tid <= ?
+            ORDER BY opprettet_tid DESC
+            LIMIT 1
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row -> mapOvergangArbeidvurderinger(row.getLongOrNull("vurderinger_id")) }
+        }?.ifEmpty { null }
+    }
+
     private fun mapOvergangArbeidvurderinger(overgangArbeidvurderingerId: Long?): List<OvergangArbeidVurdering> {
         return connection.queryList(
             """
@@ -57,7 +79,7 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
             brukerRettPåAAP = row.getBoolean("BRUKER_RETT_PAA_AAP"),
             fom = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
             tom = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
         )
@@ -132,7 +154,7 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
             setParams { vurdering ->
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.brukerRettPåAAP)
-                setString(3, vurdering.vurdertAv)
+                setBruker(3, vurdering.vurdertAv)
                 setLong(4, overgangarbeidvurderingerId)
                 setLocalDate(5, vurdering.fom)
                 setLocalDate(6, vurdering.tom)

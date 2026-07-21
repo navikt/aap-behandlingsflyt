@@ -47,7 +47,7 @@ class KvalitetssikrerLøser(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     godkjent = vurdering.godkjent!!,
                     begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker.ident,
+                    vurdertAv = kontekst.bruker,
                     årsakTilRetur = vurdering.grunner.orEmpty(),
                 )
             }
@@ -57,7 +57,7 @@ class KvalitetssikrerLøser(
                     definisjon = Definisjon.forKode(vurdering.definisjon),
                     godkjent = vurdering.godkjent!!,
                     begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker.ident
+                    vurdertAv = kontekst.bruker
                 )
             }
         }
@@ -79,10 +79,8 @@ class KvalitetssikrerLøser(
     }
 
     private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
-        if (!unleashGateway.isEnabled(
-                BehandlingsflytFeature.IngenValidering,
-                bruker.ident
-            ) && avklaringsbehovene.any { it.brukere().contains(bruker.ident) }
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)
+            && avklaringsbehovene.any { bruker in it.brukere() }
         ) {
             throw KanIkkeVurdereEgneVurderingerException()
         }

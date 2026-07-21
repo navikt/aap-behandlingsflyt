@@ -6,6 +6,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -30,7 +31,7 @@ fun List<OppholdskravVurdering>.tilTidslinje(): Tidslinje<OppholdskravTidslinjeD
 
 data class OppholdskravVurdering(
     val opprettet: LocalDateTime = LocalDateTime.now(),
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertIBehandling: BehandlingId,
     val perioder: List<OppholdskravPeriode>,
 ) {
@@ -90,5 +91,5 @@ data class OppholdskravTidslinjeData(
     val oppfylt: Boolean,
     val begrunnelse: String,
     val opprettet: LocalDateTime = LocalDateTime.now(),
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
 )

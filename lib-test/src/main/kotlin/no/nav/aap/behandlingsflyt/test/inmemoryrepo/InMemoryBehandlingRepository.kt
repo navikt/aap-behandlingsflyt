@@ -107,12 +107,6 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    override fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling {
-        synchronized(lock) {
-            return memory.getValue(behandlingId).typeBehandling()
-        }
-    }
-
     override fun oppdaterVurderingsbehovOgÅrsak(
         behandling: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,

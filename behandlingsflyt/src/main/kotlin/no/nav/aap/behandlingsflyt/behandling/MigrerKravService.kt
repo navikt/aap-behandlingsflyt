@@ -1,18 +1,16 @@
 package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravMedDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.ZoneOffset
@@ -51,14 +49,14 @@ class MigrerKravService(
         val søknadForKrav = mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.SØKNAD)
             .find { it.referanse == nyesteKrav.journalpostId }
 
-        val nyVurdering = NyttKrav(
+        val nyVurdering = RelevantKrav(
             referanse = nyesteKrav.referanse,
             journalpostId = nyesteKrav.journalpostId,
-            vurdertAv = Bruker(rettighetsperiodeVurdering.vurdertAv),
+            vurdertAv = rettighetsperiodeVurdering.vurdertAv,
             begrunnelse = rettighetsperiodeVurdering.begrunnelse,
             vurdertIBehandling = behandlingId,
             opprettet = rettighetsperiodeVurdering.vurdertDato.toInstant(ZoneOffset.UTC),
-            søknadsdato = (nyesteKrav as KravMedDato).søknadsdato,
+            søknadsdato = nyesteKrav.søknadsdato,
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 dato = rettighetsperiodeVurdering.startDato,
                 årsak = rettighetsperiodeVurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak()
@@ -66,7 +64,7 @@ class MigrerKravService(
             muligRettFra = rettighetsperiodeVurdering.startDato,
         )
 
-        KravValidering.validerKravMedDato(nyVurdering, søknadForKrav)
+        KravValidering.validerRelevantKrav(nyVurdering, søknadForKrav)
 
         kravRepository.lagre(
             behandlingId = behandlingId,
@@ -88,7 +86,7 @@ class MigrerKravService(
         val eksisterendeKravGrunnlag = kravRepository.hentHvisEksisterer(behandlingId)
 
         val kravSomSkalTilbakestilles = eksisterendeKravGrunnlag?.vurderinger
-            ?.filterIsInstance<NyttKrav>()
+            ?.filterIsInstance<RelevantKrav>()
             ?.filter { it.erRettighetsperiodeVurdering() }
             ?.maxByOrNull { it.opprettet }
 
@@ -97,10 +95,10 @@ class MigrerKravService(
             return
         }
 
-        val nyttKrav = NyttKrav(
+        val relevantKrav = RelevantKrav(
             referanse = kravSomSkalTilbakestilles.referanse,
             journalpostId = kravSomSkalTilbakestilles.journalpostId,
-            vurdertAv = Bruker(rettighetsperiodeVurdering.vurdertAv),
+            vurdertAv = rettighetsperiodeVurdering.vurdertAv,
             begrunnelse = rettighetsperiodeVurdering.begrunnelse,
             vurdertIBehandling = behandlingId,
             opprettet = rettighetsperiodeVurdering.vurdertDato.toInstant(ZoneOffset.UTC),
@@ -109,7 +107,7 @@ class MigrerKravService(
             muligRettFra = kravSomSkalTilbakestilles.muligRettFra,
         )
         val nyeVurderinger = eksisterendeKravGrunnlag.vurderinger
-            .filterNot { it.vurdertIBehandling == behandlingId && it.referanse == kravSomSkalTilbakestilles.referanse } + nyttKrav
+            .filterNot { it.vurdertIBehandling == behandlingId && it.referanse == kravSomSkalTilbakestilles.referanse } + relevantKrav
 
         kravRepository.lagre(
             behandlingId = behandlingId,
@@ -118,6 +116,6 @@ class MigrerKravService(
     }
 
     private fun KravVurdering.erRettighetsperiodeVurdering(): Boolean {
-        return this is NyttKrav && this.overstyrMuligRettFra != null
+        return this is RelevantKrav && this.overstyrMuligRettFra != null
     }
 }

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.LocalDateTime
 
 object InMemoryEtableringEgenVirksomRepository : EtableringEgenVirksomhetRepository {
     private val mutex = Any()
@@ -11,6 +12,13 @@ object InMemoryEtableringEgenVirksomRepository : EtableringEgenVirksomhetReposit
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId) =
         synchronized(mutex) { grunnlag[behandlingId] }
+
+    override fun hentEtableringEgenVirksomhetVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<EtableringEgenVirksomhetVurdering>? {
+        return null
+    }
 
     override fun lagre(
         behandlingId: BehandlingId,

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 
 data class SvarFraAndreinstansGrunnlag(
@@ -11,7 +12,7 @@ data class SvarFraAndreinstansVurdering(
     val begrunnelse: String,
     val konsekvens: SvarFraAndreinstansKonsekvens,
     val vilkårSomOmgjøres: List<Hjemmel>,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val opprettet: Instant
 )
 

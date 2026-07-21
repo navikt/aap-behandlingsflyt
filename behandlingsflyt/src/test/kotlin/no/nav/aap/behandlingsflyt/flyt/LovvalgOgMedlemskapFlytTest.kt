@@ -322,10 +322,10 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             ),
             TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
         ).second
-
-        // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+            // Validér avklaring
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+            }
 
         // Trigger manuell vurdering
         behandling = behandling
@@ -342,12 +342,13 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                     )
                 )
             )
-
-        // Validér riktig resultat
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
-        assertTrue(vilkårsResultat.none { it.erOppfylt() })
+            .medKontekst {
+                // Validér riktig resultat
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).noneMatch { it == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+                val vilkårsResultat =
+                    hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+                assertTrue(vilkårsResultat.none { it.erOppfylt() })
+            }
     }
 
     @Test

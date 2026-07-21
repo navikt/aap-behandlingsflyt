@@ -63,7 +63,7 @@ data class KravVurderingTestDto(
 )
 
 data class LeggTilKravVurderingDTO(
-    val kravVurderinger: List<KravVurderingTestDto> = listOf(KravVurderingTestDto(KravType.NYTT_KRAV_AAP))
+    val kravVurderinger: List<KravVurderingTestDto> = listOf(KravVurderingTestDto(KravType.RELEVANT_KRAV))
 )
 
 @Response(statusCode = 202)

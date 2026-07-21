@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -45,7 +46,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         arbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE")),
         vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
         opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
-        vurdertAv = row.getString("VURDERT_AV")
+        vurdertAv = row.getBruker("VURDERT_AV")
     )
 
     data class ArbeidsevneInternal(
@@ -56,7 +57,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         val arbeidsevne: Prosent,
         val vurdertIBehandling: BehandlingId,
         val opprettetTid: LocalDateTime,
-        val vurdertAv: String
+        val vurdertAv: Bruker
     ) {
         fun toArbeidsevnevurdering(): ArbeidsevneVurdering {
             return ArbeidsevneVurdering(
@@ -76,6 +77,39 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
             .map { (_, arbeidsevneVurderinger) -> ArbeidsevneGrunnlag(arbeidsevneVurderinger) }
             .takeIf { it.isNotEmpty() }
             ?.single()
+    }
+
+    override fun hentArbeidsevneVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<ArbeidsevneVurdering>? {
+        val arbeidsevneId: Long = connection.queryFirstOrNull(
+            """
+            SELECT arbeidsevne_id
+            FROM ARBEIDSEVNE_GRUNNLAG
+            WHERE behandling_id = ? AND opprettet_tid <= ?
+            ORDER BY opprettet_tid DESC
+            LIMIT 1
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row -> row.getLong("arbeidsevne_id") }
+        } ?: return null
+
+        return connection.queryList(
+            """
+            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.TIL_DATO, v.ANDEL_ARBEIDSEVNE, v.VURDERT_I_BEHANDLING, v.OPPRETTET_TID, v.VURDERT_AV
+            FROM ARBEIDSEVNE a
+            INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
+            WHERE a.ID = ?
+            """.trimIndent()
+        ) {
+            setParams { setLong(1, arbeidsevneId) }
+            setRowMapper(::toArbeidsevneInternal)
+        }.map { it.toArbeidsevnevurdering() }.takeIf { it.isNotEmpty() }
     }
 
     override fun lagre(behandlingId: BehandlingId, vurderinger: List<ArbeidsevneVurdering>) {
@@ -114,7 +148,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
                 setInt(5, it.arbeidsevne.prosentverdi())
                 setLong(6, it.vurdertIBehandling.id)
                 setLocalDateTime(7, it.opprettetTid)
-                setString(8, it.vurdertAv)
+                setBruker(8, it.vurdertAv)
             }
         }
     }

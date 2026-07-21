@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -76,7 +77,7 @@ class BehandlingHendelseServiceImpl(
             relevanteIdenterPåBehandling = pipService.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
-            reserverTil = hentReservertTil(behandling.id),
+            reserverTil = hentReservertTil(behandling.id)?.ident,
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
@@ -99,7 +100,7 @@ class BehandlingHendelseServiceImpl(
                     opprettetTidspunkt = hendelse.opprettetTidspunkt,
                     hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
                     versjon = hendelse.versjon,
-                    opprettetAv = hentBehandlingOpprettetAv(behandling.id),
+                    opprettetAv = hentBehandlingOpprettetAv(behandling.id)?.ident,
                 )
             )
                 .forBehandling(sak.id.id, behandling.id.id)
@@ -117,7 +118,7 @@ class BehandlingHendelseServiceImpl(
         }
     }
 
-    private fun hentReservertTil(behandlingId: BehandlingId): String? {
+    private fun hentReservertTil(behandlingId: BehandlingId): Bruker? {
         val oppfølgingsoppgavedokument =
             MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
@@ -143,20 +144,20 @@ class BehandlingHendelseServiceImpl(
         ?: reserverTilBrukerSøknadTrukket
     }
 
-    private fun hentBehandlingOpprettetAv(behandlingId: BehandlingId): String? {
+    private fun hentBehandlingOpprettetAv(behandlingId: BehandlingId): Bruker? {
         val eldsteManuellVurderingDokument = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
             behandlingId,
             InnsendingType.MANUELL_REVURDERING
         ).minByOrNull { it.mottattTidspunkt }
 
         val manuellVurdering = eldsteManuellVurderingDokument?.strukturerteData<ManuellRevurderingV0>()?.data
-        return manuellVurdering?.opprettetAv
+        return manuellVurdering?.opprettetAv?.let(::Bruker)
     }
 
     private fun finnReserverTilBrukerGittVurderingsbehov(
         behandlingId: BehandlingId,
         vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-    ): String? {
+    ): Bruker? {
         val nyÅrsakTilBehandlingDokumenter = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
             behandlingId,
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
@@ -174,6 +175,7 @@ class BehandlingHendelseServiceImpl(
             ?.ustrukturerteData()
             ?.let { DefaultJsonMapper.fromJson<Melding>(it) } as? NyÅrsakTilBehandlingV0)
             ?.reserverTilBruker
+            ?.let(::Bruker)
     }
 
     private fun hentMottattDokumenter(

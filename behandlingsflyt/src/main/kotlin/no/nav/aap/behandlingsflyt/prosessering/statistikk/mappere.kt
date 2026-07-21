@@ -69,6 +69,9 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
         Vurderingsbehov.VURDER_KRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_KRAV
         Vurderingsbehov.VURDER_AVSLAG_11_27 -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_AVSLAG_11_27
+        Vurderingsbehov.FASTSETT_ARBEIDSEVNE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FASTSETT_ARBEIDSEVNE
+        Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT
+        Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING
     }
 
 

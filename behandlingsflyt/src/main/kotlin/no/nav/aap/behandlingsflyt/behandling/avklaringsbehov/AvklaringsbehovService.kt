@@ -275,7 +275,7 @@ class AvklaringsbehovService(
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
     ) {
         val perioderVilkåretErRelevant by lazy { nårVurderingErRelevant(kontekst) }
 
@@ -343,7 +343,7 @@ class AvklaringsbehovService(
                             Tidslinje.map3(
                                 nårVurderingErRelevant(kontekst),
                                 nårVurderingErGyldigTidslinje,
-                                avklaringsbehovValidering.nårKravHarLøsning(
+                                if (definisjon.erFrivillig() && definisjon !in ikkeEkteFrivillig) Tidslinje.empty() else avklaringsbehovValidering.nårKravHarLøsning(
                                     definisjon,
                                     gjeldendeVurderinger(),
                                     kontekst.tilFlytKontekst()
@@ -377,7 +377,7 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -416,7 +416,7 @@ class AvklaringsbehovService(
         nårVurderingErGyldig: () -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,

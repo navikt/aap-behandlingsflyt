@@ -27,7 +27,7 @@ data class BistandLøsningDto(
             fom = fom,
             overgangBegrunnelse = overgangBegrunnelse,
             skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-            vurdertAv = bruker.ident,
+            vurdertAv = bruker,
             vurdertIBehandling = vurdertIBehandling,
             opprettet = Instant.now(),
             tom = tom

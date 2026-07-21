@@ -25,7 +25,7 @@ class Avklaringsbehovene(
     fun løsAvklaringsbehov(
         definisjon: Definisjon,
         begrunnelse: String,
-        endretAv: String,
+        endretAv: Bruker,
         kreverToTrinn: Boolean? = null
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
@@ -113,7 +113,7 @@ class Avklaringsbehovene(
                 grunn = grunn,
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                endretAv = bruker.ident
+                endretAv = bruker
             )
         }
 
@@ -130,7 +130,7 @@ class Avklaringsbehovene(
         definisjon: Definisjon,
         godkjent: Boolean,
         begrunnelse: String,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         årsakTilRetur: List<ÅrsakTilRetur> = emptyList(),
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
@@ -142,7 +142,7 @@ class Avklaringsbehovene(
         definisjon: Definisjon,
         godkjent: Boolean,
         begrunnelse: String,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         årsakTilRetur: List<ÅrsakTilRetur> = emptyList(),
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
@@ -263,7 +263,7 @@ class Avklaringsbehovene(
     }
 
     fun erLøstAv(bruker: Bruker, definisjon: Definisjon): Boolean {
-        return bruker.ident in hentBehovForDefinisjon(definisjon)?.brukere().orEmpty()
+        return bruker in hentBehovForDefinisjon(definisjon)?.brukere().orEmpty()
     }
 
     fun hentNyesteKvalitetssikringGittDefinisjon(definisjon: Definisjon): Endring? {
@@ -339,7 +339,7 @@ class Avklaringsbehovene(
                             status = Status.OPPRETTET,
                             tidsstempel = LocalDateTime.now(),
                             begrunnelse = "",
-                            endretAv = SYSTEMBRUKER.ident
+                            endretAv = SYSTEMBRUKER
                         )
                     ),
                     funnetISteg = definisjon.løsesISteg,

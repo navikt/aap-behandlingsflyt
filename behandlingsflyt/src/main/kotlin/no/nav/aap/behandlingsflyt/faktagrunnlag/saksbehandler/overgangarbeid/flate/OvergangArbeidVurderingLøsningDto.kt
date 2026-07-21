@@ -17,7 +17,7 @@ data class OvergangArbeidVurderingLøsningDto(
             begrunnelse = begrunnelse,
             brukerRettPåAAP = brukerRettPåAAP,
             fom = fom,
-            vurdertAv = avklaringsbehovKontekst.bruker.ident,
+            vurdertAv = avklaringsbehovKontekst.bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
             tom = tom,

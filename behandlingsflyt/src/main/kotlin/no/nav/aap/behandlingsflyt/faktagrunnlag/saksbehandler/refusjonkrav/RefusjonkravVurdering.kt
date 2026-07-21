@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav
 
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -8,12 +9,13 @@ data class RefusjonkravVurdering(
     val fom: LocalDate? = null,
     val tom: LocalDate? = null,
     val navKontor: String?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val opprettetTid: LocalDateTime? = null,
 ) {
-    fun tilNavKontorPeriodeDto( virkningsdato : LocalDate,vedtaksdato: LocalDate): NavKontorPeriodeDto {
+    fun tilNavKontorPeriodeDto(virkningsdato: LocalDate, vedtaksdato: LocalDate): NavKontorPeriodeDto {
         return NavKontorPeriodeDto(
-            enhetsNummer = navKontorEnhetsNummer(navKontor) ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
+            enhetsNummer = navKontorEnhetsNummer(navKontor)
+                ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
             virkingsdato = virkningsdato,
             vedtaksdato = vedtaksdato
         )

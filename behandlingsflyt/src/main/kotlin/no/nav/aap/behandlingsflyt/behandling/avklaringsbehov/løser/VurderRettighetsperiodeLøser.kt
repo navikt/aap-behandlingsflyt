@@ -65,7 +65,7 @@ class VurderRettighetsperiodeLøser(
             begrunnelse = løsning.rettighetsperiodeVurdering.begrunnelse,
             startDato = nyStartDato,
             harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRett,
-            vurdertAv = kontekst.bruker.ident,
+            vurdertAv = kontekst.bruker,
             vurdertDato = LocalDateTime.now()
         )
 

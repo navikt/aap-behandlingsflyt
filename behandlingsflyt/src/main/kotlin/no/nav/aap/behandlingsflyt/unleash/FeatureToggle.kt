@@ -19,6 +19,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     StudentV2,
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
+    MotorV2,
 
     // --- Krav ---
     KravSteg, // Visning
@@ -28,7 +29,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyttKravPeriodiserteAvklaringsbehov,
 
     // ------
-    OppfoelgingsoppgaveSynligMedEnGang,
     ManuellInntektDelvisUfore,
     Avslag11_27,
     SkalViseAlleSykdomssteg,

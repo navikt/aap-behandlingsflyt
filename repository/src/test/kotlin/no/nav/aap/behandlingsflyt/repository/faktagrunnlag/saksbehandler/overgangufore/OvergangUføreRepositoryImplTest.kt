@@ -25,6 +25,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.time.Instant
 import java.time.LocalDate
 
 internal class OvergangUføreRepositoryImplTest {
@@ -71,8 +72,9 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 fom = testDate,
                 tom = null,
-                vurdertAv = "Saks behandler",
-                vurdertIBehandling = behandling.id
+                vurdertAv = Bruker("Saks behandler"),
+                vurdertIBehandling = behandling.id,
+                opprettet = Instant.now(),
             )
 
             overgangUføreRepository.lagre(behandling.id, listOf(expected))
@@ -102,9 +104,9 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
                             tom = null,
-                            vurdertAv = "Saks behandler",
-                            vurdertIBehandling = behandling.id
-
+                            vurdertAv = Bruker("Saks behandler"),
+                            vurdertIBehandling = behandling.id,
+                            opprettet = Instant.now(),
                         )
                     )
                 )
@@ -118,9 +120,10 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
                             tom = null,
-                            vurdertAv = "Saks behandler",
-                            vurdertIBehandling = behandling.id
-                        )
+                            vurdertAv = Bruker("Saks behandler"),
+                            vurdertIBehandling = behandling.id,
+                            opprettet = Instant.now(),
+                            )
                     )
                 )
                 assertDoesNotThrow { overgangUføreRepository.slett(behandling.id) }
@@ -138,8 +141,9 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 5, 22),
                 tom = null,
-                vurdertAv = "Z00000",
-                vurdertIBehandling = vurdertIBehandling
+                vurdertAv = Bruker("Z00000"),
+                vurdertIBehandling = vurdertIBehandling,
+                opprettet = Instant.now(),
             )
         }
         val overgangUføreVurdering2 = { vurdertIBehandling: BehandlingId ->
@@ -150,8 +154,9 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 5, 1),
                 tom = null,
-                vurdertAv = "Z00001",
-                vurdertIBehandling = vurdertIBehandling
+                vurdertAv = Bruker("Z00001"),
+                vurdertIBehandling = vurdertIBehandling,
+                opprettet = Instant.now(),
             )
         }
         val overgangUføreVurdering3 = { vurdertIBehandling: BehandlingId ->
@@ -162,8 +167,9 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 4, 15),
                 tom = null,
-                vurdertAv = "Z00002",
-                vurdertIBehandling = vurdertIBehandling
+                vurdertAv = Bruker("Z00002"),
+                vurdertIBehandling = vurdertIBehandling,
+                opprettet = Instant.now(),
             )
         }
 
@@ -197,7 +203,7 @@ internal class OvergangUføreRepositoryImplTest {
 
             overgangUføreRepo.lagre(revurdering.id, listOf(overgangUføreVurdering3(revurdering.id)))
 
-            val historikk = overgangUføreRepo.hentHistoriskeOvergangUforeVurderinger(revurdering.sakId, revurdering.id)
+            val historikk = overgangUføreRepo.hentHistoriskeOvergangUføreVurderinger(revurdering.sakId, revurdering.id)
             assertThat(historikk)
                 .usingRecursiveComparison()
                 .ignoringFields("opprettet")

@@ -62,6 +62,7 @@ import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -355,8 +356,9 @@ class BrevUtlederServiceTest {
                         brukerRettPåAAP = true,
                         fom = kravdatoUføretrygd,
                         tom = sisteDagMedYtelse,
-                        vurdertAv = "meg",
+                        vurdertAv = Bruker("meg"),
                         vurdertIBehandling = behandling.id,
+                        opprettet = Instant.now(),
                     )
                 )
             )
@@ -418,7 +420,7 @@ class BrevUtlederServiceTest {
                     nedsattArbeidsevneEllerStudieevneDato = kravdatoUføretrygd,
                     ytterligereNedsattBegrunnelse = null,
                     ytterligereNedsattArbeidsevneDato = null,
-                    vurdertAv = ""
+                    vurdertAv = Bruker("")
                 )
             )
             vedtakRepository.lagre(
@@ -436,8 +438,9 @@ class BrevUtlederServiceTest {
                         brukerRettPåAAP = true,
                         fom = kravdatoUføretrygd,
                         tom = sisteDagMedYtelse,
-                        vurdertAv = "meg",
+                        vurdertAv = Bruker("meg"),
                         vurdertIBehandling = revurdering.id,
+                        opprettet = Instant.now(),
                     )
                 )
             )
@@ -531,7 +534,7 @@ class BrevUtlederServiceTest {
                     nedsattArbeidsevneEllerStudieevneDato = kravdatoUføretrygd,
                     ytterligereNedsattBegrunnelse = null,
                     ytterligereNedsattArbeidsevneDato = null,
-                    vurdertAv = ""
+                    vurdertAv = Bruker("")
                 )
             )
             vedtakRepository.lagre(revurdering.id, LocalDateTime.now(), kravdatoUføretrygd)
@@ -545,8 +548,9 @@ class BrevUtlederServiceTest {
                         brukerRettPåAAP = true,
                         fom = kravdatoUføretrygd,
                         tom = 31 desember 2023,
-                        vurdertAv = SYSTEMBRUKER.ident,
+                        vurdertAv = SYSTEMBRUKER,
                         vurdertIBehandling = revurdering.id,
+                        opprettet = Instant.now(),
                     )
                 )
             )
@@ -743,7 +747,7 @@ class BrevUtlederServiceTest {
                     nedsattArbeidsevneEllerStudieevneDato = kravdato,
                     ytterligereNedsattBegrunnelse = null,
                     ytterligereNedsattArbeidsevneDato = null,
-                    vurdertAv = ""
+                    vurdertAv = Bruker("")
                 )
             )
             vedtakRepository.lagre(revurdering.id, LocalDateTime.now(), kravdato)
@@ -757,8 +761,9 @@ class BrevUtlederServiceTest {
                         brukerRettPåAAP = true,
                         fom = kravdato,
                         tom = sisteDag,
-                        vurdertAv = "meg",
+                        vurdertAv = Bruker("meg"),
                         vurdertIBehandling = revurdering.id,
+                        opprettet = Instant.now(),
                     )
                 )
             )
@@ -788,7 +793,7 @@ class BrevUtlederServiceTest {
                     nedsattArbeidsevneEllerStudieevneDato = virkningstidspunkt,
                     ytterligereNedsattBegrunnelse = null,
                     ytterligereNedsattArbeidsevneDato = null,
-                    vurdertAv = ""
+                    vurdertAv = Bruker("")
                 )
             )
             val periode = Periode(virkningstidspunkt, 31 desember 2025)
@@ -1052,8 +1057,9 @@ class BrevUtlederServiceTest {
                     brukerRettPåAAP = true,
                     fom = kravdatoUføretrygd,
                     tom = sisteDagMedYtelse,
-                    vurdertAv = "Veileder",
+                    vurdertAv = Bruker("Veileder"),
                     vurdertIBehandling = behandling.id,
+                    opprettet = Instant.now(),
                 )
             )
         )
@@ -1091,8 +1097,9 @@ class BrevUtlederServiceTest {
                     brukerRettPåAAP = true,
                     fom = kravdatoUføretrygd,
                     tom = 31 august 2025,
-                    vurdertAv = "meg",
+                    vurdertAv = Bruker("meg"),
                     vurdertIBehandling = behandling.id,
+                    opprettet = Instant.now(),
                 )
             )
         )
@@ -1267,7 +1274,7 @@ class BrevUtlederServiceTest {
             fom = fraDato,
             reellMulighetTilOpptrapping = true,
             rettPaaAAPIOpptrapping = true,
-            vurdertAv = "Bruker",
+            vurdertAv = Bruker("Bruker"),
             opprettet = Instant.now(),
             vurdertIBehandling = revurdering.id,
             tom = tilDato
@@ -1297,7 +1304,7 @@ class BrevUtlederServiceTest {
             begrunnelse = "",
             erOppfylt = false,
             utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall.STANS,
-            vurdertAv = "",
+            vurdertAv = Bruker(""),
             fom = fra,
             opprettet = Instant.now(),
             vurdertIBehandling = id,
@@ -1412,7 +1419,7 @@ class BrevUtlederServiceTest {
         return SykdomsvurderingForBrev(
             behandlingId = BehandlingId(Random.nextLong()),
             vurdering = "Vurdering av sykdom",
-            vurdertAv = "Veileder",
+            vurdertAv = Bruker("Veileder"),
             vurdertTidspunkt = LocalDateTime.now(),
         )
     }

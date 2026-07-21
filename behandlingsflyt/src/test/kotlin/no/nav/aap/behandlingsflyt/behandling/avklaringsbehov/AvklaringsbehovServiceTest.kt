@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -68,7 +68,7 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, revurdering.id)
 
         avklaringsbehovene.leggTilFrivilligHvisMangler(Definisjon.FRITAK_MELDEPLIKT, Bruker("Z000"))
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FRITAK_MELDEPLIKT, "løsning fra intet", "Z000")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FRITAK_MELDEPLIKT, "løsning fra intet", Bruker("Z000"))
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.FRITAK_MELDEPLIKT,
@@ -182,7 +182,7 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { true }
         val erTilstrekkeligVurdert = { true }
@@ -510,7 +510,7 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val startDato = LocalDate.of(2024, 6, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
@@ -593,7 +593,7 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val startDato = LocalDate.of(2024, 6, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
@@ -707,7 +707,7 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
@@ -737,7 +737,7 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
@@ -838,8 +838,8 @@ class AvklaringsbehovServiceTest {
         }
     }
 
-    private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): NyttKrav {
-        return NyttKrav(
+    private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): RelevantKrav {
+        return RelevantKrav(
             referanse = Kravreferanse.ny(),
             journalpostId = JournalpostId("JP-001"),
             vurdertAv = Bruker("Z123456"),

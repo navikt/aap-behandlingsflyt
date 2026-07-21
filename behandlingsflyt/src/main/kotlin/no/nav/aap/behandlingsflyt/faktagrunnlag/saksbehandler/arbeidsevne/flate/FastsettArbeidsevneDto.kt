@@ -19,7 +19,7 @@ data class PeriodisertFastsettArbeidsevneDto(
             arbeidsevne = Prosent(arbeidsevne),
             vurdertIBehandling = kontekst.behandlingId(),
             opprettetTid = LocalDateTime.now(),
-            vurdertAv = kontekst.bruker.ident,
+            vurdertAv = kontekst.bruker,
             fom = fom,
             tom = tom
         )
