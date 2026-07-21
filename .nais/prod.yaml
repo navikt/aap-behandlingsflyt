@@ -97,6 +97,7 @@ spec:
             roles:
               - "bestill-varselbrev"
               - "finn-siste-behandlinger"
+              - "finn-kandidater-for-purring"
         - application: paw-patrol
         - application: api-intern
     outbound:
