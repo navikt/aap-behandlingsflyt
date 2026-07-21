@@ -36,7 +36,7 @@ class HåndterDialogMeldingService(
         val sak = sakService.hent(sakId)
         log.info("Håndterer dialogmelding for ${sak.id}")
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
-        val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+        val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
 
         if (sisteYtelsesBehandling != null) {
             mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
