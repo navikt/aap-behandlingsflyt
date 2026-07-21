@@ -813,12 +813,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         sakId: SakId
     ): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
-            val finnSisteBehandlingFor = BehandlingService(
+            BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
-                minimalGatewayProvider { }).finnSisteGjeldendeEllerÅpneYtelsesbehandling(
+                minimalGatewayProvider { }).alleYtelsesbehandlinger(
                 sakId
-            )
-            requireNotNull(finnSisteBehandlingFor)
+            ).maxBy { it.opprettetTidspunkt }
         }
     }
 
