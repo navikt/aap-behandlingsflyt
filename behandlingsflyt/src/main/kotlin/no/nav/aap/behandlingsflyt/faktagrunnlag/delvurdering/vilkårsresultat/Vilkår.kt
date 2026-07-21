@@ -45,12 +45,18 @@ class Vilkår(
             .map { segment -> Vilkårsperiode(segment.periode, segment.verdi) }
     }
 
+    internal fun setVilkårTidslinje(tidslinje: Tidslinje<Vilkårsvurdering>) {
+        vilkårTidslinje = tidslinje
+    }
+
+    @Deprecated("""Bruk VilkårService::vurderVilkår i stedet.""")
     fun leggTilVurderinger(tidslinje: Tidslinje<Vilkårsvurdering>) {
         vilkårTidslinje = vilkårTidslinje.kombiner(
             tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin()
         )
     }
 
+    @Deprecated("""Bruk VilkårService::vurderVilkår i stedet.""")
     fun leggTilVurdering(vilkårsperiode: Vilkårsperiode) {
         validerKombinasjon(type, setOf(vilkårsperiode))
         vilkårTidslinje = vilkårTidslinje.kombiner(
@@ -65,6 +71,7 @@ class Vilkår(
         )
     }
 
+    @Deprecated("""Bruk VilkårService::vurderVilkår i stedet.""")
     fun leggTilIkkeVurdertPeriode(rettighetsperiode: Periode): Vilkår {
         this.leggTilVurdering(
             Vilkårsperiode(
@@ -78,11 +85,13 @@ class Vilkår(
         return this
     }
 
+    @Deprecated("""Bruk VilkårService::vurderVilkår i stedet.""")
     fun fjernHvisUtenforRettighetsperiode(rettighetsperiode: Periode): Vilkår {
         vilkårTidslinje = vilkårTidslinje.begrensetTil(rettighetsperiode)
         return this
     }
 
+    @Deprecated("""Bruk VilkårService::vurderVilkår i stedet.""")
     fun nullstillTidslinje(): Vilkår {
         vilkårTidslinje = Tidslinje(emptyList())
         return this
