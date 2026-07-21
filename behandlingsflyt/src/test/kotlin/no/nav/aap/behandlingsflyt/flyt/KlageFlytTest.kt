@@ -259,7 +259,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 22-13")
             }
 
-        val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
+        val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId)
         assertThat(revurdering.vurderingsbehov().map { it.type }).containsExactly(
             Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
             Vurderingsbehov.HELHETLIG_VURDERING
@@ -479,7 +479,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: Kapittel 2")
         }
 
-        val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
+        val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId)
         assertThat(revurdering.vurderingsbehov().map { it.type }).containsExactly(Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
 
         // OpprettholdelseSteg
@@ -670,7 +670,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 ).isEqualTo("Revurdering etter klage som tas til følge. Følgende vilkår omgjøres: § 11-5")
             }
 
-        val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
+        val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId)
         assertThat(
             revurdering.vurderingsbehov()
                 .map { it.type }).containsExactly(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)

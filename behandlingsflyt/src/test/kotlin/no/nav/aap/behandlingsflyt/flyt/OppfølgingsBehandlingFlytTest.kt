@@ -66,10 +66,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
             }
 
         val opprettetBehandling =
-            hentSisteOpprettedeBehandlingForSak(
-                oppfølgingsbehandling.sakId,
-                listOf(TypeBehandling.Revurdering)
-            )
+            hentSisteOpprettedeBehandlingForSak(oppfølgingsbehandling.sakId)
 
         motor.kjørJobber()
 

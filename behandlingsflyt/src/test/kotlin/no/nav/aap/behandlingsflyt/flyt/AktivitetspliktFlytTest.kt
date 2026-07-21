@@ -154,12 +154,7 @@ class AktivitetspliktFlytTest :
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        val effektueringsbehandling = dataSource.transaction { connection ->
-            BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
-                sak.id,
-                listOf(TypeBehandling.Revurdering)
-            )
-        }!!
+        val effektueringsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
         assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -525,12 +520,7 @@ class AktivitetspliktFlytTest :
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        val effektueringsbehandling = dataSource.transaction { connection ->
-            BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
-                sak.id,
-                listOf(TypeBehandling.Revurdering)
-            )
-        }!!
+        val effektueringsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
         assertThat(

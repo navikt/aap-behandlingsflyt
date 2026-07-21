@@ -130,24 +130,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             opprettetTidspunkt = LocalDateTime.now(),
         )
 
-        every { behandlingRepositoryMock.finnSisteOpprettedeBehandlingFor(any(), any()) } returns Behandling(
-            id = BehandlingId(457L),
-            forrigeBehandlingId = BehandlingId(456L),
-            referanse = BehandlingReferanse(UUID.randomUUID()),
-            sakId = sakId,
-            typeBehandling = TypeBehandling.Revurdering,
-            status = Status.AVSLUTTET,
-            vurderingsbehov = årsakerPåTidligereBehandling,
-            stegTilstand = StegTilstand(
-                stegStatus = StegStatus.AVSLUTTER,
-                stegType = StegType.IVERKSETT_VEDTAK,
-                aktiv = true
-            ),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-            opprettetTidspunkt = LocalDateTime.now(),
-            versjon = 0L,
-        )
-
         every {
             behandlingRepositoryMock.hentVurderingsbehovOgÅrsaker(any())
         } returns listOf(
