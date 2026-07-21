@@ -100,9 +100,9 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
     @Test
     fun `trukket søknad blokkerer nye ytelsesbehandlinger`() {
         // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad()
+        val (sak, behandling) = sendInnFørsteSøknad()
 
-        løsSykdom(behandling, sak.rettighetsperiode.fom)
+        behandling.løsSykdom(sak.rettighetsperiode.fom)
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov)
@@ -115,7 +115,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        behandling = sak.sendInnSøknad(
+        val revurdering = sak.sendInnSøknad(
             SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
@@ -124,8 +124,8 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             ),
         )
 
-        assertThat(behandling.forrigeBehandlingId).isNull()
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(revurdering.forrigeBehandlingId).isNull()
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test

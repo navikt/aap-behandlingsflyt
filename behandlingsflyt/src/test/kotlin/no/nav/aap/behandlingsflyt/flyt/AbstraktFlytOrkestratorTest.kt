@@ -454,43 +454,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return behandling
     }
 
-    protected fun løsSykdom(
-        behandling: Behandling,
-        vurderingGjelderFra: LocalDate,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null,
-        vissVarighet: Boolean? = true,
-        erOppfylt: Boolean = true,
-    ): Behandling {
-        val harNedsattArbeidsevne = when {
-            vissVarighet == false -> ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
-            erOppfylt -> ArbeidsevneNedsattValg.JA
-            else -> ArbeidsevneNedsattValg.NEI
-        }
-        return løsAvklaringsBehov(
-            behandling,
-            AvklarSykdomLøsning(
-                løsningerForPerioder = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                        harSkadeSykdomEllerLyte = erOppfylt,
-                        erSkadeSykdomEllerLyteVesentligdel = true.takeIf { erOppfylt },
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = when {
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null -> false
-                            erOppfylt -> true
-                            else -> null
-                        },
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-                        harNedsattArbeidsevne = harNedsattArbeidsevne,
-                        yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
-                        fom = vurderingGjelderFra,
-                        tom = null,
-                    )
-                )
-            ),
-        )
-    }
-
     protected fun Behandling.løsBistand(
         fom: LocalDate,
         erOppfylt: Boolean = true,
@@ -726,12 +689,32 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         vissVarighet: Boolean? = true,
         erOppfylt: Boolean = true,
     ): Behandling {
-        return løsSykdom(
-            behandling = this,
-            vurderingGjelderFra = vurderingGjelderFra,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-            vissVarighet = vissVarighet,
-            erOppfylt = erOppfylt,
+        val harNedsattArbeidsevne = when {
+            vissVarighet == false -> ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
+            erOppfylt -> ArbeidsevneNedsattValg.JA
+            else -> ArbeidsevneNedsattValg.NEI
+        }
+        return this.løsAvklaringsBehov(
+            AvklarSykdomLøsning(
+                løsningerForPerioder = listOf(
+                    SykdomsvurderingLøsningDto(
+                        begrunnelse = "Er syk nok",
+                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                        harSkadeSykdomEllerLyte = erOppfylt,
+                        erSkadeSykdomEllerLyteVesentligdel = true.takeIf { erOppfylt },
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = when {
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null -> false
+                            erOppfylt -> true
+                            else -> null
+                        },
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+                        harNedsattArbeidsevne = harNedsattArbeidsevne,
+                        yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
+                        fom = vurderingGjelderFra,
+                        tom = null,
+                    )
+                )
+            ),
         )
     }
 
@@ -1143,7 +1126,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             }
         }
         var behandling = this
-        behandling = løsSykdom(behandling, vurderingerGjelderFra)
+        behandling = behandling.løsSykdom(vurderingerGjelderFra)
             .løsBistand(vurderingerGjelderFra)
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
