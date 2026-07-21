@@ -59,7 +59,7 @@ class Avslag11_27GrunnlagTest {
 
     @Test
     fun `nyesteVurderingPerKrav - én vurdering per referanse returneres`() {
-        val grunnlag = Avslag11_27Grunnlag(listOf(vurdering(ref1)))
+        val grunnlag = Avslag11_27Grunnlag(setOf(vurdering(ref1)))
         assertThat(grunnlag.gjeldendeVurderinger()).hasSize(1)
     }
 
@@ -67,7 +67,7 @@ class Avslag11_27GrunnlagTest {
     fun `nyesteVurderingPerKrav - kun nyeste beholdes ved flere vurderinger for samme referanse`() {
         val gammel = vurdering(ref1, skalAvslås = false, vurdertTidspunkt = Instant.now().minusSeconds(100))
         val ny = vurdering(ref1, skalAvslås = true, vurdertTidspunkt = Instant.now())
-        val grunnlag = Avslag11_27Grunnlag(listOf(gammel, ny))
+        val grunnlag = Avslag11_27Grunnlag(setOf(gammel, ny))
 
         val resultat = grunnlag.gjeldendeVurderinger()
         assertThat(resultat).hasSize(1)
@@ -76,13 +76,13 @@ class Avslag11_27GrunnlagTest {
 
     @Test
     fun `nyesteVurderingPerKrav - to ulike referanser gir to vurderinger`() {
-        val grunnlag = Avslag11_27Grunnlag(listOf(vurdering(ref1), vurdering(ref2)))
+        val grunnlag = Avslag11_27Grunnlag(setOf(vurdering(ref1), vurdering(ref2)))
         assertThat(grunnlag.gjeldendeVurderinger()).hasSize(2)
     }
 
     @Test
     fun `nyesteVurderingPerKrav - tom liste gir tom liste`() {
-        assertThat(Avslag11_27Grunnlag(emptyList()).gjeldendeVurderinger()).isEmpty()
+        assertThat(Avslag11_27Grunnlag(emptySet()).gjeldendeVurderinger()).isEmpty()
     }
 
     // ── tilTidslinje ─────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ class Avslag11_27GrunnlagTest {
     @Test
     fun `tilTidslinje - krav uten vurdering inkluderes ikke`() {
         val kravGrunnlag = KravGrunnlag(vurderinger = setOf(relevantKrav(ref1)))
-        val grunnlag = Avslag11_27Grunnlag(emptyList())
+        val grunnlag = Avslag11_27Grunnlag(emptySet())
 
         assertThat(grunnlag.tilTidslinje(kravGrunnlag).segmenter()).isEmpty()
     }
@@ -98,7 +98,7 @@ class Avslag11_27GrunnlagTest {
     @Test
     fun `tilTidslinje - ett krav med vurdering gir ett segment`() {
         val kravGrunnlag = KravGrunnlag(vurderinger = setOf(relevantKrav(ref1, 1 januar 2026)))
-        val grunnlag = Avslag11_27Grunnlag(listOf(vurdering(ref1)))
+        val grunnlag = Avslag11_27Grunnlag(setOf(vurdering(ref1)))
 
         val segmenter = grunnlag.tilTidslinje(kravGrunnlag).segmenter()
         assertThat(segmenter).hasSize(1)
@@ -114,7 +114,7 @@ class Avslag11_27GrunnlagTest {
                 relevantKrav(ref2, 1 april 2026),
             )
         )
-        val grunnlag = Avslag11_27Grunnlag(listOf(vurdering(ref1), vurdering(ref2)))
+        val grunnlag = Avslag11_27Grunnlag(setOf(vurdering(ref1), vurdering(ref2)))
 
         val segmenter = grunnlag.tilTidslinje(kravGrunnlag).segmenter()
             .sortedBy { it.periode.fom }
@@ -131,7 +131,7 @@ class Avslag11_27GrunnlagTest {
         val gammel = vurdering(ref1, skalAvslås = false, vurdertTidspunkt = Instant.now().minusSeconds(100))
         val ny = vurdering(ref1, skalAvslås = true, vurdertTidspunkt = Instant.now())
         val kravGrunnlag = KravGrunnlag(vurderinger = setOf(relevantKrav(ref1)))
-        val grunnlag = Avslag11_27Grunnlag(listOf(gammel, ny))
+        val grunnlag = Avslag11_27Grunnlag(setOf(gammel, ny))
 
         val segmenter = grunnlag.tilTidslinje(kravGrunnlag).segmenter()
         assertThat(segmenter).hasSize(1)
@@ -141,7 +141,7 @@ class Avslag11_27GrunnlagTest {
     @Test
     fun `tilTidslinje - vurdering uten matchende krav inkluderes ikke`() {
         val kravGrunnlag = KravGrunnlag(vurderinger = setOf(relevantKrav(ref1)))
-        val grunnlag = Avslag11_27Grunnlag(listOf(vurdering(ref2)))
+        val grunnlag = Avslag11_27Grunnlag(setOf(vurdering(ref2)))
 
         assertThat(grunnlag.tilTidslinje(kravGrunnlag).segmenter()).isEmpty()
     }
