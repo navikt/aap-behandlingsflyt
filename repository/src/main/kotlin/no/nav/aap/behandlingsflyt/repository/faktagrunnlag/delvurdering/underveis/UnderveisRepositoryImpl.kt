@@ -66,6 +66,40 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         return UnderveisGrunnlag(grunnlagId, perioder)
     }
 
+    override fun hentBulk(behandlingIds: List<BehandlingId>): Map<BehandlingId, UnderveisGrunnlag> {
+        if (behandlingIds.isEmpty()) return emptyMap()
+
+        val query = """
+            SELECT ug.id AS grunnlag_id, ug.behandling_id, up.*
+            FROM UNDERVEIS_GRUNNLAG ug
+            LEFT JOIN UNDERVEIS_PERIODER ups ON ug.perioder_id = ups.id
+            LEFT JOIN UNDERVEIS_PERIODE up ON up.perioder_id = ups.id
+            WHERE ug.behandling_id = ANY(?)
+              AND ug.aktiv = true
+            ORDER BY ug.behandling_id, up.periode
+        """.trimIndent()
+
+        val backfillStansOpphorEnabled = UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.BackfillStansOpphor)
+
+        val rows = connection.queryList(query) {
+            setParams {
+                setLongArray(1, behandlingIds.map { it.toLong() })
+            }
+            setRowMapper { row ->
+                BehandlingId(row.getLong("behandling_id")) to
+                        (row.getLong("grunnlag_id") to mapPeriode(row, backfillStansOpphorEnabled))
+            }
+        }
+
+        return rows
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, grunnlagOgPerioder) ->
+                val grunnlagId = grunnlagOgPerioder.first().first
+                val perioder = grunnlagOgPerioder.mapNotNull { it.second }
+                UnderveisGrunnlag(grunnlagId, perioder)
+            }
+    }
+
     private fun mapPeriode(it: Row, backfillStansOpphorEnabled: Boolean): Underveisperiode? {
         if (it.getStringOrNull("utfall") == null) return null
 
