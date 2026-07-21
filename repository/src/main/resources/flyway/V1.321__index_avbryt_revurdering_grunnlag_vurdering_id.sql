@@ -1,0 +1,1 @@
+CREATE INDEX idx_avbryt_revurdering_grunnlag_vurdering_id ON avbryt_revurdering_grunnlag (vurdering_id);

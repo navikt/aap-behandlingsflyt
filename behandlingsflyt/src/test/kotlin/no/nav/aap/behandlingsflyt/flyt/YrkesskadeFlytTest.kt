@@ -584,7 +584,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         // Skal feile dersom man prøver å sende til beslutter etter at vedtaket er fattet
         val avklaringsbehovFeil = org.junit.jupiter.api.assertThrows<UgyldigForespørselException> {
-            løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+            behandling.løsAvklaringsBehov(ForeslåVedtakLøsning())
         }
         assertThat(avklaringsbehovFeil.message).contains("Forsøker å løse avklaringsbehov FORESLÅ_VEDTAK(kode='5098') som er definert i et steg før nåværende steg[BREV]")
         val vedtak = hentVedtak(behandling.id)
@@ -677,34 +677,33 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
 
-        var (sak, behandling) = sendInnFørsteSøknad(
+        val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
         )
 
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        assertThat(alleAvklaringsbehov).isNotEmpty()
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSykdomLøsning(
-                løsningerForPerioder = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er ikke syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
-                        harSkadeSykdomEllerLyte = true,
-                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-                        erSkadeSykdomEllerLyteVesentligdel = null,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
-                        yrkesskadeBegrunnelse = "Skade under grense for yrkesskade",
-                        fom = periode.fom,
-                        tom = null
+        behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).isNotEmpty()
+            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        }
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er ikke syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
+                            harSkadeSykdomEllerLyte = true,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                            erSkadeSykdomEllerLyteVesentligdel = null,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                            yrkesskadeBegrunnelse = "Skade under grense for yrkesskade",
+                            fom = periode.fom,
+                            tom = null
+                        )
                     )
-                )
-            ),
-        )
+                ),
+            )
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
@@ -716,10 +715,10 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-            }
 
-        val vedtak = hentVedtak(behandling.id)
-        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+                val vedtak = hentVedtak()
+                assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+            }
 
         // Revurdering opprettes fra ny legeerklæring
         sak.sendInn(

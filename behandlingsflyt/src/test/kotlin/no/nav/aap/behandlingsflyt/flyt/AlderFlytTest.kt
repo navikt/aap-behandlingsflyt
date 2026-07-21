@@ -19,7 +19,7 @@ import java.time.LocalDate
 class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`() {
-        var (_, behandling) = sendInnFørsteSøknad(person = TestPersoner.PERSON_FOR_UNG())
+        val (_, behandling) = sendInnFørsteSøknad(person = TestPersoner.PERSON_FOR_UNG())
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 
@@ -40,13 +40,13 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         assertThat(status).isEqualTo(Status.IVERKSETTES)
 
         val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
-        behandling =
-            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+        behandling
+            .løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).isEmpty()
 
-        val behov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(behov).isEmpty()
-
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
     }
 
     @Test
