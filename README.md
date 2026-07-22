@@ -69,11 +69,13 @@ Velg konfigurasjonen `TestApp (med testcontainers)` i Run/Debug-menyen.
 
 Alternativt, for å unngå å starte IntelliJ, gå i rotmappen og kjør:
 
-```./gradlew runTestApp ```
+```shell
+./gradlew runTestApp
+```
 
 Alternativt, for å kjøre mot oppgave:
 
-```
+```shell
 docker-compose up -d
 ./gradlew runTestAppMotOppgave 
 ```
@@ -149,4 +151,12 @@ Etter dette vil appen kjøre mot reelle data. Her kan du velge om du vil koble d
 f.eks. gyldig token med cURL e.l.
 
 OBS: Krever at du har `EnvFile`-plugin i IntelliJ. 
+
+## Henvendelser
+
+Spørsmål knyttet til koden eller repositoryet kan stilles som issues her på GitHub.
+
+### For Nav-ansatte
+
+Interne henvendelser kan sendes via Slack i kanalen [`#ytelse-app-værsågod`](https://nav-it.slack.com/archives/C0312J501GX).
 
