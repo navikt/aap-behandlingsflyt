@@ -12,6 +12,7 @@ dependencies {
 }
 
 val generateAvklaringsbehovHtml =  tasks.register<JavaExec>("generateAvklaringsbehovHtml") {
+    description = "Generer HTML-fil med tabell over avklaringsbehov."
     val outputFile = layout.buildDirectory.file("dokka/html/avklaringsbehov.html")
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("no.nav.aap.docs.DefinisjonHtmlGeneratorKt")

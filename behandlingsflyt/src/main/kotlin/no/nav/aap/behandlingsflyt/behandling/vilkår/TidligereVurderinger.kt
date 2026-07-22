@@ -104,7 +104,7 @@ class TidligereVurderingerImpl(
                 )
             },
 
-            Sjekk(StegType.SØKNAD) { _, kontekst, accBehandlingsutfall ->
+            Sjekk(StegType.SØKNAD) { _, kontekst, _ ->
                 Tidslinje(
                     kontekst.rettighetsperiode,
                     if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId)) TidligereVurderinger.IkkeBehandlingsgrunnlag

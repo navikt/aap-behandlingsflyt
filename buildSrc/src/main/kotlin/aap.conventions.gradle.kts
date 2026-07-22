@@ -24,11 +24,11 @@ dependencies {
     dokkaPlugin("com.glureau:html-mermaid-dokka-plugin:0.6.0")
 }
 
-// https://docs.gradle.org/8.12.1/userguide/jvm_test_suite_plugin.html
+// https://docs.gradle.org/9.6.1/userguide/java_testing.html#java_testing
 testing {
     suites {
         @Suppress("UnstableApiUsage")
-        getByName<JvmTestSuite>("test") {
+        named<JvmTestSuite>("test") {
             useJUnitJupiter()
         }
     }

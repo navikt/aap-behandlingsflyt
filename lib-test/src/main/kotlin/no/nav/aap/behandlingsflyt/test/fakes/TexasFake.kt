@@ -36,6 +36,12 @@ class TexasFake : FakeServer() {
                 call.respond(TestToken(access_token = token))
             }
 
+            post("/saksbehandler") {
+                val token = AzureTokenGen("behandlingsflyt")
+                    .generate(isApp = false, azp = "behandlingsflyt", navIdent = "X123456")
+                call.respond(TestToken(access_token = token))
+            }
+
             post("/token/exchange") {
                 val body = call.receive<JsonNode>()
                 val NAVident = JWTParser.parse(body["user_token"].asText())

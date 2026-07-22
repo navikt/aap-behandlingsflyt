@@ -251,7 +251,8 @@ class AvklaringsbehovService(
         return vurderingsbehovErNyere
     }
 
-    /* Disse avklaringsbehovene er ikke rene frivillige avklaringsbehov, men er noen
+    /**
+     * Disse avklaringsbehovene er ikke rene frivillige avklaringsbehov, men er noen
      * ganger frivillige og andre ganger påkrevd.  Kan derfor ikke bruke den nye koden
      * for å håndtere frivillige avklaringsbehov for disse.
      */
