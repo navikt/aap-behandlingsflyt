@@ -73,6 +73,7 @@ import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnl
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.stønadsperiode.stønadsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
@@ -316,6 +317,7 @@ internal fun Application.server(
                 barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 kravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                stønadsperiodeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)

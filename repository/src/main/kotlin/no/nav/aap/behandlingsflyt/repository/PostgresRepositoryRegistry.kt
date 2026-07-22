@@ -76,6 +76,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettigh
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.SykestipendRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.samordning.BarnepensjonRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
@@ -178,3 +179,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<KravRepositoryImpl>()
     .register<TestAutomatiskMeldekortSakRepositoryImpl>()
     .register<Avslag11_27RepositoryImpl>()
+    .register<StønadsperiodeRepositoryImpl>()

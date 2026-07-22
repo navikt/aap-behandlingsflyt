@@ -78,6 +78,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStudentStegV2
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStønadsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
@@ -95,6 +96,11 @@ object Revurdering : BehandlingType {
                 steg = KravSteg,
                 informasjonskrav = emptyList(),
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.VURDER_KRAV)
+            )
+            .medSteg(
+                steg = AvklarStønadsperiodeSteg,
+                informasjonskrav = emptyList(),
+                vurderingsbehovRelevanteForSteg = emptyList()
             )
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,
