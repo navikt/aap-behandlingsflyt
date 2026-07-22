@@ -43,12 +43,9 @@ class RefusjonkravSteg private constructor(
                 when (behandlingstype) {
                     TypeBehandling.Førstegangsbehandling -> {
                        when {
-                           !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                               kontekst,
-                               type()
-                           ) -> true
+                           tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
-                           else -> false
+                           else -> true
                        }
                     }
 
