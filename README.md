@@ -100,6 +100,16 @@ curl -X 'GET' \
   -H "Authorization: Bearer $token"
 ```
 
+For å prosessere en behandling
+```shell
+token=$(curl -s -XPOST http://localhost:8081/saksbehandler | jq -r '.access_token')
+
+curl -X 'GET' \
+  'http://localhost:8080/api/behandling/c405ecde-ed3f-4bad-a8da-748a90342635/flyt/prosessering' \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer $token"
+```
+
 Send inn dokument til TestApp:
 
 ```shell
