@@ -23,7 +23,7 @@ fun NormalOpenAPIRoute.stønadsperiodeGrunnlagApi(
     gatewayProvider: GatewayProvider
 ) {
     route("api/behandling/{referanse}/grunnlag/stonadsperiode") {
-        getGrunnlag<BehandlingReferanse, StønadsperiodeGrunnlagDto>(
+        getGrunnlag<BehandlingReferanse, StønadsperiodeGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             påkrevdRolle = Definisjon.VURDER_KRAV.løsesAv // TODO: Oppdater denne når vi har avklaringsbehov
@@ -38,11 +38,11 @@ fun NormalOpenAPIRoute.stønadsperiodeGrunnlagApi(
                 val vedtattGrunnlag =
                     behandling.forrigeBehandlingId?.let { stønadsperiodeRepository.hentHvisEksisterer(it) }
 
-                StønadsperiodeGrunnlagDto(
+                StønadsperiodeGrunnlagResponse(
                     harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                     nyeVurderinger = stønadsperiodeGrunnlag?.gjeldendeVurderinger()
-                        .orEmpty().filter { it.vurdertIBehandling == behandling.id }.map { it.somDto() },
-                    vedtatteVurderinger = vedtattGrunnlag?.gjeldendeVurderinger().orEmpty().map { it.somDto() }
+                        .orEmpty().filter { it.vurdertIBehandling == behandling.id }.map { it.tilResponse() },
+                    vedtatteVurderinger = vedtattGrunnlag?.gjeldendeVurderinger().orEmpty().map { it.tilResponse() }
                 )
             }
             respond(response)
