@@ -59,7 +59,7 @@ class InstitusjonsoppholdSteg(
                 }
             },
             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON),
             nårVurderingErRelevant = ::perioderMedVurderingsbehovHelse
         )
 
@@ -85,7 +85,7 @@ class InstitusjonsoppholdSteg(
                 }
             },
             definisjon = Definisjon.AVKLAR_SONINGSFORRHOLD,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING),
         )
 
         when (kontekst.vurderingType) {

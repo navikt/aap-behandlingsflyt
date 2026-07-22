@@ -295,14 +295,16 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
 
 
         // Nytt institusjonsopphold
-        person.institusjonsopphold = listOf(
-            InstitusjonsoppholdJSON(
-                startdato = LocalDate.now().minusMonths(5),
-                forventetSluttdato = LocalDate.now().plusMonths(4),
-                institusjonstype = "FO",
-                institusjonsnavn = "institusjon",
-                organisasjonsnummer = "2334",
-                kategori = "S",
+        person.medInstitusjonsopphold(
+            listOf(
+                InstitusjonsoppholdJSON(
+                    startdato = LocalDate.now().minusMonths(5),
+                    forventetSluttdato = LocalDate.now().plusMonths(4),
+                    institusjonstype = "FO",
+                    institusjonsnavn = "institusjon",
+                    organisasjonsnummer = "2334",
+                    kategori = "S",
+                )
             )
         )
 

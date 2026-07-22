@@ -42,7 +42,7 @@ class TestPerson(
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     var yrkesskade: List<TestYrkesskade> = emptyList(),
-    var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
+    private var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     var uføre: Uføre? = null,
     var uføreHistorikk: List<Uføre> = emptyList(),
     var uføreSøknad: UføreSøknad? = null,
@@ -73,7 +73,12 @@ class TestPerson(
 ) {
     data class Sykepenger(val grad: Int, val periode: Periode)
     data class Dagpenger(val periode: Periode, val kilde: DagpengerKilde, val dagpengerYtelseType: DagpengerYtelseType)
-    data class Tiltakspenger(val periode: Periode, val kilde: TiltakspengerKilde, val ytelseType: TiltakspengerYtelseType)
+    data class Tiltakspenger(
+        val periode: Periode,
+        val kilde: TiltakspengerKilde,
+        val ytelseType: TiltakspengerYtelseType
+    )
+
     data class ForeldrePenger(val grad: Number, val periode: Periode)
 
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
@@ -84,6 +89,8 @@ class TestPerson(
      * A-inntekt og POPP (f.eks. ved endring i uføregrad midt i året).
      */
     private val aInntekter: List<InntektPerÅr>? = aInntekter
+
+    fun institusjonsopphold(): List<InstitusjonsoppholdJSON> = institusjonsopphold
 
     @JsonProperty
     fun inntekter(): List<InntektPerÅr> {
@@ -121,8 +128,18 @@ class TestPerson(
         return this
     }
 
-    fun medUføre(uføre: Prosent?, virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3), uføregradTom: LocalDate? = null): TestPerson {
-        this.uføre = uføre?.let { Uføre(virkningstidspunkt = virkningstidspunkt, uføregrad = uføre, uføregradTom = uføregradTom) }
+    fun medUføre(
+        uføre: Prosent?,
+        virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3),
+        uføregradTom: LocalDate? = null
+    ): TestPerson {
+        this.uføre = uføre?.let {
+            Uføre(
+                virkningstidspunkt = virkningstidspunkt,
+                uføregrad = uføre,
+                uføregradTom = uføregradTom
+            )
+        }
         return this
     }
 
