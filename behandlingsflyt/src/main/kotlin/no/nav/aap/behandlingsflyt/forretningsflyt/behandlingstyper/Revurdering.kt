@@ -236,6 +236,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REFUSJONSKRAV,
                 )
             )
             .medSteg(
