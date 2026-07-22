@@ -4,6 +4,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import kotlin.collections.filterIsInstance
 
 data class KravGrunnlag(
     val vurderinger: Set<KravVurdering>,
@@ -21,6 +22,10 @@ data class KravGrunnlag(
             .filterIsInstance<RelevantKrav>()
             .sortedBy { it.muligRettFra }
             .somTidslinje { Periode(it.muligRettFra, Tid.MAKS) }
+    }
+
+    fun gjeldendeRelevanteKrav(): Set<RelevantKrav> {
+        return this.gjeldendeVurderinger().filterIsInstance<RelevantKrav>().toSet()
     }
 }
 
