@@ -4,24 +4,18 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.brev.kontrakt.Rolle
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -32,34 +26,21 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.random.Random
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 class SignaturServiceTest {
 
     private val oppgavestyringGateway = mockk<OppgavestyringGateway>()
-    private val behandlingRepository = mockk<BehandlingRepository>()
-    private val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
-    private val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
+    private val behandlingRepository = InMemoryBehandlingRepository
+    private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+    private val avklaringsbehovOperasjonerRepository = InMemoryAvklaringsbehovRepository
     private val signaturService =
         SignaturService(oppgavestyringGateway, behandlingRepository, avklaringsbehovRepository)
 
-    private val behandlingTilAvklaringsbehovene = mutableMapOf<BehandlingId, List<Avklaringsbehov>>()
     private val behandlingTilOppgaveEnhet = mutableMapOf<BehandlingReferanse, List<OppgaveEnhetDto>>()
 
     @BeforeEach
     fun setup() {
-        val behandlingId = slot<BehandlingId>()
-        every { avklaringsbehovOperasjonerRepository.hent(capture(behandlingId)) } answers {
-            behandlingTilAvklaringsbehovene[behandlingId.captured] ?: emptyList()
-        }
-        every { avklaringsbehovRepository.hentAvklaringsbehovene(capture(behandlingId)) } answers {
-            Avklaringsbehovene(
-                avklaringsbehovOperasjonerRepository,
-                behandlingId.captured
-            )
-        }
-
         val behandlingReferanse = slot<BehandlingReferanse>()
         every { oppgavestyringGateway.hentOppgaveEnhet(capture(behandlingReferanse)) } answers {
             OppgaveEnhetResponse(behandlingTilOppgaveEnhet[behandlingReferanse.captured] ?: emptyList())
@@ -68,7 +49,7 @@ class SignaturServiceTest {
 
     @Test
     fun `den som står i signatur for en gitt rolle er den som utførte siste avklaringsbehovet for rollen (status AVSLUTTET)`() {
-        val behandling = gittBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -189,7 +170,7 @@ class SignaturServiceTest {
 
     @Test
     fun `skal fjerne duplikater om samme person har løst avklaringsbehov som er knytte til ulike roller – eksempel samme person på lokalkontor og NAY`() {
-        val behandling = gittBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -282,7 +263,7 @@ class SignaturServiceTest {
 
     @Test
     fun `tar med innlogget bruker i signatur for vedtaksbrev dersom beslutter ikke har saksbehandlet`() {
-        val behandling = gittBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -321,7 +302,7 @@ class SignaturServiceTest {
 
     @Test
     fun `dersom beslutter ikke har saksbehandlet og innlogget bruker har saksbehandlet beholdes rollen til innlogget bruker`() {
-        val behandling = gittBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -407,7 +388,7 @@ class SignaturServiceTest {
 
     @Test
     fun `innlogget bruker i signatur dersom det ikke er et vedtaksbrev`() {
-        val behandling = gittBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -435,7 +416,7 @@ class SignaturServiceTest {
 
     @Test
     fun `gir signatur men uten enhet dersom oppgave ikke har enhet for definisjon på avklaringsbehovet`() {
-        val behandling = gittBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -463,7 +444,7 @@ class SignaturServiceTest {
 
     @Test
     fun `SKRIV_VEDTAKSBREV_SAKSBEHANDLER gir saksbehandler nasjonal som brevskriver uten beslutter`() {
-        val behandling = gittBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandling.id,
@@ -530,24 +511,42 @@ class SignaturServiceTest {
         status: AvklaringsbehovStatus,
         oppgaveEnhet: String? = null,
     ) {
-        val avklaringsbehovene = behandlingTilAvklaringsbehovene[behandling.id]?.toMutableList() ?: mutableListOf()
-        val avklaringsbehov = avklaringsbehovene.find { it.definisjon == definisjon } ?: Avklaringsbehov(
-            -1, definisjon, mutableListOf(), StegType.UDEFINERT, false
-        ).also {
-            avklaringsbehovene.add(it)
-        }
-        behandlingTilAvklaringsbehovene.set(behandling.id, avklaringsbehovene)
-        val tidsstempel =
-            avklaringsbehovene.flatMap { it.historikk }.maxOrNull()?.tidsstempel?.plusMinutes(1) ?: LocalDateTime.now()
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovOperasjonerRepository, behandling.id)
+        val bruker = Bruker(endretAv)
 
-        avklaringsbehov.historikk.add(
-            Endring(
-                status = status,
-                tidsstempel = tidsstempel,
-                begrunnelse = "",
-                endretAv = Bruker(endretAv)
-            )
+        avklaringsbehovene.leggTil(
+            definisjon = definisjon,
+            funnetISteg = definisjon.løsesISteg,
+            perioderSomIkkeErTilstrekkeligVurdert = null,
+            perioderVedtaketBehøverVurdering = null,
+            begrunnelse = "...",
+            bruker = bruker
         )
+
+        when (status) {
+            AvklaringsbehovStatus.OPPRETTET -> Unit
+            AvklaringsbehovStatus.AVSLUTTET -> {
+                avklaringsbehovene.løsAvklaringsbehov(definisjon, "...", bruker)
+            }
+
+            AvklaringsbehovStatus.KVALITETSSIKRET -> {
+                val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+                if (avklaringsbehov != null && !avklaringsbehov.harAvsluttetStatusIHistorikken()) {
+                    avklaringsbehovene.løsAvklaringsbehov(definisjon, "...", bruker)
+                }
+                avklaringsbehovene.vurderKvalitet(definisjon, godkjent = true, begrunnelse = "...", vurdertAv = bruker)
+            }
+
+            AvklaringsbehovStatus.TOTRINNS_VURDERT -> {
+                val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+                if (avklaringsbehov != null && !avklaringsbehov.harAvsluttetStatusIHistorikken()) {
+                    avklaringsbehovene.løsAvklaringsbehov(definisjon, "...", bruker)
+                }
+                avklaringsbehovene.vurderTotrinn(definisjon, godkjent = true, begrunnelse = "...", vurdertAv = bruker)
+            }
+
+            else -> error("Ustøttet status i testdata: $status")
+        }
 
         if (oppgaveEnhet != null) {
             val eksistende = behandlingTilOppgaveEnhet[behandling.referanse] ?: emptyList()
@@ -558,20 +557,4 @@ class SignaturServiceTest {
         }
     }
 
-    fun gittBehandling(): Behandling {
-        val behandlingId = BehandlingId(Random.nextLong())
-        val behandling = Behandling(
-            id = behandlingId,
-            forrigeBehandlingId = null,
-            sakId = SakId(Random.nextLong()),
-            status = no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.IVERKSETTES,
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
-            årsakTilOpprettelse = null,
-            versjon = 1,
-        )
-
-        every { behandlingRepository.hent(behandlingId) } returns behandling
-
-        return behandling
-    }
 }

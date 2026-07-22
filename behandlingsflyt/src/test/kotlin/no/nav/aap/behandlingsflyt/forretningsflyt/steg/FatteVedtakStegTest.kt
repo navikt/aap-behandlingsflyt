@@ -385,7 +385,7 @@ class FatteVedtakStegTest {
 
     private fun sistAvsluttet(behandlingId: BehandlingId, definisjon: Definisjon): LocalDateTime {
         return requireNotNull(InMemoryAvklaringsbehovRepository.hent(behandlingId).find { it.definisjon == definisjon })
-            .historikk
+            .historikk()
             .filter { it.status == Status.AVSLUTTET }
             .maxOf { it.tidsstempel }
     }

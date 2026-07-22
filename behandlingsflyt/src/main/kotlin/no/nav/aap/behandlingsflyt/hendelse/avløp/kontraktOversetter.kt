@@ -60,7 +60,7 @@ fun sortererteAvklaringsbehov(
             id = avklaringsbehov.id,
             avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
             status = avklaringsbehov.status(),
-            endringer = avklaringsbehov.historikk.map { endring ->
+            endringer = avklaringsbehov.historikk().map { endring ->
                 EndringDTO(
                     status = endring.status,
                     tidsstempel = endring.tidsstempel,

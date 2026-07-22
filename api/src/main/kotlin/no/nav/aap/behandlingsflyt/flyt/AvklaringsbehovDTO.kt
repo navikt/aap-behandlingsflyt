@@ -20,7 +20,7 @@ data class AvklaringsbehovDTO(
     constructor(avklaringsbehov: Avklaringsbehov, kravdato: LocalDate) : this(
         definisjon = avklaringsbehov.definisjon,
         status = avklaringsbehov.status(),
-        endringer = avklaringsbehov.historikk.map { endring ->
+        endringer = avklaringsbehov.historikk().map { endring ->
             EndringDTO(
                 status = endring.status,
                 tidsstempel = endring.tidsstempel,

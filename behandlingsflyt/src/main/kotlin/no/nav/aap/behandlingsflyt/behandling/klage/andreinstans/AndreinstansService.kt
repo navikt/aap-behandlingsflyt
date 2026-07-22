@@ -101,7 +101,7 @@ class AndreinstansService(
 
     private fun utledSisteSaksbehandler(avklaringsbehovene: Avklaringsbehovene): Bruker {
         return avklaringsbehovene.alle().mapNotNull { avklaringsbehov ->
-            avklaringsbehov.historikk.filter { it.endretAv.erNavIdent() && it.status == Status.AVSLUTTET }.maxOrNull()
+            avklaringsbehov.historikk().filter { it.endretAv.erNavIdent() && it.status == Status.AVSLUTTET }.maxOrNull()
         }.max().endretAv
     }
 }

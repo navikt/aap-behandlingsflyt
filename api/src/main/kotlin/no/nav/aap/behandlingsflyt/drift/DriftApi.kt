@@ -443,7 +443,7 @@ fun NormalOpenAPIRoute.driftApi(
                                 .hentAvklaringsbehovene(behandling.id)
                                 .alle()
                                 .flatMap { avklaringsbehov ->
-                                    avklaringsbehov.historikk.map { endring ->
+                                    avklaringsbehov.historikk().map { endring ->
                                         ForenkletAvklaringsbehov(
                                             definisjon = avklaringsbehov.definisjon,
                                             status = endring.status,

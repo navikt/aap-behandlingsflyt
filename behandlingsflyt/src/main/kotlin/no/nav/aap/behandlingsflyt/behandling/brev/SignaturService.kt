@@ -189,7 +189,7 @@ class SignaturService(
     }
 
     private fun sisteEndringAvPerson(avklaringsbehov: Avklaringsbehov): Endring? {
-        return avklaringsbehov.historikk
+        return avklaringsbehov.historikk()
             .filter { it.endretAv.erNavIdent() && it.status == AvklaringsbehovStatus.AVSLUTTET }
             .maxOrNull()
     }

@@ -129,7 +129,7 @@ private fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Histori
     return relevanteBehov
         .asSequence()
         .flatMap { behov ->
-            behov.historikk.filter { e -> e.status in listOf(Status.AVSLUTTET) }
+            behov.historikk().filter { e -> e.status in listOf(Status.AVSLUTTET) }
                 .map { endring -> DefinisjonEndring(behov.definisjon, endring) }
         }
         .sorted()
@@ -158,7 +158,7 @@ private fun utledEndringerSidenSist(
     tidsstempel: LocalDateTime
 ): List<DefinisjonEndring> {
     return alleBehov.flatMap { behov ->
-        behov.historikk.filter {
+        behov.historikk().filter {
             Interval(
                 tidsstempelForrigeBehov,
                 tidsstempel

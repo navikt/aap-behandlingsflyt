@@ -120,8 +120,8 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(resultat1).isEqualTo(Fullført)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
-        assertThat(avklaringsbehov!!.historikk).hasSize(1)
-        assertThat(avklaringsbehov.historikk[0].status).isEqualTo(Status.OPPRETTET)
+        assertThat(avklaringsbehov!!.historikk()).hasSize(1)
+        assertThat(avklaringsbehov.historikk()[0].status).isEqualTo(Status.OPPRETTET)
 
         verify(exactly = 1) { brevbestillingService.bestill(behandling.id, VedtakAktivitetsplikt11_7, allAny(), false) }
 
@@ -145,8 +145,8 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(resultat2).isEqualTo(Fullført)
         val avklaringsbehovene2 = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov2 = avklaringsbehovene2.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
-        assertThat(avklaringsbehov2!!.historikk).hasSize(2)
-        assertThat(avklaringsbehov2.historikk.last().status).isEqualTo(Status.AVSLUTTET)
+        assertThat(avklaringsbehov2!!.historikk()).hasSize(2)
+        assertThat(avklaringsbehov2.historikk().last().status).isEqualTo(Status.AVSLUTTET)
         // brevBestilling har ikke kjørt i runde-2 da det allerede er bestilt
         verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
     }

@@ -13,20 +13,23 @@ import java.time.LocalDateTime
 class Avklaringsbehov(
     val id: Long,
     val definisjon: Definisjon,
-    val historikk: MutableList<Endring> = mutableListOf(),
+    historikk: List<Endring> = mutableListOf(),
     val funnetISteg: StegType,
     private var kreverToTrinn: Boolean?
 ) {
+
+    private var historikkInternal: MutableList<Endring> = historikk.toMutableList()
+
     init {
-        if (historikk.isEmpty()) {
-            historikk += Endring(
+        if (historikkInternal.isEmpty()) {
+            historikkInternal += Endring(
                 status = Status.OPPRETTET, begrunnelse = "", endretAv = SYSTEMBRUKER
             )
         }
     }
 
     val aktivHistorikk: List<Endring>
-        get() = historikk.takeLastWhile {
+        get() = historikkInternal.takeLastWhile {
             it.status != Status.AVBRUTT
         }
 
@@ -36,6 +39,8 @@ class Avklaringsbehov(
             ?.perioderVedtaketBehøverVurdering
             ?.sorted()
 
+    fun historikk(): List<Endring> = historikkInternal
+
     fun erTotrinn(): Boolean {
         if (definisjon.kreverToTrinn) {
             return true
@@ -44,7 +49,7 @@ class Avklaringsbehov(
     }
 
     fun brukere(): List<Bruker> {
-        return historikk.filter { it.status == Status.AVSLUTTET }.map { it.endretAv }
+        return historikkInternal.filter { it.status == Status.AVSLUTTET }.map { it.endretAv }
     }
 
     fun erTotrinnsVurdert(): Boolean {
@@ -75,7 +80,7 @@ class Avklaringsbehov(
         } else {
             Status.SENDT_TILBAKE_FRA_BESLUTTER
         }
-        historikk += Endring(
+        historikkInternal += Endring(
             status = status,
             begrunnelse = begrunnelse,
             endretAv = vurdertAv,
@@ -95,7 +100,7 @@ class Avklaringsbehov(
         } else {
             Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
         }
-        historikk += Endring(
+        historikkInternal += Endring(
             status = status,
             begrunnelse = begrunnelse,
             endretAv = vurdertAv,
@@ -111,12 +116,12 @@ class Avklaringsbehov(
         perioderVedtaketBehøverVurdering: Set<Periode>?,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
     ) {
-        require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
+        require(historikkInternal.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikkInternal.last().status}." }
         if (definisjon.erVentebehov()) {
             requireNotNull(frist)
             requireNotNull(venteårsak)
         }
-        historikk += Endring(
+        historikkInternal += Endring(
             status = Status.OPPRETTET,
             begrunnelse = begrunnelse,
             grunn = venteårsak,
@@ -131,12 +136,12 @@ class Avklaringsbehov(
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?
     ): Boolean {
-        val siste = historikk.last()
+        val siste = historikkInternal.last()
         require(siste.status.erÅpent()) {
             "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
         }
         if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering) {
-            historikk += siste.copy(
+            historikkInternal += siste.copy(
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                 tidsstempel = LocalDateTime.now()
@@ -162,7 +167,7 @@ class Avklaringsbehov(
         if (this.kreverToTrinn != true) {
             this.kreverToTrinn = kreverToTrinn
         }
-        historikk.add(
+        historikkInternal.add(
             Endring(
                 status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = endretAv
             )
@@ -170,17 +175,17 @@ class Avklaringsbehov(
     }
 
     internal fun avbryt() {
-        historikk += Endring(
+        historikkInternal += Endring(
             status = Status.AVBRUTT, begrunnelse = "", endretAv = SYSTEMBRUKER
         )
     }
 
     internal fun avslutt(begrunnelse: String) {
-        check(historikk.any { it.status == Status.AVSLUTTET }) {
+        check(historikkInternal.any { it.status == Status.AVSLUTTET }) {
             "Et steg burde vel ha vært løst minst en gang for å kunne regnes som avsluttet?"
         }
 
-        historikk += Endring(
+        historikkInternal += Endring(
             status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = SYSTEMBRUKER
         )
     }
@@ -194,25 +199,25 @@ class Avklaringsbehov(
     }
 
     fun harAvsluttetStatusIHistorikken(): Boolean {
-        return historikk.any { it.status == Status.AVSLUTTET }
+        return historikkInternal.any { it.status == Status.AVSLUTTET }
     }
 
     fun sistAvsluttet(): LocalDateTime {
-        return historikk.filter { it.status == Status.AVSLUTTET }.maxOf { it.tidsstempel }
+        return historikkInternal.filter { it.status == Status.AVSLUTTET }.maxOf { it.tidsstempel }
     }
 
     fun sistAvsluttetOrNull(): LocalDateTime? {
-        return historikk.filter { it.status == Status.AVSLUTTET }.maxOfOrNull { it.tidsstempel }
+        return historikkInternal.filter { it.status == Status.AVSLUTTET }.maxOfOrNull { it.tidsstempel }
     }
 
     fun status(): Status {
-        return historikk.maxOf { it }.status
+        return historikkInternal.maxOf { it }.status
     }
 
-    fun begrunnelse(): String = historikk.maxOf { it }.begrunnelse
-    fun venteårsak(): ÅrsakTilSettPåVent? = historikk.filter { it.status == Status.OPPRETTET }.maxOf { it }.grunn
-    fun endretAv(): Bruker = historikk.maxOf { it }.endretAv
-    fun årsakTilRetur(): List<ÅrsakTilRetur> = historikk.maxOf { it }.årsakTilRetur
+    fun begrunnelse(): String = historikkInternal.maxOf { it }.begrunnelse
+    fun venteårsak(): ÅrsakTilSettPåVent? = historikkInternal.filter { it.status == Status.OPPRETTET }.maxOf { it }.grunn
+    fun endretAv(): Bruker = historikkInternal.maxOf { it }.endretAv
+    fun årsakTilRetur(): List<ÅrsakTilRetur> = historikkInternal.maxOf { it }.årsakTilRetur
 
     fun skalLøsesISteg(type: StegType): Boolean {
         return definisjon.skalLøsesISteg(type, funnetISteg)
@@ -250,8 +255,8 @@ class Avklaringsbehov(
     }
 
     fun frist(): LocalDate {
-        return requireNotNull(historikk.last { it.status == Status.OPPRETTET && it.frist != null }.frist)
-        { "Prøvde å finne frist, men historikk er tom. Definisjon $definisjon. Funnet i steg $funnetISteg. ID: $id. Historikk: $historikk." }
+        return requireNotNull(historikkInternal.last { it.status == Status.OPPRETTET && it.frist != null }.frist)
+        { "Prøvde å finne frist, men historikk er tom. Definisjon $definisjon. Funnet i steg $funnetISteg. ID: $id. Historikk: $historikkInternal." }
     }
 
     fun fristUtløpt(): Boolean {
@@ -266,12 +271,8 @@ class Avklaringsbehov(
         return definisjon.erAutomatisk()
     }
 
-    fun erBrevVentebehov(): Boolean {
-        return definisjon.erBrevVentebehov()
-    }
-
     fun sistEndret(): LocalDateTime {
-        return historikk.last().tidsstempel
+        return historikkInternal.last().tidsstempel
     }
 
     fun perioderVedtaketBehøverVurdering(): Set<Periode>? {

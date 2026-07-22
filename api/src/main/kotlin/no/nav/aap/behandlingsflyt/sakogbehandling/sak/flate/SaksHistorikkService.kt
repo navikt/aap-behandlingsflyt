@@ -85,7 +85,7 @@ class SaksHistorikkService(
                     when (avklaringsbehov.definisjon) {
                         Definisjon.FATTE_VEDTAK -> {
                             if (erVedtatt) {
-                                avklaringsbehov.historikk
+                                avklaringsbehov.historikk()
                                     .filter { it.status == Status.AVSLUTTET }
                                     .maxByOrNull { it.tidsstempel }
                                     ?.let {
@@ -102,7 +102,7 @@ class SaksHistorikkService(
                         }
 
                         Definisjon.MANUELT_SATT_PÅ_VENT -> {
-                            avklaringsbehov.historikk.map { h ->
+                            avklaringsbehov.historikk().map { h ->
                                 val type = if (h.status == Status.AVSLUTTET) {
                                     BehandlingHendelseType.TATT_AV_VENT
                                 } else {
@@ -120,7 +120,7 @@ class SaksHistorikkService(
                         }
 
                         Definisjon.FORESLÅ_VEDTAK -> {
-                            avklaringsbehov.historikk
+                            avklaringsbehov.historikk()
                                 .filter { it.status == Status.AVSLUTTET }
                                 .map { h ->
                                     BehandlingHendelseDTO(
@@ -132,7 +132,7 @@ class SaksHistorikkService(
                         }
 
                         Definisjon.SKRIV_VEDTAKSBREV, Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
-                            avklaringsbehov.historikk
+                            avklaringsbehov.historikk()
                                 .filter { it.status == Status.AVSLUTTET }
                                 .map { h ->
                                     BehandlingHendelseDTO(
@@ -145,7 +145,8 @@ class SaksHistorikkService(
                         }
 
                         Definisjon.KVALITETSSIKRING -> {
-                            val sendtTilKvalitetssikrer = avklaringsbehov.historikk
+                            val sendtTilKvalitetssikrer = avklaringsbehov
+                                .historikk()
                                 .filter { it.status != Status.AVSLUTTET }
                                 .map { h ->
                                     BehandlingHendelseDTO(
@@ -157,7 +158,7 @@ class SaksHistorikkService(
                                 }
 
                             val kvalitetssikretTidligere = if (alleBehovErKvalitetssikret) {
-                                avklaringsbehov.historikk.filter { it.status == Status.AVSLUTTET }
+                                avklaringsbehov.historikk().filter { it.status == Status.AVSLUTTET }
                                     .maxByOrNull { it.tidsstempel }
                                     ?.let {
                                         listOf(
@@ -174,7 +175,7 @@ class SaksHistorikkService(
                         }
 
                         Definisjon.BESTILL_LEGEERKLÆRING -> {
-                            avklaringsbehov.historikk
+                            avklaringsbehov.historikk()
                                 .filter { it.status != Status.AVSLUTTET }
                                 .map { h ->
                                     BehandlingHendelseDTO(
@@ -192,7 +193,7 @@ class SaksHistorikkService(
                                 .maxByOrNull { it.vurdert }
 
                             if (nyesteVurdering?.skalTrekkes == true) {
-                                avklaringsbehov.historikk
+                                avklaringsbehov.historikk()
                                     .filter { it.status == Status.AVSLUTTET }
                                     .map { h ->
                                         BehandlingHendelseDTO(
@@ -225,7 +226,7 @@ class SaksHistorikkService(
         return behandlingerMedBehov.mapNotNull { behandling ->
             val mapped = behandling.avklaringsbehov
                 .flatMap { behov ->
-                    behov.historikk
+                    behov.historikk()
                         .filter { it.status in returStatuser }
                         .map { hendelse ->
                             val typeRetur = if (hendelse.status == SENDT_TILBAKE_FRA_KVALITETSSIKRER) {
@@ -291,12 +292,10 @@ class SaksHistorikkService(
                     MarkeringHendelseType.OPPRETTET -> when (markering.markeringType) {
                         MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_OPPRETTET
                         MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_AVSLAG_SYKDOM_OPPRETTET
-                        else -> null
                     }
                     MarkeringHendelseType.FJERNET -> when (markering.markeringType) {
                         MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_FJERNET
                         MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_AVSLAG_SYKDOM_FJERNET
-                        else -> null
                     }
                     else -> null
                 } ?: return@mapNotNull null
