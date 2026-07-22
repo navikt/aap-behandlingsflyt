@@ -15,7 +15,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.*
 
 object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
     AvklaringsbehovOperasjonerRepository {
@@ -111,10 +111,9 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
     ) {
         synchronized(lock) {
             val avklaringsbehov =
-                memory.values.single { it -> it.avklaringsbehovene.any { it.id == avklaringsbehovId } }
+                memory.values.single { it.avklaringsbehovene.any { avklaringsbehov -> avklaringsbehov.id == avklaringsbehovId } }
 
-         avklaringsbehov.endre(avklaringsbehovId, lagretEndring(endring))
-
+            avklaringsbehov.endre(avklaringsbehovId, lagretEndring(endring))
         }
     }
 
