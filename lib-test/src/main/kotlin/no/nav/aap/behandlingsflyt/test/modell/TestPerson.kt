@@ -42,7 +42,7 @@ class TestPerson(
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     var yrkesskade: List<TestYrkesskade> = emptyList(),
-    private var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
+    institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     var uføre: Uføre? = null,
     var uføreHistorikk: List<Uføre> = emptyList(),
     var uføreSøknad: UføreSøknad? = null,
@@ -64,7 +64,7 @@ class TestPerson(
     val medlStatus: List<MedlemskapDataIntern> = emptyList(),
     var fastlege: BehandlerDto? = null,
     var sykepenger: List<Sykepenger>? = null,
-    var dagpenger: List<Dagpenger>? = null,
+    dagpenger: List<Dagpenger>? = null,
     var tiltakspenger: List<Tiltakspenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
     val tjenestePensjon: TjenestePensjonRespons? = null,
@@ -81,6 +81,7 @@ class TestPerson(
 
     data class ForeldrePenger(val grad: Number, val periode: Periode)
 
+
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
 
     /**
@@ -90,7 +91,8 @@ class TestPerson(
      */
     private val aInntekter: List<InntektPerÅr>? = aInntekter
 
-    fun institusjonsopphold(): List<InstitusjonsoppholdJSON> = institusjonsopphold
+    var institusjonsopphold = institusjonsopphold
+        private set
 
     @JsonProperty
     fun inntekter(): List<InntektPerÅr> {
@@ -114,9 +116,8 @@ class TestPerson(
         return sykepenger.orEmpty()
     }
 
-    fun dagpenger(): List<Dagpenger> {
-        return dagpenger.orEmpty()
-    }
+    var dagpenger = dagpenger
+        private set
 
     fun tiltakspenger(): List<Tiltakspenger> {
         return tiltakspenger.orEmpty()

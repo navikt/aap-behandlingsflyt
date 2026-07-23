@@ -33,7 +33,7 @@ class Inst2Fake(private val fakePersoner: () -> TestPersonService) : FakeServer(
                 val fakePerson = fakePersoner().hentPerson(ident)
 
                 if (fakePerson != null) {
-                    call.respond(fakePerson.institusjonsopphold())
+                    call.respond(fakePerson.institusjonsopphold)
                 } else {
                     call.respond<List<InstitusjonoppholdRequest>>(emptyList())
                 }
