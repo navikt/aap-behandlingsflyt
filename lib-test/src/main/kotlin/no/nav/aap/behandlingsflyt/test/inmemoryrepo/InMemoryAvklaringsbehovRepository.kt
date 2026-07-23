@@ -15,7 +15,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.*
 
 object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
     AvklaringsbehovOperasjonerRepository {
@@ -74,7 +74,7 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                     endring
                 )
             } else {
-                eksisterendeBehov.historikk.add(endring)
+                avklaringsbehov.endre(eksisterendeBehov.id, endring)
             }
         }
     }
@@ -105,21 +105,15 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         endreAvklaringsbehov(avklaringsbehovId, endring)
     }
 
-    fun clearMemory() {
-        synchronized(lock) {
-            memory.clear()
-            endringSeq.set(0)
-        }
-    }
-
     private fun endreAvklaringsbehov(
         avklaringsbehovId: Long,
         endring: Endring
     ) {
         synchronized(lock) {
-            memory.values.flatMap { it.avklaringsbehovene }
-                .single { it.id == avklaringsbehovId }
-                .historikk.add(lagretEndring(endring))
+            val avklaringsbehov =
+                memory.values.single { it.avklaringsbehovene.any { avklaringsbehov -> avklaringsbehov.id == avklaringsbehovId } }
+
+            avklaringsbehov.endre(avklaringsbehovId, lagretEndring(endring))
         }
     }
 
@@ -173,6 +167,23 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                 kreverToTrinn = false
             )
             avklaringsbehovene.add(avklaringsbehov)
+        }
+
+        fun endre(avklaringsbehovId: Long, endring: Endring) {
+            val avklaringsbehov = avklaringsbehovene.single { it.id == avklaringsbehovId }
+
+            // Erstatt med kopi
+            avklaringsbehovene.removeIf { it.id == avklaringsbehovId }
+
+            avklaringsbehovene.add(
+                Avklaringsbehov(
+                    id = avklaringsbehov.id,
+                    definisjon = avklaringsbehov.definisjon,
+                    historikk = avklaringsbehov.historikk + endring,
+                    funnetISteg = avklaringsbehov.funnetISteg,
+                    kreverToTrinn = avklaringsbehov.erTotrinn()
+                )
+            )
         }
     }
 }

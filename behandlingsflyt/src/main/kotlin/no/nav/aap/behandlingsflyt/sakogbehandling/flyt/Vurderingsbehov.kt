@@ -49,6 +49,8 @@ enum class Vurderingsbehov {
     REVURDER_SYKEPENGEERSTATNING, // Sykdomstegene, men de som ligger på på NAY og ikke kontor
     BARNETILLEGG,
     INSTITUSJONSOPPHOLD,
+    INSTITUSJONSOPPHOLD_HELSEINSTITUSJON,
+    INSTITUSJONSOPPHOLD_SONING,
     SAMORDNING_OG_AVREGNING,
     REFUSJONSKRAV,
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
@@ -172,4 +174,6 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.VURDER_AVSLAG_11_27 -> Vurderingsbehov.VURDER_AVSLAG_11_27
         EksponertÅrsak.FASTSETT_ARBEIDSEVNE -> Vurderingsbehov.FASTSETT_ARBEIDSEVNE
         EksponertÅrsak.VURDER_ARBEIDSOPPTRAPPING -> Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING
+        EksponertÅrsak.INSTITUSJONSOPPHOLD_SONING -> Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING
+        EksponertÅrsak.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON -> Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON
     }

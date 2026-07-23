@@ -145,7 +145,8 @@ class SaksHistorikkService(
                         }
 
                         Definisjon.KVALITETSSIKRING -> {
-                            val sendtTilKvalitetssikrer = avklaringsbehov.historikk
+                            val sendtTilKvalitetssikrer = avklaringsbehov
+                                .historikk
                                 .filter { it.status != Status.AVSLUTTET }
                                 .map { h ->
                                     BehandlingHendelseDTO(
@@ -291,12 +292,10 @@ class SaksHistorikkService(
                     MarkeringHendelseType.OPPRETTET -> when (markering.markeringType) {
                         MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_OPPRETTET
                         MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_AVSLAG_SYKDOM_OPPRETTET
-                        else -> null
                     }
                     MarkeringHendelseType.FJERNET -> when (markering.markeringType) {
                         MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_FJERNET
                         MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_AVSLAG_SYKDOM_FJERNET
-                        else -> null
                     }
                     else -> null
                 } ?: return@mapNotNull null

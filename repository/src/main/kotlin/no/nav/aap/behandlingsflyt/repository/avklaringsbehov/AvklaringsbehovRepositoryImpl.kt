@@ -62,11 +62,11 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?
     ) {
-        var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
-
-        if (avklaringsbehovId == null) {
-            avklaringsbehovId = opprettAvklaringsbehov(behandlingId, definisjon, funnetISteg)
-        }
+        val avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon) ?: opprettAvklaringsbehov(
+            behandlingId,
+            definisjon,
+            funnetISteg
+        )
 
         endreAvklaringsbehov(
             avklaringsbehovId,

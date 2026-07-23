@@ -98,6 +98,8 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
                 Vurderingsbehov.BARNETILLEGG,
                 Vurderingsbehov.INSTITUSJONSOPPHOLD,
+                Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING,
+                Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON,
                 Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                 Vurderingsbehov.REVURDER_INNTEKTSBORTFALL,
                 Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
