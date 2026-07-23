@@ -57,7 +57,7 @@ class FatteVedtakSteg(
 
         val vedtakstidspunkt = if (vedtakBehøverVurdering)
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
-                ?.historikk()
+                ?.historikk
                 ?.filter { it.status == Status.AVSLUTTET }
                 ?.maxOrNull()
                 ?.tidsstempel

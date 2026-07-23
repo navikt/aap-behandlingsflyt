@@ -177,7 +177,7 @@ class VurderAktivitetsplikt11_7Steg(
         val varselDato = varsel?.sendtDato ?: throw IllegalStateException("Fant ikke varslingstidspunkt")
 
         val erSisteVarselTattAvVent =
-            venteBehov.historikk().any { it.status == AVSLUTTET && it.tidsstempel > varselDato.atStartOfDay() }
+            venteBehov.historikk.any { it.status == AVSLUTTET && it.tidsstempel > varselDato.atStartOfDay() }
         return !erSisteVarselTattAvVent
     }
 

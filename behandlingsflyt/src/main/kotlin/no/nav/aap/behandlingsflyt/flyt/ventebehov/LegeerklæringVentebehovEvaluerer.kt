@@ -25,7 +25,7 @@ class LegeerklæringVentebehovEvaluerer(
         avklaringsbehov: Avklaringsbehov,
         sakId: SakId
     ): Boolean {
-        val sisteLegeerklæringBestilling = avklaringsbehov.historikk().maxBy { it.tidsstempel }
+        val sisteLegeerklæringBestilling = avklaringsbehov.historikk.maxBy { it.tidsstempel }
 
         val avvistDokumenter =
             mottattDokumentRepository.hentDokumenterAvType(

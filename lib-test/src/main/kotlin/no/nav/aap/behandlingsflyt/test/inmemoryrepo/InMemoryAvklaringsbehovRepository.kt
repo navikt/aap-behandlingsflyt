@@ -137,7 +137,7 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
             Avklaringsbehov(
                 avklaringsbehovId,
                 avklaringsbehov.definisjon,
-                avklaringsbehov.historikk(),
+                avklaringsbehov.historikk,
                 funnetISteg,
                 avklaringsbehov.erTotrinn() && !avklaringsbehov.definisjon.kreverToTrinn
             )
@@ -179,7 +179,7 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                 Avklaringsbehov(
                     id = avklaringsbehov.id,
                     definisjon = avklaringsbehov.definisjon,
-                    historikk = avklaringsbehov.historikk() + endring,
+                    historikk = avklaringsbehov.historikk + endring,
                     funnetISteg = avklaringsbehov.funnetISteg,
                     kreverToTrinn = avklaringsbehov.erTotrinn()
                 )

@@ -35,7 +35,7 @@ class Avklaringsbehovene(
             avklaringsbehov.løs(begrunnelse = begrunnelse, endretAv = endretAv, kreverToTrinn = kreverToTrinn)
             repository.kreverToTrinn(avklaringsbehov.id, kreverToTrinn)
         }
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk().last())
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker) {
@@ -96,9 +96,9 @@ class Avklaringsbehovene(
                 )
                 if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
                     // TODO: Vurdere om funnet steg bør ligge på endringen...
-                    repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk().last(), funnetISteg)
+                    repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
                 } else {
-                    repository.endre(avklaringsbehov.id, avklaringsbehov.historikk().last())
+                    repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
                 }
             } else {
                 log.info("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
@@ -135,7 +135,7 @@ class Avklaringsbehovene(
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.vurderTotrinn(begrunnelse, godkjent, vurdertAv, årsakTilRetur)
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk().last())
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     fun vurderKvalitet(
@@ -147,13 +147,13 @@ class Avklaringsbehovene(
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.vurderKvalitet(begrunnelse, godkjent, vurdertAv, årsakTilRetur)
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk().last())
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     internal fun avbryt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avbryt()
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk().last())
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     /**
@@ -162,7 +162,7 @@ class Avklaringsbehovene(
     internal fun avslutt(definisjon: Definisjon, begrunnelse: String) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avslutt(begrunnelse)
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk().last())
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
 
@@ -181,7 +181,7 @@ class Avklaringsbehovene(
             perioderSomIkkeErTilstrekkeligVurdert = null, // Kan ikke si noe om dette
             perioderVedtaketBehøverVurdering = avklaringsbehov.perioderVedtaketBehøverVurdering()
         )
-        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk().last())
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     internal fun oppdaterPerioder(
@@ -195,7 +195,7 @@ class Avklaringsbehovene(
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
         )
         if (harEndring) {
-            repository.endre(avklaringsbehov.id, avklaringsbehov.historikk().last())
+            repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
         }
     }
 
@@ -267,7 +267,7 @@ class Avklaringsbehovene(
     }
 
     fun hentNyesteKvalitetssikringGittDefinisjon(definisjon: Definisjon): Endring? {
-        return hentBehovForDefinisjon(definisjon)?.historikk()?.filter {
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter {
             it.status in setOf(
                 Status.KVALITETSSIKRET,
                 Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
@@ -276,7 +276,7 @@ class Avklaringsbehovene(
     }
 
     fun hentNyesteBeslutningGittDefinisjon(definisjon: Definisjon): Endring? {
-        return hentBehovForDefinisjon(definisjon)?.historikk()?.filter {
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter {
             it.status in setOf(
                 Status.TOTRINNS_VURDERT,
                 Status.SENDT_TILBAKE_FRA_BESLUTTER

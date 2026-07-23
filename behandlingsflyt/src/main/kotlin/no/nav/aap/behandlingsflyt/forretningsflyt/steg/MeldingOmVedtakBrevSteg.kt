@@ -113,7 +113,8 @@ class MeldingOmVedtakBrevSteg(
         val harManueltBrevbehov = (!behandlingErAvbrutt && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev())
 
         val behovForBeslutterbrev = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
-        val harBeslutterSkrevetBrev = behovForBeslutterbrev?.historikk()?.any { it.status == Status.AVSLUTTET } ?: false
+        val harBeslutterSkrevetBrev =
+            behovForBeslutterbrev?.historikk?.any { it.status == Status.AVSLUTTET } ?: false
 
         val erBeslutterbehovAvbrutt = behovForBeslutterbrev?.status() == Status.AVBRUTT
         val harÅpentSaksbehandlerbehov =
