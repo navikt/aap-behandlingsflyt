@@ -149,6 +149,7 @@ class AvklarStønadsperiodeStegTest {
     private fun lagStønadsperiodeVurdering(
         referanse: Kravreferanse,
         behandlingId: BehandlingId,
+        startDato: LocalDate = LocalDate.now(),
     ) = StønadsperiodeVurdering(
         referanse = referanse,
         opprettet = Instant.now(),
@@ -158,6 +159,7 @@ class AvklarStønadsperiodeStegTest {
         harHattOrdinærSiste52Uker = false,
         harGjenværendeKvote = false,
         relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+        startDato = startDato,
     )
 
     private object KravStegPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
