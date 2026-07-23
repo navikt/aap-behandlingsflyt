@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ArbeidsopptrappingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvbrytRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStudentStegV2
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStønadsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BekreftVurderingerOppfølgingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
@@ -95,6 +96,11 @@ object Revurdering : BehandlingType {
                 steg = KravSteg,
                 informasjonskrav = emptyList(),
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.VURDER_KRAV)
+            )
+            .medSteg(
+                steg = AvklarStønadsperiodeSteg,
+                informasjonskrav = emptyList(),
+                vurderingsbehovRelevanteForSteg = emptyList()
             )
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,

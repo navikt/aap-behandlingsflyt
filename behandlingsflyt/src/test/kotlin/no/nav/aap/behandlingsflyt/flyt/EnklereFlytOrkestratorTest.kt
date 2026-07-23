@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STUDENT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
@@ -20,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FASTSETT_MELDEPERIODER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FATTE_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.IVERKSETT_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KRAV
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STØNADSPERIODE
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.OPPRETT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
@@ -267,6 +267,7 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 START_BEHANDLING,
                 KRAV,
+                AVKLAR_STØNADSPERIODE,
                 SEND_FORVALTNINGSMELDING,
                 AVBRYT_REVURDERING,
                 SØKNAD,
@@ -291,6 +292,7 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 START_BEHANDLING,
                 KRAV,
+                AVKLAR_STØNADSPERIODE,
                 SEND_FORVALTNINGSMELDING,
                 AVBRYT_REVURDERING,
                 SØKNAD,
@@ -386,6 +388,31 @@ class EnklereFlytOrkestratorTest {
                 ),
                 StegTilstand(
                     stegType = KRAV,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegStatus = StegStatus.START,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegStatus = StegStatus.UTFØRER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),
@@ -597,6 +624,31 @@ class EnklereFlytOrkestratorTest {
                 ),
                 StegTilstand(
                     stegType = KRAV,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegStatus = StegStatus.START,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegStatus = StegStatus.UTFØRER,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),
