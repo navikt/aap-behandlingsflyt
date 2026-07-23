@@ -7,6 +7,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.Instant
 
 class Reduksjon11_9RepositoryImpl(private val connection: DBConnection) :
     Reduksjon11_9Repository {
@@ -52,11 +53,12 @@ class Reduksjon11_9RepositoryImpl(private val connection: DBConnection) :
 
         val grunnlagId = connection.executeReturnKey(
             """
-            insert into reduksjon_11_9_grunnlag (behandling_id, aktiv) values (?, true)
+            insert into reduksjon_11_9_grunnlag (behandling_id, aktiv, opprettet_tid) values (?, true, ?)
         """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
+                setInstant(2, Instant.now())
             }
         }
 
@@ -68,7 +70,7 @@ class Reduksjon11_9RepositoryImpl(private val connection: DBConnection) :
     private fun lagreReduksjon(grunnlagId: Long, reduksjon: Reduksjon11_9) {
         connection.execute(
             """
-            insert into reduksjon_11_9 (reduksjon_11_9_grunnlag_id, dato, dagsats )
+            insert into reduksjon_11_9 (reduksjon_11_9_grunnlag_id, dato, dagsats)
             values (?, ?, ?)
         """.trimIndent()
         ) {
