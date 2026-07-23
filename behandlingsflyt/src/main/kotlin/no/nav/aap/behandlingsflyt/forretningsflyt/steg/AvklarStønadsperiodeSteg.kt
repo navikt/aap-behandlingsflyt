@@ -42,7 +42,8 @@ class AvklarStønadsperiodeSteg(
     }
 
     private fun vurderAutomatisk(kontekst: FlytKontekstMedPerioder) {
-        val gjeldendeRelevanteKrav = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeRelevanteKrav().orEmpty()
+        val gjeldendeRelevanteKrav =
+            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeRelevanteKrav().orEmpty()
         val vedtatteStønadsperiodeVurderinger = kontekst.forrigeBehandlingId?.let {
             stønadsperiodeRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId)?.gjeldendeVurderinger()
         }.orEmpty()
@@ -50,10 +51,10 @@ class AvklarStønadsperiodeSteg(
         val kravSomManglerVurdering =
             gjeldendeRelevanteKrav.filter { krav -> vedtatteStønadsperiodeVurderinger.none { it.referanse == krav.referanse } }
         val nyeVurderinger = kravSomManglerVurdering.map { vurderStønadsperiode(it, kontekst) }
-        
+
         stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtatteStønadsperiodeVurderinger + nyeVurderinger)
     }
-    
+
     // TODO: Antar ny stønadsperiode enn så lenge
     private fun vurderStønadsperiode(krav: RelevantKrav, kontekst: FlytKontekstMedPerioder): StønadsperiodeVurdering {
         return StønadsperiodeVurdering(
@@ -64,7 +65,8 @@ class AvklarStønadsperiodeSteg(
             begrunnelse = "Automatisk vurdering",
             harHattOrdinærSiste52Uker = false,
             harGjenværendeKvote = false,
-            relevantKravType = RelevantKravType.NY_STØNADSPERIODE
+            relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+            startDato = krav.muligRettFra // Dum heuristikk på at stønadsperiode start = kravdato start
         )
     }
 

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 
 class StønadsperiodeRepositoryImplTest {
@@ -42,6 +43,7 @@ class StønadsperiodeRepositoryImplTest {
         behandlingId: BehandlingId,
         referanse: Kravreferanse = Kravreferanse(UUID.randomUUID()),
         relevantKravType: RelevantKravType = RelevantKravType.AVSLAG,
+        startDato: LocalDate = LocalDate.now(),
     ) = StønadsperiodeVurdering(
         referanse = referanse,
         begrunnelse = "begrunnelse",
@@ -50,7 +52,8 @@ class StønadsperiodeRepositoryImplTest {
         relevantKravType = relevantKravType,
         vurdertIBehandling = behandlingId,
         opprettet = Instant.now(),
-        vurdertAv = SYSTEMBRUKER
+        vurdertAv = SYSTEMBRUKER,
+        startDato = startDato
     )
 
     @Test
@@ -206,7 +209,8 @@ class StønadsperiodeRepositoryImplTest {
                 relevantKravType = kravType,
                 vurdertIBehandling = behandlingId,
                 opprettet = Instant.now(),
-                vurdertAv = SYSTEMBRUKER
+                vurdertAv = SYSTEMBRUKER,
+                startDato = LocalDate.now()
             )
 
             dataSource.transaction { connection ->

@@ -72,7 +72,8 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 v.relevant_krav_type                AS v_relevant_krav_type,
                 v.vurdert_i_behandling              AS v_vurdert_i_behandling,
                 v.vurdert_tidspunkt                 AS v_vurdert_tidspunkt,
-                v.vurdert_av                        AS v_vurdert_av
+                v.vurdert_av                        AS v_vurdert_av,
+                v.startdato                         AS v_startdato
             FROM stonadsperiode_vurdering v 
             WHERE v.stonadsperiode_vurderinger_id = ?
         """.trimIndent()
@@ -90,6 +91,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                         vurdertIBehandling = BehandlingId(it.getLong("v_vurdert_i_behandling")),
                         opprettet = it.getInstant("v_vurdert_tidspunkt"),
                         vurdertAv = it.getBruker("v_vurdert_av"),
+                        startDato = it.getLocalDate("v_startdato"),
                     )
                 }
             }
@@ -144,17 +146,6 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
         log.info("Slettet $deletedRows rader for stonadsperiode på behandling ${behandlingId.id}")
     }
 
-    private fun hentGrunnlagsId(behandlingsId: BehandlingId): Long? {
-        return connection.queryFirstOrNull<Long>(
-            "SELECT id FROM stonadsperiode_grunnlag WHERE behandling_id = ? AND aktiv = TRUE"
-        ) {
-            setParams {
-                setLong(1, behandlingsId.toLong())
-            }
-            setRowMapper { it.getLong("id") }
-        }
-    }
-
     private fun deaktiverEksisterendeGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE stonadsperiode_grunnlag SET aktiv = FALSE WHERE aktiv AND behandling_id = ?") {
             setParams {
@@ -189,8 +180,8 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
 
         val query = """
                 INSERT INTO stonadsperiode_vurdering 
-                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -204,6 +195,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 setInstant(7, vurdering.opprettet)
                 setLong(8, vurderingerId)
                 setBruker(9, vurdering.vurdertAv)
+                setLocalDate(10, vurdering.startDato)
             }
         }
 
