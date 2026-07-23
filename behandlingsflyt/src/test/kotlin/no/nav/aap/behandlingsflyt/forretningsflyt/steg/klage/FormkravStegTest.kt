@@ -75,7 +75,6 @@ class FormkravStegTest {
                 kontekst = any(),
             )
         } returns Unit
-        InMemoryAvklaringsbehovRepository.clearMemory()
     }
 
     @Test
