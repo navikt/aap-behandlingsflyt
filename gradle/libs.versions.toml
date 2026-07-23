@@ -10,6 +10,7 @@ apiIntern = "0.0.97"
 dokumentinnhenting = "0.0.3"
 junit = "6.1.0"
 testcontainers = "2.0.2"
+archunit = "1.4.0"
 
 [libraries]
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -73,6 +74,7 @@ junitJupiterParams = { module = "org.junit.jupiter:junit-jupiter-params", versio
 junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
 
 assertJ = { module = "org.assertj:assertj-core", version = "3.27.6" }
+archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
 tabletest = { module = "io.github.nchaugen:tabletest-junit", version = "0.5.5" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainersPostgres = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
