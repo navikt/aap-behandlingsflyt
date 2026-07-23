@@ -367,6 +367,14 @@ public enum class Definisjon(
         kreverToTrinn = true
     ),
 
+    AVKLAR_STØNADSPERIODE(
+        kode = AvklaringsbehovKode.`5039`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVKLAR_STØNADSPERIODE,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
+    ),
+
     @Deprecated("Brukt i tidligere behandlinger")
     EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5015`,
