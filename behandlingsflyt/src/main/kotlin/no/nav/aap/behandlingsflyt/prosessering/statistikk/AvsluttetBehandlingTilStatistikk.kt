@@ -351,13 +351,14 @@ class AvsluttetBehandlingTilStatistikk(
 
     private fun hentResultat(behandling: Behandling): ResultatKode? {
         return when (behandling.typeBehandling()) {
-            TypeBehandling.Førstegangsbehandling -> {
-                resultatUtleder.utledResultatFørstegangsBehandling(behandling.id).let {
+            TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
+                resultatUtleder.utledResultat(behandling).let {
                     when (it) {
                         Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                         Resultat.AVSLAG -> ResultatKode.AVSLAG
                         Resultat.TRUKKET -> ResultatKode.TRUKKET
                         Resultat.AVBRUTT -> ResultatKode.AVBRUTT
+                        null -> null
                     }
                 }
             }
@@ -371,15 +372,6 @@ class AvsluttetBehandlingTilStatistikk(
                         KlageResultatType.AVSLÅTT -> ResultatKode.KLAGE_AVSLÅTT
                         KlageResultatType.TRUKKET -> ResultatKode.KLAGE_TRUKKET
                         KlageResultatType.UFULLSTENDIG -> null
-                    }
-                }
-            }
-
-            TypeBehandling.Revurdering -> {
-                resultatUtleder.utledRevurderingResultat(behandling.id).let {
-                    when (it) {
-                        Resultat.AVBRUTT -> ResultatKode.AVBRUTT
-                        else -> null
                     }
                 }
             }
