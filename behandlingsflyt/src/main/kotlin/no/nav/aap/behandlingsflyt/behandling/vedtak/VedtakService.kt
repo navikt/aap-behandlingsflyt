@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -27,14 +26,6 @@ class VedtakService(
 
     fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, virkningstidspunkt: LocalDate?) {
         vedtakRepository.lagre(behandlingId, vedtakstidspunkt, virkningstidspunkt)
-    }
-
-    fun vedtakstidspunktFørstegangsbehandling(sakId: SakId): LocalDateTime? {
-        val førstegangsbehandlingen = behandlingRepository.hentAlleFor(sakId)
-            .firstOrNull { it.typeBehandling() == TypeBehandling.Førstegangsbehandling }
-            ?: return null
-
-        return vedtakRepository.hent(førstegangsbehandlingen.id)?.vedtakstidspunkt
     }
 
     fun vedtakstidspunktFørsteInnvilgelse(sak: Sak): LocalDateTime? {
