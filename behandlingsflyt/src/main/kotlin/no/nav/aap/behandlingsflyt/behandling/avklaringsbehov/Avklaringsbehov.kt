@@ -13,21 +13,21 @@ import java.time.LocalDateTime
 class Avklaringsbehov(
     val id: Long,
     val definisjon: Definisjon,
-    historikk: MutableList<Endring> = mutableListOf(),
+    historikk: List<Endring> = emptyList(),
     val funnetISteg: StegType,
     private var kreverToTrinn: Boolean?
 ) {
 
     val historikk: List<Endring>
-        field = historikk.toMutableList()
-
-    init {
-        if (historikk.isEmpty()) {
-            historikk += Endring(
-                status = Status.OPPRETTET, begrunnelse = "", endretAv = SYSTEMBRUKER
+        field = historikk.ifEmpty {
+            mutableListOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    begrunnelse = "",
+                    endretAv = SYSTEMBRUKER
+                )
             )
-        }
-    }
+        }.toMutableList()
 
     val aktivHistorikk: List<Endring>
         get() = historikk.takeLastWhile {
