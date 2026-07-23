@@ -178,11 +178,15 @@ fun NormalOpenAPIRoute.behandlingApi(
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandling = behandling(repositoryProvider.provide(), req)
+                    
+                    // Optimistisk sjekk, uten lås, på om behandling er avsluttet
                     if (behandling.status() == Status.AVSLUTTET) {
                         return@transaction
                     }
                     val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                     val lås = taSkriveLåsRepository.lås(req.referanse)
+
+                    // Sjekk på nytt at behandlingen ikke er avsluttet nå som vi har lås den
                     if (behandling.status() != Status.AVSLUTTET
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                     ) {
