@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
-import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringDto
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -34,7 +34,7 @@ class FakeOppgavestyringGateway : OppgavestyringGateway {
         return OppgaveEnhetResponse(emptyList())
     }
 
-    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringDto> {
         return emptyList()
     }
 

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
-import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringDto
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -76,14 +76,14 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
         }
     }
 
-    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringDto> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
         )
         return checkNotNull(
-            client.get<List<MarkeringNyDto>>(
+            client.get<List<MarkeringDto>>(
                 uri = url.resolve("/${saksnummer}/hent-markeringer-og-historikk"),
                 request = request
             )

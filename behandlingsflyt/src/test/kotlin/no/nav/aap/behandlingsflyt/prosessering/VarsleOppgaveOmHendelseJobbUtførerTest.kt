@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringDto
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -277,7 +277,7 @@ internal class CapturingOppgavestyringGateway private constructor() : Oppgavesty
     override fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse =
         OppgaveEnhetResponse(emptyList())
 
-    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringDto> {
         return emptyList()
     }
 
