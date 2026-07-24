@@ -14,39 +14,35 @@ object StønadsperiodeValidering {
 
         val vurderingerForIkkeRelevanteKrav = kravSomHarVurdering - kravSomKreverVurdering
         val kravSomManglerVurdering = kravSomKreverVurdering - kravSomHarVurdering
-
-
-        when {
-            vurderingerForIkkeRelevanteKrav.isNotEmpty() && kravSomManglerVurdering.isNotEmpty() -> return IkkeTilstrekkeligVurdert(
-                "Det finnes vurderinger for krav som ikke er relevante: ${vurderingerForIkkeRelevanteKrav.formaterReferanse()}. " + "Det finnes krav som mangler vurdering: ${kravSomManglerVurdering.formaterReferanse()}",
-            )
-
-            vurderingerForIkkeRelevanteKrav.isNotEmpty() -> return IkkeTilstrekkeligVurdert(
-                "Det finnes vurderinger for krav som ikke er relevante: ${
-                    vurderingerForIkkeRelevanteKrav.formaterReferanse()
-                }",
-            )
-
-            kravSomManglerVurdering.isNotEmpty() -> return IkkeTilstrekkeligVurdert(
-                "Det finnes krav som mangler vurdering: ${kravSomManglerVurdering.formaterReferanse()}",
-            )
+        
+        if (vurderingerForIkkeRelevanteKrav.isNotEmpty() || kravSomManglerVurdering.isNotEmpty()) {
+            val melding = buildString {
+                if (vurderingerForIkkeRelevanteKrav.isNotEmpty()) {
+                    append("Det finnes vurderinger for krav som ikke er relevante: ")
+                    append(vurderingerForIkkeRelevanteKrav.formaterReferanse())
+                }
+                if (kravSomManglerVurdering.isNotEmpty()) {
+                    if (isNotEmpty()) append(". ")
+                    append("Det finnes krav som mangler vurdering: ")
+                    append(kravSomManglerVurdering.formaterReferanse())
+                }
+            }
+            return IkkeTilstrekkeligVurdert(melding)
         }
 
-        val vurderingerMedUgyldigDato = stønadsperiodeVurderinger.filterNot {
-            val kravSegment = relevanteKravVurderinger.kravtidslinje().segmenter()
-                .single { segment -> segment.verdi.referanse == it.referanse }
-            kravSegment.periode.inneholder(it.startDato)
+        val kravsegmenter = relevanteKravVurderinger.kravtidslinje().segmenter()
+        val vurderingerMedUgyldigDato = stønadsperiodeVurderinger.filterNot { vurdering ->
+            val kravSegment = kravsegmenter.single { it.verdi.referanse == vurdering.referanse }
+            kravSegment.periode.inneholder(vurdering.startDato)
         }
 
-        if (vurderingerMedUgyldigDato.isNotEmpty()) {
-            return IkkeTilstrekkeligVurdert(
-                "Startdato må være innenfor perioden for kravet: ${
-                    vurderingerMedUgyldigDato.formaterStønadsperioder()
-                }"
+        return if (vurderingerMedUgyldigDato.isNotEmpty()) {
+            IkkeTilstrekkeligVurdert(
+                "Startdato må være innenfor perioden for kravet: ${vurderingerMedUgyldigDato.formaterStønadsperioder()}"
             )
+        } else {
+            TilstrekkeligVurdert
         }
-
-        return TilstrekkeligVurdert
     }
 
     private fun Collection<Kravreferanse>.formaterReferanse(): String {
