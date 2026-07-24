@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStønadsperiodeLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.IkkeTilstrekkeligVurdert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeValidering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -34,14 +35,17 @@ class AvklarStønadsperiodeLøser(
         val relevanteKrav =
             kravRepository.hentHvisEksisterer(kontekst.behandlingId())?.gjeldendeRelevanteKrav().orEmpty()
 
-        if (!StønadsperiodeValidering.erTilstrekkeligVurdert(relevanteKrav, alleVurderinger)) {
-            throw UgyldigForespørselException("Mangler vurdering av stønadsperiode for relevant krav.")
+        StønadsperiodeValidering.evaluerTilstrekkeligVurdert(relevanteKrav, alleVurderinger).let {
+            if (it is IkkeTilstrekkeligVurdert) {
+                throw UgyldigForespørselException(it.melding)
+            }
         }
-
+        
         stønadsperiodeRepository.lagre(kontekst.behandlingId(), alleVurderinger)
 
         return LøsningsResultat("Fullført")
     }
+
     override fun forBehov(): Definisjon {
         return Definisjon.AVKLAR_STØNADSPERIODE
     }

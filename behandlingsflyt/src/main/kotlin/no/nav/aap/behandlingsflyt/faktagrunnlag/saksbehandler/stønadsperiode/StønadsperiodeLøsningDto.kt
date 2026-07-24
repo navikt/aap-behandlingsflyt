@@ -52,7 +52,7 @@ data class StønadsperiodeLøsningDto(
 }
 
 data class StansEllerOpphørDto(
-    val type: StansOpphørVurderingTypeDto,
+    val type: StansOpphørVurderingTypeDto, // TODO: Ønsker vi heller å utlede stans/opphør utifra årsak?
     val årsaker: List<Avslagsårsak>,
 )
 
