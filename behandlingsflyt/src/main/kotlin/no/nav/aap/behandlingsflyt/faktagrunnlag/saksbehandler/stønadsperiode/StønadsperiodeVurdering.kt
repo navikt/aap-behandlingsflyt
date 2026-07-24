@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
+import java.time.LocalDate
 
 data class StønadsperiodeGrunnlag(
     override val vurderinger: Set<StønadsperiodeVurdering>
@@ -21,6 +22,7 @@ data class StønadsperiodeVurdering(
     val harHattOrdinærSiste52Uker: Boolean,
     val harGjenværendeKvote: Boolean,
     val relevantKravType: RelevantKravType,
+    val startDato: LocalDate,
 ) : VurderingForKrav {
     init {
         when (relevantKravType) {

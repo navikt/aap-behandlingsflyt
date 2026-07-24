@@ -13,7 +13,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper.fromJson
-import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
 import java.net.URI
 
@@ -39,7 +38,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
         prometheus = prometheus
     )
 
-    override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> {
+    override fun hentTjenestePensjon(ident: String): List<TjenestePensjonForhold> {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json"),
@@ -50,7 +49,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
         return try {
             requireNotNull(
                 client.get(
-                    uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
+                    uri = url,
                     request = httpRequest,
                     mapper = { body, _ ->
                         fromJson<TjenestePensjonRespons?>(body)?.toIntern()

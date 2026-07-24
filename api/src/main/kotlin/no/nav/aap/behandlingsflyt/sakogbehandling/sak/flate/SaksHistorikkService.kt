@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringForBehandling
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringHendelseType
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -18,7 +19,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
-import no.nav.aap.oppgave.verdityper.MarkeringForBehandling
 
 class SaksHistorikkService(
     private val behandlingRepository: BehandlingRepository,

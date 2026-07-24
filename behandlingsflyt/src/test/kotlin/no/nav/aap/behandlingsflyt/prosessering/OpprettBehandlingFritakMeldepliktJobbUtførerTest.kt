@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -79,7 +78,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         årsakerPåTidligereBehandling: List<VurderingsbehovMedPeriode> = emptyList(),
     ): OpprettBehandlingFritakMeldepliktJobbUtfører {
         val sakServiceMock = mockk<SakService>()
-        val behandlingRepositoryMock = mockk<BehandlingRepository>()
         val meldeperiodeRepositoryMock = mockk<MeldeperiodeRepository>()
         val meldepliktRepositoryMock = mockk<MeldepliktRepository>()
 
@@ -92,7 +90,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             opprettetTidspunkt = LocalDateTime.now(),
         )
 
-        every { behandlingRepositoryMock.finnSisteOpprettedeBehandlingFor(any(), any()) } returns Behandling(
+        every { behandlingServiceMock.finnÅpenYtelsesbehandling(any()) } returns Behandling(
             id = BehandlingId(457L),
             forrigeBehandlingId = BehandlingId(456L),
             referanse = BehandlingReferanse(UUID.randomUUID()),
@@ -128,7 +126,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             versjon = 0L
         )
 
-        every { behandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
+        every { behandlingServiceMock.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns fakeBehandling
         every {
             behandlingServiceMock.finnEllerOpprettBehandling(
                 sakId,
@@ -175,7 +173,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,
-            behandlingRepository = behandlingRepositoryMock,
             meldeperiodeRepository = meldeperiodeRepositoryMock,
             meldepliktRepository = meldepliktRepositoryMock,
             behandlingService = behandlingServiceMock,

@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhet
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -19,8 +21,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.brev.kontrakt.Rolle
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.oppgave.enhet.OppgaveEnhetDto
-import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -37,7 +37,7 @@ class SignaturServiceTest {
     private val signaturService =
         SignaturService(oppgavestyringGateway, behandlingRepository, avklaringsbehovRepository)
 
-    private val behandlingTilOppgaveEnhet = mutableMapOf<BehandlingReferanse, List<OppgaveEnhetDto>>()
+    private val behandlingTilOppgaveEnhet = mutableMapOf<BehandlingReferanse, List<OppgaveEnhet>>()
 
     @BeforeEach
     fun setup() {
@@ -553,7 +553,7 @@ class SignaturServiceTest {
             behandlingTilOppgaveEnhet[behandling.referanse] =
                 eksistende
                     .filterNot { it.avklaringsbehovKode == definisjon.kode.name }
-                    .plus(OppgaveEnhetDto(definisjon.kode.name, oppgaveEnhet))
+                    .plus(OppgaveEnhet(definisjon.kode.name, oppgaveEnhet))
         }
     }
 

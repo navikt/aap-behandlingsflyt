@@ -62,19 +62,6 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
-    override fun finnSisteOpprettedeBehandlingFor(
-        sakId: SakId,
-        behandlingstypeFilter: List<TypeBehandling>
-    ): Behandling? {
-        synchronized(lock) {
-            return memory.values
-                .filter { behandling -> behandling.sakId == sakId }
-                .filter { behandling -> behandling.typeBehandling() in behandlingstypeFilter }
-                .maxOrNull()
-        }
-    }
-
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         synchronized(lock) {
             return memory.values

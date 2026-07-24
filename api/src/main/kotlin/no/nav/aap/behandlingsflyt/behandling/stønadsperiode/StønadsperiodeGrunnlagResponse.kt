@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.St
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
+import java.time.LocalDate
 
 data class StønadsperiodeGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
@@ -22,6 +23,7 @@ data class StønadsperiodeVurderingResponse(
     val harHattOrdinærSiste52Uker: Boolean,
     val harGjenværendeKvote: Boolean,
     val relevantKravType: RelevantKravType,
+    val startDato: LocalDate,
 )
 
 fun StønadsperiodeVurdering.tilResponse() = StønadsperiodeVurderingResponse(
@@ -33,6 +35,7 @@ fun StønadsperiodeVurdering.tilResponse() = StønadsperiodeVurderingResponse(
     vurdertAv = vurdertAv,
     vurdertIBehandling = vurdertIBehandling,
     opprettet = opprettet,
+    startDato = startDato
     
 )
     
