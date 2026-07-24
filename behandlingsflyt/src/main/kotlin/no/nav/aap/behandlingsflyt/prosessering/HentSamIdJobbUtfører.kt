@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingBehandlingJobbUtfører
@@ -41,10 +42,10 @@ class HentSamIdJobbUtfører(
         if (tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {
             val samId = samGateway.hentSamId(sak.person.aktivIdent(), sak.id.id, vedtakId)
 
-            if (samId != null) {
+            if (samId.isNotEmpty()) {
                 // Får null tilbake hvis det ikke er en _aktiv_ TP-ytelse
                 // Se Slack-tråd her https://nav-it.slack.com/archives/CQ08JC3UG/p1764056287208599
-                samIdRepository.lagre(behandlingId, samId.toString())
+                samIdRepository.lagre(behandlingId, samId.map { SamIdOgTpNr(it.samId, it.tpNr) })
             } else {
                 log.warn("Fant ingen SAM-ID for behandling $behandlingId / vedtak $vedtakId.")
             }
