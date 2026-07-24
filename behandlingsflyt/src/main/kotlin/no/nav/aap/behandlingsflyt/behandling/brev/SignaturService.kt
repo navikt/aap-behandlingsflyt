@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhet
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -13,7 +14,6 @@ import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.oppgave.enhet.OppgaveEnhetDto
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
@@ -116,7 +116,7 @@ class SignaturService(
     private fun utledSignatur(
         rolle: Rolle,
         avklaringsbehovene: Avklaringsbehovene,
-        oppgaveEnhetListe: List<OppgaveEnhetDto>,
+        oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): UtledetSignatur? {
         return signaturFraLøstAvklaringsbehov(avklaringsbehovene, rolle, oppgaveEnhetListe)
@@ -144,7 +144,7 @@ class SignaturService(
     private fun signaturFraLøstAvklaringsbehov(
         avklaringsbehovene: Avklaringsbehovene,
         rolle: Rolle,
-        oppgaveEnhetListe: List<OppgaveEnhetDto>,
+        oppgaveEnhetListe: List<OppgaveEnhet>,
     ): UtledetSignatur? {
         return avklaringsbehovForRolle(avklaringsbehovene, rolle).mapNotNull { avklaringsbehov ->
             val endring = sisteEndringAvPerson(avklaringsbehov) ?: return@mapNotNull null
@@ -167,7 +167,7 @@ class SignaturService(
     private fun signaturFraÅpentAvklaringsbehov(
         avklaringsbehovene: Avklaringsbehovene,
         rolle: Rolle,
-        oppgaveEnhetListe: List<OppgaveEnhetDto>,
+        oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): UtledetSignatur? {
         return avklaringsbehovForRolle(avklaringsbehovene, rolle).filter { it.erÅpent() }
@@ -196,7 +196,7 @@ class SignaturService(
 
     private fun enhetForDefinisjon(
         definisjon: Definisjon,
-        oppgaveEnhetListe: List<OppgaveEnhetDto>,
+        oppgaveEnhetListe: List<OppgaveEnhet>,
     ): String? {
         return oppgaveEnhetListe.find { it.avklaringsbehovKode == definisjon.kode.name }?.enhet
     }

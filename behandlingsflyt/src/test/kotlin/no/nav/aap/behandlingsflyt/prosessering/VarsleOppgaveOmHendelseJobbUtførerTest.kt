@@ -3,7 +3,8 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringDto
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -23,7 +24,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.JobbInput
-import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -277,7 +277,7 @@ internal class CapturingOppgavestyringGateway private constructor() : Oppgavesty
     override fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse =
         OppgaveEnhetResponse(emptyList())
 
-    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringDto> {
         return emptyList()
     }
 

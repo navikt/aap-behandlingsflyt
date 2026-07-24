@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
-import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringNyDto
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringDto
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -19,7 +20,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import java.net.URI
 
 object OppgavestyringGatewayImpl : OppgavestyringGateway {
@@ -76,14 +76,14 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
         }
     }
 
-    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto> {
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringDto> {
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
         )
         return checkNotNull(
-            client.get<List<MarkeringNyDto>>(
+            client.get<List<MarkeringDto>>(
                 uri = url.resolve("/${saksnummer}/hent-markeringer-og-historikk"),
                 request = request
             )

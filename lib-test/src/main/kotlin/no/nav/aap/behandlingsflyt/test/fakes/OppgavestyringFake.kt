@@ -7,8 +7,8 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
-import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 import org.slf4j.LoggerFactory
 
 class OppgavestyringFake : FakeServer() {
