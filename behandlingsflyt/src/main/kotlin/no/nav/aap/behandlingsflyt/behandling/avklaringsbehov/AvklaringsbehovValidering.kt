@@ -2,10 +2,11 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningMedPeriodiserteVurderinger
-import no.nav.aap.behandlingsflyt.behandling.krav.KravService
-import no.nav.aap.behandlingsflyt.behandling.krav.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -31,7 +32,8 @@ class AvklaringsbehovValidering(
 ) {
     private val unleashGateway: UnleashGateway = gatewayProvider.provide()
     private val sakRepository: SakRepository = repositoryProvider.provide()
-    private val kravService: KravService = KravService(repositoryProvider, gatewayProvider)
+    private val kravRepository: KravRepository = repositoryProvider.provide()
+    private val stønadsperiodeRepository: StønadsperiodeRepository = repositoryProvider.provide()
 
     fun validerPerioder(
         bruker: Bruker,
@@ -132,11 +134,13 @@ class AvklaringsbehovValidering(
         ) {
             return Tidslinje.empty()
         }
-        return kravService.kravtypeTidslinje(kontekst)
-            .map { kravPeriode, kravType ->
+
+        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        return stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)?.tilTidslinje(kravGrunnlag).orEmpty()
+            .map { kravPeriode, stønadsperiodeVurdering ->
                 erKravDekketAvLøsning(
                     kravPeriode,
-                    kravType,
+                    stønadsperiodeVurdering.relevantKravType,
                     definisjon,
                     gjeldendeVurderinger
                 )
@@ -149,9 +153,9 @@ class AvklaringsbehovValidering(
         definisjon: Definisjon, gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
     ): Boolean {
         return when (kravType) {
-            RelevantKravType.NYTT_KRAV -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
+            RelevantKravType.NY_STØNADSPERIODE -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
 
-            RelevantKravType.GJENOPPTAK_ETTER_STANS -> true
+            RelevantKravType.GJENOPPTAK_ETTER_STANS, RelevantKravType.AVSLAG -> true
             RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> !definisjon.måRevurderesEtterOpphør || harVurderingForKrav(
                 gjeldendeVurderinger,
                 kravPeriode
