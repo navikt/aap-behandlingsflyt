@@ -5,14 +5,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingMedId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
@@ -475,70 +473,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             setRowMapper(::mapSykdomsvurderingRad)
         }
         return mapSykdomsvurderingRader(rader)
-    }
-
-    override fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId> {
-        val query = """
-            SELECT DISTINCT sg.behandling_id
-            FROM sykdom_grunnlag sg
-            JOIN sykdom_vurdering sv ON sv.sykdom_vurderinger_id = sg.sykdom_vurderinger_id
-            JOIN behandling b on b.id = sg.behandling_id
-            JOIN sak s on s.id = b.sak_id
-            WHERE sg.aktiv = TRUE
-              AND sg.behandling_id > ?
-              AND sv.er_nedsettelse_minst_halvparten IS NULL
-              AND sv.er_nedsettelse_mer_enn_yrkesskadegrense IS NULL
-              AND s.opprettet_tid >= ?
-            ORDER BY sg.behandling_id
-            LIMIT 1
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sisteBehandlingId)
-                setLocalDate(2, if (Miljø.erDev()) LocalDate.parse("2025-04-01") else LocalDate.parse("2020-01-01"))
-            }
-            setRowMapper { row ->
-                BehandlingId(row.getLong("behandling_id"))
-            }
-        }
-    }
-
-    override fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId> {
-        val sykdomVurderingerIds = getSykdomVurderingerIds(behandlingId)
-
-        val rader = connection.queryList(
-            """
-            SELECT id,
-                   BEGRUNNELSE,
-                   VURDERINGEN_GJELDER_FRA,
-                   HAR_SYKDOM_SKADE_LYTE,
-                   ER_SYKDOM_SKADE_LYTE_VESETLING_DEL,
-                   ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
-                   ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
-                   HAR_NEDSATT_ARBEIDSEVNE,
-                   YRKESSKADE_BEGRUNNELSE,
-                   KODEVERK,
-                   DIAGNOSE,
-                   OPPRETTET_TID,
-                   VURDERT_AV_IDENT,
-                   VURDERT_I_BEHANDLING,
-                   VURDERINGEN_GJELDER_TIL
-            FROM SYKDOM_VURDERING
-            WHERE SYKDOM_VURDERINGER_ID = ANY(?::bigint[])
-            """.trimIndent()
-        ) {
-            setParams { setLongArray(1, sykdomVurderingerIds) }
-            setRowMapper(::mapSykdomsvurderingRad)
-        }
-        val ids = rader.map { it.id }
-        val bidiagnoserMap = hentAlleBidiagnoser(ids)
-        return rader.map { rad ->
-            SykdomsvurderingMedId(
-                id = rad.id,
-                sykdomsvurdering = sykdomsvurderingRowmapper(rad, bidiagnoserMap)
-            )
-        }
     }
 
     override fun hentSykdomsvurderingerPåTidspunkt(

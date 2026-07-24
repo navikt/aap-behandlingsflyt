@@ -22,14 +22,5 @@ interface SykdomRepository : Repository {
 
     fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering>
 
-    fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId>
-
-    fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId>
-
     fun hentSykdomsvurderingerPåTidspunkt(behandlingId: BehandlingId, tidspunkt: LocalDateTime): List<Sykdomsvurdering>?
 }
-
-data class SykdomsvurderingMedId(
-    val id: Long,
-    val sykdomsvurdering: Sykdomsvurdering
-)
