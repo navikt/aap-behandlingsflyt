@@ -7,7 +7,7 @@ object StønadsperiodeValidering {
     fun evaluerTilstrekkeligVurdert(
         relevanteKravVurderinger: Set<RelevantKrav>,
         stønadsperiodeVurderinger: Set<StønadsperiodeVurdering>
-    ): ValiderTilstrekkeligVurdert {
+    ): EvaluerTilstrekkeligVurdert {
         val kravSomKreverVurdering = relevanteKravVurderinger.map { it.referanse }.toSet()
         val kravSomHarVurdering = stønadsperiodeVurderinger.map { it.referanse }.toSet()
 
@@ -38,10 +38,10 @@ object StønadsperiodeValidering {
 }
 
 
-sealed interface ValiderTilstrekkeligVurdert
+sealed interface EvaluerTilstrekkeligVurdert
 
-data object TilstrekkeligVurdert : ValiderTilstrekkeligVurdert
+data object TilstrekkeligVurdert : EvaluerTilstrekkeligVurdert
 
 data class IkkeTilstrekkeligVurdert(
     val melding: String,
-) : ValiderTilstrekkeligVurdert
+) : EvaluerTilstrekkeligVurdert
