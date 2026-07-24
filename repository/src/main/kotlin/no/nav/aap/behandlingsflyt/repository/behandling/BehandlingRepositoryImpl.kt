@@ -161,7 +161,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             sakId = SakId(row.getLong("sak_id")),
             typeBehandling = TypeBehandling.from(row.getString("type")),
             status = row.getEnum("status"),
-            stegTilstand = row.getEnumOrNull<StegType, StegType>("sh_steg")?.let { stegType ->
+            stegTilstand = row.getEnumOrNull<StegType>("sh_steg")?.let { stegType ->
                 StegTilstand(
                     tidspunkt = row.getLocalDateTime("sh_opprettet_tid"),
                     stegType = stegType,
