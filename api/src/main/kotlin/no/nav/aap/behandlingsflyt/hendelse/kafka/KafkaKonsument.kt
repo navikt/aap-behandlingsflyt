@@ -10,7 +10,7 @@ import kotlin.time.toJavaDuration
 
 abstract class KafkaKonsument<K, V>(
     val topic: String,
-    config: KafkaConsumerConfig<K, V>,
+    config: KafkaConsumerConfig,
     consumerName: String,
     private val pollTimeout: Duration,
     private val closeTimeout: Duration,
