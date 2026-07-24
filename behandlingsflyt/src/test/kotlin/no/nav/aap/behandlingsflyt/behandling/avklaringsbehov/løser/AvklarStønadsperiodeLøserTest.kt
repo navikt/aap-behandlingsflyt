@@ -17,7 +17,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository.lagre
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -38,7 +40,7 @@ class AvklarStønadsperiodeLøserTest {
         val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         val kravreferanse = Kravreferanse.ny()
-        InMemoryKravRepository.lagre(
+        lagre(
             behandlingId, setOf(krav(behandlingId, kravreferanse, 15 januar 2026))
         )
 
@@ -67,7 +69,7 @@ class AvklarStønadsperiodeLøserTest {
         val kravreferanse1 = Kravreferanse.ny()
         val kravreferanse2 = Kravreferanse.ny()
         val kravreferanse3 = Kravreferanse.ny()
-        InMemoryKravRepository.lagre(
+        lagre(
             behandlingId, setOf(
                 krav(behandlingId, kravreferanse1, 15 januar 2020),
                 krav(behandlingId, kravreferanse2, 15 januar 2023),
@@ -84,11 +86,12 @@ class AvklarStønadsperiodeLøserTest {
                     harGjenværendeKvote = false,
                     stansOpphør = null,
                     startDato = 15 januar 2020,
-                ))
+                )
+            )
         )
 
         val exception = assertThrows<UgyldigForespørselException> { løser.løs(kontekst(sakId, behandlingId), løsning) }
-        assertEquals("Det finnes krav som mangler vurdering: ${kravreferanse2}, ${kravreferanse3}", exception.message)
+        assertEquals("Det finnes krav som mangler vurdering: ${kravreferanse2.verdi}, ${kravreferanse3.verdi}", exception.message)
     }
 
     @Test
@@ -96,7 +99,7 @@ class AvklarStønadsperiodeLøserTest {
         val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         val kravreferanse = Kravreferanse.ny()
-        InMemoryKravRepository.lagre(
+        lagre(
             behandlingId, setOf(krav(behandlingId, kravreferanse, 15 januar 2026))
         )
 
@@ -108,7 +111,7 @@ class AvklarStønadsperiodeLøserTest {
             stansOpphør = null,
             startDato = 15 januar 2026,
         )
-        
+
         val ikkeRelevantReferanse = Kravreferanse.ny()
         val løsningForKravSomIkkeEksisterer = StønadsperiodeLøsningDto(
             referanse = ikkeRelevantReferanse,
@@ -124,7 +127,10 @@ class AvklarStønadsperiodeLøserTest {
         )
 
         val exception = assertThrows<UgyldigForespørselException> { løser.løs(kontekst(sakId, behandlingId), løsning) }
-        assertEquals("Det finnes vurderinger for krav som ikke er relevante: ${ikkeRelevantReferanse}", exception.message)
+        assertEquals(
+            "Det finnes vurderinger for krav som ikke er relevante: ${ikkeRelevantReferanse.verdi}",
+            exception.message
+        )
     }
 
     @Test
@@ -132,7 +138,7 @@ class AvklarStønadsperiodeLøserTest {
         val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         val kravreferanse = Kravreferanse.ny()
-        InMemoryKravRepository.lagre(
+        lagre(
             behandlingId, setOf(tilleggsopplysning(behandlingId, kravreferanse))
         )
 
@@ -150,15 +156,15 @@ class AvklarStønadsperiodeLøserTest {
         )
 
         val exception = assertThrows<UgyldigForespørselException> { løser.løs(kontekst(sakId, behandlingId), løsning) }
-        assertEquals("Det finnes vurderinger for krav som ikke er relevante: ${kravreferanse}", exception.message)
+        assertEquals("Det finnes vurderinger for krav som ikke er relevante: ${kravreferanse.verdi}", exception.message)
     }
-    
-    @Test 
+
+    @Test
     fun `Skal kunne lagre ned vurdering og utlede ny stønadsperiode`() {
         val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         val kravreferanse = Kravreferanse.ny()
-        InMemoryKravRepository.lagre(
+        lagre(
             behandlingId, setOf(
                 krav(behandlingId, kravreferanse, 15 januar 2020),
             )
@@ -173,7 +179,8 @@ class AvklarStønadsperiodeLøserTest {
                     harGjenværendeKvote = false,
                     stansOpphør = null,
                     startDato = 15 januar 2020,
-                ))
+                )
+            )
         )
         løser.løs(kontekst(sakId, behandlingId), løsning1)
         val grunnlag1 = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandlingId)
@@ -192,7 +199,8 @@ class AvklarStønadsperiodeLøserTest {
                         årsaker = listOf(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS)
                     ),
                     startDato = 15 januar 2020,
-                ))
+                )
+            )
         )
         løser.løs(kontekst(sakId, behandlingId), løsning)
         val grunnlag = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandlingId)
@@ -200,18 +208,18 @@ class AvklarStønadsperiodeLøserTest {
         assertEquals(RelevantKravType.GJENOPPTAK_ETTER_STANS, grunnlag?.vurderinger?.first()?.relevantKravType)
 
     }
-    
+
     @Test
     fun `Skal kunne lagre ned vurdering og utlede gjenopptak etter stans`() {
         val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         val kravreferanse = Kravreferanse.ny()
-        InMemoryKravRepository.lagre(
+        lagre(
             behandlingId, setOf(
                 krav(behandlingId, kravreferanse, 15 januar 2020),
             )
         )
-        
+
         val løsning = AvklarStønadsperiodeLøsning(
             stønadsperiodeVurderinger = setOf(
                 StønadsperiodeLøsningDto(
@@ -224,7 +232,8 @@ class AvklarStønadsperiodeLøserTest {
                         årsaker = listOf(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS)
                     ),
                     startDato = 15 januar 2020,
-                ))
+                )
+            )
         )
         løser.løs(kontekst(sakId, behandlingId), løsning)
         val grunnlag = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandlingId)
@@ -237,7 +246,7 @@ class AvklarStønadsperiodeLøserTest {
         val sakId = SakId(Random.nextLong())
         val behandlingId = BehandlingId(Random.nextLong())
         val kravreferanse = Kravreferanse.ny()
-        InMemoryKravRepository.lagre(
+        lagre(
             behandlingId, setOf(
                 krav(behandlingId, kravreferanse, 15 januar 2020),
             )
@@ -255,12 +264,80 @@ class AvklarStønadsperiodeLøserTest {
                         årsaker = listOf(Avslagsårsak.ANNEN_FULL_YTELSE)
                     ),
                     startDato = 15 januar 2020,
-                ))
+                )
+            )
         )
         løser.løs(kontekst(sakId, behandlingId), løsning)
         val grunnlag = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandlingId)
         assertEquals(1, grunnlag?.vurderinger?.size)
         assertEquals(RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR, grunnlag?.vurderinger?.first()?.relevantKravType)
+    }
+
+    @Test
+    fun `Skal kaste feil hvis startdato er før mulig rett`() {
+        val sakId = SakId(Random.nextLong())
+        val behandlingId = BehandlingId(Random.nextLong())
+        val kravreferanse = Kravreferanse.ny()
+        lagre(
+            behandlingId, setOf(
+                krav(behandlingId, kravreferanse, 15 januar 2020),
+            )
+        )
+
+        val løsning = AvklarStønadsperiodeLøsning(
+            stønadsperiodeVurderinger = setOf(
+                StønadsperiodeLøsningDto(
+                    referanse = kravreferanse,
+                    begrunnelse = "test",
+                    harHattOrdinærSiste52Uker = false,
+                    harGjenværendeKvote = false,
+                    stansOpphør = null,
+                    startDato = 14 januar 2020,
+                )
+            )
+        )
+                    
+        val exception = assertThrows<UgyldigForespørselException> { løser.løs(kontekst(sakId, behandlingId), løsning) }
+        assertEquals("Startdato må være innenfor perioden for kravet: ${kravreferanse.verdi}", exception.message)
+    }
+
+    @Test
+    fun `Skal kaste feil hvis startdato er etter mulig rett for neste krav`() {
+        val sakId = SakId(Random.nextLong())
+        val forrigeBehandlingId = BehandlingId(Random.nextLong())
+        val behandlingId = BehandlingId(Random.nextLong())
+        val kravreferanse1 = Kravreferanse.ny()
+        val kravreferanse2 = Kravreferanse.ny()
+        lagre(
+            behandlingId, setOf(
+                krav(forrigeBehandlingId, kravreferanse1, 15 januar 2020),
+                krav(behandlingId, kravreferanse2, 15 august 2020),
+            )
+        )
+
+        val løsning = AvklarStønadsperiodeLøsning(
+            stønadsperiodeVurderinger = setOf(
+                StønadsperiodeLøsningDto(
+                    referanse = kravreferanse1,
+                    begrunnelse = "test",
+                    harHattOrdinærSiste52Uker = false,
+                    harGjenværendeKvote = false,
+                    stansOpphør = null,
+                    startDato = 15 august 2020,
+                ),
+                StønadsperiodeLøsningDto(
+                    referanse = kravreferanse2,
+                    begrunnelse = "test",
+                    harHattOrdinærSiste52Uker = false,
+                    harGjenværendeKvote = false,
+                    stansOpphør = null,
+                    startDato = 16 august 2020,
+                )
+            )
+        )
+
+        val exception = assertThrows<UgyldigForespørselException> { løser.løs(kontekst(sakId, behandlingId), løsning) }
+        assertEquals("Startdato må være innenfor perioden for kravet: ${kravreferanse1.verdi}", exception.message)
     }
 
 
