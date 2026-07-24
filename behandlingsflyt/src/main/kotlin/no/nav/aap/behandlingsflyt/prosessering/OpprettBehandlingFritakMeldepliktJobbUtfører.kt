@@ -46,7 +46,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
     private fun skalHaFritakForPassertMeldeperiode(sak: Sak): Boolean {
         val nå = LocalDate.now()
 
-        val sisteBehandling = behandlingService.finnÅpenYtelsesbehandling(sak.id) ?: return false
+        val sisteBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id) ?: return false
 
         if (sisteBehandling.status().erÅpen() && Vurderingsbehov.FRITAK_MELDEPLIKT in sisteBehandling.vurderingsbehov()
                 .map { it.type }
