@@ -93,38 +93,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return hent(BehandlingId(behandlingId))
     }
 
-    /**
-     * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
-     * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger. Den returnerer også avbrutte behandlinger.
-     */
-    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
-    override fun finnSisteOpprettedeBehandlingFor(
-        sakId: SakId,
-        behandlingstypeFilter: List<TypeBehandling>
-    ): Behandling? {
-        val query = """
-            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
-                   vb_agg.vb_json
-            FROM BEHANDLING b
-            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
-            LEFT JOIN LATERAL (
-                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
-                FROM vurderingsbehov
-                WHERE behandling_id = b.id
-            ) vb_agg ON true
-            WHERE b.sak_id = ? AND b.type = ANY(?::text[])
-            ORDER BY b.opprettet_tid DESC LIMIT 1
-            """.trimIndent()
-
-        return connection.queryFirstOrNull(query) {
-            setParams {
-                setLong(1, sakId.toLong())
-                setArray(2, behandlingstypeFilter.map { it.identifikator() })
-            }
-            setRowMapper(::mapBehandling)
-        }
-    }
-
     override fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer {
         return connection.queryFirst(
             """

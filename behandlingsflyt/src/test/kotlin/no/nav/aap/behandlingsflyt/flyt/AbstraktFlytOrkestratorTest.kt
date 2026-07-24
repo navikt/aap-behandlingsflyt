@@ -126,7 +126,6 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -137,6 +136,7 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
@@ -805,33 +805,23 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     /**
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
-     *
-     * Bruk i stedet: [BehandlingService.finnSisteYtelsesbehandlingFor]
      */
     protected fun hentSisteOpprettedeBehandlingForSak(
-        sakId: SakId,
-        typeBehandling: List<TypeBehandling> = TypeBehandling.entries
+        sakId: SakId
     ): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
-            val finnSisteBehandlingFor = BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
-                sakId,
-                typeBehandling
-            )
-            requireNotNull(finnSisteBehandlingFor)
+            BehandlingRepositoryImpl(connection).hentAlleFor(sakId).maxBy { it.opprettetTidspunkt }
         }
     }
 
     /**
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
-     *
-     * Bruk i stedet: [BehandlingService.finnSisteYtelsesbehandlingFor]
      */
     protected fun hentSisteOpprettedeBehandlingForSak(
-        saksnummer: Saksnummer,
-        typeBehandling: List<TypeBehandling> = TypeBehandling.entries
+        saksnummer: Saksnummer
     ): Behandling {
-        return hentSisteOpprettedeBehandlingForSak(hentSak(saksnummer).id, typeBehandling)
+        return hentSisteOpprettedeBehandlingForSak(hentSak(saksnummer).id)
     }
 
     protected fun hentBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
@@ -955,7 +945,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     ): Behandling {
         sendInn(
             referanse = InnsendingReferanse(
-                InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
                 UUID.randomUUID().toString(),
             ),
             type = InnsendingType.OPPFØLGINGSOPPGAVE,

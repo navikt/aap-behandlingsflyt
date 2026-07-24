@@ -104,14 +104,14 @@ class AktivitetspliktFlytTest :
                 )
             )
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-                val brevbestillingReferanse = dataSource.transaction { connection ->
-                    val aktivitetsplikt11_7Repository = Aktivitetsplikt11_7RepositoryImpl(connection)
+
+                val aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+                val brevbestillingReferanse =
                     aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(aktivitetspliktBehandling.id)?.varselId
                         ?: error("Fant ikke varsel")
 
-                }
                 aktivitetspliktBehandling.løsAvklaringsBehov(
                     SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning(
                         brevbestillingReferanse = brevbestillingReferanse.brevbestillingReferanse,
@@ -121,7 +121,7 @@ class AktivitetspliktFlytTest :
                 )
             }
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
             }
             .løsAvklaringsBehov(avklaringsBehovLøsning = VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning())
@@ -137,7 +137,7 @@ class AktivitetspliktFlytTest :
                 )
             )
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
                 val grunnlagIAktivitetspliktBehandling = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
                     .hentHvisEksisterer(aktivitetspliktBehandling.id)
@@ -154,14 +154,9 @@ class AktivitetspliktFlytTest :
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        val effektueringsbehandling = dataSource.transaction { connection ->
-            BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
-                sak.id,
-                listOf(TypeBehandling.Revurdering)
-            )
-        }!!
+        val effektueringsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
-        assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
+        assertThat(effektueringsbehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
         assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
         assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandling.forrigeBehandlingId)
 
@@ -525,12 +520,7 @@ class AktivitetspliktFlytTest :
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        val effektueringsbehandling = dataSource.transaction { connection ->
-            BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
-                sak.id,
-                listOf(TypeBehandling.Revurdering)
-            )
-        }!!
+        val effektueringsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
         assertThat(
