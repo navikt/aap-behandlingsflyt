@@ -267,8 +267,8 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 START_BEHANDLING,
                 KRAV,
-                AVKLAR_STØNADSPERIODE,
                 SEND_FORVALTNINGSMELDING,
+                AVKLAR_STØNADSPERIODE,
                 AVBRYT_REVURDERING,
                 SØKNAD,
                 VURDER_RETTIGHETSPERIODE,
@@ -292,8 +292,8 @@ class EnklereFlytOrkestratorTest {
             listOf(
                 START_BEHANDLING,
                 KRAV,
-                AVKLAR_STØNADSPERIODE,
                 SEND_FORVALTNINGSMELDING,
+                AVKLAR_STØNADSPERIODE,
                 AVBRYT_REVURDERING,
                 SØKNAD,
                 VURDER_RETTIGHETSPERIODE,
@@ -392,52 +392,52 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.START,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.UTFØRER,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.START,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.UTFØRER,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),
@@ -628,52 +628,52 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.START,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.UTFØRER,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                    stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.START,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.UTFØRER,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
                     aktiv = false
                 ),
                 StegTilstand(
-                    stegType = SEND_FORVALTNINGSMELDING,
+                    stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
                 ),

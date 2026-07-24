@@ -274,8 +274,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 listOf(
                     START_BEHANDLING,
                     KRAV,
-                    AVKLAR_STØNADSPERIODE,
                     SEND_FORVALTNINGSMELDING,
+                    AVKLAR_STØNADSPERIODE,
                     AVBRYT_REVURDERING,
                     SØKNAD,
                     VURDER_RETTIGHETSPERIODE
