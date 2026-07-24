@@ -49,9 +49,6 @@ class Behandling(
     }
 
     fun oppdaterSteg(nyStegTilstand: StegTilstand) {
-        if (!nyStegTilstand.aktiv) {
-            throw IllegalStateException("Utvikler feil, prøver legge til steg med aktivtflagg false.")
-        }
         stegTilstand = nyStegTilstand
         status = nyStegTilstand.steg().status
     }
@@ -74,7 +71,6 @@ class Behandling(
         return stegTilstand ?: StegTilstand(
             stegType = flyt().stegene().first(),
             stegStatus = StegStatus.START,
-            aktiv = true
         )
     }
 

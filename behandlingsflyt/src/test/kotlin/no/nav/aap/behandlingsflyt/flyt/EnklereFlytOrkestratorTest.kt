@@ -132,10 +132,10 @@ class EnklereFlytOrkestratorTest {
                 .filter { it.status() in listOf(StegStatus.START, StegStatus.AVSLUTTER) }
         ).containsExactlyElementsOf(
             listOf(
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.AVSLUTTER, aktiv = true),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.START),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.START),
+                StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.AVSLUTTER),
             )
         )
 
@@ -157,14 +157,14 @@ class EnklereFlytOrkestratorTest {
                 .filter { it.status() in listOf(StegStatus.START, StegStatus.AVSLUTTER) }
         ).containsExactlyElementsOf(
             listOf(
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = IVERKSETT_VEDTAK, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(stegType = IVERKSETT_VEDTAK, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = OPPRETT_REVURDERING, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(stegType = OPPRETT_REVURDERING, stegStatus = StegStatus.AVSLUTTER, aktiv = true),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.START),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.START),
+                StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = IVERKSETT_VEDTAK, stegStatus = StegStatus.START),
+                StegTilstand(stegType = IVERKSETT_VEDTAK, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = OPPRETT_REVURDERING, stegStatus = StegStatus.START),
+                StegTilstand(stegType = OPPRETT_REVURDERING, stegStatus = StegStatus.AVSLUTTER),
             )
         )
     }
@@ -353,226 +353,187 @@ class EnklereFlytOrkestratorTest {
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).containsExactlyElementsOf(
             listOf(
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = START_BEHANDLING,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = START_BEHANDLING,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(
                     stegType = KRAV,
                     stegStatus = StegStatus.START,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = KRAV,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = KRAV,
                     stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = KRAV,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = KRAV,
                     stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.START,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.START,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.START,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv = false),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.START),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVKLARINGSPUNKT),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
                     stegStatus = StegStatus.START,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
                     stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
                     stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = VURDER_LOVVALG,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = VURDER_LOVVALG,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = FASTSETT_MELDEPERIODER, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = FASTSETT_MELDEPERIODER, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = FASTSETT_MELDEPERIODER,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = FASTSETT_MELDEPERIODER,
                     stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = FASTSETT_MELDEPERIODER,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = FASTSETT_MELDEPERIODER,
                     stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = VURDER_ALDER,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
-                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.AVKLARINGSPUNKT),
+                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = VURDER_AVSLAG_11_27,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = VURDER_AVSLAG_11_27,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_STUDENT,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = AVKLAR_STUDENT,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = true),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT),
             )
         )
 
@@ -589,249 +550,207 @@ class EnklereFlytOrkestratorTest {
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).isNotEmpty()
         assertThat(behandlingRepository.hentStegHistorikk(behandling.id)).containsExactlyElementsOf(
             listOf(
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = START_BEHANDLING,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = START_BEHANDLING,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
-                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(
                     stegType = KRAV,
-                    stegStatus = StegStatus.START,
-                    aktiv = false
+                    stegStatus = StegStatus.START
                 ),
                 StegTilstand(
                     stegType = KRAV,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
                 StegTilstand(
                     stegType = KRAV,
-                    stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
+                    stegStatus = StegStatus.UTFØRER
                 ),
                 StegTilstand(
                     stegType = KRAV,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
                 StegTilstand(
                     stegType = KRAV,
-                    stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
+                    stegStatus = StegStatus.AVSLUTTER
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.START,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.START,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
+                   stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
                 ),
                 StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
                 ),
                 StegTilstand(
-                    stegType = AVKLAR_STØNADSPERIODE,
-                    stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
+                   stegType = AVKLAR_STØNADSPERIODE,
+                   stegStatus = StegStatus.AVSLUTTER,
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
-                    stegStatus = StegStatus.START,
-                    aktiv = false
+                    stegStatus = StegStatus.START
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
-                    stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
+                    stegStatus = StegStatus.UTFØRER
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
                 StegTilstand(
                     stegType = AVBRYT_REVURDERING,
-                    stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
+                    stegStatus = StegStatus.AVSLUTTER
                 ),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.START, aktiv = false),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG, aktiv = false),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
-                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.START),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVKLARINGSPUNKT),
+                StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.START,
-                    aktiv = false
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.START
                 ),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.UTFØRER
                 ),
                 StegTilstand(
                     stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
-                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.AVSLUTTER
+                ),
+                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = VURDER_LOVVALG,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = VURDER_LOVVALG,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
-                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = FASTSETT_MELDEPERIODER, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = FASTSETT_MELDEPERIODER, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = FASTSETT_MELDEPERIODER,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
-                ),
-                StegTilstand(
-                    stegType = FASTSETT_MELDEPERIODER,
-                    stegStatus = StegStatus.UTFØRER,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
                 StegTilstand(
                     stegType = FASTSETT_MELDEPERIODER,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.UTFØRER
                 ),
                 StegTilstand(
                     stegType = FASTSETT_MELDEPERIODER,
-                    stegStatus = StegStatus.AVSLUTTER,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
-                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(
+                    stegType = FASTSETT_MELDEPERIODER,
+                    stegStatus = StegStatus.AVSLUTTER
+                ),
+                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = VURDER_ALDER,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
-                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.AVKLARINGSPUNKT),
+                StegTilstand(stegType = VURDER_ALDER, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = VURDER_AVSLAG_11_27,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = VURDER_AVSLAG_11_27,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
-                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_STUDENT,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = AVKLAR_STUDENT,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.TILBAKEFØRT, aktiv = false),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.TILBAKEFØRT, aktiv = false),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.TILBAKEFØRT),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.TILBAKEFØRT),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_STUDENT,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
                     stegType = AVKLAR_STUDENT,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                    aktiv = false
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                    aktiv = false
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER, aktiv = false),
-                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = true),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT),
             )
         )
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)

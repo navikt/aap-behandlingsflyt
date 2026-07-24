@@ -166,7 +166,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     tidspunkt = row.getLocalDateTime("sh_opprettet_tid"),
                     stegType = stegType,
                     stegStatus = row.getEnum("sh_status"),
-                    aktiv = true,
                 )
             },
             versjon = row.getLong("versjon"),
@@ -328,7 +327,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     tidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
                     stegType = row.getEnum("steg"),
                     stegStatus = row.getEnum("status"),
-                    aktiv = row.getBoolean("aktiv"),
                 )
             }
         }

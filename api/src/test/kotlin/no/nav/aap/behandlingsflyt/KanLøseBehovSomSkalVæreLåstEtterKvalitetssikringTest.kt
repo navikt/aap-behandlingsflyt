@@ -23,8 +23,7 @@ class KanLøseBehovSomSkalVæreLåstEtterKvalitetssikringTest {
             versjon = 1,
             stegTilstand = StegTilstand(
                 stegType = aktivtSteg,
-                stegStatus = StegStatus.AVKLARINGSPUNKT,
-                aktiv = true
+                stegStatus = StegStatus.AVKLARINGSPUNKT
             )
         )
     }

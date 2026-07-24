@@ -534,8 +534,8 @@ internal class BehandlingRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val repo = BehandlingRepositoryImpl(connection)
 
-            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.START, aktiv = true))
-            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = true))
+            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.START))
+            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT ))
 
             assertThat(repo.hent(behandling.id).aktivtStegTilstand().steg()).isEqualTo(StegType.AVKLAR_SYKDOM)
         }
@@ -548,8 +548,8 @@ internal class BehandlingRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val repo = BehandlingRepositoryImpl(connection)
 
-            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.START, aktiv = true))
-            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = true))
+            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.START_BEHANDLING, stegStatus = StegStatus.START ))
+            repo.leggTilNyttAktivtSteg(behandling.id, StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT))
 
             val historikk = repo.hentStegHistorikk(behandling.id)
 
