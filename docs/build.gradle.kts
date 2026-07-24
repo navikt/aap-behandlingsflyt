@@ -1,5 +1,4 @@
 plugins {
-    kotlin("jvm") apply false
     id("aap.conventions")
 }
 
