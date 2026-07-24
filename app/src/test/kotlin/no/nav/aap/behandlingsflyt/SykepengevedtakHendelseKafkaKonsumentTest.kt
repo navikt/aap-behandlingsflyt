@@ -16,30 +16,16 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.slf4j.LoggerFactory
-import org.testcontainers.containers.output.Slf4jLogConsumer
-import org.testcontainers.containers.wait.strategy.Wait
-import org.testcontainers.kafka.KafkaContainer
-import org.testcontainers.utility.DockerImageName
-import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
-import kotlin.concurrent.thread
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
 class SykepengevedtakHendelseKafkaKonsumentTest {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SykepengevedtakKafkaKonsument::class.java)
-        val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofSeconds(60))
-            .withLogConsumer { Slf4jLogConsumer(logger) }
-
         private lateinit var dataSource: MockDataSource
         val repositoryRegistry = inMemoryRepositoryRegistry
 
@@ -47,18 +33,11 @@ class SykepengevedtakHendelseKafkaKonsumentTest {
         @JvmStatic
         internal fun beforeAll() {
             dataSource = MockDataSource()
-            kafka.start()
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun afterAll() {
-            kafka.stop()
         }
     }
 
     val konsument = SykepengevedtakKafkaKonsument(
-        config = testConfig(kafka.bootstrapServers),
+        config = testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = createGatewayProvider {
@@ -70,44 +49,44 @@ class SykepengevedtakHendelseKafkaKonsumentTest {
 
     @Test
     fun `Sykepengevedtakhendelse konsumeres av kafka`() {
-
-        val sykepengevedtakHendelse = SykepengevedtakKafkaMelding(
-            personidentifikator = "12345678901",
-            tidspunkt = OffsetDateTime.now(ZoneOffset.UTC)
-        )
-        val producerProps = Properties().apply {
-            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
-            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
-            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
-        }
-
-        KafkaProducer<String, String>(producerProps).use { producer ->
-            val value = DefaultJsonMapper.toJson(sykepengevedtakHendelse)
-            producer.send(
-                ProducerRecord(
-                    SYKEPENGEVEDTAK_EVENT_TOPIC,
-                    sykepengevedtakHendelse.personidentifikator,
-                    value
-                )
-            )
-            producer.flush()
-        }
-
-
-        val pollThread = thread(start = true) {
+        val pollThread = startConsumerThread {
             konsument.konsumer()
         }
 
-        while (konsument.antallMeldinger == 0 && pollThread.isAlive) {
-            Thread.sleep(100)
+        try {
+            val sykepengevedtakHendelse = SykepengevedtakKafkaMelding(
+                personidentifikator = "12345678901",
+                tidspunkt = OffsetDateTime.now(ZoneOffset.UTC)
+            )
+            val producerProps = Properties().apply {
+                put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, SharedKafkaTestContainer.kafka.bootstrapServers)
+                put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
+                put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
+            }
+
+            KafkaProducer<String, String>(producerProps).use { producer ->
+                val value = DefaultJsonMapper.toJson(sykepengevedtakHendelse)
+                producer.send(
+                    ProducerRecord(
+                        SYKEPENGEVEDTAK_EVENT_TOPIC,
+                        sykepengevedtakHendelse.personidentifikator,
+                        value
+                    )
+                )
+                producer.flush()
+            }
+
+            awaitAtMost("Konsumenten mottok ikke forventet sykepenge-melding") {
+                konsument.antallMeldinger == 1 || !pollThread.isAlive
+            }
+
+            assertThat(konsument.antallMeldinger)
+                .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
+                .isEqualTo(1)
+        } finally {
+            stopConsumerThread(konsument::lukk, pollThread)
         }
 
-        assertThat(konsument.antallMeldinger)
-            .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
-            .isEqualTo(1)
-
-        konsument.lukk()
-        pollThread.join()
     }
 
 
@@ -124,4 +103,3 @@ private fun testConfig(brokers: String) = KafkaConsumerConfig(
         password = "",
     )
 )
-
