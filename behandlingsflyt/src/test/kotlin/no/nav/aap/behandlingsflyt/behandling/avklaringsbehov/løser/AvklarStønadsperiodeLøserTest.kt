@@ -56,7 +56,7 @@ class AvklarStønadsperiodeLøserTest {
         )
 
         val exception = assertThrows<UgyldigForespørselException> { løser.løs(kontekst(sakId, behandlingId), løsning) }
-        assertEquals("stansOpphør er påkrevd ved gjennopptak/gjennintreden", exception.message)
+        assertEquals("Stans/opphør-årsak er påkrevd ved gjenopptak/gjeninntreden", exception.message)
     }
 
 

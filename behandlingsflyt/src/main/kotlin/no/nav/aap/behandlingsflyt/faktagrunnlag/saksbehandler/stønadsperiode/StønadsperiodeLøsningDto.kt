@@ -33,7 +33,7 @@ data class StønadsperiodeLøsningDto(
         opprettet: Instant = Instant.now()
     ): StønadsperiodeVurdering {
         if (stansOpphør == null && (harGjenværendeKvote || harHattOrdinærSiste52Uker)) {
-            throw UgyldigForespørselException("stansOpphør er påkrevd ved gjennopptak/gjennintreden")
+            throw UgyldigForespørselException("Stans/opphør-årsak er påkrevd ved gjenopptak/gjeninntreden")
         }
 
         // TODO: Lagre ned stansopphør
