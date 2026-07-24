@@ -74,6 +74,8 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.FASTSETT_ARBEIDSEVNE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FASTSETT_ARBEIDSEVNE
         Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT
         Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING
+        Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID
+        Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE
     }
 
 
