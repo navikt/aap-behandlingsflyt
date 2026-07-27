@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -36,14 +37,15 @@ class VedtakslengdeService(
     companion object {
         const val ANTALL_DAGER_FØR_UTVIDELSE = 28L
     }
+
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        vedtakslengdeRepository =  repositoryProvider.provide(),
+        vedtakslengdeRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
         stansOpphørRepository = repositoryProvider.provide(),
 
-    )
+        )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -55,14 +57,16 @@ class VedtakslengdeService(
         behandlingId: BehandlingId,
         forrigeBehandlingId: BehandlingId?
     ): VedtakslengdeUtvidelse {
-        val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
+        val vedtakslengdeGrunnlag =
+            forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = requireNotNull(hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)) {
             "Kan ikke utlede vedtatt sluttdato for behandling $forrigeBehandlingId, som trengs for å vurdere utvidelse av vedtakslengde for behandling $behandlingId"
         }
 
         val nesteÅrligeUtvidelse = hentNesteÅrligeUtvidelse(vedtakslengdeGrunnlag?.gjeldendeVurdering())
         val vedtattSluttdatoUtvidetMedEttÅr = vedtattSluttdato.plussEtÅrMedHverdager(nesteÅrligeUtvidelse)
-        val fremtidigBistandsbehovRettighetsperioder = hentPerioderMedBistandsbehovRettighet(vedtattSluttdato.plusDays(1), behandlingId)
+        val fremtidigBistandsbehovRettighetsperioder =
+            hentPerioderMedBistandsbehovRettighet(vedtattSluttdato.plusDays(1), behandlingId)
 
         return when (fremtidigBistandsbehovRettighetsperioder) {
             // Ingen perioder å utvide for
@@ -113,13 +117,15 @@ class VedtakslengdeService(
         forrigeBehandlingId: BehandlingId?,
         vedtakslengdeUtvidelse: VedtakslengdeUtvidelse.Automatisk,
     ) {
-        val vedtattVedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
+        val vedtattVedtakslengdeGrunnlag =
+            forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val nesteÅrligeUtvidelse = hentNesteÅrligeUtvidelse(vedtattVedtakslengdeGrunnlag?.gjeldendeVurdering())
 
         val vedtattVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
         val nyAutomatiskVurdering = VedtakslengdeVurdering(
             sluttdato = vedtakslengdeUtvidelse.nySluttdato,
             utvidetMed = nesteÅrligeUtvidelse,
+            årsaker = vedtakslengdeUtvidelse.avslagsårsaker.mapNotNull { VedtakslengdeÅrsak.fraAvslagsårsak(it) },
             vurdertAv = SYSTEMBRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(clock),
@@ -169,6 +175,7 @@ class VedtakslengdeService(
             val nyAutomatiskVurdering = VedtakslengdeVurdering(
                 sluttdato = sluttdato,
                 utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
+                årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR), // Bør vi ikke her bruke samme logikk som ved utvidelse?
                 vurdertAv = SYSTEMBRUKER,
                 vurdertIBehandling = behandlingId,
                 opprettet = Instant.now(clock),
@@ -176,7 +183,8 @@ class VedtakslengdeService(
             )
 
             val vedtatteVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
-            val nyeVurderingerFraBehandlingen = vedtakslengdeGrunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandlingId }.orEmpty()
+            val nyeVurderingerFraBehandlingen =
+                vedtakslengdeGrunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandlingId }.orEmpty()
 
             // Det kan kun være en ny manuell vurdering pr behandling
             val nyManuellVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertManuelt }.also {
@@ -225,7 +233,8 @@ class VedtakslengdeService(
             listOfNotNull(sluttdatoSisteBistandsbehov, initiellSluttdato).min()
         } else null
 
-        val kandidaterForSluttdato =  listOfNotNull(sluttdatoSisteUnntaksrettighet, sluttdatoBistandsbehov, vedtattSluttdato)
+        val kandidaterForSluttdato =
+            listOfNotNull(sluttdatoSisteUnntaksrettighet, sluttdatoBistandsbehov, vedtattSluttdato)
 
         // Tillater ikke innskrenkelse av vedtakslengde da forrige vedtak kan ha sendt over perioder til utbetaling
         val sluttdatoForBehandlingen = kandidaterForSluttdato.max()
@@ -240,7 +249,8 @@ class VedtakslengdeService(
         forrigeBehandlingId: BehandlingId?,
         rettighetsperiode: Periode,
     ) {
-        val vedtakslengdeGrunnlag = forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
+        val vedtakslengdeGrunnlag =
+            forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) }
         val vedtattSluttdato = hentVedtattSluttdato(forrigeBehandlingId, vedtakslengdeGrunnlag)
 
         if (vedtakslengdeGrunnlag == null) {
@@ -250,13 +260,17 @@ class VedtakslengdeService(
             log.info("Lagrer VedtakslengdeVurdering med sluttdato=$sluttdato")
 
             vedtakslengdeRepository.lagre(
-                behandlingId, listOf(VedtakslengdeVurdering(
-                    sluttdato = sluttdato,
-                    utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
-                    vurdertAv = SYSTEMBRUKER,
-                    vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(clock),
-                    begrunnelse = "Automatisk vurdert"))
+                behandlingId, listOf(
+                    VedtakslengdeVurdering(
+                        sluttdato = sluttdato,
+                        utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+                        årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
+                        vurdertAv = SYSTEMBRUKER,
+                        vurdertIBehandling = behandlingId,
+                        opprettet = Instant.now(clock),
+                        begrunnelse = "Automatisk vurdert"
+                    )
+                )
             )
         }
     }
@@ -264,7 +278,10 @@ class VedtakslengdeService(
     /**
      * Henter siste vedtatte sluttdato. Bruker den største verdien da vi ikke ønsker å redusere vedtakslengden.
      */
-    private fun hentVedtattSluttdato(forrigeBehandlingId: BehandlingId?, vedtakslengdeGrunnlag: VedtakslengdeGrunnlag?): LocalDate? {
+    private fun hentVedtattSluttdato(
+        forrigeBehandlingId: BehandlingId?,
+        vedtakslengdeGrunnlag: VedtakslengdeGrunnlag?
+    ): LocalDate? {
         val vedtattUnderveis = forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sluttdatoSisteVedtatteUnderveis = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }?.periode?.tom
         val sluttdatoSisteVedtatteVedtakslengdeVurdering = vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato
@@ -323,8 +340,10 @@ class VedtakslengdeService(
             perioder.isEmpty() -> BistandsbehovRettighetsperioder.IngenPerioder
             perioder.size == 1 && perioder.single().fom == fraDato ->
                 BistandsbehovRettighetsperioder.EnSammenhengendePeriodeFraAngittDato(perioder.single())
+
             perioder.size == 1 && perioder.single().fom > fraDato ->
                 BistandsbehovRettighetsperioder.EnSammenhengendePeriodeFraSenereDato(perioder.single())
+
             else -> BistandsbehovRettighetsperioder.FlereIkkeSammenhengendePerioder(perioder)
         }
     }
@@ -332,7 +351,9 @@ class VedtakslengdeService(
     private fun gyldigForAutomatiskUtvidelseAvVedtakslengde(avslagsårsaker: Set<Avslagsårsak>): Boolean {
         // Kun tillate automatisk behandling for årsakene som er slått på i prod så langt
         if (erProd()) {
-            return avslagsårsaker.isNotEmpty() && gyldigeAvslagsårsakerForAutomatiskBehandlingProd().containsAll(avslagsårsaker)
+            return avslagsårsaker.isNotEmpty() && gyldigeAvslagsårsakerForAutomatiskBehandlingProd().containsAll(
+                avslagsårsaker
+            )
         }
         return avslagsårsaker.isNotEmpty() && gyldigeAvslagsårsakerForAutomatiskBehandling().containsAll(avslagsårsaker)
     }

@@ -19,11 +19,13 @@ class AvklarVedtakslengdeLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarVedtakslengdeLøsning): LøsningsResultat {
-        val vedtattGrunnlag = kontekst.kontekst.forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
+        val vedtattGrunnlag =
+            kontekst.kontekst.forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(it) }
         val grunnlag = vedtakslengdeRepository.hentHvisEksisterer(kontekst.behandlingId())
 
         val gjeldendeVedtatteVurderinger = vedtattGrunnlag?.vurderinger.orEmpty()
-        val nyeVurderingerFraBehandlingen = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == kontekst.behandlingId() }.orEmpty()
+        val nyeVurderingerFraBehandlingen =
+            grunnlag?.vurderinger?.filter { it.vurdertIBehandling == kontekst.behandlingId() }.orEmpty()
 
         // Kun en ny automatisk vurdering per behandling
         val automatiskVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertAutomatisk }.also {
@@ -46,6 +48,7 @@ class AvklarVedtakslengdeLøser(
             VedtakslengdeVurdering(
                 sluttdato = vurdering.sluttdato,
                 utvidetMed = vedtattGrunnlag?.gjeldendeVurdering()?.utvidetMed ?: ÅrMedHverdager.FØRSTE_ÅR,
+                årsaker = listOfNotNull(vurdering.årsak),
                 vurdertAv = kontekst.bruker,
                 vurdertIBehandling = kontekst.behandlingId(),
                 opprettet = Instant.now(),
@@ -55,7 +58,9 @@ class AvklarVedtakslengdeLøser(
 
         vedtakslengdeRepository.lagre(
             behandlingId = kontekst.behandlingId(),
-            vurderinger = gjeldendeVedtatteVurderinger + automatiskVurderingFraBehandlingen + listOfNotNull(nyManuellVurdering)
+            vurderinger = gjeldendeVedtatteVurderinger + automatiskVurderingFraBehandlingen + listOfNotNull(
+                nyManuellVurdering
+            )
         )
 
         return LøsningsResultat(nyManuellVurdering?.begrunnelse ?: "")

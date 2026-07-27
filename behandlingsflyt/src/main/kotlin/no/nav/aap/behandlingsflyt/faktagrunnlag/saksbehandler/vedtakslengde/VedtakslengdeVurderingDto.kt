@@ -8,5 +8,6 @@ data class VedtakslengdeVurderingDto(
     override val tom: LocalDate?,
     override val begrunnelse: String,
     val sluttdato: LocalDate,
+    val årsak: VedtakslengdeÅrsak?,
 ) : LøsningForPeriode
 
