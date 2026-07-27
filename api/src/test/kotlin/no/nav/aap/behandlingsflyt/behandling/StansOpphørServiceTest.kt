@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -175,6 +176,7 @@ class StansOpphørServiceTest {
             behandling.id, listOf(
                 VedtakslengdeVurdering(
                     sluttdato = sluttdato,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     utvidetMed = ÅrMedHverdager.TREDJE_ÅR,
                     vurdertAv = Bruker("saksbehandler"),
                     vurdertIBehandling = behandling.id,
