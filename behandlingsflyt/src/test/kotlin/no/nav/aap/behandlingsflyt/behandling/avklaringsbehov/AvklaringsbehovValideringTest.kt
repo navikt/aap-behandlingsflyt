@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.fla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -629,6 +630,7 @@ class AvklaringsbehovValideringTest {
                 VedtakslengdeVurdering(
                     sluttdato = sluttdato,
                     utvidetMed = ÅrMedHverdager.TREDJE_ÅR,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     vurdertAv = Bruker("saksbehandler"),
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),

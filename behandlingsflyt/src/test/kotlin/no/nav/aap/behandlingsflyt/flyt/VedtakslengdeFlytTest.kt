@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.flyt.TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -50,7 +51,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-
 
 class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
@@ -1092,6 +1092,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                         VedtakslengdeVurderingDto(
                             fom = startDato,
                             tom = manueltOverstyrtSluttdato,
+                            årsak = VedtakslengdeÅrsak.MAKS_ETT_ÅR,
                             sluttdato = manueltOverstyrtSluttdato,
                             begrunnelse = "Vurdert vedtakslengde manuelt"
                         )
@@ -1144,6 +1145,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                         VedtakslengdeVurderingDto(
                             fom = automatiskSluttdato.plusDays(1),
                             tom = nyManuellSluttdato,
+                            årsak = VedtakslengdeÅrsak.MAKS_ETT_ÅR,
                             sluttdato = nyManuellSluttdato,
                             begrunnelse = nyBegrunnelse
                         )
@@ -1194,6 +1196,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                         VedtakslengdeVurderingDto(
                             fom = startDato,
                             tom = manueltOverstyrtSluttdato,
+                            årsak = VedtakslengdeÅrsak.MAKS_ETT_ÅR,
                             sluttdato = manueltOverstyrtSluttdato,
                             begrunnelse = "Vurdert vedtakslengde manuelt"
                         )
@@ -1305,6 +1308,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                         VedtakslengdeVurderingDto(
                             fom = forventetSluttdato.plusDays(1),
                             tom = forlengelseFom,
+                            årsak = VedtakslengdeÅrsak.MAKS_ETT_ÅR,
                             sluttdato = forlengelseFom,
                             begrunnelse = "Vurdert vedtakslengde manuelt"
                         )
