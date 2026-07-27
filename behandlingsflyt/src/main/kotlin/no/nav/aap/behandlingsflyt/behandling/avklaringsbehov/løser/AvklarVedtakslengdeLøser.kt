@@ -48,7 +48,7 @@ class AvklarVedtakslengdeLøser(
             VedtakslengdeVurdering(
                 sluttdato = vurdering.sluttdato,
                 utvidetMed = vedtattGrunnlag?.gjeldendeVurdering()?.utvidetMed ?: ÅrMedHverdager.FØRSTE_ÅR,
-                årsaker = listOfNotNull(vurdering.årsak),
+                årsaker = vurdering.årsaker,
                 vurdertAv = kontekst.bruker,
                 vurdertIBehandling = kontekst.behandlingId(),
                 opprettet = Instant.now(),
