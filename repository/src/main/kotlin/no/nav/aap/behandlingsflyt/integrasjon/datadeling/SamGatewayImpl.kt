@@ -48,25 +48,24 @@ class SamGatewayImpl : SamGateway {
     }
 
     override fun hentSamId(ident: Ident, sakId: Long, vedtakId: Long): List<SamIdOgTpNr> {
-        return requireNotNull(
-            restClient.get(
-                uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=$vedtakId&fagomrade=AAP"),
-                request = GetRequest(
-                    additionalHeaders = listOf(Header("pid", ident.identifikator))
-                ),
-                mapper = { body, _ ->
-                    val respons = DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body)
-                    logger.info("respons fra SAM ved henting av samId: $respons")
-                    respons.flatMap { samordningsvedtakApi ->
-                        samordningsvedtakApi.samordningsmeldinger.map {
-                            SamIdOgTpNr(
-                                it.samId,
-                                it.tpNr.toLong()
-                            )
-                        }
+        return restClient.get(
+            uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=$vedtakId&fagomrade=AAP"),
+            request = GetRequest(
+                additionalHeaders = listOf(Header("pid", ident.identifikator))
+            ),
+            mapper = { body, _ ->
+                val respons = DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body)
+                logger.info("respons fra SAM ved henting av samId: $respons")
+                respons.flatMap { samordningsvedtakApi ->
+                    samordningsvedtakApi.samordningsmeldinger.map {
+                        SamIdOgTpNr(
+                            it.samId,
+                            it.tpNr.toLong()
+                        )
                     }
                 }
-            )) { "Fikk ikke respons for sakId $sakId." }
+            }
+        ).orEmpty()
     }
 
     // https://github.com/navikt/sam/blob/541363d19bb6f0596562159b49c676d09631138e/provider/nav-provider-stotte-sam-app/src/main/java/no/nav/provider/stotte/sam/app/samordnevedtak/SamordneVedtakController.kt#L13
