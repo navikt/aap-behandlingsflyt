@@ -21,6 +21,7 @@ public data class DatadelingDTO(
     val muligMaksdato: LocalDate?,
     val behandlingsReferanse: String,
     val samId: String? = null,
+    val samIdOgTpr: List<SamIdOgTpnr>,
     val vedtakId: Long,
     val beregningsgrunnlag: BigDecimal?,
     val perioderMedFritakMeldeplikt: List<PeriodeDTO>,
@@ -28,6 +29,8 @@ public data class DatadelingDTO(
     val arenavedtak: List<ArenavedtakDTO>,
     val underveisperioder: List<UnderveisperiodeDatadelingDTO>,
 )
+
+public data class SamIdOgTpnr(val samId: String, val tpnr: String?)
 
 public data class PeriodeDTO(
     val fom: LocalDate,
@@ -49,7 +52,7 @@ public data class ArenavedtakDTO(
     public val vedtakId: Long,
     public val fom: LocalDate,
     public val tom: LocalDate,
-    public val  vedtaksvariant: ArenaVedtaksvariantDTO,
+    public val vedtaksvariant: ArenaVedtaksvariantDTO,
 )
 
 public enum class ArenaVedtaksvariantDTO {
