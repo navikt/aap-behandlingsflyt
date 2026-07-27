@@ -1092,7 +1092,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                         VedtakslengdeVurderingDto(
                             fom = startDato,
                             tom = manueltOverstyrtSluttdato,
-                            årsak = VedtakslengdeÅrsak.MAKS_ETT_ÅR,
+                            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                             sluttdato = manueltOverstyrtSluttdato,
                             begrunnelse = "Vurdert vedtakslengde manuelt"
                         )
@@ -1145,7 +1145,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                         VedtakslengdeVurderingDto(
                             fom = automatiskSluttdato.plusDays(1),
                             tom = nyManuellSluttdato,
-                            årsak = VedtakslengdeÅrsak.MAKS_ETT_ÅR,
+                            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                             sluttdato = nyManuellSluttdato,
                             begrunnelse = nyBegrunnelse
                         )
@@ -1196,7 +1196,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                         VedtakslengdeVurderingDto(
                             fom = startDato,
                             tom = manueltOverstyrtSluttdato,
-                            årsak = VedtakslengdeÅrsak.MAKS_ETT_ÅR,
+                            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                             sluttdato = manueltOverstyrtSluttdato,
                             begrunnelse = "Vurdert vedtakslengde manuelt"
                         )
@@ -1308,7 +1308,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                         VedtakslengdeVurderingDto(
                             fom = forventetSluttdato.plusDays(1),
                             tom = forlengelseFom,
-                            årsak = VedtakslengdeÅrsak.MAKS_ETT_ÅR,
+                            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                             sluttdato = forlengelseFom,
                             begrunnelse = "Vurdert vedtakslengde manuelt"
                         )
