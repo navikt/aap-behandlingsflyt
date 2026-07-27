@@ -10,18 +10,11 @@ data class KravGrunnlag(
     val vurderinger: Set<KravVurdering>,
 ) {
     fun gjeldendeVurderinger(): Set<KravVurdering> {
-        return vurderinger
-            .groupBy { it.referanse }
-            .values
-            .map { kravForReferanse -> kravForReferanse.maxBy { it.opprettet } }
-            .toSet()
+        return vurderinger.gjeldendeVurderinger()
     }
 
     fun kravtidslinje(): Tidslinje<RelevantKrav> {
-        return gjeldendeVurderinger()
-            .filterIsInstance<RelevantKrav>()
-            .sortedBy { it.muligRettFra }
-            .somTidslinje { Periode(it.muligRettFra, Tid.MAKS) }
+        return vurderinger.kravtidslinje()
     }
 
     fun gjeldendeRelevanteKrav(): Set<RelevantKrav> {
@@ -29,3 +22,16 @@ data class KravGrunnlag(
     }
 }
 
+fun Set<KravVurdering>.gjeldendeVurderinger(): Set<KravVurdering> {
+    return this.groupBy { it.referanse }
+        .values
+        .map { kravForReferanse -> kravForReferanse.maxBy { it.opprettet } }
+        .toSet()
+}
+
+fun Set<KravVurdering>.kravtidslinje(): Tidslinje<RelevantKrav> {
+    return this.gjeldendeVurderinger()
+        .filterIsInstance<RelevantKrav>()
+        .sortedBy { it.muligRettFra }
+        .somTidslinje { Periode(it.muligRettFra, Tid.MAKS) }
+}

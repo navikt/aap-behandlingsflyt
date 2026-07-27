@@ -78,7 +78,6 @@ fun opprettInMemorySakOgRevurdering(
         førstegangsbehandling.id, StegTilstand(
             stegStatus = StegStatus.AVSLUTTER,
             stegType = Førstegangsbehandling.flyt().stegene().last(),
-            aktiv = true,
         )
     )
 

@@ -161,12 +161,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             sakId = SakId(row.getLong("sak_id")),
             typeBehandling = TypeBehandling.from(row.getString("type")),
             status = row.getEnum("status"),
-            stegTilstand = row.getEnumOrNull<StegType, StegType>("sh_steg")?.let { stegType ->
+            stegTilstand = row.getEnumOrNull<StegType>("sh_steg")?.let { stegType ->
                 StegTilstand(
                     tidspunkt = row.getLocalDateTime("sh_opprettet_tid"),
                     stegType = stegType,
                     stegStatus = row.getEnum("sh_status"),
-                    aktiv = true,
                 )
             },
             versjon = row.getLong("versjon"),
@@ -328,7 +327,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     tidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
                     stegType = row.getEnum("steg"),
                     stegStatus = row.getEnum("status"),
-                    aktiv = row.getBoolean("aktiv"),
                 )
             }
         }

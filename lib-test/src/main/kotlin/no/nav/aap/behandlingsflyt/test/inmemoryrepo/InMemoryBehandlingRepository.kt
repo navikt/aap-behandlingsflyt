@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import kotlin.collections.all
 
 object InMemoryBehandlingRepository : BehandlingRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -170,14 +171,8 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         tilstand: StegTilstand
     ) {
         synchronized(lock) {
-            val stegHistorikk = memoryStegHistorikk[behandlingId]?.map {
-                StegTilstand(
-                    tidspunkt = it.tidspunkt(),
-                    stegStatus = it.status(),
-                    stegType = it.steg(),
-                    aktiv = false
-                )
-            }.orEmpty()
+            val stegHistorikk = memoryStegHistorikk[behandlingId].orEmpty()
+            check(stegHistorikk.all { it <= tilstand  })
             memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
             memory[behandlingId]!!.oppdaterSteg(tilstand)
         }

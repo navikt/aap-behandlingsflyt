@@ -157,8 +157,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,
-                stegType = StegType.FORESLÅ_VEDTAK,
-                aktiv = true
+                stegType = StegType.FORESLÅ_VEDTAK
             ),
             opprettetTidspunkt = LocalDateTime.now(),
             versjon = 0L
@@ -175,8 +174,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,
-                stegType = StegType.FORESLÅ_VEDTAK,
-                aktiv = true
+                stegType = StegType.FORESLÅ_VEDTAK
             ),
             opprettetTidspunkt = LocalDateTime.now(),
             versjon = 0L

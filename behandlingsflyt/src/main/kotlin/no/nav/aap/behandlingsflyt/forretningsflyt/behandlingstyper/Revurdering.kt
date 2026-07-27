@@ -98,14 +98,14 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.VURDER_KRAV)
             )
             .medSteg(
-                steg = AvklarStønadsperiodeSteg,
-                informasjonskrav = emptyList(),
-                vurderingsbehovRelevanteForSteg = emptyList()
-            )
-            .medSteg(
                 steg = SendForvaltningsmeldingSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 informasjonskrav = emptyList()
+            )
+            .medSteg(
+                steg = AvklarStønadsperiodeSteg,
+                informasjonskrav = emptyList(),
+                vurderingsbehovRelevanteForSteg = emptyList()
             )
             .medSteg(
                 steg = AvbrytRevurderingSteg,

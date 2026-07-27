@@ -160,7 +160,7 @@ class StegOrkestrator(
             StegStatus.TILBAKEFØRT -> Fortsett
         }
 
-        val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = gjeldendeStegStatus, aktiv = true)
+        val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = gjeldendeStegStatus)
         oppdaterStegOgStatus(behandling, nyStegTilstand)
 
         return transisjon
