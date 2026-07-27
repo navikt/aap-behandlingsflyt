@@ -376,57 +376,22 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     add(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
                     add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
-                    if (brevBehov.tilkjentYtelse != null) {
-                        add(
-                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
-                        )
-                    }
-                    if (brevBehov.grunnlagBeregning != null) {
-                        add(
-                            grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
-                        )
-                    }
-
-                    if (brevBehov.sykdomsvurdering != null) {
-                        add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
-                    }
-
-                    if (brevBehov.foreldreansvarVurderinger != null) {
-                        add(
-                            foreldreansvarVurderingerTilFaktaGrunnlag(brevBehov.foreldreansvarVurderinger!!)
-                        )
-                    }
-
-                    brevBehov.forholdTilAndreYtelser?.let { forholdTilAndreYtelser ->
-                        add(forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser))
-                    }
-                    brevBehov.yrkesskadeBeregning?.let { yrkesskadeBeregning ->
-                        add(yrkesskadeBeregningTilFaktagrunnlag(yrkesskadeBeregning))
-                    }
-                    brevBehov.yrkesSkadeISøknadIkkeIRegister?.let {
-                        add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it))
-                    }
-                    brevBehov.meldepliktGrunnlag?.let {
-                        add(
-                            fritakmeldepliktTilFaktagrunnlag(it)
-                        )
-                    }
+                    brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
+                    brevBehov.grunnlagBeregning?.let { add(grunnlagBeregningTilFaktagrunnlag(it)) }
+                    brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
+                    brevBehov.foreldreansvarVurderinger?.let { add(foreldreansvarVurderingerTilFaktaGrunnlag(it)) }
+                    brevBehov.forholdTilAndreYtelser?.let { add(forholdTilAndreYtelserTilFaktagrunnlag(it)) }
+                    brevBehov.yrkesskadeBeregning?.let { add(yrkesskadeBeregningTilFaktagrunnlag(it)) }
+                    brevBehov.yrkesSkadeISøknadIkkeIRegister?.let { add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it)) }
+                    brevBehov.meldepliktGrunnlag?.let { add(fritakmeldepliktTilFaktagrunnlag(it)) }
                 }
 
             is VurderesForUføretrygd -> {
                 buildSet {
                     add(Faktagrunnlag.KravdatoUføretrygd(brevBehov.kravdatoUføretrygd))
                     add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
-                    if (brevBehov.grunnlagBeregning != null) {
-                        add(
-                            grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
-                        )
-                    }
-                    if (brevBehov.tilkjentYtelse != null) {
-                        add(
-                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
-                        )
-                    }
+                    brevBehov.grunnlagBeregning?.let { add(grunnlagBeregningTilFaktagrunnlag(it)) }
+                    brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
                 }
             }
 
@@ -434,19 +399,13 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     add(Faktagrunnlag.DatoAvklartForJobbsøk(brevBehov.datoAvklartForJobbsøk))
                     add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
-                    if (brevBehov.tilkjentYtelse != null) {
-                        add(
-                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
-                        )
-                    }
+                    brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
                 }
             }
 
             is AvslagBrev -> {
                 buildSet {
-                    if (brevBehov.sykdomsvurdering != null) {
-                        add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
-                    }
+                    brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
                 }
             }
 
