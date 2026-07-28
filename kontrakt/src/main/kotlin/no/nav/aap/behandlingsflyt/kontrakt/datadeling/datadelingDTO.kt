@@ -20,7 +20,6 @@ public data class DatadelingDTO(
     val rettighetsTypeTidsLinje: List<RettighetsTypePeriode>,
     val muligMaksdato: LocalDate?,
     val behandlingsReferanse: String,
-    val samId: String? = null,
     val samIdOgTpr: List<SamIdOgTpnr>,
     val vedtakId: Long,
     val beregningsgrunnlag: BigDecimal?,

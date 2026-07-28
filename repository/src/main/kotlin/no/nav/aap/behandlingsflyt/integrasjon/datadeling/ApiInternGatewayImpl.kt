@@ -172,7 +172,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     muligMaksdato = muligMaksdato,
                     vedtakId = vedtakId,
-                    samId = samId.firstOrNull()?.samId.toString(),
                     samIdOgTpr = samId.map { SamIdOgTpnr(it.samId.toString(), it.tpNr?.toString()) },
                     stansOpphørVurdering = stansOpphørGrunnlag.orEmpty().map {
                         GjeldendeStansEllerOpphørDTO(
