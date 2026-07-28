@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.AsyncExecutors
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -33,7 +34,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.YearMonth
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
+import java.util.concurrent.ExecutorService
 
 
 class LovvalgInformasjonskrav internal constructor(
@@ -83,6 +84,7 @@ class LovvalgInformasjonskrav internal constructor(
 
     override fun hentData(input: LovvalgInput): LovvalgRegisterData {
         val sak = input.sak
+        val executor = AsyncExecutors.informasjonskrav
         val medlemskapPerioderFuture = CompletableFuture
             .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
         val arbeidGrunnlagFuture = CompletableFuture
@@ -152,7 +154,7 @@ class LovvalgInformasjonskrav internal constructor(
                         orgNavn = it.navn.sammensattnavn
                     )
                 }
-            }, executor)
+            }, AsyncExecutors.informasjonskrav)
         }
         return futures.mapNotNull { it.get() }
     }
@@ -191,8 +193,6 @@ class LovvalgInformasjonskrav internal constructor(
 
     companion object :
         Informasjonskravkonstruktør {
-        private val executor = Executors.newVirtualThreadPerTaskExecutor()
-
         override val navn = InformasjonskravNavn.LOVVALG
 
         override fun konstruer(
