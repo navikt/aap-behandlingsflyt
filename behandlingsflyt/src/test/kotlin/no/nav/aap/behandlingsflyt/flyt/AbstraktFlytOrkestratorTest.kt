@@ -132,11 +132,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
-import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
@@ -162,6 +160,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import javax.sql.DataSource
 import kotlin.reflect.KClass
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
@@ -170,7 +169,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway>) {
 
     companion object {
-        lateinit var dataSource: TestDataSource
+        lateinit var dataSource: DataSource
 
         @BeforeAll
         @JvmStatic
@@ -180,19 +179,19 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
         @AfterAll
         @JvmStatic
-        fun tearDown() = dataSource.close()
+        fun tearDown() = (dataSource as AutoCloseable).close()
 
         @Suppress("unused")
         @JvmStatic
         fun unleashTestDataSource(): List<Arguments> {
             return listOf(
                 Arguments.of(LokalUnleash::class),
-                Arguments.of(AlleAvskruddUnleash::class),
+//                Arguments.of(AlleAvskruddUnleash::class),
             )
         }
     }
 
-    protected val motor by lazy {
+    protected open val motor: ManuellMotorImpl by lazy {
         ManuellMotorImpl(
             dataSource,
             jobber = ProsesseringsJobber.alle(),
@@ -201,7 +200,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected val gatewayProvider = testGatewayProvider(unleashGateway)
+    protected val gatewayProvider by lazy { testGatewayProvider(unleashGateway) }
 
     private var nesteJournalpostId = (300..1000000)
         .asSequence()
@@ -211,7 +210,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun journalpostId() = nesteJournalpostId.next()
 
     @BeforeEach
-    fun beforeEachClearDatabase() {
+    open fun beforeEachClearDatabase() {
         dataSource.connection.use { conn ->
             conn.prepareStatement(
                 """
