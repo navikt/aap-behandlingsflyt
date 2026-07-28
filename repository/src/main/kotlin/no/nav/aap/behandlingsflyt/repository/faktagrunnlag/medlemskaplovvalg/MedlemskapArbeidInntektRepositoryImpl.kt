@@ -339,6 +339,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
+    /**
+     * TODO: Bør filtrere vekk avbrutte behandlinger for å få "siste" her
+     */
     override fun hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId: SakId): UtenlandsOppholdData? {
         val query = """
             SELECT *
