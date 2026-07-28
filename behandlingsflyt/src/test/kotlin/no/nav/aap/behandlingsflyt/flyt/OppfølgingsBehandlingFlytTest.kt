@@ -16,17 +16,26 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+
+    lateinit var sak: Sak
+
+    @BeforeAll
+    fun settOppFGB() = snapshotEtterSetup {
+        sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
+    }
+
     @Test
     fun `opprette oppfølgingsbehandling`() {
-        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         val oppfølgingsbehandling = sak.sendInnOppfølgingsoppgave(
@@ -48,9 +57,10 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
             .løsAvklaringsBehov(VentPåOppfølgingNyLøsning())
             .medKontekst {
                 assertThat(ventebehov).isEmpty()
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY).describedAs {
-                    "Oppfølgingsbehandling skal ha avklaringsbehov for NAY etter at ventebehov er løst"
-                }
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)
+                    .describedAs {
+                        "Oppfølgingsbehandling skal ha avklaringsbehov for NAY etter at ventebehov er løst"
+                    }
             }
             .løsAvklaringsBehov(
                 AvklarOppfølgingNAYLøsning(
@@ -78,8 +88,6 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
 
     @Test
     fun `Opprett oppfølgningsoppgave med opprinnelse`() {
-
-        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         sak.sendInnOppfølgingsoppgave(
