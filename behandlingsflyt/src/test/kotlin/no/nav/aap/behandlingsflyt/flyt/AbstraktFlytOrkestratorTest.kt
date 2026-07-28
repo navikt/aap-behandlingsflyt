@@ -834,6 +834,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return repositoryProvider.provide<VedtakRepository>().hent(this.behandling.id)!!
     }
 
+    protected fun BehandlingInfo.hentVedtakHvisEksisterer(): Vedtak? {
+        return repositoryProvider.provide<VedtakRepository>().hent(this.behandling.id)
+    }
+
     protected fun hentVedtak(behandlingId: BehandlingId): Vedtak {
         return dataSource.transaction(readOnly = true) { connection ->
             val vedtak = VedtakRepositoryImpl(connection).hent(behandlingId)

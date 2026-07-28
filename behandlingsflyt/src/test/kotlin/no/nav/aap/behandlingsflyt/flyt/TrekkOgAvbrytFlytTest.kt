@@ -136,7 +136,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
 
         // Revurdering 1 - skal bli avbrutt
         val revurdering1 = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD)
         )
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
@@ -170,7 +170,8 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
                 assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVBRYT_REVURDERING, AvklaringsbehovStatus.AVSLUTTET)
                 assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
                 assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_BISTANDSBEHOV, AvklaringsbehovStatus.AVBRUTT)
-
+                
+                assertThat(hentVedtakHvisEksisterer()).isNull()
             }
 
         // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
