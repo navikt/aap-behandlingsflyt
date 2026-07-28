@@ -9,7 +9,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.time.LocalDateTime
 
 class OvergangUføreRepositoryImpl(private val connection: DBConnection) : OvergangUføreRepository {
@@ -193,9 +192,9 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setLocalDate(5, vurdering.fom)
                 setBruker(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
-                setLong(8, vurdering.vurdertIBehandling?.toLong())
+                setLong(8, vurdering.vurdertIBehandling.toLong())
                 setLocalDate(9, vurdering.tom)
-                setInstant(10, vurdering.opprettet ?: Instant.now())
+                setInstant(10, vurdering.opprettet)
             }
         }
 

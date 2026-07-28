@@ -125,7 +125,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLocalDateTime(7, manuellVurdering.vurdertTidspunkt)
                 setLocalDate(8, manuellVurdering.fom)
                 setLocalDate(9, manuellVurdering.tom)
-                setLong(10, manuellVurdering.vurdertIBehandling?.id)
+                setLong(10, manuellVurdering.vurdertIBehandling.id)
                 setLong(11, vurderingerId)
             }
         }

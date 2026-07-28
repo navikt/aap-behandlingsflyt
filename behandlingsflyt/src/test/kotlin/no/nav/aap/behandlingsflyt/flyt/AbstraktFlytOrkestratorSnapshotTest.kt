@@ -49,9 +49,19 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
 
     /**
      * Kjør oppsettskoden i [block] (f.eks. fullfør en FGB), ta deretter et snapshot av
-     * databasetilstanden. Kall denne i en `@BeforeAll`-metode i subklassen.
+     * databasetilstanden. Kall denne i en `@BeforeAll`-metode, eller i
+     * `@BeforeParameterizedClassInvocation` for en parameterisert testklasse.
      */
     protected fun snapshotEtterSetup(block: () -> Unit) {
+        motorForTest = null
+        resetGatewayProvider()
+        if (::snapshot.isInitialized) {
+            snapshot.close()
+        }
+        if (dataSource !is TestDataSource) {
+            (dataSource as AutoCloseable).close()
+            dataSource = TestDataSource()
+        }
         block()
         snapshot = (dataSource as TestDataSource).createSnapshot()
     }
@@ -63,6 +73,7 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
     @BeforeEach
     override fun beforeEachClearDatabase() {
         motorForTest = null
+        (dataSource as AutoCloseable).close()
         dataSource = snapshot.newDataSource()
     }
 

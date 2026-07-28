@@ -132,6 +132,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
@@ -142,6 +143,7 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -166,7 +168,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 
 
 @Fakes
-open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway>) {
+open class AbstraktFlytOrkestratorTest(
+    private val configuredUnleashGateway: KClass<out UnleashGateway>,
+) {
 
     companion object {
         lateinit var dataSource: DataSource
@@ -186,7 +190,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         fun unleashTestDataSource(): List<Arguments> {
             return listOf(
                 Arguments.of(LokalUnleash::class),
-//                Arguments.of(AlleAvskruddUnleash::class),
+                Arguments.of(AlleAvskruddUnleash::class),
             )
         }
     }
@@ -200,7 +204,17 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected val gatewayProvider by lazy { testGatewayProvider(unleashGateway) }
+    protected open fun unleashGateway(): KClass<out UnleashGateway> = configuredUnleashGateway
+
+    private var gatewayProviderForTest: GatewayProvider? = null
+
+    protected val gatewayProvider: GatewayProvider
+        get() = gatewayProviderForTest
+            ?: testGatewayProvider(unleashGateway()).also { gatewayProviderForTest = it }
+
+    protected fun resetGatewayProvider() {
+        gatewayProviderForTest = null
+    }
 
     private var nesteJournalpostId = (300..1000000)
         .asSequence()
