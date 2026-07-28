@@ -57,16 +57,18 @@ class AktivitetspliktFlytTest :
     AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
     lateinit var sak: Sak
+    lateinit var revurdering: Behandling
 
     @BeforeAll
     fun settOppFGB() = snapshotEtterSetup {
         val person = TestPersoner.STANDARD_PERSON()
         sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
+        revurdering = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
     }
 
     @Test
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+        var åpenBehandling = revurdering
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
@@ -221,7 +223,7 @@ class AktivitetspliktFlytTest :
 
     @Test
     fun `Åpen behandling skal trekkes tilbake ved effektuering av aktivitetsplikt`() {
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+        var åpenBehandling = revurdering
 
         åpenBehandling = åpenBehandling.løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
@@ -430,7 +432,7 @@ class AktivitetspliktFlytTest :
     @Test
     fun `Happy-case-flyt for aktivitetsplikt § 11-9`() {
         val åpenBehandlingForbiTilkjentYtelse =
-            revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+            revurdering
                 .løsBistand(sak.rettighetsperiode.fom)
                 .medKontekst {
                     assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
