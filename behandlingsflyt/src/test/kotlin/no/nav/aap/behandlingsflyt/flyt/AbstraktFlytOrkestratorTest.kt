@@ -136,7 +136,6 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
-import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
@@ -144,6 +143,7 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -162,15 +162,18 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import javax.sql.DataSource
 import kotlin.reflect.KClass
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 
 @Fakes
-open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway>) {
+open class AbstraktFlytOrkestratorTest(
+    private val configuredUnleashGateway: KClass<out UnleashGateway>,
+) {
 
     companion object {
-        lateinit var dataSource: TestDataSource
+        lateinit var dataSource: DataSource
 
         @BeforeAll
         @JvmStatic
@@ -180,7 +183,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
         @AfterAll
         @JvmStatic
-        fun tearDown() = dataSource.close()
+        fun tearDown() = (dataSource as AutoCloseable).close()
 
         @Suppress("unused")
         @JvmStatic
@@ -192,7 +195,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         }
     }
 
-    protected val motor by lazy {
+    protected open val motor: ManuellMotorImpl by lazy {
         ManuellMotorImpl(
             dataSource,
             jobber = ProsesseringsJobber.alle(),
@@ -201,7 +204,17 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected val gatewayProvider = testGatewayProvider(unleashGateway)
+    protected open fun unleashGateway(): KClass<out UnleashGateway> = configuredUnleashGateway
+
+    private var gatewayProviderForTest: GatewayProvider? = null
+
+    protected val gatewayProvider: GatewayProvider
+        get() = gatewayProviderForTest
+            ?: testGatewayProvider(unleashGateway()).also { gatewayProviderForTest = it }
+
+    protected fun resetGatewayProvider() {
+        gatewayProviderForTest = null
+    }
 
     private var nesteJournalpostId = (300..1000000)
         .asSequence()
@@ -211,7 +224,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun journalpostId() = nesteJournalpostId.next()
 
     @BeforeEach
-    fun beforeEachClearDatabase() {
+    open fun beforeEachClearDatabase() {
         dataSource.connection.use { conn ->
             conn.prepareStatement(
                 """

@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
-import no.nav.aap.komponenter.gateway.GatewayProvider.Companion.provide
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
