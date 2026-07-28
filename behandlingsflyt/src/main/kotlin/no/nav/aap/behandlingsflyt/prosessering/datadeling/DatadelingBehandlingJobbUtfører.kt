@@ -68,6 +68,7 @@ class DatadelingBehandlingJobbUtfører(
             .mapNotNull { it.rettighetsType }.komprimer()
 
         val vedtakId = vedtakRepository.hentId(behandling.id)
+        // Todo: Dele ut både tp-nr og sam-id!
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
         val beregningsgrunnlagGUnit =
