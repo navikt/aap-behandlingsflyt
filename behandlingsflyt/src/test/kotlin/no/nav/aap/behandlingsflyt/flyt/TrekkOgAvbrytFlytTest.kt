@@ -171,7 +171,9 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
                 assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
                 assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_BISTANDSBEHOV, AvklaringsbehovStatus.AVBRUTT)
                 
-                assertThat(hentVedtakHvisEksisterer()).isNull()
+                assertThat(hentVedtakHvisEksisterer())
+                    .describedAs("Skal ikke lagre vedtak for avbrutt revurdering")
+                    .isNull()
             }
 
         // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
