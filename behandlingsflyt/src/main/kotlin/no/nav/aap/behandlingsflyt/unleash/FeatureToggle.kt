@@ -32,6 +32,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ManuellInntektDelvisUfore,
     Avslag11_27,
     SkalViseAlleSykdomssteg,
+    HoppOverKvalitetssikringVedIngenEndring
     ;
 
     override fun key(): String = name

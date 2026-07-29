@@ -55,7 +55,6 @@ class VurderingEndretService(
     )
 
     private val sjekker: Map<Definisjon, EndretSjekk<*>> = mapOf(
-        // TODO: tilsvarende for alle avklaringsbehov som skal kvalitetssikres
         Definisjon.AVKLAR_SYKDOM to EndretSjekk(
             hentPåTidspunkt = sykdomRepository::hentSykdomsvurderingerPåTidspunkt,
             hentNåværende = { sykdomRepository.hentHvisEksisterer(it)?.sykdomsvurderinger },
@@ -107,8 +106,9 @@ class VurderingEndretService(
         behandlingId: BehandlingId,
         avklaringsbehov: Avklaringsbehov,
         tidspunkt: LocalDateTime
-    ): Boolean? {
-        val sjekk = sjekker[avklaringsbehov.definisjon] ?: return null
+    ): Boolean {
+        val sjekk = sjekker[avklaringsbehov.definisjon]
+            ?: return true // Kan ikke være sikker på at det ikke er noen endring når sjekk ikke finnes.
         return sjekk.harEndring(behandlingId, tidspunkt)
     }
 }
