@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetstypeSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -16,6 +15,7 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -87,8 +87,8 @@ class BackfillStansOpphør(
                     return@transaction
                 }
 
-                val behandlingRepository = BehandlingRepositoryImpl(connection)
-                for (behandling in behandlingRepository.hentAlleIkkeAvbrutteYtelsesbehandlinger(sak.id)) {
+                val behandlingService = BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+                for (behandling in behandlingService.alleYtelsesbehandlinger(sak.id)) {
                     try {
                         backfillBehandling(connection, behandling)
                     } catch (e: Exception) {
