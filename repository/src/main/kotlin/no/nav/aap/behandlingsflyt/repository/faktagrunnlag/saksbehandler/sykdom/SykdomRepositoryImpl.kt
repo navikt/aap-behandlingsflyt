@@ -149,7 +149,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val yrkesskadeId = lagreYrkesskade(nyttGrunnlag.yrkesskadevurdering)
 
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID, opprettet_tid) VALUES (?, ?, ?, ?)
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID) VALUES (?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -157,7 +157,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLong(1, behandlingId.toLong())
                 setLong(2, yrkesskadeId)
                 setLong(3, sykdomsvurderingerId)
-                setLocalDateTime(4, LocalDateTime.now())
             }
         }
     }
