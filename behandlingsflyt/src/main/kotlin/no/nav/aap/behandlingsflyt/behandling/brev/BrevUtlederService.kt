@@ -198,13 +198,11 @@ class BrevUtlederService(
                 }
 
                 if (automatiskUførevedtakVurdering?.brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT
-                    && unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
                 ) {
                     return Vedtak11_18OpphørDelvisUfør(automatiskUførevedtakVurdering.fom)
                 }
 
                 if (automatiskUførevedtakVurdering?.brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtakResultat.JA_INNVILGET_FULL
-                    && unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
                 ) {
                     return Vedtak11_18OpphørFullUfør(automatiskUførevedtakVurdering.fom)
                 }
