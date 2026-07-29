@@ -25,8 +25,9 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
         val person = TestPersoner.STANDARD_PERSON()
 
         val (sak, behandling) = sendInnFørsteSøknad(person = person)
-        this.behandling = behandling
-        this.sak = sak
+        this@KvalitetssikringFlytTest.behandling = behandling
+        this@KvalitetssikringFlytTest.sak = sak
+        this.person = person
     }
 
     @Test
