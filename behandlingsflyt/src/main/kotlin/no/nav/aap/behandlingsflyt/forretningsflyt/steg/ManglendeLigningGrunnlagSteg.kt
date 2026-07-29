@@ -14,8 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -26,27 +24,18 @@ class ManglendeLigningGrunnlagSteg internal constructor(
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val beregningService: BeregningService,
-    private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway,
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         beregningService = BeregningService(repositoryProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide(),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
-
-        val årSomKreverPeriodeinntekt =
-            if (!unleashGateway.isEnabled(BehandlingsflytFeature.ManuellInntektDelvisUfore)) {
-                emptySet()
-            } else {
-                beregningService.årSomKreverManuellPeriodeinntekt(kontekst)
-            }
-
+        val årSomKreverPeriodeinntekt = beregningService.årSomKreverManuellPeriodeinntekt(kontekst)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.FASTSETT_MANUELL_INNTEKT,
@@ -89,11 +78,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             },
             erTilstrekkeligVurdert = {
                 val harPeriodeinntektForKrevdeÅr =
-                    if (unleashGateway.isEnabled(BehandlingsflytFeature.ManuellInntektDelvisUfore)) {
-                        beregningService.harPeriodeinntektForKrevdeÅr(kontekst, manuellInntektGrunnlag)
-                    } else {
-                        true
-                    }
+                    beregningService.harPeriodeinntektForKrevdeÅr(kontekst, manuellInntektGrunnlag)
 
                 beregningService.manglerInntekterFor(kontekst.behandlingId).isEmpty() && harPeriodeinntektForKrevdeÅr
             },
