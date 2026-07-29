@@ -475,6 +475,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return mapSykdomsvurderingRader(rader)
     }
 
+    // TODO: dette funker ikke for behandlinger med yrkesskade. Må sammenlikne på opprettet-tid på sykdomsvurderinger isteden
     override fun hentSykdomsvurderingerPåTidspunkt(
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime

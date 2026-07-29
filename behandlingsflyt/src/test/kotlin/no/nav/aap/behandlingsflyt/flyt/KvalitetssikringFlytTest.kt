@@ -55,6 +55,35 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(UnleashMedKSToggle:
     }
 
     @Test
+    fun `Ny kvalitetssikring skal skje dersom behandlingen blir dratt tilbake til 22-13 og ny startdato settes`() {
+        val fom = LocalDate.now().minusMonths(3)
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+
+        val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
+        val nyStartdato = LocalDate.now().minusMonths(5)
+        oppdatertBehandling
+            .løsRettighetsperiode(nyStartdato)
+            .løsSykdom(nyStartdato)
+            .løsBistand(nyStartdato)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+
+        val kvalitetssikringsBehovet = hentAlleAvklaringsbehov(oppdatertBehandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(kvalitetssikringsBehovet.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
+
+    @Test
     fun `Kvalitetssikrer underkjenner AVKLAR_SYKDOM, men godkjenner de andre avklaringsbehovene`() {
         val fom = LocalDate.now().minusMonths(3)
 
