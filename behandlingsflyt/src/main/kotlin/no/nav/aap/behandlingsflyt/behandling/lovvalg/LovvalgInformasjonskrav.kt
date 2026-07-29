@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.AsyncExecutors
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -84,7 +84,7 @@ class LovvalgInformasjonskrav internal constructor(
 
     override fun hentData(input: LovvalgInput): LovvalgRegisterData {
         val sak = input.sak
-        val executor = AsyncExecutors.informasjonskrav
+        val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture
             .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
         val arbeidGrunnlagFuture = CompletableFuture
@@ -154,7 +154,7 @@ class LovvalgInformasjonskrav internal constructor(
                         orgNavn = it.navn.sammensattnavn
                     )
                 }
-            }, AsyncExecutors.informasjonskrav)
+            }, informasjonskravExecutor)
         }
         return futures.mapNotNull { it.get() }
     }

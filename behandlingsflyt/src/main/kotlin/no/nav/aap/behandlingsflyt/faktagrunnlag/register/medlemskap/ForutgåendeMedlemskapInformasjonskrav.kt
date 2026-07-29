@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.AsyncExecutors
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -70,7 +70,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
 
     override fun hentData(input: MedlemsskapInput): MedlemsskapReggisterdata {
         val sak = input.sak
-        val executor = AsyncExecutors.informasjonskrav
+        val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture.supplyAsync(withMdc {
             medlemskapGateway.innhent(
                 sak.person,
@@ -148,7 +148,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
                         orgNavn = it.navn.sammensattnavn
                     )
                 }
-            }, AsyncExecutors.informasjonskrav)
+            }, informasjonskravExecutor)
         }
         return futures.mapNotNull { it.get() }
     }

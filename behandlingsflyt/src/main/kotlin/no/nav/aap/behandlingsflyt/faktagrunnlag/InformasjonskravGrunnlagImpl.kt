@@ -100,7 +100,7 @@ class InformasjonskravGrunnlagImpl(
                     } finally {
                         span.end()
                     }
-                }, AsyncExecutors.informasjonskrav)
+                }, informasjonskravExecutor)
             }
 
         val sekvensiellLagringAvFakta = parallellFaktaInnhenting

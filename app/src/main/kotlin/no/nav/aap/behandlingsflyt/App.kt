@@ -82,7 +82,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.AsyncExecutors
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -259,7 +259,7 @@ internal fun Application.server(
         // Helt til slutt, nå som vi har stanset Motor, etc. Lukk executor og database-koblinger.
         lukkRessurser(
             environment.log,
-            listOf(AsyncExecutors, fellesDataSource, motorDataSource, pipDataSource)
+            listOf(informasjonskravExecutor, fellesDataSource, motorDataSource, pipDataSource)
         )
     }
     
