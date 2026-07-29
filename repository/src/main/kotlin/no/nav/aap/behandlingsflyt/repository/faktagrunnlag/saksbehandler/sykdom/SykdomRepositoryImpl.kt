@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -150,7 +149,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val yrkesskadeId = lagreYrkesskade(nyttGrunnlag.yrkesskadevurdering)
 
         val query = """
-            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID) VALUES (?, ?, ?)
+            INSERT INTO SYKDOM_GRUNNLAG (BEHANDLING_ID, YRKESSKADE_ID, SYKDOM_VURDERINGER_ID, opprettet_tid) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
@@ -158,6 +157,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLong(1, behandlingId.toLong())
                 setLong(2, yrkesskadeId)
                 setLong(3, sykdomsvurderingerId)
+                setLocalDateTime(4, LocalDateTime.now())
             }
         }
     }
@@ -450,29 +450,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
     override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
         return requireNotNull(hentHvisEksisterer(behandlingId)) { "Fant ikke sykdomsgrunnlag for behandling med ID $behandlingId." }
-    }
-
-    override fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering> {
-        val query = """
-            SELECT DISTINCT on(vurdering.opprettet_tid) vurdering.*
-            FROM SYKDOM_GRUNNLAG grunnlag
-            INNER JOIN SYKDOM_VURDERINGER vurderinger ON grunnlag.SYKDOM_VURDERINGER_ID = vurderinger.ID
-            INNER JOIN SYKDOM_VURDERING vurdering ON vurdering.SYKDOM_VURDERINGER_ID = vurderinger.ID
-            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON behandling.ID = AR.BEHANDLING_ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?            
-                AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where a.id = ?)
-                AND AR.BEHANDLING_ID IS NULL
-            """.trimIndent()
-
-        val rader = connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper(::mapSykdomsvurderingRad)
-        }
-        return mapSykdomsvurderingRader(rader)
     }
 
     override fun hentSykdomsvurderingerPåTidspunkt(

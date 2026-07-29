@@ -263,7 +263,7 @@ class Avklaringsbehov(
     }
 
     fun kreverKvalitetssikring(): Boolean {
-        return definisjon.kvalitetssikres
+        return definisjon.kvalitetssikres && status() != Status.AVBRUTT
     }
 
     fun erAutomatisk(): Boolean {

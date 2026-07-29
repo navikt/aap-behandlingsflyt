@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -9,22 +7,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -77,22 +65,6 @@ internal class SykdomRepositoryImplTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             yrkesskadeBegrunnelse = null,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            diagnose = null,
-            vurdertIBehandling = behandlingId,
-        )
-
-        private fun sykdomsvurdering3(behandlingId: BehandlingId) = Sykdomsvurdering(
-            begrunnelse = "b3",
-            vurderingenGjelderFra = LocalDate.of(2020, 2, 2),
-            vurderingenGjelderTil = null,
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = "y",
-            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
             diagnose = null,
@@ -171,80 +143,6 @@ internal class SykdomRepositoryImplTest {
     }
 
     @Test
-    fun `historikk viser kun vurderinger fra tidligere behandlinger`() {
-        val (førstegangsbehandling, sykdomsvurdering1) = dataSource.transaction { connection ->
-            val sykdomRepo = SykdomRepositoryImpl(connection)
-            val sak = sak(connection)
-            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
-
-            val sykdomsvurdering1 = sykdomsvurdering1(førstegangsbehandling.id)
-
-            sykdomRepo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
-            Pair(førstegangsbehandling, sykdomsvurdering1)
-        }
-
-        dataSource.transaction { connection ->
-            val sykdomRepo = SykdomRepositoryImpl(connection)
-            val revurdering = revurdering(connection, førstegangsbehandling)
-
-            val sykdomsvurdering2 = sykdomsvurdering2(revurdering.id)
-
-            sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering2))
-
-            val historikk = sykdomRepo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk)
-                .usingRecursiveComparison()
-                .ignoringFields("id", "opprettet")
-                .isEqualTo(listOf(sykdomsvurdering1))
-        }
-    }
-
-    @Test
-    fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
-        val (førstegangsbehandling, sykdomsvurdering1) = dataSource.transaction { connection ->
-            val sykdomRepo = SykdomRepositoryImpl(connection)
-            val sak = sak(connection)
-            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
-
-            val sykdomsvurdering1 = sykdomsvurdering1(førstegangsbehandling.id)
-
-            sykdomRepo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
-            Pair(førstegangsbehandling, sykdomsvurdering1)
-        }
-
-        dataSource.transaction { connection ->
-            val sykdomRepo = SykdomRepositoryImpl(connection)
-            val avbrytRevurderingRepo = AvbrytRevurderingRepositoryImpl(connection)
-            val revurderingAvbrutt = revurdering(connection, førstegangsbehandling)
-
-            // Marker revurderingen som avbrutt
-            avbrytRevurderingRepo.lagre(
-                revurderingAvbrutt.id, AvbrytRevurderingVurdering(
-                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
-                    "avbryte pga. feil",
-                    Bruker("Z00000")
-                )
-            )
-
-            val sykdomsvurdering2 = sykdomsvurdering2(revurderingAvbrutt.id)
-            sykdomRepo.lagre(revurderingAvbrutt.id, listOf(sykdomsvurdering2))
-        }
-
-        dataSource.transaction { connection ->
-            val sykdomRepo = SykdomRepositoryImpl(connection)
-            val revurdering = revurdering(connection, førstegangsbehandling)
-
-            val sykdomsvurdering3 = sykdomsvurdering3(revurdering.id)
-
-            sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering3))
-
-            val historikk = sykdomRepo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk).usingRecursiveComparison().ignoringFields("id", "opprettet")
-                .isEqualTo(listOf(sykdomsvurdering1))
-        }
-    }
-
-    @Test
     fun `test sletting`() {
         TestDataSource().use { dataSource ->
             dataSource.transaction { connection ->
@@ -277,15 +175,4 @@ internal class SykdomRepositoryImplTest {
         }
     }
 
-    private fun revurdering(connection: DBConnection, behandling: Behandling): Behandling {
-        return BehandlingRepositoryImpl(connection).opprettBehandling(
-            behandling.sakId,
-            typeBehandling = TypeBehandling.Revurdering,
-            forrigeBehandlingId = behandling.id,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
-            )
-        )
-    }
 }
