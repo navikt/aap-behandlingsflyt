@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
@@ -55,7 +56,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
     }
 
     @Test
-    fun `automatisk ok førstegangsbehandling og revurdering med _nei_ på opphold i Norge som avbrytes - skal fortsatt ha automatisk innvilget i neste revurdering`() {
+    fun `automatisk ok førstegangsbehandling og revurderingsøknad med _nei_ på opphold i Norge som avbrytes - skal fortsatt ha automatisk innvilget i neste revurdering`() {
         val (sak, behandling) = sendInnFørsteSøknad(
             mottattTidspunkt = LocalDate.now().atStartOfDay(),
             søknad = TestSøknader.STANDARD_SØKNAD.copy(medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", emptyList()))
@@ -122,9 +123,8 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         revurdering2.løsOppholdskrav(sak.rettighetsperiode.fom)
         val vilkår = hentVilkårsresultat(revurdering2.id)
         val lovvalgsvilkår = vilkår.finnVilkår(Vilkårtype.LOVVALG)
+        assertThat(lovvalgsvilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
         assertThat(lovvalgsvilkår.harPerioderSomIkkeErVurdert(setOf(sak.rettighetsperiode))).isFalse
-        // TODO: Her er vilkår ikke vurdert - det er feil!
-
 }
 
     @Test
