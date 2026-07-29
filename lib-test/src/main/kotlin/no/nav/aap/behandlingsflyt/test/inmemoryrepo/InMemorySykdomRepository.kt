@@ -5,9 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDateTime
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.*
 
 object InMemorySykdomRepository : SykdomRepository {
 
@@ -61,16 +60,6 @@ object InMemorySykdomRepository : SykdomRepository {
     override fun hent(behandlingId: BehandlingId): SykdomGrunnlag {
         return hentHvisEksisterer(behandlingId)
             ?: throw IllegalStateException("Fant ikke sykdomsgrunnlag for behandling $behandlingId")
-    }
-
-    override fun hentHistoriskeSykdomsvurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId
-    ): List<Sykdomsvurdering> {
-        // Returnerer alle sykdomsvurderinger som er lagret på behandlingen, unntatt de som er vurdert i denne behandlingen
-        return sykdomsvurderingerMap[behandlingId]?.filter {
-            it.vurdertIBehandling != behandlingId
-        } ?: emptyList()
     }
 
     override fun slett(behandlingId: BehandlingId) {

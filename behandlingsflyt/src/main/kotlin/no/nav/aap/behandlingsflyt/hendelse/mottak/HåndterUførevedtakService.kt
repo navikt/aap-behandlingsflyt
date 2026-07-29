@@ -137,8 +137,7 @@ class HåndterUførevedtakService(
 
         val innvilgetEtter11_18 = oppfylteRettighetsperioder || oppfylteRettighetstypeTidslinje
 
-        return unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
-                && innvilgetEtter11_18
+        return innvilgetEtter11_18
                 && uførevedtak.resultat == UførevedtakResultat.INNV
                 && uførevedtak.virkningsdato.isAfter(LocalDate.now()) // Må endres i senere tid for del 2
     }
