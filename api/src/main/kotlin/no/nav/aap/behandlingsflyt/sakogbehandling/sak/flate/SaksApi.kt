@@ -261,7 +261,7 @@ fun NormalOpenAPIRoute.saksApi(
                             ),
                             type = InnsendingType.MIGRERING_FRA_ARENA,
                             mottattTidspunkt = LocalDateTime.now(),
-                            melding = MigreringFraArenaV0("Migrering av Arenasak ${dto.saksnummer}"),
+                            melding = MigreringFraArenaV0("Migrering av Arenasak ${dto.saksnummerArena}"),
                         )
                     )
 

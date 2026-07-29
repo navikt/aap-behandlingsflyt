@@ -24,7 +24,6 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.post
@@ -125,7 +124,7 @@ class MigrerFraArenaApiTest {
             URI.create("http://localhost:$port/api/sak/migrerFraArena"),
             PostRequest(
                 body = MigrerArenasakDTO(
-                    saksnummer = "123456",
+                    saksnummerArena = "123456",
                     ident = ident,
                 ),
                 currentToken = getToken(),
@@ -151,7 +150,7 @@ class MigrerFraArenaApiTest {
             )
         )
 
-        val dto = MigrerArenasakDTO(saksnummer = "654321", ident = ident)
+        val dto = MigrerArenasakDTO(saksnummerArena = "654321", ident = ident)
         val url = URI.create("http://localhost:$port/api/sak/migrerFraArena")
         val token = getToken()
 
