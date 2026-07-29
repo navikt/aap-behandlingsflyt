@@ -62,6 +62,7 @@ class MeldingOmVedtakBrevSteg(
             avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
                     || trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
+        log.info("Har brevbehov " + brevBehov?.typeBrev)
         val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
 
         listOf(
@@ -86,7 +87,9 @@ class MeldingOmVedtakBrevSteg(
             )
         }
 
+        log.info("Skal bestille brev? $brevBehov avbrutt? $behandlingErAvbrutt bestilling om vedtak? $harBestillingOmVedtakBrev")
         if (brevBehov != null && !behandlingErAvbrutt && !harBestillingOmVedtakBrev) {
+
             bestillBrev(kontekst, brevBehov)
         }
         return Fullført
@@ -110,7 +113,8 @@ class MeldingOmVedtakBrevSteg(
         val harManueltBrevbehov = (!behandlingErAvbrutt && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev())
 
         val behovForBeslutterbrev = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
-        val harBeslutterSkrevetBrev = behovForBeslutterbrev?.historikk?.any { it.status == Status.AVSLUTTET } ?: false
+        val harBeslutterSkrevetBrev =
+            behovForBeslutterbrev?.historikk?.any { it.status == Status.AVSLUTTET } ?: false
 
         val erBeslutterbehovAvbrutt = behovForBeslutterbrev?.status() == Status.AVBRUTT
         val harÅpentSaksbehandlerbehov =

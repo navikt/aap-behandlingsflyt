@@ -4,13 +4,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soning
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDateTime
 
 data class Soningsvurderinger(
     val id: Long? = null,
     val vurderinger: List<Soningsvurdering>,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime
 ) {
     fun tilTidslinje(): Tidslinje<Soningsvurdering> =

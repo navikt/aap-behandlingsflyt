@@ -6,12 +6,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOpp
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.gateway.Gateway
-import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
-import no.nav.aap.oppgave.verdityper.MarkeringForBehandling
 import java.time.LocalDateTime
 
-// TODO: Hvor skal denne leve og hva skal den hete?
-data class MarkeringNyDto(
+data class MarkeringDto(
     val behandlingRef: BehandlingReferanse,
     val markeringType: MarkeringForBehandling,
     val begrunnelse: String? = null,
@@ -21,10 +18,14 @@ data class MarkeringNyDto(
     val hendelseType: MarkeringHendelseType? = null,
 )
 
-// TODO: Hvor skal denne leve og hva skal den hete?
 enum class MarkeringHendelseType {
     OPPRETTET,
     FJERNET
+}
+
+enum class MarkeringForBehandling {
+    HASTER,
+    AVSLAG_11_5
 }
 
 interface OppgavestyringGateway : Gateway {
@@ -32,5 +33,5 @@ interface OppgavestyringGateway : Gateway {
     fun varsleTilbakekrevingHendelse(hendelse: TilbakekrevingsbehandlingOppdatertHendelse)
     fun finnNayEnhetForPerson(personIdent: String, relevanteIdenter: List<String>): EnhetNrDto
     fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse
-    fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringNyDto>
+    fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringDto>
 }

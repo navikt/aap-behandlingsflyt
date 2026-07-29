@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -43,7 +44,7 @@ internal class Aktivitetsplikt11_9RepositoryImplTest {
                 begrunnelse = "Begrunnelse",
                 brudd = Brudd.IKKE_MØTT_TIL_MØTE,
                 grunn = Grunn.IKKE_RIMELIG_GRUNN,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 dato = 1 januar 2023,
                 opprettet = Instant.parse("2023-01-01T12:00:00Z"),
                 vurdertIBehandling = behandling.id,
@@ -58,7 +59,7 @@ internal class Aktivitetsplikt11_9RepositoryImplTest {
                 begrunnelse = "Begrunnelse",
                 brudd = Brudd.IKKE_MØTT_TIL_MØTE,
                 grunn = Grunn.RIMELIG_GRUNN,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 dato = 1 januar 2023,
                 opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                 vurdertIBehandling = behandling.id,

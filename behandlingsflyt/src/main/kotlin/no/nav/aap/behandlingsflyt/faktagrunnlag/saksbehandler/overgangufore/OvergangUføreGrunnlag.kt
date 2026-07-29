@@ -1,11 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.somTidslinje
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
-import java.time.Instant
 import java.time.LocalDate
 
 data class OvergangUføreGrunnlag(
@@ -15,8 +12,8 @@ data class OvergangUføreGrunnlag(
     val vurderinger: List<OvergangUføreVurdering>,
 ) {
 
-    fun somOvergangUforevurderingstidslinje(maksdato: LocalDate = Tid.MAKS): Tidslinje<OvergangUføreVurdering> {
-        return filtrertOvergangUføreTidslinje(maksdato) { true }
+    fun somOvergangUforevurderingstidslinje(): Tidslinje<OvergangUføreVurdering> {
+        return filtrertOvergangUføreTidslinje() { true }
     }
 
     fun overgangUføreVurderingerVurdertIBehandling(behandlingId: BehandlingId): List<OvergangUføreVurdering> {
@@ -29,31 +26,22 @@ data class OvergangUføreGrunnlag(
 
     fun vedtattOvergangUførevurderingstidslinje(
         behandlingId: BehandlingId,
-        maksDato: LocalDate = Tid.MAKS
     ): Tidslinje<OvergangUføreVurdering> {
-        return filtrertOvergangUføreTidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
+        return filtrertOvergangUføreTidslinje() { it.vurdertIBehandling != behandlingId }
     }
 
     private fun filtrertOvergangUføreTidslinje(
-        maksDato: LocalDate = Tid.MAKS,
         filter: (vurdering: OvergangUføreVurdering) -> Boolean
     ): Tidslinje<OvergangUføreVurdering> {
         return vurderinger
             .filter(filter)
-            .groupBy { it.vurdertIBehandling }
-            .values
-            .sortedBy { it[0].opprettet ?: Instant.now() }
-            .flatMap { it.sortedBy { it.fom } }
-            .somTidslinje { Periode(it.fom, it.tom ?: Tid.MAKS) }
-            .komprimer()
-            .begrensetTil(Periode(Tid.MIN, maksDato))
+            .gjeldendeVurderinger()
     }
 
     fun kravdatoUføretrygd() : LocalDate? {
         return somOvergangUforevurderingstidslinje()
-            ?.segmenter()
-            ?.firstOrNull()
+            .segmenter()
+            .firstOrNull()
             ?.fom()
     }
-
 }

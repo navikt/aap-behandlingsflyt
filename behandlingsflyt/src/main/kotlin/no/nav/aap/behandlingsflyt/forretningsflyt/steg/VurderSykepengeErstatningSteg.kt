@@ -7,10 +7,9 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengeerstatningVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somTidslinje
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -29,7 +28,6 @@ class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sykdomRepository: SykdomRepository,
-    private val bistandRepository: BistandRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
@@ -37,7 +35,6 @@ class VurderSykepengeErstatningSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        bistandRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
     )
@@ -56,7 +53,7 @@ class VurderSykepengeErstatningSteg private constructor(
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             kontekst = kontekst,
-            nårVurderingErGyldig = { aktiveVurderinger.somTidslinje().mapValue { true } },
+            nårVurderingErGyldig = { aktiveVurderinger.gjeldendeVurderinger().mapValue { true } },
             tilbakestillGrunnlag = {
                 if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
                     sykepengerErstatningRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)

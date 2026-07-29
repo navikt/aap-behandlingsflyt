@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingÅrsakDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -41,28 +40,35 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 
 class AktivitetspliktFlytTest :
-    AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+    AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+
+    lateinit var sak: Sak
+    lateinit var revurdering: Behandling
+
+    @BeforeAll
+    fun settOppFGB() = snapshotEtterSetup {
+        val person = TestPersoner.STANDARD_PERSON()
+        sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
+        revurdering = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+    }
 
     @Test
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
-        val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+        var åpenBehandling = revurdering
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
@@ -103,14 +109,14 @@ class AktivitetspliktFlytTest :
                 )
             )
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-                val brevbestillingReferanse = dataSource.transaction { connection ->
-                    val aktivitetsplikt11_7Repository = Aktivitetsplikt11_7RepositoryImpl(connection)
+
+                val aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+                val brevbestillingReferanse =
                     aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(aktivitetspliktBehandling.id)?.varselId
                         ?: error("Fant ikke varsel")
 
-                }
                 aktivitetspliktBehandling.løsAvklaringsBehov(
                     SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning(
                         brevbestillingReferanse = brevbestillingReferanse.brevbestillingReferanse,
@@ -120,7 +126,7 @@ class AktivitetspliktFlytTest :
                 )
             }
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
             }
             .løsAvklaringsBehov(avklaringsBehovLøsning = VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning())
@@ -136,7 +142,7 @@ class AktivitetspliktFlytTest :
                 )
             )
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
                 val grunnlagIAktivitetspliktBehandling = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
                     .hentHvisEksisterer(aktivitetspliktBehandling.id)
@@ -153,14 +159,9 @@ class AktivitetspliktFlytTest :
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        val effektueringsbehandling = dataSource.transaction { connection ->
-            BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
-                sak.id,
-                listOf(TypeBehandling.Revurdering)
-            )
-        }!!
+        val effektueringsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
-        assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
+        assertThat(effektueringsbehandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
         assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
         assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandling.forrigeBehandlingId)
 
@@ -222,9 +223,7 @@ class AktivitetspliktFlytTest :
 
     @Test
     fun `Åpen behandling skal trekkes tilbake ved effektuering av aktivitetsplikt`() {
-        val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+        var åpenBehandling = revurdering
 
         åpenBehandling = åpenBehandling.løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
@@ -262,7 +261,7 @@ class AktivitetspliktFlytTest :
                 erOppfylt = false,
                 utfall = Utfall.STANS,
                 fom = bruddFom,
-                vurdertAv = "Saksbehandler",
+                vurdertAv = Bruker("Saksbehandler"),
                 opprettet = sak.rettighetsperiode.fom.plusWeeks(20).atStartOfDay().toInstant(ZoneOffset.UTC),
                 vurdertIBehandling = behandlingId,
                 skalIgnorereVarselFrist = false
@@ -334,9 +333,6 @@ class AktivitetspliktFlytTest :
 
     @Test
     fun `Kan avbryte aktivitetsplikt 11-7`() {
-        val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
-
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             opprettAktivitetspliktBehandling(
                 Vurderingsbehov.AKTIVITETSPLIKT_11_7,
@@ -375,9 +371,6 @@ class AktivitetspliktFlytTest :
 
     @Test
     fun `Kan avbryte aktivitetsplikt 11-9`() {
-        val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
-
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             opprettAktivitetspliktBehandling(
                 Vurderingsbehov.AKTIVITETSPLIKT_11_9,
@@ -438,20 +431,8 @@ class AktivitetspliktFlytTest :
 
     @Test
     fun `Happy-case-flyt for aktivitetsplikt § 11-9`() {
-        val person = FakePersoner.leggTil(
-            TestPerson(
-                fødselsdato = Fødselsdato(1 januar 1990),
-                yrkesskade = emptyList(),
-                sykepenger = emptyList()
-            )
-        )
-        val sak = happyCaseFørstegangsbehandling(
-            fom = LocalDate.now().minusMonths(1),
-            person = person,
-            sendMeldekort = false
-        )
         val åpenBehandlingForbiTilkjentYtelse =
-            revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+            revurdering
                 .løsBistand(sak.rettighetsperiode.fom)
                 .medKontekst {
                     assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
@@ -524,12 +505,7 @@ class AktivitetspliktFlytTest :
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        val effektueringsbehandling = dataSource.transaction { connection ->
-            BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
-                sak.id,
-                listOf(TypeBehandling.Revurdering)
-            )
-        }!!
+        val effektueringsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
         assertThat(

@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
+import no.nav.aap.komponenter.verdityper.Bruker
 
 object MottattHendelseUtleder {
 
@@ -105,8 +106,8 @@ object MottattHendelseUtleder {
         }
     }
 
-    fun utledOpprettetAv(melding: Melding?): String? = when (melding) {
-        is ManuellRevurderingV0 -> melding.opprettetAv
+    fun utledOpprettetAv(melding: Melding?): Bruker? = when (melding) {
+        is ManuellRevurderingV0 -> melding.opprettetAv?.let(::Bruker)
         else -> null
     }
 

@@ -50,7 +50,7 @@ class Avslag11_27RepositoryImplTest {
         harSykepengegrunnlagOver2G = null,
         skalAvslås1127 = skalAvslås,
         vurdertIBehandling = behandlingId,
-        vurdertTidspunkt = Instant.now(),
+        opprettet = Instant.now(),
         vurdertAv = Bruker("test"),
     )
 
@@ -72,7 +72,7 @@ class Avslag11_27RepositoryImplTest {
 
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                behandlingId, listOf(vurdering(behandlingId, ref, skalAvslås = true))
+                behandlingId, setOf(vurdering(behandlingId, ref, skalAvslås = true))
             )
         }
 
@@ -94,7 +94,7 @@ class Avslag11_27RepositoryImplTest {
 
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                behandlingId, listOf(
+                behandlingId, setOf(
                     vurdering(behandlingId, skalAvslås = true),
                     vurdering(behandlingId, skalAvslås = false),
                 )
@@ -115,12 +115,12 @@ class Avslag11_27RepositoryImplTest {
 
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                behandlingId, listOf(vurdering(behandlingId, ref, skalAvslås = true))
+                behandlingId, setOf(vurdering(behandlingId, ref, skalAvslås = true))
             )
         }
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                behandlingId, listOf(vurdering(behandlingId, ref, skalAvslås = false))
+                behandlingId, setOf(vurdering(behandlingId, ref, skalAvslås = false))
             )
         }
 
@@ -139,7 +139,7 @@ class Avslag11_27RepositoryImplTest {
 
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                fraBehandlingId, listOf(vurdering(fraBehandlingId, skalAvslås = true))
+                fraBehandlingId, setOf(vurdering(fraBehandlingId, skalAvslås = true))
             )
         }
         dataSource.transaction { connection ->
@@ -160,7 +160,7 @@ class Avslag11_27RepositoryImplTest {
 
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                behandlingId, listOf(vurdering(behandlingId))
+                behandlingId, setOf(vurdering(behandlingId))
             )
         }
         dataSource.transaction { connection ->
@@ -181,7 +181,7 @@ class Avslag11_27RepositoryImplTest {
 
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                forrigeBehandlingId, listOf(vurdering(forrigeBehandlingId, skalAvslås = true))
+                forrigeBehandlingId, setOf(vurdering(forrigeBehandlingId, skalAvslås = true))
             )
         }
         dataSource.transaction { connection ->
@@ -206,12 +206,12 @@ class Avslag11_27RepositoryImplTest {
             harSykepengegrunnlagOver2G = true,
             skalAvslås1127 = true,
             vurdertIBehandling = behandlingId,
-            vurdertTidspunkt = Instant.now(),
+            opprettet = Instant.now(),
             vurdertAv = Bruker("test"),
         )
 
         dataSource.transaction { connection ->
-            Avslag11_27RepositoryImpl(connection).lagre(behandlingId, listOf(vurdering))
+            Avslag11_27RepositoryImpl(connection).lagre(behandlingId, setOf(vurdering))
         }
 
         val lagret = dataSource.transaction(readOnly = true) { connection ->
@@ -227,7 +227,7 @@ class Avslag11_27RepositoryImplTest {
         val behandlingId = opprettBehandlingId()
 
         dataSource.transaction { connection ->
-            Avslag11_27RepositoryImpl(connection).lagre(behandlingId, emptyList())
+            Avslag11_27RepositoryImpl(connection).lagre(behandlingId, emptySet())
         }
 
         val grunnlag = dataSource.transaction(readOnly = true) { connection ->

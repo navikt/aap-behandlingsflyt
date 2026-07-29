@@ -129,7 +129,6 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = AlleAvskruddUnleash,
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
             behandlingRepository = inMemoryRepositoryProvider.provide(),
             behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
@@ -151,7 +150,7 @@ class KvalitetssikringsStegTest {
                 perioderSomIkkeErTilstrekkeligVurdert = setOf(periode),
                 perioderVedtaketBehøverVurdering = setOf(periode)
             )
-            avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", VEILEDER)
+            avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", Bruker(VEILEDER))
 
             assertThat(avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.erÅpent())
                 .`as`("Avklaringsbehov $definisjon skal være lukket etter løsning")
@@ -180,7 +179,7 @@ class KvalitetssikringsStegTest {
             avklaringsbehovene.løsAvklaringsbehov(
                 Definisjon.KVALITETSSIKRING,
                 resultat.begrunnelse,
-                KVALITETSSIKRER,
+                Bruker(KVALITETSSIKRER),
                 resultat.kreverToTrinn
             )
         }

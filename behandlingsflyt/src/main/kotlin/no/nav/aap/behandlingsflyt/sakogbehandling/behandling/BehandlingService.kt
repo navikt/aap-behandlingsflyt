@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -27,10 +26,8 @@ class BehandlingService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
-    private val avbrytRevurderingService: AvbrytRevurderingService,
     private val underveisService: UnderveisService,
     private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
-    private val unleashGateway: UnleashGateway
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -40,18 +37,42 @@ class BehandlingService(
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
-        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide()
     )
 
-    /**
-     * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
+    fun finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId: SakId): Behandling? {
+        return alleYtelsesbehandlinger(sakId).lastOrNull()
+    }
+
+    fun finnGjeldendeYtelsesbehandling(sakId: SakId): Behandling? {
+        return alleYtelsesbehandlinger(sakId).lastOrNull { it.status().erAvsluttet() }
+    }
+
+    fun finnÅpenYtelsesbehandling(sakId: SakId): Behandling? {
+        return alleYtelsesbehandlinger(sakId).lastOrNull { it.status().erÅpen() }
+    }
+
+    /** Alle ytelsesbehandlinger for sak, sortert basert på behandling.forrigeBehandlingId. */
+    fun alleYtelsesbehandlinger(sakId: SakId): List<Behandling> {
+        val ytelsesbehandlinger = behandlingRepository.hentAlleIkkeAvbrutteYtelsesbehandlinger(sakId)
+        return ytelsesbehandlinger.sortedWith(comparator(ytelsesbehandlinger))
+    }
+
+    /** Siste ikke-avbrutte ytelsesbehandling, uavhengig av om den er åpen eller vedtatt.
+     *
+     * Er du sikker på at du ikke bryr deg om behandlingen du får er siste vedtatte eller en åpen behandling?
      */
+    @Deprecated(
+        """
+        Navnet på denne metoden er ikke tydelig på hva du egentlig ser etter. Bytt ut metodekallet med en av følgende:
+            - Hvis du ønsker å finne gjeldende, vedtatte ytelsesbehandling: finnGjeldendeYtelsesbehandling 
+            - Hvis du ønsker å finne en åpen behandling: finnÅpenYtelsesbehandling 
+            - Hvis du ikke bryr deg om du får den gjeldende behandlingen eller en åpen (les: ikke-gjeldende) ytelsesbehandling: finnSisteGjeldendeEllerÅpneYtelsesbehandling
+    """
+    )
     fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
-        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
-        return ytelsesbehandlinger.sortedWith(comparator(ytelsesbehandlinger)).lastOrNull()
+        return alleYtelsesbehandlinger(sakId).lastOrNull()
     }
 
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
@@ -65,27 +86,46 @@ class BehandlingService(
         return utledFaktiskBehandlingstype(behandlingRepository.hent(behandling))
     }
 
+    @WithSpan
     fun utledFaktiskBehandlingstype(behandling: Behandling): TypeBehandling {
-        return when (behandling.typeBehandling()) {
-            TypeBehandling.Revurdering -> {
-                val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
-                    "Revurdering skal alltid ha forrigeBehandling"
-                }
-
-                val erAktuellVurderingtype = prioritertType(
-                    vurderingTyper = behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet(),
-                    typeBehandling = behandling.typeBehandling()
-                ) in listOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
-
-                if (!underveisService.harRett(forrigeBehandlingId) && erAktuellVurderingtype) {
-                    TypeBehandling.Førstegangsbehandling
-                } else {
-                    TypeBehandling.Revurdering
-                }
-            }
-
-            else -> behandling.typeBehandling()
+        val harRett = when (behandling.typeBehandling()) {
+            TypeBehandling.Revurdering -> underveisService.harRett(
+                requireNotNull(behandling.forrigeBehandlingId) { "Revurdering skal alltid ha forrigeBehandling" }
+            )
+            else -> return behandling.typeBehandling()
         }
+        return utledTypeForRevurdering(behandling, harRett)
+    }
+
+    fun utledFaktiskBehandlingstyper(behandlinger: List<Behandling>): Map<BehandlingId, TypeBehandling> {
+        val forrigeIds = behandlinger
+            .filter { it.typeBehandling() == TypeBehandling.Revurdering }
+            .mapNotNull { it.forrigeBehandlingId }
+
+        val harRettMap = underveisService.harRettForBehandlinger(forrigeIds)
+
+        return behandlinger.associate { behandling ->
+            val type = when (behandling.typeBehandling()) {
+                TypeBehandling.Revurdering -> {
+                    val forrigeBehandlingId = requireNotNull(behandling.forrigeBehandlingId) {
+                        "Revurdering skal alltid ha forrigeBehandling"
+                    }
+                    utledTypeForRevurdering(behandling, harRettMap[forrigeBehandlingId] ?: false)
+                }
+                else -> behandling.typeBehandling()
+            }
+            behandling.id to type
+        }
+    }
+
+    private fun utledTypeForRevurdering(behandling: Behandling, harRett: Boolean): TypeBehandling {
+        val erAktuellVurderingtype = prioritertType(
+            vurderingTyper = behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet(),
+            typeBehandling = behandling.typeBehandling()
+        ) in listOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
+
+        return if (!harRett && erAktuellVurderingtype) TypeBehandling.Førstegangsbehandling
+        else TypeBehandling.Revurdering
     }
 
     sealed interface OpprettetBehandling {
@@ -380,8 +420,10 @@ class BehandlingService(
 
     private fun validerAtSisteStegstatusErAvsluttet(behandlingId: BehandlingId) {
         val oppdatertBehandling = behandlingRepository.hent(behandlingId)
-        val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
-        require(sisteSteg.status() == StegStatus.AVSLUTTER)
+        val aktivtSteg = oppdatertBehandling.aktivtStegTilstand()
+        require(aktivtSteg.status() == StegStatus.AVSLUTTER) {
+            "Aktivt steg ${aktivtSteg.steg()} har status ${aktivtSteg.status()}, men forventet status ${StegStatus.AVSLUTTER}"
+        }
     }
 
 
@@ -392,7 +434,8 @@ class BehandlingService(
         }
     }
 
-    fun comparator(ytelsesbehandlinger: List<Behandling>): Comparator<Behandling> {
+    /** Antagelse som kaller må ivareta: ingen avbrutte behandlinger finnes i [ytelsesbehandlinger]. */
+    private fun comparator(ytelsesbehandlinger: List<Behandling>): Comparator<Behandling> {
         /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
          * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
          * så vi regner ut bakover-pekerne.
@@ -400,11 +443,6 @@ class BehandlingService(
 
         val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
         for (behandling in ytelsesbehandlinger) {
-            // Hopp over hvis behandlingen er avbrutt
-            if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
-                continue
-            }
-
             nesteId[behandling.forrigeBehandlingId ?: continue] = behandling.id
         }
 

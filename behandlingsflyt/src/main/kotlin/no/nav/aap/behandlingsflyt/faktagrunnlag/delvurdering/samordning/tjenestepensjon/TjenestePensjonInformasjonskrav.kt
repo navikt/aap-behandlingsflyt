@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -69,7 +68,6 @@ class TjenestePensjonInformasjonskrav(
 
     data class TjenestePensjonInput(
         val personIdent: String,
-        val rettighetsperiode: Periode,
         val eksisterendeData: List<TjenestePensjonForhold>?
     ) : InformasjonskravInput
 
@@ -83,18 +81,14 @@ class TjenestePensjonInformasjonskrav(
         val personIdent = sak.person.aktivIdent().identifikator
         return TjenestePensjonInput(
             personIdent = personIdent,
-            rettighetsperiode = sak.rettighetsperiode,
             eksisterendeData = eksisterendeData
         )
     }
 
     override fun hentData(input: TjenestePensjonInput): TjenestePensjonRegisterdata {
-        val (personIdent, rettigetsperiode) = input
+        val (personIdent) = input
         return TjenestePensjonRegisterdata(
-            tpGateway.hentTjenestePensjon(
-                personIdent,
-                rettigetsperiode
-            )
+            tpGateway.hentTjenestePensjon(personIdent)
         )
     }
 
@@ -121,7 +115,6 @@ class TjenestePensjonInformasjonskrav(
 
         return tpGateway.hentTjenestePensjon(
             personIdent,
-            sak.rettighetsperiode
         ).also {
             log.info("Hentet tjenestepensjon for person i sak ${sak.saksnummer}. Antall: ${it.size}")
         }

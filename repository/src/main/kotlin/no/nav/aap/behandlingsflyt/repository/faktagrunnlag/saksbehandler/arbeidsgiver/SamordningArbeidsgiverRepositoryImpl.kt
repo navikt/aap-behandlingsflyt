@@ -59,7 +59,7 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
                 SamordningArbeidsgiverGrunnlag(
                     vurdering = SamordningArbeidsgiverVurdering(
                         begrunnelse = it.getString("begrunnelse"),
-                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertAv = it.getBruker("vurdert_av"),
                         perioder = allePerioder,
                         vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
                     )
@@ -197,7 +197,7 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
         val vunderingsId = connection.executeReturnKey(query) {
             setParams {
                 setString(1, vurdering.begrunnelse)
-                setString(2, vurdering.vurdertAv)
+                setBruker(2, vurdering.vurdertAv)
             }
         }
         val periodeQuery = """

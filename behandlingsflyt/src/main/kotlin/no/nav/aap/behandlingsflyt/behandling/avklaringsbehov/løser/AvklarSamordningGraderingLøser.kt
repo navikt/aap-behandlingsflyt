@@ -47,7 +47,7 @@ class AvklarSamordningGraderingLøser(
                     }.toSet()
                 )
             }.toSet(),
-            vurdertAv = kontekst.bruker.ident,
+            vurdertAv = kontekst.bruker,
             vurdertTidspunkt = LocalDateTime.now()
         )
 

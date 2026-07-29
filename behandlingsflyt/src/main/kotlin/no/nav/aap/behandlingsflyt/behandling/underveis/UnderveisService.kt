@@ -116,7 +116,7 @@ class UnderveisService(
             )
         }
 
-        fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
+        internal fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
             .map {
                 Underveisperiode(
                     periode = it.periode,
@@ -261,5 +261,11 @@ class UnderveisService(
 
     fun harRett(behandlingId: BehandlingId): Boolean {
         return rettighetsType(behandlingId).isNotEmpty()
+    }
+
+    /** Henter harRett for mange behandlinger i ett DB-kall. */
+    fun harRettForBehandlinger(behandlingIds: List<BehandlingId>): Map<BehandlingId, Boolean> {
+        return underveisRepository.hentBulk(behandlingIds)
+            .mapValues { (_, grunnlag) -> grunnlag.harRett() }
     }
 }

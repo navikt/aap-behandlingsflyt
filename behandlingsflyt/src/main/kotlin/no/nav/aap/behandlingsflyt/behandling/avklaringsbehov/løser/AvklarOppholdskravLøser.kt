@@ -24,7 +24,7 @@ class AvklarOppholdskravLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val vurdering = OppholdskravVurdering(
-            vurdertAv = kontekst.bruker.ident,
+            vurdertAv = kontekst.bruker,
             perioder = løsning.løsningerForPerioder.map { it.tilOppholdskravPeriode() },
             vurdertIBehandling = behandling.id
         )

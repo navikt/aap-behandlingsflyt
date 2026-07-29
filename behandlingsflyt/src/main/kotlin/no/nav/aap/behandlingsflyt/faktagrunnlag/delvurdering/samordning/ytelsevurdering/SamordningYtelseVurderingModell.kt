@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDateTime
 
@@ -39,7 +40,7 @@ data class SamordningVurderingGrunnlag(
     val vurderingerId: Long? = null,
     val begrunnelse: String?,
     val vurderinger: Set<SamordningVurdering>,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime
 )
 

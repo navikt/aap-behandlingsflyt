@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TjenestepensjonRefusjonskravLøsning
@@ -500,21 +501,32 @@ class TestBehandlingFullføringService(
         )
 
         Definisjon.SKRIV_VEDTAKSBREV -> {
-            val brevbestilling = dataSource.transaction(readOnly = true) { connection ->
-                repositoryRegistry.provider(connection)
-                    .provide<BrevbestillingRepository>()
-                    .hent(behandlingId)
-                    .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
-                    ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
-            }
+            val brevbestilling = hentVedtaksbrev(behandlingId)
             SkrivVedtaksbrevLøsning(
                 brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
-                handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
+            )
+        }
+
+        Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
+            val brevbestilling = hentVedtaksbrev(behandlingId)
+            SkrivVedtaksbrevKlageLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
             )
         }
 
         else -> null
     }
+
+    private fun hentVedtaksbrev(behandlingId: BehandlingId) =
+        dataSource.transaction(readOnly = true) { connection ->
+            repositoryRegistry.provider(connection)
+                .provide<BrevbestillingRepository>()
+                .hent(behandlingId)
+                .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
+                ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
+        }
 
     private fun hentFørsteYrkesskade(behandlingId: BehandlingId) =
         dataSource.transaction(readOnly = true) { connection ->

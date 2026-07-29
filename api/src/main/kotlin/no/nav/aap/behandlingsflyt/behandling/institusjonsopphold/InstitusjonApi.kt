@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
@@ -271,7 +272,7 @@ private fun mapVurderingerToDto(
                             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
                             behandlingId = vurdering.vurdertIBehandling,
                             vurdertAv = vurdertAvService.medNavnOgEnhet(
-                                ident = vurdering.vurdertAv ?: "ukjent",
+                                ident = vurdering.vurdertAv ?: Bruker("ukjent") /* hacky, burdeikke kalle PDL med ukjent som ident */,
                                 dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
                             ),
                         )

@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.LocalDateTime
 
 class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnection) :
     EtableringEgenVirksomhetRepository {
@@ -36,6 +37,27 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 )
             }
         }
+    }
+
+    override fun hentEtableringEgenVirksomhetVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<EtableringEgenVirksomhetVurdering>? {
+        return connection.queryFirstOrNull(
+            """
+                SELECT vurderinger_id
+                FROM ETABLERING_EGEN_VIRKSOMHET_GRUNNLAG
+                WHERE behandling_id = ? AND opprettet_tid <= ?
+                ORDER BY opprettet_tid DESC
+                LIMIT 1
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row -> mapVurdering(row.getLong("vurderinger_id")) }
+        }?.ifEmpty { null }
     }
 
     override fun lagre(
@@ -71,9 +93,9 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setLong(10, vurderingerId)
                 setLong(11, it.vurdertIBehandling.id)
                 setString(12, it.vurdertAv.ident)
-                setLocalDate(13, it.vurderingenGjelderFra)
-                setLocalDate(14, it.vurderingenGjelderTil)
-                setInstant(15, it.opprettetTid)
+                setLocalDate(13, it.fom)
+                setLocalDate(14, it.tom)
+                setInstant(15, it.opprettet)
             }
         }
 
@@ -137,10 +159,10 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     oppstartsPerioder = row.getLongOrNull("EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID")
                         .let(::hentVirksomhetOppstartsperioder),
                     vurdertAv = Bruker(row.getString("VURDERT_AV")),
-                    opprettetTid = row.getInstant("OPPRETTET_TID"),
+                    opprettet = row.getInstant("OPPRETTET_TID"),
                     vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
-                    vurderingenGjelderFra = row.getLocalDate("GJELDER_FRA"),
-                    vurderingenGjelderTil = row.getLocalDateOrNull("GJELDER_TIL")
+                    fom = row.getLocalDate("GJELDER_FRA"),
+                    tom = row.getLocalDateOrNull("GJELDER_TIL")
                 )
             }
         }

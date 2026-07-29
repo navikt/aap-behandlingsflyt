@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.net.URI
 import java.time.LocalDate
 import java.time.Duration
@@ -35,8 +36,8 @@ class NomInfoGateway : AnsattInfoGateway {
         prometheus = prometheus
     )
 
-    override fun hentAnsattInfo(navIdent: String): AnsattInfo = ansattInfoCache.get(navIdent) {
-        val request = GraphqlRequest(ressursQuery, NomRessursVariables(navIdent))
+    override fun hentAnsattInfo(navIdent: Bruker): AnsattInfo = ansattInfoCache.get(navIdent) {
+        val request = GraphqlRequest(ressursQuery, NomRessursVariables(navIdent.ident))
         val response = checkNotNull(query(request).data) {
             "Fant ikke ansatt ($navIdent) i NOM"
         }
@@ -44,14 +45,14 @@ class NomInfoGateway : AnsattInfoGateway {
         mapResponse(navIdent, checkNotNull(response.ressurs))
     }
 
-    override fun hentAnsatteVisningsnavn(navIdenter: List<String>): List<AnsattVisningsnavn?> = ansattVisningsnavnCache.get(navIdenter) {
-        val request = GraphqlRequest(flereNavnQuery, NomRessurserVariables(navIdenter))
+    override fun hentAnsatteVisningsnavn(navIdenter: List<Bruker>): List<AnsattVisningsnavn?> = ansattVisningsnavnCache.get(navIdenter) {
+        val request = GraphqlRequest(flereNavnQuery, NomRessurserVariables(navIdenter.map { it.ident }))
         val response = checkNotNull(flereNavnQuery(request).data) {
             "Fant ikke ansatt i NOM"
         }
 
         response.ressurser.map {
-            if(it.ressurs != null) AnsattVisningsnavn(it.ressurs.navident, it.ressurs.visningsnavn) else null
+            if(it.ressurs != null) AnsattVisningsnavn(Bruker(it.ressurs.navident), it.ressurs.visningsnavn) else null
         }
     }
 
@@ -65,7 +66,7 @@ class NomInfoGateway : AnsattInfoGateway {
         return requireNotNull(client.post(uri = graphqlUrl, request = httpRequest))
     }
 
-    private fun mapResponse(navIdent: String, nomDataRessurs: NomDataRessurs): AnsattInfo {
+    private fun mapResponse(navIdent: Bruker, nomDataRessurs: NomDataRessurs): AnsattInfo {
         return AnsattInfo(
             navIdent = navIdent,
             navn = nomDataRessurs.visningsnavn,
@@ -93,13 +94,13 @@ class NomInfoGateway : AnsattInfoGateway {
             .maximumSize(1000)
             .expireAfterWrite(Duration.ofHours(1))
             .recordStats()
-            .build<String, AnsattInfo>()
+            .build<Bruker, AnsattInfo>()
 
         private val ansattVisningsnavnCache = Caffeine.newBuilder()
             .maximumSize(1000)
             .expireAfterWrite(Duration.ofHours(6))
             .recordStats()
-            .build<List<String>, List<AnsattVisningsnavn?>>()
+            .build<List<Bruker>, List<AnsattVisningsnavn?>>()
 
         init {
             CaffeineCacheMetrics.monitor(prometheus, ansattInfoCache, "nom_ansatt_info")

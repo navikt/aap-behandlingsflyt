@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -37,7 +38,7 @@ class BeregningsGrunnlagApiTest {
                 andelAvNedsettelsen = Prosent(30),
                 erÅrsakssammenheng = true,
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                vurdertAv = "saksbehandler"
+                vurdertAv = Bruker("saksbehandler")
             ),
             ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
             yrkesskadeBeløpVurderinger = listOf(
@@ -45,7 +46,7 @@ class BeregningsGrunnlagApiTest {
                     antattÅrligInntekt = Beløp(50000),
                     referanse = "yrkesskadesaken",
                     begrunnelse = "asdf",
-                    vurdertAv = "saksbehandler"
+                    vurdertAv = Bruker("saksbehandler")
                 )
             ),
             registrerteYrkesskader = Yrkesskader(
@@ -95,7 +96,7 @@ class BeregningsGrunnlagApiTest {
                 andelAvNedsettelsen = Prosent(30),
                 erÅrsakssammenheng = true,
                 relevanteSaker = listOf(YrkesskadeSak("yrkesskadesaken", null)),
-                vurdertAv = "saksbehandler"
+                vurdertAv = Bruker("saksbehandler")
             ),
             ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
             yrkesskadeBeløpVurderinger = listOf(
@@ -103,7 +104,7 @@ class BeregningsGrunnlagApiTest {
                     antattÅrligInntekt = Beløp(9999999999),
                     referanse = "yrkesskadesaken",
                     begrunnelse = "asdf",
-                    vurdertAv = "saksbehandler"
+                    vurdertAv = Bruker("saksbehandler")
                 )
             ),
             registrerteYrkesskader = Yrkesskader(

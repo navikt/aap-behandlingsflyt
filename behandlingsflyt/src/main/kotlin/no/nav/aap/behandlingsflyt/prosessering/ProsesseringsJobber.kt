@@ -47,7 +47,8 @@ object ProsesseringsJobber {
             HåndterUbehandletDokumentJobbUtfører,
             DigitaliserteMeldekortTilMeldekortBackendJobbUtfører,
             HåndterUbehandledeMeldekortForSakJobbUtfører,
-            if (!Miljø.erProd()) SendAutomatiskMeldekortJobbUtfører else null
+            if (!Miljø.erProd()) SendAutomatiskMeldekortJobbUtfører else null,
+            if (!Miljø.erProd()) SendAutomatiskMeldekortEngangsJobbUtfører else null
         )
     }
 }

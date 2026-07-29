@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ArbeidsopptrappingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvbrytRevurderingSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStudentStegV2
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStønadsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BekreftVurderingerOppfølgingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
@@ -77,7 +79,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlems
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStudentStegV2
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
@@ -100,6 +101,11 @@ object Revurdering : BehandlingType {
                 steg = SendForvaltningsmeldingSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
                 informasjonskrav = emptyList()
+            )
+            .medSteg(
+                steg = AvklarStønadsperiodeSteg,
+                informasjonskrav = emptyList(),
+                vurderingsbehovRelevanteForSteg = emptyList()
             )
             .medSteg(
                 steg = AvbrytRevurderingSteg,
@@ -150,6 +156,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.OVERGANG_ARBEID,
@@ -162,6 +169,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.OVERGANG_UFORE,
@@ -180,7 +188,9 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING,
                 )
             )
             .medSteg(
@@ -189,7 +199,9 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT,
                 )
             )
             .medSteg(
@@ -198,7 +210,9 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.FASTSETT_ARBEIDSEVNE,
                 )
             )
             .medSteg(
@@ -212,6 +226,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.OVERGANG_UFORE,
                     Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS,
@@ -224,6 +239,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.OVERGANG_ARBEID,
                 )
@@ -233,6 +249,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REFUSJONSKRAV,
                 )
             )
             .medSteg(
@@ -241,6 +258,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
@@ -252,7 +270,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.REVURDER_YRKESSKADE,
-                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
@@ -261,7 +278,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_STUDENT,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                 )
             )
             .medSteg(
@@ -269,7 +285,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
@@ -351,7 +366,12 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = InstitusjonsoppholdSteg,
                 informasjonskrav = listOf(InstitusjonsoppholdInformasjonskrav),
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.MOTTATT_SØKNAD)
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING,
+                    Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON,
+                    Vurderingsbehov.INSTITUSJONSOPPHOLD,
+                    Vurderingsbehov.MOTTATT_SØKNAD
+                )
             )
             .medSteg(
                 steg = SamordningSteg,

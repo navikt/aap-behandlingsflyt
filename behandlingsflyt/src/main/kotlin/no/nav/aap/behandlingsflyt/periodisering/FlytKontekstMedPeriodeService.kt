@@ -95,12 +95,16 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                 Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
                 Vurderingsbehov.BARNETILLEGG,
                 Vurderingsbehov.INSTITUSJONSOPPHOLD,
+                Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING,
+                Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON,
                 Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                 Vurderingsbehov.REVURDER_INNTEKTSBORTFALL,
                 Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+                Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE,
                 Vurderingsbehov.REVURDER_SAMORDNING_UFØRE,
                 Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
                 Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER,
@@ -115,15 +119,16 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.VEDTAKSLENGDE_MANUELT,
                 Vurderingsbehov.VURDER_KRAV,
                 Vurderingsbehov.VURDER_AVSLAG_11_27,
-                Vurderingsbehov.REVURDERING_AVBRUTT ->
-                    REVURDERING
-
+                Vurderingsbehov.FASTSETT_ARBEIDSEVNE,
+                Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT,
+                Vurderingsbehov.REVURDERING_AVBRUTT,
                 Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
                 Vurderingsbehov.OVERGANG_UFORE,
                 Vurderingsbehov.OVERGANG_ARBEID,
                 Vurderingsbehov.OPPHOLDSKRAV,
                 Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
+                Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING,
                 Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                     REVURDERING
 

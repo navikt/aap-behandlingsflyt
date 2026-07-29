@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.ETABLERING_EGEN_VIRKS
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -41,6 +42,6 @@ class EtableringEgenVirksomhetLøsning(
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<EtableringEgenVirksomhetRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderingerSomTidslinje() ?: Tidslinje<Unit>()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderingerSomTidslinje().orEmpty()
     }
 }

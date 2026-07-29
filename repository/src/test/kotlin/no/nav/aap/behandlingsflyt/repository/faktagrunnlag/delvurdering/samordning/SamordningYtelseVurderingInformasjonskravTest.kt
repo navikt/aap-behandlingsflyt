@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -488,7 +489,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -529,7 +530,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -570,7 +571,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -611,7 +612,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -652,7 +653,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -693,7 +694,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -721,7 +722,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         val vurderingsGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "Test",
             vurderinger = emptySet(),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -762,7 +763,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 

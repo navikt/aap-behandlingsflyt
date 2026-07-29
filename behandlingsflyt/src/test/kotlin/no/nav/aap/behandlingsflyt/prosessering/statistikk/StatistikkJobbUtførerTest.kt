@@ -368,7 +368,7 @@ class StatistikkJobbUtførerTest {
                     nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
                     ytterligereNedsattBegrunnelse = null,
                     ytterligereNedsattArbeidsevneDato = null,
-                    vurdertAv = "Z0000",
+                    vurdertAv = Bruker("Z0000"),
                 )
             )
 

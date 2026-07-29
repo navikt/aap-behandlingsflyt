@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.Ove
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.LocalDateTime
 
 object InMemoryOvergangArbeidRepository : OvergangArbeidRepository {
     private val mutex = Any()
@@ -11,6 +12,11 @@ object InMemoryOvergangArbeidRepository : OvergangArbeidRepository {
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId) =
         synchronized(mutex) { grunnlag[behandlingId] }
+
+    override fun hentOvergangArbeidVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<OvergangArbeidVurdering>? = null
 
     override fun lagre(
         behandlingId: BehandlingId,

@@ -117,7 +117,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setString(5, manuellVurdering.medlemskap?.begrunnelse)
                 setBoolean(6, manuellVurdering.medlemskap?.varMedlemIFolketrygd)
                 setBoolean(7, overstyrt)
-                setString(8, manuellVurdering.vurdertAv)
+                setBruker(8, manuellVurdering.vurdertAv)
                 setLocalDateTime(9, manuellVurdering.vurdertDato)
                 setLong(10, manuellVurdering.vurdertIBehandling.toLong())
                 setLong(11, vurderingerId)
@@ -644,7 +644,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 )
             },
             overstyrt = row.getBoolean("overstyrt"),
-            vurdertAv = row.getString("vurdert_av"),
+            vurdertAv = row.getBruker("vurdert_av"),
             vurdertDato = row.getLocalDateTime("opprettet_tid"),
             fom = row.getLocalDate("fom"),
             tom = row.getLocalDateOrNull("tom"),

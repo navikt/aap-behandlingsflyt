@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
+
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -19,10 +21,13 @@ data class Sykdomsvurdering(
     val yrkesskadeBegrunnelse: String?,
     val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val diagnose: Diagnose?,
-    val vurdertIBehandling: BehandlingId,
-    val opprettet: Instant,
     val vurdertAv: Bruker,
-) {
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+) : PeriodisertVurdering {
+    override val fom: LocalDate = vurderingenGjelderFra
+    override val tom: LocalDate? = vurderingenGjelderTil
+
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
             return false
@@ -32,14 +37,44 @@ data class Sykdomsvurdering(
             return false
         }
 
-        if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)) {
+        if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI
+            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
+        ) {
             return false
         }
 
-        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null &&
-            !erNedsettelseIArbeidsevneMerEnnHalvparten &&
-            harYrkesskadeRegistrert &&
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
+            && !erNedsettelseIArbeidsevneMerEnnHalvparten
+            && harYrkesskadeRegistrert
+            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        ) {
+            return false
+        }
+        return true
+    }
+
+    fun erKonsistentForSykdomVisAlleSykdomssteg(harYrkesskadeRegistrert: Boolean): Boolean {
+
+        if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
+            return false
+        }
+
+        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
+            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
+        ) {
+            return false
+        }
+
+        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
+            && (erSkadeSykdomEllerLyteVesentligdel == true)
+        ) {
+            return false
+        }
+
+        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
+            && !erNedsettelseIArbeidsevneMerEnnHalvparten
+            && harYrkesskadeRegistrert
+            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
         ) {
             return false
         }
@@ -90,6 +125,24 @@ data class Sykdomsvurdering(
     }
 }
 
+fun List<Sykdomsvurdering>.erFunksjoneltLik(annen: List<Sykdomsvurdering>): Boolean {
+    if (this.size != annen.size) return false
+
+    // sammenlikner alle felter unntat vurdertAv og tidsstempel
+    return this.zip(annen).all { (første, andre) ->
+        første.begrunnelse == andre.begrunnelse &&
+                første.vurderingenGjelderFra == andre.vurderingenGjelderFra &&
+                første.vurderingenGjelderTil == andre.vurderingenGjelderTil &&
+                første.harSkadeSykdomEllerLyte == andre.harSkadeSykdomEllerLyte &&
+                første.erSkadeSykdomEllerLyteVesentligdel == andre.erSkadeSykdomEllerLyteVesentligdel &&
+                første.erNedsettelseIArbeidsevneMerEnnHalvparten == andre.erNedsettelseIArbeidsevneMerEnnHalvparten &&
+                første.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == andre.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense &&
+                første.yrkesskadeBegrunnelse == andre.yrkesskadeBegrunnelse &&
+                første.harNedsattArbeidsevne == andre.harNedsattArbeidsevne &&
+                første.diagnose == andre.diagnose
+    }
+}
+
 /**
  * @param relevanteSaker Liste over saksnumre til yrkesskadesaker fra register.
  */
@@ -99,7 +152,7 @@ data class Yrkesskadevurdering(
     val relevanteSaker: List<YrkesskadeSak>,
     val erÅrsakssammenheng: Boolean,
     val andelAvNedsettelsen: Prosent?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime? = null,
 )
 

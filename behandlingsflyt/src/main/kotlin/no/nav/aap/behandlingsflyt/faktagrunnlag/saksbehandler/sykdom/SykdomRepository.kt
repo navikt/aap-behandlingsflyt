@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
+import java.time.LocalDateTime
 
 interface SykdomRepository : Repository {
     fun lagre(
@@ -21,12 +22,5 @@ interface SykdomRepository : Repository {
 
     fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering>
 
-    fun hentBehandlingIderMedUmigrerteSykdomsvurderinger(sisteBehandlingId: Long): List<BehandlingId>
-
-    fun hentSykdomsvurderingMedId(behandlingId: BehandlingId): List<SykdomsvurderingMedId>
+    fun hentSykdomsvurderingerPåTidspunkt(behandlingId: BehandlingId, tidspunkt: LocalDateTime): List<Sykdomsvurdering>?
 }
-
-data class SykdomsvurderingMedId(
-    val id: Long,
-    val sykdomsvurdering: Sykdomsvurdering
-)

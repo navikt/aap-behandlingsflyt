@@ -27,7 +27,10 @@ public enum class AnnetRelevantDokumentUnderkategori {
     HELSEOPPLYSNINGER,
     ETTERSENDELSE_TIL_KLAGE,
     ETTERSENDELSE_TIL_FEILUTBETALING,
-    TILTAKSRAPPORT
+    TILTAKSRAPPORT,
+    MELDEKORT,
+    BEHOLDE_AAP_I_UTLANDET,
+    DOKUMENTASJON_TREKK_SOKNAD,
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)

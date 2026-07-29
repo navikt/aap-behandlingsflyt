@@ -6,6 +6,7 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
@@ -31,7 +32,9 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -81,7 +84,8 @@ class RettighetsperiodeStegTest {
                 TrukketSøknadService(trukketSøknadRepository),
                 kravRepository,
                 mockk(),
-                gatewayProvider.provide()
+                gatewayProvider.provide(),
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider { register<AlleAvskruddUnleash>() })
             ),
             tidligereVurderinger,
             rettighetsperiodeRepository,
@@ -237,7 +241,7 @@ class RettighetsperiodeStegTest {
             null,
             null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", "saksbehandler")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", Bruker("saksbehandler"))
     }
 
     private fun flytKontekstMedPerioder(

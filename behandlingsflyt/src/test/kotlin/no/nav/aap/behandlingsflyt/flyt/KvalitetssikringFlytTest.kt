@@ -4,16 +4,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(
-    KvalitetssikringFlytTestUnleash::class
-) {
+
+class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Kvalitetssikrer godkjenner alle avklaringsbehov`() {
         val fom = LocalDate.now().minusMonths(3)
@@ -368,7 +366,3 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(
             }
     }
 }
-
-object KvalitetssikringFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres)
-)

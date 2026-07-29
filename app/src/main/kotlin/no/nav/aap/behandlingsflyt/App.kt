@@ -73,6 +73,7 @@ import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnl
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.stønadsperiode.stønadsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
@@ -105,6 +106,8 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -117,6 +120,7 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.tilgang.TeamAap
 import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
@@ -259,6 +263,8 @@ internal fun Application.server(
             // Ignorert
         }
     }
+    
+    val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
 
     routing {
         authenticate(IdentityProvider.ENTRA_ID.value) {
@@ -300,7 +306,7 @@ internal fun Application.server(
                 aldersGrunnlagApi(fellesDataSource, repositoryRegistry)
                 avslag11_27GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                motorApi(fellesDataSource)
+                motorApi(fellesDataSource, påkrevdeRollerMotor)
                 behandlingsflytPipApi(pipDataSource, repositoryRegistry)
                 auditlogApi(fellesDataSource, repositoryRegistry)
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -310,7 +316,8 @@ internal fun Application.server(
                 tidligereVurderingerApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                kravGrunnlagApi(fellesDataSource, repositoryRegistry)
+                kravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                stønadsperiodeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -454,6 +461,8 @@ fun Application.startMotor(
     gatewayProvider: GatewayProvider,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
     val motor = Motor(
         dataSource = dataSource,
         antallKammer = AppConfig.ANTALL_WORKERS_FOR_MOTOR,
@@ -462,6 +471,7 @@ fun Application.startMotor(
         prometheus = prometheus,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider,
+        enableV2 = { unleashGateway.isEnabled(BehandlingsflytFeature.MotorV2) },
     )
 
     dataSource.transaction { dbConnection ->

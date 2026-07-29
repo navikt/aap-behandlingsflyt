@@ -4,24 +4,34 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
-import java.time.LocalDate
+import kotlin.collections.filterIsInstance
 
 data class KravGrunnlag(
     val vurderinger: Set<KravVurdering>,
 ) {
     fun gjeldendeVurderinger(): Set<KravVurdering> {
-        return vurderinger
-            .groupBy { it.referanse }
-            .values
-            .map { kravForReferanse -> kravForReferanse.maxBy { it.opprettet } }
-            .toSet()
+        return vurderinger.gjeldendeVurderinger()
     }
 
-    fun kravtidslinje(): Tidslinje<KravVurdering> {
-        return gjeldendeVurderinger()
-            .filter { it is NyttKrav || it is Gjenopptak }
-            .sortedBy { (it as KravMedDato).muligRettFra }
-            .somTidslinje { Periode((it as KravMedDato).muligRettFra, Tid.MAKS) }
+    fun kravtidslinje(): Tidslinje<RelevantKrav> {
+        return vurderinger.kravtidslinje()
+    }
+
+    fun gjeldendeRelevanteKrav(): Set<RelevantKrav> {
+        return this.gjeldendeVurderinger().filterIsInstance<RelevantKrav>().toSet()
     }
 }
 
+fun Set<KravVurdering>.gjeldendeVurderinger(): Set<KravVurdering> {
+    return this.groupBy { it.referanse }
+        .values
+        .map { kravForReferanse -> kravForReferanse.maxBy { it.opprettet } }
+        .toSet()
+}
+
+fun Set<KravVurdering>.kravtidslinje(): Tidslinje<RelevantKrav> {
+    return this.gjeldendeVurderinger()
+        .filterIsInstance<RelevantKrav>()
+        .sortedBy { it.muligRettFra }
+        .somTidslinje { Periode(it.muligRettFra, Tid.MAKS) }
+}

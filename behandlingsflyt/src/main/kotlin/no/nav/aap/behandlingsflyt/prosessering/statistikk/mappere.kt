@@ -30,6 +30,8 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING
         Vurderingsbehov.BARNETILLEGG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BARNETILLEGG
         Vurderingsbehov.INSTITUSJONSOPPHOLD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.INSTITUSJONSOPPHOLD
+        Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING
+        Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON
         Vurderingsbehov.SAMORDNING_OG_AVREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING
         Vurderingsbehov.REVURDER_INNTEKTSBORTFALL -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_INNTEKTSBORTFALL
         Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER
@@ -69,6 +71,11 @@ internal fun VurderingsbehovMedPeriode.tilKontraktVurderingsbehov(): no.nav.aap.
         Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
         Vurderingsbehov.VURDER_KRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_KRAV
         Vurderingsbehov.VURDER_AVSLAG_11_27 -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_AVSLAG_11_27
+        Vurderingsbehov.FASTSETT_ARBEIDSEVNE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FASTSETT_ARBEIDSEVNE
+        Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_FRITAK_MELDEPLIKT
+        Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING
+        Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID
+        Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE
     }
 
 

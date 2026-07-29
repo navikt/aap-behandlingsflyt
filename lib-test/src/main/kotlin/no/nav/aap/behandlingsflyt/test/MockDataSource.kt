@@ -26,7 +26,7 @@ class MockDataSource : DataSource {
         TODO("Not yet implemented")
     }
 
-    override fun <T : Any?> unwrap(iface: Class<T>?): T {
+    override fun <T> unwrap(iface: Class<T>?): T {
         TODO("Not yet implemented")
     }
 

@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -118,7 +119,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 Soningsvurderinger(
                     id = soningsvurderingerId,
                     vurderinger = vurderingene,
-                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertAv = row.getBruker("VURDERT_AV"),
                     vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
@@ -150,7 +151,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                     harFasteUtgifter = it.getBoolean("FASTE_UTGIFTER"),
                     periode = it.getPeriode("PERIODE"),
                     vurdertIBehandling = BehandlingId(it.getLong("VURDERT_I_BEHANDLING")),
-                    vurdertAv = it.getString("VURDERT_AV"),
+                    vurdertAv = it.getBruker("VURDERT_AV"),
                     vurdertTidspunkt = it.getLocalDateTime("OPPRETTET_TID")
                 )
             }
@@ -221,7 +222,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
     override fun lagreSoningsVurdering(
         behandlingId: BehandlingId,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         soningsvurderinger: List<Soningsvurdering>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
@@ -245,7 +246,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun lagreSoningsVurderinger(soningsvurderings: List<Soningsvurdering>, vurdertAv: String): Long? {
+    private fun lagreSoningsVurderinger(soningsvurderings: List<Soningsvurdering>, vurdertAv: Bruker): Long? {
         if (soningsvurderings.isEmpty()) {
             return null
         }
@@ -258,7 +259,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 """.trimIndent()
             ) {
                 setParams {
-                    setString(1, vurdertAv)
+                    setBruker(1, vurdertAv)
                 }
             }
 
@@ -345,7 +346,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setString(7, vurdering.begrunnelse)
                 setPeriode(8, vurdering.periode)
                 setLong(9, vurdering.vurdertIBehandling.toLong())
-                setString(10, vurdering.vurdertAv)
+                setBruker(10, vurdering.vurdertAv)
             }
         }
 
@@ -454,7 +455,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                         harFasteUtgifter = it.getBooleanOrNull("FASTE_UTGIFTER"),
                         periode = it.getPeriode("VURDERING_PERIODE"),
                         vurdertIBehandling = BehandlingId(it.getLong("VURDERT_I_BEHANDLING")),
-                        vurdertAv = it.getString("VURDERT_AV"),
+                        vurdertAv = it.getBruker("VURDERT_AV"),
                         vurdertTidspunkt = it.getLocalDateTime("OPPRETTET_TID")
                     )
                 )

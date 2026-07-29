@@ -98,7 +98,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                     SamordningVurderingGrunnlag(
                         begrunnelse = it.getStringOrNull("begrunnelse"),
                         vurderingerId = vurderingerId,
-                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertAv = it.getBruker("vurdert_av"),
                         vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
                         vurderinger = vurderinger
                     )
@@ -144,7 +144,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         val vurderingerId = connection.executeReturnKey(samordningVurderingerQuery) {
             setParams {
                 setString(1, samordningVurderinger.begrunnelse)
-                setString(2, samordningVurderinger.vurdertAv)
+                setBruker(2, samordningVurderinger.vurdertAv)
                 setLocalDateTime(3, samordningVurderinger.vurdertTidspunkt)
             }
         }

@@ -27,15 +27,27 @@ class Underveisperiode(
     val brukerAvKvoter: Set<Kvote>,
     val meldepliktStatus: MeldepliktStatus?,
     val meldepliktGradering: Prosent?,
+    private val backFillStansOpphorEnabled: Boolean = false,
 ) : Comparable<Underveisperiode> {
     init {
         if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak) { "Må ha avslagsårsak om utfall ikke oppfylt." }
         if (utfall == Utfall.OPPFYLT) requireNotNull(rettighetsType) { "Må ha rettighetsType om utfall oppfylt." }
     }
 
+    private val rettighetsTypeRå: RettighetsType? = rettighetsType
+
     /** Tidligere lagret [UnderveisService][no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService] ned [rettighetsType] også for perioder uten rett til AAP.
      * Nå lagrer den kun ned hvis medlemmet faktisk har rett på AAP. Denne getteren gjør at vi ikke trenger å ta hensyn til den forskjellen. */
-    val rettighetsType: RettighetsType? = if (utfall == Utfall.OPPFYLT) rettighetsType else null
+    val rettighetsType: RettighetsType? = when (backFillStansOpphorEnabled) {
+        true ->
+            if (utfall == Utfall.OPPFYLT || avslagsårsak?.konsekvens == Konsekvens.REDUKSJON)
+                rettighetsType
+            else
+                null
+
+        false ->
+            if (utfall == Utfall.OPPFYLT) rettighetsType else null
+    }
 
     override fun compareTo(other: Underveisperiode): Int {
         return periode.compareTo(other.periode)
@@ -48,7 +60,7 @@ class Underveisperiode(
         periode = periode,
         meldePeriode = meldePeriode,
         utfall = utfall,
-        rettighetsType = rettighetsType,
+        rettighetsType = rettighetsTypeRå,
         avslagsårsak = avslagsårsak,
         grenseverdi = grenseverdi,
         institusjonsoppholdReduksjon = institusjonsoppholdReduksjon,
@@ -57,6 +69,7 @@ class Underveisperiode(
         brukerAvKvoter = brukerAvKvoter,
         meldepliktStatus = meldepliktStatus,
         meldepliktGradering = meldepliktGradering,
+        backFillStansOpphorEnabled = backFillStansOpphorEnabled,
     )
 
     override fun equals(other: Any?) =
