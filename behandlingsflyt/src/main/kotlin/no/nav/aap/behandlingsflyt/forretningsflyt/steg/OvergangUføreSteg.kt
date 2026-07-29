@@ -121,10 +121,6 @@ class OvergangUføreSteg private constructor(
     }
 
     private fun erAutomatiskOpphør11_18(kontekst: FlytKontekstMedPerioder): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans1118)) {
-            return false
-        }
-
         val uførevedtak = hentUførevedtak(kontekst.sakId) ?: return false
         return uførevedtak.resultat == UførevedtakResultat.INNV &&
                 uførevedtak.virkningsdato.isAfter(LocalDate.now())
