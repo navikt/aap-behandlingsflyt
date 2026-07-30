@@ -115,7 +115,7 @@ class SamordningAnnenFullYtelseVilkårTest {
     }
 
     @Test
-    fun `skal ikke avslå hvis samordning ytelse er 50 og samordnung uføre er 50`() {
+    fun `skal ikke avslå hvis samordning ytelse er 50 og samordning uføre er 50`() {
         val periode = Periode(1 februar 2025, 31 mars 2025)
         val rettighetsperiode = Periode(1 januar 2025, 31 desember 2025)
         val forventetPeriode = Periode(periode.fom, rettighetsperiode.tom)
