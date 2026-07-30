@@ -53,6 +53,9 @@ class InntektInformasjonskrav(
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg) &&
                 // Avhengig av å vite hvilke år vi skal hente inntekt for
                 kanUtledeRelevanteÅr(kontekst) &&
+                // Ved tidligere innvilgelse med manuelt fastsatt inntekt beholder vi det lagrede grunnlaget,
+                // så lenge relevante år er uendret
+                !harVidereførbartManueltFastsattGrunnlag(kontekst) &&
                 // Oppdaterer inntekt uavhengig av om relevante år har endret seg en gang i døgnet / hvis ikke hver gang relevante år endrer seg
                 (oppdatert.ikkeKjørtSisteKalenderdag() || relevanteÅrErEndret(kontekst))
     }
@@ -66,30 +69,18 @@ class InntektInformasjonskrav(
         val person: Person,
         val relevanteÅr: Set<Year>,
         val relevanteÅrUføre: Set<Year>,
-        val videreførteÅrsinntekter: Set<InntektPerÅrFraRegister>? = null,
     ) : InformasjonskravInput
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): InntektInput {
         val sak = sakService.hent(kontekst.sakId)
         val (relevanteÅr, relevanteUføreInntektÅr) = utledAlleRelevanteÅr(kontekst.behandlingId)
 
-        val videreførteÅrsinntekter = if (erTidligereInnvilgetMedManuellInntekt(kontekst)) {
-            inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?.inntekter.orEmpty()
-                .map { InntektPerÅrFraRegister(it.år, it.beløp) }
-                .toSet()
-                .takeIf { it.map(InntektPerÅrFraRegister::år).toSet() == relevanteÅr }
-        } else {
-            null
-        }
-
-        return InntektInput(sak.person, relevanteÅr, relevanteUføreInntektÅr, videreførteÅrsinntekter)
+        return InntektInput(sak.person, relevanteÅr, relevanteUføreInntektÅr)
     }
 
     override fun hentData(input: InntektInput): InntektRegisterdata {
-        val (person, relevanteÅr, relevanteÅrUføre, videreførteÅrsinntekter) = input
-        val oppdaterteInntekter = videreførteÅrsinntekter
-            ?: inntektRegisterGateway.innhent(person, relevanteÅr)
+        val (person, relevanteÅr, relevanteÅrUføre) = input
+        val oppdaterteInntekter = inntektRegisterGateway.innhent(person, relevanteÅr)
         val tidligsteMuligeInntektÅr = YearMonth.of(2015, 1)
 
         val fom = relevanteÅrUføre.minOfOrNull { it.atMonth(1) }
@@ -160,7 +151,7 @@ class InntektInformasjonskrav(
         }
     }
 
-    private fun erTidligereInnvilgetMedManuellInntekt(kontekst: FlytKontekstMedPerioder): Boolean {
+    private fun harVidereførbartManueltFastsattGrunnlag(kontekst: FlytKontekstMedPerioder): Boolean {
         val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return false
 
         val erInnvilget = underveisRepository.hentHvisEksisterer(forrigeBehandlingId)?.harRett() == true
@@ -168,10 +159,21 @@ class InntektInformasjonskrav(
             return false
         }
 
-        return manuellInntektGrunnlagRepository.hentHvisEksisterer(forrigeBehandlingId)
+        val harManuellInntekt = manuellInntektGrunnlagRepository.hentHvisEksisterer(forrigeBehandlingId)
             ?.manuelleInntekter
             .orEmpty()
             .isNotEmpty()
+        if (!harManuellInntekt) {
+            return false
+        }
+
+        val (relevanteÅr, _) = utledAlleRelevanteÅr(kontekst.behandlingId)
+        val lagredeÅr = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.inntekter.orEmpty()
+            .map { it.år }
+            .toSet()
+
+        return lagredeÅr == relevanteÅr
     }
 
     private fun kanUtledeRelevanteÅr(kontekst: FlytKontekstMedPerioder): Boolean {

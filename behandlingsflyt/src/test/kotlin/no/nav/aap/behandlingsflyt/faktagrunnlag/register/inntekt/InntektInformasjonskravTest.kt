@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -97,62 +97,52 @@ class InntektInformasjonskravTest {
     )
 
     @Test
-    fun `henter inntekt fra POPP når forrige behandling ikke har manuell inntekt`() {
+    fun `innhenter når forrige behandling ikke har manuell inntekt`() {
+        val kontekst = oppsett(innvilget = true, manuellInntektPåForrige = false)
+        InMemoryInntektGrunnlagRepository.lagre(kontekst.behandlingId, lagredeInntekter, emptySet())
+
+        assertThat(erRelevant(kontekst)).isTrue()
+    }
+
+    @Test
+    fun `innhenter når forrige behandling har manuell inntekt men ikke ble innvilget`() {
+        val kontekst = oppsett(innvilget = false, manuellInntektPåForrige = true)
+        InMemoryInntektGrunnlagRepository.lagre(kontekst.behandlingId, lagredeInntekter, emptySet())
+
+        assertThat(erRelevant(kontekst)).isTrue()
+    }
+
+    @Test
+    fun `innhenter ikke når forrige behandling er innvilget med manuell inntekt`() {
+        val kontekst = oppsett(innvilget = true, manuellInntektPåForrige = true)
+        InMemoryInntektGrunnlagRepository.lagre(kontekst.behandlingId, lagredeInntekter, emptySet())
+
+        assertThat(erRelevant(kontekst)).isFalse()
+    }
+
+    @Test
+    fun `innhenter når beregningstidspunktet endrer seg slik at relevante år ikke matcher lagret grunnlag`() {
+        val kontekst = oppsett(innvilget = true, manuellInntektPåForrige = true)
+        InMemoryInntektGrunnlagRepository.lagre(kontekst.behandlingId, lagredeInntekter, emptySet())
+        lagreBeregningstidspunkt(kontekst.behandlingId, nedsattDato = år.plusYears(4).atDay(1))
+
+        assertThat(erRelevant(kontekst)).isTrue()
+    }
+
+    @Test
+    fun `henter både POPP og A-inntekt når informasjonskravet er relevant`() {
         val kontekst = oppsett(innvilget = true, manuellInntektPåForrige = false)
 
         val registerdata = hentData(kontekst)
 
         assertThat(registerdata.inntekter.map { it.år }).containsExactlyInAnyOrderElementsOf(relevanteÅr)
-        verify(exactly = 1) { poppGateway.innhent(any(), relevanteÅr) }
-    }
-
-    @Test
-    fun `henter inntekt fra POPP når forrige behandling har manuell inntekt men ikke ble innvilget`() {
-        val kontekst = oppsett(innvilget = false, manuellInntektPåForrige = true)
-
-        hentData(kontekst)
-
-        verify(exactly = 1) { poppGateway.innhent(any(), relevanteÅr) }
-    }
-
-    @Test
-    fun `viderefører lagrede årsinntekter og henter fortsatt A-inntekt når forrige behandling er innvilget med manuell inntekt`() {
-        val kontekst = oppsett(innvilget = true, manuellInntektPåForrige = true)
-        InMemoryInntektGrunnlagRepository.lagre(kontekst.behandlingId, lagredeInntekter, emptySet())
-
-        val registerdata = hentData(kontekst)
-
-        assertThat(registerdata.inntekter)
-            .containsExactlyInAnyOrderElementsOf(lagredeInntekter.map { InntektPerÅrFraRegister(it.år, it.beløp) })
         assertThat(registerdata.inntektsperioder).isNotEmpty()
-        verify(exactly = 0) { poppGateway.innhent(any(), any()) }
+        verify(exactly = 1) { poppGateway.innhent(any(), relevanteÅr) }
         verify(exactly = 1) { aInntektGateway.hentAInntekt(any(), any(), any()) }
     }
 
-    @Test
-    fun `henter inntekt fra POPP når beregningstidspunktet endrer seg slik at relevante år ikke matcher lagret grunnlag`() {
-        val kontekst = oppsett(innvilget = true, manuellInntektPåForrige = true)
-        InMemoryInntektGrunnlagRepository.lagre(kontekst.behandlingId, lagredeInntekter, emptySet())
-        lagreBeregningstidspunkt(kontekst.behandlingId, nedsattDato = år.plusYears(4).atDay(1))
-
-        val nyeRelevanteÅr = setOf(Year.of(2026), Year.of(2027), Year.of(2028))
-        val registerdata = hentData(kontekst)
-
-        assertThat(registerdata.inntekter.map { it.år }).containsExactlyInAnyOrderElementsOf(nyeRelevanteÅr)
-        verify(exactly = 1) { poppGateway.innhent(any(), nyeRelevanteÅr) }
-    }
-
-    @Test
-    fun `informasjonsgrunnlag er uendret når årsinntekter videreføres fra lagret grunnlag`() {
-        val kontekst = oppsett(innvilget = true, manuellInntektPåForrige = true)
-        val førsteInput = informasjonskrav.klargjør(kontekst)
-        informasjonskrav.oppdater(førsteInput, informasjonskrav.hentData(førsteInput), kontekst)
-
-        val input = informasjonskrav.klargjør(kontekst)
-        val resultat = informasjonskrav.oppdater(input, informasjonskrav.hentData(input), kontekst)
-
-        assertThat(resultat).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
-    }
+    private fun erRelevant(kontekst: FlytKontekstMedPerioder) =
+        informasjonskrav.erRelevant(kontekst, StegType.MANGLENDE_LIGNING, null)
 
     private fun hentData(kontekst: FlytKontekstMedPerioder) =
         informasjonskrav.hentData(informasjonskrav.klargjør(kontekst))
