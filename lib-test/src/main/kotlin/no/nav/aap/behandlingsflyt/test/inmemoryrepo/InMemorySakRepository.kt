@@ -69,6 +69,12 @@ object InMemorySakRepository : SakRepository {
         }
     }
 
+    fun hentHvisFinnes(sakId: SakId): Sak? {
+        synchronized(lock) {
+            return memory[sakId]
+        }
+    }
+
     override fun hent(saksnummer: Saksnummer): Sak {
         synchronized(lock) {
             return memory.values.single { sak -> sak.saksnummer == saksnummer }
