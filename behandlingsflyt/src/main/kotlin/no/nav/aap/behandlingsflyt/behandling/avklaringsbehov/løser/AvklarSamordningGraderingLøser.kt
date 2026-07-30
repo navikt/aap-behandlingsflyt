@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
@@ -29,8 +29,6 @@ class AvklarSamordningGraderingLøser(
         val vurderingerForSamordning = løsning.vurderingerForSamordning
             .also(VurderingerForSamordning::valider)
 
-        val samordningService = SamordningService(samordningYtelseVurderingRepository, samordningYtelseRepository)
-
         val samordningYtelseGrunnlag = samordningYtelseRepository.hentHvisEksisterer(kontekst.behandlingId())
         val samordningsvurderinger = SamordningVurderingGrunnlag(
             begrunnelse = vurderingerForSamordning.begrunnelse,
@@ -51,9 +49,12 @@ class AvklarSamordningGraderingLøser(
             vurdertTidspunkt = LocalDateTime.now()
         )
 
-        val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
-            samordningYtelseGrunnlag, samordningService.vurderingTidslinje(samordningsvurderinger)
+        val grunnlag = SamordningYtelseVurderingGrunnlag(
+            ytelseGrunnlag = samordningYtelseGrunnlag,
+            vurderingGrunnlag = samordningsvurderinger,
         )
+
+        val perioderSomIkkeHarBlittVurdert = grunnlag.perioderSomIkkeHarBlittVurdert()
 
         if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
             throw UgyldigForespørselException(message = "Har ikke vurdert alle perioder for samordning med andre folketrygdytelser")
