@@ -19,6 +19,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     MotorV2,
+    IngenStoppHendelseVedAtomaerBehandling,
 
     // --- Krav ---
     KravSteg, // Visning

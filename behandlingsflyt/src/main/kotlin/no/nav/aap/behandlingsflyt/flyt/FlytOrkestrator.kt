@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -224,7 +225,13 @@ class FlytOrkestrator(
         while (true) {
             if (gjeldendeSteg.type().status in stoppNårStatus) {
                 loggStopp(behandling, avklaringsbehovene)
-                return
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling)) {
+                    return
+                } else {
+                    val oppdatertBehandling = behandlingRepository.hent(behandling.id)
+                    behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
+                    return
+                }
             }
 
             val kontekstMedPerioder = flytKontekstMedPeriodeService.utled(kontekst, gjeldendeSteg.type())
