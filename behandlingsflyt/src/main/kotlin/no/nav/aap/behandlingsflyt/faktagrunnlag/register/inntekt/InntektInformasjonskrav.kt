@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
@@ -31,6 +32,8 @@ import java.time.YearMonth
 class InntektInformasjonskrav(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
+    private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
+    private val underveisRepository: UnderveisRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val inntektRegisterGateway: InntektRegisterGateway,
     private val inntektkomponentenGateway: InntektkomponentenGateway,
@@ -62,18 +65,30 @@ class InntektInformasjonskrav(
     data class InntektInput(
         val person: Person,
         val relevanteÅr: Set<Year>,
-        val relevanteÅrUføre: Set<Year>
+        val relevanteÅrUføre: Set<Year>,
+        val videreførteÅrsinntekter: Set<InntektPerÅrFraRegister>? = null,
     ) : InformasjonskravInput
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): InntektInput {
         val sak = sakService.hent(kontekst.sakId)
         val (relevanteÅr, relevanteUføreInntektÅr) = utledAlleRelevanteÅr(kontekst.behandlingId)
-        return InntektInput(sak.person, relevanteÅr, relevanteUføreInntektÅr)
+
+        val videreførteÅrsinntekter = if (erTidligereInnvilgetMedManuellInntekt(kontekst)) {
+            inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+                ?.inntekter.orEmpty()
+                .map { InntektPerÅrFraRegister(it.år, it.beløp) }
+                .toSet()
+        } else {
+            null
+        }
+
+        return InntektInput(sak.person, relevanteÅr, relevanteUføreInntektÅr, videreførteÅrsinntekter)
     }
 
     override fun hentData(input: InntektInput): InntektRegisterdata {
-        val (person, relevanteÅr, relevanteÅrUføre) = input
-        val oppdaterteInntekter = inntektRegisterGateway.innhent(person, relevanteÅr)
+        val (person, relevanteÅr, relevanteÅrUføre, videreførteÅrsinntekter) = input
+        val oppdaterteInntekter = videreførteÅrsinntekter
+            ?: inntektRegisterGateway.innhent(person, relevanteÅr)
         val tidligsteMuligeInntektÅr = YearMonth.of(2015, 1)
 
         val fom = relevanteÅrUføre.minOfOrNull { it.atMonth(1) }
@@ -144,6 +159,20 @@ class InntektInformasjonskrav(
         }
     }
 
+    private fun erTidligereInnvilgetMedManuellInntekt(kontekst: FlytKontekstMedPerioder): Boolean {
+        val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return false
+
+        val erInnvilget = underveisRepository.hentHvisEksisterer(forrigeBehandlingId)?.harRett() == true
+        if (!erInnvilget) {
+            return false
+        }
+
+        return manuellInntektGrunnlagRepository.hentHvisEksisterer(forrigeBehandlingId)
+            ?.manuelleInntekter
+            .orEmpty()
+            .isNotEmpty()
+    }
+
     private fun kanUtledeRelevanteÅr(kontekst: FlytKontekstMedPerioder): Boolean {
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -182,6 +211,8 @@ class InntektInformasjonskrav(
             return InntektInformasjonskrav(
                 sakService = SakService(repositoryProvider, gatewayProvider),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
+                manuellInntektGrunnlagRepository = repositoryProvider.provide(),
+                underveisRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 inntektRegisterGateway = gatewayProvider.provide(),
                 inntektkomponentenGateway = gatewayProvider.provide(),
