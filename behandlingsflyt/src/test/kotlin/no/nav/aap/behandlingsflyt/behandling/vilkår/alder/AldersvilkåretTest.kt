@@ -26,7 +26,7 @@ class AldersvilkåretTest {
             grenseForAntallMånederFørFylte18 = 0,
         )
 
-        val resultat = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
 //        assertThat(resultat.segmenter()).hasSize(1)
         assertThat(resultat.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -44,7 +44,7 @@ class AldersvilkåretTest {
             vurderingsdato = 1 januar 2020
         )
 
-        val resultat = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         assertTidslinje(resultat, rettighetsperiode to {
             assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -63,7 +63,7 @@ class AldersvilkåretTest {
             vurderingsdato = 1 januar 2020
         )
 
-        val vilkåret = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val vilkåret = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         assertTidslinje(
             vilkåret, Periode(rettighetsperiode.fom, 31 mars 2020) to {
@@ -84,7 +84,7 @@ class AldersvilkåretTest {
             grenseForAntallMånederFørFylte18 = 3
         )
 
-        val vilkåret = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val vilkåret = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         assertThat(vilkåret.segmenter()).allSatisfy { segment ->
             assertThat(segment.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -102,7 +102,7 @@ class AldersvilkåretTest {
             vurderingsdato = rettighetsperiode.fom
         )
 
-        val resultat = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         assertThat(resultat.segmenter().first().verdi.utfall).isEqualTo(Utfall.OPPFYLT)
     }
@@ -117,7 +117,7 @@ class AldersvilkåretTest {
             grenseForAntallMånederFørFylte18 = 3,
             vurderingsdato = rettighetsperiode.fom
         )
-        val resultat = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         assertThat(resultat.segmenter()).allSatisfy {
             assertThat(it.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -135,7 +135,7 @@ class AldersvilkåretTest {
             vurderingsdato = rettighetsperiode.fom
         )
 
-        val resultat = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         assertThat(resultat.segmenter()).allSatisfy {
             assertThat(it.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -153,7 +153,7 @@ class AldersvilkåretTest {
             grenseForAntallMånederFørFylte18 = 3,
         )
 
-        val resultat = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         assertThat(resultat.segmenter()).allSatisfy {
             assertThat(it.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
@@ -170,7 +170,7 @@ class AldersvilkåretTest {
             grenseForAntallMånederFørFylte18 = 3
         )
 
-        val resultat = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         assertThat(resultat.segmenter()).allSatisfy {
             assertThat(it.verdi.utfall).isEqualTo(Utfall.OPPFYLT)
@@ -187,7 +187,7 @@ class AldersvilkåretTest {
             grenseForAntallMånederFørFylte18 = 3
         )
 
-        val resultat = Aldersvilkåret().vurder(aldersgrunnlaget)
+        val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
         val måned67 = YearMonth.from(aldersgrunnlaget.fødselsdato.dato.plusYears(67).minusDays(1)).atEndOfMonth()
 

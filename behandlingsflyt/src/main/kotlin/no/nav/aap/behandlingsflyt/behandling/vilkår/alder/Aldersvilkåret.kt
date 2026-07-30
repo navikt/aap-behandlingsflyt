@@ -11,7 +11,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.YearMonth
 
-class Aldersvilkåret : Vilkårsvurderer<Aldersgrunnlag> {
+object Aldersvilkåret : Vilkårsvurderer<Aldersgrunnlag> {
     override val vilkårtype: Vilkårtype = Vilkårtype.ALDERSVILKÅRET
 
     override fun vurder(faktagrunnlag: Aldersgrunnlag): Tidslinje<Vilkårsvurdering> {

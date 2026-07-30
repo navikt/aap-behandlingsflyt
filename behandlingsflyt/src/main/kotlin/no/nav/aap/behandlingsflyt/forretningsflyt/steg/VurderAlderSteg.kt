@@ -76,7 +76,7 @@ class VurderAlderSteg private constructor(
                 brukerPersonopplysning.fødselsdato,
                 grenseForAntallMånederFørFylte18,
             )
-        vilkårService.vurderVilkår(kontekst.behandlingId, aldersgrunnlag, Aldersvilkåret())
+        vilkårService.vurderVilkår(kontekst.behandlingId, aldersgrunnlag, Aldersvilkåret)
     }
 
     companion object : FlytSteg {
