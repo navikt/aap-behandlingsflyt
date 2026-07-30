@@ -2,16 +2,20 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse
 
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.behandling.samordning.YtelseGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
@@ -21,15 +25,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.UUID
+import java.time.LocalDateTime
+import java.util.*
 
 class SamordningAnnenFullYtelseVilkårTest {
 
@@ -37,73 +43,186 @@ class SamordningAnnenFullYtelseVilkårTest {
     private val behandlingId = BehandlingId(1L)
     private val ref1 = Kravreferanse(UUID.randomUUID())
 
-    private fun vurder(grunnlag: SamordningAnnenFullYtelseFaktagrunnlag): Vilkårsresultat {
-        val vilkårsresultat = Vilkårsresultat(id = 1L, vilkår = emptyList())
-        SamordningAnnenFullYtelseVilkår(vilkårsresultat).vurder(grunnlag)
-        return vilkårsresultat
+    // ── ingen grunnlag ────────────────────────────────────────────────────────
+
+    @Test
+    fun `ingen samordning og ingen avslag - gir tom tidslinje`() {
+        val resultat = vurder(grunnlag())
+        assertThat(resultat.segmenter()).isEmpty()
     }
 
-    private fun grunnlag(
-        samordningTidslinje: Tidslinje<SamordningGradering> = Tidslinje.Companion.empty(),
-        uføreGrunnlag: SamordningUføreGrunnlag? = null,
-        avslag1127: Avslag11_27Grunnlag? = null,
-        kravGrunnlag: KravGrunnlag? = null,
-    ) = SamordningAnnenFullYtelseFaktagrunnlag(
-        rettighetsperiode = rettighetsperiode,
-        samordningTidslinje = samordningTidslinje,
-        samordningGrunnlag = null,
-        uføreRegisterGrunnlag = null,
-        uføreVurderingGrunnlag = uføreGrunnlag,
-        avslag1127grunnlag = avslag1127,
-        kravGrunnlag = kravGrunnlag,
-    )
+    // ── kun samordning ────────────────────────────────────────────────────────
 
-    private fun samordning100Prosent(periode: Periode = rettighetsperiode) =
-        Tidslinje(
-            periode,
-            SamordningGradering(
-                Prosent.Companion.`100_PROSENT`,
-                listOf(YtelseGradering(Ytelse.SYKEPENGER, Prosent.Companion.`100_PROSENT`))
+    @Test
+    fun `samordning 100 prosent uten avslag11_27 - gir IKKE_OPPFYLT`() {
+        val resultat = vurder(grunnlag(samordningGrunnlag = samordningGrunnlag(prosent = Prosent.`100_PROSENT`)))
+        val segmenter = resultat.segmenter()
+        assertThat(segmenter).hasSize(1)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE)
+    }
+
+    @Test
+    fun `skal avslå hvis samordning ytelse er 100 i en periode`() {
+        val res = SamordningAnnenFullYtelseVilkår.vurder(
+            SamordningAnnenFullYtelseFaktagrunnlag(
+                rettighetsperiode = rettighetsperiode,
+                samordningGrunnlag = samordningGrunnlag(prosent = Prosent.`100_PROSENT`),
+                uføreRegisterGrunnlag = null,
+                uføreVurderingGrunnlag = null,
+                avslag1127grunnlag = null,
+                kravGrunnlag = null
             )
         )
 
-    private fun uføre100Prosent() = SamordningUføreGrunnlag(
-        vurdering = SamordningUføreVurdering(
-            begrunnelse = "begrunnelse uføre",
-            vurderingPerioder = listOf(
-                SamordningUføreVurderingPeriode(
-                    rettighetsperiode.fom,
-                    Prosent.Companion.`100_PROSENT`
-                )
-            ),
-            vurdertAv = Bruker("testBruker")
-        )
-    )
+        assertThat(res.segmenter()).allSatisfy {
+            assertThat(it.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        }
+    }
 
-    private fun avslag1127(skalAvslås: Boolean, periode: Periode = rettighetsperiode): Avslag11_27Grunnlag {
-        val krav = RelevantKrav(
-            referanse = ref1,
-            journalpostId = JournalpostId("jp"),
-            vurdertAv = Bruker("testBruker"),
-            begrunnelse = "begrunnelse nytt krav a",
-            vurdertIBehandling = behandlingId,
-            opprettet = Instant.now(),
-            søknadsdato = Søknadsdato(periode.fom, SøknadsdatoÅrsak.SøknadMottatt),
-            overstyrMuligRettFra = null,
-            muligRettFra = periode.fom,
+    @Test
+    fun `skal avslå hvis samordning uføre er 100 i en periode`() {
+        val periode = Periode(1 februar 2025, 31 mars 2025)
+        val rettighetsperiode = Periode(1 januar 2025, 31 desember 2025)
+        val forventetPeriode = Periode(periode.fom, rettighetsperiode.tom)
+
+        val res = SamordningAnnenFullYtelseVilkår.vurder(
+            SamordningAnnenFullYtelseFaktagrunnlag(
+                rettighetsperiode = rettighetsperiode,
+                samordningGrunnlag = tomtSamordningYtelseVurderingGrunnlag(),
+                uføreRegisterGrunnlag = null,
+                uføreVurderingGrunnlag = SamordningUføreGrunnlag(
+                    SamordningUføreVurdering(
+                        begrunnelse = "...",
+                        vurderingPerioder = listOf(
+                            SamordningUføreVurderingPeriode(
+                                virkningstidspunkt = periode.fom,
+                                uføregradTilSamordning = Prosent.`100_PROSENT`
+                            )
+                        ),
+                        vurdertAv = Bruker("...")
+                    )
+                ),
+                avslag1127grunnlag = null,
+                kravGrunnlag = null
+            )
         )
-        val vurdering = Avslag11_27Vurdering(
-            referanse = ref1,
-            begrunnelse = "begrunnelse avslag 11-27",
-            harAnnenFullYtelse = skalAvslås,
-            brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
-            harSykepengegrunnlagOver2G = null,
-            skalAvslås1127 = skalAvslås,
-            vurdertIBehandling = behandlingId,
-            opprettet = Instant.now(),
-            vurdertAv = Bruker("testBruker"),
+
+        assertThat(res.segmenter()).allSatisfy {
+            assertThat(it.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        }
+        assertThat(res.helePerioden()).isEqualTo(forventetPeriode)
+    }
+
+    @Test
+    fun `skal ikke avslå hvis samordning ytelse er 50 og samordning uføre er 50`() {
+        val periode = Periode(1 februar 2025, 31 mars 2025)
+        val rettighetsperiode = Periode(1 januar 2025, 31 desember 2025)
+        val forventetPeriode = Periode(periode.fom, rettighetsperiode.tom)
+
+        val res = SamordningAnnenFullYtelseVilkår.vurder(
+            SamordningAnnenFullYtelseFaktagrunnlag(
+                rettighetsperiode = rettighetsperiode,
+                samordningGrunnlag = samordningGrunnlag(periode = periode, prosent = Prosent.`50_PROSENT`),
+                uføreRegisterGrunnlag = null,
+                uføreVurderingGrunnlag = SamordningUføreGrunnlag(
+                    SamordningUføreVurdering(
+                        begrunnelse = "...",
+                        vurderingPerioder = listOf(
+                            SamordningUføreVurderingPeriode(
+                                virkningstidspunkt = periode.fom,
+                                uføregradTilSamordning = Prosent.`50_PROSENT`
+                            )
+                        ),
+                        vurdertAv = Bruker("...")
+                    )
+                ),
+                avslag1127grunnlag = null,
+                kravGrunnlag = null
+            )
         )
-        return Avslag11_27Grunnlag(setOf(vurdering))
+
+        assertThat(res.segmenter()).allSatisfy {
+            assertThat(it.verdi.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+        }
+        assertThat(res.helePerioden()).isEqualTo(forventetPeriode)
+
+    }
+
+
+    @Test
+    fun `uføre 100 prosent uten avslag11_27 - gir IKKE_OPPFYLT`() {
+        val resultat = vurder(grunnlag(uføreGrunnlag = uføre100Prosent()))
+        val segmenter = resultat.segmenter()
+        assertThat(segmenter).hasSize(1)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE)
+    }
+
+    // ── kun avslag 11-27 ─────────────────────────────────────────────────────
+
+    @Test
+    fun `avslag11_27 skalAvslås true - gir IKKE_OPPFYLT med årsak ANNEN_FULL_YTELSE_AVSLAG`() {
+        val resultat = vurder(
+            grunnlag(avslag1127 = avslag1127(true), kravGrunnlag = kravGrunnlag())
+        )
+        val segmenter = resultat.segmenter()
+        assertThat(segmenter).hasSize(1)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
+    }
+
+    // ── prioritering: avslag11_27 vs samordning ───────────────────────────────
+
+    @Test
+    fun `avslag11_27 IKKE_OPPFYLT prioriteres over samordning IKKE_OPPFYLT`() {
+        val resultat = vurder(
+            grunnlag(
+                avslag1127 = avslag1127(true),
+                kravGrunnlag = kravGrunnlag(),
+            )
+        )
+        val segmenter = resultat.segmenter()
+        assertThat(segmenter).hasSize(1)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        // Avslag 11-27 vinner
+        assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
+    }
+
+    @Test
+    fun `avslag11_27 OPPFYLT, samordning IKKE_OPPFYLT - samordning gir IKKE_OPPFYLT`() {
+        val resultat = vurder(
+            grunnlag(
+                avslag1127 = avslag1127(false),
+                kravGrunnlag = kravGrunnlag(),
+                samordningGrunnlag = samordningGrunnlag(prosent = Prosent.`100_PROSENT`)
+            )
+        )
+        val segmenter = resultat.segmenter()
+        assertThat(segmenter).hasSize(1)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE)
+    }
+
+    @Test
+    fun `begrenset til rettighetsperiode - perioder utenfor fjernes`() {
+        val periodeUtenforRettighetsperiode = Periode(1 januar 2027, 1 februar 2027)
+        val resultat = vurder(
+            grunnlag(
+                samordningGrunnlag = samordningGrunnlag(
+                    periode = periodeUtenforRettighetsperiode,
+                    prosent = Prosent.`100_PROSENT`
+                )
+            )
+        )
+        val segmenter = resultat.segmenter()
+
+        assertThat(segmenter.all { it.periode.fom >= rettighetsperiode.fom }).isTrue()
+        assertThat(segmenter.all { it.periode.tom <= rettighetsperiode.tom }).isTrue()
+    }
+
+    private fun vurder(grunnlag: SamordningAnnenFullYtelseFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
+        return SamordningAnnenFullYtelseVilkår.vurder(grunnlag)
     }
 
     private fun kravGrunnlag(periode: Periode = rettighetsperiode) = KravGrunnlag(
@@ -122,84 +241,89 @@ class SamordningAnnenFullYtelseVilkårTest {
         )
     )
 
-    // ── ingen grunnlag ────────────────────────────────────────────────────────
-
-    @Test
-    fun `ingen samordning og ingen avslag - gir tom tidslinje`() {
-        val resultat = vurder(grunnlag())
-        Assertions.assertThat(resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()).isEmpty()
-    }
-
-    // ── kun samordning ────────────────────────────────────────────────────────
-
-    @Test
-    fun `samordning 100 prosent uten avslag11_27 - gir IKKE_OPPFYLT`() {
-        val resultat = vurder(grunnlag(samordningTidslinje = samordning100Prosent()))
-        val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
-        Assertions.assertThat(segmenter).hasSize(1)
-        Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        Assertions.assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE)
-    }
-
-    @Test
-    fun `uføre 100 prosent uten avslag11_27 - gir IKKE_OPPFYLT`() {
-        val resultat = vurder(grunnlag(uføreGrunnlag = uføre100Prosent()))
-        val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
-        Assertions.assertThat(segmenter).hasSize(1)
-        Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        Assertions.assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE)
-    }
-
-    // ── kun avslag 11-27 ─────────────────────────────────────────────────────
-
-    @Test
-    fun `avslag11_27 skalAvslås true - gir IKKE_OPPFYLT med årsak ANNEN_FULL_YTELSE_AVSLAG`() {
-        val resultat = vurder(
-            grunnlag(avslag1127 = avslag1127(true), kravGrunnlag = kravGrunnlag())
+    private fun avslag1127(skalAvslås: Boolean): Avslag11_27Grunnlag {
+        val vurdering = Avslag11_27Vurdering(
+            referanse = ref1,
+            begrunnelse = "begrunnelse avslag 11-27",
+            harAnnenFullYtelse = skalAvslås,
+            brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
+            harSykepengegrunnlagOver2G = null,
+            skalAvslås1127 = skalAvslås,
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            vurdertAv = Bruker("testBruker"),
         )
-        val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
-        Assertions.assertThat(segmenter).hasSize(1)
-        Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        Assertions.assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
+        return Avslag11_27Grunnlag(setOf(vurdering))
     }
 
-    // ── prioritering: avslag11_27 vs samordning ───────────────────────────────
+    private fun uføre100Prosent() = SamordningUføreGrunnlag(
+        vurdering = SamordningUføreVurdering(
+            begrunnelse = "begrunnelse uføre",
+            vurderingPerioder = listOf(
+                SamordningUføreVurderingPeriode(
+                    rettighetsperiode.fom,
+                    Prosent.`100_PROSENT`
+                )
+            ),
+            vurdertAv = Bruker("testBruker")
+        )
+    )
 
-    @Test
-    fun `avslag11_27 IKKE_OPPFYLT prioriteres over samordning IKKE_OPPFYLT`() {
-        val resultat = vurder(grunnlag(
-            samordningTidslinje = samordning100Prosent(),
-            avslag1127 = avslag1127(true),
-            kravGrunnlag = kravGrunnlag(),
-        ))
-        val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
-        Assertions.assertThat(segmenter).hasSize(1)
-        Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        // Avslag 11-27 vinner
-        Assertions.assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
-    }
+    private fun samordningGrunnlag(periode: Periode = rettighetsperiode, prosent: Prosent) =
+        SamordningYtelseVurderingGrunnlag(
+            SamordningYtelseGrunnlag(
+                grunnlagId = 1L,
+                ytelser = setOf(
+                    SamordningYtelse(
+                        ytelseType = Ytelse.FORELDREPENGER,
+                        ytelsePerioder = setOf(SamordningYtelsePeriode(periode, gradering = prosent)),
+                        kilde = "..."
+                    )
+                )
+            ), SamordningVurderingGrunnlag(
+                vurderingerId = 1L,
+                begrunnelse = "...",
+                vurderinger = setOf(
+                    SamordningVurdering(
+                        ytelseType = Ytelse.FORELDREPENGER,
+                        vurderingPerioder = setOf(
+                            SamordningVurderingPeriode(
+                                periode,
+                                gradering = prosent,
+                                manuell = false
+                            )
+                        )
+                    )
+                ),
+                vurdertAv = Bruker("..."),
+                vurdertTidspunkt = LocalDateTime.now(),
+            )
+        )
 
-    @Test
-    fun `avslag11_27 OPPFYLT, samordning IKKE_OPPFYLT - samordning gir IKKE_OPPFYLT`() {
-        val resultat = vurder(grunnlag(
-            samordningTidslinje = samordning100Prosent(),
-            avslag1127 = avslag1127(false),
-            kravGrunnlag = kravGrunnlag(),
-        ))
-        val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
-        Assertions.assertThat(segmenter).hasSize(1)
-        Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        Assertions.assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE)
-    }
+    private fun grunnlag(
+        uføreGrunnlag: SamordningUføreGrunnlag? = null,
+        avslag1127: Avslag11_27Grunnlag? = null,
+        kravGrunnlag: KravGrunnlag? = null,
+        samordningGrunnlag: SamordningYtelseVurderingGrunnlag? = tomtSamordningYtelseVurderingGrunnlag(),
+    ) = SamordningAnnenFullYtelseFaktagrunnlag(
+        rettighetsperiode = rettighetsperiode,
+        samordningGrunnlag = samordningGrunnlag,
+        uføreRegisterGrunnlag = null,
+        uføreVurderingGrunnlag = uføreGrunnlag,
+        avslag1127grunnlag = avslag1127,
+        kravGrunnlag = kravGrunnlag,
+    )
 
-    @Test
-    fun `begrenset til rettighetsperiode - perioder utenfor fjernes`() {
-        val periodeUtenforRettighetsperiode = Periode(1 januar 2027, 1 februar 2027)
-        val resultat = vurder(grunnlag(
-            samordningTidslinje = samordning100Prosent(periodeUtenforRettighetsperiode),
-        ))
-        val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
-        Assertions.assertThat(segmenter.all { it.periode.fom >= rettighetsperiode.fom }).isTrue()
-        Assertions.assertThat(segmenter.all { it.periode.tom <= rettighetsperiode.tom }).isTrue()
-    }
+    fun tomtSamordningYtelseVurderingGrunnlag() = SamordningYtelseVurderingGrunnlag(
+        SamordningYtelseGrunnlag(
+            grunnlagId = 1L,
+            ytelser = emptySet()
+        ), SamordningVurderingGrunnlag(
+            vurderingerId = 1L,
+            begrunnelse = "...",
+            vurderinger = emptySet(),
+            vurdertAv = Bruker("..."),
+            vurdertTidspunkt = LocalDateTime.now(),
+        )
+    )
 }
