@@ -55,9 +55,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         val sak = sakService.hent(sakId)
         val behandling =
             if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaSisteFattedeVedtak)) {
-                behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)?.let { sisteFattedeVedtakBehandling ->
-                    behandlingRepository.hent(sisteFattedeVedtakBehandling.id)
-                } ?: behandlingRepository.hent(inputBehandlingId)
+                behandlingService.finnGjeldendeYtelsesbehandling(sakId) ?: behandlingRepository.hent(inputBehandlingId)
             } else {
                 behandlingRepository.hent(inputBehandlingId)
             }
