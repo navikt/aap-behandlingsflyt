@@ -71,7 +71,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
-        BehandlingsflytFeature.AutomatiskStans1118 to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
@@ -83,7 +82,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KravAutomatiskVurdering to true,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
         // ------
-        BehandlingsflytFeature.ManuellInntektDelvisUfore to true,
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
         BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true

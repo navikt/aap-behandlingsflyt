@@ -12,7 +12,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
 
 class InformasjonskravGrunnlagImpl(
     private val informasjonskravRepository: InformasjonskravRepository,
@@ -49,8 +48,6 @@ class InformasjonskravGrunnlagImpl(
                 val sisteOppdatering = oppdateringer[krav.navn]
                 krav.erRelevant(kontekst, steg, sisteOppdatering)
             }
-
-        val executor = Executors.newVirtualThreadPerTaskExecutor()
 
         // TODO: Finn en bedre måde å forhindre race conditions når async informasjonskrav avghenger av hverandre
         // Når SøknadService er relevant, må denne kjøre før de andre for å forhindre race conditions
@@ -103,7 +100,7 @@ class InformasjonskravGrunnlagImpl(
                     } finally {
                         span.end()
                     }
-                }, executor)
+                }, informasjonskravExecutor)
             }
 
         val sekvensiellLagringAvFakta = parallellFaktaInnhenting
@@ -112,7 +109,6 @@ class InformasjonskravGrunnlagImpl(
                 val input = klargjortInputPerInformasjonskravNavn.getValue(krav.navn)
                 Triple(konstruktør, krav.oppdater(input, registerdata, kontekst), input)
             }
-
 
         val endredeAsyncInformasjonskrav = sekvensiellLagringAvFakta
             .filter { (_, endret) -> endret == Informasjonskrav.Endret.ENDRET }

@@ -15,7 +15,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
     MeldekortEndretAvSaksbehandler,
-    AutomatiskStans1118,
     StudentV2,
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
@@ -29,7 +28,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyttKravPeriodiserteAvklaringsbehov,
 
     // ------
-    ManuellInntektDelvisUfore,
     Avslag11_27,
     SkalViseAlleSykdomssteg,
     HoppOverKvalitetssikringVedIngenEndring

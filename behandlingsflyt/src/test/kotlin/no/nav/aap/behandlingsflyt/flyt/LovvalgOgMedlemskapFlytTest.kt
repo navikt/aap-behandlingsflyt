@@ -1,11 +1,15 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.flate.AvbrytRevurderingVurderingDto
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.flate.AvbrytRevurderingÅrsakDto
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvbrytRevurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
@@ -14,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -26,6 +31,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -48,6 +54,78 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
     }
+
+    @Test
+    fun `automatisk ok førstegangsbehandling og revurderingsøknad med _nei_ på opphold i Norge som avbrytes - skal fortsatt ha automatisk innvilget i neste revurdering`() {
+        val (sak, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = LocalDate.now().atStartOfDay(),
+            søknad = TestSøknader.STANDARD_SØKNAD.copy(medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", emptyList()))
+        )
+
+        val oppdatertBehandling = behandling
+            .løsSykdom(sak.rettighetsperiode.fom)
+            .løsBistand(sak.rettighetsperiode.fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        sak.sendInnMeldekort(
+            timerArbeidet = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1)).dager().associateWith { 0.0 },
+            mottattTidspunkt = LocalDate.now().atStartOfDay(),
+            journalpostId = JournalpostId("123901283")
+        )
+
+        val revurdering1 = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD.copy(
+            medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", "NEI", emptyList())),
+        )
+
+        val åpneAvklaringsbehovRevurderingMedSøknad = hentÅpneAvklaringsbehov(revurdering1)
+        assertThat(åpneAvklaringsbehovRevurderingMedSøknad.size).isEqualTo(1)
+        assertThat(åpneAvklaringsbehovRevurderingMedSøknad.first().definisjon).isEqualTo(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+
+
+        revurdering1.leggTilVurderingsbehov(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+        )
+            .løsAvklaringsBehov(
+                AvbrytRevurderingLøsning(
+                    vurdering = AvbrytRevurderingVurderingDto(
+                        årsak = AvbrytRevurderingÅrsakDto.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
+                        begrunnelse = "Fordi den ikke er aktuell lenger"
+                    ),
+                )
+            )
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                assertThat(åpneAvklaringsbehov).isEmpty()
+            }
+
+        // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
+        val revurdering2 = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OPPHOLDSKRAV)
+        )
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+
+        assertThat(revurdering2.forrigeBehandlingId).isNotEqualTo(revurdering1.id)
+
+        revurdering2.løsOppholdskrav(sak.rettighetsperiode.fom)
+        val vilkår = hentVilkårsresultat(revurdering2.id)
+        val lovvalgsvilkår = vilkår.finnVilkår(Vilkårtype.LOVVALG)
+        assertThat(lovvalgsvilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
+        assertThat(lovvalgsvilkår.harPerioderSomIkkeErVurdert(setOf(sak.rettighetsperiode))).isFalse
+}
 
     @Test
     fun `ved førstegangsbehandling og annet lovvalgsland hopper behandling rett til foreslå vedtak`() {
