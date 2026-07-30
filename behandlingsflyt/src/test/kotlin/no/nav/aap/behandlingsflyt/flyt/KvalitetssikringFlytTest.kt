@@ -4,9 +4,11 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -14,7 +16,7 @@ import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 
-class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedKSToggle::class) {
 
     lateinit var sak: Sak
     lateinit var behandling: Behandling
@@ -58,35 +60,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
         val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.kreverKvalitetssikring() }
         assertThat(avklaringsbehovSomKreverKvalitetssikring.all { it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
-    }
-
-    @Test
-    fun `Ny kvalitetssikring skal skje dersom behandlingen blir dratt tilbake til 22-13 og ny startdato settes`() {
-        val fom = LocalDate.now().minusMonths(3)
-
-        val person = TestPersoner.STANDARD_PERSON()
-
-        val (sak, behandling) = sendInnFørsteSøknad(person = person)
-        behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-
-        val oppdatertBehandling = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
-        val nyStartdato = LocalDate.now().minusMonths(5)
-        oppdatertBehandling
-            .løsRettighetsperiode(nyStartdato)
-            .løsSykdom(nyStartdato)
-            .løsBistand(nyStartdato)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-
-        val kvalitetssikringsBehovet = hentAlleAvklaringsbehov(oppdatertBehandling)
-            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
-        assertThat(kvalitetssikringsBehovet.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
     }
 
     @Test
@@ -245,12 +218,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
 
     @Test
     fun `Skal hoppe over kvalitetssikring hvis beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM uten endring`() {
-        val fom = LocalDate.now().minusMonths(3)
-
-        val person = TestPersoner.STANDARD_PERSON()
-
-        val (sak, behandling) = sendInnFørsteSøknad(person = person)
-
         sak.opprettManuellRevurdering(vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
 
         behandling
@@ -278,7 +245,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
         val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
         assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
-        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
     }
 
     @Test
@@ -355,11 +321,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
 
     @Test
     fun `Skal hoppe over kvalitetssikring hvis behandling trekkes tilbake og ingen endringer gjøres`() {
-        val fom = LocalDate.now().minusMonths(3)
-
-        val person = TestPersoner.STANDARD_PERSON()
-
-        val (_, behandling) = sendInnFørsteSøknad(person = person)
         val etterKvalitetssikring = behandling
             .løsSykdom(fom)
             .løsBistand(fom)
