@@ -78,6 +78,7 @@ class InntektInformasjonskrav(
                 ?.inntekter.orEmpty()
                 .map { InntektPerÅrFraRegister(it.år, it.beløp) }
                 .toSet()
+                .takeIf { it.map(InntektPerÅrFraRegister::år).toSet() == relevanteÅr }
         } else {
             null
         }
