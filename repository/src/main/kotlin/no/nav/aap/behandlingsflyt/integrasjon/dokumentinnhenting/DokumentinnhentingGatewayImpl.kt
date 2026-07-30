@@ -9,7 +9,6 @@ import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
-import no.nav.aap.dokumentinnhenting.kontrakt.MarkerBestillingSomMottattDto
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
