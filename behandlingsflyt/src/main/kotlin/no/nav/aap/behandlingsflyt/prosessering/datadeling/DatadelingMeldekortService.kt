@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -48,11 +49,15 @@ class DatadelingMeldekortService(
                 Meldekort.fraKontrakt(
                     dokument.referanse.asJournalpostId,
                     dokument.mottattTidspunkt,
+                    dokument.opprettetTid,
                     requireNotNull(m) { "Meldekort mangler strukturert data. JournalpostId=${dokument.referanse.asJournalpostId}" })
             }.ifEmpty { return null }
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
-        val helePerioden = underveisGrunnlag?.somTidslinje()?.helePerioden() ?: sak.rettighetsperiodeEttÅrFraStartDato()
+        val helePerioden =
+            underveisGrunnlag?.somTidslinje().orEmpty().filter { it.verdi.rettighetsType != null }.run {
+                if (isNotEmpty()) helePerioden() else sak.rettighetsperiodeEttÅrFraStartDato()
+            }
         val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
 
         return if (meldePeriodene.isNotEmpty()) {

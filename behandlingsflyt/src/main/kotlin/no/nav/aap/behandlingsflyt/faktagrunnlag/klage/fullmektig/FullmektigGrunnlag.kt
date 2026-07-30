@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig
 
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 
 data class FullmektigGrunnlag(
@@ -10,8 +11,8 @@ data class FullmektigVurdering(
     val harFullmektig: Boolean,
     val fullmektigIdent: IdentMedType? = null,
     val fullmektigNavnOgAdresse: NavnOgAdresse? = null,
-    val vurdertAv: String,
-    val opprettet: Instant? = null
+    val vurdertAv: Bruker,
+    val opprettet: Instant
 ) {
     init {
         require(harFullmektig || (fullmektigIdent == null && fullmektigNavnOgAdresse == null)) {

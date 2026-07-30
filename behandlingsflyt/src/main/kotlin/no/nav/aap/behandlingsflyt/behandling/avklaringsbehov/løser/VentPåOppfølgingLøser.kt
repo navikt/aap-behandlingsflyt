@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOpp
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
 
+@Deprecated("Erstattes av VentPåOppfølgingNyLøser")
 class VentPåOppfølgingLøser(repositoryProvider: RepositoryProvider) : AvklaringsbehovsLøser<VentPåOppfølgingLøsning> {
     override fun løs(
         kontekst: AvklaringsbehovKontekst,

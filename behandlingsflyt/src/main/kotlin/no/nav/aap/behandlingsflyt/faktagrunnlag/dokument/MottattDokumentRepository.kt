@@ -10,7 +10,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface MottattDokumentRepository : Repository {
     fun lagre(mottattDokument: MottattDokument)
-    fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument
+    fun hent(sakId: SakId, innsendingsreferanse: InnsendingReferanse): MottattDokument
     fun oppdaterStatus(
         dokumentReferanse: InnsendingReferanse,
         behandlingId: BehandlingId,

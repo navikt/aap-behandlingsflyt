@@ -31,12 +31,14 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
@@ -337,7 +339,8 @@ class SamordningYtelseVurderingServiceTest {
                         )
                     )
                 ),
-                vurdertAv = "ident"
+                vurdertAv = Bruker("ident"),
+            vurdertTidspunkt = LocalDateTime.now()
             )
         )
     }

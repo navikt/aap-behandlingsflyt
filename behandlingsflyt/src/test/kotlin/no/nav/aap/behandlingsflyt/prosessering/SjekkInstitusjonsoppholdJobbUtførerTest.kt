@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -36,15 +37,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -127,32 +124,10 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
         every { sakServiceMock.hent(any<SakId>()) } returns Sak(
             id = sakId,
             saksnummer = Saksnummer("DUMMYSAKSNR"),
-            person = Person(
-                id = 456L.let(::PersonId),
-                identifikator = UUID.randomUUID(),
-                identer = emptyList()
-            ),
+            person = person(),
             rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
             status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
             opprettetTidspunkt = LocalDateTime.now(),
-        )
-
-        every { behandlingRepositoryMock.finnSisteOpprettedeBehandlingFor(any(), any()) } returns Behandling(
-            id = BehandlingId(457L),
-            forrigeBehandlingId = BehandlingId(456L),
-            referanse = BehandlingReferanse(UUID.randomUUID()),
-            sakId = sakId,
-            typeBehandling = TypeBehandling.Revurdering,
-            status = Status.AVSLUTTET,
-            vurderingsbehov = årsakerPåTidligereBehandling,
-            stegTilstand = StegTilstand(
-                stegStatus = StegStatus.AVSLUTTER,
-                stegType = StegType.IVERKSETT_VEDTAK,
-                aktiv = true
-            ),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-            opprettetTidspunkt = LocalDateTime.now(),
-            versjon = 0L,
         )
 
         every {
@@ -182,8 +157,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,
-                stegType = StegType.FORESLÅ_VEDTAK,
-                aktiv = true
+                stegType = StegType.FORESLÅ_VEDTAK
             ),
             opprettetTidspunkt = LocalDateTime.now(),
             versjon = 0L
@@ -200,8 +174,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,
-                stegType = StegType.FORESLÅ_VEDTAK,
-                aktiv = true
+                stegType = StegType.FORESLÅ_VEDTAK
             ),
             opprettetTidspunkt = LocalDateTime.now(),
             versjon = 0L
@@ -257,11 +230,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                 Sak(
                     id = sakId,
                     saksnummer = Saksnummer("DUMMYSAKSNR"),
-                    person = Person(
-                        id = 456L.let(::PersonId),
-                        identifikator = UUID.randomUUID(),
-                        identer = emptyList()
-                    ),
+                    person = person(),
                     rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
                     status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
                     opprettetTidspunkt = LocalDateTime.now(),
@@ -272,11 +241,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                     Sak(
                         id = sakId,
                         saksnummer = Saksnummer("DUMMYSAKSNR"),
-                        person = Person(
-                            id = 456L.let(::PersonId),
-                            identifikator = UUID.randomUUID(),
-                            identer = emptyList()
-                        ),
+                        person = person(),
                         rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
                         status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
                         opprettetTidspunkt = LocalDateTime.now(),

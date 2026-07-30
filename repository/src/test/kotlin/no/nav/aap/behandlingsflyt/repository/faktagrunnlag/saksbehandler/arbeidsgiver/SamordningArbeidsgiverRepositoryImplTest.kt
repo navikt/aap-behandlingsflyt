@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -52,7 +53,7 @@ class SamordningArbeidsgiverRepositoryImplTest {
                 refusjonkravVurderinger = SamordningArbeidsgiverVurdering(
                     begrunnelse = "begrunnelse",
                     perioder = perioder,
-                    vurdertAv = "vurdert_av",
+                    vurdertAv = Bruker("vurdert_av"),
                 )
             )
 
@@ -93,7 +94,7 @@ class SamordningArbeidsgiverRepositoryImplTest {
                 refusjonkravVurderinger = SamordningArbeidsgiverVurdering(
                     begrunnelse = "begrunnelse",
                     perioder = perioder,
-                    vurdertAv = "vurdert_av",
+                    vurdertAv = Bruker("vurdert_av"),
                 )
             )
 
@@ -126,7 +127,7 @@ class SamordningArbeidsgiverRepositoryImplTest {
                 refusjonkravVurderinger = SamordningArbeidsgiverVurdering(
                     begrunnelse = "begrunnelse",
                     perioder = nyePerioder,
-                    vurdertAv = "vurdert_av",
+                    vurdertAv = Bruker("vurdert_av"),
                 )
             )
 

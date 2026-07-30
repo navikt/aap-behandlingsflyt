@@ -7,10 +7,11 @@ import java.util.*
 @JvmInline
 value class PersonId(val id: Long)
 
-class Person(val id: PersonId, val identifikator: UUID, private var identer: List<Ident>) {
-
-    constructor(identifikator: UUID, identer: List<Ident>) : this(PersonId(-0), identifikator, identer)
-
+ class Person(
+     val id: PersonId,
+     val referanse: UUID,
+     private var identer: List<Ident>,
+ ) {
     fun er(ident: Ident): Boolean {
         return identer.any { it == ident }
     }
@@ -30,14 +31,14 @@ class Person(val id: PersonId, val identifikator: UUID, private var identer: Lis
 
         other as Person
 
-        return identifikator == other.identifikator
+        return referanse == other.referanse
     }
 
     override fun hashCode(): Int {
-        return identifikator.hashCode()
+        return referanse.hashCode()
     }
 
     override fun toString(): String {
-        return "Person(identifikator=$identifikator, identer=$identer)"
+        return "Person(identifikator=$referanse, identer=$identer)"
     }
 }

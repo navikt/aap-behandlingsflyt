@@ -11,10 +11,12 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FullmektigRepos
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.Instant
 
 class FullmektigRepositoryImplTest {
     companion object {
@@ -42,7 +44,8 @@ class FullmektigRepositoryImplTest {
             val vurdering = FullmektigVurdering(
                 harFullmektig = true,
                 fullmektigIdent = IdentMedType("12345678901", IdentType.FNR_DNR),
-                vurdertAv = "Saksbehandler"
+                vurdertAv = Bruker("Saksbehandler"),
+                opprettet = Instant.now()
             )
 
             fullmektigRepository.lagre(klageBehandling.id, vurdering)
@@ -52,7 +55,7 @@ class FullmektigRepositoryImplTest {
                 FullmektigVurdering::fullmektigIdent,
                 FullmektigVurdering::fullmektigNavnOgAdresse,
                 FullmektigVurdering::vurdertAv
-            ).containsExactly(true, IdentMedType("12345678901", IdentType.FNR_DNR), null, "Saksbehandler")
+            ).containsExactly(true, IdentMedType("12345678901", IdentType.FNR_DNR), null, Bruker("Saksbehandler"))
         }
     }
 
@@ -71,7 +74,8 @@ class FullmektigRepositoryImplTest {
 
             val fullmektigRepository = FullmektigRepositoryImpl(connection)
             val vurdering = FullmektigVurdering(
-                harFullmektig = true, fullmektigNavnOgAdresse = navnOgAdresse, vurdertAv = "Saksbehandler"
+                harFullmektig = true, fullmektigNavnOgAdresse = navnOgAdresse, vurdertAv = Bruker("Saksbehandler"),
+                opprettet = Instant.now()
             )
 
             fullmektigRepository.lagre(klagebehandling.id, vurdering)
@@ -81,7 +85,7 @@ class FullmektigRepositoryImplTest {
                 FullmektigVurdering::fullmektigIdent,
                 FullmektigVurdering::fullmektigNavnOgAdresse,
                 FullmektigVurdering::vurdertAv
-            ).containsExactly(true, null, navnOgAdresse, "Saksbehandler")
+            ).containsExactly(true, null, navnOgAdresse, Bruker("Saksbehandler"))
 
             klagebehandling
         }

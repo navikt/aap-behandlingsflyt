@@ -43,35 +43,20 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
-import org.testcontainers.containers.output.Slf4jLogConsumer
-import org.testcontainers.containers.wait.strategy.Wait
-import org.testcontainers.kafka.KafkaContainer
-import org.testcontainers.utility.DockerImageName
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.concurrent.thread
 import kotlin.time.Duration.Companion.milliseconds
 
 class KabalKafkaKonsumentTest {
     companion object {
-        private val logger = LoggerFactory.getLogger(KabalKafkaKonsumentTest::class.java)
         private val repositoryRegistry = postgresRepositoryRegistry
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         private lateinit var dataSource: TestDataSource
         private lateinit var motor: ManuellMotorImpl
-
-        val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
-            .withReuse(true)
-            .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofSeconds(60))
-            .withLogConsumer { Slf4jLogConsumer(logger) }
 
         @BeforeAll
         @JvmStatic
@@ -95,23 +80,20 @@ class KabalKafkaKonsumentTest {
                 }
             )
             motor.start()
-
-            kafka.start()
         }
 
-        @AfterAll
+        @org.junit.jupiter.api.AfterAll
         @JvmStatic
         internal fun afterAll() {
             motor.stop()
-            kafka.stop()
             dataSource.close()
         }
     }
 
     @Test
     fun `Kan motta og lagre ned hendelse fra Kabal`() {
-        val testTopic = KABAL_EVENT_TOPIC + "test2"
-        
+        val testTopic = "$KABAL_EVENT_TOPIC-${UUID.randomUUID()}"
+
         val sak = dataSource.transaction { sak(it, periode.fom) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
@@ -125,26 +107,27 @@ class KabalKafkaKonsumentTest {
         )
 
         val konsument = KabalKafkaKonsument(
-            testConfig(kafka.bootstrapServers),
+            testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
             pollTimeout = 50.milliseconds,
             topic = testTopic,
         )
 
-        val thread = thread(start = true) {
-            while (true) {
-                if (konsument.antallMeldinger > 0) {
-                    konsument.lukk()
-                    return@thread
-                }
-                Thread.sleep(500L)
-            }
+        val pollThread = startConsumerThread {
+            konsument.konsumer()
         }
-        konsument.konsumer()
 
-        thread.join()
-        assertThat(konsument.antallMeldinger).isEqualTo(1)
+        try {
+            awaitAtMost("Konsumenten mottok ikke forventet Kabal-melding") {
+                konsument.antallMeldinger == 1 || !pollThread.isAlive
+            }
+            assertThat(konsument.antallMeldinger)
+                .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
+                .isEqualTo(1)
+        } finally {
+            stopConsumerThread(konsument::lukk, pollThread)
+        }
 
         motor.kjørJobber()
         val svarFraAnderinstansBehandling = dataSource.transaction { connection ->
@@ -183,6 +166,8 @@ class KabalKafkaKonsumentTest {
 
     @Test
     fun `Skal ikke konsumere neste melding dersom håndtering feiler`() {
+        val testTopic = "$KABAL_EVENT_TOPIC-${UUID.randomUUID()}"
+
         val sak = dataSource.transaction { sak(it, periode.fom) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
@@ -192,41 +177,36 @@ class KabalKafkaKonsumentTest {
         val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
         produserHendelse(
             listOf(Pair("1", "blabla"), Pair("2", DefaultJsonMapper.toJson(hendelse))),
-            KABAL_EVENT_TOPIC
+            testTopic
         )
 
         val konsument = KabalKafkaKonsument(
-            testConfig(kafka.bootstrapServers),
+            testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
             pollTimeout = 50.milliseconds,
+            topic = testTopic,
         )
 
-        val thread = thread(start = true) {
-            while (true) {
-                // Denne vil ikke ha noe relevans med mindre vi får en regresjon der neste melding blir behandlet
-                if (konsument.antallMeldinger > 0) {
-                    konsument.lukk()
-                    return@thread
-                }
-                // Det forventes konsumenten lukkes pga. exception
-                if (konsument.erLukket()) {
-                    return@thread
-                }
-                Thread.sleep(500L)
-            }
+        val pollThread = startConsumerThread {
+            konsument.konsumer()
         }
-        konsument.konsumer()
 
-        thread.join()
-        
+        try {
+            awaitAtMost("Konsumenten lukket seg ikke etter ugyldig melding") {
+                konsument.erLukket()
+            }
+        } finally {
+            stopConsumerThread(konsument::lukk, pollThread)
+        }
+
         assertThat(konsument.antallMeldinger).isEqualTo(0)
     }
 
     @Test
     fun `Skal opprette feiljobb for meldinger som skal til Kelvin, men som vi ikke finner saksnummer for`() {
         val konsument = KabalKafkaKonsument(
-            testConfig(kafka.bootstrapServers),
+            testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
             pollTimeout = 50.milliseconds,
@@ -264,7 +244,7 @@ class KabalKafkaKonsumentTest {
 
     private fun produserHendelse(hendelser: List<Pair<String, String>>, topic: String) {
         val producerProps = Properties().apply {
-            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
+            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, SharedKafkaTestContainer.kafka.bootstrapServers)
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
         }
@@ -279,8 +259,8 @@ class KabalKafkaKonsumentTest {
         }
     }
 
-    private fun testConfig(brokers: String) = KafkaConsumerConfig<String, String>(
-        applicationId = "behandlingsflyt-test",
+    private fun testConfig(brokers: String) = KafkaConsumerConfig(
+        applicationId = "behandlingsflyt-test-${UUID.randomUUID()}",
         brokers = brokers,
         ssl = null,
         schemaRegistry = SchemaRegistryConfig(

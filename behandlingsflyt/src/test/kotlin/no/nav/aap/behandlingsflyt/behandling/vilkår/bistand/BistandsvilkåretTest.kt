@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.bistand
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -14,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
+import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.sak
@@ -84,13 +84,15 @@ class BistandsvilkåretTest {
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                bistandGrunnlag = BistandGrunnlag(listOf(
-                    bistandvurdering(
-                        erBehovForAktivBehandling = false,
-                        erBehovForAnnenOppfølging = false,
-                        erBehovForArbeidsrettetTiltak = false
+                bistandGrunnlag = BistandGrunnlag(
+                    listOf(
+                        bistandvurdering(
+                            erBehovForAktivBehandling = false,
+                            erBehovForAnnenOppfølging = false,
+                            erBehovForArbeidsrettetTiltak = false
+                        )
                     )
-                )),
+                ),
             )
         )
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
@@ -105,14 +107,16 @@ class BistandsvilkåretTest {
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                bistandGrunnlag = BistandGrunnlag(listOf(
-                    bistandvurdering(), bistandvurdering(
-                        vurderingenGjelderFra = iDag.plusDays(10),
-                        erBehovForAktivBehandling = false,
-                        erBehovForAnnenOppfølging = false,
-                        erBehovForArbeidsrettetTiltak = false
+                bistandGrunnlag = BistandGrunnlag(
+                    listOf(
+                        bistandvurdering(), bistandvurdering(
+                            vurderingenGjelderFra = iDag.plusDays(10),
+                            erBehovForAktivBehandling = false,
+                            erBehovForAnnenOppfølging = false,
+                            erBehovForArbeidsrettetTiltak = false
+                        )
                     )
-                )),
+                ),
             )
         )
 
@@ -140,9 +144,9 @@ class BistandsvilkåretTest {
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = false,
-                vurderingenGjelderFra = sak.rettighetsperiode.fom,
+                fom = sak.rettighetsperiode.fom,
                 tom = null,
-                vurdertAv = "Z00000",
+                vurdertAv = Bruker("Z00000"),
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
                 opprettet = Instant.now()
@@ -210,10 +214,8 @@ class BistandsvilkåretTest {
             )
 
             AvklarBistandLøser(postgresRepositoryRegistry.provider(connection)).løs(
-                AvklaringsbehovKontekst(
-                    bruker = Bruker(sak.person.aktivIdent().identifikator),
-                    kontekst = revurdering.flytKontekst(),
-                ), løsning = AvklarBistandsbehovLøsning(løsningerForPerioder = listOf(bistandsvurdering2))
+                avklaringsbehovKontekst { this.behandling = revurdering },
+                løsning = AvklarBistandsbehovLøsning(løsningerForPerioder = listOf(bistandsvurdering2))
             )
         }
 
@@ -223,7 +225,7 @@ class BistandsvilkåretTest {
             avklaringsbehovene.leggTil(
                 definisjon = Definisjon.AVKLAR_BISTANDSBEHOV, funnetISteg = AVKLAR_SYKDOM, null, null
             )
-            avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", "", false)
+            avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", Bruker(""), false)
 
             VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), gatewayProvider).utfør(
                 flytKontekstMedPerioder {
@@ -254,8 +256,6 @@ class BistandsvilkåretTest {
         assertThat(segment2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
 
     }
-    
-    
 
 
     @Test
@@ -270,8 +270,8 @@ class BistandsvilkåretTest {
             erBehovForAnnenOppfølging = null,
             overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = null,
-            vurdertAv = "O146060",
-            vurderingenGjelderFra = LocalDate.of(2025, 11, 25),
+            vurdertAv = Bruker("O146060"),
+            fom = LocalDate.of(2025, 11, 25),
             tom = null,
             opprettet = Instant.parse("2025-11-20T10:23:52.051Z"),
             vurdertIBehandling = BehandlingId(5441)
@@ -284,8 +284,8 @@ class BistandsvilkåretTest {
             erBehovForAnnenOppfølging = false,
             overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = false,
-            vurdertAv = "S108601",
-            vurderingenGjelderFra = LocalDate.of(2026, 4, 21),
+            vurdertAv = Bruker("S108601"),
+            fom = LocalDate.of(2026, 4, 21),
             tom = null,
             opprettet = Instant.parse("2026-05-20T10:23:52.051Z"),
             vurdertIBehandling = BehandlingId(70608)
@@ -332,8 +332,8 @@ class BistandsvilkåretTest {
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         overgangBegrunnelse = overgangBegrunnelse,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-        vurdertAv = vurdertAv,
-        vurderingenGjelderFra = vurderingenGjelderFra,
+        vurdertAv = Bruker(vurdertAv),
+        fom = vurderingenGjelderFra,
         tom = null,
         vurdertIBehandling = vurdertIBehandling,
         opprettet = opprettet
@@ -357,7 +357,6 @@ class BistandsvilkåretTest {
         behandlingId: BehandlingId
     ) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,

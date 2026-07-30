@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`50_PROSENT`
@@ -66,11 +67,13 @@ class GraderingArbeidRegelTest {
                     journalpostId = JournalpostId(1010.toString()),
                     timerArbeidPerPeriode = arbeidetPerDag,
                     mottattTidspunkt = (1 januar 2024).atStartOfDay(),
+                    opprettetTidspunkt = (1 januar 2024).atStartOfDay()
                 ),
                 Meldekort(
                     journalpostId = JournalpostId(1011.toString()),
                     timerArbeidPerPeriode = emptySet(),
                     mottattTidspunkt = (2 januar 2024).atStartOfDay(),
+                    opprettetTidspunkt = (1 januar 2024).atStartOfDay()
                 )
             )
         )
@@ -147,7 +150,7 @@ class GraderingArbeidRegelTest {
     }
 
     @Test
-    fun `Kan ikke jobbe  over 60 prosent uten arbeidsopptrapping`() {
+    fun `Kan ikke jobbe over 60 prosent uten arbeidsopptrapping`() {
         assertMeldekortutregning(
             fastsattArbeidsevne = null,
             opptrapping = false,
@@ -231,11 +234,11 @@ class GraderingArbeidRegelTest {
                     ArbeidsevneVurdering(
                         begrunnelse = "",
                         arbeidsevne = `50_PROSENT`,
-                        fraDato = fom.minusDays(1), /* viktig at vi tester vurderinger fra før rettighetsperioden */
-                        tilDato = null,
+                        fom = fom.minusDays(1), /* viktig at vi tester vurderinger fra før rettighetsperioden */
+                        tom = null,
                         vurdertIBehandling = BehandlingId(1),
                         opprettetTid = LocalDateTime.now(),
-                        "vurdertAv"
+                        Bruker("vurdertAv")
                     )
                 )
             )
@@ -316,9 +319,9 @@ class GraderingArbeidRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = rettighetsperiode.fom,
+                        fom = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         vurdertIBehandling = BehandlingId(1),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     )
@@ -407,11 +410,11 @@ class GraderingArbeidRegelTest {
                 ArbeidsevneVurdering(
                     begrunnelse = "",
                     arbeidsevne = it,
-                    fraDato = rettighetsperiode.fom,
-                    tilDato = null,
+                    fom = rettighetsperiode.fom,
+                    tom = null,
                     vurdertIBehandling = BehandlingId(1),
                     opprettetTid = LocalDateTime.now(),
-                    "vurdertAv"
+                    Bruker("vurdertAv")
                 )
             })
         )
@@ -430,6 +433,7 @@ class GraderingArbeidRegelTest {
                         )
                     }.toSet(),
                 mottattTidspunkt = LocalDateTime.now().plusMinutes(i.toLong()),
+                opprettetTidspunkt = LocalDateTime.now().plusMinutes(i.toLong())
             )
         }
     }

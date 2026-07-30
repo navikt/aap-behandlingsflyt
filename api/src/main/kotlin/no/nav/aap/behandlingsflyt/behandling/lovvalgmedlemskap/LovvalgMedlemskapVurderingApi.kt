@@ -18,9 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -29,8 +27,7 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider
+    repositoryRegistry: RepositoryRegistry
 ) {
     route("/api/lovvalgmedlemskap/") {
         route("/vurdering/{referanse}") {
@@ -116,7 +113,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                                 sak.id
                             )
 
-                    ForutgåendeMedlemskapVurderingService(gatewayProvider.provide<UnleashGateway>()).vurderTilhørighet(
+                    ForutgåendeMedlemskapVurderingService().vurderTilhørighet(
                         ForutgåendeMedlemskapGrunnlag(
                             medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag
                         ),

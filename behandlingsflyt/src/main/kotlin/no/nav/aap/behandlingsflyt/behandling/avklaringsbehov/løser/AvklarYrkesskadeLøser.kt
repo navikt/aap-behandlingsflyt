@@ -52,7 +52,7 @@ class AvklarYrkesskadeLøser(
                 },
                 erÅrsakssammenheng = løsning.yrkesskadesvurdering.erÅrsakssammenheng,
                 andelAvNedsettelsen = løsning.yrkesskadesvurdering.andelAvNedsettelsen?.let { Prosent(it) },
-                vurdertAv = kontekst.bruker.ident,
+                vurdertAv = kontekst.bruker,
             ),
         )
 

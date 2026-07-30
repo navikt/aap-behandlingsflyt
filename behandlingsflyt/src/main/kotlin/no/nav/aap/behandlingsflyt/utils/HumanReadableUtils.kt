@@ -20,9 +20,9 @@ fun Collection<Periode>.toHumanReadable(): String {
 }
 
 fun Periode.toHumanReadable() =
-    "${fom.tilNorsktFormat()}–${tom.tilNorsktFormat()}"
+    "${fom.tilNorskFormat()}–${tom.tilNorskFormat()}"
 
-fun LocalDate?.tilNorsktFormat(): String {
+fun LocalDate?.tilNorskFormat(): String {
     if (this == null || !isBefore(Tid.MAKS)) {
         return "løpende"
     }

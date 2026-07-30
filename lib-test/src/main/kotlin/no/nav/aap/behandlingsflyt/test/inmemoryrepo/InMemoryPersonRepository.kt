@@ -23,7 +23,7 @@ object InMemoryPersonRepository : PersonRepository {
     }
 
     override fun hent(identifikator: UUID): Person {
-        return personer.values.find { it.identifikator == identifikator }!!
+        return personer.values.find { it.referanse == identifikator }!!
     }
 
     override fun finn(ident: Ident): Person? {
@@ -38,7 +38,7 @@ object InMemoryPersonRepository : PersonRepository {
         person: Person,
         identer: List<Ident>
     ): Person {
-        val oppdatertPerson = Person(person.id, person.identifikator, identer)
+        val oppdatertPerson = Person(person.id, person.referanse, identer)
         personer[person.id] = oppdatertPerson
         return oppdatertPerson
     }

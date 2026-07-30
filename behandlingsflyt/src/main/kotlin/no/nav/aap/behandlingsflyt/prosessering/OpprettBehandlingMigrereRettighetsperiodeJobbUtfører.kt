@@ -125,7 +125,6 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         fun overstyrVerdierForPeriode(underveisperiode: Underveisperiode): Underveisperiode =
             underveisperiode.copy(
                 periode = Periode(Tid.MIN, Tid.MAKS),
-                id = null,
                 meldepliktStatus = if (forrigeBehandlingFørstegangsbehandling) null else underveisperiode.meldepliktStatus
             )
 

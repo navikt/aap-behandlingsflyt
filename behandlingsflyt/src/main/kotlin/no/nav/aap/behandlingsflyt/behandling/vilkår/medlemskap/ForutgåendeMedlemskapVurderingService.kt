@@ -18,14 +18,10 @@ import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapUtfall
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapNorskOgUtfallInntekt
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapStandardGjennomslipp
 import no.nav.aap.behandlingsflyt.prometheus
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import java.time.YearMonth
 
-class ForutgåendeMedlemskapVurderingService(
-    private val unleashGateway: UnleashGateway? = null
-) {
+class ForutgåendeMedlemskapVurderingService {
     fun vurderTilhørighet(
         grunnlag: ForutgåendeMedlemskapGrunnlag,
         rettighetsPeriode: Periode
@@ -94,18 +90,14 @@ class ForutgåendeMedlemskapVurderingService(
                 forutgåendePeriode
             )
 
-        if (unleashGateway?.isEnabled(BehandlingsflytFeature.MaritimtArbeid) == true) {
-            return listOf(
-                harJobbetIUtland,
-                harHattUtenlandsOpphold,
-                harUtenlandsAdresse,
-                annetLovvalgsland,
-                utenforEØS,
-                bestemtArbeidsgruppe
-            )
-        }
-
-        return listOf(harJobbetIUtland, harHattUtenlandsOpphold, harUtenlandsAdresse, annetLovvalgsland, utenforEØS)
+        return listOf(
+            harJobbetIUtland,
+            harHattUtenlandsOpphold,
+            harUtenlandsAdresse,
+            annetLovvalgsland,
+            utenforEØS,
+            bestemtArbeidsgruppe
+        )
     }
 
     private fun bestemtArbeidsgruppe(
@@ -358,11 +350,7 @@ class ForutgåendeMedlemskapVurderingService(
 
         val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
         val sammenhengendeInntektSiste5År =
-            if (unleashGateway?.isEnabled(BehandlingsflytFeature.ForutgaaendeGap) == true) {
-                sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
-            } else {
-                sammenhengendePerioderAlleMndSiste5år(inntekterINorgePerioder, forutgåendePeriode)
-            }
+            sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
 
         val arbeidInntektINorgeGrunnlag =
             inntektINorgeGrunnlag?.map {

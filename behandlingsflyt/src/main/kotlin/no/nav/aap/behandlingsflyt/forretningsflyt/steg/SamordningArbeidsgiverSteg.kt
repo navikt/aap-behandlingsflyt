@@ -40,6 +40,7 @@ class SamordningArbeidsgiverSteg(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
@@ -57,7 +58,7 @@ class SamordningArbeidsgiverSteg(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return SamordningArbeidsgiverSteg(
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
             )
         }

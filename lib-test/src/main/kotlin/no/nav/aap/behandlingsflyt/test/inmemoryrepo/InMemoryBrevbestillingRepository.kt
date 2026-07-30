@@ -66,10 +66,6 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
 
-    fun clearMemory() {
-        bestilling.clear()
-    }
-
     override fun hentBehandlingsreferanseForBestilling(referanse: BrevbestillingReferanse): BehandlingReferanse {
         TODO("Not yet implemented")
     }

@@ -8,12 +8,14 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SamordningAndreStatligeYtelserRepositoryImplTest {
     companion object {
@@ -43,7 +45,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
         // Lagre ytelse
         val vurdering = SamordningAndreStatligeYtelserVurdering(
             begrunnelse = "En fin begrunnelse",
-            vurdertAv = "Lokalsaksbehandler",
+            vurdertAv = Bruker("Lokalsaksbehandler"),
             vurderingPerioder = listOf(
                 SamordningAndreStatligeYtelserVurderingPeriode(
                     periode = periode,
@@ -53,7 +55,8 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                     periode = periodeTo,
                     ytelse = AndreStatligeYtelser.BARNEPENSJON,
                 )
-            )
+            ),
+        vurdertTidspunkt = LocalDateTime.now()
         )
         dataSource.transaction {
             SamordningAndreStatligeYtelserRepositoryImpl(it).lagre(behandling.id, vurdering)
@@ -76,7 +79,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
             samordningAndreStatligeYtelserRepository.lagre(
                 behandling.id, SamordningAndreStatligeYtelserVurdering(
                     begrunnelse = "En fin begrunnelse",
-                    vurdertAv = "Lokalsaksbehandler",
+                    vurdertAv = Bruker("Lokalsaksbehandler"),
                     vurderingPerioder = listOf(
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periode,
@@ -86,13 +89,14 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                             periode = periodeTo,
                             ytelse = AndreStatligeYtelser.BARNEPENSJON,
                         )
-                    )
+                    ),
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
             samordningAndreStatligeYtelserRepository.lagre(
                 behandling.id, SamordningAndreStatligeYtelserVurdering(
                     begrunnelse = "En fin begrunnelse",
-                    vurdertAv = "Lokalsaksbehandler",
+                    vurdertAv = Bruker("Lokalsaksbehandler"),
                     vurderingPerioder = listOf(
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periode,
@@ -102,7 +106,8 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
                             periode = periodeTo,
                             ytelse = AndreStatligeYtelser.TILTAKSPENGER,
                         )
-                    )
+                    ),
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
             assertDoesNotThrow {

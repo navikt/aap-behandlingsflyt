@@ -12,7 +12,7 @@ class UføreServiceTest {
     fun `Ulik rekkefølge i lister skal ikke gi endring`() {
         val nå = LocalDate.now()
         val eksisterendeGrunnlag = UføreGrunnlag(
-            BehandlingId(1), setOf(
+            setOf(
                 Uføre(nå, Prosent.`50_PROSENT`),
                 Uføre(nå.plusDays(2), Prosent.`30_PROSENT`),
             )

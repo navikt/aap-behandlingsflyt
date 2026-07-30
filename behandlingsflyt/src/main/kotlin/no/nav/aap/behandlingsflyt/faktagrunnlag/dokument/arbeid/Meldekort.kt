@@ -7,17 +7,20 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort as KontraktMeldekort
 
 data class Meldekort(
     val journalpostId: JournalpostId,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
-    val mottattTidspunkt: LocalDateTime
+    val mottattTidspunkt: LocalDateTime,
+    val opprettetTidspunkt: LocalDateTime,
 ) {
     companion object {
         fun fraKontrakt(
             journalpostId: JournalpostId,
             mottattTidspunkt: LocalDateTime,
-            meldekort: no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
+            opprettetTidspunkt: LocalDateTime,
+            meldekort: KontraktMeldekort
         ): Meldekort {
             return when (meldekort) {
                 is MeldekortV0 -> Meldekort(
@@ -28,7 +31,8 @@ data class Meldekort(
                             timerArbeid = TimerArbeid(it.timerArbeid.toBigDecimal())
                         )
                     }.toSet(),
-                    mottattTidspunkt = mottattTidspunkt
+                    mottattTidspunkt = mottattTidspunkt,
+                    opprettetTidspunkt = opprettetTidspunkt
                 )
             }
         }

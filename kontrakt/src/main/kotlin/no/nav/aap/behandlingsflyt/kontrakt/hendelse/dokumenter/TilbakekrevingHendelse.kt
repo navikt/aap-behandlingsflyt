@@ -45,7 +45,8 @@ public data class TilbakekrevingHendelseKafkaMelding(
                     behandlingsstatus = behandlingsstatus!!,
                     totaltFeilutbetaltBeløp = totaltFeilutbetaltBeløp!!,
                     saksbehandlingURL = saksbehandlingURL,
-                    fullstendigPeriode = fullstendigPeriode!!
+                    fullstendigPeriode = fullstendigPeriode!!,
+                    venter = tilTilbakekrevingVenterKafkaDto(),
             )
 
 
@@ -57,6 +58,15 @@ public data class TilbakekrevingHendelseKafkaMelding(
             eksternBehandlingId = eksternBehandlingId,
             tilbakekreving = nyTilbakekreving,
         )
+    }
+
+    private fun tilTilbakekrevingVenterKafkaDto(): TilbakekrevingVenterKafkaDto? {
+        val venter = tilbakekreving?.venter
+        return if (venter != null) {
+            TilbakekrevingVenterKafkaDto(venter.grunn,venter.gjenopptas)
+        } else {
+            null
+        }
     }
 
     public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
@@ -134,11 +144,11 @@ public data class TilbakekrevingKafkaDto(
 )
 
 public data class TilbakekrevingVenterKafkaDto(
-    val grunn: TilbakekrevingGrunn,
+    val grunn: TilbakekrevingVenteGrunn,
     val gjenopptas: LocalDate,
 )
 
-public enum class TilbakekrevingGrunn {
+public enum class TilbakekrevingVenteGrunn {
     AVVENTER_BRUKERUTTALELSE
 }
 

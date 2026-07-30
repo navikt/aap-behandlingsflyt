@@ -13,12 +13,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper.fromJson
-import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
 import java.net.URI
 
 /**
- * Se https://github.com/navikt/tp/blob/e99c670da41c23172e2ccc3a3e8dff4c7870fa82/tp-api/src/main/kotlin/no/nav/samhandling/tp/controller/TjenestepensjonController.kt#L117
+ * Se [kildekoden](https://github.com/navikt/tp/blob/e99c670da41c23172e2ccc3a3e8dff4c7870fa82/tp-api/src/main/kotlin/no/nav/samhandling/tp/controller/TjenestepensjonController.kt#L117)
  */
 class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
     private val url =
@@ -39,7 +38,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
         prometheus = prometheus
     )
 
-    override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> {
+    override fun hentTjenestePensjon(ident: String): List<TjenestePensjonForhold> {
         val httpRequest = GetRequest(
             additionalHeaders = listOf(
                 Header("Accept", "application/json"),
@@ -50,7 +49,7 @@ class TjenestePensjonGatewayImpl : TjenestePensjonGateway {
         return try {
             requireNotNull(
                 client.get(
-                    uri = URI.create("${url}?fomDate=${periode.fom}&tomDate=${periode.tom}"),
+                    uri = url,
                     request = httpRequest,
                     mapper = { body, _ ->
                         fromJson<TjenestePensjonRespons?>(body)?.toIntern()

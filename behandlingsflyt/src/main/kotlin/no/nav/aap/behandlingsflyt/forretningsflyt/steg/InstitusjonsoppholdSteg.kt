@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
@@ -34,7 +35,7 @@ class InstitusjonsoppholdSteg(
         institusjonsoppholdRepository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         vilkårsresultatRepository = repositoryProvider.provide()
     )
 
@@ -58,7 +59,7 @@ class InstitusjonsoppholdSteg(
                 }
             },
             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON),
             nårVurderingErRelevant = ::perioderMedVurderingsbehovHelse
         )
 
@@ -74,7 +75,7 @@ class InstitusjonsoppholdSteg(
                 val aktiveVurderinger =
                     institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.soningsVurderinger?.vurderinger.orEmpty()
                 if (vedtatteVurderinger == null && aktiveVurderinger.isNotEmpty()) {
-                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, "Kelvin", listOf())
+                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, SYSTEMBRUKER, listOf())
                 } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreSoningsVurdering(
                         kontekst.behandlingId,
@@ -84,7 +85,7 @@ class InstitusjonsoppholdSteg(
                 }
             },
             definisjon = Definisjon.AVKLAR_SONINGSFORRHOLD,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING),
         )
 
         when (kontekst.vurderingType) {
@@ -113,6 +114,7 @@ class InstitusjonsoppholdSteg(
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> {
                 /* noop */
             }

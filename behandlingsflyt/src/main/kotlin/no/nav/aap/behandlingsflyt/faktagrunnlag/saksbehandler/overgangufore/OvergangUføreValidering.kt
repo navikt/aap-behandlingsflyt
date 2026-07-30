@@ -21,7 +21,7 @@ object OvergangUføreValidering {
                 kravdato.minusMonths(8),
                 kravdato
             ).inneholder(segmentPeriode) // Det er tillatt å vurdere 11-18 før kravdato
-                    || overgangUføreVurdering.brukerRettPåAAP == false // Nei-vurdering er uavhengig av bistand og sykdom
+                    || !overgangUføreVurdering.harRettPåAAPMedOvergangUføre() // Nei-vurdering er uavhengig av bistand og sykdom
                     || (sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true && bistandsvurdering?.erBehovForBistand() != true)
         }.komprimer()
     }

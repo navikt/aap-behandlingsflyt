@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 
 @Fakes
@@ -31,7 +32,7 @@ class SamordningApiKtTest : BaseApiTest() {
     @Test
     fun `hente ut samordningsgrunnlag fra API`() {
         val ds = MockDataSource()
-        val behandling = opprettBehandling(nySak(), TypeBehandling.Revurdering)
+        val behandling = opprettBehandling(opprettInMemorySak(LocalDate.now()), TypeBehandling.Revurdering)
 
         InMemorySamordningYtelseRepository.lagre(
             behandling.id,

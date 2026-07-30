@@ -14,6 +14,7 @@ data class Journalpost(
     val journalfoerendeEnhet: String? = null,
     val eksternReferanseId: String,
     val datoMottatt: String? = null,
+    val overstyrInnsynsregler: OverstyrInnsynsregler? = null,
     val tilleggsopplysninger: List<Tilleggsopplysning>? = null,
     val sak: DokarkivSak? = null,
     val dokumenter: List<Dokument>? = null
@@ -59,6 +60,10 @@ data class DokumentVariant(
 
 enum class Journalposttype {
     NOTAT
+}
+
+enum class OverstyrInnsynsregler {
+    VISES_MANUELT_GODKJENT
 }
 
 // Se https://confluence.adeo.no/display/BOA/Tema

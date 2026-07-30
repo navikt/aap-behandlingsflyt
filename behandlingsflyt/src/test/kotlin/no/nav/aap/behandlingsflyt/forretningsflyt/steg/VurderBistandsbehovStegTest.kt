@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -19,31 +21,25 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOvergangUføreRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.time.LocalDate
-import java.util.*
 
 class VurderBistandsbehovStegTest {
-    private val random = Random(1235123)
-
-    private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
+    private val gatewayProvider = createGatewayProvider {
+        register<AlleAvskruddUnleash>()
+    }
 
     @Test
     fun `Gjeldende vurdering er ikke god nok dersom den ikke dekker hele rettighetsperioden`() {
@@ -58,8 +54,8 @@ class VurderBistandsbehovStegTest {
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = true,
                         erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = søknadsdato.plusDays(10),
-                        vurdertAv = "Z00000",
+                        fom = søknadsdato.plusDays(10),
+                        vurdertAv = Bruker("Z00000"),
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         opprettet = Instant.now(),
@@ -69,8 +65,7 @@ class VurderBistandsbehovStegTest {
             )
         }
 
-        val person = person()
-        val sak = sak(person, søknadsdato)
+        val sak = opprettInMemorySak(søknadsdato)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling)
 
@@ -84,7 +79,6 @@ class VurderBistandsbehovStegTest {
                     sykdomsvurderinger = listOf(
                         Sykdomsvurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -104,7 +98,7 @@ class VurderBistandsbehovStegTest {
             vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
             overgangUføreRepository = InMemoryOvergangUføreRepository,
             tidligereVurderinger = FakeTidligereVurderinger(),
-            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider),
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
         )
 
         opprettOgLøsBistandsbehov(behandling)
@@ -124,7 +118,7 @@ class VurderBistandsbehovStegTest {
             "..."
         )
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "...", "meg")
+            .løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "...", Bruker("meg"))
     }
 
     private fun hentBistandsbehov(behandling: Behandling): Avklaringsbehov? =
@@ -150,10 +144,4 @@ class VurderBistandsbehovStegTest {
                 årsak = ÅrsakTilOpprettelse.SØKNAD
             )
         )
-
-    private fun sak(person: Person, søknadsdato: LocalDate): Sak =
-        sakRepository.finnEllerOpprett(person, søknadsdato)
-
-    private fun person(): Person =
-        Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 }

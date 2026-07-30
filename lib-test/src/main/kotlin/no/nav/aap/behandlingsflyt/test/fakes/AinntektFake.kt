@@ -29,7 +29,7 @@ class AinntektFake(private val fakePersoner: () -> TestPersonService) : FakeServ
                 val request = call.receive<Map<String, Any>>()
                 val person = fakePersoner().hentPerson((request["ident"] as Map<*, *>)["identifikator"] as String)
 
-                val z = person!!.inntekter().flatMap { inntektPerÅr ->
+                val z = (person!!.aInntekter() ?: person.inntekter()).flatMap { inntektPerÅr ->
                     (1..12).map { mnd ->
                         Månedsinntekt(
                             YearMonth.of(inntektPerÅr.år.value, mnd),

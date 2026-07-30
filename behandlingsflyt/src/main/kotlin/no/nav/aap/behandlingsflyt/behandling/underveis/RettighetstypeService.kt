@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.utils.Uendret
+import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -67,28 +69,25 @@ class RettighetstypeService(
      * Perioder som ikke samsvarer kaster en feil slik at disse sakene kan håndteres manuelt
      */
     private fun utledRettighetstidslinjeBakoverkompatibel(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
-        val vilkårsresultat =
-            vilkårsresultatRepository.hent(behandlingId)
-        val vedtatteUnderveisperioder = underveisRepository.hentHvisEksisterer(behandlingId)
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val underveisperioder = underveisRepository.hentHvisEksisterer(behandlingId)?.somTidslinje()
+        val utlededeRettighetstyper = vurderRettighetstypeOgKvoter(vilkårsresultat, KvoteService().beregn())
+            .filter { it.verdi is KvoteOk }
+            .mapNotNull { it.rettighetsType }
+            .komprimer()
 
-        val utledetRettighetstidslinje = vurderRettighetstypeOgKvoter(
-            vilkårsresultat,
-            KvoteService().beregn()
-        ).filter { it.verdi is KvoteOk }.mapNotNull { it.rettighetsType }
-
-        if (vedtatteUnderveisperioder != null) {
-            val harVedtattePerioderSomIkkeSamsvarerMedUtlededePerioder = vedtatteUnderveisperioder.somTidslinje()
-                .mapNotNull { it.rettighetsType }
-                .komprimer()
-                .leftJoin(utledetRettighetstidslinje) { underveisRettighetstype, rettighetstype ->
-                    underveisRettighetstype != rettighetstype
-                }.segmenter().any { erInkonsistent -> erInkonsistent.verdi }
-
-            if (harVedtattePerioderSomIkkeSamsvarerMedUtlededePerioder) {
-                error("Vedtatte underveisperioder samsvarer ikke med utledede rettighetstyper fra vilkårsresultat for behandling $behandlingId.")
-            }
+        if (underveisperioder == null || underveisperioder.isEmpty()) {
+            return utlededeRettighetstyper
         }
 
-        return utledetRettighetstidslinje
+        val differanse = diffTidslinjer(
+            underveisperioder.mapNotNull { it.rettighetsType }.komprimer(),
+            utlededeRettighetstyper.begrensetTil(underveisperioder.helePerioden())
+        ).filter { (_, it) -> it !is Uendret<*> }
+        if (differanse.isNotEmpty()) {
+            error("Vedtatte underveisperioder samsvarer ikke med utledede rettighetstyper behandling $behandlingId: $differanse")
+        }
+
+        return utlededeRettighetstyper
     }
 }

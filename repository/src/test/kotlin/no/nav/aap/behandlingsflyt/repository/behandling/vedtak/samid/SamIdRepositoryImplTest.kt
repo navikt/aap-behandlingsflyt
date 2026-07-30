@@ -1,0 +1,45 @@
+package no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettSak
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+
+class SamIdRepositoryImplTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
+
+    @Test
+    fun `Kan skrive og lese`() {
+        dataSource.transaction { connection ->
+            val samRepo = SamIdRepositoryImpl(connection)
+            val samId = 123456789L
+
+            val sak = opprettSak(connection, 1 januar 2020)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            samRepo.lagre(behandling.id, listOf(SamIdOgTpNr(samId = samId, tpNr = null)))
+            val hentetSamId = samRepo.hentHvisEksisterer(behandling.id)
+
+            assertThat(hentetSamId.first()).isEqualTo(SamIdOgTpNr(samId = samId, tpNr = null))
+        }
+    }
+}

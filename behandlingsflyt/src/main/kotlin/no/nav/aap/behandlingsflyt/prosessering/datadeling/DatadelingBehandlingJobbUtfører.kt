@@ -7,8 +7,11 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -31,6 +34,7 @@ class DatadelingBehandlingJobbUtfører(
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val meldepliktRepository: MeldepliktRepository,
     private val stansOpphørService: StansOpphørService,
     private val rettighetstypeService: RettighetstypeService,
     private val utledArenaVedtakstype: UtledArenaVedtakstype,
@@ -57,12 +61,14 @@ class DatadelingBehandlingJobbUtfører(
             return
         }
 
-        val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
+        val underveistidslinje = underveisRepository.hentHvisEksisterer(behandling.id)?.somTidslinje().orEmpty()
+            .filter { it.verdi.rettighetsType != null }
 
-        val vilkårsresultatTidslinje = underveis?.somTidslinje().orEmpty()
-            .mapNotNull { it.rettighetsType }
+        val vilkårsresultatTidslinje = underveistidslinje
+            .mapNotNull { it.rettighetsType }.komprimer()
 
         val vedtakId = vedtakRepository.hentId(behandling.id)
+        // Todo: Dele ut både tp-nr og sam-id!
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
         val beregningsgrunnlagGUnit =
@@ -77,6 +83,11 @@ class DatadelingBehandlingJobbUtfører(
 
         val maksdato = rettighetstypeService.sisteDagMedRett(sak.saksnummer)
 
+        val perioderMedFritakMeldeplikt = meldepliktRepository.hentHvisEksisterer(behandling.id)
+            ?.gjeldendeVurderinger().orEmpty()
+            .map { it.harFritak }.segmenter()
+            .filter { it.verdi }.map { it.periode }
+
         apiInternGateway.sendBehandling(
             sak = sak,
             behandling = behandling,
@@ -88,6 +99,8 @@ class DatadelingBehandlingJobbUtfører(
             rettighetsTypeTidslinje = vilkårsresultatTidslinje,
             muligMaksdato = maksdato,
             stansOpphørGrunnlag = stansOpphør,
+            perioderMedFritakMeldeplikt = perioderMedFritakMeldeplikt,
+            underveisperioder = underveistidslinje.map { it.tilDatadeling() }.komprimer().segmenter().map { it.verdi },
             arenavedtak = utledArenaVedtakstype.utledVedtak(sak),
         )
     }
@@ -106,6 +119,7 @@ class DatadelingBehandlingJobbUtfører(
                 underveisRepository = repositoryProvider.provide(),
                 vedtakRepository = repositoryProvider.provide(),
                 samIdRepository = repositoryProvider.provide(),
+                meldepliktRepository = repositoryProvider.provide(),
                 beregningsgrunnlagRepository = repositoryProvider.provide(),
                 stansOpphørService = StansOpphørService(
                     repositoryProvider.provide(),
@@ -117,4 +131,14 @@ class DatadelingBehandlingJobbUtfører(
             )
         }
     }
+
 }
+
+internal fun Underveisperiode.tilDatadeling() = UnderveisperiodeDatadeling(
+    periode = periode,
+    meldepliktstatus = meldepliktStatus?.name,
+    arbeidsgrad = arbeidsgradering.andelArbeid.prosentverdi(),
+    overgrenseVerdi = arbeidsgradering.andelArbeid.prosentverdi() > grenseverdi.prosentverdi(),
+    timerArbeidet = arbeidsgradering.totaltAntallTimer.antallTimer,
+    meldeperiode = meldePeriode,
+)

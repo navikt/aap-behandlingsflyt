@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * Hendelse til statistikk-appen.
  *
  * @param saksnummer Saksnummer.
- * @param behandlingReferanse Behandlingsreferanse
+ * @param behandlingReferanse Behandlingsreferanse.
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
  * @param relatertFagsystem Stort sett Kelvin, men om behandlingen har oppstått f.eks fra en klagebehandling i Kabal, skal dette refereres her.
  * @param mottattTid Dato for første søknad mottatt for behandlingen.
@@ -67,6 +67,7 @@ public data class StoppetBehandling(
  */
 public enum class Vurderingsbehov {
     SØKNAD,
+    VURDER_KRAV,
     AKTIVITETSMELDING,
     MELDEKORT,
     LEGEERKLÆRING,
@@ -75,7 +76,7 @@ public enum class Vurderingsbehov {
     G_REGULERING,
     BARNETILLEGG_SATS_REGULERING,
     REVURDER_MEDLEMSKAP,
-    REVURDER_YRKESSKADE,        // Yrkesskade
+    REVURDER_YRKESSKADE,
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_LOVVALG,
 
@@ -83,34 +84,54 @@ public enum class Vurderingsbehov {
     REVURDER_SAMORDNING,
     REVURDER_STUDENT,
     KLAGE,
-    LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
-    FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
-    SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, // Sykdom, arbeidsevne og behov for bistand
+    LOVVALG_OG_MEDLEMSKAP,
+    FORUTGAENDE_MEDLEMSKAP,
+    SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+    BRUKER_TILBAKE_I_ARBEID,
     REVURDER_SYKEPENGEERSTATNING,
-    BARNETILLEGG,               // Barnetillegg
-    INSTITUSJONSOPPHOLD,        // Institusjonsopphold
-    SAMORDNING_OG_AVREGNING,    // Samordning og avregning
+    BARNETILLEGG,
+    INSTITUSJONSOPPHOLD,
+    INSTITUSJONSOPPHOLD_SONING,
+    INSTITUSJONSOPPHOLD_HELSEINSTITUSJON,
+    SAMORDNING_OG_AVREGNING,
+    REVURDER_INNTEKTSBORTFALL, // 11-4 2. ledd - inntektsbortfall
     REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+    FERIE_I_SYKEPENGEPERIODE,
     REVURDER_SAMORDNING_UFØRE,
     REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
     REVURDER_SAMORDNING_ARBEIDSGIVER,
     REVURDER_SAMORDNING_BARNEPENSJON,
     REVURDER_SAMORDNING_TJENESTEPENSJON,
-    REFUSJONSKRAV,              // Refusjonskrav
+    REFUSJONSKRAV,
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden
     SØKNAD_TRUKKET,
     REVURDERING_AVBRUTT,
+
+    /**
+     * Opprettes av [no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingFritakMeldepliktJobbUtfører].
+     */
     FRITAK_MELDEPLIKT,
+
+    /**
+     * For trigging av saksbehandler i frontend.
+     */
+    VURDER_FRITAK_MELDEPLIKT,
+    FASTSETT_ARBEIDSEVNE,
     KLAGE_TRUKKET,
-    REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
-    MOTTATT_KABAL_HENDELSE, // Hendelser fra klage andreinstans
+    REVURDER_MANUELL_INNTEKT,
+
+    /**
+     * Hendelser fra klage andreinstans
+     */
+    MOTTATT_KABAL_HENDELSE,
     OPPFØLGINGSOPPGAVE,
     HELHETLIG_VURDERING,
     REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
     AKTIVITETSPLIKT_11_7,
     AKTIVITETSPLIKT_11_9,
     OVERGANG_UFORE,
+    OVERGANG_UFORE_AUTOMATISK_STANS,
     OVERGANG_ARBEID,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
@@ -122,7 +143,9 @@ public enum class Vurderingsbehov {
     MIGRER_RETTIGHETSPERIODE,
     REVURDER_SYKESTIPEND,
     ETABLERING_EGEN_VIRKSOMHET,
-    AKTIVITETSPLIKTBEHANDLING_AVBRUTT;
+    AKTIVITETSPLIKTBEHANDLING_AVBRUTT,
+    VURDER_ARBEIDSOPPTRAPPING,
+    VURDER_AVSLAG_11_27;
 }
 
 /**

@@ -8,11 +8,13 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.svarfraanadreinstans.
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.Instant
 
 class SvarFraAndreinstansRepositoryImplTest {
     companion object {
@@ -43,8 +45,9 @@ class SvarFraAndreinstansRepositoryImplTest {
             val vurdering = SvarFraAndreinstansVurdering(
                 begrunnelse = "Begrunnelse",
                 konsekvens = SvarFraAndreinstansKonsekvens.INGENTING,
-                vurdertAv = "saksbehandler",
-                vilkårSomOmgjøres = emptyList()
+                vurdertAv = Bruker("saksbehandler"),
+                vilkårSomOmgjøres = emptyList(),
+                opprettet = Instant.now()
             )
             // Lagre vurdering
             repository.lagre(behandling.id, vurdering)
@@ -61,7 +64,7 @@ class SvarFraAndreinstansRepositoryImplTest {
                 "Begrunnelse",
                 SvarFraAndreinstansKonsekvens.INGENTING,
                 emptyList<String>(),
-                "saksbehandler"
+                Bruker("saksbehandler")
             )
         }
     }

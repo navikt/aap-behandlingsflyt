@@ -44,7 +44,7 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
         meldeperiode: Periode?
     ) {
         val disableQuery = """
-            UPDATE MELDEPERIODE_GRUNNLAG SET aktiv = false WHERE behandling_id = ?
+            UPDATE MELDEPERIODE_GRUNNLAG SET aktiv = false WHERE behandling_id = ? AND aktiv
         """.trimIndent()
         connection.execute(disableQuery) {
             setParams {

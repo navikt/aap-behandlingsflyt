@@ -48,13 +48,12 @@ class SykepengeerstatningVilkårTest {
                         vurderinger = listOf(
                             SykepengerVurdering(
                                 begrunnelse = "",
-                                dokumenterBruktIVurdering = emptyList(),
                                 harRettPå = true,
                                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                                vurdertAv = "abc123",
+                                vurdertAv = Bruker("abc123"),
                                 vurdertTidspunkt = LocalDateTime.now(),
                                 vurdertIBehandling = BehandlingId(1L),
-                                gjelderFra = startDato
+                                fom = startDato
                             )
                         )
                     ),
@@ -98,23 +97,21 @@ class SykepengeerstatningVilkårTest {
                     vurderinger = listOf(
                         SykepengerVurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harRettPå = true,
                             grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            vurdertAv = "abc123",
+                            vurdertAv = Bruker("abc123"),
                             vurdertTidspunkt = LocalDateTime.now(),
                             vurdertIBehandling = BehandlingId(1L),
-                            gjelderFra = startDato,
+                            fom = startDato,
                         ),
                         SykepengerVurdering(
                             begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
                             harRettPå = true,
                             grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            vurdertAv = "abc123",
+                            vurdertAv = Bruker("abc123"),
                             vurdertTidspunkt = LocalDateTime.now(),
                             vurdertIBehandling = BehandlingId(1L),
-                            gjelderFra = startDato.plusDays(10),
+                            fom = startDato.plusDays(10),
                         )
                     )
                 ),
@@ -152,7 +149,6 @@ class SykepengeerstatningVilkårTest {
         behandlingId: BehandlingId = BehandlingId(1L)
     ) = Sykdomsvurdering(
         begrunnelse = "",
-        dokumenterBruktIVurdering = emptyList(),
         harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
         erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
         erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingVenteGrunn
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilbakekrevingsbehandling.TilbakekrevingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -13,7 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.testGatewayProvider
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -33,7 +34,7 @@ class BehandlingServiceTest {
     @Test
     fun `sak uten behandlinger`() {
         dataSource.transaction { connection ->
-            val sakOgBehandlingService = SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), testGatewayProvider())
+            val sakOgBehandlingService = SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider())
             val sak = sak(connection)
             val resultat = sakOgBehandlingService.finnSakOgBehandlinger(sak.saksnummer)
             assertThat(resultat.behandlinger).hasSize(0)
@@ -43,7 +44,7 @@ class BehandlingServiceTest {
     @Test
     fun `sak med en vanlig behandling`() {
         dataSource.transaction { connection ->
-            val sakOgBehandlingService = SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), testGatewayProvider())
+            val sakOgBehandlingService = SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider())
             val sak = sak(connection)
             val behandlingId1 = behandling(connection, sak)
             val resultat = sakOgBehandlingService.finnSakOgBehandlinger(sak.saksnummer)
@@ -54,7 +55,7 @@ class BehandlingServiceTest {
     @Test
     fun `sak med en vanlig behandling og en tilbakekrevingsbehandling`() {
         dataSource.transaction { connection ->
-            val sakOgBehandlingService = SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), testGatewayProvider())
+            val sakOgBehandlingService = SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider())
             val sak = sak(connection)
             behandling(connection, sak)
             tilbakekrevingBehandling(connection, sak)
@@ -93,6 +94,8 @@ class BehandlingServiceTest {
             eksternBehandlingId = UUID.randomUUID().toString(),
             sakOpprettet = LocalDateTime.now(),
             varselSendt = LocalDate.now(),
+            venteGrunn = TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE,
+            gjenopptas = LocalDate.now().plusMonths(1),
             behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
             totaltFeilutbetaltBeløp = Beløp(1000),
             tilbakekrevingSaksbehandlingUrl = URI.create("https://localhost"),

@@ -32,7 +32,7 @@ class TrukketSøknadRepositoryImpl(
             """
             update trukket_soknad_grunnlag
             set aktiv = false
-            where behandling_id = ?
+            where behandling_id = ? and aktiv
         """.trimIndent()
         ) {
             setParams {

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingServi
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -27,6 +28,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -42,7 +44,9 @@ class MeldingOmVedtakBrevStegTest {
     val behandlingRepository = InMemoryBehandlingRepository
     val sakRepository = InMemorySakRepository
     val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider)
+    val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, createGatewayProvider {
+        register<AlleAvskruddUnleash>()
+    })
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
 
     @BeforeEach
@@ -128,7 +132,7 @@ class MeldingOmVedtakBrevStegTest {
             avklaringsbehovId = avklaringsbehov.id,
             endring = Endring(
                 status = Status.AVSLUTTET,
-                endretAv = "SAKSBEHANDLER",
+                endretAv = Bruker("SAKSBEHANDLER"),
                 begrunnelse = "Brev ferdig"
             )
         )

@@ -1,19 +1,23 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
-import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
+import no.nav.aap.behandlingsflyt.behandling.brev.AvslagBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
 import no.nav.aap.behandlingsflyt.behandling.brev.ForholdTilAndreYtelser
 import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
+import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørDelvisUfør
+import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørFullUfør
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
 import no.nav.aap.behandlingsflyt.behandling.brev.YrkesskadeBeregningBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
@@ -55,7 +59,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import java.math.BigDecimal
 import java.net.URI
 import kotlin.collections.orEmpty
 
@@ -338,6 +341,8 @@ class BrevGateway : BrevbestillingGateway {
 
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
+        TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER -> Brevtype.AVSLAG_UNDER_17_AAR_9_MAANEDER
+        TypeBrev.VEDTAK_AVSLAG_11_5 -> Brevtype.AVSLAG_11_5
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
         TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> Brevtype.VEDTAK_UTVID_VEDTAKSLENGDE
         TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
@@ -361,6 +366,8 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27
+        TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR -> Brevtype.VEDTAK_11_18_OPPHØR_FULL_UFØR
+        TypeBrev.VEDTAK_11_18_OPPHØR_DELVIS_UFØR -> Brevtype.VEDTAK_11_18_OPPHØR_DELVIS_UFØR
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
@@ -369,43 +376,22 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     add(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
                     add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
-                    if (brevBehov.tilkjentYtelse != null) {
-                        add(
-                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
-                        )
-                    }
-                    if (brevBehov.grunnlagBeregning != null) {
-                        add(
-                            grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
-                        )
-                    }
-
-                    if(brevBehov.sykdomsvurdering != null) {
-                        add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
-                    }
-
-                    brevBehov.forholdTilAndreYtelser?.let { forholdTilAndreYtelser ->
-                        add(forholdTilAndreYtelserTilFaktagrunnlag(forholdTilAndreYtelser))
-                    }
-                    brevBehov.yrkesskadeBeregning?.let { yrkesskadeBeregning ->
-                        add(yrkesskadeBeregningTilFaktagrunnlag(yrkesskadeBeregning))
-                    }
+                    brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
+                    brevBehov.grunnlagBeregning?.let { add(grunnlagBeregningTilFaktagrunnlag(it)) }
+                    brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
+                    brevBehov.foreldreansvarVurderinger?.let { add(foreldreansvarVurderingerTilFaktaGrunnlag(it)) }
+                    brevBehov.forholdTilAndreYtelser?.let { add(forholdTilAndreYtelserTilFaktagrunnlag(it)) }
+                    brevBehov.yrkesskadeBeregning?.let { add(yrkesskadeBeregningTilFaktagrunnlag(it)) }
+                    brevBehov.yrkesSkadeISøknadIkkeIRegister?.let { add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it)) }
+                    brevBehov.meldepliktGrunnlag?.let { add(fritakmeldepliktTilFaktagrunnlag(it)) }
                 }
 
             is VurderesForUføretrygd -> {
                 buildSet {
                     add(Faktagrunnlag.KravdatoUføretrygd(brevBehov.kravdatoUføretrygd))
                     add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
-                    if (brevBehov.grunnlagBeregning != null) {
-                        add(
-                            grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
-                        )
-                    }
-                    if (brevBehov.tilkjentYtelse != null) {
-                        add(
-                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
-                        )
-                    }
+                    brevBehov.grunnlagBeregning?.let { add(grunnlagBeregningTilFaktagrunnlag(it)) }
+                    brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
                 }
             }
 
@@ -413,19 +399,13 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     add(Faktagrunnlag.DatoAvklartForJobbsøk(brevBehov.datoAvklartForJobbsøk))
                     add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
-                    if (brevBehov.tilkjentYtelse != null) {
-                        add(
-                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
-                        )
-                    }
+                    brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
                 }
             }
 
-            is Avslag -> {
+            is AvslagBrev -> {
                 buildSet {
-                    if(brevBehov.sykdomsvurdering != null) {
-                        add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
-                    }
+                    brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
                 }
             }
 
@@ -440,22 +420,38 @@ class BrevGateway : BrevbestillingGateway {
                 }
             }
 
+            is Vedtak11_18OpphørFullUfør -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.InnvilgetUføretrygd(brevBehov.virkningstidspunkt)
+                    )
+                }
+            }
+
+            is Vedtak11_18OpphørDelvisUfør -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.InnvilgetUføretrygd(brevBehov.virkningstidspunkt)
+                    )
+                }
+            }
+
             else -> emptySet()
         }
     }
 
     private fun tilkjentYtelseTilFaktagrunnlag(tilkjentYtelse: TilkjentYtelse): Faktagrunnlag {
         return Faktagrunnlag.TilkjentYtelse(
-            dagsats = tilkjentYtelse.dagsats?.verdi,
-            gradertDagsats = tilkjentYtelse.gradertDagsats?.verdi,
-            barnetilleggSats = tilkjentYtelse.barnetilleggsats?.verdi,
-            gradertBarnetillegg = tilkjentYtelse.gradertBarnetillegg?.verdi,
-            gradertDagsatsInkludertBarnetillegg = tilkjentYtelse.gradertDagsatsInkludertBarnetillegg?.verdi,
-            barnetillegg = tilkjentYtelse.barnetillegg?.verdi,
+            dagsats = tilkjentYtelse.dagsats.verdi,
+            gradertDagsats = tilkjentYtelse.gradertDagsats.verdi,
+            barnetilleggSats = tilkjentYtelse.barnetilleggsats.verdi,
+            gradertBarnetillegg = tilkjentYtelse.gradertBarnetillegg.verdi,
+            gradertDagsatsInkludertBarnetillegg = tilkjentYtelse.gradertDagsatsInkludertBarnetillegg.verdi,
+            barnetillegg = tilkjentYtelse.barnetillegg.verdi,
             antallBarn = tilkjentYtelse.antallBarn,
-            minsteÅrligYtelse = tilkjentYtelse.minsteÅrligYtelse?.heltallverdi(),
-            minsteÅrligYtelseUnder25 = tilkjentYtelse.minsteÅrligYtelseUnder25?.heltallverdi(),
-            årligYtelse = tilkjentYtelse.årligYtelse?.heltallverdi()
+            minsteÅrligYtelse = tilkjentYtelse.minsteÅrligYtelse.heltallverdi(),
+            minsteÅrligYtelseUnder25 = tilkjentYtelse.minsteÅrligYtelseUnder25.heltallverdi(),
+            årligYtelse = tilkjentYtelse.årligYtelse.heltallverdi()
         )
     }
 
@@ -472,6 +468,33 @@ class BrevGateway : BrevbestillingGateway {
             andelAvNedsettelseSomSkyldesYrkesskade = yrkesskadeBeregning.andelAvNedsettelseSomSkyldesYrkesskade,
         )
     }
+
+    private fun fritakmeldepliktTilFaktagrunnlag(
+        meldepliktGrunnlag: MeldepliktGrunnlag
+    ): Faktagrunnlag.FritakMeldepliktGrunnlag {
+        return Faktagrunnlag.FritakMeldepliktGrunnlag(
+            fritakMeldepliktGrunnlag = meldepliktGrunnlag.vurderinger.map { vurdering ->
+                Faktagrunnlag.FritakMeldepliktGrunnlag.FritakMeldepliktVurdering(
+                    harFritak = vurdering.harFritak,
+                    fraDato = vurdering.fom,
+                    tilDato = vurdering.tom,
+                )
+            }
+        )
+    }
+
+    private fun foreldreansvarVurderingerTilFaktaGrunnlag(foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>): Faktagrunnlag.BarnUtenBarnetillegg {
+        return Faktagrunnlag.BarnUtenBarnetillegg(
+            foreldreansvarVurderinger.map { vurdering ->
+                Faktagrunnlag.BarnUtenBarnetillegg.Barn(
+                    harForeldreAnsvar = vurdering.harForeldreAnsvar,
+                    begrunnelse = vurdering.begrunnelse,
+                    erFosterforelder = vurdering.erFosterForelder,
+                )
+            }
+        )
+    }
+
 
     private fun grunnlagBeregningTilFaktagrunnlag(grunnlagBeregning: GrunnlagBeregning): Faktagrunnlag.GrunnlagBeregning {
         return Faktagrunnlag.GrunnlagBeregning(

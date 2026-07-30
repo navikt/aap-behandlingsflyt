@@ -24,7 +24,6 @@ data class SykepengerGrunnlagResponse(
 
 data class SykepengerVurderingResponse(
     val begrunnelse: String,
-    val dokumenterBruktIVurdering: List<JournalpostId>,
     val vurdertIBehandling: BehandlingId,
     val opprettet: LocalDateTime,
     val harRettPå: Boolean,

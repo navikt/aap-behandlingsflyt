@@ -15,7 +15,6 @@ class SykdomsInformasjonskravTest {
     fun `er konsistent hvis ikke yrkesskade og 50 prosent`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -37,7 +36,6 @@ class SykdomsInformasjonskravTest {
     fun `er konsistent hvis yrkesskade med årsakssammenheng og 30 prosent`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -59,7 +57,6 @@ class SykdomsInformasjonskravTest {
     fun `er ikke konsistent hvis yrkesskade uten årsakssammenheng og 30 prosent`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
@@ -81,7 +78,6 @@ class SykdomsInformasjonskravTest {
     fun `er konsistent hvis yrkesskade 30 prosent og ingen begrunnelse for ys på revurdering`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
@@ -103,7 +99,6 @@ class SykdomsInformasjonskravTest {
     fun `er konsistent hvis yrkesskade uten årsakssammenheng og 50 prosent`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -125,7 +120,6 @@ class SykdomsInformasjonskravTest {
     fun `er konsistent hvis ikke ssl og ssl ikke vesentlig del`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = false,
             erSkadeSykdomEllerLyteVesentligdel = false,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -147,7 +141,6 @@ class SykdomsInformasjonskravTest {
     fun `er konsistent hvis ssl og ssl ikke vesentlig del`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = false,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -169,7 +162,6 @@ class SykdomsInformasjonskravTest {
     fun `er konsistent hvis ssl og ssl vesentlig del`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -191,7 +183,6 @@ class SykdomsInformasjonskravTest {
     fun `er ikke konsistend hvis ikke ssl og ssl vesentlig del`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = false,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,

@@ -65,7 +65,6 @@ data class SykdomsvurderingLøsningDto(
             begrunnelse = begrunnelse,
             vurderingenGjelderFra = fom,
             vurderingenGjelderTil = tom,
-            dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             harNedsattArbeidsevne = harNedsattArbeidsevne,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,

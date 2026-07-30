@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -13,32 +14,36 @@ class SamIdRepositoryImpl(private val connection: DBConnection) : SamIdRepositor
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): String? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): List<SamIdOgTpNr> {
         val query = """
-            SELECT sam_id FROM SAM_ID WHERE behandling_id = ?
+            SELECT sam_id, tp_nr FROM SAM_ID WHERE behandling_id = ?
         """.trimIndent()
 
-        return connection.queryFirstOrNull(query) {
+        return connection.queryList(query) {
             setParams {
                 setLong(1, behandlingId.id)
             }
             setRowMapper {
-                it.getStringOrNull("sam_id")
+                SamIdOgTpNr(
+                    samId = it.getLong("sam_id"),
+                    tpNr = it.getLongOrNull("tp_nr")
+                )
             }
         }
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
-        samId: String
+        samIdOgTpNr: List<SamIdOgTpNr>
     ) {
         val query = """
-            INSERT INTO SAM_ID (SAM_ID, behandling_id) VALUES (?,?)
+            INSERT INTO SAM_ID (SAM_ID, TP_NR, behandling_id) VALUES (?,?,?)
             """.trimIndent()
-        connection.execute(query){
+        connection.executeBatch(query, samIdOgTpNr) {
             setParams {
-                setString(1, samId)
-                setLong(2, behandlingId.id)
+                setLong(1, it.samId)
+                setLong(2, it.tpNr)
+                setLong(3, behandlingId.id)
             }
         }
     }

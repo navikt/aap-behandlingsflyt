@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
+import no.nav.aap.komponenter.httpklient.httpclient.error.RequestTimeoutHttpResponseException
 import no.nav.aap.komponenter.json.DeserializationException
 import org.slf4j.LoggerFactory
 import java.net.http.HttpTimeoutException
@@ -109,6 +110,7 @@ object StatusPagesConfigHelper {
                     }
                 }
 
+                is RequestTimeoutHttpResponseException,
                 is HttpRequestTimeoutException,
                 is HttpTimeoutException -> {
                     logger.warn("Timeout ved kall til '$uri'", cause)

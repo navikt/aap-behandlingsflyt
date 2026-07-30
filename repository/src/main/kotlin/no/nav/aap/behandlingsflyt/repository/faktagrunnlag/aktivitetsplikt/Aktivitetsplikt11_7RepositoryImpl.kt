@@ -170,7 +170,7 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.erOppfylt)
                 setEnumName(3, vurdering.utfall)
-                setString(4, vurdering.vurdertAv)
+                setBruker(4, vurdering.vurdertAv)
                 setLocalDate(5, vurdering.fom)
                 setInstant(6, vurdering.opprettet)
                 setLong(7, vurderingerId)
@@ -198,7 +198,7 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
             begrunnelse = row.getString("begrunnelse"),
             erOppfylt = row.getBoolean("er_oppfylt"),
             utfall = row.getStringOrNull("utfall")?.let { Utfall.valueOf(it) },
-            vurdertAv = row.getString("vurdert_av"),
+            vurdertAv = row.getBruker("vurdert_av"),
             fom = row.getLocalDate("vurderingen_gjelder_fra"),
             opprettet = row.getInstant("opprettet_tid"),
             vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),

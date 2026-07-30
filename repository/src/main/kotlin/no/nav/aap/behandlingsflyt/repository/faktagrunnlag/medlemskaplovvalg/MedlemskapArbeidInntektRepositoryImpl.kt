@@ -117,7 +117,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setString(5, manuellVurdering.medlemskap?.begrunnelse)
                 setBoolean(6, manuellVurdering.medlemskap?.varMedlemIFolketrygd)
                 setBoolean(7, overstyrt)
-                setString(8, manuellVurdering.vurdertAv)
+                setBruker(8, manuellVurdering.vurdertAv)
                 setLocalDateTime(9, manuellVurdering.vurdertDato)
                 setLong(10, manuellVurdering.vurdertIBehandling.toLong())
                 setLong(11, vurderingerId)
@@ -343,8 +343,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val query = """
             SELECT *
             FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG grunnlag
-            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+            JOIN BEHANDLING ON grunnlag.BEHANDLING_ID = behandling.ID
+            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON AR.BEHANDLING_ID = BEHANDLING.ID
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ? AND AR.BEHANDLING_ID IS NULL
             ORDER BY behandling.OPPRETTET_TID DESC
             LIMIT 1
         """.trimIndent()
@@ -644,7 +645,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 )
             },
             overstyrt = row.getBoolean("overstyrt"),
-            vurdertAv = row.getString("vurdert_av"),
+            vurdertAv = row.getBruker("vurdert_av"),
             vurdertDato = row.getLocalDateTime("opprettet_tid"),
             fom = row.getLocalDate("fom"),
             tom = row.getLocalDateOrNull("tom"),

@@ -40,8 +40,12 @@ public const val AVBRYT_REVURDERING_KODE: String = "5033"
 public const val AVKLAR_SAMORDNING_SYKESTIPEND_KODE: String = "5034"
 public const val AVKLAR_OPPHOLDSKRAV: String = "5035"
 public const val AVKLAR_SAMORDNING_BARNEPENSJON_KODE: String = "5036"
+public const val AVKLAR_STUDENT_KODE_V2: String = "5037"
+public const val VURDER_KRAV_KODE: String = "5038"
+public const val AVKLAR_STØNADSPERIODE_KODE: String = "5039"
 public const val VURDER_INNTEKTSBORTFALL: String = "5040"
 public const val SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE: String = "5041"
+public const val VURDER_AVSLAG_11_27_KODE: String = "5042"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
@@ -72,6 +76,7 @@ public const val FASTSETT_MANUELL_INNTEKT: String = "7001"
 public const val AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR: String = "8001"
 public const val AVKLAR_OPPFØLGINGSBEHOV_NAY: String = "8002"
 public const val VENT_PÅ_OPPFØLGING: String = "8003"
+public const val VENT_PÅ_OPPFØLGING_NY_KODE: String = "8004"
 public const val MANUELT_SATT_PÅ_VENT_KODE: String = "9001"
 public const val BESTILL_BREV_KODE: String = "9002"
 public const val BESTILL_LEGEERKLÆRING_KODE: String = "9003"
@@ -284,6 +289,21 @@ public enum class AvklaringsbehovKode {
     `5036`,
 
     /**
+     * [AVKLAR_STUDENT_KODE_V2]
+     */
+    `5037`,
+
+    /**
+     * [VURDER_KRAV_KODE]
+     */
+    `5038`,
+
+    /**
+     * [AVKLAR_STØNADSPERIODE_KODE]
+     */
+    `5039`,
+    
+    /**
      * [VURDER_INNTEKTSBORTFALL]
      */
     `5040`,
@@ -292,6 +312,11 @@ public enum class AvklaringsbehovKode {
      * [SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE]
      */
     `5041`,
+
+    /**
+     * [VURDER_AVSLAG_11_27_KODE]
+     */
+    `5042`,
 
     /**
      * [SKRIV_BREV_KODE]
@@ -442,6 +467,11 @@ public enum class AvklaringsbehovKode {
      * [VENT_PÅ_OPPFØLGING]
      */
     `8003`,
+
+    /**
+     * [VENT_PÅ_OPPFØLGING_NY_KODE]
+     */
+    `8004`,
 
     /**
      * [MANUELT_SATT_PÅ_VENT_KODE]

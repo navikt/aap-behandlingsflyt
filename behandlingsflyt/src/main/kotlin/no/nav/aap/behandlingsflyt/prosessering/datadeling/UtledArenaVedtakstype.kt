@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.utils.tilTidslinje
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.filterNotNull
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -88,8 +89,9 @@ class UtledArenaVedtakstype(
         var forrigeStansOgOpphør = mapOf<LocalDate, StansEllerOpphør>()
 
         for (behandling in behandlinger) {
-            val behandlingensRettighetsTyper = underveisRepository.hent(behandling.id)
-                .somTidslinje()
+            val behandlingensRettighetsTyper = underveisRepository.hentHvisEksisterer(behandling.id)
+                ?.somTidslinje()
+                .orEmpty()
                 .mapNotNull { it.rettighetsType }
                 .komprimer()
 
@@ -99,7 +101,7 @@ class UtledArenaVedtakstype(
             eksisterendeVedtak = utledVedtak(
                 eksisterendeVedtak = eksisterendeVedtak,
                 behandling = behandling,
-                søknader = søknader.filter { it.mottattTidspunkt <= behandling.opprettetTidspunkt }.toSet(),
+                søknader = søknader,
                 rettighetsTyper = diffTidslinjer(forrigeRettighetsTyper, behandlingensRettighetsTyper),
                 stansOgOpphør = diffMap(forrigeStansOgOpphør, behandlingensStansOgOpphør),
             )
@@ -112,7 +114,7 @@ class UtledArenaVedtakstype(
 
     private fun behandlingerMedVedtak(sak: Sak): List<BehandlingMedVedtak> =
         behandlingRepository.hentAlleMedVedtakFor(
-            sak.person,
+            sak.person.id,
             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
         )
             .filter { it.saksnummer == sak.saksnummer }
@@ -230,11 +232,16 @@ class UtledArenaVedtakstype(
             eksisterendeVedtak: Tidslinje<ArenaVedtak>
         ): Tidslinje<ArenaVedtak> {
             /* Nyeste søknad knyttet til behandling, eventuelt siste søknad mottatt før behandlingen
-                 * ble opprettet som fallback. */
+             * ble opprettet som fallback, og hvis det ikke finnes, så tidligst mottatte søknad.
+             *
+             * Eksempel på case som hvor søknad er mottatt etter at behandlingen er opprettet, er
+             * hvis behandlingen er opprettet på grunn av mottatt legeerklæring.
+             **/
             val søknadsdato = søknader.filter { it.behandlingId == behandling.id }
                 .minOfOrNull { it.mottattTidspunkt.toLocalDate() }
-                ?: søknader.filter { it.mottattTidspunkt < behandling.opprettetTidspunkt }
-                    .maxOf { it.mottattTidspunkt.toLocalDate() }
+                ?: søknader.filter { it.mottattTidspunkt <= behandling.opprettetTidspunkt }
+                    .maxOfOrNull { it.mottattTidspunkt.toLocalDate() }
+                ?: søknader.minOf { it.mottattTidspunkt.toLocalDate() }
 
             return eksisterendeVedtak.mergePrioriterHøyre(
                 tidslinjeOf(

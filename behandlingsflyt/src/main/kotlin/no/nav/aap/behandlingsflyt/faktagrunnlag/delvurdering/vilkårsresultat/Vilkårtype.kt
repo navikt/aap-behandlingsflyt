@@ -104,7 +104,8 @@ enum class Vilkårtype(
         kode = "AAP-27",
         spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
-            Avslagsårsak.ANNEN_FULL_YTELSE
+            Avslagsårsak.ANNEN_FULL_YTELSE,
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG
         ),
         hjemmel = "§ 11-27",
         obligatorisk = false

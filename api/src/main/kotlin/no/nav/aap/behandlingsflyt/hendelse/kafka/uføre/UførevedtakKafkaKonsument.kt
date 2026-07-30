@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 val UFØRE_VEDTAK_TOPIC = requiredConfigForKey("INTEGRASJON_UFORE_VEDTAK_TOPIC")
 
 class UførevedtakKafkaKonsument(
-    config: KafkaConsumerConfig<String, String>,
+    config: KafkaConsumerConfig,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
@@ -58,7 +58,7 @@ class UførevedtakKafkaKonsument(
             val ident = Ident(uførevedtakMelding.personId)
             val person = personRepository.finn(ident) ?: finnPersonMedIdenterFraPdl(ident, personRepository)
             if (person != null) {
-                val saker = sakRepository.finnSakerFor(person)
+                val saker = sakRepository.finnSakerFor(person.id)
                 for (saken in saker) {
                     log.info("Oppretter mottatt uførevedtakshendelse for sak ${saken.saksnummer}")
                     hendelseService.registrerMottattHendelse(

@@ -18,7 +18,7 @@ data class FormkravVurderingLøsningDto(
         erFristOverholdt = erFristOverholdt,
         erKonkret = erKonkret,
         erSignert = erSignert,
-        vurdertAv = bruker.ident,
+        vurdertAv = bruker,
         opprettet = dato.atZone(ZoneId.of("Europe/Oslo")).toInstant(),
         likevelBehandles = likevelBehandles,
     )

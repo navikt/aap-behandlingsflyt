@@ -16,8 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -26,8 +24,7 @@ class DagpengerInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val dagpengerGateway: DagpengerGateway,
     private val dagpengerRepository: DagpengerRepository,
-    private val sakService: SakService,
-    private val unleashGateway: UnleashGateway
+    private val sakService: SakService
 ) : Informasjonskrav<DagpengerInformasjonskrav.DagpengerInput, DagpengerInformasjonskrav.DagpengerRegisterdata> {
     override val navn = Companion.navn
 
@@ -113,8 +110,7 @@ class DagpengerInformasjonskrav(
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 dagpengerGateway = gatewayProvider.provide(),
                 dagpengerRepository = repositoryProvider.provide(),
-                sakService = SakService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide()
+                sakService = SakService(repositoryProvider, gatewayProvider)
             )
         }
     }

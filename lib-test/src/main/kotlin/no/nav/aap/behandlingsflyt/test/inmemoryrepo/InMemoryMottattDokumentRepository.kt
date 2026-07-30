@@ -164,7 +164,7 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
         }
     }
 
-    override fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument {
+    override fun hent(sakId: SakId, innsendingsreferanse: InnsendingReferanse): MottattDokument {
         synchronized(lock) {
             return memory.first { it.referanse == innsendingsreferanse }
         }

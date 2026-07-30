@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SamordningUføreSteg(
@@ -29,7 +30,7 @@ class SamordningUføreSteg(
         samordningUføreRepository = repositoryProvider.provide(),
         uføreRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -53,6 +54,7 @@ class SamordningUføreSteg(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT -> {
                         false
                     }
@@ -60,7 +62,7 @@ class SamordningUføreSteg(
 
             },
             erTilstrekkeligVurdert = {
-                harVurdertAllePerioder(kontekst.behandlingId)
+                harVurdertAllePerioder(kontekst.rettighetsperiode, kontekst.behandlingId)
             },
             tilbakestillGrunnlag = {
                 kontekst.forrigeBehandlingId
@@ -90,13 +92,16 @@ class SamordningUføreSteg(
         return uføreGrunnlag
     }
 
-    private fun harVurdertAllePerioder(behandlingId: BehandlingId): Boolean {
+    private fun harVurdertAllePerioder(rettighetsperiode: Periode, behandlingId: BehandlingId): Boolean {
         val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId = behandlingId)
         val samordningUføreGrunnlag = samordningUføreRepository.hentHvisEksisterer(behandlingId)
         val vurderinger = samordningUføreGrunnlag?.vurdering?.vurderingPerioder
-        return uføreGrunnlag?.vurderinger?.all { uføre ->
-            vurderinger?.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt } ?: false
-        } ?: true
+
+        return uføreGrunnlag?.vurderinger.orEmpty()
+            .filter { it.uføregradTom == null || it.uføregradTom >= rettighetsperiode.fom }
+            .all { uføre ->
+                vurderinger?.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt } ?: false
+            }
     }
 
     private fun erManueltTriggetRevurdering(

@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Trukket
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Ufullstendig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilAvslag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.ÅrsakTilUfullstendigResultat
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -29,7 +30,7 @@ class KlageresultatUtlederTest {
             erFristOverholdt = true,
             erKonkret = true,
             erSignert = true,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             opprettet = Instant.now(),
             likevelBehandles = null
         )
@@ -51,7 +52,7 @@ class KlageresultatUtlederTest {
             erFristOverholdt = true,
             erKonkret = true,
             erSignert = true,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             opprettet = Instant.now(),
             likevelBehandles = null
         )
@@ -73,7 +74,7 @@ class KlageresultatUtlederTest {
             erFristOverholdt = false,
             erKonkret = true,
             erSignert = true,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             opprettet = Instant.now(),
             likevelBehandles = false
         )
@@ -90,18 +91,21 @@ class KlageresultatUtlederTest {
     @Test
     fun `Skal gi opprettholdes ved kun NAY-vurdering dersom NAY-vurdering er opprettholdes`() {
         val behandlendeEnhetVurdering = BehandlendeEnhetVurdering(
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = false
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
             innstilling = KlageInnstilling.OPPRETTHOLD,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = emptyList(),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -116,18 +120,21 @@ class KlageresultatUtlederTest {
     @Test
     fun `Skal gi delvis omgjør ved kun NAY-vurdering dersom NAY-vurdering er delvis omgjør`() {
         val behandlendeEnhetVurdering = BehandlendeEnhetVurdering(
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = false
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
             innstilling = KlageInnstilling.DELVIS_OMGJØR,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -145,18 +152,21 @@ class KlageresultatUtlederTest {
     @Test
     fun `Skal gi omgjør ved kun NAY-vurdering dersom NAY-vurdering er omgjør`() {
         val behandlendeEnhetVurdering = BehandlendeEnhetVurdering(
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = false
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
             innstilling = KlageInnstilling.OMGJØR,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = emptyList(),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -173,27 +183,31 @@ class KlageresultatUtlederTest {
     @Test
     fun `Skal gi delvis opprettholdelse hvis ett av kontorene har omgjøring, og det andre ikke`() {
         val behandlendeEnhetVurdering = BehandlendeEnhetVurdering(
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = true
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
             innstilling = KlageInnstilling.OPPRETTHOLD,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = emptyList(),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val kontorVurdering = KlagevurderingKontor(
             innstilling = KlageInnstilling.OMGJØR,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             begrunnelse = "Omgjøres",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = emptyList(),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -211,27 +225,31 @@ class KlageresultatUtlederTest {
     @Test
     fun `Skal gi delvis omgjøring dersom resultatet fra ett er delvis omgjøring`() {
         val behandlendeEnhetVurdering = BehandlendeEnhetVurdering(
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = true
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
             innstilling = KlageInnstilling.OPPRETTHOLD,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             begrunnelse = "Opprettholdes",
             vilkårSomOmgjøres = emptyList(),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val kontorVurdering = KlagevurderingKontor(
             innstilling = KlageInnstilling.DELVIS_OMGJØR,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             begrunnelse = "Omgjøres",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -268,18 +286,21 @@ class KlageresultatUtlederTest {
     fun `Skal gi Ufullstendig dersom det mangler vurdering fra minst ett av kontorene som skal vurdere`() {
 
         val behandlendeEnhetVurdering = BehandlendeEnhetVurdering(
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             skalBehandlesAvNay = true,
             skalBehandlesAvKontor = true
+        ,
+        opprettet = Instant.now()
         )
 
         val nayVurdering = KlagevurderingNay(
             innstilling = KlageInnstilling.OMGJØR,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             begrunnelse = "Omgjøres",
             vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
             vilkårSomOpprettholdes = emptyList(),
-            notat = null
+            notat = null,
+            opprettet = Instant.now()
         )
 
         val klageresultat = KlageresultatUtleder.utledKlagebehandlingResultat(
@@ -295,7 +316,7 @@ class KlageresultatUtlederTest {
             erFristOverholdt = true,
             erKonkret = true,
             erSignert = true,
-            vurdertAv = "Saksbehandler",
+            vurdertAv = Bruker("Saksbehandler"),
             opprettet = Instant.now(),
             likevelBehandles = null
         )

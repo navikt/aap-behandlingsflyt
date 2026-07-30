@@ -2,6 +2,13 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
@@ -18,17 +25,22 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -36,6 +48,7 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -65,7 +78,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -143,7 +156,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -404,7 +417,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -472,7 +485,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -539,7 +552,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -606,7 +619,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -680,14 +693,14 @@ class BeregnTilkjentYtelseServiceTest {
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`30_PROSENT`),
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 2 august 2023, Prosent.`0_PROSENT`)
                 ),
-                "ident"
+                Bruker("ident")
             )
         )
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -798,14 +811,14 @@ class BeregnTilkjentYtelseServiceTest {
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 mars 2023, Prosent.`50_PROSENT`),
                     SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`70_PROSENT`)
                 ),
-                "ident"
+                Bruker("ident")
             )
         )
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -892,7 +905,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -937,6 +950,90 @@ class BeregnTilkjentYtelseServiceTest {
     }
 
     @Test
+    fun `meldekort levert etter frist reduserer utbetaling fram til levering`() {
+        val rettighetsperiode = Periode(6 januar 2020, 1 mars 2020)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            meldekort = listOf(
+                meldekortUtenArbeid(JournalpostId("1"), Periode(6 januar 2020, 19 januar 2020), 20 januar 2020),
+                meldekortUtenArbeid(JournalpostId("2"), Periode(20 januar 2020, 2 februar 2020), 11 februar 2020),
+                meldekortUtenArbeid(JournalpostId("3"), Periode(3 februar 2020, 16 februar 2020), 17 februar 2020),
+                meldekortUtenArbeid(JournalpostId("4"), Periode(17 februar 2020, 1 mars 2020), 2 mars 2020),
+            ),
+            innsendingsTidspunkt = mapOf(
+                20 januar 2020 to JournalpostId("1"),
+                11 februar 2020 to JournalpostId("2"),
+                17 februar 2020 to JournalpostId("3"),
+                2 mars 2020 to JournalpostId("4"),
+            ),
+            vedtaksdatoFørstegangsbehandling = 5 januar 2020,
+        )
+
+        val vurderinger = GraderingArbeidRegel().vurder(
+            input,
+            FastsettGrenseverdiArbeidRegel().vurder(
+                input,
+                MeldepliktRegel().vurder(
+                    input,
+                    UtledMeldeperiodeRegel().vurder(
+                        input,
+                        Tidslinje(input.periodeForVurdering, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV))
+                    )
+                )
+            )
+        )
+        val underveisperioder = UnderveisService.tilUnderveisperioder(vurderinger)
+        assertThat(underveisperioder.first { it.periode == Periode(3 februar 2020, 10 februar 2020) }.meldepliktStatus)
+            .isEqualTo(MeldepliktStatus.IKKE_MELDT_SEG)
+
+        val tilkjentYtelse = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2)),
+                beregningsgrunnlag = GUnit(BigDecimal(4)),
+                underveisgrunnlag = UnderveisGrunnlag(1L, underveisperioder),
+                barnetilleggGrunnlag = utenBarnetillegg(),
+                samordningGrunnlag = utenSamordningGrunnlag(),
+                samordningUføre = utenSamordningUføre(),
+                samordningArbeidsgiver = utenSamordningArbeidsgiver(),
+                barnepensjonGrunnlag = utenBarnepensjon(),
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(tilkjentYtelse.segmenter()).satisfiesExactly(
+            {
+                assertThat(it.periode).isEqualTo(Periode(6 januar 2020, 19 januar 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(20 januar 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isNotEqualTo(Beløp(0))
+            },
+            {
+                assertThat(it.periode).isEqualTo(Periode(20 januar 2020, 2 februar 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(11 februar 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isNotEqualTo(Beløp(0))
+            },
+            {
+                assertThat(it.periode).isEqualTo(Periode(3 februar 2020, 10 februar 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(17 februar 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`0_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isEqualTo(Beløp(0))
+            },
+            {
+                assertThat(it.periode).isEqualTo(Periode(11 februar 2020, 16 februar 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(17 februar 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isNotEqualTo(Beløp(0))
+            },
+            {
+                assertThat(it.periode).isEqualTo(Periode(17 februar 2020, 1 mars 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(2 mars 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isNotEqualTo(Beløp(0))
+            },
+        )
+    }
+
+    @Test
     fun `arbeidsgrad og samordning reduserer tilkjent endelig utbetalingsgrad`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = object : Grunnlag {
@@ -962,7 +1059,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1046,6 +1143,22 @@ class BeregnTilkjentYtelseServiceTest {
         meldepliktGradering = Prosent.`0_PROSENT`,
     )
 
+    private fun meldekortUtenArbeid(
+        journalpostId: JournalpostId,
+        periode: Periode,
+        mottattDato: LocalDate,
+    ): Meldekort = Meldekort(
+        journalpostId = journalpostId,
+        timerArbeidPerPeriode = periode.dager().map {
+            ArbeidIPeriode(
+                periode = Periode(it, it),
+                timerArbeid = TimerArbeid(BigDecimal.ZERO),
+            )
+        }.toSet(),
+        mottattTidspunkt = mottattDato.atStartOfDay(),
+        opprettetTidspunkt = mottattDato.atStartOfDay(),
+    )
+
     @Test
     fun `sluttpakke fra arbeidsgiver reduserer tilkjent endelig utbetalingsgrad`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
@@ -1061,7 +1174,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "Har fått sluttpakke",
-                listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))), vurdertAv = "ident"
+                listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1130,14 +1243,14 @@ class BeregnTilkjentYtelseServiceTest {
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent.`30_PROSENT`)
                 ),
-                "ident"
+                Bruker("ident")
             )
         )
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1231,7 +1344,7 @@ class BeregnTilkjentYtelseServiceTest {
                 "", listOf(
                     SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent(uforegrad))
                 ),
-                "ident"
+                Bruker("ident")
             )
         )
 
@@ -1313,7 +1426,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
             )
         )
 
@@ -1479,12 +1592,12 @@ class BeregnTilkjentYtelseServiceTest {
     private fun utenBarnetillegg(): BarnetilleggGrunnlag = BarnetilleggGrunnlag(emptyList())
 
     private fun utenSamordningUføre(): SamordningUføreGrunnlag =
-        SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident"))
+        SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), Bruker("ident")))
 
     private fun utenSamordningArbeidsgiver(): SamordningArbeidsgiverGrunnlag = SamordningArbeidsgiverGrunnlag(
         vurdering = SamordningArbeidsgiverVurdering(
             "",
-            emptyList(), vurdertAv = "ident"
+            emptyList(), vurdertAv = Bruker("ident")
         )
     )
     private fun utenBarnepensjon() = null

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -15,11 +16,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
 
@@ -56,8 +59,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
 
         val årsakQuery = """
-            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid, opprettet_av)
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val behandlingÅrsakId = connection.executeReturnKey(årsakQuery) {
@@ -66,6 +69,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
+                setBruker(5, vurderingsbehovOgÅrsak.opprettetAv)
             }
         }
 
@@ -86,28 +90,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
 
         return hent(BehandlingId(behandlingId))
-    }
-
-    /**
-     * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
-     * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger. Den returnerer også avbrutte behandlinger.
-     */
-    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
-    override fun finnSisteOpprettedeBehandlingFor(
-        sakId: SakId,
-        behandlingstypeFilter: List<TypeBehandling>
-    ): Behandling? {
-        val query = """
-            SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ANY(?::text[]) ORDER BY opprettet_tid DESC LIMIT 1
-            """.trimIndent()
-
-        return connection.queryFirstOrNull(query) {
-            setParams {
-                setLong(1, sakId.toLong())
-                setArray(2, behandlingstypeFilter.map { it.identifikator() })
-            }
-            setRowMapper(::mapBehandling)
-        }
     }
 
     override fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer {
@@ -158,6 +140,18 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    private data class VurderingsbehovJson(val aarsak: String, val tid: String)
+
+    private fun mapVurderingsbehov(row: Row): List<VurderingsbehovMedPeriode> {
+        val json = row.getStringOrNull("vb_json") ?: return emptyList()
+        return DefaultJsonMapper.fromJson<List<VurderingsbehovJson>>(json).map {
+            VurderingsbehovMedPeriode(
+                type = Vurderingsbehov.valueOf(it.aarsak),
+                oppdatertTid = LocalDateTime.parse(it.tid)
+            )
+        }.distinct()
+    }
+
     private fun mapBehandling(row: Row): Behandling {
         val behandlingId = BehandlingId(row.getLong("id"))
         return Behandling(
@@ -166,9 +160,15 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             sakId = SakId(row.getLong("sak_id")),
             typeBehandling = TypeBehandling.from(row.getString("type")),
             status = row.getEnum("status"),
-            stegTilstand = hentAktivtSteg(behandlingId),
+            stegTilstand = row.getEnumOrNull<StegType>("sh_steg")?.let { stegType ->
+                StegTilstand(
+                    tidspunkt = row.getLocalDateTime("sh_opprettet_tid"),
+                    stegType = stegType,
+                    stegStatus = row.getEnum("sh_status"),
+                )
+            },
             versjon = row.getLong("versjon"),
-            vurderingsbehov = hentVurderingsbehov(behandlingId).distinct(),
+            vurderingsbehov = mapVurderingsbehov(row),
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             årsakTilOpprettelse = row.getEnumOrNull("aarsak_til_opprettelse"),
             forrigeBehandlingId = row.getLongOrNull("forrige_id")?.let { BehandlingId(it) }
@@ -187,27 +187,10 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             vedtakstidspunkt = row.getLocalDateTime("vedtakstidspunkt"),
             virkningstidspunkt = row.getLocalDateOrNull("virkningstidspunkt"),
-            vurderingsbehov = hentVurderingsbehov(behandlingId).map { it.type }.toSet(),
+            vurderingsbehov = mapVurderingsbehov(row).map { it.type }.toSet(),
             årsakTilOpprettelse = row.getEnumOrNull("aarsak_til_opprettelse"),
             vedtakId = VedtakId(row.getLong("vedtak_id")),
         )
-    }
-
-    private fun hentVurderingsbehov(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
-        val query = """
-            SELECT * FROM vurderingsbehov WHERE behandling_id = ? ORDER BY opprettet_tid DESC
-        """.trimIndent()
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, behandlingId.id)
-            }
-            setRowMapper {
-                VurderingsbehovMedPeriode(
-                    it.getEnum("aarsak"),
-                    it.getLocalDateTimeOrNull("oppdatert_tid") ?: it.getLocalDateTime("opprettet_tid")
-                )
-            }
-        }
     }
 
     /**
@@ -222,11 +205,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             val vurderingsbehovOppdatertTid: LocalDateTime,
             val årsak: ÅrsakTilOpprettelse,
             val opprettet: LocalDateTime,
+            val opprettetAv: Bruker?,
             val beskrivelse: String?
         )
 
         val query = """
-            SELECT ba.id as aarsak_id, ba.aarsak, ba.begrunnelse, ba.opprettet_tid,
+            SELECT ba.id as aarsak_id, ba.aarsak, ba.begrunnelse, ba.opprettet_tid, ba.opprettet_av,
                    vb.aarsak as vurderingsbehov, vb.opprettet_tid as vb_opprettet_Tid, vb.oppdatert_tid as vb_oppdatert_tid
             FROM behandling_aarsak ba
             INNER JOIN vurderingsbehov vb ON vb.behandling_aarsak_id = ba.id
@@ -244,6 +228,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     årsak = row.getEnum("aarsak"),
                     beskrivelse = row.getStringOrNull("begrunnelse"),
                     opprettet = row.getLocalDateTime("opprettet_tid"),
+                    opprettetAv = row.getBrukerOrNull("opprettet_av"),
                     vurderingsbehovType = row.getEnum("vurderingsbehov"),
                     vurderingsbehovOppdatertTid = row.getLocalDateTimeOrNull("vb_oppdatert_tid")
                         ?: row.getLocalDateTime("vb_opprettet_Tid")
@@ -258,6 +243,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     årsak = vurderingsbehovOgÅrsak.first().årsak,
                     beskrivelse = vurderingsbehovOgÅrsak.first().beskrivelse,
                     opprettet = vurderingsbehovOgÅrsak.first().opprettet,
+                    opprettetAv = vurderingsbehovOgÅrsak.first().opprettetAv,
                     vurderingsbehov = vurderingsbehovOgÅrsak.map {
                         VurderingsbehovMedPeriode(
                             it.vurderingsbehovType,
@@ -330,14 +316,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    fun hentAktivtSteg(behandlingId: BehandlingId): StegTilstand? {
-        val query = """
-            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? AND AKTIV = true
-        """.trimIndent()
-
-        return connection.queryFirstOrNull(query, setStegtilstand(behandlingId))
-    }
-
     private fun setStegtilstand(behandlingId: BehandlingId): Query<StegTilstand>.() -> Unit {
         return {
             setParams {
@@ -348,7 +326,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     tidspunkt = row.getLocalDateTime("OPPRETTET_TID"),
                     stegType = row.getEnum("steg"),
                     stegStatus = row.getEnum("status"),
-                    aktiv = row.getBoolean("aktiv"),
                 )
             }
         }
@@ -356,7 +333,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
         val query = """
-            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? ORDER BY opprettet_tid
+            SELECT * FROM STEG_HISTORIKK WHERE behandling_id = ? ORDER BY opprettet_tid, id
         """.trimIndent()
 
         return connection.queryList(query, setStegtilstand(behandlingId))
@@ -364,9 +341,18 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         val query = """
-            SELECT * FROM BEHANDLING WHERE sak_id = ?
-             AND type = ANY(?::text[])
-             ORDER BY opprettet_tid DESC
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
+            WHERE b.sak_id = ?
+             AND b.type = ANY(?::text[])
+             ORDER BY b.opprettet_tid DESC
             """.trimIndent()
 
         return connection.queryList(query) {
@@ -380,8 +366,41 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    override fun hentAlleIkkeAvbrutteYtelsesbehandlinger(sakId: SakId): List<Behandling> {
+        val query = """
+            with avbrutt_behandling as (
+                select avbryt_revurdering_grunnlag.behandling_id as behandling_id
+                from avbryt_revurdering_grunnlag
+                join avbryt_revurdering_vurdering on avbryt_revurdering_grunnlag.vurdering_id = avbryt_revurdering_vurdering.id
+                where avbryt_revurdering_grunnlag.aktiv
+            )
+            select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
+            from behandling b
+            left join avbrutt_behandling on avbrutt_behandling.behandling_id = b.id
+            left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv
+            left join lateral (
+                select json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                from vurderingsbehov
+                where behandling_id = b.id
+            ) vb_agg on true
+            where b.sak_id = ?
+            and b.type in (${TypeBehandling.ytelseBehandlingstyper().joinToString { "'${it.identifikator()}'"} })
+            and avbrutt_behandling.behandling_id is null
+            """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper {
+                mapBehandling(it)
+            }
+        }
+    }
+
     override fun hentAlleMedVedtakFor(
-        person: Person,
+        personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> {
         val query = """
@@ -396,22 +415,27 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 B.AARSAK_TIL_OPPRETTELSE,
                 V.VEDTAKSTIDSPUNKT,
                 V.VIRKNINGSTIDSPUNKT,
-                V.ID AS VEDTAK_ID
+                V.ID AS VEDTAK_ID,
+                vb_agg.vb_json
             FROM
                 SAK S
                 INNER JOIN BEHANDLING B ON B.SAK_ID = S.ID
                 INNER JOIN VEDTAK V ON V.BEHANDLING_ID = B.ID
+                LEFT JOIN LATERAL (
+                    SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                    FROM vurderingsbehov
+                    WHERE behandling_id = B.ID
+                ) vb_agg ON true
             WHERE
                 S.PERSON_ID = ?
                 AND TYPE = ANY(?::TEXT[])
             ORDER BY
                 OPPRETTET_TID DESC
-
         """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
-                setLong(1, person.id.id)
+                setLong(1, personId.id)
                 setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper {
@@ -422,7 +446,16 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun hent(behandlingId: BehandlingId): Behandling {
         val query = """
-            SELECT * FROM BEHANDLING WHERE id = ?
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
+            WHERE b.id = ?
             """.trimIndent()
 
         return connection.queryFirst(query) {
@@ -435,24 +468,18 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling {
-        val query = """
-            SELECT type FROM BEHANDLING WHERE id = ?
-            """.trimIndent()
-
-        return connection.queryFirst(query) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-            setRowMapper { row ->
-                TypeBehandling.from(row.getString("type"))
-            }
-        }
-    }
-
     override fun hent(referanse: BehandlingReferanse): Behandling {
         val query = """
-            SELECT * FROM BEHANDLING WHERE referanse = ?
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
+            WHERE b.referanse = ?
             """.trimIndent()
 
         return connection.queryFirst(query) {
@@ -467,7 +494,16 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun finnFørstegangsbehandling(sakId: SakId): Behandling {
         val query = """
-            SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ?
+            SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
+                   vb_agg.vb_json
+            FROM BEHANDLING b
+            LEFT JOIN STEG_HISTORIKK sh ON sh.behandling_id = b.id AND sh.aktiv
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
+                FROM vurderingsbehov
+                WHERE behandling_id = b.id
+            ) vb_agg ON true
+            WHERE b.sak_id = ? AND b.type = ?
             """.trimIndent()
 
         return connection.queryFirst(query) {
@@ -486,8 +522,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ) {
         val årsakQuery = """
-            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid, opprettet_av)
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         val behandlingÅrsakId = connection.executeReturnKey(årsakQuery) {
@@ -496,6 +532,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, vurderingsbehovOgÅrsak.årsak)
                 setString(3, vurderingsbehovOgÅrsak.beskrivelse)
                 setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
+                setBruker(5, vurderingsbehovOgÅrsak.opprettetAv)
             }
         }
 

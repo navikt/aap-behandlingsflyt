@@ -29,21 +29,21 @@ class PesysFake(private val fakePersoner: () -> TestPersonService) : FakeServer(
                     call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.fnr}")
                     return@post
                 }
-                val uføregrad = hentPerson.uføre
-                if (uføregrad == null) {
+                val uføreperioder = hentPerson.uføreHistorikk.ifEmpty { hentPerson.uføre?.let(::listOf).orEmpty() }
+                if (uføreperioder.isEmpty()) {
                     call.respond(HttpStatusCode.NotFound)
                 } else {
                     call.respond(
                         HttpStatusCode.OK, UføreHistorikkRespons(
-                            uforeperioder = listOf(
+                            uforeperioder = uføreperioder.map { uføregrad ->
                                 UførePeriode(
                                     uforegrad = uføregrad.uføregrad.prosentverdi(),
-                                    uforegradTom = null,
-                                    uforegradFom = uføregrad.virkningstidspunkt,
+                                    uforegradTom = uføregrad.uføregradTom,
+                                    uforegradFom = uføregrad.uføregradFom ?: uføregrad.virkningstidspunkt,
                                     uforetidspunkt = null,
                                     virkningstidspunkt = uføregrad.virkningstidspunkt
                                 )
-                            )
+                            }
                         )
                     )
                 }

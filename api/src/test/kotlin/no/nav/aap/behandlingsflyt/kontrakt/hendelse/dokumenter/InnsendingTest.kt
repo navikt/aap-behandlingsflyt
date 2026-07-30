@@ -252,7 +252,8 @@ class InnsendingTest {
             datoForOppfølging = LocalDate.now(),
             hvemSkalFølgeOpp = hvemSkalFølgeOpp,
             reserverTilBruker = "xx",
-            hvaSkalFølgesOpp = "da"
+            hvaSkalFølgesOpp = "da",
+            opprettetAv = null
         )
 
         val json = DefaultJsonMapper.toJson(oppfølgingsoppgave)

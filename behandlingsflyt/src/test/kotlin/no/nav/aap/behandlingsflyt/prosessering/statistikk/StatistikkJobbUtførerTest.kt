@@ -116,7 +116,7 @@ import java.time.temporal.ChronoUnit
 
 @Fakes
 class StatistikkJobbUtførerTest {
-    private val gatewayProvider = minimalGatewayProvider { }
+    private val gatewayProvider = minimalGatewayProvider()
 
     companion object {
         private lateinit var dataSource: TestDataSource
@@ -231,7 +231,7 @@ class StatistikkJobbUtførerTest {
             StatistikkJobbUtfører(
                 statistikkMetoder = StatistikkMetoder(
                     postgresRepositoryRegistry.provider(connection),
-                    minimalGatewayProvider { }),
+                    minimalGatewayProvider()),
                 statistikkGateway = StatistikkGatewayImpl(),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -299,6 +299,7 @@ class StatistikkJobbUtførerTest {
                         )
                     ),
                     mottattTidspunkt = LocalDateTime.now(),
+                    opprettetTidspunkt = LocalDateTime.now()
                 )
             )
         )
@@ -367,7 +368,7 @@ class StatistikkJobbUtførerTest {
                     nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
                     ytterligereNedsattBegrunnelse = null,
                     ytterligereNedsattArbeidsevneDato = null,
-                    vurdertAv = "Z0000",
+                    vurdertAv = Bruker("Z0000"),
                 )
             )
 
@@ -423,7 +424,6 @@ class StatistikkJobbUtførerTest {
                 behandlingId = opprettetBehandling.id, listOf(
                     Sykdomsvurdering(
                         begrunnelse = "123",
-                        dokumenterBruktIVurdering = emptyList(),
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
@@ -504,7 +504,7 @@ class StatistikkJobbUtførerTest {
                 statistikkGateway = StatistikkGatewayImpl(),
                 statistikkMetoder = StatistikkMetoder(
                     postgresRepositoryRegistry.provider(connection),
-                    minimalGatewayProvider { }),
+                    minimalGatewayProvider()),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -634,7 +634,7 @@ class StatistikkJobbUtførerTest {
                 klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
                 avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(
                     inMemoryRepositoryProvider,
-                    minimalGatewayProvider { }),
+                    minimalGatewayProvider()),
             )
         )
 

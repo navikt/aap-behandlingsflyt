@@ -6,12 +6,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -37,38 +39,69 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): UnderveisGrunnlag? {
         val query = """
-            SELECT * FROM UNDERVEIS_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+            SELECT ug.id AS grunnlag_id, up.*
+            FROM UNDERVEIS_GRUNNLAG ug
+            LEFT JOIN UNDERVEIS_PERIODER ups ON ug.perioder_id = ups.id
+            LEFT JOIN UNDERVEIS_PERIODE up ON up.perioder_id = ups.id
+            WHERE ug.behandling_id = ?
+              AND ug.aktiv = true
+            ORDER BY up.periode
         """.trimIndent()
-        return connection.queryFirstOrNull(query) {
+
+        val backfillStansOpphorEnabled = UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.BackfillStansOpphor)
+
+        val rows = connection.queryList(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
-            setRowMapper {
-                mapGrunnlag(it)
+            setRowMapper { row ->
+                row.getLong("grunnlag_id") to mapPeriode(row, backfillStansOpphorEnabled)
             }
         }
+
+        if (rows.isEmpty()) return null
+
+        val grunnlagId = rows.first().first
+        val perioder = rows.mapNotNull { it.second }
+        return UnderveisGrunnlag(grunnlagId, perioder)
     }
 
-    private fun mapGrunnlag(row: Row): UnderveisGrunnlag {
-        val periodeneId = row.getLong("perioder_id")
+    override fun hentBulk(behandlingIds: List<BehandlingId>): Map<BehandlingId, UnderveisGrunnlag> {
+        if (behandlingIds.isEmpty()) return emptyMap()
 
         val query = """
-            SELECT * FROM UNDERVEIS_PERIODE WHERE perioder_id = ? ORDER BY periode
+            SELECT ug.id AS grunnlag_id, ug.behandling_id, up.*
+            FROM UNDERVEIS_GRUNNLAG ug
+            LEFT JOIN UNDERVEIS_PERIODER ups ON ug.perioder_id = ups.id
+            LEFT JOIN UNDERVEIS_PERIODE up ON up.perioder_id = ups.id
+            WHERE ug.behandling_id = ANY(?)
+              AND ug.aktiv = true
+            ORDER BY ug.behandling_id, up.periode
         """.trimIndent()
 
-        val underveisperioder = connection.queryList(query) {
-            setParams {
-                setLong(1, periodeneId)
-            }
-            setRowMapper {
-                mapPeriode(it)
-            }
-        }.toList()
+        val backfillStansOpphorEnabled = UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.BackfillStansOpphor)
 
-        return UnderveisGrunnlag(row.getLong("id"), underveisperioder)
+        val rows = connection.queryList(query) {
+            setParams {
+                setLongArray(1, behandlingIds.map { it.toLong() })
+            }
+            setRowMapper { row ->
+                BehandlingId(row.getLong("behandling_id")) to
+                        (row.getLong("grunnlag_id") to mapPeriode(row, backfillStansOpphorEnabled))
+            }
+        }
+
+        return rows
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, grunnlagOgPerioder) ->
+                val grunnlagId = grunnlagOgPerioder.first().first
+                val perioder = grunnlagOgPerioder.mapNotNull { it.second }
+                UnderveisGrunnlag(grunnlagId, perioder)
+            }
     }
 
-    private fun mapPeriode(it: Row): Underveisperiode {
+    private fun mapPeriode(it: Row, backfillStansOpphorEnabled: Boolean): Underveisperiode? {
+        if (it.getStringOrNull("utfall") == null) return null
 
         val antallTimer = it.getBigDecimal("timer_arbeid")
         val graderingProsent = it.getInt("gradering")
@@ -92,10 +125,10 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             arbeidsgradering = arbeidsGradering,
             trekk = Dagsatser(it.getInt("trekk_dagsatser")),
             brukerAvKvoter = it.getArray("bruker_av_kvoter", String::class).map { Kvote.valueOf(it) }.toSet(),
-            id = UnderveisperiodeId(it.getLong("id")),
             institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon")),
             meldepliktStatus = it.getEnumOrNull("meldeplikt_status"),
             meldepliktGradering = it.getIntOrNull("meldeplikt_gradering")?.let { Prosent(it) },
+            backFillStansOpphorEnabled = backfillStansOpphorEnabled,
         )
     }
 
@@ -156,6 +189,36 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }.toSet()
     }
 
+    override fun hentUbesvarteMeldeperioderForDollyJobb(
+        sakIds: List<SakId>,
+        idag: LocalDate
+    ): Map<SakId, List<Periode>> {
+        if (sakIds.isEmpty()) return emptyMap()
+
+        val query = """
+            SELECT DISTINCT gvb.sak_id, up.meldeperiode
+            FROM underveis_grunnlag ug
+                JOIN underveis_periode up ON ug.perioder_id = up.perioder_id
+                JOIN gjeldende_vedtatte_behandlinger gvb ON gvb.behandling_id = ug.behandling_id
+            WHERE ug.aktiv = true
+                AND up.meldeplikt_status IN ('IKKE_MELDT_SEG', 'FØR_VEDTAK')
+                AND upper(up.meldeperiode) <= ?
+                AND gvb.sak_id = ANY(?)
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLocalDate(1, idag.plusDays(1))
+                setLongArray(2, sakIds.map { it.toLong() })
+            }
+            setRowMapper {
+                val sakId = SakId(it.getLong("sak_id"))
+                val meldeperiode = it.getPeriode("meldeperiode")
+                sakId to meldeperiode
+            }
+        }.groupBy({ it.first }, { it.second })
+    }
+
     override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> {
         val query = """
             WITH siste_underveisperiode AS (SELECT ug.behandling_id, max(upper(periode)) AS siste_dato
@@ -187,13 +250,15 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
         val sporingIds = getSporingIds(behandlingId)
         val periodeIds = getPerioderIds(behandlingId)
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from underveis_grunnlag where behandling_id = ?; 
             delete from underveis_periode where perioder_id = ANY(?::bigint[]);
             delete from underveis_perioder where id = ANY(?::bigint[]);
             delete from underveis_sporing where id = ANY(?::bigint[]);
           
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, periodeIds)
@@ -222,7 +287,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         """
                     SELECT perioder_id
                     FROM underveis_grunnlag
-                    WHERE behandling_id = ? AND perioder_id is not null
+                    WHERE behandling_id = ?
                  
                 """.trimIndent()
     ) {

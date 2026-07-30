@@ -140,7 +140,7 @@ class FatteVedtakSteg(
             return FatteVedtakSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 trekkKlageService = TrekkKlageService(repositoryProvider),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),

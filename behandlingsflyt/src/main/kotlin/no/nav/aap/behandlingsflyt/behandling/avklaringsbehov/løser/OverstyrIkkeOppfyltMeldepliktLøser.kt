@@ -25,7 +25,7 @@ class OverstyrIkkeOppfyltMeldepliktLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val overstyringMeldepliktVurderinger = OverstyringMeldepliktVurdering(
-            vurdertAv = kontekst.bruker.ident,
+            vurdertAv = kontekst.bruker,
             opprettetTid = LocalDateTime.now(),
             vurdertIBehandling = behandling.referanse,
             perioder = løsning.meldepliktOverstyringVurdering.perioder

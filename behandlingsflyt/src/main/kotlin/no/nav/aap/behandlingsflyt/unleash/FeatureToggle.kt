@@ -10,19 +10,26 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevbyggerV3,
     Under18,
     TrekkSoeknadOpprettetFraLegeerklaering,
-    KvalitetssikringVed2213,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
-    AvslagLovvalgMedlemskap,
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
-    ForutgaaendeGap,
-    FjernTilbakefoeringTransisjon,
-    MaritimtArbeid,
-    ForstegangsbehandlingEtterAvslagOppgave,
-    AlleEndringerKreverKvalitetssikring,
-    RevurderingEtterAvslagSkalKvalitetssikres,
-    MeldepliktForsteFraForsteInnvilgelse,
+    MeldekortEndretAvSaksbehandler,
+    StudentV2,
+    BackfillStansOpphor,
+    VentStatusForTilbakekrevingIBehandlingsflyt,
+    MotorV2,
+
+    // --- Krav ---
+    KravSteg, // Visning
+    LagreVurderRettighetsperiodeSomKrav, // Double write
+    KravAutomatiskVurdering, // Double write
+    KravManuellVurdering,
+    NyttKravPeriodiserteAvklaringsbehov,
+
+    // ------
+    Avslag11_27,
+    SkalViseAlleSykdomssteg,
     ;
 
     override fun key(): String = name

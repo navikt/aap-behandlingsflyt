@@ -4,11 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.repository.RepositoryFactory
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemorySamordningUføreRepository : SamordningUføreRepository {
+object InMemorySamordningUføreRepository : SamordningUføreRepository {
     private val store = ConcurrentHashMap<BehandlingId, SamordningUføreGrunnlag>()
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningUføreGrunnlag? {
@@ -31,9 +29,5 @@ class InMemorySamordningUføreRepository : SamordningUføreRepository {
 
     override fun slett(behandlingId: BehandlingId) {
         store.remove(behandlingId)
-    }
-
-    companion object : RepositoryFactory<SamordningUføreRepository> {
-        override fun konstruer(connection: DBConnection) = InMemorySamordningUføreRepository()
     }
 }

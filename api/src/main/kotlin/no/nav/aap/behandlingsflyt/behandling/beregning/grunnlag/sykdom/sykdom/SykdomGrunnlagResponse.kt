@@ -33,7 +33,6 @@ data class SykdomsvurderingResponse(
     /** Hvis null, så gjelder den fra starten. */
     val begrunnelse: String,
     val vurderingenGjelderFra: LocalDate?, @Deprecated("Bruk fom")
-    val dokumenterBruktIVurdering: List<JournalpostId>,
     val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
@@ -72,7 +71,6 @@ data class SykdomsvurderingResponse(
         ) = SykdomsvurderingResponse(
             begrunnelse = sykdomsvurdering.begrunnelse,
             vurderingenGjelderFra = sykdomsvurdering.vurderingenGjelderFra,
-            dokumenterBruktIVurdering = sykdomsvurdering.dokumenterBruktIVurdering,
             harNedsattArbeidsevne = sykdomsvurdering.harNedsattArbeidsevne,
             harSkadeSykdomEllerLyte = sykdomsvurdering.harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel,
@@ -87,7 +85,7 @@ data class SykdomsvurderingResponse(
             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.AVKLAR_SYKDOM,
                 behandlingId = sykdomsvurdering.vurdertIBehandling,
-                vurdertAv = vurdertAvService.medNavnOgEnhet(sykdomsvurdering.vurdertAv.ident, sykdomsvurdering.opprettet),
+                vurdertAv = vurdertAvService.medNavnOgEnhet(sykdomsvurdering.vurdertAv, sykdomsvurdering.opprettet),
             ),
         )
     }

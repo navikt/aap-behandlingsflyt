@@ -12,10 +12,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import kotlin.collections.all
 
 object InMemoryBehandlingRepository : BehandlingRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -62,25 +63,17 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
-    override fun finnSisteOpprettedeBehandlingFor(
-        sakId: SakId,
-        behandlingstypeFilter: List<TypeBehandling>
-    ): Behandling? {
-        synchronized(lock) {
-            return memory.values
-                .filter { behandling -> behandling.sakId == sakId }
-                .filter { behandling -> behandling.typeBehandling() in behandlingstypeFilter }
-                .maxOrNull()
-        }
-    }
-
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         synchronized(lock) {
             return memory.values
                 .filter { behandling -> behandling.sakId == sakId }
                 .filter { behandling -> behandling.typeBehandling() in behandlingstypeFilter }
         }
+    }
+
+    override fun hentAlleIkkeAvbrutteYtelsesbehandlinger(sakId: SakId): List<Behandling> {
+        return hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
+            .filter { InMemoryAvbrytRevurderingRepository.hentHvisEksisterer(it.id)?.vurdering == null }
     }
 
     override fun hent(behandlingId: BehandlingId): Behandling {
@@ -99,12 +92,6 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         synchronized(lock) {
             log.info("Henter behandling med referanse $referanse.")
             return memory.values.single { behandling -> behandling.referanse == referanse }
-        }
-    }
-
-    override fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling {
-        synchronized(lock) {
-            return memory.getValue(behandlingId).typeBehandling()
         }
     }
 
@@ -147,7 +134,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     }
 
     override fun hentAlleMedVedtakFor(
-        person: Person,
+        personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> = synchronized(lock) {
         memory.values.mapNotNull { behandling ->
@@ -156,7 +143,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
             }
 
             val sak = InMemorySakRepository.hent(behandling.sakId)
-            if (sak.person.id != person.id) {
+            if (sak.person.id != personId) {
                 return@mapNotNull null
             }
             val vedtak = InMemoryVedtakRepository.hent(behandling.id)
@@ -184,15 +171,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         tilstand: StegTilstand
     ) {
         synchronized(lock) {
-            val stegHistorikk = memoryStegHistorikk[behandlingId]?.map {
-                StegTilstand(
-                    tidspunkt = it.tidspunkt(),
-                    stegStatus = it.status(),
-                    stegType = it.steg(),
-                    aktiv = false
-                )
-            }.orEmpty()
+            val stegHistorikk = memoryStegHistorikk[behandlingId].orEmpty()
+            check(stegHistorikk.all { it <= tilstand  })
             memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
+            memory[behandlingId]!!.oppdaterSteg(tilstand)
         }
     }
 

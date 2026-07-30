@@ -8,9 +8,8 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -18,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
@@ -35,6 +35,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -95,7 +96,6 @@ fun NormalOpenAPIRoute.behandlingApi(
                             log.warn("Feil ved utleding av virkningstidspunkt for behandling ${behandling.id}", it)
                             null
                         }
-                    val flyt = behandling.flyt()
 
                     val kravMottatt = finnKravMottatt(repositoryProvider, behandling)
                     val tilhørendeKlagebehandling = tilhørendeKlagebehandling(
@@ -103,7 +103,15 @@ fun NormalOpenAPIRoute.behandlingApi(
                         behandling
                     )
 
-                    val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+                    val vurderingsbehovOgÅrsaker = run {
+                        val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+                        val identer = vurderingsbehovOgÅrsaker.mapNotNull { it.opprettetAv }.distinct()
+                        val navnPerIdent = if (identer.isEmpty()) emptyMap()
+                        else AnsattInfoService(gatewayProvider).hentAnsatteVisningsnavn(identer)
+                            .filterNotNull()
+                            .associateBy({ it.navident }, { Bruker(it.visningsnavn) /* hacky. burde ha DTO */})
+                        vurderingsbehovOgÅrsaker.map { it.copy(opprettetAv = it.opprettetAv?.let { ident -> navnPerIdent[ident] ?: ident }) }
+                    }
 
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
@@ -112,19 +120,15 @@ fun NormalOpenAPIRoute.behandlingApi(
                         opprettet = behandling.opprettetTidspunkt,
                         skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status()
                             .erAvsluttet(),
-                        avklaringsbehov = FrivilligeAvklaringsbehov(
-                            avklaringsbehov(
-                                avklaringsbehovRepository,
-                                behandling.id
-                            ),
-                            flyt,
-                            behandling.aktivtSteg()
-                        ).alle().map { avklaringsbehov ->
-                            AvklaringsbehovDTO(
-                                avklaringsbehov = avklaringsbehov,
-                                kravdato = sak.rettighetsperiode.fom
-                            )
-                        },
+                        avklaringsbehov =
+                            avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                                .allePlussFrivillige(behandling)
+                                .map { avklaringsbehov ->
+                                    AvklaringsbehovDTO(
+                                        avklaringsbehov = avklaringsbehov,
+                                        kravdato = sak.rettighetsperiode.fom
+                                    )
+                                },
                         vilkår = vilkårResultat(vilkårsresultatRepository, behandling.id).alle()
                             .map { vilkår ->
                                 VilkårDTO(
@@ -168,12 +172,16 @@ fun NormalOpenAPIRoute.behandlingApi(
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandling = behandling(repositoryProvider.provide(), req)
-                    if (behandling.status().erAvsluttet()) {
+                    
+                    // Optimistisk sjekk, uten lås, på om behandling er avsluttet
+                    if (behandling.status() == Status.AVSLUTTET) {
                         return@transaction
                     }
                     val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                     val lås = taSkriveLåsRepository.lås(req.referanse)
-                    if (!behandling.status().erAvsluttet()
+
+                    // Sjekk på nytt at behandlingen ikke er avsluttet nå som vi har lås den
+                    if (behandling.status() != Status.AVSLUTTET
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                     ) {
                         ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(
@@ -220,13 +228,6 @@ fun NormalOpenAPIRoute.behandlingApi(
 
 private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {
     return BehandlingReferanseService(behandlingRepository).behandling(req)
-}
-
-private fun avklaringsbehov(
-    avklaringsbehovRepository: AvklaringsbehovRepository,
-    behandlingId: BehandlingId
-): Avklaringsbehovene {
-    return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 }
 
 private fun vilkårResultat(

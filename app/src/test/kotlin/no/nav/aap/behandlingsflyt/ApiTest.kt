@@ -77,6 +77,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
 
 @Fakes
 // FIXME testene i klassen bruker samme database og er timing-sensitive. Derfor SAME_THREAD.
@@ -153,7 +154,6 @@ class ApiTest {
         @JvmStatic
         @BeforeAll
         fun beforeall() {
-            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
             server.start()
             port =
                 runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
@@ -423,7 +423,7 @@ class ApiTest {
                     } catch (e: Exception) {
                         log.info("Exception: $e")
                     } finally {
-                        delay(delayMs)
+                        delay(delayMs.milliseconds)
                         tries++
                     }
                 }

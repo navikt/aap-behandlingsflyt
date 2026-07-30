@@ -49,7 +49,7 @@ class FastsettBehandlendeEnhetSteg private constructor(
                 repositoryProvider.provide(),
                 KlageresultatUtleder(repositoryProvider),
                 TrekkKlageService(repositoryProvider),
-                AvklaringsbehovService(repositoryProvider),
+                AvklaringsbehovService(repositoryProvider, gatewayProvider),
             )
         }
 

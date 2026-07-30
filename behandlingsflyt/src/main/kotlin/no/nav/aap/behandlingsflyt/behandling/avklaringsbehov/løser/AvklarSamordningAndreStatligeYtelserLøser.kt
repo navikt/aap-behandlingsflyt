@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklarSamordningAndreStatligeYtelserLøser(
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
@@ -24,7 +25,8 @@ class AvklarSamordningAndreStatligeYtelserLøser(
             kontekst.behandlingId(),
             SamordningAndreStatligeYtelserVurdering(
                 begrunnelse = løsning.samordningAndreStatligeYtelserVurdering.begrunnelse,
-                vurdertAv = kontekst.bruker.ident,
+                vurdertAv = kontekst.bruker,
+                vurdertTidspunkt = LocalDateTime.now(),
                 vurderingPerioder = løsning.samordningAndreStatligeYtelserVurdering.vurderingPerioder.map {
                     SamordningAndreStatligeYtelserVurderingPeriode(
                         ytelse = it.ytelse,

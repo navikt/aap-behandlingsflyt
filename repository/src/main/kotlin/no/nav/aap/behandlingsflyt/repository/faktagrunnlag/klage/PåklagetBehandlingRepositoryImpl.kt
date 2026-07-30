@@ -75,14 +75,15 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: PåklagetBehandlingGrunnlag) {
         val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
         val query = """
-            INSERT INTO PAAKLAGET_BEHANDLING_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV) 
-            VALUES (?, ?, TRUE)
+            INSERT INTO PAAKLAGET_BEHANDLING_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID) 
+            VALUES (?, ?, TRUE, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -90,15 +91,16 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
     private fun lagreVurdering(vurdering: PåklagetBehandlingVurdering): Long {
         val query = """
             INSERT INTO PAAKLAGET_BEHANDLING_VURDERING 
-            (TYPE_VEDTAK, PAAKLAGET_BEHANDLING_ID, VURDERT_AV) 
-            VALUES (?, ?, ?)
+            (TYPE_VEDTAK, PAAKLAGET_BEHANDLING_ID, VURDERT_AV, OPPRETTET_TID) 
+            VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
             setParams {
                 setEnumName(1, vurdering.påklagetVedtakType)
                 setLong(2, vurdering.påklagetBehandling?.id)
-                setString(3, vurdering.vurdertAv)
+                setBruker(3, vurdering.vurdertAv)
+                setInstant(4, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
@@ -157,7 +159,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
         return PåklagetBehandlingVurdering(
             påklagetVedtakType = row.getEnum("type_vedtak"),
             påklagetBehandling = row.getLongOrNull("PAAKLAGET_BEHANDLING_ID")?.let { BehandlingId(it) },
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant(
                 "OPPRETTET_TID"
             )
@@ -168,7 +170,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
         return PåklagetBehandlingVurderingMedReferanse(
             påklagetVedtakType = row.getEnum("TYPE_VEDTAK"),
             påklagetBehandling = row.getLongOrNull("PAAKLAGET_BEHANDLING_ID")?.let { BehandlingId(it) },
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             referanse = row.getUUIDOrNull("REFERANSE")?.let { BehandlingReferanse(it) },
             opprettet = row.getInstant(
                 "OPPRETTET_TID"

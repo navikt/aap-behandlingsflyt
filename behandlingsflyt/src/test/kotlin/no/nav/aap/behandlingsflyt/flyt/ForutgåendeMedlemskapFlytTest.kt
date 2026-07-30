@@ -3,13 +3,18 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertOverstyrtForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -310,4 +315,92 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
 
         assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
     }
+
+
+    @Test
+    fun `forutgående medlemskap går fra oppfylt kun for vurdert periode til oppfylt til Tid MAKS når grunnlaget gir automatisk innvilgelse`() {
+        // Person uten inntekt og uten MEDL-vedtak -> forutgående medlemskap kan ikke avgjøres automatisk
+        val person = TestPersoner.STANDARD_PERSON().medInntekter(emptyList())
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
+
+        val fom = sak.rettighetsperiode.fom
+        val sisteOppfylteDag = fom.plusMonths(2)
+        val ikkeOppfyltFra = sisteOppfylteDag.plusDays(1)
+
+        // Saksbehandler frem til forutgående medlemskap (løser bl.a. lovvalg manuelt på veien)
+        behandling.løsFramTilForutgåendeMedlemskap(fom)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactly(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+            }
+
+        // Fase 1: bruker legger inn to perioder - oppfylt frem til sisteOppfylteDag, ikke oppfylt etter
+        val oppdatertBehandling = behandling.løsAvklaringsBehov(
+            AvklarPeriodisertForutgåendeMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
+                        fom = fom,
+                        tom = sisteOppfylteDag,
+                        begrunnelse = "oppfyller forutgående medlemskap",
+                        harForutgåendeMedlemskap = true,
+                        varMedlemMedNedsattArbeidsevne = null,
+                        medlemMedUnntakAvMaksFemAar = null
+                    ),
+                    PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
+                        fom = ikkeOppfyltFra,
+                        tom = null,
+                        begrunnelse = "oppfyller ikke forutgående medlemskap",
+                        harForutgåendeMedlemskap = false,
+                        varMedlemMedNedsattArbeidsevne = null,
+                        medlemMedUnntakAvMaksFemAar = null
+                    )
+                )
+            )
+        )
+
+        // Fase 1: forutgående medlemskap er oppfylt KUN for den vurderte perioden (frem til
+        // sisteOppfylteDag), og ikke oppfylt etterpå
+        val medlemskapFase1 = hentVilkårsresultat(oppdatertBehandling.id)
+            .finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+        assertThat(medlemskapFase1.filter { it.erOppfylt() }.maxOf { it.periode.tom }).isEqualTo(sisteOppfylteDag)
+        assertThat(medlemskapFase1.any { !it.erOppfylt() }).isTrue()
+
+        // Fase 2: grunnlaget oppdateres - et MEDL-vedtak om sammenhengende medlemskap i Norge
+        // siste 5 år kommer inn, slik at forutgående medlemskap nå kan avgjøres automatisk som
+        // oppfylt for hele perioden
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = person.identer,
+                fødselsdato = person.fødselsdato,
+                inntekter = emptyList(),
+                medlStatus = listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 100087727,
+                        ident = person.aktivIdent().identifikator,
+                        fraOgMed = fom.minusYears(6).toString(),
+                        tilOgMed = fom.plusYears(2).toString(),
+                        status = "GYLD",
+                        statusaarsak = null,
+                        medlem = true,
+                        grunnlag = "grunnlag",
+                        lovvalg = "lovvalg",
+                        helsedel = true,
+                        lovvalgsland = "NOR",
+                        kilde = null
+                    )
+                )
+            )
+        )
+
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP, sak.id)
+        val oppdatertBehandlingNyttGrunnlag = prosesserBehandling(oppdatertBehandling)
+
+        // Fase 2: forutgående medlemskap er nå oppfylt for hele perioden, helt til Tid.MAKS
+        val medlemskapFase2 = hentVilkårsresultat(oppdatertBehandlingNyttGrunnlag.id)
+            .finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+        assertThat(medlemskapFase2).allMatch { it.erOppfylt() }
+        assertThat(medlemskapFase2.maxOf { it.periode.tom }).isEqualTo(Tid.MAKS)
+    }
+
+
 }

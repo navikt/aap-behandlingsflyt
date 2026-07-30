@@ -10,6 +10,9 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 
+/**
+ * @param behandlingId Er ikke-null hvis dokumentet er ferdigbehandlet. Se [no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService.oppdaterMedBehandlingId].
+ */
 class MottattDokument(
     val referanse: InnsendingReferanse,
     val sakId: SakId,

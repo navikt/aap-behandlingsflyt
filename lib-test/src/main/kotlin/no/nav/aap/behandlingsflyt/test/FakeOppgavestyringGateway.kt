@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.test
 
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringDto
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOppdatertHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.gateway.Factory
-import no.nav.aap.oppgave.enhet.OppgaveEnhetResponse
 
 class FakeOppgavestyringGateway : OppgavestyringGateway {
     override fun varsleHendelse(hendelse: BehandlingFlytStoppetHendelse) {
@@ -30,6 +32,10 @@ class FakeOppgavestyringGateway : OppgavestyringGateway {
 
     override fun hentOppgaveEnhet(behandlingReferanse: BehandlingReferanse): OppgaveEnhetResponse {
         return OppgaveEnhetResponse(emptyList())
+    }
+
+    override fun hentMarkeringerOgHistorikk(saksnummer: Saksnummer): List<MarkeringDto> {
+        return emptyList()
     }
 
     companion object : Factory<OppgavestyringGateway> {

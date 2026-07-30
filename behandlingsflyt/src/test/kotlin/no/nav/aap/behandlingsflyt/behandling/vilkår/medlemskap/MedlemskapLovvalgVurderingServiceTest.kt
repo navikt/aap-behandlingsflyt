@@ -46,7 +46,6 @@ class MedlemskapLovvalgVurderingServiceTest {
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)),
-                1,
                 null,
                 PersonStatus.bosatt,
                 listOf(Statsborgerskap("NOR"))
@@ -89,7 +88,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 arbeiderINorgeGrunnlag = emptyList(),
             ),
             personopplysning = Personopplysning(
-                Fødselsdato(LocalDate.now().minusYears(18)), 1, null, PersonStatus.bosatt,
+                Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt,
                 listOf(
                     Statsborgerskap("XUK"),
                     Statsborgerskap("NOR"),
@@ -133,7 +132,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 arbeiderINorgeGrunnlag = emptyList(),
             ),
             personopplysning = Personopplysning(
-                Fødselsdato(LocalDate.now().minusYears(18)), 1, null, PersonStatus.bosatt, listOf(
+                Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt, listOf(
                     Statsborgerskap("XUK"),
                 )
             ),

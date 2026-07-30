@@ -27,7 +27,7 @@ class RefusjonkravSteg private constructor(
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         refusjonkravRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
     )
@@ -41,10 +41,13 @@ class RefusjonkravSteg private constructor(
             definisjon = Definisjon.REFUSJON_KRAV,
             vedtakBehøverVurdering = {
                 when (behandlingstype) {
-                    TypeBehandling.Førstegangsbehandling -> !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                        kontekst,
-                        type()
-                    )
+                    TypeBehandling.Førstegangsbehandling -> {
+                       when {
+                           tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                           kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
+                           else -> true
+                       }
+                    }
 
                     else -> false
                 }

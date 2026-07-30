@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument.Dødsfalltype
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
@@ -20,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -80,7 +80,7 @@ class PdlHendelseService(
             val harOppdatertIdent = person.aktivIdent() != nyAktivIdent
             if (harOppdatertIdent) {
                 log.info("Oppdaterert ident for personId ${person.id} med ny aktiv ident fra PDL")
-                sakRepository.finnSakerFor(person).forEach { sak ->
+                sakRepository.finnSakerFor(person.id).forEach { sak ->
                     hendelseService.registrerMottattHendelse(
                         personHendelse.tilInnsendingFolkeregisterIdentHendelse(
                             sak.saksnummer,
@@ -115,7 +115,7 @@ class PdlHendelseService(
         // Sjekk om personen er et barn fr apersontabellen eller aap-mottaker
         if (person != null) {
             håndterDødPersonSomBrukerEllerBarn(
-                person,
+                person.id,
                 funnetIdent!!,
                 personHendelse,
             )
@@ -132,7 +132,7 @@ class PdlHendelseService(
     }
 
     private fun håndterDødPersonSomBrukerEllerBarn(
-        person: Person,
+        personId: PersonId,
         funnetIdent: Ident,
         personHendelse: PdlPersonHendelse,
     ) {
@@ -154,7 +154,7 @@ class PdlHendelseService(
                 .forEach { sak ->
                     val behandlingMedSistFattedeVedtak =
                         behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
-                    val sisteOpprettedeBehandling = behandlingService.finnSisteYtelsesbehandlingFor(
+                    val sisteOpprettedeBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(
                         sak.id
                     )
                     log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
@@ -169,9 +169,9 @@ class PdlHendelseService(
         }
 
         // Finn sak på person
-        sakRepository.finnSakerFor(person).forEach { sak ->
+        sakRepository.finnSakerFor(personId).forEach { sak ->
             log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
-            val sisteOpprettedeBehandling = behandlingService.finnSisteYtelsesbehandlingFor(
+            val sisteOpprettedeBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(
                 sak.id
             )
             val behandlingMedSistFattedeVedtak =
@@ -210,11 +210,8 @@ class PdlHendelseService(
             .forEach { sak ->
                 val behandlingMedSistFattedeVedtak =
                     behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
-                val sisteOpprettedeBehandling =
-                    behandlingRepository.finnSisteOpprettedeBehandlingFor(
-                        sak.id,
-                        listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                    )
+                val sisteOpprettedeBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
+
                 log.info("Registrerer mottatt hendelse på barn oppgitt av saksbehandler for ${sak.saksnummer}")
                 sendDødsHendelseHvisRelevant(
                     behandlingMedSistFattedeVedtak,

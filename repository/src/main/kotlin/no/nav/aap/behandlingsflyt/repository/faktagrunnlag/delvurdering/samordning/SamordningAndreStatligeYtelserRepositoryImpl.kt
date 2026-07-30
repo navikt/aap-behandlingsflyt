@@ -35,7 +35,7 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
                 SamordningAndreStatligeYtelserGrunnlag(
                     vurdering = SamordningAndreStatligeYtelserVurdering(
                         begrunnelse = it.getString("begrunnelse"),
-                        vurdertAv = it.getString("vurdert_av"),
+                        vurdertAv = it.getBruker("vurdert_av"),
                         vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
                         vurderingPerioder = vurderingPerioder
                     )
@@ -80,12 +80,13 @@ class SamordningAndreStatligeYtelserRepositoryImpl(private val connection: DBCon
         }
 
         val samordingAndreStatligeYtelserVurderingQuery = """
-            INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING (begrunnelse, vurdert_av) VALUES (?, ?)
+            INSERT INTO SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING (begrunnelse, vurdert_av, opprettet_tid) VALUES (?, ?, ?)
         """.trimIndent()
         val vurderingId = connection.executeReturnKey(samordingAndreStatligeYtelserVurderingQuery) {
             setParams {
                 setString(1, vurdering.begrunnelse)
-                setString(2, vurdering.vurdertAv)
+                setBruker(2, vurdering.vurdertAv)
+                setLocalDateTime(3, vurdering.vurdertTidspunkt)
             }
         }
 

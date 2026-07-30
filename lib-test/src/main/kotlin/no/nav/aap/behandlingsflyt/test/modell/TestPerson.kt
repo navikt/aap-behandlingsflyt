@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
-import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.type.Periode
@@ -24,15 +23,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
+import no.nav.aap.behandlingsflyt.help.ident
 
+import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 import java.time.Year
-
-fun genererIdent(fødselsdato: LocalDate): Ident {
-    return Ident(FødselsnummerGenerator.Builder().fodselsdato(fødselsdato).buildAndGenerate())
-}
 
 fun defaultInntekt(): List<InntektPerÅr> {
     return (0..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
@@ -40,15 +37,17 @@ fun defaultInntekt(): List<InntektPerÅr> {
 
 class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
-    val identer: Set<Ident> = setOf(genererIdent(fødselsdato.toLocalDate())),
+    val identer: Set<Ident> = setOf(ident()),
     val dødsdato: Dødsdato? = null,
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     var yrkesskade: List<TestYrkesskade> = emptyList(),
-    var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
+    institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     var uføre: Uføre? = null,
+    var uføreHistorikk: List<Uføre> = emptyList(),
     var uføreSøknad: UføreSøknad? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
+    aInntekter: List<InntektPerÅr>? = null,
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
         PdlFolkeregisterPersonStatus(
             PersonStatus.bosatt,
@@ -63,8 +62,9 @@ class TestPerson(
         )
     ),
     val medlStatus: List<MedlemskapDataIntern> = emptyList(),
+    var fastlege: BehandlerDto? = null,
     var sykepenger: List<Sykepenger>? = null,
-    var dagpenger: List<Dagpenger>? = null,
+    dagpenger: List<Dagpenger>? = null,
     var tiltakspenger: List<Tiltakspenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
     val tjenestePensjon: TjenestePensjonRespons? = null,
@@ -73,14 +73,35 @@ class TestPerson(
 ) {
     data class Sykepenger(val grad: Int, val periode: Periode)
     data class Dagpenger(val periode: Periode, val kilde: DagpengerKilde, val dagpengerYtelseType: DagpengerYtelseType)
-    data class Tiltakspenger(val periode: Periode, val kilde: TiltakspengerKilde, val ytelseType: TiltakspengerYtelseType)
+    data class Tiltakspenger(
+        val periode: Periode,
+        val kilde: TiltakspengerKilde,
+        val ytelseType: TiltakspengerYtelseType
+    )
+
     data class ForeldrePenger(val grad: Number, val periode: Periode)
 
+
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
+
+    /**
+     * A-inntekt per år (kun for test). Når satt, brukes denne i [no.nav.aap.behandlingsflyt.test.fakes.AinntektFake]
+     * i stedet for å avlede A-inntekt fra POPP-inntekten — slik at man kan simulere avvik mellom
+     * A-inntekt og POPP (f.eks. ved endring i uføregrad midt i året).
+     */
+    private val aInntekter: List<InntektPerÅr>? = aInntekter
+
+    var institusjonsopphold = institusjonsopphold
+        private set
 
     @JsonProperty
     fun inntekter(): List<InntektPerÅr> {
         return inntekter.toList()
+    }
+
+    @JsonProperty
+    fun aInntekter(): List<InntektPerÅr>? {
+        return aInntekter
     }
 
     fun aktivIdent(): Ident {
@@ -88,16 +109,15 @@ class TestPerson(
     }
 
     override fun toString(): String {
-        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, dagpenger=${dagpenger}, tiltakspenger=$tiltakspenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
+        return "TestPerson(barn=$barn, fødselsdato=$fødselsdato, identer=$identer, dødsdato=$dødsdato, navn=$navn, yrkesskade=$yrkesskade, institusjonsopphold=$institusjonsopphold, uføre=$uføre, uføreHistorikk=$uføreHistorikk, personStatus=$personStatus, statsborgerskap=$statsborgerskap, sykepenger=$sykepenger, dagpenger=${dagpenger}, tiltakspenger=$tiltakspenger, foreldrepenger=$foreldrepenger, inntekter=$inntekter)"
     }
 
     fun sykepenger(): List<Sykepenger> {
         return sykepenger.orEmpty()
     }
 
-    fun dagpenger(): List<Dagpenger> {
-        return dagpenger.orEmpty()
-    }
+    var dagpenger = dagpenger
+        private set
 
     fun tiltakspenger(): List<Tiltakspenger> {
         return tiltakspenger.orEmpty()
@@ -109,8 +129,23 @@ class TestPerson(
         return this
     }
 
-    fun medUføre(uføre: Prosent?, virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3), uføregradTom: LocalDate? = null): TestPerson {
-        this.uføre = uføre?.let { Uføre(virkningstidspunkt = virkningstidspunkt, uføregrad = uføre, uføregradTom = uføregradTom) }
+    fun medUføre(
+        uføre: Prosent?,
+        virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3),
+        uføregradTom: LocalDate? = null
+    ): TestPerson {
+        this.uføre = uføre?.let {
+            Uføre(
+                virkningstidspunkt = virkningstidspunkt,
+                uføregrad = uføre,
+                uføregradTom = uføregradTom
+            )
+        }
+        return this
+    }
+
+    fun medFastlege(fastlege: BehandlerDto): TestPerson {
+        this.fastlege = fastlege
         return this
     }
 

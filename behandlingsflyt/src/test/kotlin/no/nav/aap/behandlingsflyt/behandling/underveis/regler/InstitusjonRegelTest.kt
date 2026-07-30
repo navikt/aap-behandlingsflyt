@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -245,7 +246,7 @@ class InstitusjonRegelTest {
                     forsoergerEktefelle = false,
                     harFasteUtgifter = false,
                     vurdertIBehandling = BehandlingId(1L),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     vurdertTidspunkt = fom.atStartOfDay()
                 ),
                 HelseinstitusjonVurdering(
@@ -255,7 +256,7 @@ class InstitusjonRegelTest {
                     forsoergerEktefelle = false,
                     harFasteUtgifter = false,
                     vurdertIBehandling = BehandlingId(1L),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     vurdertTidspunkt = fom.atStartOfDay()
                 ),
                 HelseinstitusjonVurdering(
@@ -265,7 +266,7 @@ class InstitusjonRegelTest {
                     forsoergerEktefelle = true,
                     harFasteUtgifter = false,
                     vurdertIBehandling = BehandlingId(1L),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     vurdertTidspunkt = fom.atStartOfDay()
                 ),
             ),

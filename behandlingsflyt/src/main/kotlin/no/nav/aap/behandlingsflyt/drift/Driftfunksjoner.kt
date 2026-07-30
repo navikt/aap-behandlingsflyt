@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.MeldekortGateway
+import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -29,12 +30,14 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
 
 /**
  * Klasse for alle driftsfunksjoner. Skal kún brukes av DriftApi.
  * */
 class Driftfunksjoner(
+    private val flytJobbRepository: FlytJobbRepository,
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
     private val taSkriveLåsRepository: TaSkriveLåsRepository,
@@ -49,6 +52,7 @@ class Driftfunksjoner(
     private val apiInternGateway: ApiInternGateway,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        flytJobbRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         taSkriveLåsRepository = repositoryProvider.provide(),
@@ -91,11 +95,22 @@ class Driftfunksjoner(
                 behandling.id, StegTilstand(
                     stegType = stegType,
                     stegStatus = StegStatus.START,
-                    aktiv = true,
                 )
             )
 
             flytOrkestrator.prosesserBehandling(behandling.flytKontekst())
+        }
+    }
+
+    fun prosesserBehandling(behandling: Behandling, skalForberede: Boolean) {
+        taSkriveLåsRepository.withLåstBehandling(behandling.id) {
+            if (skalForberede) {
+                log.info("Forbereder og prosesserer behandling")
+                flytOrkestrator.forberedOgProsesserBehandling(behandling.id)
+            } else {
+                log.info("Prosesserer behandling")
+                flytOrkestrator.prosesserBehandling(behandling.flytKontekst())
+            }
         }
     }
 
@@ -137,7 +152,6 @@ class Driftfunksjoner(
                 behandling.id, StegTilstand(
                     stegType = stegType,
                     stegStatus = StegStatus.START,
-                    aktiv = true,
                 )
             )
 
@@ -179,6 +193,27 @@ class Driftfunksjoner(
         val person = personRepository.finnEllerOpprett(identliste)
         meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = person.identer())
         apiInternGateway.oppdaterIdenter(sak.saksnummer, person.identer())
+
+        val sisteBehandling =
+            behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+                ?.behandlingId
+                ?.let { behandlingRepository.hent(it) }
+
+        if (sisteBehandling == null) {
+            log.warn("Fant ingen vedtatt behandling på sak ${sak.saksnummer}. Oppdaterer ikke meldeperioder.")
+        } else {
+            log.info("Fant vedtatt behandling på sak ${sak.saksnummer}. Oppdaterer meldeperioder for behandling ${sisteBehandling.id}.")
+            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, sisteBehandling.id))
+        }
+    }
+
+    fun oppdaterMeldeperioderMeldekortbackend(saksnummer: Saksnummer) {
+        val sak = sakRepository.hent(saksnummer)
+        val sisteBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+            ?: throw UgyldigForespørselException("Finnes ingen vedtatt behandling for sak — avbryter oppdatering av meldeperioder")
+
+        log.info("Oppdaterer meldeperioder (sakId: ${sak.id}, behandlingId: ${sisteBehandling.behandlingId}) i meldekort-backend")
+        flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, sisteBehandling.behandlingId))
     }
 
     private fun validerGyldigTilstandFørUtvidelseAvRettighetsperiode(
@@ -206,14 +241,14 @@ class Driftfunksjoner(
         if (nyttAktivtSteg != behandling.aktivtSteg()) {
             throw UgyldigForespørselException("Aktivt steg er ulikt etter utvidelse av rettighetsperiode - rull tilbake. Før=${behandling.aktivtSteg()} etter=$nyttAktivtSteg")
         }
-        if (`avklaringsbehovFørEndring`.size != avklaringsbehovEtterEndring.size) {
-            throw UgyldigForespørselException("Ulikt antall avklaringsbehov før og etter endring, ruller tilbake. Før=${`avklaringsbehovFørEndring`} etter=${avklaringsbehovEtterEndring}")
+        if (avklaringsbehovFørEndring.size != avklaringsbehovEtterEndring.size) {
+            throw UgyldigForespørselException("Ulikt antall avklaringsbehov før og etter endring, ruller tilbake. Før=${avklaringsbehovFørEndring} etter=${avklaringsbehovEtterEndring}")
         }
         avklaringsbehovEtterEndring.forEach { etter ->
-            val før = `avklaringsbehovFørEndring`.find { it.definisjon == etter.definisjon }
+            val før = avklaringsbehovFørEndring.find { it.definisjon == etter.definisjon }
                 ?: error("Fant ikke avklaringsbehov med definisjon ${etter.definisjon} fra avklaringsbehovene før endringen")
             if (før.status() != etter.status()) {
-                throw UgyldigForespørselException("Ulik status på avklaringsbehov før og etter endring for ${etter.definisjon}, ruller tilbake. Før=${`avklaringsbehovFørEndring`} etter=${avklaringsbehovEtterEndring}")
+                throw UgyldigForespørselException("Ulik status på avklaringsbehov før og etter endring for ${etter.definisjon}, ruller tilbake. Før=${avklaringsbehovFørEndring} etter=${avklaringsbehovEtterEndring}")
             }
         }
     }

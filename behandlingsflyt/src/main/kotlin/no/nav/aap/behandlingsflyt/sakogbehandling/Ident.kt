@@ -9,10 +9,10 @@ data class Ident(val identifikator: String, val aktivIdent: Boolean = true) {
     }
 
     override fun toString(): String {
-        return "Ident(identifikator='${identifikator.substring(0, min(identifikator.length, 6))}*****')"
+        return "Ident(identifikator='${maskert()}')"
     }
 
-    fun getMasked(): String =
+    fun maskert(): String =
         "${identifikator.substring(0, min(identifikator.length, 6))}*****"
 
 }

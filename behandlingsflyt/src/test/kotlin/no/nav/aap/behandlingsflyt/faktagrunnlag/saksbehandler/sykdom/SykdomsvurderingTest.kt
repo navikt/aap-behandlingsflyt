@@ -17,7 +17,6 @@ class SykdomsvurderingTest {
     fun `skal tolke svarene som oppfylt og ikke oppfylt`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
-            dokumenterBruktIVurdering = emptyList(),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
             erNedsettelseIArbeidsevneMerEnnHalvparten = true,

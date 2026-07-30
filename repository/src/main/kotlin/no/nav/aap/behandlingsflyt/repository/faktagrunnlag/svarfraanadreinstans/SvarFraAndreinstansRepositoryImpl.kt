@@ -44,7 +44,7 @@ class SvarFraAndreinstansRepositoryImpl(private val connection: DBConnection) : 
             konsekvens = row.getEnum("KONSEKVENS"),
             vilkårSomOmgjøres = row.getArray("vilkaar_som_skal_omgjoeres", String::class)
                 .mapNotNull { Hjemmel.fraHjemmel(it) },
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("opprettet_tid")
         )
     }
@@ -68,14 +68,15 @@ class SvarFraAndreinstansRepositoryImpl(private val connection: DBConnection) : 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: SvarFraAndreinstansGrunnlag) {
         val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
         val query = """
-            INSERT INTO SVAR_FRA_ANDREINSTANS_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV) 
-            VALUES (?, ?, TRUE)
+            INSERT INTO SVAR_FRA_ANDREINSTANS_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID) 
+            VALUES (?, ?, TRUE, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -83,8 +84,8 @@ class SvarFraAndreinstansRepositoryImpl(private val connection: DBConnection) : 
     private fun lagreVurdering(vurdering: SvarFraAndreinstansVurdering): Long {
         val query = """
             INSERT INTO SVAR_FRA_ANDREINSTANS_VURDERING
-            (BEGRUNNELSE, KONSEKVENS, VILKAAR_SOM_SKAL_OMGJOERES, VURDERT_AV)
-            VALUES (?, ?, ?, ?)
+            (BEGRUNNELSE, KONSEKVENS, VILKAAR_SOM_SKAL_OMGJOERES, VURDERT_AV, OPPRETTET_TID)
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
@@ -92,7 +93,8 @@ class SvarFraAndreinstansRepositoryImpl(private val connection: DBConnection) : 
                 setString(1, vurdering.begrunnelse)
                 setEnumName(2, vurdering.konsekvens)
                 setArray(3, vurdering.vilkårSomOmgjøres.map { it.hjemmel })
-                setString(4, vurdering.vurdertAv)
+                setBruker(4, vurdering.vurdertAv)
+                setInstant(5, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)

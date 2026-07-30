@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 const val SYKEPENGEVEDTAK_EVENT_TOPIC = "tbd.boo"
 
 class SykepengevedtakKafkaKonsument(
-    config: KafkaConsumerConfig<String, String>,
+    config: KafkaConsumerConfig,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
@@ -64,7 +64,7 @@ class SykepengevedtakKafkaKonsument(
             val ident = Ident(sykepengevedtakMelding.personidentifikator)
             val person = personRepository.finn(ident) ?: finnPersonMedIdenterFraPdl(ident, personRepository)
             if (person != null) {
-                val saker = sakRepository.finnSakerFor(person)
+                val saker = sakRepository.finnSakerFor(person.id)
                 for (saken in saker) {
                     val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)
                     if (sisteYtelsesBehandling == null) {

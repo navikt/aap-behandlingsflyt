@@ -31,7 +31,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.*
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class UnderveisGrunnlagApiTest : BaseApiTest() {
@@ -39,7 +39,7 @@ class UnderveisGrunnlagApiTest : BaseApiTest() {
     @Test
     fun `henter underveisperioder for behandling`() {
         val ds = MockDataSource()
-        val sak = nySak(LocalDate.parse("2025-01-01"))
+        val sak = opprettInMemorySak(LocalDate.parse("2025-01-01"))
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         val periode1 = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-14"))
@@ -103,7 +103,7 @@ class UnderveisGrunnlagApiTest : BaseApiTest() {
     @Test
     fun `underveis med diff skal gi lagt til for første behandling`() {
         val ds = MockDataSource()
-        val sak = nySak(LocalDate.parse("2025-01-01"))
+        val sak = opprettInMemorySak(LocalDate.parse("2025-01-01"))
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         val periode1 = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-14"))
@@ -173,7 +173,7 @@ class UnderveisGrunnlagApiTest : BaseApiTest() {
     @Test
     fun `underveis med diff skal generere lagt til uendret endret og fjernet`() {
         val ds = MockDataSource()
-        val sak = nySak(LocalDate.parse("2025-01-01"))
+        val sak = opprettInMemorySak(LocalDate.parse("2025-01-01"))
         val forrigeBehandling = opprettBehandling(sak, TypeBehandling.Revurdering)
         val gjeldendeBehandling = opprettBehandling(
             sak,

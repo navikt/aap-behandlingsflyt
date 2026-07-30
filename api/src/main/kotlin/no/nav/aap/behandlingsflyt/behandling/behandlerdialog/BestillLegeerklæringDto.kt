@@ -13,7 +13,6 @@ data class BestillLegeerklæringDto(
     val behandlerNavn: String,
     val behandlerHprNr: String,
     val fritekst: String,
-    val saksnummer: String,
     val dokumentasjonType: DokumentasjonType,
     val behandlingsReferanse: UUID
 ) : Behandlingsreferanse {

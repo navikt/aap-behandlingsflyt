@@ -45,7 +45,7 @@ data class BarnepensjonVurderingDto(
             vurdering: BarnepensjonVurdering,
             vurdertAvService: VurdertAvService
         ): BarnepensjonVurderingDto {
-            val vurdertAv = vurdering.vurdertAv.ident
+            val vurdertAv = vurdering.vurdertAv
             return BarnepensjonVurderingDto(
                 perioder = vurdering.perioder.map { periode ->
                     BarnepensjonVurderingPeriodeDto(

@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.Instant
 
 class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : SamordningYtelseRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -124,13 +125,17 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         }
 
         val samordningYtelserQuery = """
-            INSERT INTO SAMORDNING_YTELSER DEFAULT VALUES
+            INSERT INTO SAMORDNING_YTELSER (opprettet_tid) VALUES (?)
             """.trimIndent()
-        val ytelserId = dbConnection.executeReturnKey(samordningYtelserQuery)
+        val ytelserId = dbConnection.executeReturnKey(samordningYtelserQuery) {
+            setParams {
+                setInstant(1, Instant.now())
+            }
+        }
 
         samordningYtelser.forEach { ytelse ->
             val ytelseQuery = """
-                INSERT INTO SAMORDNING_YTELSE (ytelse_type, ytelser_id, kilde, saks_ref) VALUES (?, ?, ?, ?)
+                INSERT INTO SAMORDNING_YTELSE (ytelse_type, ytelser_id, kilde, saks_ref, opprettet_tid) VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
 
             val ytelseId = dbConnection.executeReturnKey(ytelseQuery) {
@@ -139,11 +144,12 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                     setLong(2, ytelserId)
                     setString(3, ytelse.kilde)
                     setString(4, ytelse.saksRef)
+                    setInstant(5, Instant.now())
                 }
             }
 
             val ytelsePeriodeQuery = """
-                INSERT INTO SAMORDNING_YTELSE_PERIODE (ytelse_id, periode, gradering, kronesum) VALUES (?, ?::daterange, ?, ?)
+                INSERT INTO SAMORDNING_YTELSE_PERIODE (ytelse_id, periode, gradering, kronesum, opprettet_tid) VALUES (?, ?::daterange, ?, ?, ?)
                 """.trimIndent()
             dbConnection.executeBatch(ytelsePeriodeQuery, ytelse.ytelsePerioder) {
                 setParams {
@@ -151,12 +157,13 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                     setPeriode(2, it.periode)
                     setInt(3, it.gradering?.prosentverdi())
                     setInt(4, it.kronesum?.toInt())
+                    setInstant(5, Instant.now())
                 }
             }
         }
 
         val sql = """
-            INSERT INTO SAMORDNING_YTELSE_GRUNNLAG (BEHANDLING_ID, samordning_ytelse_id, aktiv) VALUES (?, ?, ?)
+            INSERT INTO SAMORDNING_YTELSE_GRUNNLAG (BEHANDLING_ID, samordning_ytelse_id, aktiv, opprettet) VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         val grunnlagId = dbConnection.executeReturnKey(sql) {
@@ -164,6 +171,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                 setLong(1, behandlingId.toLong())
                 setLong(2, ytelserId)
                 setBoolean(3, true)
+                setInstant(4, Instant.now())
             }
         }
         log.info("Lagret samordningytelsegrunnlag med id $grunnlagId for behandling $behandlingId.")
@@ -177,8 +185,8 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         }
         val query = """
             INSERT INTO samordning_ytelse_grunnlag 
-                (behandling_id, samordning_ytelse_id, aktiv) 
-            SELECT ?, samordning_ytelse_id, true
+                (behandling_id, opprettet, samordning_ytelse_id, aktiv) 
+            SELECT ?, ?, samordning_ytelse_id, true
                 from samordning_ytelse_grunnlag 
                 where behandling_id = ? and aktiv
         """.trimIndent()
@@ -186,7 +194,8 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         dbConnection.execute(query) {
             setParams {
                 setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
+                setInstant(2, Instant.now())
+                setLong(3, fraBehandling.toLong())
             }
             setResultValidator { require(it == 1) }
             log.info("Kopiert fra behandling $fraBehandling til $tilBehandling")

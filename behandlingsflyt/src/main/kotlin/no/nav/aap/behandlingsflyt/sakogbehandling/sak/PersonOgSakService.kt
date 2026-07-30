@@ -54,6 +54,6 @@ class PersonOgSakService(
 
         val person = personRepository.finnEllerOpprett(identliste)
 
-        return sakRepository.finnSakerFor(person)
+        return sakRepository.finnSakerFor(person.id)
     }
 }

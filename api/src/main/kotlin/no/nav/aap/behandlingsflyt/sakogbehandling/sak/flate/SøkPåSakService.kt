@@ -11,8 +11,8 @@ class SøkPåSakService(
     val repositoryProvider: RepositoryProvider
 ) {
     fun søkEtterSaker(søketekst: String): List<Sak> {
-        val skalSøkePåSaksnummer = søketekst.length == 7
         val skalSøkePåIdent = søketekst.length == 11
+        val skalSøkePåSaksnummer = søketekst.length != 11
 
         return if (skalSøkePåSaksnummer) {
             søkPåSaksnummer(Saksnummer(søketekst))
@@ -36,6 +36,6 @@ class SøkPåSakService(
         if (person == null) {
             return emptyList()
         }
-        return sakRepository.finnSakerFor(person)
+        return sakRepository.finnSakerFor(person.id)
     }
 }

@@ -6,12 +6,16 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -22,23 +26,21 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.test.testGatewayProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
-import java.time.LocalDate
-import java.util.*
 
 class RettighetsperiodeStegTest {
     private lateinit var vilkårsresultatRepository: VilkårsresultatRepository
@@ -47,9 +49,12 @@ class RettighetsperiodeStegTest {
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var rettighetsperiodeRepository: VurderRettighetsperiodeRepository
     private lateinit var steg: RettighetsperiodeSteg
-    private val sakRepository = InMemorySakRepository
+    private lateinit var kravRepository: KravRepository
     private val behandlingRepository = InMemoryBehandlingRepository
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
+    private val gatewayProvider = createGatewayProvider {
+        register<AlleAvskruddUnleash>()
+    }
 
     @BeforeEach
     fun setup() {
@@ -66,6 +71,7 @@ class RettighetsperiodeStegTest {
         val avbrytRevurderingService: AvbrytRevurderingService = mockk {
             every { revurderingErAvbrutt(any()) } returns false
         }
+        kravRepository = mockk()
 
         steg = RettighetsperiodeSteg(
             vilkårsresultatRepository,
@@ -75,7 +81,11 @@ class RettighetsperiodeStegTest {
                 avklaringsbehovRepository,
                 behandlingRepository,
                 vilkårsresultatRepository,
-                TrukketSøknadService(trukketSøknadRepository)
+                TrukketSøknadService(trukketSøknadRepository),
+                kravRepository,
+                mockk(),
+                gatewayProvider.provide(),
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider { register<AlleAvskruddUnleash>() })
             ),
             tidligereVurderinger,
             rettighetsperiodeRepository,
@@ -231,7 +241,7 @@ class RettighetsperiodeStegTest {
             null,
             null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", "saksbehandler")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", Bruker("saksbehandler"))
     }
 
     private fun flytKontekstMedPerioder(
@@ -249,11 +259,8 @@ class RettighetsperiodeStegTest {
         årsak: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
         vurderingsbehov: Vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE
     ): Behandling {
-        val person = person()
-        val sak = sak(person)
-
         return behandlingRepository.opprettBehandling(
-            sakId = sak.id,
+            sakId = opprettInMemorySak().id,
             typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -262,14 +269,4 @@ class RettighetsperiodeStegTest {
             )
         )
     }
-
-    private fun sak(person: Person): Sak =
-        sakRepository.finnEllerOpprett(person, LocalDate.now())
-
-    private fun person(): Person =
-        Person(
-            id = PersonId(Random(1235123).nextLong()),
-            identifikator = UUID.randomUUID(),
-            identer = listOf(genererIdent(LocalDate.now().minusYears(23)))
-        )
 }

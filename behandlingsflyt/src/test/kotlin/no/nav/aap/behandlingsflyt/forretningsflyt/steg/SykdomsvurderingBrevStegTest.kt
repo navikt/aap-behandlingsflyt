@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -11,40 +13,31 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class SykdomsvurderingBrevStegTest {
 
-    private val random = Random(1235123)
-
     private val steg = SykdomsvurderingBrevSteg(
         InMemorySykdomsvurderingForBrevRepository,
-        AvklaringsbehovService(inMemoryRepositoryProvider),
+        AvklaringsbehovService(inMemoryRepositoryProvider, createGatewayProvider { register<AlleAvskruddUnleash>() }),
         InMemoryAvklaringsbehovRepository,
         FakeTidligereVurderinger()
     )
-    private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
 
     @Test
     fun `skal opprette avklaringsbehov dersom ingen vurdering allerede finnes`() {
-        val person = person()
-        val sak = sak(person)
-        val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val behandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(behandling)
 
         opprettOgLøsSykdombehov(behandling)
@@ -58,15 +51,13 @@ class SykdomsvurderingBrevStegTest {
 
     @Test
     fun `skal returnere fullført dersom avklaringsbehov allerede finnes`() {
-        val person = person()
-        val sak = sak(person)
-        val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val behandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
 
         InMemorySykdomsvurderingForBrevRepository.lagre(
             behandling.id, SykdomsvurderingForBrev(
                 behandlingId = behandling.id,
                 vurdering = "En vurdering",
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
             )
         )
 
@@ -77,9 +68,7 @@ class SykdomsvurderingBrevStegTest {
 
     @Test
     fun `skal opprette avklaringsbehov ved revurdering`() {
-        val person = person()
-        val sak = sak(person)
-        val behandling = behandling(sak, typeBehandling = TypeBehandling.Revurdering)
+        val behandling = behandling(typeBehandling = TypeBehandling.Revurdering)
         val kontekstMedPerioder = flytKontekstMedPerioder(
             behandling,
             setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
@@ -107,7 +96,7 @@ class SykdomsvurderingBrevStegTest {
             "..."
         )
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "...", "meg")
+            .løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "...", Bruker("meg"))
     }
 
     private fun flytKontekstMedPerioder(
@@ -119,9 +108,9 @@ class SykdomsvurderingBrevStegTest {
         this.rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
     }
 
-    private fun behandling(sak: Sak, typeBehandling: TypeBehandling): Behandling =
+    private fun behandling(typeBehandling: TypeBehandling): Behandling =
         behandlingRepository.opprettBehandling(
-            sakId = sak.id,
+            sakId = opprettInMemorySak().id,
             typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -129,10 +118,4 @@ class SykdomsvurderingBrevStegTest {
                 årsak = ÅrsakTilOpprettelse.SØKNAD
             )
         )
-
-    private fun sak(person: Person): Sak =
-        sakRepository.finnEllerOpprett(person, LocalDate.now())
-
-    private fun person(): Person =
-        Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 }

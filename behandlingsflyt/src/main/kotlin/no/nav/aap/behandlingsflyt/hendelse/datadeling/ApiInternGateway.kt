@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.datadeling
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
@@ -30,12 +31,14 @@ interface ApiInternGateway : Gateway {
         sak: Sak,
         behandling: Behandling,
         vedtakId: Long,
-        samId: String?,
+        samId: List<SamIdOgTpNr>,
         tilkjent: List<TilkjentYtelsePeriode>,
         beregningsgrunnlag: BigDecimal?,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
+        perioderMedFritakMeldeplikt: List<Periode>,
+        underveisperioder: List<UnderveisperiodeDatadeling>,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
         muligMaksdato: LocalDate?,
     )
@@ -54,4 +57,3 @@ interface ApiInternGateway : Gateway {
 
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 }
-

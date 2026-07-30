@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -12,7 +13,7 @@ data class Endring(
     val begrunnelse: String,
     val grunn: ÅrsakTilSettPåVent? = null,
     val frist: LocalDate? = null,
-    val endretAv: String,
+    val endretAv: Bruker,
     val årsakTilRetur: List<ÅrsakTilRetur> = emptyList(),
     /**
      * Perioder som vurderingene minst må dekke

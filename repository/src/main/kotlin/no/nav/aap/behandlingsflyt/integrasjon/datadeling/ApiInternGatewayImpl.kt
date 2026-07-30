@@ -9,6 +9,7 @@ import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
@@ -17,16 +18,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenaVedtaksvariantDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenavedtakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.AvslagsårsakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphørDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SamIdOgTpnr
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisperiodeDatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
@@ -93,6 +98,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                 body = SakStatusKelvin(
                     ident = ident, status = no.nav.aap.api.intern.behandlingsflyt.SakStatus(
                         sakId = sakStatus.sakId,
+                        søknadsdatoer = sakStatus.søknadsdatoer,
                         statusKode = when (sakStatus.status) {
                             SakStatus.DatadelingBehandlingStatus.SOKNAD_UNDER_BEHANDLING -> SakstatusFraKelvin.SOKNAD_UNDER_BEHANDLING
                             SakStatus.DatadelingBehandlingStatus.REVURDERING_UNDER_BEHANDLING -> SakstatusFraKelvin.REVURDERING_UNDER_BEHANDLING
@@ -113,14 +119,16 @@ class ApiInternGatewayImpl : ApiInternGateway {
         sak: Sak,
         behandling: Behandling,
         vedtakId: Long,
-        samId: String?,
+        samId: List<SamIdOgTpNr>,
         tilkjent: List<TilkjentYtelsePeriode>,
         beregningsgrunnlag: BigDecimal?,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
         stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
+        perioderMedFritakMeldeplikt: List<Periode>,
+        underveisperioder: List<UnderveisperiodeDatadeling>,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
-        muligMaksdato: LocalDate?
+        muligMaksdato: LocalDate?,
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -144,6 +152,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             tilkjentFom = tilkjentPeriode.periode.fom,
                             tilkjentTom = tilkjentPeriode.periode.tom,
                             dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
+                            effektivDagsats = tilkjentPeriode.tilkjent.redusertDagsats().verdi.toInt(),
                             // legg til redusert dagsats
                             gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
                             samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
@@ -163,7 +172,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     muligMaksdato = muligMaksdato,
                     vedtakId = vedtakId,
-                    samId = samId,
+                    samIdOgTpr = samId.map { SamIdOgTpnr(it.samId.toString(), it.tpNr?.toString()) },
                     stansOpphørVurdering = stansOpphørGrunnlag.orEmpty().map {
                         GjeldendeStansEllerOpphørDTO(
                             fom = it.fom,
@@ -196,6 +205,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             }
                         )
                     },
+                    perioderMedFritakMeldeplikt = perioderMedFritakMeldeplikt.map { PeriodeDTO(it.fom, it.tom) },
+                    underveisperioder = underveisperioder.map { it.tilDatadelingDTO() },
                 ),
             ),
             mapper = { _, _ ->
@@ -233,6 +244,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
             Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> null
             Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT -> null
             Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON -> null
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG -> AvslagsårsakDTO.ANNEN_FULL_YTELSE_AVSLAG
         }
     }
 
@@ -284,3 +296,16 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
     }
 }
+
+internal fun UnderveisperiodeDatadeling.tilDatadelingDTO() = UnderveisperiodeDatadelingDTO(
+    meldepliktstatus = meldepliktstatus,
+    arbeidsgrad = arbeidsgrad,
+    overgrenseVerdi = overgrenseVerdi,
+    timerArbeidet = timerArbeidet,
+    fom = periode.fom,
+    tom = periode.tom,
+    periode = periode.tilDatadelingDTO(),
+    meldeperiode = meldeperiode.tilDatadelingDTO()
+)
+
+internal fun Periode.tilDatadelingDTO() = PeriodeDTO(fom, tom)

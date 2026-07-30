@@ -22,19 +22,19 @@ jobs:
           matrix:
             gradle_args: [":api:check", ":app:check", ":behandlingsflyt:check", ":kontrakt:check", ":lib-test:check", ":repository:check"]
         steps:
-            -   uses: actions/checkout@v6
-            -   uses: actions/setup-java@v5
+            -   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            -   uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
                 with:
                     java-version: 25
                     distribution: 'temurin'
 
             - name: Setup Gradle for a non-wrapper project
-              uses: gradle/actions/setup-gradle@v6
+              uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
               with:
                   gradle-version: wrapper
             - name: Bygg og test (${{matrix.gradle_args}})
               run: ./gradlew ${{matrix.gradle_args}} --continue --stacktrace
-            - uses: dorny/test-reporter@v3.0.0
+            - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
               if: success() || failure()
               with:
                 name: test
@@ -42,7 +42,7 @@ jobs:
                 reporter: java-junit
                 token: ${{ secrets.GITHUB_TOKEN }}
             - name: Publish Test Report
-              uses: mikepenz/action-junit-report@v6
+              uses: mikepenz/action-junit-report@d9f48fc87bc235f7e214acf696ca5abc0a986f16 # v6.4.2
               if: success() || failure() # always run even if the previous step fails
               with:
                 report_paths: '**/build/test-results/test/TEST-*.xml'

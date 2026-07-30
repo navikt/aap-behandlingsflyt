@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -36,7 +37,7 @@ class InntektsbortfallRepositoryImplTest {
         val vurdering = InntektsbortfallVurdering(
             begrunnelse = "En begrunnelse",
             rettTilUttak = true,
-            vurdertAv = "Z123456",
+            vurdertAv = Bruker("Z123456"),
             vurdertIBehandling = behandling.id,
             opprettetTid = LocalDateTime.of(2023, 1, 1, 12, 0)
         )

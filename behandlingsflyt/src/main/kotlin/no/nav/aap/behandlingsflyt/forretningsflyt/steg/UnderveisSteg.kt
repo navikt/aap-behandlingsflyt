@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -21,20 +20,21 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class UnderveisSteg(
     private val underveisService: UnderveisService,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val underveisRepository: UnderveisRepository,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovRepository = repositoryProvider.provide(),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         underveisRepository = repositoryProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            return Fullført
+        }
+        underveisService.vurder(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.FORESLÅ_UTTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
@@ -66,6 +66,7 @@ class UnderveisSteg(
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> false
         }
     }

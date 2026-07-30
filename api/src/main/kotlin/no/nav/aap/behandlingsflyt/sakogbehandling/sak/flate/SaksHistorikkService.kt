@@ -3,30 +3,50 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringForBehandling
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringHendelseType
+import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 
 class SaksHistorikkService(
-    val repositoryProvider: RepositoryProvider
+    private val behandlingRepository: BehandlingRepository,
+    private val avklaringsbehovOperasjonerRepository: AvklaringsbehovOperasjonerRepository,
+    private val trukketSøknadRepository: TrukketSøknadRepository,
+    private val oppgavestyringGateway: OppgavestyringGateway,
 ) {
-    fun utledSaksHistorikk(sakId: SakId): List<BehandlingHistorikkDTO> {
-        val alleBehandlinger = repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sakId)
-        val behandlingerMedBehov = repositoryProvider.provide<AvklaringsbehovOperasjonerRepository>()
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
+    ) : this(
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovOperasjonerRepository = repositoryProvider.provide(),
+        trukketSøknadRepository = repositoryProvider.provide(),
+        oppgavestyringGateway = gatewayProvider.provide()
+    )
+
+    fun utledSaksHistorikk(sak: Sak): List<BehandlingHistorikkDTO> {
+        val alleBehandlinger = behandlingRepository.hentAlleFor(sak.id)
+        val behandlingerMedBehov = avklaringsbehovOperasjonerRepository
             .hentAlleAvklaringsbehovForSak(alleBehandlinger.map { it.id })
 
         val opprettelsesHendelser = utledOpprettelseHendelser(alleBehandlinger)
         val behandlingHendelser = utledBehandlingHendelser(behandlingerMedBehov)
         val returerMedÅrsakHendelser = utledReturerMedÅrsak(behandlingerMedBehov)
+        val markeringerHendelser = utledMarkeringerHendelser(sak.saksnummer)
 
-        return (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser)
+        return (opprettelsesHendelser + behandlingHendelser + returerMedÅrsakHendelser + markeringerHendelser)
             .groupBy { it.behandlingId }
             .map { (_, behandlingData) ->
                 val samlet = behandlingData
@@ -54,7 +74,7 @@ class SaksHistorikkService(
         val erVedtatt =
             avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.erTotrinn() }.all { it.erTotrinnsVurdert() }
         val alleBehovErKvalitetssikret =
-            avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.kreverKvalitetssikring()}
+            avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.kreverKvalitetssikring() }
                 .all { it.erKvalitetssikret() }
 
         return behandlingerMedBehov.mapNotNull { behandling ->
@@ -73,7 +93,7 @@ class SaksHistorikkService(
                                             BehandlingHendelseDTO(
                                                 hendelse = BehandlingHendelseType.VEDTAK_FATTET,
                                                 tidspunkt = it.tidsstempel,
-                                                utførtAv = it.endretAv,
+                                                utførtAv = it.endretAv.ident,
                                             )
                                         )
                                     }
@@ -92,7 +112,7 @@ class SaksHistorikkService(
                                 BehandlingHendelseDTO(
                                     hendelse = type,
                                     tidspunkt = h.tidsstempel,
-                                    utførtAv = h.endretAv,
+                                    utførtAv = h.endretAv.ident,
                                     årsakTilSattPåVent = h.grunn,
                                     begrunnelse = h.begrunnelse
                                 )
@@ -106,7 +126,7 @@ class SaksHistorikkService(
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.SENDT_TIL_BESLUTTER,
                                         tidspunkt = h.tidsstempel,
-                                        utførtAv = h.endretAv,
+                                        utførtAv = h.endretAv.ident,
                                     )
                                 }
                         }
@@ -118,20 +138,21 @@ class SaksHistorikkService(
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.BREV_SENDT,
                                         tidspunkt = h.tidsstempel,
-                                        utførtAv = h.endretAv,
+                                        utførtAv = h.endretAv.ident,
                                         begrunnelse = h.begrunnelse
                                     )
                                 }
                         }
 
                         Definisjon.KVALITETSSIKRING -> {
-                            val sendtTilKvalitetssikrer = avklaringsbehov.historikk
+                            val sendtTilKvalitetssikrer = avklaringsbehov
+                                .historikk
                                 .filter { it.status != Status.AVSLUTTET }
                                 .map { h ->
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.SENDT_TIL_KVALITETSSIKRER,
                                         tidspunkt = h.tidsstempel,
-                                        utførtAv = h.endretAv,
+                                        utførtAv = h.endretAv.ident,
                                         begrunnelse = h.begrunnelse
                                     )
                                 }
@@ -144,7 +165,7 @@ class SaksHistorikkService(
                                             BehandlingHendelseDTO(
                                                 hendelse = BehandlingHendelseType.KVALITETSSIKRET,
                                                 tidspunkt = it.tidsstempel,
-                                                utførtAv = it.endretAv,
+                                                utførtAv = it.endretAv.ident,
                                             )
                                         )
                                     }.orEmpty()
@@ -160,14 +181,14 @@ class SaksHistorikkService(
                                     BehandlingHendelseDTO(
                                         hendelse = BehandlingHendelseType.BESTILT_LEGEERKLÆRING,
                                         tidspunkt = h.tidsstempel,
-                                        utførtAv = h.endretAv,
+                                        utførtAv = h.endretAv.ident,
                                         begrunnelse = h.begrunnelse
                                     )
                                 }
                         }
 
                         Definisjon.VURDER_TREKK_AV_SØKNAD -> {
-                            val nyesteVurdering = repositoryProvider.provide<TrukketSøknadRepository>()
+                            val nyesteVurdering = trukketSøknadRepository
                                 .hentTrukketSøknadVurderinger(behandling.behandlingId)
                                 .maxByOrNull { it.vurdert }
 
@@ -178,7 +199,7 @@ class SaksHistorikkService(
                                         BehandlingHendelseDTO(
                                             hendelse = BehandlingHendelseType.SØKNAD_TRUKKET,
                                             tidspunkt = h.tidsstempel,
-                                            utførtAv = h.endretAv,
+                                            utførtAv = h.endretAv.ident,
                                         )
                                     }
                             } else emptyList()
@@ -217,7 +238,7 @@ class SaksHistorikkService(
                             BehandlingHendelseDTO(
                                 hendelse = typeRetur,
                                 tidspunkt = hendelse.tidsstempel,
-                                utførtAv = hendelse.endretAv,
+                                utførtAv = hendelse.endretAv.ident,
                                 årsakerTilRetur = hendelse.årsakTilRetur,
                                 begrunnelse = hendelse.begrunnelse,
                             )
@@ -259,6 +280,38 @@ class SaksHistorikkService(
                     )
                 )
             )
+        }
+    }
+
+    private fun utledMarkeringerHendelser(saksnummer: Saksnummer): List<BehandlingHistorikkInternal> {
+        val markeringer = oppgavestyringGateway.hentMarkeringerOgHistorikk(saksnummer)
+
+        return markeringer.groupBy { it.behandlingRef }.mapNotNull { (behandlingRef, markeringer) ->
+            val hendelser = markeringer.mapNotNull { markering ->
+                val hendelseType = when (markering.hendelseType) {
+                    MarkeringHendelseType.OPPRETTET -> when (markering.markeringType) {
+                        MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_OPPRETTET
+                        MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_AVSLAG_SYKDOM_OPPRETTET
+                    }
+                    MarkeringHendelseType.FJERNET -> when (markering.markeringType) {
+                        MarkeringForBehandling.HASTER -> BehandlingHendelseType.MARKERING_HASTER_FJERNET
+                        MarkeringForBehandling.AVSLAG_11_5 -> BehandlingHendelseType.MARKERING_AVSLAG_SYKDOM_FJERNET
+                    }
+                    else -> null
+                } ?: return@mapNotNull null
+
+                BehandlingHendelseDTO(
+                    hendelse = hendelseType,
+                    tidspunkt = markering.opprettetTidspunkt,
+                    utførtAv = markering.opprettetAv,
+                    begrunnelse = markering.begrunnelse,
+                    resultat = markering.markeringType.name
+                )
+            }
+            if (hendelser.isNotEmpty()) {
+                val behandling = BehandlingReferanseService(behandlingRepository).behandling(behandlingRef)
+                BehandlingHistorikkInternal(behandling.id, hendelser)
+            } else null
         }
     }
 

@@ -1,0 +1,1 @@
+CREATE INDEX IDX_TILKJENT_YTELSE_SPORING ON tilkjent_ytelse_sporing (tilkjent_ytelse_id);

@@ -4,9 +4,12 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -15,25 +18,23 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class ForeslåVedtakStegTest {
-
-    private val random = Random(1235123)
-
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     private val avklaringsbehovService = AvklaringsbehovService(
         mockk<AvbrytRevurderingService> {
@@ -46,6 +47,10 @@ class ForeslåVedtakStegTest {
             TrukketSøknadService(
                 InMemoryTrukketSøknadRepository
             ),
+        kravRepository = InMemoryKravRepository,
+        sakRepository = InMemorySakRepository,
+        unleashGateway = AlleAvskruddUnleash,
+        avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {register<AlleAvskruddUnleash>()  })
     )
     private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)
     private val sakRepository = InMemorySakRepository
@@ -55,13 +60,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis ingen avklaringsbehov skal det ikke gi foreslå vedtak`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -83,13 +84,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis ingen avklaringsbehov løst av NAY skal foreslå vedtak hoppes over`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -102,7 +99,7 @@ class ForeslåVedtakStegTest {
             definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -117,13 +114,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis avklaringsbehov løst av NAY, gå innom foreslå vedtak`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -136,7 +129,7 @@ class ForeslåVedtakStegTest {
             definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             funnetISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -152,13 +145,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis NAY kun har behandlet lovvalg og behandling går mot avslag på lokalkontor, ikke gå innom foreslå vedtak`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -175,8 +164,8 @@ class ForeslåVedtakStegTest {
             definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", Bruker("TESTEN"))
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -192,13 +181,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis NAY har behandlet lovvalg og medlemskap til avslag, gå innom foreslå vedtak`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -211,7 +196,7 @@ class ForeslåVedtakStegTest {
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             funnetISteg = StegType.VURDER_LOVVALG, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -227,13 +212,9 @@ class ForeslåVedtakStegTest {
 
     @Test
     fun `hvis NAY-avklaringsbehov finnes, skal foreslå vedtak åpnes også etter tilbakehopp`() {
-        val person =
-            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-        val sak = sakRepository.finnEllerOpprett(person, LocalDate.now())
         val behandling =
             behandlingRepository.opprettBehandling(
-                sakId = sak.id,
+                sakId = opprettInMemorySak().id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -247,14 +228,14 @@ class ForeslåVedtakStegTest {
             funnetISteg = StegType.VURDER_LOVVALG,
             null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", Bruker("TESTEN"))
         avklaringsbehovene.leggTil(
             definisjon = Definisjon.FORESLÅ_VEDTAK,
             funnetISteg = StegType.FORESLÅ_VEDTAK,
             null, null
         )
 
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", Bruker("TESTEN"))
         val kontekstMedPerioder = flytKontekstMedPerioder {
             this.behandling = behandling
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
@@ -267,7 +248,7 @@ class ForeslåVedtakStegTest {
         assertThat(avklaringsbehovene.åpne()).isEmpty()
 
         // Gjør om på et NAY-avklaringsbehov
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "gjorde om på noe", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "gjorde om på noe", Bruker("TESTEN"))
 
         val resultatEtterTilbakehopp = steg.utfør(kontekstMedPerioder)
         assertThat(resultatEtterTilbakehopp).isEqualTo(Fullført)

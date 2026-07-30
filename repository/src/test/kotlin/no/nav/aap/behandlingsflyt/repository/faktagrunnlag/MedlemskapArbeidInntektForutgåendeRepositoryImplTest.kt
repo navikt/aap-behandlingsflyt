@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -404,7 +405,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             harForutgåendeMedlemskap = true,
             varMedlemMedNedsattArbeidsevne = false,
             medlemMedUnntakAvMaksFemAar = false,
-            vurdertAv = "NavIdent",
+            vurdertAv = Bruker("NavIdent"),
             vurdertTidspunkt = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling
         )
@@ -558,7 +559,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                     harForutgåendeMedlemskap = true,
                     varMedlemMedNedsattArbeidsevne = false,
                     medlemMedUnntakAvMaksFemAar = false,
-                    vurdertAv = "NavIdent",
+                    vurdertAv = Bruker("NavIdent"),
                     vurdertTidspunkt = LocalDateTime.now(),
                     vurdertIBehandling = behandlingId,
                     fom = LocalDate.now(),

@@ -4,28 +4,28 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.Klageb
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.util.concurrent.ConcurrentHashMap
 
 object ImMemoryKlagebehandlingNayRepository : KlagebehandlingNayRepository {
+    private val vurderinger = ConcurrentHashMap<BehandlingId, KlagevurderingNay>()
+
     override fun hentHvisEksisterer(behandlingId: BehandlingId): KlagebehandlingNayGrunnlag? {
-        TODO("Not yet implemented")
+        return vurderinger[behandlingId]?.let { KlagebehandlingNayGrunnlag(vurdering = it) }
     }
 
-    override fun lagre(
-        behandlingId: BehandlingId,
-        klagevurderingNay: KlagevurderingNay
-    ) {
-        TODO("Not yet implemented")
+    override fun lagre(behandlingId: BehandlingId, klagevurderingNay: KlagevurderingNay) {
+        val eksisterende = hentHvisEksisterer(behandlingId)
+        val nytt = KlagebehandlingNayGrunnlag(vurdering = klagevurderingNay)
+        if (eksisterende != nytt) {
+            vurderinger[behandlingId] = klagevurderingNay
+        }
     }
 
-    override fun kopier(
-        fraBehandling: BehandlingId,
-        tilBehandling: BehandlingId
-    ) {
-        TODO("Not yet implemented")
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Gjør ingenting
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        vurderinger.remove(behandlingId)
     }
-
 }

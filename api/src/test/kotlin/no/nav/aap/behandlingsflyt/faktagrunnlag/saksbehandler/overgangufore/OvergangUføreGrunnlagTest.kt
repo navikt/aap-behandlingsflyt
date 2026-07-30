@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -23,7 +24,7 @@ class OvergangUføreGrunnlagTest {
                     brukerRettPåAAP = true,
                     fom = gittKravdato,
                     tom = 31 desember 2025,
-                    vurdertAv = "meg",
+                    vurdertAv = Bruker("meg"),
                     vurdertIBehandling = BehandlingId(Random.nextLong()),
                     opprettet = LocalDateTime.now().atZone(ZoneId.of("Europe/Oslo")).toInstant(),
                 )

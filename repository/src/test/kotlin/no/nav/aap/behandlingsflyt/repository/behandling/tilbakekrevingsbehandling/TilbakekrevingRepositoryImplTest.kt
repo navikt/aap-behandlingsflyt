@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.behandling.tilbakekrevingsbehandli
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.help.opprettSak
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingVenteGrunn
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -49,6 +50,8 @@ class TilbakekrevingRepositoryImplTest {
                 eksternBehandlingId = UUID.randomUUID().toString(),
                 sakOpprettet = nå,
                 varselSendt = nå.toLocalDate(),
+                venteGrunn = TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE,
+                gjenopptas = LocalDate.now().plusMonths(1),
                 behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
                 totaltFeilutbetaltBeløp = Beløp(1000),
                 tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
@@ -75,6 +78,8 @@ class TilbakekrevingRepositoryImplTest {
             assertThat(behandlingerEtterHendelse2).hasSize(1)
             assertThat(behandlingerEtterHendelse2.first().behandlingsstatus).isEqualTo(TilbakekrevingBehandlingsstatus.TIL_BEHANDLING)
             assertThat(behandlingerEtterHendelse2.first().eksternBehandlingId).isEqualTo(nyEksternBehandlingId)
+            assertThat(behandlingerEtterHendelse2.first().venteGrunn).isEqualTo(hendelse.venteGrunn)
+            assertThat(behandlingerEtterHendelse2.first().gjenopptas).isEqualTo(hendelse.gjenopptas)
         }
 
     }
@@ -91,6 +96,8 @@ class TilbakekrevingRepositoryImplTest {
                 eksternBehandlingId = UUID.randomUUID().toString(),
                 sakOpprettet = nå,
                 varselSendt = nå.toLocalDate(),
+                venteGrunn = TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE,
+                gjenopptas = LocalDate.now().plusMonths(1),
                 behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
                 totaltFeilutbetaltBeløp = Beløp(1000),
                 tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
@@ -127,6 +134,8 @@ class TilbakekrevingRepositoryImplTest {
                 eksternBehandlingId = UUID.randomUUID().toString(),
                 sakOpprettet = nå,
                 varselSendt = nå.toLocalDate(),
+                venteGrunn = TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE,
+                gjenopptas = LocalDate.now().plusMonths(1),
                 behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
                 totaltFeilutbetaltBeløp = Beløp(1000),
                 tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),

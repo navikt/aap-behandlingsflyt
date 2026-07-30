@@ -37,4 +37,6 @@ enum class ÅrsakTilOpprettelse {
     TILBAKEKREVING_HENDELSE,
     FAGSYSTEMINFO_BEHOV_HENDELSE,
 
+    // Uføre
+    UFØRE_VEDTAK_HENDELSE
 }

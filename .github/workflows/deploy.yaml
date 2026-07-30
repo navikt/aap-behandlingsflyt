@@ -29,19 +29,19 @@ jobs:
         packages: write
         checks: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: 25
           distribution: 'temurin'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
             gradle-version: wrapper
       - name: Bygg & test
         run: ./gradlew clean build --continue --stacktrace
 
-      - uses: dorny/test-reporter@v3.0.0
+      - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         if: success() || failure()
         with:
           name: test
@@ -49,21 +49,21 @@ jobs:
           reporter: java-junit
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v6
+        uses: mikepenz/action-junit-report@d9f48fc87bc235f7e214acf696ca5abc0a986f16 # v6.4.2
         if: success() || failure() # always run even if the previous step fails
         with:
           report_paths: '**/build/test-results/test/TEST-*.xml'
 
       - name: Store reports
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
             name: reports
             path: |
                 **/build/reports/
                 **/build/test-results
 
-      - uses: nais/docker-build-push@v0
+      - uses: nais/docker-build-push@31c3a7321909bcb20799fdf46153fec721fd9512 # v0
         id: docker-push
         with:
             team: aap # required
@@ -81,20 +81,20 @@ jobs:
         packages: write
         checks: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: 25
           distribution: 'temurin'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
             gradle-version: wrapper
       - name: Genererer docs
         run: |
           ./gradlew dokkaGenerate
       - name: upload-artifact for docs
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: './docs/build/dokka/html'
 
@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
 
 
   publiser-kontrakt:
@@ -126,11 +126,11 @@ jobs:
           id-token: write
       runs-on: ubuntu-latest
       steps:
-          - uses: actions/checkout@v6
+          - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
             with:
                 fetch-depth: 0
             #  Ha denne tidlig, så action kan skippe raskt om ingen endringer.
-          - uses: paulhatch/semantic-version@v6.0.2
+          - uses: paulhatch/semantic-version@502226b17e3e242e4befd0a45690fcbb27dd1373 # v6.0.3
             id: tag
             with:
                 change_path: "kontrakt/"
@@ -138,12 +138,12 @@ jobs:
                 tag_prefix: ""
                 bump_each_commit_patch_pattern: ''
                 major_pattern: "(MAJOR)" # If major bump, include this in the commit message
-          - uses: actions/setup-java@v5
+          - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
             if: ${{ steps.tag.outputs.version_type != 'none' }}
             with:
                 java-version: 25
                 distribution: 'temurin'
-          - uses: gradle/actions/setup-gradle@v6
+          - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
             with:
                 gradle-version: wrapper
           - id: notes
@@ -159,7 +159,7 @@ jobs:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             run: |
                 ./gradlew -Pversion=${{ steps.tag.outputs.version }} publish
-          - uses:  softprops/action-gh-release@v3
+          - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
             if: ${{ steps.tag.outputs.version_type != 'none' }}
             id: create_release
             env:
@@ -180,8 +180,8 @@ jobs:
     concurrency:
       group: deploy-dev
     steps:
-      - uses: actions/checkout@v6
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # v2
         env:
           PRINT_PAYLOAD: true
           CLUSTER: dev-gcp
@@ -198,8 +198,8 @@ jobs:
           contents: read
           id-token: write
       steps:
-          - uses: actions/checkout@v6
-          - uses: nais/deploy/actions/deploy@v2
+          - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          - uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # v2
             env:
                 PRINT_PAYLOAD: true
                 CLUSTER: prod-gcp

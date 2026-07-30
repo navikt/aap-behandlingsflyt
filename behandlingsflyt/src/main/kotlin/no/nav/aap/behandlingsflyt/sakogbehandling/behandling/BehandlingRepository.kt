@@ -5,9 +5,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
+import org.jetbrains.annotations.TestOnly
 
 interface BehandlingRepository : Repository {
 
@@ -20,13 +21,6 @@ interface BehandlingRepository : Repository {
 
     fun finnFørstegangsbehandling(sakId: SakId): Behandling
 
-    /**
-     * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
-     * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger. Den returnerer også avbrutte behandlinger.
-     */
-    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
-    fun finnSisteOpprettedeBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling?
-
     fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand>
 
     fun hentAlleFor(
@@ -34,16 +28,16 @@ interface BehandlingRepository : Repository {
         behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
     ): List<Behandling>
 
+    fun hentAlleIkkeAvbrutteYtelsesbehandlinger(sakId: SakId): List<Behandling>
+
     fun hentAlleMedVedtakFor(
-        person: Person,
+        personId: PersonId,
         behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
     ): List<BehandlingMedVedtak>
 
     fun hent(behandlingId: BehandlingId): Behandling
 
     fun hent(referanse: BehandlingReferanse): Behandling
-
-    fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling
 
     fun oppdaterVurderingsbehovOgÅrsak(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak)
 
@@ -61,6 +55,7 @@ interface BehandlingRepository : Repository {
 
     fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer
 
+    @TestOnly
     fun finnAlleGjeldendeVedtatteBehandlinger(): List<SakOgBehandling>
 
     fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling?

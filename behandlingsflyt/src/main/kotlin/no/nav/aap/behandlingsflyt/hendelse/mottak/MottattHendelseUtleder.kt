@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
+import no.nav.aap.komponenter.verdityper.Bruker
 
 object MottattHendelseUtleder {
 
@@ -41,7 +42,7 @@ object MottattHendelseUtleder {
             InnsendingType.SYKEPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Sykepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
             InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Foreldrepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
             InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT -> throw IllegalArgumentException("Folkeregisteridenthendelser skal trigge oppdatering av person og sak - ikke opprette en behandling")
-            InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
+            InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
         }
     }
 
@@ -103,6 +104,11 @@ object MottattHendelseUtleder {
             InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT,
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> emptyList()
         }
+    }
+
+    fun utledOpprettetAv(melding: Melding?): Bruker? = when (melding) {
+        is ManuellRevurderingV0 -> melding.opprettetAv?.let(::Bruker)
+        else -> null
     }
 
     fun utledBeskrivelseForÅrsakTilOpprettelse(melding: Melding?): String? = when (melding) {

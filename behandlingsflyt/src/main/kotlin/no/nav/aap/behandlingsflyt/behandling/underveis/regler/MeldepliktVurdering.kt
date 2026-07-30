@@ -18,12 +18,8 @@ enum class MeldepliktStatus {
     IKKE_MELDT_SEG,
     RIMELIG_GRUNN,
 
-    @Deprecated(
-        """Verdien produseres ikke lenger, men vil kunne leses ut fra databasen. Den brukes også i
-        |OpprettBehandlingFastsattPeriodePassertJobbUtførerfor å identifisere perioder i tilkjent ytelser som 
-        |må nulles ut pga. antatt oppfylt. Men for nye behandlinger, så antas det ikke at de er oppfylt, og det 
-        |er derforikke nødvendig å nulle ut i utbetalingsplanen."""
-    )
+    @Suppress("unused")
+    @Deprecated("Verdien produseres ikke lenger, men vil kunne leses ut fra databasen.")
     FREMTIDIG_OPPFYLT,
 
     @Suppress("unused") // leses fra database

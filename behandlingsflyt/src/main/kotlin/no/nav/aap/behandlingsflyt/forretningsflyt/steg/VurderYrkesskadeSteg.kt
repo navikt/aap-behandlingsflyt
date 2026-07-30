@@ -27,7 +27,7 @@ class VurderYrkesskadeSteg private constructor(
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -42,7 +42,7 @@ class VurderYrkesskadeSteg private constructor(
                     kontekst, tidligereVurderinger, yrkesskader
                 )
             },
-            erTilstrekkeligVurdert = { sykdomsgrunnlag != null && sykdomsgrunnlag.yrkesskadevurdering != null },
+            erTilstrekkeligVurdert = { sykdomsgrunnlag?.yrkesskadevurdering != null },
             tilbakestillGrunnlag = {
                 val forrigeGrunnlag =
                     kontekst.forrigeBehandlingId?.let { sykdomRepository.hentHvisEksisterer(it) }?.yrkesskadevurdering
@@ -74,6 +74,7 @@ class VurderYrkesskadeSteg private constructor(
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.IKKE_RELEVANT -> false
         }
     }

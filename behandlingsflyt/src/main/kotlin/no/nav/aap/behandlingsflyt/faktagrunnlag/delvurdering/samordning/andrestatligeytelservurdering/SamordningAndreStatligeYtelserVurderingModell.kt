@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering
 
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime
 
 data class SamordningAndreStatligeYtelserGrunnlag(
@@ -9,8 +10,8 @@ data class SamordningAndreStatligeYtelserGrunnlag(
 
 data class SamordningAndreStatligeYtelserVurdering(
     val begrunnelse: String,
-    val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime? = null,
+    val vurdertAv: Bruker,
+    val vurdertTidspunkt: LocalDateTime,
     val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriode>,
     val historiskePerioder: List<SamordningAndreStatligeYtelserVurderingPeriode>? = null,
 )

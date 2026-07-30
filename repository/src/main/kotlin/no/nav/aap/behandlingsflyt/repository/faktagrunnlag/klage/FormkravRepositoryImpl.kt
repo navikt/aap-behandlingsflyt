@@ -107,7 +107,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
                 setBoolean(3, vurdering.erFristOverholdt)
                 setBoolean(4, vurdering.erKonkret)
                 setBoolean(5, vurdering.erSignert)
-                setString(6, vurdering.vurdertAv)
+                setBruker(6, vurdering.vurdertAv)
                 setBoolean(7, vurdering.likevelBehandles)
                 setInstant(8, vurdering.opprettet)
             }
@@ -183,7 +183,7 @@ class FormkravRepositoryImpl(private val connection: DBConnection) : FormkravRep
             erFristOverholdt = row.getBoolean("ER_FRIST_OVERHOLDT"),
             erKonkret = row.getBoolean("ER_KONKRET"),
             erSignert = row.getBoolean("ER_SIGNERT"),
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             likevelBehandles = row.getBooleanOrNull("LIKEVEL_BEHANDLES"),
         )

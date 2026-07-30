@@ -33,6 +33,7 @@ import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -140,7 +141,7 @@ fun NormalOpenAPIRoute.saksApi(
                     if (person == null) {
                         null
                     } else {
-                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person.id)
 
                         log.info("Fant ${sakerForPerson.size} saker for person. Mottattidspunkt: ${dto.mottattTidspunkt}")
 
@@ -258,26 +259,26 @@ fun NormalOpenAPIRoute.saksApi(
                 SøkPåSakService(repositoryProvider).søkEtterSaker(søkDto.søketekst.trim())
             }
 
-            if (saker.isNotEmpty()) {
-                respond(
-                    saker.map { sak ->
-                        SøkPåSakDTO(
-                            ident = sak.person.aktivIdent().identifikator,
-                            navn = pdlGateway.hentPersoninfoForIdent(sak.person.aktivIdent(), token()).fulltNavn(),
+
+            respond(
+                saker.map { sak ->
+                    SøkPåSakDTO(
+                        ident = sak.person.aktivIdent().identifikator,
+                        navn = pdlGateway.hentPersoninfoForIdent(sak.person.aktivIdent(), token()).fulltNavn(),
+                        saksnummer = sak.saksnummer,
+                        opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
+                        harTilgang = tilgangGateway.sjekkTilgangTilSak(
                             saksnummer = sak.saksnummer,
-                            opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
-                            harTilgang = tilgangGateway.sjekkTilgangTilSak(
-                                saksnummer = sak.saksnummer,
-                                token(),
-                                Operasjon.SE,
-                                relevanteIdenter = relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer.toString())
+                            token(),
+                            Operasjon.SE,
+                            relevanteIdenter = relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(
+                                sak.saksnummer.toString()
                             )
                         )
-                    }
-                )
-            } else {
-                throw VerdiIkkeFunnetException("Fant ingen saker knyttet til søketeksten.")
-            }
+                    )
+                }
+            )
+
         }
 
         route("/{saksnummer}/finnBehandlingerAvType") {
@@ -285,23 +286,17 @@ fun NormalOpenAPIRoute.saksApi(
                 routeConfig = AuthorizationMachineToMachineConfig(
                     authorizedAzps = listOf(Azp.Postmottak.uuid)
                 ).medAzureTokenGen()
-            ) { saksnummer, body ->
+            ) { saksnummer, typeBehandling ->
                 val behandlinger = dataSource.transaction { connection ->
                     val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
                     val behandlingRepository = repositoryRegistry.provider(connection).provide<BehandlingRepository>()
                     val sakId = sakRepository.hent(Saksnummer(saksnummer.saksnummer)).id
 
-                    val behandlinger = behandlingRepository.hentAlleFor(sakId)
-
-                    behandlinger.filter { it.typeBehandling() == body }.map {
-                        BehandlingAvTypeDTO(
-                            it.referanse.referanse, it.opprettetTidspunkt
-                        )
-                    }
-
-
+                    behandlingRepository.hentAlleFor(sakId, behandlingstypeFilter = listOf(typeBehandling))
                 }
-                respond(behandlinger)
+                respond(
+                    behandlinger.map { BehandlingAvTypeDTO(it.referanse.referanse, it.opprettetTidspunkt) }
+                )
             }
         }
 
@@ -327,7 +322,7 @@ fun NormalOpenAPIRoute.saksApi(
                     SakPersoninfoDTO(
                         fnr = personinfo.ident.identifikator,
                         navn = personinfo.fulltNavn(),
-                        personReferanse = sak.person.identifikator,
+                        personReferanse = sak.person.referanse,
                         fødselsdato = personinfo.fødselsdato,
                         dødsdato = personinfo.dødsdato,
                     )
@@ -349,17 +344,17 @@ fun NormalOpenAPIRoute.saksApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val sakRepository = repositoryProvider.provide<SakRepository>()
 
-                val sakId = sakRepository.hent(Saksnummer(saksnummer)).id
-                val saksHistorikkService = SaksHistorikkService(repositoryProvider)
+                val sak = sakRepository.hent(Saksnummer(saksnummer))
+                val saksHistorikkService = SaksHistorikkService(repositoryProvider, gatewayProvider)
 
-                saksHistorikkService.utledSaksHistorikk(sakId)
+                saksHistorikkService.utledSaksHistorikk(sak)
             }
             val navidenterIHistorikk = historikk.flatMap { it.hendelser.mapNotNull { it.utførtAv } }
-            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk).mapNotNull { it }
+            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk.map(::Bruker)).mapNotNull { it }
             val visningsnavnMap = visningsnavn.associateBy({ it.navident }, { it.visningsnavn })
             val historikkMedVisningsnavn = historikk.map {
                 val nyeHendelser = it.hendelser.map {
-                    val navn = visningsnavnMap[it.utførtAv] ?: it.utførtAv
+                    val navn = visningsnavnMap[it.utførtAv?.let(::Bruker)] ?: it.utførtAv
                     it.copy(utførtAv = navn)
                 }
                 it.copy(hendelser = nyeHendelser)

@@ -166,8 +166,10 @@ class AvsluttetBehandlingTilStatistikk(
         val perioderMedArbeidsopptrapping =
             arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
 
+        val resultat = hentResultat(behandling)
+
         val vedtattStansOpphør = if (behandling.typeBehandling()
-                .erYtelsesbehandling() && !avbrytRevurderingService.revurderingErAvbrutt(behandling.id)
+                .erYtelsesbehandling() && !(avbrytRevurderingService.revurderingErAvbrutt(behandling.id) || resultat == ResultatKode.TRUKKET)
         ) stansOpphørService.vedtattStansOpphør(behandling.id) else emptyList()
 
         val diagnoserPeriodisert = hentDiagnose(behandling)
@@ -189,14 +191,16 @@ class AvsluttetBehandlingTilStatistikk(
                 }),
             tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
             beregningsGrunnlag = beregningsGrunnlagDTO,
-            diagnoser = diagnoserPeriodisert.lastOrNull()?.let { Diagnoser(
-                kodeverk = it.kodeverk,
-                diagnosekode = it.diagnosekode,
-                bidiagnoser = it.bidiagnoser
-            ) },
+            diagnoser = diagnoserPeriodisert.lastOrNull()?.let {
+                Diagnoser(
+                    kodeverk = it.kodeverk,
+                    diagnosekode = it.diagnosekode,
+                    bidiagnoser = it.bidiagnoser
+                )
+            },
             diagnoserPeriodisert = diagnoserPeriodisert,
             rettighetstypePerioder = rettighetstypePerioder,
-            resultat = hentResultat(behandling),
+            resultat = resultat,
             vedtakstidspunkt = vedtakTidspunkt,
             fritaksvurderinger = fritaksvurderinger,
             perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) },
@@ -491,6 +495,7 @@ class AvsluttetBehandlingTilStatistikk(
             Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON -> AvslagsårsakDTO.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> AvslagsårsakDTO.ORDINÆRKVOTE_BRUKT_OPP
             Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP -> AvslagsårsakDTO.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG -> AvslagsårsakDTO.ANNEN_FULL_YTELSE_AVSLAG
         }
 
 }

@@ -25,12 +25,14 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class SamordningServiceTest {
     companion object {
@@ -97,7 +99,7 @@ internal class SamordningServiceTest {
             opprettVurderingData(
                 ytelseVurderingRepo, behandlingId, vurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                     vurderinger = setOf(
                         SamordningVurdering(
                             ytelseType = Ytelse.SYKEPENGER,
@@ -109,7 +111,8 @@ internal class SamordningServiceTest {
                                 )
                             )
                         )
-                    )
+                    ),
+                vurdertTidspunkt = LocalDateTime.now()
                 )
             )
         }
@@ -175,7 +178,7 @@ internal class SamordningServiceTest {
 
             val vurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
@@ -194,7 +197,8 @@ internal class SamordningServiceTest {
                             )
                         )
                     )
-                )
+                ),
+            vurdertTidspunkt = LocalDateTime.now()
             )
 
             val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
@@ -257,7 +261,7 @@ internal class SamordningServiceTest {
         behandlingId: BehandlingId,
         vurderinger: SamordningVurderingGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "En god begrunnelse",
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurderinger = setOf(
                 SamordningVurdering(
                     Ytelse.SYKEPENGER,
@@ -270,7 +274,8 @@ internal class SamordningServiceTest {
                         )
                     )
                 )
-            )
+            ),
+        vurdertTidspunkt = LocalDateTime.now()
         )
     ) {
         samordningVurderingRepo.lagreVurderinger(behandlingId, vurderinger)

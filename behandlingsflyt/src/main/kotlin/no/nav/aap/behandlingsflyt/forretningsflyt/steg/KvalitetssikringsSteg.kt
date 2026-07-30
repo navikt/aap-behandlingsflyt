@@ -12,14 +12,11 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -31,32 +28,24 @@ class KvalitetssikringsSteg(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val behandlingRepository: BehandlingRepository,
     private val behandlingService: BehandlingService,
-    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         trekkKlageService = TrekkKlageService(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
-        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide()
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val erTilstrekkeligVurdert =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.AlleEndringerKreverKvalitetssikring)) {
-                erTilstrekkeligVurdertNy(avklaringsbehovene)
-            } else {
-                erTilstrekkeligVurdertGammel(avklaringsbehovene)
-            }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.KVALITETSSIKRING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },
             tilbakestillGrunnlag = {},
             kontekst
         )
@@ -77,13 +66,7 @@ class KvalitetssikringsSteg(
         }
 
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
-        val behandlingstype =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.RevurderingEtterAvslagSkalKvalitetssikres)) {
-                behandlingService.utledFaktiskBehandlingstype(behandling)
-            } else {
-                kontekst.behandlingType
-            }
-        return when (behandlingstype) {
+        return when (behandlingService.utledFaktiskBehandlingstype(behandling)) {
             TypeBehandling.Førstegangsbehandling,
             TypeBehandling.Klage -> {
                 avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()
@@ -93,108 +76,9 @@ class KvalitetssikringsSteg(
         }
     }
 
-    private fun erTilstrekkeligVurdertNy(avklaringsbehovene: Avklaringsbehovene): Boolean {
+    private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean {
         return !avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent()
     }
-
-    private fun erTilstrekkeligVurdertGammel(avklaringsbehovene: Avklaringsbehovene): Boolean {
-        if (avklaringsbehovene.alle()
-                .filter { it.kreverKvalitetssikring() }
-                .any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER || it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }
-        ) {
-            return false
-        }
-
-        val aktuelleAvklaringsbehovForKvalitetssikring = avklaringsbehovene.alle()
-            .filter { it.kreverKvalitetssikring() }
-            .filter { it.status() != Status.AVBRUTT }
-
-        /**
-         * Om et behov aldri tidligere har blitt kvalitetssikret, ikke tilstrekkelig vurdert:
-         */
-        if (aktuelleAvklaringsbehovForKvalitetssikring.any { !it.harBlittKvalitetssikretTidligere() }) {
-            return false
-        }
-
-        /**
-         * Når kvalitetssikrer godkjenner, men beslutter underkjenner så skal steget sendes på nytt til kvalitetssikring
-         */
-        aktuelleAvklaringsbehovForKvalitetssikring.forEach { avklaringsbehov ->
-            val sistReturnertFraBeslutter =
-                avklaringsbehov.historikk.lastOrNull { historikk -> historikk.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
-            val sistKvalitetssikret =
-                avklaringsbehov.historikk.lastOrNull { historikk -> historikk.status == Status.KVALITETSSIKRET }
-
-            if (sistReturnertFraBeslutter != null && sistKvalitetssikret != null) {
-                return sistKvalitetssikret > sistReturnertFraBeslutter
-            }
-        }
-
-        /**
-         * Hvis stegets eget behov ("KVALITETSSIKRING") har status OPPRETTET, skal det alltid skje en ny kvalitetssikring
-         */
-        if (avklaringsbehovene.alle()
-                .any { it.definisjon == Definisjon.KVALITETSSIKRING && it.status() == Status.OPPRETTET }
-        ) {
-            return false
-        }
-
-        /**
-         * Dersom flyten blir dratt tilbake til et steg før kvalitetssikring, og det allerede er gjort en kvalitetssikring,
-         * så skal dette potensielt trigge en ny kvalitetssikring. Dette kan skje selv om kvalitetssikrer og beslutter ikke har returnert,
-         * men f. eks. ved at nytt starttidspunkt i 22-13 blir satt. Dette igjen vil løfte avklaringsbehovene under Sykdom.
-         */
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringVed2213)) {
-            val avsluttedeBehov = avklaringsbehovene.alle()
-                .filter { it.kreverKvalitetssikring() && it.status() == Status.AVSLUTTET }
-
-            if (avsluttedeBehov.isNotEmpty()) {
-                /**
-                 * Når flyten blir dratt tilbake eller beslutter returnerer et behov som ikke skal kvalitetssikres (22-13),
-                 * blir alle behov reåpnet og gjeldende status "KVALITETSSIKRET" går tapt, selv om kvalitetssikring har skjedd.
-                 * Derfor må historikken sjekkes for å avgjøre om det er skjedd en tidligere kvalitetssikring.
-                 */
-                val erKvalitetssikretFørRetur = avsluttedeBehov
-                    .any {
-                        val aktivHistorikk = it.aktivHistorikk
-
-                        /**
-                         * De tre siste statusene i historikken skal være følgende etter reåpning:
-                         * "KVALITETSSIKRET"
-                         * "OPPRETTET"
-                         * "AVSLUTTET" (gjeldende status)
-                         */
-                        val endring = it.aktivHistorikk.getOrNull(aktivHistorikk.size - 3)
-                        endring?.status == Status.KVALITETSSIKRET
-                    }
-                if (erKvalitetssikretFørRetur) {
-                    /**
-                     * På dette tidspunktet kan to ting ha skjedd:
-                     * 1. Beslutter har kun returnert behov som ikke krever kvalitetssikring (f. eks. 22-13)
-                     * 2. Flyten er dratt tilbake til 22-13 og nytt starttidspunkt er satt
-                     */
-                    val behovSomIkkeKreverKvalitetssikring = avklaringsbehovene.alle()
-                        .filter { !it.kreverKvalitetssikring() }
-
-                    val sendtTilbakeFraBeslutter =
-                        behovSomIkkeKreverKvalitetssikring.any { behov ->
-                            /**
-                             * Dersom beslutter har returnert vil de to siste statusene i historikken være følgende etter reåpning:
-                             * "SENDT_TILBAKE_FRA_BESLUTTER"
-                             * "AVSLUTTET" (gjeldende status)
-                             */
-                            val endringer = behov.aktivHistorikk
-                            endringer.size >= 2 && endringer[endringer.size - 2].status == Status.SENDT_TILBAKE_FRA_BESLUTTER
-                        }
-
-                    return sendtTilbakeFraBeslutter
-                }
-            }
-        }
-
-        return true
-    }
-
 
     companion object : FlytSteg {
         override fun konstruer(

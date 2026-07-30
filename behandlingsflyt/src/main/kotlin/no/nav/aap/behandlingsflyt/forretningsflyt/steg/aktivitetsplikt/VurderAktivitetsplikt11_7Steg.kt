@@ -219,7 +219,7 @@ class VurderAktivitetsplikt11_7Steg(
                 aktivitetsplikt11_7Repository = repositoryProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
                 )
         }

@@ -30,6 +30,9 @@ class Behandling(
 
     fun flyt(): BehandlingFlyt = typeBehandling.flyt()
 
+    /**
+     * Kanskje er det mer riktig å bruke [BehandlingService.utledFaktiskBehandlingstype] istedenfor denne.
+     */
     fun typeBehandling(): TypeBehandling = typeBehandling
 
     fun flytKontekst(): FlytKontekst {
@@ -46,9 +49,6 @@ class Behandling(
     }
 
     fun oppdaterSteg(nyStegTilstand: StegTilstand) {
-        if (!nyStegTilstand.aktiv) {
-            throw IllegalStateException("Utvikler feil, prøver legge til steg med aktivtflagg false.")
-        }
         stegTilstand = nyStegTilstand
         status = nyStegTilstand.steg().status
     }
@@ -71,7 +71,6 @@ class Behandling(
         return stegTilstand ?: StegTilstand(
             stegType = flyt().stegene().first(),
             stegStatus = StegStatus.START,
-            aktiv = true
         )
     }
 

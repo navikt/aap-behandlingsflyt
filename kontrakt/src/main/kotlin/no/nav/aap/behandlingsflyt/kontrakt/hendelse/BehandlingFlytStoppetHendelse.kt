@@ -32,5 +32,17 @@ public data class BehandlingFlytStoppetHendelse(
     val reserverTil: String? = null,
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,
-    val versjon: String
-)
+    val versjon: String,
+    val behandlingMetadata: BehandlingMetadata? = null,
+) {
+    public fun erFørstegangsbehandlingHosBeslutterEllerVedtatt(): Boolean {
+        return behandlingType == TypeBehandling.Førstegangsbehandling && (aktivtSteg == StegType.FATTE_VEDTAK || status.erVedtatt())
+    }
+}
+
+/**
+ * Tilleggsmetadata for behandling som kan brukes av konsumenter (f.eks. Oppgave).
+ */
+public enum class BehandlingMetadata {
+    AVSLAG_11_5_FØRSTEGANGSBEHANDLING
+}

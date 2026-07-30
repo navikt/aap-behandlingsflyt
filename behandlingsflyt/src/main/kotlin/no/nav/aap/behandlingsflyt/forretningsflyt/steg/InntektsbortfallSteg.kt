@@ -59,6 +59,7 @@ class InntektsbortfallSteg private constructor(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }
@@ -129,7 +130,7 @@ class InntektsbortfallSteg private constructor(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return InntektsbortfallSteg(
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 personopplysningRepository = repositoryProvider.provide(),
                 manuellInntektGrunnlagRepository = repositoryProvider.provide(),

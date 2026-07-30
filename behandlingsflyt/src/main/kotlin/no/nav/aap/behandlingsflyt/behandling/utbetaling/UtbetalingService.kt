@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
@@ -102,8 +103,8 @@ class UtbetalingService(
             val personIdent = sak.person.aktivIdent().identifikator
             val avklaringsbehovForeslåVedtak = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FORESLÅ_VEDTAK)
             val avklaringsbehovFatteVedtak = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
-            val saksbehandlerIdent = avklaringsbehovForeslåVedtak?.endretAv() ?: "Kelvin"
-            val beslutterIdent = avklaringsbehovFatteVedtak?.endretAv() ?: "Kelvin"
+            val saksbehandlerIdent = avklaringsbehovForeslåVedtak?.endretAv() ?: SYSTEMBRUKER
+            val beslutterIdent = avklaringsbehovFatteVedtak?.endretAv() ?: SYSTEMBRUKER
             val vedtakstidspunkt = if (simulering) {
                 LocalDateTime.now()
             } else {
@@ -129,8 +130,8 @@ class UtbetalingService(
                 forrigeBehandlingsreferanse = forrigeBehandlingRef,
                 personIdent = personIdent,
                 vedtakstidspunkt = vedtakstidspunkt,
-                beslutterId = beslutterIdent,
-                saksbehandlerId = saksbehandlerIdent,
+                beslutterId = beslutterIdent.ident,
+                saksbehandlerId = saksbehandlerIdent.ident,
                 perioder = tilkjentYtelse.tilTilkjentYtelsePeriodeDtoer(meldeperioder),
                 avvent = avventUtbetaling,
                 trekk = reduksjoner.tilTilkjentYtelseTrekkDtoer(),
@@ -237,7 +238,7 @@ class UtbetalingService(
         map { segment ->
             val periode = segment.periode
             val detaljer = segment.tilkjent
-            val meldeperiode = meldeperioder.firstOrNull {Periode(it.fom, it.tom).inneholder(periode)}
+            val meldeperiode = meldeperioder.firstOrNull { Periode(it.fom, it.tom).inneholder(periode) }
             TilkjentYtelsePeriodeDto(
                 fom = periode.fom,
                 tom = periode.tom,

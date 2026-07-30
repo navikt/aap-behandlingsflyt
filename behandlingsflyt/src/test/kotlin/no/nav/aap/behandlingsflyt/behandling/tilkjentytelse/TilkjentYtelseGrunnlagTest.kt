@@ -27,6 +27,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
@@ -35,6 +36,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 /**
  * Eksemplene er hentet fra https://navno.sharepoint.com/:w:/r/sites/POAAP/Shared%20Documents/Regelverk/Regelverksavklaringer/Juridiske%20avklaringer/Beregningscaser.docx?web=1
@@ -489,7 +491,8 @@ class TilkjentYtelseGrunnlagTest {
                             timerArbeid = TimerArbeid(BigDecimal(timer)),
                         )
                     }.toSet(),
-                    mottattTidspunkt = (14 desember 2025).atTime(14, 0)
+                    mottattTidspunkt = (14 desember 2025).atTime(14, 0),
+                    opprettetTidspunkt = (14 desember 2025).atTime(14, 0),
                 )
             ),
             innsendingsTidspunkt = mapOf(15 desember 2025 to JournalpostId("0")),
@@ -525,7 +528,7 @@ class TilkjentYtelseGrunnlagTest {
                     SamordningUføreVurdering(
                         begrunnelse = "",
                         vurderingPerioder = listOf(),
-                        vurdertAv = "Z00000",
+                        vurdertAv = Bruker("Z00000"),
                     )
                 ),
                 barnepensjonGrunnlag = null,
@@ -533,7 +536,7 @@ class TilkjentYtelseGrunnlagTest {
                     vurdering = SamordningArbeidsgiverVurdering(
                         begrunnelse = "",
                         perioder = listOf(),
-                        vurdertAv = "Z00000",
+                        vurdertAv = Bruker("Z00000"),
                     )
                 ),
             ),

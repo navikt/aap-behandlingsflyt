@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.integrasjon.gosys
 
 import no.bekk.bekkopen.date.NorwegianDateUtil.addWorkingDaysToDate
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Behandlingstema
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysOppgaveGateway
+import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveType
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Prioritet
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.Gateway
@@ -21,19 +21,15 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 import java.time.ZoneId.systemDefault
-import java.time.format.DateTimeFormatter
 import java.util.*
 
-class GosysGateway : OppgaveGateway {
+class GosysGateway : GosysOppgaveGateway {
 
     companion object : Factory<Gateway> {
-
-
         override fun konstruer(): Gateway {
             return GosysGateway()
         }
     }
-
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val baseUri = URI.create(requiredConfigForKey("INTEGRASJON_GOSYS_URL"))
@@ -47,43 +43,30 @@ class GosysGateway : OppgaveGateway {
     )
 
     override fun opprettOppgave(
-        aktivIdent: Ident,
+        oppgavetype: OppgaveType,
+        tema: String,
+        personIdent: Ident,
         bestillingReferanse: String,
-        behandlingId: BehandlingId,
-        navKontor: NavKontorPeriodeDto
+        tildeltEnhetsnr: String,
+        opprettetAvEnhetsnr: String,
+        behandlingstema: Behandlingstema,
+        beskrivelse: String,
+        prioritet: Prioritet,
+        aktivDato: LocalDate,
+        fristFerdigstillelse: LocalDate?
     ) {
-
-        if (navKontor.vedtaksdato == null || navKontor.virkingsdato == null) {
-            log.info("Oppretter gosysoppgave med manglende dato for behandling $behandlingId, " +
-                    "virkningsdato=${navKontor.virkingsdato}, vedtaksdato=${navKontor.vedtaksdato}")
-        }
-
-        val beskrivelse =
-            if (navKontor.virkingsdato != null && navKontor.vedtaksdato != null) {
-                val fom = requireNotNull(navKontor.virkingsdato)
-                val tom = requireNotNull(navKontor.vedtaksdato)
-                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
-                    formatDateToSaksbehandlerVennlig(fom)
-                } til ${
-                    formatDateToSaksbehandlerVennlig(tom)
-                }. Dere må sende refusjonskrav til NØS."
-            } else {
-                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP til ${navKontor.enhetsNummer}. Dere må sende refusjonskrav til NØS."
-            }
-
-
         val oppgaveRequest = OpprettOppgaveRequest(
-            oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,
-            tema = "AAP",
-            prioritet = Prioritet.HOY,
-            aktivDato = LocalDate.now().toString(),
-            personident = aktivIdent.identifikator,
-            tildeltEnhetsnr = navKontor.enhetsNummer,
-            opprettetAvEnhetsnr = navKontor.enhetsNummer,
+            oppgavetype = oppgavetype.verdi,
+            tema = tema,
+            prioritet = prioritet,
+            aktivDato = aktivDato.toString(),
+            personident = personIdent.identifikator,
+            tildeltEnhetsnr = tildeltEnhetsnr,
+            opprettetAvEnhetsnr = opprettetAvEnhetsnr,
             beskrivelse = beskrivelse,
-            behandlingstema = Behandlingstema.REFUSJON.kode,
+            behandlingstema = behandlingstema.kode,
             behandlingstype = null,
-            fristFerdigstillelse = finnStandardOppgavefrist(),
+            fristFerdigstillelse = fristFerdigstillelse ?: finnStandardOppgavefrist()
         )
 
         val path = baseUri.resolve("/api/v1/oppgaver")
@@ -97,12 +80,6 @@ class GosysGateway : OppgaveGateway {
         }
 
     }
-
-
-    enum class Behandlingstema(val kode: String) {
-        REFUSJON("ab0504");
-    }
-
 }
 
 fun finnStandardOppgavefrist(nå: LocalDateTime = now()): LocalDate {
@@ -118,11 +95,3 @@ fun finnStandardOppgavefrist(nå: LocalDateTime = now()): LocalDate {
     }
 }
 
-fun formatDateToSaksbehandlerVennlig(date: LocalDate): String {
-    val outputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
-    return date.format(outputFormatter)
-}
-
-enum class OppgaveType(val verdi: String) {
-    VURDER_KONSEKVENS_FOR_YTELSE("VUR_KONS_YTE"),
-}

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
@@ -23,10 +23,6 @@ data class BistandGrunnlag(
         return vurderinger.filter { it.vurdertIBehandling == behandlingId }
     }
 
-    fun historiskeBistandsvurderinger(behandlingIdForGrunnlag: BehandlingId): List<Bistandsvurdering> {
-        return vurderinger.filterNot { it.vurdertIBehandling == behandlingIdForGrunnlag }
-    }
-
     fun vedtattBistandstidslinje(
         behandlingId: BehandlingId,
         maksDato: LocalDate = Tid.MAKS
@@ -40,12 +36,7 @@ data class BistandGrunnlag(
     ): Tidslinje<Bistandsvurdering> {
         return vurderinger
             .filter(filter)
-            .groupBy { it.vurdertIBehandling }
-            .values
-            .sortedBy { it[0].opprettet }
-            .flatMap { vurderingerForBehandling -> vurderingerForBehandling.sortedBy { it.vurderingenGjelderFra } }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, it.tom ?: Tid.MAKS) }
-            .komprimer()
+            .gjeldendeVurderinger()
             .begrensetTil(Periode(Tid.MIN, maksDato))
     }
 }

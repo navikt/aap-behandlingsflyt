@@ -1,25 +1,34 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import io.mockk.mockk
-import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVKLAR_BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
@@ -37,21 +46,105 @@ import java.time.LocalDateTime
 class AvklaringsbehovServiceTest {
 
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
-    private val avbrytRevurderingService = AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository)
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private lateinit var avklaringsbehovService: AvklaringsbehovService
+    private lateinit var avklaringsbehovServiceMedKrav: AvklaringsbehovService
 
     @BeforeEach
     fun setup() {
         avklaringsbehovService = AvklaringsbehovService(
-            avbrytRevurderingService = avbrytRevurderingService,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            behandlingRepository = InMemoryBehandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
-            trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
+            inMemoryRepositoryProvider,
+            createGatewayProvider { register<AlleAvskruddUnleash>() }
+        )
+        avklaringsbehovServiceMedKrav = AvklaringsbehovService(
+            inMemoryRepositoryProvider,
+            createGatewayProvider { register<LokalUnleash>() }
         )
     }
+
+    @Test
+    fun `hvis det finnes vurdering i behandling, så avbrytes ikke frivillig avklaringsbehov`() {
+        val (sak, _, revurdering) = opprettInMemorySakOgRevurdering()
+        val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, revurdering.id)
+
+        avklaringsbehovene.leggTilFrivilligHvisMangler(Definisjon.FRITAK_MELDEPLIKT, Bruker("Z000"))
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FRITAK_MELDEPLIKT, "løsning fra intet", Bruker("Z000"))
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = Definisjon.FRITAK_MELDEPLIKT,
+            tvingerAvklaringsbehov = setOf(),
+            nårVurderingErRelevant = { tidslinjeOf(sak.rettighetsperiode to true) },
+            kontekst = flytKontekstMedPerioder { this.behandling = revurdering },
+            nårVurderingErGyldig = { tidslinjeOf(sak.rettighetsperiode to true) },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    sak.rettighetsperiode to (object : PeriodisertVurdering {
+                        override val fom = sak.rettighetsperiode.fom
+                        override val tom = null
+                        override val vurdertIBehandling = revurdering.id
+                        override val opprettet = Instant.now()
+                    })
+                )
+            }
+        )
+
+        assertThat(
+            Avklaringsbehovene(InMemoryAvklaringsbehovRepository, revurdering.id)
+                .hentBehovForDefinisjon(Definisjon.FRITAK_MELDEPLIKT)!!.status()
+        )
+            .isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `oppretter ikke frivillig avklaringsbehov selv om det er en endring i relevans fra forrige behandling`() {
+        val (sak, _, revurdering) = opprettInMemorySakOgRevurdering()
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = Definisjon.FRITAK_MELDEPLIKT,
+            tvingerAvklaringsbehov = setOf(),
+            nårVurderingErRelevant = {
+                if (it.behandlingId == revurdering.id)
+                    tidslinjeOf(sak.rettighetsperiode to true)
+                else tidslinjeOf()
+            },
+            kontekst = flytKontekstMedPerioder { this.behandling = revurdering },
+            nårVurderingErGyldig = { tidslinjeOf() },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+            gjeldendeVurderinger = { tidslinjeOf() }
+        )
+
+        assertThat(
+            Avklaringsbehovene(InMemoryAvklaringsbehovRepository, revurdering.id)
+                .hentBehovForDefinisjon(Definisjon.FRITAK_MELDEPLIKT)
+        )
+            .isNull()
+    }
+
+    @Test
+    fun `løfter frivillig avklaringsbehov hvis det blir tvunget av vurderingsbehov, selv ved ingen endring i relevans`() {
+        val (sak, _, revurdering) = opprettInMemorySakOgRevurdering(
+            vurderingsbehov = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        )
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = Definisjon.FRITAK_MELDEPLIKT,
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND /* dette er feil vurderingsbehov, men vi kjører ikke flyten, så har ikke noe å si. */),
+            nårVurderingErRelevant = { tidslinjeOf(sak.rettighetsperiode to true) },
+            kontekst = flytKontekstMedPerioder { this.behandling = revurdering },
+            nårVurderingErGyldig = { tidslinjeOf() },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+            gjeldendeVurderinger = { tidslinjeOf() }
+        )
+
+        assertThat(
+            Avklaringsbehovene(InMemoryAvklaringsbehovRepository, revurdering.id)
+                .hentBehovForDefinisjon(Definisjon.FRITAK_MELDEPLIKT)
+                ?.status()
+        )
+            .isEqualTo(Status.OPPRETTET)
+    }
+
 
     @Test
     fun `oppdaterAvklaringsbehov skal opprette nytt avklaringsbehov når vedtak behøver vurdering og ingen eksisterer`() {
@@ -61,7 +154,6 @@ class AvklaringsbehovServiceTest {
         val definisjon = Definisjon.AVKLAR_SYKDOM
         val vedtakBehøverVurdering = { true }
         val erTilstrekkeligVurdert = { false }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
@@ -72,7 +164,7 @@ class AvklaringsbehovServiceTest {
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
             kontekst = kontekst
         )
 
@@ -81,7 +173,6 @@ class AvklaringsbehovServiceTest {
         assertThat(avklaringsbehov).isNotNull
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
         assertThat(avklaringsbehov?.definisjon).isEqualTo(definisjon)
-        verify(exactly = 0) { tilbakestillGrunnlag() }
     }
 
     @Test
@@ -91,11 +182,10 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { true }
         val erTilstrekkeligVurdert = { true }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
@@ -106,14 +196,13 @@ class AvklaringsbehovServiceTest {
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-            tilbakestillGrunnlag = tilbakestillGrunnlag,
-            kontekst = kontekst
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+            kontekst = kontekst,
         )
 
         // Assert
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVSLUTTET)
-        verify(exactly = 0) { tilbakestillGrunnlag() }
     }
 
     @Test
@@ -126,7 +215,7 @@ class AvklaringsbehovServiceTest {
 
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+        var erTilbakestilt = false
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
@@ -137,14 +226,14 @@ class AvklaringsbehovServiceTest {
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            tilbakestillGrunnlag = { erTilbakestilt = true },
             kontekst = kontekst
         )
 
         // Assert
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
-        verify(exactly = 1) { tilbakestillGrunnlag() }
+        assertThat(erTilbakestilt).isTrue
     }
 
     @Test
@@ -155,7 +244,6 @@ class AvklaringsbehovServiceTest {
         val definisjon = Definisjon.AVKLAR_SYKDOM
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
@@ -166,18 +254,18 @@ class AvklaringsbehovServiceTest {
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
             kontekst = kontekst
         )
 
         // Assert
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov).isNull()
-        verify(exactly = 0) { tilbakestillGrunnlag() }
     }
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal opprette avklaringsbehov når vurdering er relevant`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2001)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -205,8 +293,8 @@ class AvklaringsbehovServiceTest {
                 )
             )
         }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -217,7 +305,7 @@ class AvklaringsbehovServiceTest {
             nårVurderingErRelevant = nårVurderingErRelevant,
             nårVurderingErGyldig = nårVurderingErGyldig,
             kontekst = kontekst,
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
         )
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
@@ -227,6 +315,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal ikke opprette avklaringsbehov når vurdering ikke er relevant`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2002)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -251,9 +340,9 @@ class AvklaringsbehovServiceTest {
                 )
             )
         }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -264,7 +353,7 @@ class AvklaringsbehovServiceTest {
             nårVurderingErRelevant = nårVurderingErRelevant,
             nårVurderingErGyldig = nårVurderingErGyldig,
             kontekst = kontekst,
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
         )
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
@@ -273,6 +362,8 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal avbryte avklaringsbehov når vurdering ikke lenger er relevant`() {
+        val sak = opprettInMemorySak()
+
         val behandlingId = BehandlingId(2003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -299,9 +390,10 @@ class AvklaringsbehovServiceTest {
                 )
             )
         }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+        var erTilbakestilt = false
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -312,16 +404,17 @@ class AvklaringsbehovServiceTest {
             nårVurderingErRelevant = nårVurderingErRelevant,
             nårVurderingErGyldig = nårVurderingErGyldig,
             kontekst = kontekst,
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = { erTilbakestilt = true },
         )
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
-        verify(exactly = 1) { tilbakestillGrunnlag() }
+        assertThat(erTilbakestilt).isTrue
     }
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal opprette avklaringsbehov når noen perioder krever vurdering`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -349,8 +442,8 @@ class AvklaringsbehovServiceTest {
                 )
             )
         }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -361,7 +454,7 @@ class AvklaringsbehovServiceTest {
             nårVurderingErRelevant = nårVurderingErRelevant,
             nårVurderingErGyldig = nårVurderingErGyldig,
             kontekst = kontekst,
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
         )
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
@@ -371,6 +464,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert skal opprette avklaringsbehov for utilstrekkelig vurderte perioder`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2006)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -388,9 +482,9 @@ class AvklaringsbehovServiceTest {
             )
         }
         val perioderSomIkkeErTilstrekkeligVurdert = setOf(periode2, periode3)
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -401,7 +495,7 @@ class AvklaringsbehovServiceTest {
             nårVurderingErRelevant = nårVurderingErRelevant,
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
         )
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
@@ -411,11 +505,12 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert skal avslutte avklaringsbehov når alle perioder er tilstrekkelig vurdert`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2007)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val startDato = LocalDate.of(2024, 6, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
@@ -431,9 +526,9 @@ class AvklaringsbehovServiceTest {
             )
         }
         val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
         }
@@ -444,7 +539,7 @@ class AvklaringsbehovServiceTest {
             nårVurderingErRelevant = nårVurderingErRelevant,
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
         )
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
@@ -453,6 +548,7 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2008)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
@@ -469,9 +565,9 @@ class AvklaringsbehovServiceTest {
             )
         }
         val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
             this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
@@ -483,7 +579,7 @@ class AvklaringsbehovServiceTest {
             nårVurderingErRelevant = nårVurderingErRelevant,
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
         )
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
@@ -492,11 +588,12 @@ class AvklaringsbehovServiceTest {
 
     @Test
     fun `skal opprette avklaringsbehov for vurderingsbehov som tvinger avklaringsbehov, også når behovet har blitt løst før, men kun om vurderingsbehovet er nyere`() {
+        val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(20099)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val startDato = LocalDate.of(2024, 6, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
@@ -510,9 +607,9 @@ class AvklaringsbehovServiceTest {
             )
         }
         val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
 
         val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = helePeriode
             this.vurderingsbehovRelevanteForStegMedPerioder =
@@ -530,11 +627,77 @@ class AvklaringsbehovServiceTest {
             nårVurderingErRelevant = nårVurderingErRelevant,
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
-            tilbakestillGrunnlag = tilbakestillGrunnlag
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
         )
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+    }
+
+    @Test
+    fun `skal opprette avklaringsbehov i behandling med nytt krav, selv om alle relevante perioder er vurdert tidligere`() {
+        val behandlingId = BehandlingId(20100)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.AVKLAR_SYKDOM
+
+        val sak = opprettInMemorySak()
+        val forrigeBehandling = InMemoryBehandlingRepository.opprettBehandling(
+            sakId = sak.id,
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            forrigeBehandlingId = null,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                årsak = ÅrsakTilOpprettelse.SØKNAD
+            ),
+        )
+        val forrigeBehandlingId = forrigeBehandling.id
+
+
+        val startDato = LocalDate.of(2024, 6, 1)
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        InMemoryVilkårsresultatRepository.lagre(forrigeBehandlingId, genererVilkårsresultat(helePeriode))
+
+        val førsteKrav = opprettNyttKrav(forrigeBehandlingId, startDato)
+        InMemoryKravRepository.lagre(forrigeBehandlingId, setOf(førsteKrav))
+
+        val andreKrav = opprettNyttKrav(forrigeBehandlingId, startDato.plusMonths(1).plusWeeks(2))
+        InMemoryKravRepository.lagre(behandlingId, setOf(førsteKrav, andreKrav))
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje(
+                listOf(
+                    Segment(helePeriode, true),
+                )
+            )
+        }
+        val perioderSomIkkeErTilstrekkeligVurdert = emptySet<Periode>()
+
+        val kontekst = flytKontekstMedPerioder {
+            this.behandlingId = behandlingId
+            this.forrigeBehandlingId = forrigeBehandlingId
+            this.sakId = sak.id
+            this.rettighetsperiode = helePeriode
+            this.vurderingsbehovRelevanteForStegMedPerioder = emptySet()
+        }
+
+        avklaringsbehovServiceMedKrav.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+        assertThat(avklaringsbehov?.perioderVedtaketBehøverVurdering).containsExactlyInAnyOrder(
+            Periode(
+                andreKrav.muligRettFra,
+                helePeriode.tom
+            )
+        )
     }
 
     @Test
@@ -544,11 +707,10 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
@@ -559,14 +721,13 @@ class AvklaringsbehovServiceTest {
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
             kontekst = kontekst
         )
 
         // Assert
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVSLUTTET)
-        verify(exactly = 0) { tilbakestillGrunnlag() }
     }
 
     @Test
@@ -576,11 +737,11 @@ class AvklaringsbehovServiceTest {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
-        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+        var erTilbakestilt = false
         val kontekst = flytKontekstMedPerioder {
             this.behandlingId = behandlingId
             this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
@@ -601,23 +762,24 @@ class AvklaringsbehovServiceTest {
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            tilbakestillGrunnlag = { erTilbakestilt = true },
             kontekst = kontekst
         )
 
         // Assert
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
-        verify(exactly = 1) { tilbakestillGrunnlag() }
+        assertThat(erTilbakestilt).isTrue
     }
 
     @Test
     fun `løfter avbrutt avklaringsbehov hvis det blir relevant igjen`() {
+        val sak = opprettInMemorySak()
         val rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
         val behandlingId = BehandlingId(1004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val kontekst = flytKontekstMedPerioder {
-            sakId = SakId(1)
+            sakId = sak.id
             this.behandlingId = behandlingId
             this.rettighetsperiode = rettighetsperiode
             behandlingType = TypeBehandling.Førstegangsbehandling
@@ -675,4 +837,19 @@ class AvklaringsbehovServiceTest {
             assertThat(it?.status()).isEqualTo(Status.OPPRETTET)
         }
     }
+
+    private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): RelevantKrav {
+        return RelevantKrav(
+            referanse = Kravreferanse.ny(),
+            journalpostId = JournalpostId("JP-001"),
+            vurdertAv = Bruker("Z123456"),
+            begrunnelse = "Standard krav om AAP",
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            søknadsdato = Søknadsdato(kravdato, SøknadsdatoÅrsak.SøknadMottatt),
+            overstyrMuligRettFra = null,
+            muligRettFra = kravdato,
+        )
+    }
 }
+

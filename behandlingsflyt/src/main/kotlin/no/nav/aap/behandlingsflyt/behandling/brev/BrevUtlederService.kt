@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
@@ -27,17 +28,24 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
@@ -47,6 +55,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
@@ -96,6 +105,9 @@ class BrevUtlederService(
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val sykdomRepository: SykdomRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
+    private val barnRepository: BarnRepository,
+    private val meldepliktRepository: MeldepliktRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -121,6 +133,9 @@ class BrevUtlederService(
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
+        barnRepository = repositoryProvider.provide(),
+        meldepliktRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
     )
 
@@ -137,6 +152,14 @@ class BrevUtlederService(
         val skalSendeVedtakForArbeidsopptrapping =
             harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
 
+        val overgangUføre = overgangUføreRepository.hentHvisEksisterer(behandlingId)
+        val automatiskUførevedtakVurdering = overgangUføre?.vurderinger?.firstOrNull {
+            it.brukerHarFåttVedtakOmUføretrygd in setOf(
+                UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
+                UføreSøknadVedtakResultat.JA_INNVILGET_FULL
+            ) && it.vurdertAv == SYSTEMBRUKER && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
+        }
+
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
                 if (skalSendeVedtakForArbeidsopptrapping) {
@@ -144,54 +167,44 @@ class BrevUtlederService(
                 }
 
                 val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandlingId)
-                if (Miljø.erLokal() || Miljø.erDev()) {
-                    return when (resultat) {
-                        Resultat.INNVILGELSE -> {
-                            val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-                            val harOrdinærAAP = perioder.any { it.rettighetsType == RettighetsType.BISTANDSBEHOV }
-                            val harUføretrygd =
-                                perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
 
-                            if (harUføretrygd && !harOrdinærAAP) {
-                                brevBehovVurderesForUføretrygd(behandling)
-                            } else {
-                                brevBehovInnvilgelse(behandling)
-                            }
+                return when (resultat) {
+                    Resultat.INNVILGELSE -> {
+                        val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
+                        val harOrdinærAAP = perioder.any { it.rettighetsType == RettighetsType.BISTANDSBEHOV }
+                        val harUføretrygd =
+                            perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
+
+                        if (harUføretrygd && !harOrdinærAAP) {
+                            brevBehovVurderesForUføretrygd(behandling)
+                        } else {
+                            brevBehovInnvilgelse(behandling)
                         }
-
-                        Resultat.AVSLAG -> {
-                            brevBehovAvslag(behandling)
-                        }
-
-                        Resultat.TRUKKET -> null
-                        Resultat.AVBRUTT -> null
-                    }.also { log.info("Brukt brevtype $it")}
-                } else {
-                    return when (resultat) {
-                        Resultat.INNVILGELSE -> {
-                            if (harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
-                            ) {
-                                brevBehovVurderesForUføretrygd(behandling)
-                            } else {
-                                brevBehovInnvilgelse(behandling)
-                            }
-                        }
-
-                        Resultat.AVSLAG -> {
-                            brevBehovAvslag(behandling)
-                        }
-
-                        Resultat.TRUKKET -> null
-                        Resultat.AVBRUTT -> null
                     }
-                }
 
+                    Resultat.AVSLAG -> {
+                        brevBehovAvslag(behandling)
+                    }
+
+                    Resultat.TRUKKET -> null
+                    Resultat.AVBRUTT -> null
+                }
             }
 
             TypeBehandling.Revurdering -> {
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 if (resultat == Resultat.AVBRUTT) {
                     return null
+                }
+
+                if (automatiskUførevedtakVurdering?.brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT
+                ) {
+                    return Vedtak11_18OpphørDelvisUfør(automatiskUførevedtakVurdering.fom)
+                }
+
+                if (automatiskUførevedtakVurdering?.brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtakResultat.JA_INNVILGET_FULL
+                ) {
+                    return Vedtak11_18OpphørFullUfør(automatiskUførevedtakVurdering.fom)
                 }
 
                 if (skalSendeVedtakForArbeidsopptrapping) {
@@ -301,7 +314,7 @@ class BrevUtlederService(
 
         if (avslagsårsaker.isNotEmpty()) {
             // Støtter kun en avslagsårsak i brev - henter ut høyest prioritert
-            val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsak(avslagsårsaker)) {
+            val prioritertAvslagsårsak = requireNotNull(prioriterAvslagsårsakUtvideVedtakslengde(avslagsårsaker)) {
                 "Fant avslagsårsaker $avslagsårsaker for behandling ${behandling.id}, men ingen av dem er støttet for utvidelse under ett år"
             }
 
@@ -331,7 +344,7 @@ class BrevUtlederService(
         else -> error("Uventet avslagsårsak for utvidelse under ett år: $avslagsårsak")
     }
 
-    private fun prioriterAvslagsårsak(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+    private fun prioriterAvslagsårsakUtvideVedtakslengde(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
         val prioritertRekkefølge = listOf(
             Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.IKKE_MEDLEM,
@@ -339,6 +352,16 @@ class BrevUtlederService(
             Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
             Avslagsårsak.ANNEN_FULL_YTELSE,
+        )
+        return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
+    }
+
+    private fun prioriterAvslagsårsakAvslagsBrevType(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
+        val prioritertRekkefølge = listOf(
+            Avslagsårsak.BRUKER_UNDER_18,
+            Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
+            Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
         )
         return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
@@ -377,11 +400,14 @@ class BrevUtlederService(
         } else {
             null
         }
+        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
-        val yrkesskadeBeregning = if (Miljø.erDev())
-            utledYrkesskadeBeregning(behandling.id)
-        else null
+        val yrkesSkadeISøknadIkkeIRegister =
+            yrkesskader != null && yrkesskader.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
 
+        val yrkesskadeBeregning = utledYrkesskadeBeregning(behandling.id, yrkesskader)
+
+        val foreldreAnsvarVurderinger = hentBarnVurderingPerioder(behandling.id)
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
@@ -390,12 +416,37 @@ class BrevUtlederService(
             sykdomsvurdering = sykdomsvurdering,
             forholdTilAndreYtelser = samordning,
             yrkesskadeBeregning = yrkesskadeBeregning,
+            yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister,
+            foreldreansvarVurderinger = foreldreAnsvarVurderinger,
+            meldepliktGrunnlag = hentMeldepliktVurderingPerioder(behandling.id),
         )
     }
 
-    private fun brevBehovAvslag(behandling: Behandling): Avslag {
+    private fun hentAvslagsårsaker(behandlingId: BehandlingId): Set<Avslagsårsak> {
+        return vilkårsresultatRepository.hent(behandlingId)
+            .alle()
+            .flatMap { it.vilkårsperioder() }
+            .mapNotNull { it.avslagsårsak }
+            .toSet()
+    }
+
+    private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        return Avslag(sykdomsvurdering = sykdomsvurdering)
+        val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id)
+        val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
+
+        if (Miljø.erDev() && avslagsårsak != null) {
+            /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
+                return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
+            }*/
+            if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
+                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
+                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+            ) {
+                return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
+            }
+        }
+        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
@@ -466,11 +517,13 @@ class BrevUtlederService(
         }
     }
 
-    private fun utledYrkesskadeBeregning(behandlingId: BehandlingId): YrkesskadeBeregningBrev? {
+    private fun utledYrkesskadeBeregning(
+        behandlingId: BehandlingId,
+        yrkesSkadeGrunnlag: YrkesskadeGrunnlag?
+    ): YrkesskadeBeregningBrev? {
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val yrkesSkaderMedManuelledatoer = sykdomGrunnlag?.yrkesskadevurdering?.relevanteSaker ?: emptyList()
 
-        val yrkesSkadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val yrkesSkaderFraEksterntRegister = yrkesSkadeGrunnlag?.yrkesskader?.yrkesskader ?: emptyList()
         val andelAvNedsettelsen = sykdomGrunnlag?.yrkesskadevurdering?.andelAvNedsettelsen?.prosentverdi()
 
@@ -486,7 +539,6 @@ class BrevUtlederService(
             val internsak = yrkesSkaderMedManuelledatoer.firstOrNull { it.referanse == ys.ref }
             val skadedato = ys.skadedato
                 ?: internsak?.manuellYrkesskadeDato
-                ?: error("Mangler skadedato for yrkesskade med referanse ${ys.ref}")
             val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.ref }?.antattÅrligInntekt
             YrkesskadeBeregningBrev.Yrkesskade(
                 yrkesskadedato = skadedato,
@@ -693,6 +745,17 @@ class BrevUtlederService(
             samordningBarnepensjon = samordningBarnepensjon,
             fradragAndreYtelser = fradragAndreYtelser,
         )
+    }
+
+    fun hentBarnVurderingPerioder(behandlingId: BehandlingId): List<VurderingAvForeldreAnsvar> {
+        return barnRepository.hentVurderteBarnHvisEksisterer(behandlingId)
+            ?.barn
+            ?.flatMap { it.vurderinger }
+            .orEmpty()
+    }
+
+    fun hentMeldepliktVurderingPerioder(behandlingId: BehandlingId): MeldepliktGrunnlag? {
+        return meldepliktRepository.hentHvisEksisterer(behandlingId)
     }
 
     private fun hentSamordningAndreYtelser(behandlingId: BehandlingId): List<SamordningYtelse> {

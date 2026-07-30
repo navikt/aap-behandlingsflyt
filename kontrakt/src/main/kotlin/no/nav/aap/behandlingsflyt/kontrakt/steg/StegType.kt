@@ -11,9 +11,17 @@ public enum class StegType(
         gruppe = StegGruppe.START_BEHANDLING,
         status = Status.OPPRETTET
     ),
+    KRAV(
+        gruppe = StegGruppe.KRAV,
+        status = Status.UTREDES
+    ),
+    AVKLAR_STØNADSPERIODE(
+        gruppe = StegGruppe.KRAV,
+        status = Status.UTREDES
+    ),
     SEND_FORVALTNINGSMELDING(
         gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
-        status = Status.OPPRETTET
+        status = Status.UTREDES
     ),
     AVBRYT_REVURDERING(
         gruppe = StegGruppe.AVBRYT_REVURDERING,
@@ -39,9 +47,17 @@ public enum class StegType(
         gruppe = StegGruppe.ALDER,
         status = Status.UTREDES,
     ),
+    VURDER_AVSLAG_11_27(
+        gruppe = StegGruppe.AVSLAG_11_27,
+        status = Status.UTREDES
+    ),
     AVKLAR_STUDENT(
         gruppe = StegGruppe.STUDENT,
         status = Status.UTREDES
+    ),
+    AVKLAR_STUDENT_V2(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES,
     ),
     AVKLAR_SYKDOM(
         gruppe = StegGruppe.SYKDOM,

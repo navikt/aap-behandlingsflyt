@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingerDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -32,7 +33,6 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
-import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
@@ -52,16 +52,18 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         val søknadsdato = LocalDate.now()
 
         val person = TestPersoner.STANDARD_PERSON()
-        person.institusjonsopphold = listOf(
-            InstitusjonsoppholdJSON(
-                startdato = LocalDate.now().minusMonths(3),
-                forventetSluttdato = LocalDate.now().plusMonths(2),
-                institusjonstype = "HS",
-                institusjonsnavn = "institusjon",
-                organisasjonsnummer = "2334",
-                kategori = "H",
+            .medInstitusjonsopphold(
+                listOf(
+                    InstitusjonsoppholdJSON(
+                        startdato = LocalDate.now().minusMonths(3),
+                        forventetSluttdato = LocalDate.now().plusMonths(2),
+                        institusjonstype = "HS",
+                        institusjonsnavn = "institusjon",
+                        organisasjonsnummer = "2334",
+                        kategori = "H",
+                    )
+                )
             )
-        )
 
         val (_, behandling) = sendInnFørsteSøknad(
             person = person,
@@ -98,7 +100,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         val tidligsteReduksjonsdato = fom.withDayOfMonth(1).plusMonths(4)
 
         val person = TestPersoner.STANDARD_PERSON()
-        person.institusjonsopphold = listOf(hsOpphold(fom, oppholdTom))
+            .medInstitusjonsopphold(listOf(hsOpphold(fom, oppholdTom)))
 
         val (_, behandling) = sendInnFørsteSøknad(
             person = person,
@@ -152,7 +154,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         val oppholdTom = LocalDate.now().plusMonths(2)
 
         val person = TestPersoner.STANDARD_PERSON()
-        person.institusjonsopphold = listOf(hsOpphold(fom, oppholdTom))
+            .medInstitusjonsopphold(listOf(hsOpphold(fom, oppholdTom)))
 
         val (_, behandling) = sendInnFørsteSøknad(
             person = person,
@@ -247,7 +249,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         val barn = lagBarn(barnFødselsdato)
         val person = TestPersoner.STANDARD_PERSON()
             .medBarn(listOf(barn))
-        person.institusjonsopphold = listOf(hsOpphold(fom, oppholdTom))
+            .medInstitusjonsopphold(listOf(hsOpphold(startdato = fom, sluttdato = oppholdTom)))
 
         val (_, behandling) = sendInnFørsteSøknad(
             person = person,
@@ -820,7 +822,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         ) { "Tilkjent ytelse skal være beregnet her." }
 
     private fun lagBarn(fødselsdato: LocalDate): TestPerson {
-        val ident = genererIdent(fødselsdato)
+        val ident = ident()
         return TestPerson(
             identer = setOf(ident),
             navn = PersonNavn("Tuva", "Hansen"),

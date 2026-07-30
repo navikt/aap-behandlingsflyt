@@ -9,7 +9,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklarSykepengerErstatningLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -28,7 +30,7 @@ class AvklarSykepengerErstatningLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val tidligereVurderinger = behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it)?.vurderinger }.orEmpty()
 
-        val nyeVurderinger = løsning.løsningerForPerioder.map { tilVurdering(it, behandling.id, kontekst.bruker.ident) }
+        val nyeVurderinger = løsning.løsningerForPerioder.map { tilVurdering(it, behandling.id, kontekst.bruker) }
 
         sykepengerErstatningRepository.lagre(
             behandlingId = behandling.id,
@@ -43,16 +45,16 @@ class AvklarSykepengerErstatningLøser(
     private fun tilVurdering(
         dto: PeriodisertSykepengerVurderingDto,
         behandlingId: BehandlingId,
-        vurdertAv: String
+        vurdertAv: Bruker
     ): SykepengerVurdering = SykepengerVurdering(
         begrunnelse = dto.begrunnelse,
-        dokumenterBruktIVurdering = dto.dokumenterBruktIVurdering,
         harRettPå = dto.harRettPå,
         grunn = dto.grunn,
         vurdertIBehandling = behandlingId,
         vurdertAv = vurdertAv,
-        gjelderFra = dto.fom,
-        gjelderTom = dto.tom,
+        vurdertTidspunkt = LocalDateTime.now(),
+        fom = dto.fom,
+        tom = dto.tom,
     )
 
     override fun forBehov(): Definisjon {

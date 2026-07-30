@@ -8,7 +8,7 @@ repositories {
 plugins {
     id("aap.conventions")
     alias(libs.plugins.ktor)
-    id("com.gradleup.shadow") version "9.4.1"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 application {
@@ -45,11 +45,24 @@ tasks {
 }
 
 tasks.register<JavaExec>("runTestApp") {
+    description = "Kjør TestApp,."
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
 }
 
+tasks.register<JavaExec>("runTestAppMotOppgave") {
+    description = "Kjør TestApp mot Oppgave. Forventer at db kjører på port 5438, og oppgave-app på port 8084."
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
+    environment("NAIS_CLUSTER_NAME", "LOCAL")
+    environment("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL", "jdbc:postgresql://localhost:5438/postgres")
+    environment("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME", "postgres")
+    environment("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD", "")
+    environment("INTEGRASJON_OPPGAVESTYRING_URL", "http://localhost:8084")
+}
+
 tasks.register<JavaExec>("genererOpenApiJson") {
+    description = "Kjør generering av OpenAPI JSON-fil. Filen blir skrevet til openapi.json"
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.GenererOpenApiJsonKt")
 }

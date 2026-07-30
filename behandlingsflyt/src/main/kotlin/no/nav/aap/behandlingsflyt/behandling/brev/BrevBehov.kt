@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import java.time.LocalDate
 
 sealed class BrevBehov(val typeBrev: TypeBrev)
@@ -13,6 +16,9 @@ data class Innvilgelse(
     val sykdomsvurdering: String?,
     val forholdTilAndreYtelser: ForholdTilAndreYtelser?,
     val yrkesskadeBeregning: YrkesskadeBeregningBrev? = null,
+    val foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>? = null,
+    val meldepliktGrunnlag: MeldepliktGrunnlag? = null,
+    val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 
 data class VurderesForUføretrygd(
@@ -34,7 +40,22 @@ data class UtvidVedtakslengde(
     val vedtakslengdeTypeBrev: TypeBrev,
 ) : BrevBehov(vedtakslengdeTypeBrev)
 
-data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)
+data class Vedtak11_18OpphørDelvisUfør(
+    val virkningstidspunkt: LocalDate
+) : BrevBehov(TypeBrev.VEDTAK_11_18_OPPHØR_DELVIS_UFØR)
+
+data class Vedtak11_18OpphørFullUfør(
+    val virkningstidspunkt: LocalDate
+) : BrevBehov(TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR)
+
+
+sealed class AvslagBrev(typeBrev: TypeBrev) : BrevBehov(typeBrev) {
+    abstract val sykdomsvurdering: String?
+    data class AvslagUnder17År9Måneder(override val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER)
+    data class AvslagSykdomsvilkåret(override val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_5)
+    data class Avslag(override val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak? = null) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG)
+}
+
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object BarnetilleggSatsRegulering : BrevBehov(TypeBrev.BARNETILLEGG_SATS_REGULERING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)

@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.help
 
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -14,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -78,4 +79,28 @@ fun sak(
         repositoryProvider.provide(),
         repositoryProvider.provide()
     ).finnEllerOpprett(ident(), søknadsdato)
+}
+
+/**
+ * Oppretter en revurdering ved å først lage en avsluttet førstegangsbehandling og deretter opprette en ny behandling.
+ */
+fun opprettRevurdering(
+    connection: DBConnection,
+    sak: Sak,
+    vurderingsbehov: List<VurderingsbehovMedPeriode> = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_MEDLEMSKAP)),
+    gatewayProvider: GatewayProvider = createGatewayProvider {
+        register<AlleAvskruddUnleash>()
+    },
+): Behandling {
+    val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+
+    val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak, gatewayProvider = gatewayProvider)
+    behandlingRepository.oppdaterBehandlingStatus(førstegangsbehandling.id, Status.AVSLUTTET)
+
+    return behandlingService.finnEllerOpprettOrdinærBehandling(
+        sak.id,
+        VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE)
+    )
 }

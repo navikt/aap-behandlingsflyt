@@ -20,18 +20,38 @@ public data class DatadelingDTO(
     val rettighetsTypeTidsLinje: List<RettighetsTypePeriode>,
     val muligMaksdato: LocalDate?,
     val behandlingsReferanse: String,
-    val samId: String? = null,
+    val samIdOgTpr: List<SamIdOgTpnr>,
     val vedtakId: Long,
     val beregningsgrunnlag: BigDecimal?,
+    val perioderMedFritakMeldeplikt: List<PeriodeDTO>,
     val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?,
     val arenavedtak: List<ArenavedtakDTO>,
+    val underveisperioder: List<UnderveisperiodeDatadelingDTO>,
+)
+
+public data class SamIdOgTpnr(val samId: String, val tpnr: String?)
+
+public data class PeriodeDTO(
+    val fom: LocalDate,
+    val tom: LocalDate,
+)
+
+public data class UnderveisperiodeDatadelingDTO(
+    @Deprecated("Fjernes. Bruk periode.") val fom: LocalDate,
+    @Deprecated("Fjernes. Bruk periode.") val tom: LocalDate,
+    val periode: PeriodeDTO,
+    val meldeperiode: PeriodeDTO,
+    val meldepliktstatus: String?,
+    val arbeidsgrad: Int,
+    val overgrenseVerdi: Boolean,
+    val timerArbeidet: BigDecimal,
 )
 
 public data class ArenavedtakDTO(
     public val vedtakId: Long,
     public val fom: LocalDate,
     public val tom: LocalDate,
-    public val  vedtaksvariant: ArenaVedtaksvariantDTO,
+    public val vedtaksvariant: ArenaVedtaksvariantDTO,
 )
 
 public enum class ArenaVedtaksvariantDTO {
@@ -89,6 +109,7 @@ public enum class AvslagsårsakDTO(
     ORDINÆRKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
     SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP(StansEllerOpphørEnumDTO.OPPHØR),
     IKKE_SYKDOM_SKADE_LYTE(StansEllerOpphørEnumDTO.OPPHØR),
+    ANNEN_FULL_YTELSE_AVSLAG(StansEllerOpphørEnumDTO.OPPHØR)
 }
 
 
@@ -108,6 +129,7 @@ public data class TilkjentDTO(
     val tilkjentFom: LocalDate,
     val tilkjentTom: LocalDate,
     val dagsats: Int,
+    val effektivDagsats: Int,
     val gradering: Int,
     val samordningUføregradering: Int? = null,
     val grunnlagsfaktor: BigDecimal,

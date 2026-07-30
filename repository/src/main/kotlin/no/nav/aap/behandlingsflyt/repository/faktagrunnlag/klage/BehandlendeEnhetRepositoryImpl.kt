@@ -88,14 +88,15 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: BehandlendeEnhetGrunnlag) {
         val vurderingId = lagreVurdering(nyttGrunnlag.vurdering)
         val query = """
-            INSERT INTO BEHANDLENDE_ENHET_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV) 
-            VALUES (?, ?, TRUE)
+            INSERT INTO BEHANDLENDE_ENHET_GRUNNLAG (BEHANDLING_ID, VURDERING_ID, AKTIV, OPPRETTET_TID) 
+            VALUES (?, ?, TRUE, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
+                setInstant(3, java.time.Instant.now())
             }
         }
     }
@@ -111,7 +112,7 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
             setParams {
                 setBoolean(1, vurdering.skalBehandlesAvNay)
                 setBoolean(2, vurdering.skalBehandlesAvKontor)
-                setString(3, vurdering.vurdertAv)
+                setBruker(3, vurdering.vurdertAv)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
@@ -129,7 +130,7 @@ class BehandlendeEnhetRepositoryImpl(private val connection: DBConnection) : Beh
         return BehandlendeEnhetVurdering(
             skalBehandlesAvNay = row.getBoolean("skal_behandles_av_nay"),
             skalBehandlesAvKontor = row.getBoolean("skal_behandles_av_kontor"),
-            vurdertAv = row.getString("vurdert_av"),
+            vurdertAv = row.getBruker("vurdert_av"),
             opprettet = row.getInstant("opprettet_tid")
         )
     }

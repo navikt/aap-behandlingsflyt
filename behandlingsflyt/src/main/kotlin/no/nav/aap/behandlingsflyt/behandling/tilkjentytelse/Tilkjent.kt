@@ -99,7 +99,3 @@ data class GraderingGrunnlag(
         .minus(samordningUføregradering)
         .minus(meldepliktGradering)
 }
-
-fun maks(a: Beløp, b: Beløp): Beløp {
-    return if (a.verdi > b.verdi) a else b
-}

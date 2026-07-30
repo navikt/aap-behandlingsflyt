@@ -46,7 +46,11 @@ interface Informasjonskrav<out InformasjonskravInput : no.nav.aap.behandlingsfly
      *
      * Om det ikke finnes noen endringer i persistert data, returneres [Endret.IKKE_ENDRET].
      */
-    fun oppdater(input: @UnsafeVariance InformasjonskravInput, registerdata: @UnsafeVariance Registerdata, kontekst: FlytKontekstMedPerioder): Endret
+    fun oppdater(
+        input: @UnsafeVariance InformasjonskravInput,
+        registerdata: @UnsafeVariance Registerdata,
+        kontekst: FlytKontekstMedPerioder
+    ): Endret
 
     fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst) = Endret.IKKE_ENDRET
 }

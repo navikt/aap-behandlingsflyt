@@ -55,7 +55,7 @@ class VurderAktivitetsplikt11_9Steg(
         ): BehandlingSteg {
             return VurderAktivitetsplikt11_9Steg(
                 aktivitetsplikt11_9Repository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
             )
         }

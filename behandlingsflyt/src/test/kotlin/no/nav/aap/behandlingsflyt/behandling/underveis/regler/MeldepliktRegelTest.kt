@@ -22,6 +22,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -355,15 +356,18 @@ class MeldepliktRegelTest {
         )
     }
 
-    /*   2020
-     *           January                   February                   March
-     *   Mo  Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo  Tu We Th Fr  Sa  Su
-     *                                              1 [2]                           1
-     *   [6]  7  8  9 10 11 12       3  4  5  6  7  8  9       2   3  4  5 [6]  7   8
-     *   13  14 15 16 17 18 19      10 11 12 13 14 15 16       9  10 11 12 13  14  15
-     *   20  21 22 23 24 25 26      17 18 19 20 21 22 23      16  17 18 19 20  21  22
-     *   27  28 29 30 31            24 25 26 27 28 29         23  24 25 26 27  28 [29]
-     *                                                       [30] 31
+    /**
+     * ```
+     *     2020
+     *           January                  February                  March
+     *   Mo  Tu We Th Fr Sa Su     Mo Tu We Th Fr Sa Su     Mo  Tu We Th Fr  Sa  Su
+     *                                             1 [2]                          1
+     *   [6]  7  8  9 10 11 12      3  4  5  6  7  8  9      2   3  4  5 [6]  7   8
+     *   13  14 15 16 17 18 19     10 11 12 13 14 15 16      9  10 11 12 13  14  15
+     *   20  21 22 23 24 25 26     17 18 19 20 21 22 23     16  17 18 19 20  21  22
+     *   27  28 29 30 31           24 25 26 27 28 29        23  24 25 26 27  28 [29]
+     *                                                     [30] 31
+     * ```
      */
     @Test
     fun `Meldeplikt skal være stanset etter at man ikke har meldt seg og fristen utløpt`() {
@@ -433,9 +437,9 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = rettighetsperiode.fom,
+                        fom = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                         vurdertIBehandling = BehandlingId(1),
                     )
@@ -478,9 +482,9 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 20 april 2020,
+                        fom = 20 april 2020,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                         vurdertIBehandling = BehandlingId(1),
                     )
@@ -863,17 +867,17 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 4 mai 2020,
+                        fom = 4 mai 2020,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                         vurdertIBehandling = BehandlingId(1),
                     ),
                     Fritaksvurdering(
                         harFritak = false,
-                        fraDato = 18 mai 2020,
+                        fom = 18 mai 2020,
                         begrunnelse = "kan",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                         vurdertIBehandling = BehandlingId(1),
                     )
@@ -925,17 +929,17 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 4 mai 2020,
+                        fom = 4 mai 2020,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                         vurdertIBehandling = BehandlingId(1),
                     ),
                     Fritaksvurdering(
                         harFritak = false,
-                        fraDato = 18 mai 2020,
+                        fom = 18 mai 2020,
                         begrunnelse = "kan",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                         vurdertIBehandling = BehandlingId(1),
                     )
@@ -1028,17 +1032,17 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 14 mai 2020,
+                        fom = 14 mai 2020,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                         vurdertIBehandling = BehandlingId(1),
                     ),
                     Fritaksvurdering(
                         harFritak = false,
-                        fraDato = 15 mai 2020,
+                        fom = 15 mai 2020,
                         begrunnelse = "kan",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                         vurdertIBehandling = BehandlingId(1),
                     )
@@ -1204,9 +1208,9 @@ class MeldepliktRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = 28 mai 2020,
+                        fom = 28 mai 2020,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         opprettetTid = LocalDateTime.now(),
                         vurdertIBehandling = BehandlingId(1),
                     )
@@ -1269,7 +1273,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
                                 meldepliktOverstyringStatus = MeldepliktOverstyringStatus.RIMELIG_GRUNN
                             )
                         ),
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         vurdertIBehandling = BehandlingReferanse(),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     )
