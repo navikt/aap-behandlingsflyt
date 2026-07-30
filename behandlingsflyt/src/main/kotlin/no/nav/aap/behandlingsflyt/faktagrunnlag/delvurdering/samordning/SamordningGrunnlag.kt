@@ -33,9 +33,12 @@ data class SamordningYtelseVurderingGrunnlag(
                 StandardSammenslåere.minus()
             )
 
-        return perioderSomIkkeHarBlittVurdert
+        return perioderSomIkkeHarBlittVurdert.komprimer()
     }
 
+    /**
+     * Regn ut samordning-gradering ved å summere grad for ytelser det skal samordnes mot.
+     */
     fun vurder(): Tidslinje<SamordningGradering> {
         /**
          * Henter kun automatiske ytelser fra register - disse skal ikke ha overlappende perioder
