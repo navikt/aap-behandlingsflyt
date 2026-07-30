@@ -2,10 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere.slåSammenTilListe
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.outerJoin
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -43,13 +42,9 @@ data class SamordningYtelseGrunnlag(
     fun tidslinjeMedSamordningYtelser(): Tidslinje<List<Ytelse>> {
         return this.ytelser.filter { it.ytelseType.type == AvklaringsType.MANUELL }
             .map { ytelse ->
-                val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, ytelse.ytelseType) }
-                tidslinjePerPeriode.fold(Tidslinje.empty<Ytelse>()) { acc, curr ->
-                    acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-                }.komprimer()
-            }.fold(Tidslinje.empty()) { acc, curr ->
-                acc.kombiner(curr, slåSammenTilListe())
+                ytelse.ytelsePerioder.somTidslinje({ it.periode }, { ytelse.ytelseType })
             }
+            .outerJoin()
     }
 }
 
@@ -62,13 +57,8 @@ data class SamordningVurderingGrunnlag(
 ) {
     fun vurderingTidslinje(): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {
         return this.vurderinger.filter { it.ytelseType.type == AvklaringsType.MANUELL }
-            .map { ytelse ->
-                val segmenterForYtelse =
-                    ytelse.vurderingPerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) }
-                Tidslinje(segmenterForYtelse)
-            }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningVurderingPeriode>>>()) { acc, curr ->
-                acc.kombiner(curr, slåSammenTilListe())
-            }
+            .map { ytelse -> ytelse.vurderingPerioder.somTidslinje({ it.periode }, { Pair(ytelse.ytelseType, it) }) }
+            .outerJoin()
     }
 }
 
