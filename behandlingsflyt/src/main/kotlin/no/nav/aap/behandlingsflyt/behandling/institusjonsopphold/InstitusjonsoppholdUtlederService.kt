@@ -3,10 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -15,11 +15,12 @@ import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
-import java.util.stream.IntStream
+import java.util.stream.*
 import kotlin.math.max
 
 class InstitusjonsoppholdUtlederService(
@@ -80,7 +81,7 @@ class InstitusjonsoppholdUtlederService(
                 })
 
         if (helseopphold.isNotEmpty()) {
-            val helseOppholdTidslinje = opprettTidslinje(helseopphold)
+            val helseOppholdTidslinje = helseopphold.somTidslinje({ it.periode }, { true })
             val barnetilleggTidslinje = barnetillegg.tilTidslinje()
 
             //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
@@ -177,43 +178,28 @@ class InstitusjonsoppholdUtlederService(
     }
 
     private fun byggSoningsvurderingTidslinje(
-        soningsvurderinger: List<Soningsvurdering>
+        soningsvurderinger: Soningsvurderinger?
     ): Tidslinje<SoningOpphold> {
-        return soningsvurderinger.sortedBy { it.fraDato }.map {
-            Tidslinje(
-                Periode(
-                    it.fraDato,
-                    Tid.MAKS
-                ), SoningOpphold(
-                    if (it.skalOpphøre) {
-                        OppholdVurdering.AVSLÅTT
-                    } else {
-                        OppholdVurdering.GODKJENT
-                    }
-                )
-            )
-        }.fold(Tidslinje<SoningOpphold>()) { acc, tidslinje ->
-            acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }.komprimer()
+        return soningsvurderinger?.tilTidslinje().orEmpty()
+            .map { SoningOpphold(if (it.skalOpphøre) OppholdVurdering.AVSLÅTT else OppholdVurdering.GODKJENT) }
+            .komprimer()
     }
 
     private fun byggHelsevurderingTidslinje(
-        helsevurderinger: List<HelseinstitusjonVurdering>,
+        helsevurderinger: Helseoppholdvurderinger?,
         oppholdPerioder: List<Periode>
     ): Tidslinje<HelseOpphold> {
         // Første lag tidslinje fra saksbehandlers vurderinger
-        val vurderingTidslinje = Tidslinje(helsevurderinger.sortedBy { it.periode }.map {
-            Segment(
-                it.periode, HelseOpphold(
-                    if (it.faarFriKostOgLosji && it.harFasteUtgifter == false && it.forsoergerEktefelle == false) {
-                        OppholdVurdering.AVSLÅTT
-                    } else {
-                        OppholdVurdering.GODKJENT
-                    },
-                    umiddelbarReduksjon = true
-                )
+        val vurderingTidslinje = helsevurderinger?.tilTidslinje().orEmpty().map {
+            HelseOpphold(
+                if (it.faarFriKostOgLosji && it.harFasteUtgifter == false && it.forsoergerEktefelle == false) {
+                    OppholdVurdering.AVSLÅTT
+                } else {
+                    OppholdVurdering.GODKJENT
+                },
+                umiddelbarReduksjon = true
             )
-        })
+        }
 
         // Fyll inn gaps med GODKJENT for perioder som ikke er vurdert
         val vurderingMedGaps = fyllInnGapsMedGodkjentForHelseopphold(vurderingTidslinje, oppholdPerioder)
@@ -404,17 +390,6 @@ class InstitusjonsoppholdUtlederService(
         return justertPeriode.inneholder(førsteDagMedMuligReduksjon) && (oppholdStartDato.plusMonths(2) <= LocalDate.now())
     }
 
-    private fun <T> opprettTidslinje(segmenter: List<Segment<T>>): Tidslinje<Boolean> {
-        return segmenter.sortedBy { it.fom() }.map { segment ->
-            Tidslinje(
-                segment.periode,
-                true
-            )
-        }.fold(Tidslinje()) { acc, tidslinje ->
-            acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-        }
-    }
-
     private fun konstruerInput(
         behandlingId: BehandlingId,
         basertPåVurderingerFørDenneBehandlingen: Boolean
@@ -425,19 +400,25 @@ class InstitusjonsoppholdUtlederService(
         val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
 
         val opphold = grunnlag?.oppholdene?.opphold.orEmpty()
-        val soningsvurderinger: List<Soningsvurdering>
-        val helsevurderinger: List<HelseinstitusjonVurdering>
+        val soningsvurderinger: Soningsvurderinger?
+        val helsevurderinger: Helseoppholdvurderinger?
         if (basertPåVurderingerFørDenneBehandlingen) {
             val forrigeGrunnlag =
                 behandling.forrigeBehandlingId?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }
-            soningsvurderinger = forrigeGrunnlag?.soningsVurderinger?.vurderinger.orEmpty()
-            helsevurderinger = forrigeGrunnlag?.helseoppholdvurderinger?.vurderinger.orEmpty()
+            soningsvurderinger = forrigeGrunnlag?.soningsVurderinger
+            helsevurderinger = forrigeGrunnlag?.helseoppholdvurderinger
         } else {
-            soningsvurderinger = grunnlag?.soningsVurderinger?.vurderinger.orEmpty()
-            helsevurderinger = grunnlag?.helseoppholdvurderinger?.vurderinger.orEmpty()
+            soningsvurderinger = grunnlag?.soningsVurderinger
+            helsevurderinger = grunnlag?.helseoppholdvurderinger
         }
 
-        return InstitusjonsoppholdInput(rettighetsperiode, opphold, soningsvurderinger, barnetillegg, helsevurderinger)
+        return InstitusjonsoppholdInput(
+            rettighetsperiode,
+            institusjonsOpphold = opphold,
+            soningsvurderinger = soningsvurderinger,
+            barnetillegg = barnetillegg,
+            helsevurderinger = helsevurderinger
+        )
     }
 
     private fun giNyTidslinjeHvisBarneTilleggTarSluttUnderOppholdet(
@@ -489,7 +470,7 @@ class InstitusjonsoppholdUtlederService(
         } else {
             Tidslinje.empty()
         }
-        
+
         val oppholdIBarneTilleggGapSomKreverAvklaring = barnetilleggTidslinje.segmenter().sortedBy { it.fom() }
             .zipWithNext()
             .mapNotNull { (current, next) ->
@@ -519,7 +500,10 @@ class InstitusjonsoppholdUtlederService(
         }
 
         return oppholdFørBarnetillegg
-            .kombiner(oppholdIBarneTilleggGapSomKreverAvklaring, joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin())
+            .kombiner(
+                oppholdIBarneTilleggGapSomKreverAvklaring,
+                joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin()
+            )
             .kombiner(oppholdEtterBarnetillegg, joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin())
     }
 

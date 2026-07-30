@@ -7,17 +7,15 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.YtelseGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere.slåSammenTilListe
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.outerJoin
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import kotlin.collections.associate
-import kotlin.collections.orEmpty
 import kotlin.math.min
 
 data class SamordningYtelseVurderingGrunnlag(
@@ -45,10 +43,8 @@ data class SamordningYtelseVurderingGrunnlag(
          */
         val hentedeYtelserFraRegisterForAutomatiskVurdering =
             ytelseGrunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.AUTOMATISK }.map { ytelse ->
-                Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
-            }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
-                acc.kombiner(curr, slåSammenTilListe())
-            }
+                ytelse.ytelsePerioder.somTidslinje({it.periode}, { Pair(ytelse.ytelseType, it) })
+            }.outerJoin()
 
         // Slå sammen med vurderinger og regn ut graderinger
 
