@@ -47,7 +47,9 @@ class AvklarSamordningGraderingLøser(
         )
 
         val perioderSomIkkeHarBlittVurdert =
-            samordningService.samordningGrunnlag(kontekst.behandlingId()).perioderSomIkkeHarBlittVurdert()
+            samordningService.samordningGrunnlag(kontekst.behandlingId())
+                .copy(vurderingGrunnlag = samordningsvurderinger)
+                .perioderSomIkkeHarBlittVurdert()
 
         if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
             throw UgyldigForespørselException(message = "Har ikke vurdert alle perioder for samordning med andre folketrygdytelser")
