@@ -72,24 +72,6 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
     }
 
-    override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerBestillingSomMottattDto): DialogmeldingStatusTilBehandslingsflytDto {
-        val request = PostRequest(
-            body = markerSomMottattRequest,
-            additionalHeaders = listOf(
-                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
-                Header("Accept", "application/json")
-            )
-        )
-
-        return requireNotNull(
-            client.post(
-                uri = URI.create("$syfoUri/status/markerbestillingmottatt"),
-                request = request,
-                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-            )
-        )
-    }
-
     override fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto> {
         val request = GetRequest(
             additionalHeaders = listOf(

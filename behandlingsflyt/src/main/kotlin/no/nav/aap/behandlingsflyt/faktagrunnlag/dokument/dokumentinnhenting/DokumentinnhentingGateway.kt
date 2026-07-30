@@ -15,7 +15,6 @@ interface DokumentinnhentingGateway : Gateway {
 
     fun bestillLegeerklæring(request: BehandlingsflytToDokumentInnhentingBestillingDto): String
     fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringDto): String
-    fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerBestillingSomMottattDto): DialogmeldingStatusTilBehandslingsflytDto
     fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto>
     fun forhåndsvisDialogmelding(request: ForhåndsvisDialogmeldingDto): DialogmeldingForhåndsvisningDto
     fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto
