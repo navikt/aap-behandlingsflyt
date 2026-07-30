@@ -33,7 +33,8 @@ class SamordningYtelseGrunnlagTest {
             ),
         )
 
-        val ikkeVurdertePerioder = SamordningYtelseVurderingGrunnlag(grunnlag, null).perioderSomIkkeHarBlittVurdert()
+        val ikkeVurdertePerioder =
+            SamordningYtelseVurderingGrunnlag(grunnlag, null).perioderSomIkkeHarBlittVurdert()
 
         assertThat(ikkeVurdertePerioder.segmenter().first().periode).isEqualTo(
             Periode(1 januar 2024, 13 januar 2024)
