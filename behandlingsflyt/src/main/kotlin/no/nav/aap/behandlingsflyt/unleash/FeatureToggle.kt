@@ -31,7 +31,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ManuellInntektDelvisUfore,
     Avslag11_27,
     SkalViseAlleSykdomssteg,
-    MeldeperiodeTilMeldekortBackendBasertPaaSisteFattedeVedtak,
+    MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     ;
 
     override fun key(): String = name

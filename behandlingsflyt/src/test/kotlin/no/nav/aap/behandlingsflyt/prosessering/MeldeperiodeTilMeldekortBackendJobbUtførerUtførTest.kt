@@ -64,7 +64,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerUtførTest {
 
     @Test
     fun `feature toggle av - sender data basert på triggerende behandling`() {
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaSisteFattedeVedtak) } returns false
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling) } returns false
         val førstegangsbehandling = opprettFørstegangsbehandling()
         val revurdering = opprettRevurdering(førstegangsbehandling)
 
@@ -80,13 +80,13 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerUtførTest {
 
         val sendt = utfør(førstegangsbehandling)
 
-        assertThat(sendt.opplysningsbehov).singleElement()
+        assertThat(sendt?.opplysningsbehov).singleElement()
             .matches { it.fom == LocalDate.of(2025, 1, 1) && it.tom == LocalDate.of(2026, 1, 1) }
     }
 
     @Test
     fun `feature toggle på - sender data basert på gjeldende ytelsesbehandling når den er nyere enn behandlingen som trigget jobben`() {
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaSisteFattedeVedtak) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling) } returns true
         val førstegangsbehandling = opprettFørstegangsbehandling()
         val revurdering = opprettRevurdering(førstegangsbehandling)
 
@@ -102,13 +102,13 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerUtførTest {
 
         val sendt = utfør(førstegangsbehandling)
 
-        assertThat(sendt.opplysningsbehov).singleElement()
+        assertThat(sendt?.opplysningsbehov).singleElement()
             .matches { it.fom == LocalDate.of(2025, 2, 1) && it.tom == LocalDate.of(2026, 1, 1) }
     }
 
     @Test
     fun `feature toggle på - ingen gjeldende ytelsesbehandling, faller tilbake til behandlingen som trigget jobben`() {
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaSisteFattedeVedtak) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling) } returns true
         val førstegangsbehandling = opprettFørstegangsbehandling()
         lagreUnderveisperiodeMedRett(
             førstegangsbehandling.id,
@@ -119,13 +119,13 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerUtførTest {
         val sendt = utfør(førstegangsbehandling)
 
         // Før vedtak
-        assertThat(sendt.opplysningsbehov).singleElement()
+        assertThat(sendt?.opplysningsbehov).singleElement()
             .matches { it.fom == LocalDate.now() && it.tom == Tid.MAKS }
     }
 
     @Test
     fun `feature toggle på - gjeldende ytelsesbehandling er samme som behandlingen som trigget jobben`() {
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaSisteFattedeVedtak) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling) } returns true
         val førstegangsbehandling = opprettFørstegangsbehandling()
 
         lagreUnderveisperiodeMedRett(
@@ -138,9 +138,30 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerUtførTest {
 
         val sendt = utfør(førstegangsbehandling)
 
-        assertThat(sendt.opplysningsbehov).singleElement()
+        assertThat(sendt?.opplysningsbehov).singleElement()
             .matches { it.fom == LocalDate.of(2025, 1, 1) && it.tom == LocalDate.of(2026, 1, 1) }
     }
+
+    @Test
+    fun `feature toggle på - sender ikke data når triggende behandling er en revurdering som utredes`() {
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling) } returns true
+        val førstegangsbehandling = opprettFørstegangsbehandling()
+        val revurdering = opprettRevurdering(førstegangsbehandling)
+
+        lagreUnderveisperiodeMedRett(
+            førstegangsbehandling.id,
+            fom = LocalDate.of(2025, 1, 1),
+            tom = LocalDate.of(2026, 1, 1)
+        )
+        lagreUnderveisperiodeMedRett(revurdering.id, fom = LocalDate.of(2025, 2, 1), tom = LocalDate.of(2026, 1, 1))
+
+        iverksettBehandling(førstegangsbehandling)
+
+        val sendt = utfør(revurdering)
+
+        assertThat(sendt).isNull()
+    }
+
 
     private fun opprettFørstegangsbehandling(): Behandling {
         val sakOgBehandling = opprettInMemorySakOgBehandling()
@@ -166,11 +187,11 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerUtførTest {
         )
     }
 
-    private fun utfør(behandling: Behandling): MeldeperioderV0 {
+    private fun utfør(behandling: Behandling): MeldeperioderV0? {
         val sendt = slot<MeldeperioderV0>()
         every { meldekortGateway.oppdaterMeldeperioder(capture(sendt)) } returns Unit
         utfører.utfør(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(behandling.sakId, behandling.id))
-        return sendt.captured
+        return if (sendt.isCaptured) sendt.captured else null
     }
 
     private fun lagreUnderveisperiodeMedRett(behandlingId: BehandlingId, fom: LocalDate, tom: LocalDate) {

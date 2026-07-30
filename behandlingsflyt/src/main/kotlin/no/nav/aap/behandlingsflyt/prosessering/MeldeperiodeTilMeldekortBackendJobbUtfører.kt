@@ -51,36 +51,37 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
-        val inputBehandlingId = BehandlingId(input.behandlingId())
+        val behandlingId = BehandlingId(input.behandlingId())
         val sak = sakService.hent(sakId)
-        val behandling =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaSisteFattedeVedtak)) {
-                behandlingService.finnGjeldendeYtelsesbehandling(sakId) ?: behandlingRepository.hent(inputBehandlingId)
-            } else {
-                behandlingRepository.hent(inputBehandlingId)
-            }
-
-        if (behandling.id != inputBehandlingId) {
-            log.warn(
-                "Overfører meldeperioder til meldekort-backend for annen behandling [${behandling.id}] enn den som trigget jobben [$inputBehandlingId] for sak $sakId. " +
-                        "Det som trolig har skjedd er at behandlingen som trigget jobben ble iverksatt før, men avsluttet etter den andre behandlingen som har siste fattede vedtak."
-            )
-        }
+        val behandling = behandlingRepository.hent(behandlingId)
 
         val opplysningerTilMeldekortBackend = when {
             trukketSøknadService.søknadErTrukket(behandling.id) ->
                 opplysningerVedTrukketSøknad(sak)
 
             behandling.status().erAvsluttet() -> {
-                val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                val gjeldendeYtelsesbehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling)) {
+                    behandlingService.finnGjeldendeYtelsesbehandling(sakId) ?: behandling
+                } else {
+                    behandling
+                }
+
+                if (gjeldendeYtelsesbehandling.id != behandling.id) {
+                    log.warn(
+                        "Overfører meldeperioder til meldekort-backend for annen behandling [${gjeldendeYtelsesbehandling.id}] enn den som trigget jobben [${behandling.id}] for sak $sakId. " +
+                                "Det som trolig har skjedd er at behandlingen som trigget jobben ble iverksatt før, men avsluttet etter den andre behandlingen som har siste fattede vedtak."
+                    )
+                }
+
+                val underveisGrunnlag = underveisRepository.hentHvisEksisterer(gjeldendeYtelsesbehandling.id)
                 val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden()
-                    ?: error("Skal ha underveisperiode for avsluttet behandling ${behandling.id}")
-                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandling.id, underveisperiode)
+                    ?: error("Skal ha underveisperiode for avsluttet behandling ${gjeldendeYtelsesbehandling.id}")
+                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(gjeldendeYtelsesbehandling.id, underveisperiode)
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
                     vedtaksdatoFørsteInnvilgelse = vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)?.toLocalDate(),
-                    meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id),
+                    meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(gjeldendeYtelsesbehandling.id),
                     underveisGrunnlag = underveisGrunnlag
                 )
             }
