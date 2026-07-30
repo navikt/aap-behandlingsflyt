@@ -58,39 +58,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerUtførTest {
         trukketSøknadService, vedtakService, unleashGateway
     )
 
-    private fun opprettFørstegangsbehandling(): Behandling {
-        val sakOgBehandling = opprettInMemorySakOgBehandling()
-        return sakOgBehandling.second
-    }
-
-    private fun iverksettBehandling(behandling: Behandling) {
-        InMemoryBehandlingRepository.oppdaterBehandlingStatus(
-            behandling.id,
-            Status.IVERKSETTES
-        )
-    }
-
-    private fun opprettRevurdering(behandling: Behandling): Behandling {
-        return InMemoryBehandlingRepository.opprettBehandling(
-            behandling.sakId,
-            TypeBehandling.Revurdering,
-            behandling.id,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG)),
-                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
-            )
-        )
-    }
-
     init {
         every { meldekortGateway.oppdaterMeldeperioder(any()) } returns Unit
-    }
-
-    private fun lagreUnderveisperiodeMedRett(behandlingId: BehandlingId, fom: LocalDate, tom: LocalDate) {
-        InMemoryUnderveisRepository.lagre(
-            behandlingId,
-            listOf(underveisperiodeMedRett(fom, tom)),
-            object : Faktagrunnlag {})
     }
 
     @Test
@@ -173,11 +142,42 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerUtførTest {
             .matches { it.fom == LocalDate.of(2025, 1, 1) && it.tom == LocalDate.of(2026, 1, 1) }
     }
 
+    private fun opprettFørstegangsbehandling(): Behandling {
+        val sakOgBehandling = opprettInMemorySakOgBehandling()
+        return sakOgBehandling.second
+    }
+
+    private fun iverksettBehandling(behandling: Behandling) {
+        InMemoryBehandlingRepository.oppdaterBehandlingStatus(
+            behandling.id,
+            Status.IVERKSETTES
+        )
+    }
+
+    private fun opprettRevurdering(behandling: Behandling): Behandling {
+        return InMemoryBehandlingRepository.opprettBehandling(
+            behandling.sakId,
+            TypeBehandling.Revurdering,
+            behandling.id,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG)),
+                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+            )
+        )
+    }
+
     private fun utfør(behandling: Behandling): MeldeperioderV0 {
         val sendt = slot<MeldeperioderV0>()
         every { meldekortGateway.oppdaterMeldeperioder(capture(sendt)) } returns Unit
         utfører.utfør(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(behandling.sakId, behandling.id))
         return sendt.captured
+    }
+
+    private fun lagreUnderveisperiodeMedRett(behandlingId: BehandlingId, fom: LocalDate, tom: LocalDate) {
+        InMemoryUnderveisRepository.lagre(
+            behandlingId,
+            listOf(underveisperiodeMedRett(fom, tom)),
+            object : Faktagrunnlag {})
     }
 
     private fun underveisperiodeMedRett(fom: LocalDate, tom: LocalDate) = Underveisperiode(
