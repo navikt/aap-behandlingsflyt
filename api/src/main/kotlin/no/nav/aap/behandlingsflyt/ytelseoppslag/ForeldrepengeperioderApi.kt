@@ -8,7 +8,6 @@ import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.ForeldrepengeUtbetaling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.ForeldrepengeoppslagService
 import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.ForeldrepengeperiodeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.ForeldrepengeperioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.YtelseoppslagRequest
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -19,12 +18,7 @@ import javax.sql.DataSource
 
 const val FORELDREPENGEPERIODER_PATH: String = "/api/person/foreldrepengeperioder"
 
-/**
- * Henter utbetalte foreldrepengeperioder for en person innenfor oppslagsvinduet `fom`-`tom`.
- *
- * Returnerer rådata, slik at konsumenten selv kan avgjøre hva som er relevant
- * (f.eks. om personen har mottatt foreldrepenger de siste 52 ukene).
- */
+
 fun NormalOpenAPIRoute.foreldrepengeperioderApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
@@ -34,23 +28,15 @@ fun NormalOpenAPIRoute.foreldrepengeperioderApi(
 
     route(FORELDREPENGEPERIODER_PATH) {
         @Suppress("UnauthorizedPost")
-        post<Unit, ForeldrepengeperioderDTO, YtelseoppslagRequest> { _, request ->
+        post<Unit, List<ForeldrepengeperiodeDTO>, YtelseoppslagRequest> { _, request ->
             sjekkTilgangTilPerson(tilgangGateway, request.personident, token())
-
-            val oppslagsperiode = request.tilOppslagsperiode()
 
             val perioder = dataSource.transaction(readOnly = true) { connection ->
                 ForeldrepengeoppslagService(repositoryRegistry.provider(connection), gatewayProvider)
-                    .hentForeldrepengeperioder(request.personident, oppslagsperiode)
+                    .hentForeldrepengeperioder(request.personident, request.tilOppslagsperiode())
             }
 
-            respond(
-                ForeldrepengeperioderDTO(
-                    oppslagsperiode = oppslagsperiode.tilDto(),
-                    perioder = perioder.map { it.tilDto() },
-                ),
-                HttpStatusCode.OK,
-            )
+            respond(perioder.map { it.tilDto() }, HttpStatusCode.OK)
         }
     }
 }
@@ -65,8 +51,3 @@ private fun ForeldrepengeUtbetaling.tilDto() = ForeldrepengeperiodeDTO(
     ytelseStatus = ytelseStatus,
     vedtattTidspunkt = vedtattTidspunkt,
 )
-
-
-
-
-

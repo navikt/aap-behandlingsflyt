@@ -17,10 +17,3 @@ public data class YtelseoppslagRequest(
     val fom: LocalDate,
     val tom: LocalDate,
 )
-
-public data class YtelseoppslagPeriodeDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
-)
-
-

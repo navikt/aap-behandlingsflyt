@@ -9,12 +9,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTimedValue
 
-/**
- * Slår opp utbetalte sykepengeperioder for en person, inkludert historiske identer.
- *
- * Tjenesten gjør ingen vurdering av om perioder er "nære nok" i tid - den returnerer rådata
- * innenfor oppslagsperioden, slik at konsumenten selv kan avgjøre hva som er relevant.
- */
+
 class SykepengeoppslagService(
     private val sykepengerGateway: SykepengerGateway,
     private val personRepository: PersonRepository,
@@ -27,7 +22,6 @@ class SykepengeoppslagService(
     )
 
     fun hentSykepengeperioder(personident: String, oppslagsperiode: Periode): List<UtbetaltePerioder> {
-        // Sykepenger-gatewayen tar imot alle identene til personen i ett kall.
         val identer = personRepository.finnAlleIdenter(personident)
 
         val (perioder, duration) = measureTimedValue {

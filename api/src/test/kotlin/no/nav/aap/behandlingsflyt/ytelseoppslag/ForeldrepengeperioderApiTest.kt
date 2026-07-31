@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.ForeldrepengeperioderDTO
+import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.ForeldrepengeperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.YtelseoppslagRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -66,17 +66,15 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-
-            val body = response.body<ForeldrepengeperioderDTO>()
-            assertThat(body.oppslagsperiode.fom).isEqualTo(fom)
-            assertThat(body.oppslagsperiode.tom).isEqualTo(tom)
             assertThat(FakeForeldrepengerGateway.periodeBrukt).isEqualTo(fom to tom)
-            assertThat(body.perioder).hasSize(1)
-            assertThat(body.perioder.first().fom).isEqualTo(foreldrepengeperiode.fom)
-            assertThat(body.perioder.first().tom).isEqualTo(foreldrepengeperiode.tom)
-            assertThat(body.perioder.first().utbetalingsgrad.toInt()).isEqualTo(80)
-            assertThat(body.perioder.first().beløp?.toInt()).isEqualTo(1234)
-            assertThat(body.perioder.first().saksnummer).isEqualTo("352017890")
+
+            val perioder = response.body<List<ForeldrepengeperiodeDTO>>()
+            assertThat(perioder).hasSize(1)
+            assertThat(perioder.first().fom).isEqualTo(foreldrepengeperiode.fom)
+            assertThat(perioder.first().tom).isEqualTo(foreldrepengeperiode.tom)
+            assertThat(perioder.first().utbetalingsgrad.toInt()).isEqualTo(80)
+            assertThat(perioder.first().beløp?.toInt()).isEqualTo(1234)
+            assertThat(perioder.first().saksnummer).isEqualTo("352017890")
         }
     }
 
@@ -102,7 +100,7 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            assertThat(response.body<ForeldrepengeperioderDTO>().perioder).isEmpty()
+            assertThat(response.body<List<ForeldrepengeperiodeDTO>>()).isEmpty()
         }
     }
 
@@ -146,7 +144,7 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            assertThat(response.body<ForeldrepengeperioderDTO>().perioder).isEmpty()
+            assertThat(response.body<List<ForeldrepengeperiodeDTO>>()).isEmpty()
             assertThat(FakeForeldrepengerGateway.identerBrukt).containsExactly(ukjentIdent)
         }
     }
@@ -172,5 +170,3 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
         )
     )
 }
-
-

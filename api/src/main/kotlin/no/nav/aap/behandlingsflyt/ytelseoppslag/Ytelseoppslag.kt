@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.ytelseoppslag
 
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.YtelseoppslagPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.YtelseoppslagRequest
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
@@ -15,18 +14,12 @@ internal fun YtelseoppslagRequest.tilOppslagsperiode(): Periode {
     return Periode(fom, tom)
 }
 
-internal fun Periode.tilDto() = YtelseoppslagPeriodeDTO(fom, tom)
-
 internal fun Number.tilBigDecimal(): BigDecimal = when (this) {
     is BigDecimal -> this
     is BigInteger -> BigDecimal(this)
     else -> BigDecimal(this.toString())
 }
 
-/**
- * Personidenten sendes i request-body, og tilgang-pluginen støtter ikke persontilgang via body.
- * Tilgang sjekkes derfor manuelt, på samme måte som i PersonApi.
- */
 internal suspend fun sjekkTilgangTilPerson(
     tilgangGateway: TilgangGateway,
     personident: String,
@@ -36,8 +29,3 @@ internal suspend fun sjekkTilgangTilPerson(
         throw IkkeTillattException("Har ikke tilgang til person")
     }
 }
-
-
-
-
-

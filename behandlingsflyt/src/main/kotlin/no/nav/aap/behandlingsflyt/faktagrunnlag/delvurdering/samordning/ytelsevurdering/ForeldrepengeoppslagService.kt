@@ -12,12 +12,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.time.measureTimedValue
 
-/**
- * Slår opp utbetalte foreldrepengeperioder for en person, inkludert historiske identer.
- *
- * Tjenesten gjør ingen vurdering av om perioder er "nære nok" i tid - den returnerer rådata
- * innenfor oppslagsperioden, slik at konsumenten selv kan avgjøre hva som er relevant.
- */
+
 class ForeldrepengeoppslagService(
     private val foreldrepengerGateway: ForeldrepengerGateway,
     private val personRepository: PersonRepository,
@@ -30,7 +25,6 @@ class ForeldrepengeoppslagService(
     )
 
     fun hentForeldrepengeperioder(personident: String, oppslagsperiode: Periode): List<ForeldrepengeUtbetaling> {
-        // Foreldrepenger-gatewayen slår opp én ident om gangen, så vi må spørre for hver kjente ident.
         val identer = personRepository.finnAlleIdenter(personident)
 
         val (perioder, duration) = measureTimedValue {

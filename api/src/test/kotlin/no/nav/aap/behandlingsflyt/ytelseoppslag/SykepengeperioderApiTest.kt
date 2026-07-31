@@ -11,7 +11,7 @@ import io.ktor.server.testing.testApplication
 import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.SykepengeperioderDTO
+import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.SykepengeperiodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.YtelseoppslagRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -61,14 +61,12 @@ class SykepengeperioderApiTest : BaseApiTest() {
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
 
-            val body = response.body<SykepengeperioderDTO>()
-            assertThat(body.oppslagsperiode.fom).isEqualTo(fom)
-            assertThat(body.oppslagsperiode.tom).isEqualTo(tom)
-            assertThat(body.perioder).hasSize(1)
-            assertThat(body.perioder.first().fom).isEqualTo(periodeFom)
-            assertThat(body.perioder.first().tom).isEqualTo(periodeTom)
-            assertThat(body.perioder.first().grad.toInt()).isEqualTo(100)
-            assertThat(body.perioder.first().organisasjonsnummer).isEqualTo("999999999")
+            val perioder = response.body<List<SykepengeperiodeDTO>>()
+            assertThat(perioder).hasSize(1)
+            assertThat(perioder.first().fom).isEqualTo(periodeFom)
+            assertThat(perioder.first().tom).isEqualTo(periodeTom)
+            assertThat(perioder.first().grad.toInt()).isEqualTo(100)
+            assertThat(perioder.first().organisasjonsnummer).isEqualTo("999999999")
         }
     }
 
@@ -111,7 +109,7 @@ class SykepengeperioderApiTest : BaseApiTest() {
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            assertThat(response.body<SykepengeperioderDTO>().perioder).isEmpty()
+            assertThat(response.body<List<SykepengeperiodeDTO>>()).isEmpty()
             assertThat(FakeSykepengerGateway.identerBrukt).containsExactly(ukjentIdent)
         }
     }
@@ -136,9 +134,6 @@ class SykepengeperioderApiTest : BaseApiTest() {
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            val oppslagsperiode = response.body<SykepengeperioderDTO>().oppslagsperiode
-            assertThat(oppslagsperiode.fom).isEqualTo(fom)
-            assertThat(oppslagsperiode.tom).isEqualTo(tom)
             assertThat(FakeSykepengerGateway.periodeBrukt).isEqualTo(fom to tom)
         }
     }
@@ -149,9 +144,4 @@ class SykepengeperioderApiTest : BaseApiTest() {
         tom = LocalDate.of(2026, 7, 1),
     )
 }
-
-
-
-
-
 
