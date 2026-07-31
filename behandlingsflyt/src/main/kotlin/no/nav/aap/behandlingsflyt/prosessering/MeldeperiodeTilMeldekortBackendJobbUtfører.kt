@@ -68,8 +68,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
 
                 if (gjeldendeYtelsesbehandling.id != behandling.id) {
                     log.warn(
-                        "Overfører meldeperioder til meldekort-backend for annen behandling [${gjeldendeYtelsesbehandling.id}] enn den som trigget jobben [${behandling.id}] for sak $sakId. " +
-                                "Det som trolig har skjedd er at behandlingen som trigget jobben ble iverksatt før, men avsluttet etter den andre behandlingen som har siste fattede vedtak."
+                        "Overfører meldeperioder til meldekort-backend for gjeldende ytelsesbehandling [${gjeldendeYtelsesbehandling.id}] som er en annenn enn den som trigget jobben [${behandling.id}] for sak $sakId. " +
+                                "Det som trolig har skjedd er at behandlingen som trigget jobben ble iverksatt før, men avsluttet etter gjeldende ytelsesbehandling som har siste fattede vedtak."
                     )
                 }
 
