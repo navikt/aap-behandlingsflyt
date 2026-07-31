@@ -20,12 +20,10 @@ class SamordningYtelseGrunnlagTest {
                         SamordningYtelsePeriode(
                             Periode(1 januar 2024, 10 januar 2024),
                             Prosent.`70_PROSENT`,
-                            kronesum = null
                         ),
                         SamordningYtelsePeriode(
                             Periode(9 januar 2024, 13 januar 2024),
                             Prosent.`50_PROSENT`,
-                            kronesum = null
                         )
                     ),
                     kilde = "kilde"

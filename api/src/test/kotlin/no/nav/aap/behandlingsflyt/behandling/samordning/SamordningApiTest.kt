@@ -43,7 +43,6 @@ class SamordningApiKtTest : BaseApiTest() {
                         SamordningYtelsePeriode(
                             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1).minusDays(1)),
                             gradering = Prosent(50),
-                            kronesum = null,
                         )
                     ),
                     kilde = "kilde",
@@ -79,7 +78,6 @@ class SamordningApiKtTest : BaseApiTest() {
                                     tom = LocalDate.now().plusYears(1).minusDays(1),
                                 ),
                             gradering = 50,
-                            kronesum = null,
                             endringStatus = EndringStatus.NY
                         )
                     ),

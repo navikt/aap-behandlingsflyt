@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
@@ -71,7 +72,8 @@ class SamordningAnnenFullYtelseVilkårTest {
                 uføreRegisterGrunnlag = null,
                 uføreVurderingGrunnlag = null,
                 avslag1127grunnlag = null,
-                kravGrunnlag = null
+                kravGrunnlag = null,
+                strekkAvslagOverHelger = true
             )
         )
 
@@ -104,7 +106,8 @@ class SamordningAnnenFullYtelseVilkårTest {
                     )
                 ),
                 avslag1127grunnlag = null,
-                kravGrunnlag = null
+                kravGrunnlag = null,
+                strekkAvslagOverHelger = true
             )
         )
 
@@ -138,7 +141,8 @@ class SamordningAnnenFullYtelseVilkårTest {
                     )
                 ),
                 avslag1127grunnlag = null,
-                kravGrunnlag = null
+                kravGrunnlag = null,
+                strekkAvslagOverHelger = true
             )
         )
 
@@ -221,6 +225,79 @@ class SamordningAnnenFullYtelseVilkårTest {
         assertThat(segmenter.all { it.periode.tom <= rettighetsperiode.tom }).isTrue()
     }
 
+    // ── strekk avslag over helg ───────────────────────────────────────────────
+
+    @Test
+    fun `avslag fredag og mandag - helga fylles med IKKE_OPPFYLT og tidslinja er sammenhengende`() {
+        val fredag = Periode(2 januar 2026, 2 januar 2026)
+        val mandag = Periode(5 januar 2026, 5 januar 2026)
+        val resultat = vurder(
+            grunnlag(
+                samordningGrunnlag = samordningToPerioder(
+                    fredag to Prosent.`100_PROSENT`,
+                    mandag to Prosent.`100_PROSENT`,
+                )
+            )
+        )
+
+        val helgeperiode = Periode(fredag.fom, mandag.tom)
+        // assertTidslinje krever verdi for hele perioden - fanger dermed opp hull i helga
+        assertTidslinje(
+            resultat.begrensetTil(helgeperiode),
+            helgeperiode to { vurdering -> assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT) },
+        )
+    }
+
+    @Test
+    fun `avslag kun fredag - helga fylles ikke`() {
+        val fredag = Periode(2 januar 2026, 2 januar 2026)
+        val mandag = Periode(5 januar 2026, 5 januar 2026)
+        val resultat = vurder(
+            grunnlag(
+                samordningGrunnlag = samordningToPerioder(
+                    fredag to Prosent.`100_PROSENT`,
+                    mandag to Prosent.`50_PROSENT`,
+                )
+            )
+        )
+
+        assertThat(resultat.segment(3 januar 2026)).isNull()
+    }
+
+    @Test
+    fun `hull som ikke er ren helg fylles ikke`() {
+        val torsdag = Periode(1 januar 2026, 1 januar 2026)
+        val mandag = Periode(5 januar 2026, 5 januar 2026)
+        val resultat = vurder(
+            grunnlag(
+                samordningGrunnlag = samordningToPerioder(
+                    torsdag to Prosent.`100_PROSENT`,
+                    mandag to Prosent.`100_PROSENT`,
+                )
+            )
+        )
+
+        assertThat(resultat.segment(3 januar 2026)).isNull()
+    }
+
+    @Test
+    fun `helge-segmentet er lik fredagens vurdering`() {
+        val fredag = Periode(2 januar 2026, 2 januar 2026)
+        val mandag = Periode(5 januar 2026, 5 januar 2026)
+        val resultat = vurder(
+            grunnlag(
+                samordningGrunnlag = samordningToPerioder(
+                    fredag to Prosent.`100_PROSENT`,
+                    mandag to Prosent.`100_PROSENT`,
+                )
+            )
+        )
+
+        val fredagVurdering = resultat.segment(2 januar 2026)!!.verdi
+        val helgVurdering = resultat.segment(3 januar 2026)!!.verdi
+        assertThat(helgVurdering).usingRecursiveComparison().isEqualTo(fredagVurdering)
+    }
+
     private fun vurder(grunnlag: SamordningAnnenFullYtelseFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
         return SamordningAnnenFullYtelseVilkår.vurder(grunnlag)
     }
@@ -300,6 +377,37 @@ class SamordningAnnenFullYtelseVilkårTest {
             )
         )
 
+    private fun samordningToPerioder(vararg perioder: Pair<Periode, Prosent>) =
+        SamordningYtelseVurderingGrunnlag(
+            SamordningYtelseGrunnlag(
+                grunnlagId = 1L,
+                ytelser = setOf(
+                    SamordningYtelse(
+                        ytelseType = Ytelse.FORELDREPENGER,
+                        ytelsePerioder = perioder
+                            .map { (periode, prosent) -> SamordningYtelsePeriode(periode, gradering = prosent) }
+                            .toSet(),
+                        kilde = "..."
+                    )
+                )
+            ), SamordningVurderingGrunnlag(
+                vurderingerId = 1L,
+                begrunnelse = "...",
+                vurderinger = setOf(
+                    SamordningVurdering(
+                        ytelseType = Ytelse.FORELDREPENGER,
+                        vurderingPerioder = perioder
+                            .map { (periode, prosent) ->
+                                SamordningVurderingPeriode(periode, gradering = prosent, manuell = false)
+                            }
+                            .toSet()
+                    )
+                ),
+                vurdertAv = Bruker("..."),
+                vurdertTidspunkt = LocalDateTime.now(),
+            )
+        )
+
     private fun grunnlag(
         uføreGrunnlag: SamordningUføreGrunnlag? = null,
         avslag1127: Avslag11_27Grunnlag? = null,
@@ -312,6 +420,7 @@ class SamordningAnnenFullYtelseVilkårTest {
         uføreVurderingGrunnlag = uføreGrunnlag,
         avslag1127grunnlag = avslag1127,
         kravGrunnlag = kravGrunnlag,
+        strekkAvslagOverHelger = true
     )
 
     fun tomtSamordningYtelseVurderingGrunnlag() = SamordningYtelseVurderingGrunnlag(

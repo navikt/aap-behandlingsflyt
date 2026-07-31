@@ -33,7 +33,6 @@ data class SamordningYtelseDTO(
     val ytelseType: Ytelse,
     val periode: Periode,
     val gradering: Int?,
-    val kronesum: Int?,
     val kilde: String,
     val saksRef: String?,
     val endringStatus: EndringStatus
@@ -43,7 +42,6 @@ data class SamordningVurderingDTO(
     val ytelseType: Ytelse,
     val periode: Periode,
     val gradering: Int?,
-    val kronesum: Int?,
     val manuell: Boolean?
 )
 

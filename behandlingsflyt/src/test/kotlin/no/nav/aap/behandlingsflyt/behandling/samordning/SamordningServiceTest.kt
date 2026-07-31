@@ -108,11 +108,10 @@ internal class SamordningServiceTest {
         }
 
         val (ytelser, vurderinger) = dataSource.transaction { connection ->
-            val service = SamordningService(
+            SamordningService(
                 SamordningVurderingRepositoryImpl(connection),
                 SamordningYtelseRepositoryImpl(connection)
-            )
-            Pair(service.hentYtelser(behandlingId), service.hentVurderinger(behandlingId))
+            ).samordningGrunnlag(behandlingId)
         }
         val ikkeVurdertePerioder =
             SamordningYtelseVurderingGrunnlag(ytelser, vurderinger).perioderSomIkkeHarBlittVurdert()
@@ -146,12 +145,10 @@ internal class SamordningServiceTest {
                             SamordningYtelsePeriode(
                                 Periode(13 mars 2025, 31 mars 2025),
                                 Prosent.`70_PROSENT`,
-                                kronesum = null
                             ),
                             SamordningYtelsePeriode(
                                 Periode(13 mars 2025, 15 mars 2025),
                                 Prosent.`50_PROSENT`,
-                                kronesum = null
                             )
                         ),
                         kilde = "kilde"

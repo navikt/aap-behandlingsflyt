@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
@@ -34,32 +33,6 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 // At denne kunne være nullable er egentlig rester fra tidligere. Vurder å slette
                 // grunnlag uten vurderinger?
                 it.getLongOrNull("vurderinger_id")?.let(::hentSamordningVurderinger)
-            }
-        }
-    }
-
-    override fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId
-    ): List<SamordningVurderingGrunnlag> {
-        val query = """
-            SELECT VURDERINGER_ID
-            FROM SAMORDNING_YTELSEVURDERING_GRUNNLAG GRUNNLAG 
-                JOIN BEHANDLING B1 ON B1.ID = GRUNNLAG.BEHANDLING_ID
-                LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON AR.BEHANDLING_ID = B1.ID
-            WHERE GRUNNLAG.AKTIV
-            AND B1.SAK_ID = ?
-            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE B2.ID = ?)
-            AND AR.BEHANDLING_ID IS NULL
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper {
-                hentSamordningVurderinger(it.getLong("vurderinger_id"))
             }
         }
     }
