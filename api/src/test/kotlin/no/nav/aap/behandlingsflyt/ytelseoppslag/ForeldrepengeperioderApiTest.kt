@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 
 @Fakes
@@ -66,11 +67,21 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
 
             val perioder = response.body<List<ForeldrepengeperiodeDTO>>()
             assertThat(perioder).hasSize(1)
-            assertThat(perioder.first().fom).isEqualTo(foreldrepengeperiode.fom)
-            assertThat(perioder.first().tom).isEqualTo(foreldrepengeperiode.tom)
-            assertThat(perioder.first().utbetalingsgrad.toInt()).isEqualTo(80)
-            assertThat(perioder.first().beløp?.toInt()).isEqualTo(1234)
-            assertThat(perioder.first().saksnummer).isEqualTo("352017890")
+            assertThat(perioder.first())
+                .usingRecursiveComparison()
+                .withComparatorForType(Comparator { a, b -> a.compareTo(b) }, BigDecimal::class.java)
+                .isEqualTo(
+                    ForeldrepengeperiodeDTO(
+                        fom = foreldrepengeperiode.fom,
+                        tom = foreldrepengeperiode.tom,
+                        utbetalingsgrad = BigDecimal(80),
+                        beløp = BigDecimal(1234),
+                        saksnummer = "352017890",
+                        kildesystem = "FPSAK",
+                        ytelseStatus = "AVSLUTTET",
+                        vedtattTidspunkt = foreldrepengeperiode.fom.minusWeeks(1),
+                    )
+                )
         }
     }
 

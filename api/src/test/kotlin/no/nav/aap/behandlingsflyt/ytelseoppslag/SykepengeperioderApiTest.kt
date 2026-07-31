@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 
 @Fakes
@@ -59,10 +60,17 @@ class SykepengeperioderApiTest : BaseApiTest() {
 
             val perioder = response.body<List<SykepengeperiodeDTO>>()
             assertThat(perioder).hasSize(1)
-            assertThat(perioder.first().fom).isEqualTo(periodeFom)
-            assertThat(perioder.first().tom).isEqualTo(periodeTom)
-            assertThat(perioder.first().grad.toInt()).isEqualTo(100)
-            assertThat(perioder.first().organisasjonsnummer).isEqualTo("999999999")
+            assertThat(perioder.first())
+                .usingRecursiveComparison()
+                .withComparatorForType(Comparator { a, b -> a.compareTo(b) }, BigDecimal::class.java)
+                .isEqualTo(
+                    SykepengeperiodeDTO(
+                        fom = periodeFom,
+                        tom = periodeTom,
+                        grad = BigDecimal(100),
+                        organisasjonsnummer = "999999999",
+                    )
+                )
         }
     }
 
