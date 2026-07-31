@@ -262,7 +262,7 @@ internal fun Application.server(
             listOf(informasjonskravExecutor, fellesDataSource, motorDataSource, pipDataSource)
         )
     }
-    
+    loggTidssoneForDatabase(fellesDataSource)
     val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
 
     routing {
@@ -359,6 +359,15 @@ internal fun Application.server(
         actuator(prometheus, motor)
     }
 
+}
+
+private fun Application.loggTidssoneForDatabase(dataSource: HikariDataSource) {
+    val tidssoneForDatabase = dataSource.transaction { connection ->
+        connection.queryFirst("show timezone") {
+            setRowMapper { it.getString("timezone") }
+        }
+    }
+    log.info("Tidssone for databasen: $tidssoneForDatabase")
 }
 
 private fun Application.startKafkakonsumenter(
