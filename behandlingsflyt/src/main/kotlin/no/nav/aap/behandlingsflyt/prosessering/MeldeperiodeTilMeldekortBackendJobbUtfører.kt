@@ -98,7 +98,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         if (opplysningerTilMeldekortBackend != null) {
             val antallMeldePerioder = opplysningerTilMeldekortBackend.meldeperioder.size
             val antallOpplysningsbehov = opplysningerTilMeldekortBackend.opplysningsbehov.size
-            log.info("Sender $antallMeldePerioder meldeperioder og $antallOpplysningsbehov opplysningsbehov til meldekort-backend for behandling ${behandling.id}d")
+            log.info("Sender $antallMeldePerioder meldeperioder og $antallOpplysningsbehov opplysningsbehov til meldekort-backend for behandling ${behandling.id}")
             meldekortGateway.oppdaterMeldeperioder(opplysningerTilMeldekortBackend)
         }
     }
