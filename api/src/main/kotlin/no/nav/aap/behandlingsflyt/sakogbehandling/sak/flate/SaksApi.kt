@@ -47,6 +47,7 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
@@ -216,7 +217,9 @@ fun NormalOpenAPIRoute.saksApi(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))), routeConfig = AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SAKSBEHANDLE,
                     applicationsOnly = false,
-                    påkrevdRolle = Definisjon.VURDER_RETTIGHETSPERIODE.løsesAv
+                    påkrevdRolle = listOf(
+                        Rolle.SAKSBEHANDLER_NASJONAL
+                    )
                 )
             ) { _, dto ->
                 val eksisterendeSaker: List<Sak> = dataSource.transaction { connection ->
