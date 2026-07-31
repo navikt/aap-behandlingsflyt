@@ -14,12 +14,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.ForeldrepengeperiodeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.YtelseoppslagRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakeTilgangGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
@@ -32,7 +29,6 @@ import java.time.LocalDate
 class ForeldrepengeperioderApiTest : BaseApiTest() {
 
     private val gatewayProvider = createGatewayProvider {
-        register<FakeTilgangGateway>()
         register<FakeForeldrepengerGateway>()
     }
 

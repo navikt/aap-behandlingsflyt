@@ -1,41 +1,34 @@
 package no.nav.aap.behandlingsflyt.ytelseoppslag
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.ForeldrepengeUtbetaling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.ForeldrepengeoppslagService
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.ForeldrepengeperiodeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.YtelseoppslagRequest
-import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.server.auth.token
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
 
 const val FORELDREPENGEPERIODER_PATH: String = "/api/person/foreldrepengeperioder"
-
 
 fun NormalOpenAPIRoute.foreldrepengeperioderApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
-
     route(FORELDREPENGEPERIODER_PATH) {
-        @Suppress("UnauthorizedPost")
-        post<Unit, List<ForeldrepengeperiodeDTO>, YtelseoppslagRequest> { _, request ->
-            sjekkTilgangTilPerson(tilgangGateway, request.personident, token())
-
+        authorizedPost<Unit, List<ForeldrepengeperiodeDTO>, YtelseoppslagRequest>(
+            AuthorizationBodyPathConfig(operasjon = Operasjon.SE)
+        ) { _, request ->
             val perioder = dataSource.transaction(readOnly = true) { connection ->
                 ForeldrepengeoppslagService(repositoryRegistry.provider(connection), gatewayProvider)
                     .hentForeldrepengeperioder(request.personident, request.tilOppslagsperiode())
             }
-
             respond(perioder.map { it.tilDto() }, HttpStatusCode.OK)
         }
     }

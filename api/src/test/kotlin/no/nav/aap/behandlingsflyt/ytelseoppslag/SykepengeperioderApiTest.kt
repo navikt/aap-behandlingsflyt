@@ -11,12 +11,9 @@ import io.ktor.server.testing.testApplication
 import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.SykepengeperiodeDTO
-import no.nav.aap.behandlingsflyt.kontrakt.ytelseoppslag.YtelseoppslagRequest
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakeTilgangGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
@@ -28,7 +25,6 @@ import java.time.LocalDate
 class SykepengeperioderApiTest : BaseApiTest() {
 
     private val gatewayProvider = createGatewayProvider {
-        register<FakeTilgangGateway>()
         register<FakeSykepengerGateway>()
     }
 
@@ -144,4 +140,3 @@ class SykepengeperioderApiTest : BaseApiTest() {
         tom = LocalDate.of(2026, 7, 1),
     )
 }
-

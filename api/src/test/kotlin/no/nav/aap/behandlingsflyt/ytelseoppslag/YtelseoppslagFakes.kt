@@ -47,5 +47,3 @@ internal object FakeForeldrepengerGateway : ForeldrepengerGateway {
         return ForeldrepengerResponse(ytelserPerIdent[request.ident.verdi].orEmpty())
     }
 }
-
-
