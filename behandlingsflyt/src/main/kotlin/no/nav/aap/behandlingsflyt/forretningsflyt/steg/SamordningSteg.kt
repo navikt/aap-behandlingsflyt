@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -38,11 +39,10 @@ class SamordningSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
         val ytelser = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
-        val tidligereVurderinger = samordningService.vurderingTidslinje(vurderinger)
 
-        val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
-            ytelser, tidligereVurderinger
-        )
+        val samordningYtelseVurderingGrunnlag = SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
+        val perioderSomIkkeHarBlittVurdert =
+            samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert()
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
@@ -59,8 +59,7 @@ class SamordningSteg(
         )
 
         if (perioderSomIkkeHarBlittVurdert.isEmpty()) {
-            val samordningTidslinje =
-                samordningService.vurder(ytelser, tidligereVurderinger)
+            val samordningTidslinje = samordningYtelseVurderingGrunnlag.vurder()
 
             samordningRepository.lagre(
                 kontekst.behandlingId,
@@ -71,7 +70,7 @@ class SamordningSteg(
                             it.verdi.gradering
                         )
                     }.toSet(),
-                SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
+                samordningYtelseVurderingGrunnlag
             )
         } else {
             log.info("Mangler vurdering på perioder, lagrer ingenting i SamordningRepository.")
@@ -88,12 +87,12 @@ class SamordningSteg(
 
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val grunnlag = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
-        val ytelser = samordningService.tidslinjeMedSamordningYtelser(grunnlag)
+        val ytelser = grunnlag?.tidslinjeMedSamordningYtelser().orEmpty()
 
         // Vi sjekker om det har blitt gjort en manuell vurdering her for å klare å sende tilbake hit
         // hvis f.eks beslutter underkjenner vurderingen.
         val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
-        val vurderingtidslinje = samordningService.vurderingTidslinje(vurderinger)
+        val vurderingtidslinje = vurderinger?.vurderingTidslinje().orEmpty()
 
         return Tidslinje.map3(
             tidligereVurderingsutfall,

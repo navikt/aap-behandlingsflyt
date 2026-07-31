@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakePersoner
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbtest.DatabaseSnapshot
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -47,12 +49,16 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
     private lateinit var snapshot: DatabaseSnapshot
     private var motorForTest: ManuellMotorImpl? = null
 
+    data class TestData(var person: TestPerson?)
+
+    private var testData: TestData = TestData(person = null)
+
     /**
      * Kjør oppsettskoden i [block] (f.eks. fullfør en FGB), ta deretter et snapshot av
      * databasetilstanden. Kall denne i en `@BeforeAll`-metode, eller i
      * `@BeforeParameterizedClassInvocation` for en parameterisert testklasse.
      */
-    protected fun snapshotEtterSetup(block: () -> Unit) {
+    protected fun snapshotEtterSetup(block: TestData.() -> Unit) {
         motorForTest = null
         resetGatewayProvider()
         if (::snapshot.isInitialized) {
@@ -62,19 +68,24 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
             (dataSource as AutoCloseable).close()
             dataSource = TestDataSource()
         }
-        block()
+        testData.block()
         snapshot = (dataSource as TestDataSource).createSnapshot()
     }
 
     /**
-     * Før hvert test: bytt ut [dataSource] med en fersk klon av snapshotet og nullstill
-     * motoren slik at den bruker den nye databasen.
+     * Før hvert test: bytt ut [dataSource] med en fersk klone av snapshotet, nullstill
+     * motoren slik at den bruker den nye databasen, og re-registrer personen som var
+     * aktiv under oppsett (siden FakesExtension.beforeEach() nullstiller FakePersoner).
      */
     @BeforeEach
     override fun beforeEachClearDatabase() {
         motorForTest = null
         (dataSource as AutoCloseable).close()
         dataSource = snapshot.newDataSource()
+        // Re-register person that was registered during setup
+        if (testData.person != null) {
+            FakePersoner.leggTil(testData.person!!)
+        }
     }
 
     /**

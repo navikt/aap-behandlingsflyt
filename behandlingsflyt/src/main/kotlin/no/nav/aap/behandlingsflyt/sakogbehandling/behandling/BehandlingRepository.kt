@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
+import org.jetbrains.annotations.TestOnly
 
 interface BehandlingRepository : Repository {
 
@@ -54,6 +55,7 @@ interface BehandlingRepository : Repository {
 
     fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer
 
+    @TestOnly
     fun finnAlleGjeldendeVedtatteBehandlinger(): List<SakOgBehandling>
 
     fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling?

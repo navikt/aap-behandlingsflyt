@@ -55,7 +55,7 @@ data class OvergangUføreVurderingResponse(
                 behandlingId = overgangUføreVurdering.vurdertIBehandling,
                 vurdertAv = vurdertAvService.medNavnOgEnhet(
                     overgangUføreVurdering.vurdertAv,
-                    overgangUføreVurdering.opprettet!!, // TODO: Sett denne i kode i stedet for database
+                    overgangUføreVurdering.opprettet,
                 ),
             ),
         )

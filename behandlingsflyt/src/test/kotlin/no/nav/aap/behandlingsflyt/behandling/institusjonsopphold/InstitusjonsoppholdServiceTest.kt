@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
@@ -17,7 +19,6 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -45,17 +46,65 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         Institusjon(Institusjonstype.FO, Oppholdstype.S, "456", "fengsel")
     )
 
-    private fun hsInput(fom: LocalDate, tom: LocalDate) = InstitusjonsoppholdInput(
+    private fun institusjonsoppholdInput(
+        institusjonsOpphold: List<Segment<Institusjon>> = emptyList(),
+        soningsvurderinger: Any? = null,
+        barnetillegg: List<BarnetilleggPeriode> = emptyList(),
+        helsevurderinger: Any? = null,
+        rettighetsperiode: Periode = rettighetsperiode()
+    ) = InstitusjonsoppholdInput(
+        institusjonsOpphold = institusjonsOpphold,
+        soningsvurderinger = when (val vurderinger = soningsvurderinger) {
+            null -> null
+            is Soningsvurderinger -> vurderinger
+            is List<*> -> Soningsvurderinger(
+                vurderinger = vurderinger.filterIsInstance<Soningsvurdering>(),
+                vurdertAv = Bruker("ident"),
+                vurdertTidspunkt = LocalDateTime.now()
+            )
+            else -> error("Uventet type for soningsvurderinger")
+        },
+        barnetillegg = barnetillegg,
+        helsevurderinger = when (val vurderinger = helsevurderinger) {
+            null -> null
+            is Helseoppholdvurderinger -> vurderinger
+            is List<*> -> Helseoppholdvurderinger(
+                id = null,
+                vurderinger = vurderinger.filterIsInstance<HelseinstitusjonVurdering>(),
+                vurdertTidspunkt = LocalDateTime.now()
+            )
+            else -> error("Uventet type for helsevurderinger")
+        },
+        rettighetsperiode = rettighetsperiode
+    )
+
+    private fun hsInput(fom: LocalDate, tom: LocalDate) = institusjonsoppholdInput(
         institusjonsOpphold = listOf(
             Segment(
                 Periode(fom, tom),
                 Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "Helgelandssykehuset")
             )
         ),
-        soningsvurderinger = emptyList(),
-        barnetillegg = emptyList(),
-        helsevurderinger = emptyList(),
         rettighetsperiode = Periode(fom.minusYears(1), tom.plusYears(2))
+    )
+
+    private fun soningsvurderinger(
+        vararg vurderinger: Soningsvurdering,
+        vurdertAv: Bruker = Bruker("ident"),
+        vurdertTidspunkt: LocalDateTime = LocalDateTime.now()
+    ) = Soningsvurderinger(
+        vurderinger = vurderinger.toList(),
+        vurdertAv = vurdertAv,
+        vurdertTidspunkt = vurdertTidspunkt
+    )
+
+    private fun helsevurderinger(
+        vararg vurderinger: HelseinstitusjonVurdering,
+        vurdertTidspunkt: LocalDateTime = LocalDateTime.now()
+    ) = Helseoppholdvurderinger(
+        id = null,
+        vurderinger = vurderinger.toList(),
+        vurdertTidspunkt = vurdertTidspunkt
     )
 
     private fun helsevurdering(
@@ -90,11 +139,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
     @Test
     fun `ingen opphold gir ingen avklaring`() {
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
-                institusjonsOpphold = emptyList(),
-                soningsvurderinger = emptyList(),
-                barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+            institusjonsoppholdInput(
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -107,11 +152,9 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(5)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -124,11 +167,9 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(3)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -141,11 +182,9 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(1)
         val tom = LocalDate.now().plusMonths(5)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
                 rettighetsperiode = rettighetsperiode(
                     fom = LocalDate.now().minusYears(1),
                     tom = LocalDate.now().plusYears(2)
@@ -162,11 +201,10 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(5)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
                 barnetillegg = emptyList(),
-                helsevurderinger = listOf(
+                helsevurderinger = helsevurderinger(
                     helsevurdering(
                         fom,
                         tom,
@@ -188,11 +226,10 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(5)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
                 barnetillegg = emptyList(),
-                helsevurderinger = listOf(
+                helsevurderinger = helsevurderinger(
                     helsevurdering(
                         fom,
                         tom,
@@ -214,11 +251,10 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(5)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
                 barnetillegg = emptyList(),
-                helsevurderinger = listOf(
+                helsevurderinger = helsevurderinger(
                     helsevurdering(
                         fom,
                         tom,
@@ -240,9 +276,9 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(5)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = emptyList(),
                 helsevurderinger = listOf(
                     helsevurdering(fom, tom, faarFriKostOgLosji = false)
@@ -264,9 +300,9 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val tom = LocalDate.now().minusMonths(1)
 
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(oppholdFom, tom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = emptyList(),
                 helsevurderinger = listOf(
                     helsevurdering(
@@ -293,11 +329,11 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(5)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -310,7 +346,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
 
     @Test
     fun `Delvis overlappende barnetillegg trenger avklaring`() {
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -325,7 +361,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     )
                 )
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = listOf(
                 BarnetilleggPeriode(
                     Periode(
@@ -337,7 +373,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     )
                 )
             ),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
@@ -350,11 +386,11 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(5)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = listOf(barnPeriode(fom.minusDays(1), tom.plusDays(1))),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -366,11 +402,11 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(7)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = listOf(barnPeriode(fom.minusDays(1), fom.plusMonths(1))),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -387,12 +423,12 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val andreOppholdTom = LocalDate.now().minusMonths(1)
 
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(
                     hsOpphold(forsteOppholdFom, forsteOppholdTom),
                     hsOpphold(andreOppholdFom, andreOppholdTom),
                 ),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = emptyList(),
                 helsevurderinger = listOf(
                     helsevurdering(
@@ -422,12 +458,12 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val andreOppholdTom = LocalDate.now().minusMonths(1)
 
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(
                     hsOpphold(forsteOppholdFom, forsteOppholdTom),
                     hsOpphold(andreOppholdFom, andreOppholdTom),
                 ),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = emptyList(),
                 helsevurderinger = listOf(
                     helsevurdering(
@@ -450,7 +486,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
     @Test
     fun `soner noe, det krever avklaring`() {
         val soningsstart = LocalDate.now().minusMonths(5)
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -477,9 +513,9 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     )
                 )
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
@@ -490,7 +526,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
     @Test
     fun `soner noe, det krever avklaring men ikke etter at det har blitt vurdert`() {
         val soningsstart = LocalDate.now().minusMonths(5)
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -525,7 +561,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                 )
             ),
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
@@ -538,11 +574,11 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(3)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(foOpphold(fom, tom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -555,13 +591,13 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(3)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(foOpphold(fom, tom)),
                 soningsvurderinger = listOf(
                     Soningsvurdering(skalOpphøre = true, begrunnelse = "soner", fraDato = fom)
                 ),
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -575,13 +611,13 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(3)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(foOpphold(fom, tom)),
                 soningsvurderinger = listOf(
                     Soningsvurdering(skalOpphøre = false, begrunnelse = "frigang", fraDato = fom)
                 ),
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -595,14 +631,14 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(3)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(foOpphold(fom, tom)),
                 soningsvurderinger = listOf(
                     Soningsvurdering(skalOpphøre = true, begrunnelse = "soner", fraDato = fom),
                     Soningsvurdering(skalOpphøre = false, begrunnelse = "frigang", fraDato = fom.plusWeeks(2))
                 ),
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -624,11 +660,11 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val rettTom = LocalDate.now().plusMonths(2)
 
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(oppholdFom, oppholdTom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = Periode(rettFom, rettTom)
             ),
             begrensetTilRettighetsperiode = true
@@ -646,11 +682,11 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val rettTom = LocalDate.now().plusMonths(2)
 
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(oppholdFom, oppholdTom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = Periode(rettFom, rettTom)
             ),
             begrensetTilRettighetsperiode = false
@@ -666,7 +702,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom = LocalDate.now().minusMonths(5)
         val tom = LocalDate.now().minusMonths(1)
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(
                     foOpphold(fom, tom),
                     hsOpphold(fom, tom),
@@ -675,7 +711,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     Soningsvurdering(skalOpphøre = true, begrunnelse = "soner", fraDato = fom)
                 ),
                 barnetillegg = emptyList(),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = rettighetsperiode()
             )
         )
@@ -735,7 +771,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
             LocalDate.now().minusMonths(12),
             LocalDate.now().minusMonths(5)
         )
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     innleggelsesperiode,
@@ -760,7 +796,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                 )
 
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
             helsevurderinger = listOf(
                 HelseinstitusjonVurdering(
@@ -791,7 +827,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
             LocalDate.now().plusMonths(5)
         )
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     innleggelsesperiode,
@@ -803,9 +839,9 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     )
                 )
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = rettighetsperiode
         )
 
@@ -869,14 +905,14 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom2 = LocalDate.now().minusMonths(1).minusDays(15)
         val tom2 = LocalDate.now().minusDays(5)
 
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "opphold1")),
                 Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "opphold2")),
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
         )
 
@@ -895,14 +931,14 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom2 = LocalDate.now().minusMonths(1).minusDays(15) // 4+ mnd etter tom1
         val tom2 = LocalDate.now().minusDays(5)
 
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "opphold1")),
                 Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "opphold2")),
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
         )
 
@@ -922,15 +958,15 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom3 = tom2.plusMonths(1)            // 1 mnd etter tom2 (< 3 mnd)
         val tom3 = fom3.plusDays(20)
 
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "opphold1")),
                 Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "opphold2")),
                 Segment(Periode(fom3, tom3), Institusjon(Institusjonstype.HS, Oppholdstype.D, "789", "opphold3")),
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(fom1.minusYears(1), tom3.plusYears(2))
         )
 
@@ -947,14 +983,14 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom2 = tom1.plusMonths(3)            // nøyaktig 3 mnd etter → ikke innenfor
         val tom2 = fom2.plusMonths(1)
 
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "opphold1")),
                 Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "opphold2")),
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
         )
 
@@ -971,14 +1007,14 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val fom2 = tom1.plusMonths(3).minusDays(1) // én dag innenfor grensen
         val tom2 = fom2.plusMonths(1)
 
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "opphold1")),
                 Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "opphold2")),
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
         )
 
@@ -994,7 +1030,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         )
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        val inputMedVurdering = InstitusjonsoppholdInput(
+        val inputMedVurdering = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     innleggelsesperiode,
@@ -1006,7 +1042,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     )
                 )
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
             helsevurderinger = listOf(
                 HelseinstitusjonVurdering(
@@ -1032,7 +1068,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
 
     @Test
     fun `Oppholder seg på inst mellom søknads tidspunkt og behandlingstidspunkt`() {
-        val input = InstitusjonsoppholdInput(
+        val input = institusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -1047,9 +1083,9 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                     )
                 )
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = null,
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
         )
 
@@ -1065,14 +1101,14 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val gapTom = LocalDate.of(2025, 5, 31)
 
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(helseFom, helseTom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = listOf(
                     barnPeriode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 3, 31)),
                     barnPeriode(LocalDate.of(2027, 1, 1), LocalDate.of(2027, 1, 31))
                 ),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2028, 12, 31))
             )
         )
@@ -1090,14 +1126,14 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         val helseTom = LocalDate.of(2025, 5, 31)
 
         val res = utlederService.utledBehov(
-            InstitusjonsoppholdInput(
+            institusjonsoppholdInput(
                 institusjonsOpphold = listOf(hsOpphold(helseFom, helseTom)),
-                soningsvurderinger = emptyList(),
+                soningsvurderinger = null,
                 barnetillegg = listOf(
                     barnPeriode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 3, 31)),
                     barnPeriode(LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 31))
                 ),
-                helsevurderinger = emptyList(),
+                helsevurderinger = null,
                 rettighetsperiode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2028, 12, 31))
             )
         )
@@ -1105,4 +1141,3 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         assertThat(res.harBehovForAvklaring()).isFalse
     }
 }
-

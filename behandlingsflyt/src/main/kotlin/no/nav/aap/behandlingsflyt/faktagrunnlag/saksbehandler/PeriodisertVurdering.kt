@@ -19,7 +19,7 @@ fun <T: PeriodisertVurdering> List<T>.gjeldendeVurderinger(): Tidslinje<T> {
     return this.groupBy { it.vurdertIBehandling }
         .values
         .sortedBy { it[0].opprettet }
-        .flatMap { it.sortedBy { it.fom } }
+        .flatMap { it.sortedBy { vurdering -> vurdering.fom } }
         .somTidslinje { Periode(it.fom, it.tom ?: Tid.MAKS) }
         .komprimer()
 }
