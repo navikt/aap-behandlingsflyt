@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -25,12 +23,10 @@ class SykepengeerstatningVilkårTest {
     
     @Test
     fun `hvis revurdering av førstegangsvurdering, så skal viss varigheten vurderes`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
 
-        SykepengeerstatningVilkår(vilkårsresultat).vurder(
+        val resultat = SykepengeerstatningVilkår.vurder(
             SykepengerErstatningFaktagrunnlag(
                 rettighetsperiode = Periode(startDato, startDato.plusYears(3)),
                 sykdomGrunnlag = SykdomGrunnlag(
@@ -60,11 +56,7 @@ class SykepengeerstatningVilkårTest {
             )
         )
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(1)
-
-        vilkår.tidslinje().assertTidslinje(
+        resultat.assertTidslinje(
             Segment(Periode(1 januar 2024, 1 januar 2027)) { vurdering ->
                 assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
                 assertThat(vurdering.innvilgelsesårsak).isEqualTo(null)
@@ -74,8 +66,6 @@ class SykepengeerstatningVilkårTest {
 
     @Test
     fun `overlapp feil`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
 
@@ -117,15 +107,9 @@ class SykepengeerstatningVilkårTest {
                 ),
         )
         grunnlag.sykepengeerstatningGrunnlag?.somTidslinje(startDato, rettighetsperiode.tom)
-        SykepengeerstatningVilkår(vilkårsresultat).vurder(
-            grunnlag
-        )
+        val resultat = SykepengeerstatningVilkår.vurder(grunnlag)
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
-
-        vilkår.tidslinje().assertTidslinje(
+        resultat.assertTidslinje(
             Segment(Periode(1 januar 2024, 10 januar 2024)) { vurdering ->
                 assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
                 assertThat(vurdering.innvilgelsesårsak).isEqualTo(null)

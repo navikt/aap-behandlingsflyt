@@ -180,8 +180,8 @@ class UnderveisServiceTest {
                 kvotevurdering
                     .filter { it.verdi is KvoteOk }
                     .mapNotNull { it.rettighetsType }.komprimer()
-            OrdinærKvoteVilkår(vilkårsresultat2).vurder(OrdinærKvoteFaktagrunnlag(kvotevurdering, fiktiveKvoter))
-            SykepengeerstatningKvoteVilkår(vilkårsresultat2).vurder(
+            OrdinærKvoteVilkår.vurder(OrdinærKvoteFaktagrunnlag(kvotevurdering, fiktiveKvoter))
+            SykepengeerstatningKvoteVilkår.vurder(
                 SykepengeerstatningKvoteFaktagrunnlag(
                     kvotevurdering,
                     fiktiveKvoter
@@ -340,8 +340,8 @@ class UnderveisServiceTest {
                 kvotevurdering
                     .filter { it.verdi is KvoteOk }
                     .mapNotNull { it.rettighetsType }.komprimer()
-            OrdinærKvoteVilkår(vilkårsresultat).vurder(OrdinærKvoteFaktagrunnlag(kvotevurdering, fiktiveKvoter))
-            SykepengeerstatningKvoteVilkår(vilkårsresultat).vurder(
+            OrdinærKvoteVilkår.vurder(OrdinærKvoteFaktagrunnlag(kvotevurdering, fiktiveKvoter))
+            SykepengeerstatningKvoteVilkår.vurder(
                 SykepengeerstatningKvoteFaktagrunnlag(
                     kvotevurdering,
                     fiktiveKvoter
