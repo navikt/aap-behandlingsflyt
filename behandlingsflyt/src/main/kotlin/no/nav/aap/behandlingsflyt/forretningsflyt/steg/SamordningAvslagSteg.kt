@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -29,6 +31,7 @@ class SamordningAvslagSteg(
     private val kravRepository: KravRepository,
     private val vilkårService: VilkårService,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         samordningService = SamordningService(repositoryProvider),
@@ -38,6 +41,7 @@ class SamordningAvslagSteg(
         kravRepository = repositoryProvider.provide(),
         vilkårService = VilkårService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -60,7 +64,8 @@ class SamordningAvslagSteg(
             uføreRegisterGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId),
             uføreVurderingGrunnlag = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId),
             avslag1127grunnlag = avslag1127repository.hentHvisEksisterer(kontekst.behandlingId),
-            kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+            kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId),
+            strekkAvslagOverHelger = unleashGateway.isEnabled(BehandlingsflytFeature.StrekkAvslagOverHelg)
         )
 
     companion object : FlytSteg {
