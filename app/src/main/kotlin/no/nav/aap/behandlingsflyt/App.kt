@@ -82,6 +82,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -124,6 +125,7 @@ import no.nav.aap.tilgang.TeamAap
 import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger as Slf4jLogger
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.*
 import java.util.logging.Level
@@ -254,14 +256,11 @@ internal fun Application.server(
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
-        try {
-            // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
-            fellesDataSource.close()
-            motorDataSource.close()
-            pipDataSource.close()
-        } catch (_: Exception) {
-            // Ignorert
-        }
+        // Helt til slutt, nå som vi har stanset Motor, etc. Lukk executor og database-koblinger.
+        lukkRessurser(
+            environment.log,
+            listOf(informasjonskravExecutor, fellesDataSource, motorDataSource, pipDataSource)
+        )
     }
     
     val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
@@ -434,6 +433,17 @@ private fun Application.startKafkakonsumenter(
                 gatewayProvider = gatewayProvider
             )
         )
+    }
+}
+
+@Suppress("TooGenericExceptionCaught")
+private fun lukkRessurser(log: Slf4jLogger, resources: List<AutoCloseable>) {
+    resources.forEach { resource ->
+        try {
+            resource.close()
+        } catch (exception: Exception) {
+            log.error("Feil ved lukking av ressurs under nedstopping.", exception)
+        }
     }
 }
 

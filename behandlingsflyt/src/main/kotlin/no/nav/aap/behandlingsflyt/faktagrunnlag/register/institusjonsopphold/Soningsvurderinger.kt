@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
@@ -17,8 +17,5 @@ data class Soningsvurderinger(
     fun tilTidslinje(): Tidslinje<Soningsvurdering> =
         vurderinger
             .sortedBy { it.fraDato }
-            .map { Tidslinje(Periode(it.fraDato, Tid.MAKS), it) }
-            .fold(Tidslinje()) { acc, tidslinje ->
-                acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
+            .somTidslinje { Periode(it.fraDato, Tid.MAKS) }
 }

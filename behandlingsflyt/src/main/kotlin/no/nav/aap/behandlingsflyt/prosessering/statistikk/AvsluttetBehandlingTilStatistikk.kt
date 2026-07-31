@@ -217,7 +217,8 @@ class AvsluttetBehandlingTilStatistikk(
                     SamordningDTO.Arbeidsgiver(fom = it.periode.fom, tom = it.periode.tom)
                 }
 
-        val samordningYtelserSamornding = samordningService.tidslinje(behandling.id).segmenter()
+        val samordningYtelserSamornding = samordningService.samordningGrunnlag(behandling.id)
+            .vurder().segmenter()
             .flatMap { (periode, verdi) ->
                 verdi.ytelsesGraderinger.map { ytelseGradering ->
                     SamordningDTO.StatligeYtelser(

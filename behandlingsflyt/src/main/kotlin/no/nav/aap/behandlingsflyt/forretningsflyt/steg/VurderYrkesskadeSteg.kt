@@ -42,7 +42,7 @@ class VurderYrkesskadeSteg private constructor(
                     kontekst, tidligereVurderinger, yrkesskader
                 )
             },
-            erTilstrekkeligVurdert = { sykdomsgrunnlag != null && sykdomsgrunnlag.yrkesskadevurdering != null },
+            erTilstrekkeligVurdert = { sykdomsgrunnlag?.yrkesskadevurdering != null },
             tilbakestillGrunnlag = {
                 val forrigeGrunnlag =
                     kontekst.forrigeBehandlingId?.let { sykdomRepository.hentHvisEksisterer(it) }?.yrkesskadevurdering

@@ -159,7 +159,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                     ytelseType = ytelse.ytelseType,
                                     periode = Periode(fom = ytelse.periode.fom, tom = ytelse.periode.tom),
                                     gradering = ytelse.gradering?.prosentverdi(),
-                                    kronesum = ytelse.kronesum?.toInt(),
                                     kilde = ytelse.kilde,
                                     saksRef = ytelse.saksRef,
                                     endringStatus = ytelse.endringStatus

@@ -149,7 +149,7 @@ class TestBehandlingFullføringService(
         repeat(maksForsøk) {
             val behandling = dataSource.transaction(readOnly = true) { connection ->
                 BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                    .finnSisteYtelsesbehandlingFor(sak.id)
+                    .finnÅpenYtelsesbehandling(sak.id)
             }
             if (behandling != null && behandling.status() != Status.AVSLUTTET) {
                 return behandling.id
@@ -163,7 +163,7 @@ class TestBehandlingFullføringService(
     private fun erBehandlingAvsluttet(sak: Sak): Boolean {
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(sak.id)
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
         } ?: return false
         return behandling.status() == Status.AVSLUTTET
     }
@@ -200,7 +200,7 @@ class TestBehandlingFullføringService(
 
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(sak.id)
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
         }
 
         if (behandling == null || behandling.id != forventetBehandlingId || behandling.status() == Status.AVSLUTTET) {
@@ -452,7 +452,7 @@ class TestBehandlingFullføringService(
         )
 
         Definisjon.AVKLAR_SAMORDNING_GRADERING -> AvklarSamordningGraderingLøsning(
-            vurderingerForSamordning = VurderingerForSamordning("", true, null, emptyList())
+            vurderingerForSamordning = VurderingerForSamordning("", emptyList())
         )
 
         Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND -> AvklarSamordningSykestipendLøsning(

@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersgrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -21,7 +20,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderAlderSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val vilkårService: VilkårService,
     private val personopplysningRepository: PersonopplysningRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -29,7 +27,6 @@ class VurderAlderSteg private constructor(
 ) : BehandlingSteg {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        vilkårsresultatRepository = repositoryProvider.provide(),
         vilkårService = VilkårService(repositoryProvider),
         personopplysningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
@@ -70,18 +67,16 @@ class VurderAlderSteg private constructor(
         val brukerPersonopplysning =
             personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
-        
+
         val grenseForAntallMånederFørFylte18 = if (unleashGateway.isEnabled(BehandlingsflytFeature.Under18)) 3L else 0L
-        
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+
         val aldersgrunnlag =
             Aldersgrunnlag(
                 kontekst.rettighetsperiode,
                 brukerPersonopplysning.fødselsdato,
                 grenseForAntallMånederFørFylte18,
             )
-        Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        vilkårService.vurderVilkår(kontekst.behandlingId, aldersgrunnlag, Aldersvilkåret)
     }
 
     companion object : FlytSteg {

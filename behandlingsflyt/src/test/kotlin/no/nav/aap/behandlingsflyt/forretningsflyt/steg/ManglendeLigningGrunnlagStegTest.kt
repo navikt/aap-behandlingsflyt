@@ -207,8 +207,7 @@ class ManglendeLigningGrunnlagStegTest {
         manuellInntektGrunnlagRepository = inMemoryRepositoryProvider.provide(),
         tidligereVurderinger = tidligereVurderinger,
         beregningService = BeregningService(inMemoryRepositoryProvider),
-        avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
-        unleashGateway = minimalGatewayProvider().provide(),
+        avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider())
     )
 
     private fun lagreBeregningstidspunkt(behandling: Behandling) {
