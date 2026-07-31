@@ -426,7 +426,6 @@ class SamordningStegTest {
                         SamordningYtelsePeriode(
                             periode = periode,
                             gradering = Prosent(50),
-                            kronesum = 1234,
                         )
                     ),
                     kilde = "xxxx",

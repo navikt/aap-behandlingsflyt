@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -37,10 +36,7 @@ class SamordningSteg(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
-        val ytelser = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
-
-        val samordningYtelseVurderingGrunnlag = SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
+        val samordningYtelseVurderingGrunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
         val perioderSomIkkeHarBlittVurdert =
             samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert()
 
@@ -86,18 +82,17 @@ class SamordningSteg(
         }
 
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val grunnlag = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
-        val ytelser = grunnlag?.tidslinjeMedSamordningYtelser().orEmpty()
+        val grunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
+        val ytelser = grunnlag.ytelseGrunnlag?.tidslinjeMedSamordningYtelser().orEmpty()
 
         // Vi sjekker om det har blitt gjort en manuell vurdering her for å klare å sende tilbake hit
         // hvis f.eks beslutter underkjenner vurderingen.
-        val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
-        val vurderingtidslinje = vurderinger?.vurderingTidslinje().orEmpty()
+        val vurderinger = grunnlag.vurderingGrunnlag?.vurderingTidslinje().orEmpty()
 
         return Tidslinje.map3(
             tidligereVurderingsutfall,
             ytelser,
-            vurderingtidslinje
+            vurderinger
         ) { utfall, samordningYtelser, vurdering ->
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
