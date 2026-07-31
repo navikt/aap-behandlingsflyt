@@ -3,12 +3,12 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -34,19 +34,21 @@ class HåndterDialogMeldingService(
         melding: Melding?,
     ) {
         val sak = sakService.hent(sakId)
-        log.info("Håndterer dialogmelding for ${sak.id}")
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
+        val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(brevkategori, melding)
+
         val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
 
         if (sisteYtelsesBehandling != null) {
+            // TODO: Rart å markere på lukket behandling?
             mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
             log.info("Markerer dialogmelding som behandlet ${sisteYtelsesBehandling.id}")
             if (sisteYtelsesBehandling.status().erÅpen()) {
-                prosesserBehandling.triggProsesserBehandling(
+                behandlingService.oppdaterVurderingsbehovOgÅrsak(
                     sisteYtelsesBehandling,
-                    vurderingsbehov = vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
-                        .map { it.type }
+                    VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
                 )
+                prosesserBehandling.triggProsesserBehandling(sisteYtelsesBehandling)
                 log.info("Prosessert behandling etter mottatt dialogmelding ${sisteYtelsesBehandling.id}")
             }
 
