@@ -71,9 +71,10 @@ class RettighetstypeService(
      * Perioder som ikke samsvarer kaster en feil slik at disse sakene kan håndteres manuelt
      */
     private fun utledRettighetstidslinjeBakoverkompatibel(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
+        val behandling = behandlingRepository.hent(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
         val underveisperioder = underveisRepository.hentHvisEksisterer(behandlingId)?.somTidslinje()
-        val utlededeRettighetstyper = vurderRettighetstypeOgKvoter(vilkårsresultat, kvoteService.beregn())
+        val utlededeRettighetstyper = vurderRettighetstypeOgKvoter(vilkårsresultat, kvoteService.historiskBruktKvoter(behandling))
             .filter { it.verdi is KvoteOk }
             .mapNotNull { it.rettighetsType }
             .komprimer()

@@ -175,7 +175,7 @@ class BackfillStansOpphør(
                 ?.helePerioden()
                 ?: sakRepository.hent(behandling.sakId).rettighetsperiode
 
-            val stansOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = rettighetsperiode, kvoter = kvoteService.beregn())
+            val stansOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = rettighetsperiode, kvoter = kvoteService.historiskBruktKvoter(behandling))
             val nyttGrunnlag = (grunnlag ?: StansOpphørGrunnlag().utledNyttGrunnlag(stansOpphør, behandling.id))
                 .copy(stansOpphørV2 = stansOpphør)
 

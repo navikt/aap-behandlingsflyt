@@ -43,6 +43,6 @@ class VirkningstidspunktService(
 
     private fun utledVirkningstidspunkt(behandlingId: BehandlingId): LocalDate? {
         val vilkårsResultat = vilkårsresultatRepository.hent(behandlingId)
-        return vurderRettighetsType(vilkårsResultat, kvoteService.beregn()).segmenter().firstOrNull()?.periode?.fom
+        return vurderRettighetsType(vilkårsResultat, kvoteService.gjeldendeKvoter()).segmenter().firstOrNull()?.periode?.fom
     }
 }
