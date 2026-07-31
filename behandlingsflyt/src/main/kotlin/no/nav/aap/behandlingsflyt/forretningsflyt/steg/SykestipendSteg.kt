@@ -44,7 +44,7 @@ class SykestipendSteg private constructor(
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING ->
+                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                                 && (studentGrunnlag.skalVurdereStudent() || studentGrunnlag?.gjeldendeStudentvurderinger()
                             ?.any { it.erOppfylt() } == true)

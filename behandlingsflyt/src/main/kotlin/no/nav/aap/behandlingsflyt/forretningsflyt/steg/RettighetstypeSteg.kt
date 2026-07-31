@@ -89,6 +89,7 @@ class RettighetstypeSteg(
             VurderingType.REVURDERING,
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.MIGERING_FRA_ARENA,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT ->
                 lagreStansOgOpphør(
                     kontekst,

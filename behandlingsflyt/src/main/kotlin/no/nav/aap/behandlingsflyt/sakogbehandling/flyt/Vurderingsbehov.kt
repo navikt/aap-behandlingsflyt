@@ -85,7 +85,8 @@ enum class Vurderingsbehov {
     ETABLERING_EGEN_VIRKSOMHET,
     AKTIVITETSPLIKTBEHANDLING_AVBRUTT,
     VURDER_AVSLAG_11_27,
-    VURDER_ARBEIDSOPPTRAPPING
+    VURDER_ARBEIDSOPPTRAPPING,
+    MIGRERING_FRA_ARENA
     ;
 
     companion object {
@@ -101,6 +102,13 @@ enum class Vurderingsbehov {
          */
         fun alleInklusivGRegulering(): List<Vurderingsbehov> {
             return Vurderingsbehov.entries.toList()
+        }
+
+        /**
+         * Alle med funksjonell verdi - unntatt migrering
+         */
+        fun alleInklusivGReguleringUnntattMigrering(): List<Vurderingsbehov> {
+            return Vurderingsbehov.entries.filter { it != MIGRERING_FRA_ARENA }.toList()
         }
 
         fun forAktivitetspliktbehandling(): List<Vurderingsbehov> {
@@ -180,4 +188,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.BRUKER_TILBAKE_I_ARBEID -> Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID
         EksponertÅrsak.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON -> Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON
         EksponertÅrsak.FERIE_I_SYKEPENGEPERIODE -> Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE
+        EksponertÅrsak.MIGRERING_FRA_ARENA -> Vurderingsbehov.MIGRERING_FRA_ARENA
     }

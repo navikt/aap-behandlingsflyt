@@ -62,7 +62,8 @@ class BarnetilleggSteg(
 
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING ->
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA ->
                 (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && (vurderingsbehovSomTvingerStopp.any { kontekst.vurderingsbehovRelevanteForSteg.contains(it) }
                         || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag)
