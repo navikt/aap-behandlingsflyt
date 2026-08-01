@@ -1,14 +1,17 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.overganguføre.OvergangUføreGrunnlag
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlin.random.Random
+import no.nav.aap.overganguføre.OvergangUføreVurdering
+import no.nav.aap.overganguføre.UføreSøknadVedtakResultat
 
 class OvergangUføreGrunnlagTest {
 

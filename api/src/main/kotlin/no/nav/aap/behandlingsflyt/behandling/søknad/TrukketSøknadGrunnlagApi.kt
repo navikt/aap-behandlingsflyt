@@ -17,6 +17,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadRepository
 
 
 class TrukketSøknadGrunnlagDto(

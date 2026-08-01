@@ -5,13 +5,13 @@ import io.ktor.server.netty.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.barnetillegg.Barn
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.BarnRepository
+import no.nav.aap.barnetillegg.OppgitteBarn
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.barnetillegg.VurdertBarn
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.IdenterDTO
@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -40,6 +39,7 @@ import org.junit.jupiter.api.Test
 import java.io.InputStream
 import java.net.URI
 import java.time.LocalDate
+import no.nav.aap.misc.Ident
 
 @Fakes
 class PipTest {

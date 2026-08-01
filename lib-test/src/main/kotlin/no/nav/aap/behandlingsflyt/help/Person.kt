@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.help
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import java.util.Random

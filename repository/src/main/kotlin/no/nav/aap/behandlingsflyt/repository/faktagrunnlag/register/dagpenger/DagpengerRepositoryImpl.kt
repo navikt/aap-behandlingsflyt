@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.dagpenger
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dagpenger.DagpengerRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 

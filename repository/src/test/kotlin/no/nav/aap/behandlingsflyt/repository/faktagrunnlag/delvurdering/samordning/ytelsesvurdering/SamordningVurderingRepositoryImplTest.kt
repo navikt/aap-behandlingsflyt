@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
+import no.nav.aap.behandlingsflyt.steg.avbrytrevurdering.AvbrytRevurderingVurdering
+import no.nav.aap.behandlingsflyt.steg.avbrytrevurdering.AvbrytRevurderingÅrsak
+import no.nav.aap.samordning.Ytelse
+import no.nav.aap.misc.SamordningVurdering
+import no.nav.aap.misc.SamordningVurderingGrunnlag
+import no.nav.aap.misc.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling

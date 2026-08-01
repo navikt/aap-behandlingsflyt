@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import kotlin.reflect.KClass

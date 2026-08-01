@@ -1,18 +1,19 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSamordningUføreLøser
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklarSamordningUføreLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
+import no.nav.aap.samordning.SamordningUføreVurderingDto
+import no.nav.aap.samordning.SamordningUføreVurderingPeriodeDto
+import no.nav.aap.beregning.Uføre
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.steg.samordning.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository

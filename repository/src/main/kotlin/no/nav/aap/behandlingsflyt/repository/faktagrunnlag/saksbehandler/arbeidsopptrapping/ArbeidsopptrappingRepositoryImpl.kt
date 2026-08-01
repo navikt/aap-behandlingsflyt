@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsopptrapping
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
+import no.nav.aap.behandlingsflyt.steg.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.arbeidsopptrapping.ArbeidsopptrappingVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory

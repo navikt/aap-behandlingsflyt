@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdene
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.misc.institusjonsopphold.Institusjon
+import no.nav.aap.misc.institusjonsopphold.InstitusjonsoppholdGrunnlag
+import no.nav.aap.misc.institusjonsopphold.Institusjonstype
+import no.nav.aap.misc.institusjonsopphold.Oppholdene
+import no.nav.aap.misc.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.august
@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
+import no.nav.aap.behandlingsflyt.steg.institusjon.HelseOpphold
+import no.nav.aap.behandlingsflyt.steg.institusjon.InstitusjonsoppholdVurdering
+import no.nav.aap.behandlingsflyt.steg.institusjon.lagOppholdId
 
 
 class InstitusjonApiTest {

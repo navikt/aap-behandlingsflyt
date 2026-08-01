@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.AvslagsårsakDTO
+import no.nav.aap.vilkårsresultat.Avslagstype
+import no.nav.aap.vilkårsresultat.Avslagsårsak
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

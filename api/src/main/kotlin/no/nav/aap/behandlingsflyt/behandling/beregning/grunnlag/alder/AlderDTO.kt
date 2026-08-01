@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.vilkårsresultat.Vilkårsperiode
 import java.time.LocalDate
 
 data class AlderDTO (

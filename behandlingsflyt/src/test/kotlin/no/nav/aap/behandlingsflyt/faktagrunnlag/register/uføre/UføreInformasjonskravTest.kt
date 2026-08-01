@@ -11,9 +11,11 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningVurderingRe
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonopplysningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUføreRepository
+import no.nav.aap.beregning.Uføre
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.misc.uføre.UføreSøknad
 
 class UføreInformasjonskravTest {
 

@@ -4,6 +4,12 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.personopplysninger.AdresseType
+import no.nav.aap.personopplysninger.PersonStatus
+import no.nav.aap.personopplysninger.Personopplysning
+import no.nav.aap.personopplysninger.Statsborgerskap
+import no.nav.aap.personopplysninger.UtenlandsAdresse
 
 class PersonopplysningInformasjonskravTest {
 

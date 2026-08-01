@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.misc.institusjonsopphold.Institusjon
+import no.nav.aap.misc.institusjonsopphold.Institusjonstype
+import no.nav.aap.misc.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
@@ -20,6 +20,8 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.steg.institusjon.beregnTidligsteReduksjonsdatoPerOpphold
+import no.nav.aap.behandlingsflyt.steg.institusjon.lagOppholdId
 
 class InstitusjonsoppholdUtilTest {
 

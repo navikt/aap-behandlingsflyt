@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.bistand.Bistandsvurdering
+import no.nav.aap.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository

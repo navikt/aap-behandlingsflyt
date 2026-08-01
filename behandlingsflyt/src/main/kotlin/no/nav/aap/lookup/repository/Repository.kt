@@ -1,6 +1,6 @@
 package no.nav.aap.lookup.repository
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 
 /**
  * Marker interface for repository.

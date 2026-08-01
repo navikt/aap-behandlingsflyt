@@ -1,28 +1,28 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse
 
-import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
-import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.samordning.avslag11_27.Avslag11_27Grunnlag
+import no.nav.aap.samordning.avslag11_27.Avslag11_27Vurdering
+import no.nav.aap.samordning.Ytelse
+import no.nav.aap.samordning.SamordningYtelseVurderingGrunnlag
+import no.nav.aap.samordning.SamordningUføreGrunnlag
+import no.nav.aap.samordning.SamordningUføreVurdering
+import no.nav.aap.samordning.SamordningUføreVurderingPeriode
+import no.nav.aap.misc.SamordningVurdering
+import no.nav.aap.misc.SamordningVurderingGrunnlag
+import no.nav.aap.misc.SamordningVurderingPeriode
+import no.nav.aap.misc.SamordningYtelse
+import no.nav.aap.misc.SamordningYtelseGrunnlag
+import no.nav.aap.misc.SamordningYtelsePeriode
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.krav.KravGrunnlag
+import no.nav.aap.krav.Kravreferanse
+import no.nav.aap.krav.RelevantKrav
+import no.nav.aap.krav.Søknadsdato
+import no.nav.aap.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
@@ -37,6 +37,8 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.aap.samordning.annenfullytelse.SamordningAnnenFullYtelseFaktagrunnlag
+import no.nav.aap.samordning.annenfullytelse.SamordningAnnenFullYtelseVilkår
 
 class SamordningAnnenFullYtelseVilkårTest {
 

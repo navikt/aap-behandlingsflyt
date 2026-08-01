@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.underveis.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakService
+import no.nav.aap.misc.Faktagrunnlag
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.underveis.Underveisperiode
+import no.nav.aap.underveis.UnderveisÅrsak
+import no.nav.aap.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -78,7 +79,7 @@ class UnderveisRepositoryImplAutomatiskMeldekortTest {
         meldePeriode = meldeperiode,
         utfall = Utfall.IKKE_OPPFYLT,
         rettighetsType = null,
-        avslagsårsak = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+        avslagsårsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
         grenseverdi = `100_PROSENT`,
         arbeidsgradering = ArbeidsGradering(
             totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),

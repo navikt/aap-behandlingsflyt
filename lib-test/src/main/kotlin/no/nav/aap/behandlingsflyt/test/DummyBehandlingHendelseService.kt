@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceProvider
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling

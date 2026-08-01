@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGruppe
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.komponenter.gateway.Factory
 import org.intellij.lang.annotations.Language

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.oppfølgingsbehandling
 
-import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
-import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.oppfølgingsbehandling.OppfølgingsBehandlingRepository
+import no.nav.aap.behandlingsflyt.steg.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory

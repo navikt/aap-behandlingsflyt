@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
+import no.nav.aap.aktivitetsplikt.Brudd
+import no.nav.aap.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.test.januar

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering
+import no.nav.aap.samordning.barnepensjon.BarnepensjonGrunnlag
+import no.nav.aap.samordning.barnepensjon.BarnepensjonPeriode
+import no.nav.aap.samordning.barnepensjon.BarnepensjonVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status

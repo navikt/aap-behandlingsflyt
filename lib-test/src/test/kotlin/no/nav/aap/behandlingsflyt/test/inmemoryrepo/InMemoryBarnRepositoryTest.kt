@@ -1,16 +1,17 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.barnetillegg.OppgitteBarn
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.barnetillegg.VurdertBarn
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.barnetillegg.Barn
 
 class InMemoryBarnRepositoryTest {
 
@@ -40,7 +41,7 @@ class InMemoryBarnRepositoryTest {
             )
         )
         val barnListe = listOf(Ident("12345678910"), Ident("12345")).map {
-            no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn(
+            Barn(
                 BarnIdentifikator.BarnIdent(it),
                 Fødselsdato(LocalDate.now().minusYears(18))
             )

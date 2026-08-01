@@ -25,7 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.barnepensjon.barnepensjonGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.bekreftvurderingeroppfølging.bekreftVurderingerOppfølgingApi
@@ -83,7 +83,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig

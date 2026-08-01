@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.steg.lovvalg.LovvalgInformasjonskrav
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon

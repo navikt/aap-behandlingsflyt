@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.integrasjon.medlemsskap
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
+import no.nav.aap.medlemskap.KildesystemKode
+import no.nav.aap.medlemskap.KildesystemMedl
+import no.nav.aap.medlemskap.MedlemskapDataIntern
+import no.nav.aap.behandlingsflyt.steg.medlemskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey

@@ -1,0 +1,157 @@
+package no.nav.aap.underveis
+
+import no.nav.aap.komponenter.tidslinje.JoinStyle
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.rettighetstype.KvoteBruktOpp
+import no.nav.aap.rettighetstype.KvoteOk
+import no.nav.aap.rettighetstype.KvoteVurdering
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
+
+data class Vurdering(
+    val fårAapEtter: RettighetsType? = null,
+    val meldepliktVurdering: MeldepliktVurdering? = null,
+    private val gradering: ArbeidsGradering? = null,
+    private val samordningProsent: Prosent? = null,
+    private val grenseverdi: Prosent? = null,
+    val institusjonVurdering: InstitusjonVurdering? = null,
+    private val meldeperiode: Periode? = null,
+    val varighetVurdering: VarighetVurdering? = null,
+    val kvoteVurdering: KvoteVurdering? = null,
+) {
+    fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
+        return copy(fårAapEtter = rettighetstype)
+    }
+
+    fun leggTilGradering(arbeidsGradering: ArbeidsGradering): Vurdering {
+        return copy(gradering = arbeidsGradering)
+    }
+
+    fun leggTilMeldepliktVurdering(meldepliktVurdering: MeldepliktVurdering): Vurdering {
+        return copy(meldepliktVurdering = meldepliktVurdering)
+    }
+
+    fun leggTilGrenseverdi(grenseverdi: Prosent): Vurdering {
+        return copy(grenseverdi = grenseverdi)
+    }
+
+    fun leggTilInstitusjonVurdering(vurdering: InstitusjonVurdering): Vurdering {
+        return copy(institusjonVurdering = vurdering)
+    }
+
+    fun leggTilMeldeperiode(meldeperiode: Periode): Vurdering {
+        return copy(meldeperiode = meldeperiode)
+    }
+
+    fun leggTilVarighetVurdering(varighetVurdering: VarighetVurdering): Vurdering {
+        return copy(varighetVurdering = varighetVurdering)
+    }
+
+    fun leggTilVarighetVurdering(kvotevurdering: KvoteVurdering): Vurdering {
+        return copy(
+            varighetVurdering = when (kvotevurdering) {
+                is KvoteOk ->
+                    Oppfylt(setOfNotNull(kvotevurdering.brukerKvote))
+
+                is KvoteBruktOpp ->
+                    Avslag(
+                        brukerAvKvoter = setOfNotNull(kvotevurdering.kvoteBruktOpp),
+                        avslagsårsaker = setOf(UnderveisÅrsak.fraKvote(kvotevurdering.kvoteBruktOpp))
+                    )
+            }
+        )
+    }
+
+    fun harRett(): Boolean {
+        return fårAapEtter != null &&
+                varighetsvurderingOppfylt()
+    }
+
+    private fun varighetsvurderingOppfylt(): Boolean {
+        return varighetVurdering !is Avslag
+    }
+
+    /** Rettighetstype før vi har kjørt underveissteget. */
+    fun preliminærRettighetsType(): RettighetsType? {
+        return fårAapEtter
+    }
+
+    /** Rettighetstype etter vi har kjørt underveissteget. */
+    fun endeligRettighetsType(): RettighetsType? {
+        return if (harRett()) preliminærRettighetsType() else null
+    }
+
+    fun grenseverdi(): Prosent {
+        return requireNotNull(grenseverdi)
+    }
+
+    fun meldeperiode(): Periode {
+        return requireNotNull(meldeperiode)
+    }
+
+    fun arbeidsgradering(): ArbeidsGradering {
+        return when {
+            gradering == null -> error("gradering er ikke lagt til enda")
+            else -> gradering
+        }
+    }
+
+    fun utfall(): Utfall {
+        return if (harRett()) {
+            Utfall.OPPFYLT
+        } else {
+            Utfall.IKKE_OPPFYLT
+        }
+    }
+
+    fun avslagsårsak(): UnderveisÅrsak? {
+        if (harRett()) {
+            return null
+        }
+
+        if (!varighetsvurderingOppfylt()) {
+            return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
+        } else if (fårAapEtter == null) {
+            return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
+        }
+
+        throw IllegalStateException("Ukjent avslagsårsak")
+    }
+
+    fun skalReduseresDagsatser(): Boolean {
+//        if (!harRett() || fraværFastsattAktivitetVurdering?.utfall == UNNTAK) {
+//            return false
+//        }
+//        return reduksjonAktivitetspliktVurdering?.vilkårsvurdering == VILKÅR_FOR_REDUKSJON_OPPFYLT
+        return false
+    }
+
+    override fun toString(): String {
+        return """
+            Vurdering(
+            harRett=${harRett()},
+            meldeplikt=${meldepliktVurdering},
+            gradering=${gradering?.gradering ?: Prosent(0)},
+            institusjonVurdering=${institusjonVurdering},
+            grenseverdi=${grenseverdi}
+            )""".trimIndent().replace("\n", "")
+    }
+
+}
+
+fun <T> Tidslinje<Vurdering>.leggTilVurderinger(
+    vurderinger: Tidslinje<T>, utvidVurdering: (Vurdering, T) -> Vurdering
+): Tidslinje<Vurdering> {
+    return vurderinger.kombiner(
+        this,
+        JoinStyle.OUTER_JOIN
+        { periode, nyVurdering, foreløpigVurdering ->
+            if (nyVurdering == null) return@OUTER_JOIN foreløpigVurdering
+            val vurdering = utvidVurdering(foreløpigVurdering?.verdi ?: Vurdering(), nyVurdering.verdi)
+            Segment(periode, vurdering)
+        },
+    )
+}

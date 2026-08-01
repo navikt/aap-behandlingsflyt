@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.BISTANDSVILKÅRET
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.SYKDOMSVILKÅRET
+import no.nav.aap.vilkårsresultat.Vilkårtype.BISTANDSVILKÅRET
+import no.nav.aap.vilkårsresultat.Vilkårtype.SYKDOMSVILKÅRET
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -9,6 +9,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.vilkårsresultat.Vilkårtype
 
 class VilkårsresultatTest {
     @Nested

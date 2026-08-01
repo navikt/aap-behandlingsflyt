@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.utils
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.ForeslåVedtakData
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.UnderveisPeriodeInfo
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.UnderveisPeriodeInfo.Companion.tilForeslåVedtakData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.underveis.UnderveisGrunnlag
+import no.nav.aap.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import java.time.Instant

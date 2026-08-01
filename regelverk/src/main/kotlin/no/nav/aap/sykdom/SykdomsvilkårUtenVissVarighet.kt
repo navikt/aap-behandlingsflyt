@@ -1,0 +1,155 @@
+package no.nav.aap.sykdom
+
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.vilkårsresultat.Vilkårsvurderer
+import no.nav.aap.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.vilkårsresultat.Vilkårtype
+import no.nav.aap.bistand.Bistandsvurdering
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.sykepengererstatning.SykepengerVurdering
+
+object SykdomsvilkårUtenVissVarighet :
+    Vilkårsvurderer<SykdomsFaktagrunnlag> {
+    override val vilkårtype: Vilkårtype = Vilkårtype.SYKDOMSVILKÅRET
+
+    override fun vurder(faktagrunnlag: SykdomsFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
+        return vurderVilkårUtenMutering(faktagrunnlag)
+    }
+
+    fun vurderVilkårUtenMutering(
+        grunnlag: SykdomsFaktagrunnlag
+    ): Tidslinje<Vilkårsvurdering> {
+        val yrkesskadeVurderingTidslinje = Tidslinje(
+            Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
+            grunnlag.yrkesskadevurdering
+        )
+
+        val sykdomsvurderingTidslinje =
+            grunnlag.sykdomsvurderinger.somSykdomsvurderingTidslinje(grunnlag.sisteDagMedMuligYtelse)
+
+        val bistandvurderingtidslinje =
+            grunnlag.bistandvurderingFaktagrunnlag
+                ?.somBistandsvurderingstidslinje(grunnlag.sisteDagMedMuligYtelse)
+                .orEmpty()
+
+        val sykepengeerstatningTidslinje = grunnlag.sykepengerErstatningFaktagrunnlag?.somTidslinje(
+            kravDato = grunnlag.kravDato,
+            sisteMuligDagMedYtelse = grunnlag.sisteDagMedMuligYtelse
+        ).orEmpty()
+
+
+        return kombinerAlleTidslinjer(
+            yrkesskadeVurderingTidslinje,
+            sykdomsvurderingTidslinje,
+            sykepengeerstatningTidslinje,
+            bistandvurderingtidslinje
+        )
+            .mapValue { (yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
+                opprettVilkårsvurdering(
+                    grunnlag.sykepengeerstatningVilkår,
+                    sykdomVurdering,
+                    yrkesskadeVurdering,
+                    sykepengerVurdering,
+                    bistandVurdering,
+                    grunnlag
+                )
+            }
+    }
+
+    private fun kombinerAlleTidslinjer(
+        yrkesskadeVurderingTidslinje: Tidslinje<Yrkesskadevurdering?>,
+        sykdomsvurderingTidslinje: Tidslinje<Sykdomsvurdering>,
+        sykepengerTidslinje: Tidslinje<SykepengerVurdering>,
+        bistandvurderingTidslinje: Tidslinje<Bistandsvurdering>,
+    ): Tidslinje<LokaltSegment> {
+        val zip2 = Tidslinje.zip2(
+            yrkesskadeVurderingTidslinje,
+            sykdomsvurderingTidslinje,
+        )
+
+        return Tidslinje.map3(
+            zip2,
+            sykepengerTidslinje,
+            bistandvurderingTidslinje,
+        ) { a, b, c ->
+            LokaltSegment(
+                yrkesskadeVurdering = a?.first,
+                sykdomVurdering = a?.second,
+                sykepengerVurdering = b,
+                bistandsvurdering = c
+            )
+        }
+    }
+
+    internal data class LokaltSegment(
+        val yrkesskadeVurdering: Yrkesskadevurdering?,
+        val sykdomVurdering: Sykdomsvurdering?,
+        val sykepengerVurdering: SykepengerVurdering?,
+        val bistandsvurdering: Bistandsvurdering?
+    )
+
+
+    private fun opprettVilkårsvurdering(
+        sykepengeerstatningVilkår: Tidslinje<Vilkårsvurdering>,
+        sykdomVurdering: Sykdomsvurdering?,
+        yrkesskadeVurdering: Yrkesskadevurdering?,
+        sykepengerVurdering: SykepengerVurdering?,
+        bistandsvurdering: Bistandsvurdering?,
+        grunnlag: SykdomsFaktagrunnlag
+    ): Vilkårsvurdering {
+        var utfall: Utfall
+        var avslagsårsak: Avslagsårsak? = null
+        var innvilgelsesårsak: Innvilgelsesårsak?
+
+        if (sykdomVurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
+            && yrkesskadeVurdering?.erÅrsakssammenheng == true
+        ) {
+            utfall = Utfall.OPPFYLT
+            innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
+        } else if (sykdomVurdering?.erOppfyltOrdinærMedUtlededeFelter() == true
+            && bistandsvurdering?.erBehovForBistand() == true
+        ) {
+            utfall = Utfall.OPPFYLT
+            innvilgelsesårsak = null
+        } else if (sykepengeerstatningVilkår.isEmpty() // Bakoverkompatibel - denne inngangen er egentlig ikke riktig
+            && sykepengerVurdering?.harRettPå == true
+            && sykdomVurdering?.skalVurderesForSykepengeerstatning() == true
+        ) {
+            utfall = Utfall.OPPFYLT
+            innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
+        } else {
+            innvilgelsesårsak = null
+            utfall = Utfall.IKKE_OPPFYLT
+
+            avslagsårsak = when {
+                sykdomVurdering?.harSkadeSykdomEllerLyte == false ->
+                    Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE
+
+                sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false ->
+                    Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+
+                sykdomVurdering?.harNedsattArbeidsevne == ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER ->
+                    Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
+
+                else ->
+                    Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+            }
+        }
+
+        return Vilkårsvurdering(
+            Vilkårsperiode(
+                periode = Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
+                utfall = utfall,
+                begrunnelse = null,
+                innvilgelsesårsak = innvilgelsesårsak,
+                avslagsårsak = avslagsårsak,
+                faktagrunnlag = grunnlag,
+            )
+        )
+    }
+}

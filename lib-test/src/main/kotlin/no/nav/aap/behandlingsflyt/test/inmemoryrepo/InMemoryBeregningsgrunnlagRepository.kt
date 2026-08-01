@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.beregning.Beregningsgrunnlag
+import no.nav.aap.behandlingsflyt.steg.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandling.BehandlingId
 
 object InMemoryBeregningsgrunnlagRepository : BeregningsgrunnlagRepository {
 

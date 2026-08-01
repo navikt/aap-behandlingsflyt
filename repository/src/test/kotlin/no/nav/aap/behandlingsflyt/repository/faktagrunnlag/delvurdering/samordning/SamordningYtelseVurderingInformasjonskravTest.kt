@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.Companion.harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.Companion.harEndringerIYtelserIkkeDekketAvManuelleVurderinger
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.Companion.harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.Companion.harEndringerIYtelserIkkeDekketAvManuelleVurderinger
+import no.nav.aap.samordning.Ytelse
+import no.nav.aap.misc.SamordningVurdering
+import no.nav.aap.misc.SamordningVurderingGrunnlag
+import no.nav.aap.misc.SamordningVurderingPeriode
+import no.nav.aap.misc.SamordningYtelse
+import no.nav.aap.misc.SamordningYtelseGrunnlag
+import no.nav.aap.misc.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli

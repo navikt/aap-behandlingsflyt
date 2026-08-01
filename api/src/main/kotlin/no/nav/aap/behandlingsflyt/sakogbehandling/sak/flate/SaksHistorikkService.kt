@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovForSak
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovForSak
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovOperasjonerRepository
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringForBehandling
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringHendelseType
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse

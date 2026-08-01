@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.beregning.Beregning
+import no.nav.aap.beregning.InntektPerÅr
+import no.nav.aap.beregning.Uføre
+import no.nav.aap.beregning.Månedsinntekt
+import no.nav.aap.yrkesskade.Yrkesskade
+import no.nav.aap.yrkesskade.Yrkesskader
+import no.nav.aap.beregning.YrkesskadeBeløpVurdering
+import no.nav.aap.sykdom.YrkesskadeSak
+import no.nav.aap.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker

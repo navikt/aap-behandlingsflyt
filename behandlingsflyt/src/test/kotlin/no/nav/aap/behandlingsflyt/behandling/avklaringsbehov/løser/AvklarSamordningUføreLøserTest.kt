@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklarSamordningUføreLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
+import no.nav.aap.samordning.SamordningUføreVurderingDto
+import no.nav.aap.samordning.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningUføreRepository

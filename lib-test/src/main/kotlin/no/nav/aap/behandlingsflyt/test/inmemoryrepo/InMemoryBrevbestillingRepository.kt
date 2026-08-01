@@ -2,11 +2,12 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDateTime
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicLong
+import no.nav.aap.brev.BrevbestillingReferanse
 
 object InMemoryBrevbestillingRepository: BrevbestillingRepository {
     private val bestilling = CopyOnWriteArrayList<Brevbestilling>()

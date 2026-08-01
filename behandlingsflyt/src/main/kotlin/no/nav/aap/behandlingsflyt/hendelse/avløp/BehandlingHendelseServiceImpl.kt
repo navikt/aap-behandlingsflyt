@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.avløp
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.prosessering.statistikk.BehandlingFlytStoppetH
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.tilKontrakt
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov

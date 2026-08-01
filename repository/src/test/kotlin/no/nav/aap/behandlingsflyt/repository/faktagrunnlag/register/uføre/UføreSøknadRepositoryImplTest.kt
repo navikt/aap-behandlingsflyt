@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
+import no.nav.aap.misc.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status

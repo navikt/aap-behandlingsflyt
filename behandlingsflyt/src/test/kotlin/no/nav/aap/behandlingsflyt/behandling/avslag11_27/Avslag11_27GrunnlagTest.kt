@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.avslag11_27
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.samordning.avslag11_27.Avslag11_27Grunnlag
+import no.nav.aap.samordning.avslag11_27.Avslag11_27Vurdering
+import no.nav.aap.samordning.Ytelse
+import no.nav.aap.krav.KravGrunnlag
+import no.nav.aap.krav.Kravreferanse
+import no.nav.aap.krav.RelevantKrav
+import no.nav.aap.krav.Søknadsdato
+import no.nav.aap.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars

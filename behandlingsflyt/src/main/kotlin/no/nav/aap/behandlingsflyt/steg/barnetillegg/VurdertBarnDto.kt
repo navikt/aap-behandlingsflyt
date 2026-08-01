@@ -1,0 +1,50 @@
+package no.nav.aap.behandlingsflyt.steg.barnetillegg
+
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.barnetillegg.Relasjon
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.barnetillegg.VurdertBarn
+import no.nav.aap.misc.Ident
+import java.time.LocalDate
+
+data class VurderingAvForeldreAnsvarDto(
+    val fraDato: LocalDate,
+    val harForeldreAnsvar: Boolean,
+    val begrunnelse: String,
+    val erFosterForelder: Boolean? = null,
+) {
+    fun tilVurderingAvForeldreAnsvar() = VurderingAvForeldreAnsvar(
+        fraDato = fraDato,
+        harForeldreAnsvar = harForeldreAnsvar,
+        begrunnelse = begrunnelse,
+        erFosterForelder = erFosterForelder
+    )
+}
+
+open class VurdertBarnDto(
+    val ident: String?,
+    val navn: String?,
+    val fødselsdato: LocalDate?,
+    val dødsdato: LocalDate?,
+    val vurderinger: List<VurderingAvForeldreAnsvarDto>,
+    val oppgittForeldreRelasjon: Relasjon? = null,
+) {
+    init {
+        if (ident == null) {
+            requireNotNull(navn) { "Om ident er null, krever navn. Fødselsdato: $fødselsdato." }
+            requireNotNull(fødselsdato) { "Om ident er null, kreves fødselsdato. Navn: $navn." }
+        }
+    }
+
+    fun toVurdertBarn(): VurdertBarn {
+        val identifikator = if (ident == null) {
+            BarnIdentifikator.NavnOgFødselsdato(navn!!, Fødselsdato(fødselsdato!!))
+        } else {
+            BarnIdentifikator.BarnIdent(Ident(ident), navn, fødselsdato?.let((::Fødselsdato)))
+        }
+        return VurdertBarn(
+            identifikator,
+            vurderinger.map { it.tilVurderingAvForeldreAnsvar() })
+    }
+}

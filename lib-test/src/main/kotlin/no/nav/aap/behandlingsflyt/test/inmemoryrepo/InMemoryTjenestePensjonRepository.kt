@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonRepository
 
 object InMemoryTjenestePensjonRepository : TjenestePensjonRepository {
     private val tjenestePensjon = mutableMapOf<BehandlingId, List<TjenestePensjonForhold>>()

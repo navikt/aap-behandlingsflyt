@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.hendelse.avløp.sortererteAvklaringsbehov
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService

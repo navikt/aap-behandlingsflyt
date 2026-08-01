@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
+import no.nav.aap.beregning.Uføre
+import no.nav.aap.beregning.UføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory

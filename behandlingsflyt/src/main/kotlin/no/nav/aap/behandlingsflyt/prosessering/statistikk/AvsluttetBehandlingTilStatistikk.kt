@@ -2,37 +2,30 @@ package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.steg.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.steg.samordning.SamordningService
+import no.nav.aap.behandlingsflyt.steg.stansopphør.StansOpphørService
+import no.nav.aap.behandlingsflyt.steg.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakService
+import no.nav.aap.beregning.Beregningsgrunnlag
+import no.nav.aap.behandlingsflyt.steg.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.beregning.Grunnlag11_19
+import no.nav.aap.beregning.GrunnlagUføre
+import no.nav.aap.beregning.GrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisRepository
+import no.nav.aap.underveis.Underveisperiode
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
+import no.nav.aap.behandlingsflyt.steg.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.steg.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
@@ -60,11 +53,18 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.steg.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.steg.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.samordning.Ytelse
+import no.nav.aap.stansopphør.Opphør
+import no.nav.aap.stansopphør.Stans
 import org.slf4j.LoggerFactory
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagstype as AvslagstypeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Avslagsårsak as AvslagsårsakDTO
@@ -336,7 +336,8 @@ class AvsluttetBehandlingTilStatistikk(
             .komprimer().segmenter().mapNotNull { (periode, diagnose) ->
                 if (diagnose == null) return@mapNotNull null
 
-                if (diagnose.hoveddiagnose == null) {
+                val hoveddiagnose = diagnose.hoveddiagnose
+                if (hoveddiagnose == null) {
                     log.info("Fant sykdomsvurdering, men ingen diagnose eller kodeverk for behandling ${behandling.referanse} (id: ${behandling.id})")
                     return@mapNotNull null
                 }
@@ -344,7 +345,7 @@ class AvsluttetBehandlingTilStatistikk(
                 DiagnoserMedPeriode(
                     periodeDTO = PeriodeDTO(periode.fom, periode.tom),
                     kodeverk = diagnose.kodeverk,
-                    diagnosekode = diagnose.hoveddiagnose,
+                    diagnosekode = hoveddiagnose,
                     bidiagnoser = diagnose.bidiagnoser.orEmpty(),
                 )
             }

@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.help
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.tilkjentytelse.TilkjentYtelseGrunnlag
+import no.nav.aap.barnetillegg.BarnetilleggGrunnlag
+import no.nav.aap.samordning.SamordningGrunnlag
+import no.nav.aap.underveis.UnderveisGrunnlag
+import no.nav.aap.personopplysninger.Fødselsdato
 import java.time.LocalDate
 
 val tomtTilkjentYtelseGrunnlag = TilkjentYtelseGrunnlag(

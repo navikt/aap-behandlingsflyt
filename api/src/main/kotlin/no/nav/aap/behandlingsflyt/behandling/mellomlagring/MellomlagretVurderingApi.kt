@@ -27,6 +27,8 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurderingRepository
 
 fun NormalOpenAPIRoute.mellomlagretVurderingApi(
     dataSource: DataSource,

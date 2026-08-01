@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.Ytelse
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig

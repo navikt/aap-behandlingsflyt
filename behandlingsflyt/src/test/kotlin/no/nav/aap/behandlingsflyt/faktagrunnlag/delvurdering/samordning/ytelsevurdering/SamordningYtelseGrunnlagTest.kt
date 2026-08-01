@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
+import no.nav.aap.misc.SamordningYtelse
+import no.nav.aap.misc.SamordningYtelseGrunnlag
+import no.nav.aap.misc.SamordningYtelsePeriode
+import no.nav.aap.samordning.Ytelse
+import no.nav.aap.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent

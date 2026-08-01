@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav
 
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.brev.BrevbestillingReferanse
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 import java.time.LocalDate
 

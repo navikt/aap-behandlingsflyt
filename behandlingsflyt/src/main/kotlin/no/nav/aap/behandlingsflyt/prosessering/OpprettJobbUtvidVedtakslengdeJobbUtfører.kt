@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
+import no.nav.aap.behandlingsflyt.steg.vedtakslengde.VedtakslengdeService
+import no.nav.aap.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId

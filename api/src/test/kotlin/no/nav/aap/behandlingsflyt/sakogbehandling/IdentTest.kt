@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling
 
+import no.nav.aap.misc.Ident
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

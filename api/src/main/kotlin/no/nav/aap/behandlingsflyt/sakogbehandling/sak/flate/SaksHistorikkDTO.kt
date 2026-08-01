@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.time.LocalDateTime
 

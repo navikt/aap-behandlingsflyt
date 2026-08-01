@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.stansopphør
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.IkkeStansOpphørVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.OpphevetStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.OpphørVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.IkkeStansOpphørVurdering
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.OpphevetStansEllerOpphør
+import no.nav.aap.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.OpphørVurdering
+import no.nav.aap.stansopphør.Stans
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.StansOpphørGrunnlag
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.StansVurdering
+import no.nav.aap.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.test.januar

@@ -1,16 +1,16 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
+import no.nav.aap.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.misc.institusjonsopphold.Institusjon
+import no.nav.aap.misc.institusjonsopphold.Institusjonstype
+import no.nav.aap.misc.institusjonsopphold.Oppholdstype
+import no.nav.aap.misc.institusjonsopphold.Helseoppholdvurderinger
+import no.nav.aap.misc.institusjonsopphold.Soningsvurderinger
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.institusjonsopphold.HelseinstitusjonVurdering
+import no.nav.aap.institusjonsopphold.Soningsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBarnetilleggRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryInstitusjonsoppholdRepository
@@ -22,6 +22,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.steg.institusjon.InstitusjonsoppholdInput
 
 internal class InstitusjonsoppholdUtlederServiceTest {
 
@@ -62,6 +63,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                 vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
+
             else -> error("Uventet type for soningsvurderinger")
         },
         barnetillegg = barnetillegg,
@@ -73,6 +75,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                 vurderinger = vurderinger.filterIsInstance<HelseinstitusjonVurdering>(),
                 vurdertTidspunkt = LocalDateTime.now()
             )
+
             else -> error("Uventet type for helsevurderinger")
         },
         rettighetsperiode = rettighetsperiode

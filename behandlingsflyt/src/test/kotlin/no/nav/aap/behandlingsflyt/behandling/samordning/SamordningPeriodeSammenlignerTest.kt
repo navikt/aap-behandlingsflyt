@@ -1,17 +1,21 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.misc.SamordningYtelse
+import no.nav.aap.misc.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.samordning.Ytelse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import no.nav.aap.behandlingsflyt.steg.samordning.EndringStatus
+import no.nav.aap.behandlingsflyt.steg.samordning.SamordningPeriodeSammenligner
+import no.nav.aap.behandlingsflyt.steg.samordning.SamordningYtelseMedEndring
 
 class SamordningPeriodeSammenlignerTest {
 

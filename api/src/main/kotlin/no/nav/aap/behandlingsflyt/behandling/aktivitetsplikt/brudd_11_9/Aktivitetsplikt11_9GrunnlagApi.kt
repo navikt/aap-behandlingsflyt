@@ -10,11 +10,11 @@ import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
+import no.nav.aap.aktivitetsplikt.Brudd
+import no.nav.aap.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer

@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.MeldekortGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig

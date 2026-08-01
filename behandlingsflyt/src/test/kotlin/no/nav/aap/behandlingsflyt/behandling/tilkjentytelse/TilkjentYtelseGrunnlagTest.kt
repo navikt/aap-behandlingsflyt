@@ -1,25 +1,25 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktVurdering
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Oppfylt
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.FastsettGrenseverdiArbeidRegel
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.GraderingArbeidRegel
+import no.nav.aap.underveis.Hverdager.Companion.antallHverdager
+import no.nav.aap.kvote.Kvote
+import no.nav.aap.underveis.MeldepliktVurdering
+import no.nav.aap.underveis.Oppfylt
+import no.nav.aap.underveis.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.barnetillegg.BarnetilleggGrunnlag
+import no.nav.aap.samordning.SamordningGrunnlag
+import no.nav.aap.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
+import no.nav.aap.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
+import no.nav.aap.samordning.SamordningUføreGrunnlag
+import no.nav.aap.samordning.SamordningUføreVurdering
+import no.nav.aap.underveis.UnderveisGrunnlag
+import no.nav.aap.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
@@ -32,11 +32,14 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+import no.nav.aap.tilkjentytelse.Tilkjent
+import no.nav.aap.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 /**
  * Eksemplene er hentet fra https://navno.sharepoint.com/:w:/r/sites/POAAP/Shared%20Documents/Regelverk/Regelverksavklaringer/Juridiske%20avklaringer/Beregningscaser.docx?web=1

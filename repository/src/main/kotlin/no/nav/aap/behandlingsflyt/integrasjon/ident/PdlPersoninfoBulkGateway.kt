@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnDataBolk
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
 import org.intellij.lang.annotations.Language

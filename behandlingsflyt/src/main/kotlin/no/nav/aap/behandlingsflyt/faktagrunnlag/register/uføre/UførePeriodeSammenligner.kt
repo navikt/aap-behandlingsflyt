@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.samordning.EndringStatus
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.beregning.Uføre
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
+import no.nav.aap.beregning.UføreGrunnlag
 
 data class UførePeriodeMedEndringStatus(
     val virkningstidspunkt: LocalDate,

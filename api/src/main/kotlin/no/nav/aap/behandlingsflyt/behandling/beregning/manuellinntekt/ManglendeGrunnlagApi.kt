@@ -3,12 +3,12 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
-import no.nav.aap.behandlingsflyt.behandling.beregning.UføreInntektUtleder
+import no.nav.aap.behandlingsflyt.steg.beregning.BeregningService
+import no.nav.aap.beregning.UføreInntektUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
+import no.nav.aap.misc.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.beregning.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon

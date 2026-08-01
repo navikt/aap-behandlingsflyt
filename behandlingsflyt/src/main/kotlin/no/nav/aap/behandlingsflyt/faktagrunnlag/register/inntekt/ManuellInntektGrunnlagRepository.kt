@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.beregning.ManuellInntektVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
+import no.nav.aap.misc.inntekt.ManuellInntektGrunnlag
 
 interface ManuellInntektGrunnlagRepository : Repository {
     fun lagre(behandlingId: BehandlingId, manuellVurderinger: Set<ManuellInntektVurdering>)

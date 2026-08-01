@@ -2,16 +2,16 @@ package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.papsign.ktor.openapigen.annotations.Response
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
+import no.nav.aap.beregning.InntektPerÅr
+import no.nav.aap.misc.institusjonsopphold.Institusjonstype
+import no.nav.aap.misc.institusjonsopphold.Oppholdstype
+import no.nav.aap.krav.KravType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.TiltakspengerKilde
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp

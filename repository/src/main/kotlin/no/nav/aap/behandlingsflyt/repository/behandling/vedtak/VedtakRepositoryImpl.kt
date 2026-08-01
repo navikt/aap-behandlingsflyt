@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.vedtak
 
-import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.Vedtak
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakId
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakRepository
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDate

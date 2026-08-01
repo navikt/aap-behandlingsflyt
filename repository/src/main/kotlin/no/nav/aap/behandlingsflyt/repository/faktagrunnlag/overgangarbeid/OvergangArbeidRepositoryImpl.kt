@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.overgangarbeid
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.overgangarbeid.OvergangArbeidRepository
+import no.nav.aap.overgangarbeid.OvergangArbeidVurdering
+import no.nav.aap.overgangarbeid.OvergangArbeidGrunnlag
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory

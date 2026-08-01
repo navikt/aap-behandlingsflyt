@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt.ventebehov
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
 
 internal object FristUtløptVentebehovEvaluerer {
 

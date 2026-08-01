@@ -1,18 +1,22 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektTyper
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
+import no.nav.aap.lovvalg.InntektTyper
+import no.nav.aap.behandlingsflyt.steg.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.steg.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.personopplysninger.PersonStatus
+import no.nav.aap.personopplysninger.Personopplysning
+import no.nav.aap.personopplysninger.erGyldigIPeriode
 import no.nav.aap.behandlingsflyt.lovvalgAutomatiskGjennomslipp
 import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurdering
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.medlemskap.Indikasjon
+import no.nav.aap.medlemskap.Kilde
+import no.nav.aap.medlemskap.VurdertPeriode
 import kotlin.enums.enumEntries
 
 class MedlemskapLovvalgVurderingService {
@@ -92,8 +96,10 @@ class MedlemskapLovvalgVurderingService {
             )
         }
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
-            (it.tilDato != null && rettighetsPeriode.inneholder(it.tilDato)) || (it.fraDato != null && rettighetsPeriode.inneholder(
-                it.fraDato
+            val tilDato = it.tilDato
+            val fraDato = it.fraDato
+            (tilDato != null && rettighetsPeriode.inneholder(tilDato)) || (fraDato != null && rettighetsPeriode.inneholder(
+                fraDato
             ))
         }
 
@@ -163,8 +169,10 @@ class MedlemskapLovvalgVurderingService {
         }
 
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
-            (it.tilDato != null && rettighetsPeriode.inneholder(it.tilDato)) || (it.fraDato != null && rettighetsPeriode.inneholder(
-                it.fraDato
+            val tilDato = it.tilDato
+            val fraDato = it.fraDato
+            (tilDato != null && rettighetsPeriode.inneholder(tilDato)) || (fraDato != null && rettighetsPeriode.inneholder(
+                fraDato
             )) && !it.iArbeid
         }
 

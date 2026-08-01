@@ -3,10 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.misc.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.brev.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling

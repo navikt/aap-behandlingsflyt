@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.steg.student.StudentRepository
+import no.nav.aap.behandlingsflyt.steg.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingMetadata
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -55,7 +55,7 @@ class VarsleOppgaveOmHendelseJobbUtFører private constructor(
 
     private fun harOppfyltStudentVurdering(behandlingId: BehandlingId): Boolean {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-        return studentGrunnlag != null && studentGrunnlag.vurderinger?.isNotEmpty() == true && studentGrunnlag.vurderinger.any { it.erOppfylt() }
+        return studentGrunnlag != null && studentGrunnlag.vurderinger?.isNotEmpty() == true && studentGrunnlag.vurderinger!!.any { it.erOppfylt() }
     }
 
     companion object : ProvidersJobbSpesifikasjon {

@@ -1,0 +1,106 @@
+package no.nav.aap.behandlingsflyt.steg.sykdom
+
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.steg.sykepengeerstatning.SykepengerErstatningRepository
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.sykdom.SykdomsFaktagrunnlag
+import no.nav.aap.sykdom.Sykdomsvilkår
+import no.nav.aap.vilkårsresultat.Vilkårtype
+
+class FastsettSykdomsvilkåretSteg private constructor(
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val sykdomRepository: SykdomRepository,
+    private val bistandRepository: BistandRepository,
+    private val sykepengerErstatningRepository: SykepengerErstatningRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val vilkårService: VilkårService,
+) : BehandlingSteg {
+
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        bistandRepository = repositoryProvider.provide(),
+        sykepengerErstatningRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        vilkårService = VilkårService(repositoryProvider),
+    )
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MIGERING_FRA_ARENA -> {
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst,
+                        Vilkårtype.SYKDOMSVILKÅRET,
+                        "mangler behandlingsgrunnlag",
+                    )
+                    return Fullført
+                }
+                vurderVilkåret(kontekst)
+            }
+
+            VurderingType.MELDEKORT,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
+            VurderingType.IKKE_RELEVANT -> {
+                // Do nothing
+            }
+        }
+
+        return Fullført
+    }
+
+    private fun vurderVilkåret(
+        kontekst: FlytKontekstMedPerioder,
+    ) {
+        val behandlingId = kontekst.behandlingId
+        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
+        val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+        val sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId)
+        val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandlingId)
+
+        val rettighetsperiode = kontekst.rettighetsperiode
+        val faktagrunnlag = SykdomsFaktagrunnlag(
+            rettighetsperiode.fom,
+            rettighetsperiode.tom,
+            sykdomsGrunnlag?.yrkesskadevurdering,
+            sykepengerErstatningGrunnlag,
+            sykdomsGrunnlag?.sykdomsvurderinger.orEmpty(),
+            bistandGrunnlag,
+            vilkårsresultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje().orEmpty(),
+        )
+
+        vilkårService.vurderVilkår(behandlingId, faktagrunnlag, Sykdomsvilkår)
+    }
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return FastsettSykdomsvilkåretSteg(repositoryProvider, gatewayProvider)
+        }
+
+        override fun type(): StegType {
+            return StegType.FASTSETT_SYKDOMSVILKÅRET
+        }
+    }
+}

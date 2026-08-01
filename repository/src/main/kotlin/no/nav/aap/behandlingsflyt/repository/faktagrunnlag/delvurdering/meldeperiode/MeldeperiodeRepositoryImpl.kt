@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeUtleder
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory

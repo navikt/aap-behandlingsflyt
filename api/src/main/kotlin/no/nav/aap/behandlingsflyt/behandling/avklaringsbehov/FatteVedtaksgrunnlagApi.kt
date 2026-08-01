@@ -6,9 +6,9 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
+import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.Aksjon
+import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.DefinisjonEndring
+import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.Historikk
 import no.nav.aap.behandlingsflyt.behandling.totrinnsvurdering.TotrinnsVurderingResponse
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -31,6 +31,9 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 
 fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
     dataSource: DataSource,

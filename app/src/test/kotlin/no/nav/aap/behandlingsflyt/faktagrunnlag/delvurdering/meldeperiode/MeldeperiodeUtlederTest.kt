@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode
 
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.komponenter.type.Periode

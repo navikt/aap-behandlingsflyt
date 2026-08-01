@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.databind.node.BooleanNode
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

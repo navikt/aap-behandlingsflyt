@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeFaktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.RettighetstypeFaktagrunnlag
+import no.nav.aap.rettighetstype.RettighetstypeGrunnlag
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.RettighetstypeRepository
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment

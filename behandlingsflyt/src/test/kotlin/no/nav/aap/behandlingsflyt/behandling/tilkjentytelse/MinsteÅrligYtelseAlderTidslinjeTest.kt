@@ -1,10 +1,16 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.personopplysninger.Fødselsdato
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+import no.nav.aap.tilkjentytelse.Minstesats
+import no.nav.aap.tilkjentytelse.Over25
+import no.nav.aap.tilkjentytelse.Under25
+import no.nav.aap.tilkjentytelse.aldersjusteringAvMinsteÅrligeYtelse
+import no.nav.aap.tilkjentytelse.ÅrligYtelse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

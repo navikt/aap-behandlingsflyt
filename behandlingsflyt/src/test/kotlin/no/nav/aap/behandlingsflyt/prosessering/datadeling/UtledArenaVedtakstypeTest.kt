@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphør
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakId
+import no.nav.aap.stansopphør.Opphør
+import no.nav.aap.stansopphør.Stans
+import no.nav.aap.stansopphør.StansEllerOpphør
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.help.assertTidslinjeEquals
@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov

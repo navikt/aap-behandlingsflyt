@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeUtvidelse
+import no.nav.aap.behandlingsflyt.steg.vedtakslengde.VedtakslengdeService
+import no.nav.aap.vedtakslengde.VedtakslengdeUtvidelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -15,7 +15,6 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.time.Clock
-import java.time.LocalDate
 import java.time.LocalDate.now
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(

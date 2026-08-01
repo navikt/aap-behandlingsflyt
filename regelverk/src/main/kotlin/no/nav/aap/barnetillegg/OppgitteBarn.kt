@@ -1,0 +1,37 @@
+package no.nav.aap.barnetillegg
+
+import no.nav.aap.misc.Ident
+import no.nav.aap.personopplysninger.Fødselsdato
+
+/**
+ * Barn oppgitt i søknaden.
+ */
+data class OppgitteBarn(val id: Long? = null, val oppgitteBarn: List<OppgittBarn>) {
+
+    data class OppgittBarn(
+        val ident: Ident?,
+        val navn: String? = null,
+        val fødselsdato: Fødselsdato? = null,
+        val relasjon: Relasjon? = null
+    ) : IBarn {
+        init {
+            if (ident == null) {
+                requireNotNull(navn) { "Om ident er null, må både navn og fødselsdato gis." }
+                requireNotNull(fødselsdato) { "Om ident er null, må både navn og fødselsdato gis." }
+            }
+            if (fødselsdato == null || navn == null) {
+                requireNotNull(ident) { "Om fødseldato eller navn ikke er gitt, må ident være satt." }
+            }
+        }
+
+        override fun identifikator(): BarnIdentifikator = if (ident == null) {
+            BarnIdentifikator.NavnOgFødselsdato(navn!!, fødselsdato!!)
+        } else {
+            BarnIdentifikator.BarnIdent(ident, navn, fødselsdato)
+        }
+
+        override fun fødselsdato(): Fødselsdato {
+            return requireNotNull(fødselsdato) { "Fødselsdato skal være oppgitt i søknaden. Identifikatortype: ${identifikator().javaClass.simpleName}" }
+        }
+    }
+}

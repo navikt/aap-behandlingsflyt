@@ -1,0 +1,25 @@
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løsning
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.SamordningVentPaVirkningstidspunktLøser
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+
+@JsonTypeName(value = SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT)
+class SamordningVentPaVirkningstidspunktLøsning(
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5025`
+) : EnkeltAvklaringsbehovLøsning {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
+        return SamordningVentPaVirkningstidspunktLøser(repositoryProvider).løs(kontekst, this)
+    }
+}

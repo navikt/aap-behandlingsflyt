@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppfølgingNAYLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingNyLøsning
-import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
-import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarOppfølgingNAYLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.VentPåOppfølgingNyLøsning
+import no.nav.aap.behandlingsflyt.steg.oppfølgingsbehandling.KonsekvensAvOppfølging
+import no.nav.aap.behandlingsflyt.steg.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon

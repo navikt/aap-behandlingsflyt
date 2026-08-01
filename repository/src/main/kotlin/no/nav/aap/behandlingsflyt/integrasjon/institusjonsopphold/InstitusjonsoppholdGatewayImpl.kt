@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
+import no.nav.aap.misc.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.behandlingsflyt.steg.institusjon.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey

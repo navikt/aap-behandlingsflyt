@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt.testutil
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 

@@ -1,16 +1,16 @@
 package no.nav.aap.behandlingsflyt.behandling
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
+import no.nav.aap.misc.SYSTEMBRUKER
+import no.nav.aap.krav.Kravreferanse
+import no.nav.aap.krav.RelevantKrav
+import no.nav.aap.krav.OverstyrMuligRettFra
+import no.nav.aap.krav.OverstyrMuligRettFraÅrsak
+import no.nav.aap.krav.Søknadsdato
+import no.nav.aap.krav.SøknadsdatoÅrsak
+import no.nav.aap.krav.RettighetsperiodeHarRett
+import no.nav.aap.krav.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import no.nav.aap.behandlingsflyt.steg.krav.MigrerKravService
 
 class MigrerKravServiceTest {
 

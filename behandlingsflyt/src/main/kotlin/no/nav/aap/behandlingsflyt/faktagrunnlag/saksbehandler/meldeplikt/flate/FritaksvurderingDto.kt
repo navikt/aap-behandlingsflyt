@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.LøsningForPeriode
 import java.time.LocalDate
 
 data class FritaksvurderingDto(

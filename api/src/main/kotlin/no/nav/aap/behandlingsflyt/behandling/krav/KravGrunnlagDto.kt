@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.krav
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.krav.Klage
+import no.nav.aap.krav.KravType
+import no.nav.aap.krav.KravVurdering
+import no.nav.aap.krav.RelevantKrav
+import no.nav.aap.krav.OverstyrMuligRettFra
+import no.nav.aap.krav.Søknadsdato
+import no.nav.aap.krav.Tilleggsopplysning
+import no.nav.aap.krav.TrukketSøknad
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant

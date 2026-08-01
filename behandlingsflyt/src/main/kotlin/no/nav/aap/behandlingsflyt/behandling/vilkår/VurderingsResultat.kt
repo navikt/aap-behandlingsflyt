@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.vilkårsresultat.Utfall
 
 class VurderingsResultat(
     val utfall: Utfall,

@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.sykepengererstatning.SykepengerErstatningGrunnlag
+import no.nav.aap.behandlingsflyt.steg.sykepengeerstatning.SykepengerErstatningRepository
+import no.nav.aap.sykepengererstatning.SykepengerVurdering
+import no.nav.aap.behandling.BehandlingId
 
 object InMemorySykepengerErstatningRepository: SykepengerErstatningRepository {
     private val mutex = Any()

@@ -4,23 +4,23 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
-import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
-import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektSiste3ÅrOver3G
-import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektSisteÅrOver1G
-import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallKanBehandlesAutomatisk
-import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVurderingService
-import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.Under62ÅrVedSøknadstidspunkt
+import no.nav.aap.beregning.Beregning
+import no.nav.aap.behandlingsflyt.steg.beregning.BeregningService
+import no.nav.aap.inntektsbortfall.InntektSiste3ÅrOver3G
+import no.nav.aap.inntektsbortfall.InntektSisteÅrOver1G
+import no.nav.aap.inntektsbortfall.InntektsbortfallKanBehandlesAutomatisk
+import no.nav.aap.behandlingsflyt.steg.inntektsbortfall.InntektsbortfallVurderingService
+import no.nav.aap.inntektsbortfall.Under62ÅrVedSøknadstidspunkt
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurdering
+import no.nav.aap.beregning.InntektsbortfallVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -34,6 +34,7 @@ import no.nav.aap.tilgang.getGrunnlag
 import java.math.BigDecimal
 import java.time.LocalDate
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.steg.inntektsbortfall.InntektsbortfallRepository
 
 data class InntektsbortfallGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,

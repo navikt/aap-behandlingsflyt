@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.underveis.MeldepliktStatus
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.underveis.Underveisperiode
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent

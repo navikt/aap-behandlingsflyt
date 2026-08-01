@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.krav.KravGrunnlag
+import no.nav.aap.behandlingsflyt.steg.krav.KravRepository
+import no.nav.aap.krav.KravVurdering
+import no.nav.aap.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryKravRepository : KravRepository {

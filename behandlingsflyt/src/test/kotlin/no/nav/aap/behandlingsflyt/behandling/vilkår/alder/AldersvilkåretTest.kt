@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.alder
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.alder.Aldersgrunnlag
+import no.nav.aap.alder.Aldersvilkåret
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.januar

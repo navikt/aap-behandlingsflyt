@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurderingPeriode
+import no.nav.aap.vilkårsresultat.RettighetsType.BISTANDSBEHOV
+import no.nav.aap.meldeplikt.Fritaksvurdering
+import no.nav.aap.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.meldeplikt.MeldepliktOverstyringStatus
+import no.nav.aap.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.meldeplikt.OverstyringMeldepliktVurdering
+import no.nav.aap.meldeplikt.OverstyringMeldepliktVurderingPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
@@ -30,6 +30,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.MeldepliktRegel
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.UnderveisInput
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.UtledMeldeperiodeRegel
+import no.nav.aap.underveis.MeldepliktVurdering
+import no.nav.aap.underveis.Vurdering
 
 class MeldepliktRegelTest {
 

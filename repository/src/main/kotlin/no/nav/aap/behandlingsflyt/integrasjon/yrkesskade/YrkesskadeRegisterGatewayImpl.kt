@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.integrasjon.yrkesskade
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.yrkesskade.SkadekombinasjonRegister
+import no.nav.aap.yrkesskade.Yrkesskade
+import no.nav.aap.behandlingsflyt.steg.yrkesskade.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.prometheus
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig

@@ -1,16 +1,16 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
+import no.nav.aap.misc.institusjonsopphold.Institusjon
+import no.nav.aap.misc.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.misc.institusjonsopphold.Institusjonstype
+import no.nav.aap.misc.institusjonsopphold.Oppholdstype
+import no.nav.aap.institusjonsopphold.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse

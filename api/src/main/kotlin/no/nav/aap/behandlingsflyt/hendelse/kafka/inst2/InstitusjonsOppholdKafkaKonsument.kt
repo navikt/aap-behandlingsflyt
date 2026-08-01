@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.steg.institusjon.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding

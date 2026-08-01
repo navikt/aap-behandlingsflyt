@@ -1,19 +1,19 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
+import no.nav.aap.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
+import no.nav.aap.barnetillegg.OppgitteBarn
+import no.nav.aap.barnetillegg.Relasjon
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.student.ErStudentStatus
+import no.nav.aap.student.SkalGjenopptaStudieStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate

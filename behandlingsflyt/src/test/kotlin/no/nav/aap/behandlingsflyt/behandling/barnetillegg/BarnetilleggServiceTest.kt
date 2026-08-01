@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.barnetillegg.Barn
+import no.nav.aap.personopplysninger.Dødsdato
+import no.nav.aap.barnetillegg.OppgitteBarn
+import no.nav.aap.barnetillegg.Relasjon
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.barnetillegg.VurdertBarn
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
@@ -32,6 +32,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import java.time.LocalDate
+import no.nav.aap.barnetillegg.RettTilBarnetillegg
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.BarnetilleggService
 
 @RestoreSystemProperties
 class BarnetilleggServiceTest {

@@ -1,0 +1,45 @@
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løsning
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.FastsettArbeidsevneLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.PeriodisertFastsettArbeidsevneDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_ARBEIDSEVNE_KODE
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(value = FASTSETT_ARBEIDSEVNE_KODE)
+class PeriodisertFastsettArbeidsevneLøsning(
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = FASTSETT_ARBEIDSEVNE_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5004`,
+    override val løsningerForPerioder: List<PeriodisertFastsettArbeidsevneDto>
+) : PeriodisertAvklaringsbehovLøsning<PeriodisertFastsettArbeidsevneDto> {
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
+        return FastsettArbeidsevneLøser(repositoryProvider).løs(kontekst, this)
+    }
+
+    override fun hentLagredeLøstePerioder(
+        behandlingId: BehandlingId,
+        repositoryProvider: RepositoryProvider
+    ): Tidslinje<*> {
+        val repository = repositoryProvider.provide<ArbeidsevneRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger().orEmpty()
+    }
+}

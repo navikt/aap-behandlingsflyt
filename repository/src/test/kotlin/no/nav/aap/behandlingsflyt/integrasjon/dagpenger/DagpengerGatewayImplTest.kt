@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dagpenger
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerGatewayImpl
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson

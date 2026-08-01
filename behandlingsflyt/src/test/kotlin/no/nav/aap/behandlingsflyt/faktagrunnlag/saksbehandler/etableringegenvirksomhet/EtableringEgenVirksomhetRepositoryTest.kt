@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
 import java.time.LocalDate
+import no.nav.aap.etableringegenvirksomhet.EierVirksomhet
+import no.nav.aap.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 
 class EtableringEgenVirksomhetRepositoryTest {
     companion object {
@@ -89,7 +91,12 @@ class EtableringEgenVirksomhetRepositoryTest {
                         brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                         kanFøreTilSelvforsørget = true,
                         utviklingsPerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusMonths(5))),
-                        oppstartsPerioder = listOf(Periode(LocalDate.now().plusMonths(6), LocalDate.now().plusMonths(9))),
+                        oppstartsPerioder = listOf(
+                            Periode(
+                                LocalDate.now().plusMonths(6),
+                                LocalDate.now().plusMonths(9)
+                            )
+                        ),
                     )
                 )
             )

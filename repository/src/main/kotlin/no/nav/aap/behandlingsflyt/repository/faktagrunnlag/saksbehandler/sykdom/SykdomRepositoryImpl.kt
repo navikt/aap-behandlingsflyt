@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.sykdom.Diagnose
+import no.nav.aap.sykdom.SykdomGrunnlag
+import no.nav.aap.behandlingsflyt.steg.sykdom.SykdomRepository
+import no.nav.aap.sykdom.Sykdomsvurdering
+import no.nav.aap.sykdom.YrkesskadeSak
+import no.nav.aap.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Bruker

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.barnetillegg.RettTilBarnetillegg
+import no.nav.aap.barnetillegg.BarnIdentifikator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

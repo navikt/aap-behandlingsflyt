@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.totrinnsvurdering
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
+import no.nav.aap.behandlingsflyt.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 
 data class TotrinnsVurderingResponse(

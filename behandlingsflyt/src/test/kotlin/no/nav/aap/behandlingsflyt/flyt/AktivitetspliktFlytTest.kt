@@ -1,23 +1,23 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvbrytAktivitetspliktbehandlingLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_9Løsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvbrytAktivitetspliktbehandlingLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.VurderBrudd11_7Løsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.VurderBrudd11_9Løsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9LøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
+import no.nav.aap.aktivitetsplikt.Brudd
+import no.nav.aap.aktivitetsplikt.Grunn
+import no.nav.aap.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingÅrsakDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -31,7 +31,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktiv
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -51,7 +51,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
+import no.nav.aap.vilkårsresultat.Utfall as VilkårsresultatUtfall
 
 class AktivitetspliktFlytTest :
     AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {

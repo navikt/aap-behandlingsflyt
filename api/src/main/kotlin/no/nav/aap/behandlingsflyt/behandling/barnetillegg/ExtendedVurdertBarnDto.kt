@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
+import no.nav.aap.barnetillegg.Relasjon
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.VurderingAvForeldreAnsvarDto
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.VurdertBarnDto
 import java.time.LocalDate
 
 class ExtendedVurdertBarnDto(

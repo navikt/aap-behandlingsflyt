@@ -1,0 +1,42 @@
+package no.nav.aap.bistand
+
+import java.time.LocalDate
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.misc.gjeldendeVurderinger
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
+
+data class BistandGrunnlag(
+    /**
+     * Nye vurderinger for inneværende behandling + vedtatte vurderinger
+     */
+    val vurderinger: List<Bistandsvurdering>,
+) {
+    fun somBistandsvurderingstidslinje(
+        maksDato: LocalDate = Tid.MAKS
+    ): Tidslinje<Bistandsvurdering> {
+        return filtrertBistandstidslinje(maksDato) { true }
+    }
+
+    fun bistandsvurderingerVurdertIBehandling(behandlingId: BehandlingId): List<Bistandsvurdering> {
+        return vurderinger.filter { it.vurdertIBehandling == behandlingId }
+    }
+
+    fun vedtattBistandstidslinje(
+        behandlingId: BehandlingId,
+        maksDato: LocalDate = Tid.MAKS
+    ): Tidslinje<Bistandsvurdering> {
+        return filtrertBistandstidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
+    }
+
+    private fun filtrertBistandstidslinje(
+        maksDato: LocalDate = Tid.MAKS,
+        filter: (bistandsvurdering: Bistandsvurdering) -> Boolean
+    ): Tidslinje<Bistandsvurdering> {
+        return vurderinger
+            .filter(filter)
+            .gjeldendeVurderinger()
+            .begrensetTil(Periode(Tid.MIN, maksDato))
+    }
+}

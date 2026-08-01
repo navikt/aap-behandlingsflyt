@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.opphold
 
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.oppholdskrav.OppholdskravGrunnlag
+import no.nav.aap.behandlingsflyt.steg.oppholdskrav.OppholdskravGrunnlagRepository
+import no.nav.aap.oppholdskrav.OppholdskravPeriode
+import no.nav.aap.oppholdskrav.OppholdskravVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory

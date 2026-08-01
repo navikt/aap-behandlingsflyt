@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.integrasjon.gosys
 
 import no.bekk.bekkopen.date.NorwegianDateUtil.addWorkingDaysToDate
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Behandlingstema
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysOppgaveGateway
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveType
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Prioritet
+import no.nav.aap.behandlingsflyt.steg.iverksett.Behandlingstema
+import no.nav.aap.behandlingsflyt.steg.iverksett.GosysOppgaveGateway
+import no.nav.aap.behandlingsflyt.steg.iverksett.OppgaveType
+import no.nav.aap.behandlingsflyt.steg.iverksett.OpprettOppgaveRequest
+import no.nav.aap.behandlingsflyt.steg.iverksett.Prioritet
 import no.nav.aap.behandlingsflyt.prometheus
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.Gateway

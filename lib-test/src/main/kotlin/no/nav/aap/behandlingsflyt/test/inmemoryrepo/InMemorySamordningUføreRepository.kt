@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.samordning.SamordningUføreGrunnlag
+import no.nav.aap.samordning.SamordningUføreVurdering
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.samordning.uførevurdering.SamordningUføreRepository
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemorySamordningUføreRepository : SamordningUføreRepository {

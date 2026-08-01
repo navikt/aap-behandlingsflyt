@@ -1,0 +1,29 @@
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løsning
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.OverstyrIkkeOppfyltMeldepliktLøser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.MeldepliktOverstyringLøsningDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(value = OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE)
+class OverstyrIkkeOppfyltMeldepliktLøsning(
+    @param:JsonProperty("meldepliktOverstyringVurdering", required = true) val meldepliktOverstyringVurdering: MeldepliktOverstyringLøsningDto,
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5002`
+) : EnkeltAvklaringsbehovLøsning {
+
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
+        return OverstyrIkkeOppfyltMeldepliktLøser(repositoryProvider).løs(kontekst, this)
+    }
+}

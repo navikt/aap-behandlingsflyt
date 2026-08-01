@@ -1,5 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon
 
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonOrdning
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonYtelse
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.YtelseTypeCode
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

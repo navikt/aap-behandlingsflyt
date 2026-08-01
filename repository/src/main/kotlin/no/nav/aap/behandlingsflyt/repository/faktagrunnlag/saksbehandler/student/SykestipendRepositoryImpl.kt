@@ -1,10 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.student.sykestipend.SykestipendGrunnlag
+import no.nav.aap.behandlingsflyt.steg.samordning.sykestipend.SykestipendRepository
+import no.nav.aap.student.sykestipend.SykestipendVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
@@ -88,7 +89,7 @@ class SykestipendRepositoryImpl(private val connection: DBConnection) : Sykestip
                     begrunnelse = row.getString("begrunnelse"),
                     perioder = row.getPeriodeArray("perioder").toSet(),
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
-                    vurdertAv = no.nav.aap.komponenter.verdityper.Bruker(row.getString("vurdert_av_ident")),
+                    vurdertAv = Bruker(row.getString("vurdert_av_ident")),
                     opprettet = row.getInstant("opprettet"),
                 )
                 SykestipendGrunnlag(

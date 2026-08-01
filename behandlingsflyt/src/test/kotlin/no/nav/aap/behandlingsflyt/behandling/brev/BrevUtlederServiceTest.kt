@@ -1,49 +1,49 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.misc.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+import no.nav.aap.tilkjentytelse.Minstesats
+import no.nav.aap.tilkjentytelse.Tilkjent
+import no.nav.aap.tilkjentytelse.TilkjentYtelseGrunnlag
+import no.nav.aap.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.steg.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakRepository
+import no.nav.aap.misc.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.behandlingsflyt.steg.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.beregning.Grunnlag11_19
+import no.nav.aap.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.GjeldendeStansEllerOpphør
+import no.nav.aap.stansopphør.StansEllerOpphør
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.StansOpphørGrunnlag
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.StansOpphørRepository
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisRepository
+import no.nav.aap.underveis.Underveisperiode
+import no.nav.aap.underveis.UnderveisÅrsak
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.beregning.Grunnbeløp
+import no.nav.aap.behandlingsflyt.steg.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
+import no.nav.aap.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.steg.overgangufore.OvergangUføreRepository
+import no.nav.aap.overganguføre.OvergangUføreVurdering
+import no.nav.aap.overganguføre.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -1303,7 +1303,7 @@ class BrevUtlederServiceTest {
         return Aktivitetsplikt11_7Vurdering(
             begrunnelse = "",
             erOppfylt = false,
-            utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall.STANS,
+            utfall = no.nav.aap.aktivitetsplikt.Utfall.STANS,
             vurdertAv = Bruker(""),
             fom = fra,
             opprettet = Instant.now(),

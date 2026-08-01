@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
+import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.Historikk
 import no.nav.aap.behandlingsflyt.behandling.totrinnsvurdering.TotrinnsVurderingResponse
 import java.time.LocalDateTime
 

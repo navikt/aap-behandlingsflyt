@@ -8,6 +8,10 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import no.nav.aap.meldeplikt.MeldepliktOverstyringStatus
+import no.nav.aap.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.meldeplikt.OverstyringMeldepliktVurdering
+import no.nav.aap.meldeplikt.OverstyringMeldepliktVurderingPeriode
 
 class MeldepliktOverstyringGrunnlagTest {
     @Test
@@ -21,13 +25,13 @@ class MeldepliktOverstyringGrunnlagTest {
 
         val periode2 = OverstyringMeldepliktVurderingPeriode(
             fom = 1 juli 2020,
-            tom = 14 juli  2020,
+            tom = 14 juli 2020,
             begrunnelse = "begrunnelse2",
             meldepliktOverstyringStatus = MeldepliktOverstyringStatus.RIMELIG_GRUNN
         )
 
         val periode3 = OverstyringMeldepliktVurderingPeriode(
-            fom = 1 august  2020,
+            fom = 1 august 2020,
             tom = 14 august 2020,
             begrunnelse = "begrunnelse3",
             meldepliktOverstyringStatus = MeldepliktOverstyringStatus.RIMELIG_GRUNN
@@ -65,14 +69,14 @@ class MeldepliktOverstyringGrunnlagTest {
 
         val periode2 = OverstyringMeldepliktVurderingPeriode(
             fom = 1 juli 2020,
-            tom = 14 juli  2020,
+            tom = 14 juli 2020,
             begrunnelse = "begrunnelse2",
             meldepliktOverstyringStatus = MeldepliktOverstyringStatus.RIMELIG_GRUNN
         )
 
         val periode3 = OverstyringMeldepliktVurderingPeriode(
             fom = 1 juli 2020,
-            tom = 14 juli  2020,
+            tom = 14 juli 2020,
             begrunnelse = "begrunnelse3",
             meldepliktOverstyringStatus = MeldepliktOverstyringStatus.IKKE_MELDT_SEG
         )
@@ -121,14 +125,14 @@ class MeldepliktOverstyringGrunnlagTest {
 
         val periode2 = OverstyringMeldepliktVurderingPeriode(
             fom = 1 juli 2020,
-            tom = 14 juli  2020,
+            tom = 14 juli 2020,
             begrunnelse = "begrunnelse2",
             meldepliktOverstyringStatus = MeldepliktOverstyringStatus.RIMELIG_GRUNN
         )
 
         val periode3 = OverstyringMeldepliktVurderingPeriode(
             fom = 5 juli 2020,
-            tom = 14 juli  2020,
+            tom = 14 juli 2020,
             begrunnelse = "begrunnelse3",
             meldepliktOverstyringStatus = MeldepliktOverstyringStatus.IKKE_MELDT_SEG
         )

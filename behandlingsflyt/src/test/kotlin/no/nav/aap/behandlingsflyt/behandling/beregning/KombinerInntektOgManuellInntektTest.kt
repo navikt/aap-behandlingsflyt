@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
+import no.nav.aap.beregning.InntektPerÅr
+import no.nav.aap.beregning.ManuellInntektVurdering
+import no.nav.aap.beregning.Beregning
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker

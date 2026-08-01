@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeFaktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.RettighetstypeFaktagrunnlag
+import no.nav.aap.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl

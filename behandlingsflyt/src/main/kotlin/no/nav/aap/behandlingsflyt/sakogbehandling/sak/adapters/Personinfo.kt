@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import java.time.LocalDate
 
 class Personinfo(

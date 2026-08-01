@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.personopplysninger.Fødselsdato
 import java.time.Year
 
 object PdlParser {

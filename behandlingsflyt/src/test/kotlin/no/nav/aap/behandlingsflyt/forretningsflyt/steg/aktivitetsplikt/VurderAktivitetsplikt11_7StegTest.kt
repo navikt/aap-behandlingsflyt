@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.brev.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.steg.aktivitetsplikt.VurderAktivitetsplikt11_7Steg
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAktivitetsplikt11_7Repository

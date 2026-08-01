@@ -1,0 +1,89 @@
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser
+
+import kotlin.collections.orEmpty
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.KvalitetssikringLøsning
+import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerException
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+class KvalitetssikrerLøser(
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val unleashGateway: UnleashGateway
+) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
+
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
+    )
+
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: KvalitetssikringLøsning
+    ): LøsningsResultat {
+        val avklaringsbehovene =
+            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = kontekst.kontekst.behandlingId)
+
+        val relevanteVurderinger =
+            løsning.vurderinger.filter { Definisjon.forKode(it.definisjon).kvalitetssikres }
+        relevanteVurderinger.all { it.valider() }
+
+        validerAvklaringsbehovOppMotBruker(
+            avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() },
+            kontekst.bruker
+        )
+
+        if (skalSendesTilbake(relevanteVurderinger)) {
+            relevanteVurderinger
+                .filter { it.godkjent != null }
+                .forEach { vurdering ->
+                avklaringsbehovene.vurderKvalitet(
+                    definisjon = Definisjon.forKode(vurdering.definisjon),
+                    godkjent = vurdering.godkjent!!,
+                    begrunnelse = vurdering.begrunnelse(),
+                    vurdertAv = kontekst.bruker,
+                    årsakTilRetur = vurdering.grunner.orEmpty(),
+                )
+            }
+        } else {
+            relevanteVurderinger.forEach { vurdering ->
+                avklaringsbehovene.vurderKvalitet(
+                    definisjon = Definisjon.forKode(vurdering.definisjon),
+                    godkjent = vurdering.godkjent!!,
+                    begrunnelse = vurdering.begrunnelse(),
+                    vurdertAv = kontekst.bruker
+                )
+            }
+        }
+        val sammenstiltBegrunnelse = sammenstillBegrunnelse(løsning)
+
+        return LøsningsResultat(sammenstiltBegrunnelse)
+    }
+
+    private fun skalSendesTilbake(vurderinger: List<TotrinnsVurdering>): Boolean {
+        return vurderinger.any { it.godkjent == false }
+    }
+
+    private fun sammenstillBegrunnelse(løsning: KvalitetssikringLøsning): String {
+        return løsning.vurderinger.joinToString("\\n") { it.begrunnelse() }
+    }
+
+    override fun forBehov(): Definisjon {
+        return Definisjon.KVALITETSSIKRING
+    }
+
+    private fun validerAvklaringsbehovOppMotBruker(avklaringsbehovene: List<Avklaringsbehov>, bruker: Bruker) {
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)
+            && avklaringsbehovene.any { bruker in it.brukere() }
+        ) {
+            throw KanIkkeVurdereEgneVurderingerException()
+        }
+    }
+}

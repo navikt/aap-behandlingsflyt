@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
 import no.nav.aap.behandlingsflyt.utils.diff.somDto
@@ -14,7 +14,10 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tilkjentytelse.Tilkjent
+import no.nav.aap.tilkjentytelse.tilTidslinje
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.steg.tilkjentytelse.TilkjentYtelseRepository
 
 class TilkjentYtelseService(
     private val dataSource: DataSource,

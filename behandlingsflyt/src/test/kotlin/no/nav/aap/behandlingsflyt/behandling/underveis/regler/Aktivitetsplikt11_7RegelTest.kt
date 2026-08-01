@@ -1,16 +1,16 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.aktivitetsplikt.Aktivitetspliktvilkåret
-import no.nav.aap.behandlingsflyt.behandling.vilkår.aktivitetsplikt.AktivitetspliktvilkåretGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.behandling.vilkår.Aktivitetspliktvilkåret
+import no.nav.aap.aktivitetsplikt.AktivitetspliktvilkåretGrunnlag
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.aktivitetsplikt.Utfall
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni

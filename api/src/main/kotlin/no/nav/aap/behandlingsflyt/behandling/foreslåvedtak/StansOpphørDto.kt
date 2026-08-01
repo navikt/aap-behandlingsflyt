@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.`foreslåvedtak`
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.Avslagsårsak
 import java.time.LocalDate
 import java.util.UUID
 

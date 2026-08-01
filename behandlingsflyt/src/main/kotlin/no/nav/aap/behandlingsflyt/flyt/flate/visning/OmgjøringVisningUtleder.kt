@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @Suppress("unused")

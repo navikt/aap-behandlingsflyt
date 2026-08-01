@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnst
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 
 data class KlagebehandlingKontorGrunnlagDto(
     val vurdering: KlagevurderingKontorDto? = null,

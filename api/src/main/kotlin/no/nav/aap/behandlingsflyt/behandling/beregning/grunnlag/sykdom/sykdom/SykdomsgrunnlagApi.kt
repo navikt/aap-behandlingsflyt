@@ -4,17 +4,17 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovMetadataService
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.RegistrertYrkesskade
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
+import no.nav.aap.behandlingsflyt.steg.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.steg.sykdom.SykdomRepository
+import no.nav.aap.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.steg.sykdom.InnhentetSykdomsOpplysninger
+import no.nav.aap.behandlingsflyt.steg.sykdom.RegistrertYrkesskade
+import no.nav.aap.behandlingsflyt.steg.sykdom.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -55,7 +55,10 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                    val vurderSykdomSteg = VurderSykdomSteg(repositoryProvider, gatewayProvider)
+                    val vurderSykdomSteg = VurderSykdomSteg(
+                        repositoryProvider,
+                        gatewayProvider
+                    )
                     val avklaringsbehovMetadataService = AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                     val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)

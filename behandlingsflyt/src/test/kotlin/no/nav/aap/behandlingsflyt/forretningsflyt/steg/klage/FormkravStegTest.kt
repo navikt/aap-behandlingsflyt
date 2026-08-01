@@ -3,15 +3,15 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
+import no.nav.aap.behandlingsflyt.steg.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovValidering
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.brev.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
@@ -25,11 +25,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.steg.klage.FormkravSteg
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
@@ -109,7 +110,7 @@ class FormkravStegTest {
                 kravRepository = InMemoryKravRepository, InMemorySakRepository,
                 unleashGateway = gatewayProvider.provide(),
                 AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-                
+
             ),
             unleashGateway = gatewayProvider.provide()
         )

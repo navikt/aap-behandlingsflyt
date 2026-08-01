@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.prosessering.gregulering.GReguleringService
+import no.nav.aap.beregning.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature.GReguleringUtplukkJobb
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway

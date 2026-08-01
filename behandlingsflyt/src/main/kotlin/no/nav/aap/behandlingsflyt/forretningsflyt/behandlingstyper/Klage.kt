@@ -3,20 +3,20 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FastsettBehandlendeEnhetSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FullmektigSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingKontorSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNayOppsummeringSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.KlagebehandlingNaySteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OmgjøringSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.OpprettholdelseSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.PåklagetBehandlingSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.TrekkKlageSteg
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.FatteVedtakSteg
+import no.nav.aap.behandlingsflyt.steg.kvalitetssikring.KvalitetssikringsSteg
+import no.nav.aap.behandlingsflyt.steg.MeldingOmVedtakBrevSteg
+import no.nav.aap.behandlingsflyt.steg.SendForvaltningsmeldingSteg
+import no.nav.aap.behandlingsflyt.steg.klage.FastsettBehandlendeEnhetSteg
+import no.nav.aap.behandlingsflyt.steg.klage.FormkravSteg
+import no.nav.aap.behandlingsflyt.steg.klage.FullmektigSteg
+import no.nav.aap.behandlingsflyt.steg.klage.KlagebehandlingKontorSteg
+import no.nav.aap.behandlingsflyt.steg.klage.KlagebehandlingNayOppsummeringSteg
+import no.nav.aap.behandlingsflyt.steg.klage.KlagebehandlingNaySteg
+import no.nav.aap.behandlingsflyt.steg.klage.OmgjøringSteg
+import no.nav.aap.behandlingsflyt.steg.klage.OpprettholdelseSteg
+import no.nav.aap.behandlingsflyt.steg.klage.PåklagetBehandlingSteg
+import no.nav.aap.behandlingsflyt.steg.klage.TrekkKlageSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 
 object Klage : BehandlingType {

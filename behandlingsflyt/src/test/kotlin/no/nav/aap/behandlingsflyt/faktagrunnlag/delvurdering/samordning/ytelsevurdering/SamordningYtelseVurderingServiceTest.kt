@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -13,8 +13,8 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordni
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.misc.Ident
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -39,6 +40,12 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import no.nav.aap.misc.SamordningVurdering
+import no.nav.aap.misc.SamordningVurderingGrunnlag
+import no.nav.aap.misc.SamordningVurderingPeriode
+import no.nav.aap.misc.SamordningYtelse
+import no.nav.aap.misc.SamordningYtelseGrunnlag
+import no.nav.aap.misc.SamordningYtelsePeriode
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
@@ -91,7 +98,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  })
+                SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { })
             )
             val foreldrePerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -340,7 +347,7 @@ class SamordningYtelseVurderingServiceTest {
                     )
                 ),
                 vurdertAv = Bruker("ident"),
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
         )
     }

@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.filtrerBortMigrerteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag. saksbehandler.barn.BarnIdentifikator
-import no. nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.barnetillegg.Barn
+import no.nav.aap.barnetillegg.filtrerBortMigrerteBarn
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.misc.Ident
 import org.assertj.core.api. Assertions.assertThat
 import org.junit.jupiter.api. Test
 import java.time.LocalDate

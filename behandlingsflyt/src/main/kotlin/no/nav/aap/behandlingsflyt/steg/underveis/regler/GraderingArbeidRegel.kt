@@ -1,0 +1,245 @@
+package no.nav.aap.behandlingsflyt.steg.underveis.regler
+
+import no.nav.aap.underveis.Hverdager.Companion.antallHverdager
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.underveis.Vurdering
+import no.nav.aap.underveis.helligdagsunntakFritaksUtbetalingDato
+import no.nav.aap.underveis.leggTilVurderinger
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.LocalDate
+
+/*
+
+- Skal vi legge vurderingen av andre ledd inn i Vurdering, og så sammenstille senere?
+- Hvordan sammenstille.
+
+
+arbeidsevne: 30%
+faktisk arbeid: 40%
+utbetaling %: 60%
+
+arbeidsevne: 30%
+faktisk arbeid: 20%
+utbetaling %: 70%
+
+gradering = max(arbeidsevne, faktisk arbeid)
+utbetaling = 100 % - max(arbeidsevne, faktisk arbeid)
+ */
+
+// § 11-23 tredje ledd
+private const val ANTALL_TIMER_I_ARBEIDSUKE = 37.5
+
+private val HVERDAGER_I_FULL_MELDEPERIODE = BigDecimal(10)
+
+private val ANTALL_TIMER_I_MELDEPERIODE =
+    BigDecimal(ANTALL_TIMER_I_ARBEIDSUKE).multiply(BigDecimal.TWO)
+
+/** § 11-23. Reduksjon ved delvis nedsatt arbeidsevne
+ *
+ * Graderer arbeid der hvor det ikke er avslått pga en regel tidligere i løpet
+ *
+ * - Arbeid fra meldeplikt
+ */
+class GraderingArbeidRegel : UnderveisRegel {
+    override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
+            "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
+        }
+
+        val arbeidsTidslinje = graderingerTidslinje(resultat, input)
+        return resultat.leggTilVurderinger(arbeidsTidslinje, Vurdering::leggTilGradering)
+    }
+
+    /** § 11-23 tredje ledd */
+    private data class OpplysningerOmArbeid(
+        /** null representerer fravær av opplysninger */
+        val timerArbeid: TimerArbeid? = null,
+        /** null representerer fravær av opplysninger */
+        val arbeidsevne: Prosent? = null,
+        val opplysningerFørstMottatt: LocalDate? = null,
+        val harRett: Boolean? = null,
+        val grenseverdi: Prosent? = null,
+        val meldeperiode: Periode? = null,
+    ) {
+        fun harRettOgLevertTimer(): Boolean {
+            return harRett == true && timerArbeid != null
+        }
+
+        fun harLevertTimer(): Boolean {
+            return timerArbeid != null
+        }
+
+        companion object {
+            fun mergePrioriterHøyre(venstre: OpplysningerOmArbeid?, høyre: OpplysningerOmArbeid?) =
+                OpplysningerOmArbeid(
+                    timerArbeid = høyre?.timerArbeid ?: venstre?.timerArbeid,
+                    arbeidsevne = høyre?.arbeidsevne ?: venstre?.arbeidsevne,
+                    opplysningerFørstMottatt = listOfNotNull(
+                        venstre?.opplysningerFørstMottatt,
+                        høyre?.opplysningerFørstMottatt
+                    ).minOrNull(),
+                    harRett = høyre?.harRett ?: venstre?.harRett,
+                    grenseverdi = høyre?.grenseverdi ?: venstre?.grenseverdi,
+                    meldeperiode = høyre?.meldeperiode ?: venstre?.meldeperiode,
+                )
+        }
+    }
+
+    private fun graderingerTidslinje(
+        resultat: Tidslinje<Vurdering>,
+        input: UnderveisInput
+    ): Tidslinje<ArbeidsGradering> {
+        val opplysninger = Tidslinje(input.periodeForVurdering, OpplysningerOmArbeid())
+            .leftJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(meldeperioder(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(grenseverdi(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
+
+        return opplysninger.splittOppIPerioderBasertPå { Pair(it.meldeperiode, it.grenseverdi) }
+            .flatMap { periode -> regnUtGradering(periode.verdi) }
+            .komprimer()
+    }
+
+    private fun grenseverdi(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {
+        return vurderinger.map { OpplysningerOmArbeid(grenseverdi = it.grenseverdi()) }
+    }
+
+    private fun meldeperioder(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
+        return input.meldeperioder.somTidslinje({ it }, { OpplysningerOmArbeid(meldeperiode = it) })
+    }
+
+    private fun harRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {
+        return vurderinger.mapValue { vurdering ->
+            OpplysningerOmArbeid(harRett = vurdering.fårAapEtter != null)
+        }
+    }
+
+    private fun arbeidsevnevurdering(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
+        return input.arbeidsevneGrunnlag.tilTidslinje().mapValue {
+            OpplysningerOmArbeid(arbeidsevne = it.arbeidsevne)
+        }
+    }
+
+    private fun nullTimerVedFritakFraMeldeplikt(
+        input: UnderveisInput,
+        dagensDato: LocalDate = LocalDate.now()
+    ): Tidslinje<OpplysningerOmArbeid> =
+        Tidslinje.map2(
+            input.meldeperioder.somTidslinje { it },
+            input.meldepliktGrunnlag.tilTidslinje()
+        ) { meldeperiode, fritaksvurdering ->
+            val harPassertMeldeperiodeITid = meldeperiode?.let { dagensDato >= meldeperiode.tom.plusDays(1) } ?: false
+            if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
+                OpplysningerOmArbeid(
+                    timerArbeid = TimerArbeid(BigDecimal.ZERO),
+                    opplysningerFørstMottatt = helligdagsunntakFritaksUtbetalingDato[meldeperiode.tom.plusDays(3)]
+                        ?: meldeperiode.tom.plusDays(3)
+                )
+            } else {
+                OpplysningerOmArbeid()
+            }
+        }
+
+
+    private fun opplysningerFraMeldekort(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
+        var tidslinje = Tidslinje<OpplysningerOmArbeid>()
+
+        for (meldekort in input.meldekort.sortedBy { it.mottattTidspunkt }) {
+            tidslinje = tidslinje.outerJoin(meldekort.somTidslinje()) { tidligereOpplysninger, meldekortopplysninger ->
+                /* Opplysninger fra nyeste meldekort, opplysningerFørstMottatt fra eldste meldekort */
+                val timerArbeidetOpplysninger = OpplysningerOmArbeid(
+                    timerArbeid = meldekortopplysninger?.let { (timerArbeidet, antallDager) ->
+                        TimerArbeid(
+                            timerArbeidet.antallTimer.divide(
+                                BigDecimal(antallDager),
+                                3,
+                                RoundingMode.HALF_UP
+                            )
+                        )
+                    },
+                    opplysningerFørstMottatt = meldekort.mottattTidspunkt.toLocalDate(),
+                )
+
+                OpplysningerOmArbeid.mergePrioriterHøyre(tidligereOpplysninger, timerArbeidetOpplysninger)
+            }
+        }
+
+        return tidslinje
+    }
+
+    private fun regnUtGradering(
+        opplysningerOmArbeid: Tidslinje<OpplysningerOmArbeid>,
+    ): Tidslinje<ArbeidsGradering> {
+        val antallHverdager = opplysningerOmArbeid
+            .segmenter().sumOf {
+                if (it.verdi.harRettOgLevertTimer())
+                    BigDecimal(it.periode.antallHverdager().asInt)
+                else
+                    BigDecimal.ZERO
+            }
+
+        val timerArbeidet = opplysningerOmArbeid.segmenter().sumOf {
+            if (it.verdi.harRettOgLevertTimer())
+                it.verdi.timerArbeid!!.antallTimer * BigDecimal(it.periode.antallDager())
+            else
+                BigDecimal.ZERO
+        }
+
+        // En meldeperiode har ikke nødvendigvis 10 hverdager, f.eks. ved start og stopp.
+        // Vi skalerer derfor antall timer i meldeperiode med hvor lang meldeperioden faktisk er, altså:
+        // (antall timer arbeidet) / (antall timer i meldeperiode * (antall faktiske timer i meldeperioden / 10))
+        // men for å bevare presisjon er formelen stokket om.
+
+        // Dersom det er levert timer for deler av meldeperioden, men ikke hele så må det beregnes
+        // for de dagene det er levert timer for. Dette kan skje ved utvidelse av AAP-retten fra start eller slutt
+        // etter at delvis meldekort er mottatt for perioden
+
+        val andelArbeid = if (antallHverdager == BigDecimal.ZERO) {
+            `0_PROSENT`
+        } else {
+            Prosent.fraDesimal(
+                minOf(
+                    BigDecimal.ONE,
+                    (timerArbeidet * HVERDAGER_I_FULL_MELDEPERIODE).divide(
+                        ANTALL_TIMER_I_MELDEPERIODE * antallHverdager,
+                        3,
+                        RoundingMode.HALF_UP
+                    )
+                )
+            )
+        }
+        return opplysningerOmArbeid.mapValue { arbeid ->
+            requireNotNull(arbeid.grenseverdi) {
+                "grenseverdi for hvor mye medlemmet har lov til å jobbe må være satt for å kunne gradere basert på timer arbeidet"
+            }
+            val fastsattArbeidsevne = arbeid.arbeidsevne ?: `0_PROSENT`
+            val andelArbeidGittLeverteTimer = if (arbeid.harLevertTimer()) andelArbeid else `0_PROSENT`
+            ArbeidsGradering(
+                totaltAntallTimer = arbeid.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
+                andelArbeid = andelArbeidGittLeverteTimer,
+                fastsattArbeidsevne = fastsattArbeidsevne,
+                gradering = when {
+                    !arbeid.harLevertTimer() -> `0_PROSENT`
+                    arbeid.grenseverdi < andelArbeid -> `0_PROSENT`
+                    else -> Prosent.`100_PROSENT`.minus(
+                        Prosent.max(andelArbeid, fastsattArbeidsevne)
+                    )
+
+                },
+                opplysningerMottatt =
+                    opplysningerOmArbeid.segmenter().mapNotNull { it.verdi.opplysningerFørstMottatt }
+                        /* Høyeste dato er datoen første dato vi hadde opplysninger for *hele* meldeperioden. */
+                        .maxOrNull()
+            )
+        }
+    }
+}

@@ -3,25 +3,25 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.misc.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.underveis.UnderveisÅrsak
+import no.nav.aap.underveis.Underveisperiode
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.misc.aordning.ArbeidsInntektInformasjon
+import no.nav.aap.misc.aordning.ArbeidsInntektMåned
+import no.nav.aap.misc.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
+import no.nav.aap.misc.aordning.InntektskomponentData
+import no.nav.aap.misc.aordning.Virksomhet
+import no.nav.aap.beregning.BeregningstidspunktVurdering
+import no.nav.aap.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryInntektGrunnlagRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
+import no.nav.aap.beregning.InntektPerÅr
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -43,6 +44,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
+import no.nav.aap.misc.inntekt.InntektPerÅrFraRegister
 
 class InntektInformasjonskravTest {
 

@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.integrasjon.aordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
+import no.nav.aap.misc.aordning.ArbeidsInntektInformasjon
+import no.nav.aap.misc.aordning.ArbeidsInntektMåned
+import no.nav.aap.misc.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
+import no.nav.aap.misc.aordning.InntektskomponentData
+import no.nav.aap.misc.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory

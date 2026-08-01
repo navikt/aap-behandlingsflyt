@@ -7,10 +7,10 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.LøsAvklaringsbehovPåBehandling
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.LøsPeriodisertAvklaringsbehovPåBehandling
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.LøsAvklaringsbehovPåBehandling
+import no.nav.aap.behandlingsflyt.avklaringsbehov.flate.LøsPeriodisertAvklaringsbehovPåBehandling
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
@@ -29,6 +29,8 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovOrkestrator
+import no.nav.aap.behandlingsflyt.avklaringsbehov.BehandlingTilstandValidator
 
 fun NormalOpenAPIRoute.avklaringsbehovApi(
     dataSource: DataSource,

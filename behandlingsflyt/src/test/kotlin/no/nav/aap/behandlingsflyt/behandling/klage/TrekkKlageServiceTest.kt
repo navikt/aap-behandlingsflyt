@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageRepository
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageVurdering
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.krav.Kravreferanse
+import no.nav.aap.stønadsperiode.StønadsperiodeGrunnlag
+import no.nav.aap.behandlingsflyt.steg.stønadsperiode.StønadsperiodeRepository
+import no.nav.aap.stønadsperiode.StønadsperiodeVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory

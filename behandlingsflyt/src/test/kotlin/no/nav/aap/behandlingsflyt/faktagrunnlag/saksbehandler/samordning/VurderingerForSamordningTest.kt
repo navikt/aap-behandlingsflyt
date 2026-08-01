@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.samordning.Ytelse
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
+import no.nav.aap.samordning.SamordningVurderingData
+import no.nav.aap.samordning.VurderingerForSamordning
 
 class VurderingerForSamordningTest {
     @Test

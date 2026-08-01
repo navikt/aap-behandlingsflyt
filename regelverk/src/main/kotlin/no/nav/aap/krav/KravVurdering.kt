@@ -1,0 +1,83 @@
+package no.nav.aap.krav
+
+import java.time.Instant
+import java.time.LocalDate
+import no.nav.aap.misc.SYSTEMBRUKER
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.verdityper.dokument.JournalpostId
+
+sealed interface KravVurdering {
+    val referanse: Kravreferanse
+    val journalpostId: JournalpostId
+    val vurdertAv: Bruker
+    val begrunnelse: String
+    val vurdertIBehandling: BehandlingId
+    val opprettet: Instant
+
+    fun erAutomatiskVurdert(): Boolean {
+        return vurdertAv == SYSTEMBRUKER
+
+    }
+}
+
+data class RelevantKrav(
+    override val referanse: Kravreferanse,
+    override val journalpostId: JournalpostId,
+    override val vurdertAv: Bruker,
+    override val begrunnelse: String,
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+
+    val søknadsdato: Søknadsdato,
+    val overstyrMuligRettFra: OverstyrMuligRettFra?,
+    val muligRettFra: LocalDate,
+) : KravVurdering
+
+data class TrukketSøknad(
+    override val referanse: Kravreferanse,
+    override val journalpostId: JournalpostId,
+    override val vurdertAv: Bruker,
+    override val begrunnelse: String,
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+) : KravVurdering
+
+data class Klage(
+    override val referanse: Kravreferanse,
+    override val journalpostId: JournalpostId,
+    override val vurdertAv: Bruker,
+    override val begrunnelse: String,
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+) : KravVurdering
+
+data class Tilleggsopplysning(
+    override val referanse: Kravreferanse,
+    override val journalpostId: JournalpostId,
+    override val vurdertAv: Bruker,
+    override val begrunnelse: String,
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+) : KravVurdering
+
+enum class KravType {
+    RELEVANT_KRAV,
+    TRUKKET_SØKNAD,
+    KLAGE,
+    TILLEGGSOPPLYSNING,
+}
+
+data class OverstyrMuligRettFra(val dato: LocalDate, val årsak: OverstyrMuligRettFraÅrsak)
+data class Søknadsdato(val dato: LocalDate, val årsak: SøknadsdatoÅrsak)
+
+enum class SøknadsdatoÅrsak {
+    BrukerHarSøktTidligere,
+    FeilregistrertSøknadsdato,
+    SøknadMottatt
+}
+
+enum class OverstyrMuligRettFraÅrsak {
+    IkkeIStandTilÅSøkeTidligere,
+    MisvisendeOpplysninger,
+}

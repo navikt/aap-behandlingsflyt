@@ -1,0 +1,236 @@
+package no.nav.aap.behandlingsflyt.steg.medlemskap
+
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovMetadataUtleder
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapvilkåret
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.steg.sykdom.SykdomRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
+import no.nav.aap.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.vilkårsresultat.Vilkårtype
+
+class VurderForutgåendeMedlemskapSteg private constructor(
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
+    private val sykdomRepository: SykdomRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovService: AvklaringsbehovService
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        personopplysningForutgåendeRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
+    )
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),
+            nårVurderingErRelevant = ::nårVurderingErRelevant,
+            nårVurderingErGyldig = { nårVurderingErGyldig(kontekst, grunnlag.value) },
+            kontekst = kontekst,
+            tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.value.medlemskapArbeidInntektGrunnlag) },
+        )
+
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.MIGERING_FRA_ARENA,
+            VurderingType.REVURDERING -> {
+                // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
+                val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
+                vurderVilkår(kontekst, grunnlag)
+            }
+
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.MELDEKORT,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
+            VurderingType.IKKE_RELEVANT -> {
+            }
+        }
+
+        return Fullført
+    }
+
+    private fun tilbakestillGrunnlagNy(
+        kontekst: FlytKontekstMedPerioder,
+        grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?
+    ) {
+        val forrigeVurderinger = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
+            forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
+                ?.vurderinger
+        } ?: emptyList()
+
+        if (forrigeVurderinger.toSet() != grunnlag?.vurderinger?.toSet()) {
+            forutgåendeMedlemskapArbeidInntektRepository.lagreVurderinger(
+                kontekst.behandlingId,
+                forrigeVurderinger,
+            )
+        }
+    }
+
+    private fun harYrkesskadeSammenheng(kontekst: FlytKontekstMedPerioder): Boolean {
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val harYrkesskadeSammenheng = sykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
+        return harYrkesskadeSammenheng == true
+    }
+
+    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder, grunnlag: ForutgåendeMedlemskapGrunnlag) {
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+
+        if (kontekst.harNoeTilBehandling()) {
+            if (harYrkesskadeSammenheng(kontekst)) {
+                ForutgåendeMedlemskapvilkåret(
+                    vilkårsresultat,
+                    kontekst.rettighetsperiode
+                ).leggTilYrkesskadeVurdering()
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+
+            } else {
+                ForutgåendeMedlemskapvilkåret(
+                    vilkårsresultat, kontekst.rettighetsperiode
+                ).vurder(grunnlag)
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+            }
+        }
+    }
+
+    override fun nårVurderingErRelevant(
+        kontekst: FlytKontekstMedPerioder,
+    ): Tidslinje<Boolean> {
+        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+        val automatiskVilkårsvurderingForutgåendeMedlemskap =
+            vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag)
+
+        return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingForutgåendeMedlemskap)
+            .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
+                when (behandlingsutfall) {
+                    null -> false
+                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                    TidligereVurderinger.UunngåeligAvslag -> false
+                    is TidligereVurderinger.PotensieltOppfylt -> {
+                        val automatiskVilkårsvurderingForutgåendeMedlemskapIkkeOppfylt =
+                            automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
+
+                        // Må gjøres slik for å trigge overstyrt avklaringsbehov hvis allerede automatisk oppfylt
+                        val tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg.any {
+                            it in vurderingsbehovSomTvingerAvklaringsbehov()
+                        }
+
+                        automatiskVilkårsvurderingForutgåendeMedlemskapIkkeOppfylt || tvingerAvklaringsbehov
+                    }
+                }
+            }
+    }
+
+    private fun nårVurderingErGyldig(
+        kontekst: FlytKontekstMedPerioder,
+        grunnlag: ForutgåendeMedlemskapGrunnlag
+    ): Tidslinje<Boolean> {
+        val automatiskVilkårsvurderingLovvalg =
+            vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
+        val automatiskVurderingOppfylt = automatiskVilkårsvurderingLovvalg.filter { it.verdi }.isNotEmpty()
+        if (automatiskVurderingOppfylt) {
+            return automatiskVilkårsvurderingLovvalg
+        }
+
+        // Automatisk vurdering er ikke oppfylt - trenger manuell vurdering
+        return grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger().orEmpty().mapValue { true }
+    }
+
+    private fun vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(
+        kontekst: FlytKontekstMedPerioder,
+        grunnlag: ForutgåendeMedlemskapGrunnlag,
+    ): Tidslinje<Vilkårsvurdering> {
+        val vilkårsresultat = Vilkårsresultat()
+        val grunnlagUtenManuellVurdering = grunnlag.copy(
+            medlemskapArbeidInntektGrunnlag = grunnlag.medlemskapArbeidInntektGrunnlag?.copy(
+                vurderinger = emptyList()
+            )
+        )
+
+        if (harYrkesskadeSammenheng(kontekst)) {
+            ForutgåendeMedlemskapvilkåret(
+                vilkårsresultat,
+                kontekst.rettighetsperiode
+            ).leggTilYrkesskadeVurdering()
+        } else {
+            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
+                .vurder(grunnlagUtenManuellVurdering)
+        }
+
+        return vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP).tidslinje()
+    }
+
+    private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): ForutgåendeMedlemskapGrunnlag {
+        val personopplysningForutgåendeGrunnlag =
+            personopplysningForutgåendeRepository.hentHvisEksisterer(behandlingId)
+
+        val forutgåendeMedlemskapArbeidInntektGrunnlag =
+            forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)
+        val oppgittUtenlandsOppholdGrunnlag =
+            medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
+                ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+                    sakId
+                )
+
+        val grunnlag = ForutgåendeMedlemskapGrunnlag(
+            forutgåendeMedlemskapArbeidInntektGrunnlag,
+            personopplysningForutgåendeGrunnlag,
+            oppgittUtenlandsOppholdGrunnlag
+        )
+        return grunnlag
+    }
+
+    private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
+        setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
+
+    override val stegType = type()
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): VurderForutgåendeMedlemskapSteg {
+            return VurderForutgåendeMedlemskapSteg(repositoryProvider, gatewayProvider)
+        }
+
+        override fun type(): StegType {
+            return StegType.VURDER_MEDLEMSKAP
+        }
+    }
+}

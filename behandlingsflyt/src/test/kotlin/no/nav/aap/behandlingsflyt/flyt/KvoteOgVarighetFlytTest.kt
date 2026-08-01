@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.underveis.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.kvote.Kvote
+import no.nav.aap.vedtakslengde.ÅrMedHverdager
+import no.nav.aap.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.G_REGULERING
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar

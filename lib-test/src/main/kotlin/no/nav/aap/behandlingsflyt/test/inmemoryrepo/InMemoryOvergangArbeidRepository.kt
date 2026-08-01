@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.overgangarbeid.OvergangArbeidGrunnlag
+import no.nav.aap.behandlingsflyt.steg.overgangarbeid.OvergangArbeidRepository
+import no.nav.aap.overgangarbeid.OvergangArbeidVurdering
+import no.nav.aap.behandling.BehandlingId
 import java.time.LocalDateTime
 
 object InMemoryOvergangArbeidRepository : OvergangArbeidRepository {

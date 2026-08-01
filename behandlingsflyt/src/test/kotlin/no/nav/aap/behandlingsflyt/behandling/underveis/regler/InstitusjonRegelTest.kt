@@ -1,22 +1,22 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjon
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdInput
+import no.nav.aap.institusjonsopphold.Institusjon
+import no.nav.aap.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.behandlingsflyt.steg.institusjon.InstitusjonsoppholdInput
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.misc.institusjonsopphold.Helseoppholdvurderinger
+import no.nav.aap.misc.institusjonsopphold.Institusjonstype
+import no.nav.aap.misc.institusjonsopphold.Oppholdstype
+import no.nav.aap.institusjonsopphold.HelseinstitusjonVurdering
+import no.nav.aap.institusjonsopphold.Soningsvurdering
+import no.nav.aap.misc.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -30,6 +30,11 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.InstitusjonRegel
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.MapInstitusjonoppholdTilRegel
+import no.nav.aap.underveis.MeldepliktVurdering
+import no.nav.aap.underveis.Vurdering
+import no.nav.aap.underveis.Årsak
 
 @Fakes
 class InstitusjonRegelTest {
@@ -223,19 +228,19 @@ class InstitusjonRegelTest {
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(opphold1Fom, opphold1Tom),
-                    no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon(
+                    no.nav.aap.misc.institusjonsopphold.Institusjon(
                         Institusjonstype.HS, Oppholdstype.D, "123", "opphold1"
                     )
                 ),
                 Segment(
                     Periode(opphold2Fom, opphold2Tom),
-                    no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon(
+                    no.nav.aap.misc.institusjonsopphold.Institusjon(
                         Institusjonstype.HS, Oppholdstype.D, "456", "opphold2"
                     )
                 ),
                 Segment(
                     Periode(opphold3Fom, opphold3Tom),
-                    no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon(
+                    no.nav.aap.misc.institusjonsopphold.Institusjon(
                         Institusjonstype.HS, Oppholdstype.D, "789", "opphold3"
                     )
                 )

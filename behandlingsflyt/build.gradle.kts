@@ -48,6 +48,7 @@ fun runCommand(command: String): String {
 
 dependencies {
     api(project(":kontrakt"))
+    api(project(":regelverk"))
     implementation(libs.micrometerRegistryPrometheus)
     implementation(libs.logbackClassic)
     implementation(libs.logstashLogbackEncoder)

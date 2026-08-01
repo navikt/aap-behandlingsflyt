@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
-import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryMellomlagretVurderingRepository : MellomlagretVurderingRepository {

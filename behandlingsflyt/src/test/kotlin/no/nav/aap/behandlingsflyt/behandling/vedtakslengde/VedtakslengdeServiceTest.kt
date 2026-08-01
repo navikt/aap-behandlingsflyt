@@ -2,40 +2,39 @@ package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
+import no.nav.aap.misc.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.steg.underveis.RettighetstypeService
+import no.nav.aap.vedtakslengde.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.GjeldendeStansEllerOpphør
+import no.nav.aap.stansopphør.Opphør
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.StansOpphørGrunnlag
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.StansOpphørRepository
+import no.nav.aap.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisRepository
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.desember
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.vedtakslengde.VedtakslengdeUtvidelse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import java.time.Instant
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.steg.vedtakslengde.VedtakslengdeService
 
 @RestoreSystemProperties
 class VedtakslengdeServiceTest {

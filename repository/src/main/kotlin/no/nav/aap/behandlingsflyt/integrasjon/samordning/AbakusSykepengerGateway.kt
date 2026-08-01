@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.SykepengerGateway
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.SykepengerResponse
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig

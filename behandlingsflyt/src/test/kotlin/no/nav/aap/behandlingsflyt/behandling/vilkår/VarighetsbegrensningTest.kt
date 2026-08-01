@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår
 
+import no.nav.aap.misc.Varighetsvurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.misc.mapMedDatoTilDatoVarighet
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar

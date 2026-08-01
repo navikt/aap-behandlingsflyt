@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
+import no.nav.aap.behandlingsflyt.prosessering.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType

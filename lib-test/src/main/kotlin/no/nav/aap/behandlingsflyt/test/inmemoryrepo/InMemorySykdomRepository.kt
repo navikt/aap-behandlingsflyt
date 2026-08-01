@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.sykdom.SykdomGrunnlag
+import no.nav.aap.behandlingsflyt.steg.sykdom.SykdomRepository
+import no.nav.aap.sykdom.Sykdomsvurdering
+import no.nav.aap.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandling.BehandlingId
 import java.time.LocalDateTime
 import java.util.concurrent.*
 

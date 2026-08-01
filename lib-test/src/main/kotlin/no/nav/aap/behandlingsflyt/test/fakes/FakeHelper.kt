@@ -8,8 +8,8 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.test.ErrorRespons
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson

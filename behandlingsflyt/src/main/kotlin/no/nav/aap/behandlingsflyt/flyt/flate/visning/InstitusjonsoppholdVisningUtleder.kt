@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.steg.institusjon.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 // Er ikke ubrukt, men blir opprettet med refleksjon

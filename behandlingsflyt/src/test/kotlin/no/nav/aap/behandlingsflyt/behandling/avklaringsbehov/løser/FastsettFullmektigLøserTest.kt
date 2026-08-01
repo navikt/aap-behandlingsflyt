@@ -4,8 +4,9 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettFullmektigLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FullmektigLøsningDto
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.FastsettFullmektigLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.FastsettFullmektigLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.FullmektigLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentType

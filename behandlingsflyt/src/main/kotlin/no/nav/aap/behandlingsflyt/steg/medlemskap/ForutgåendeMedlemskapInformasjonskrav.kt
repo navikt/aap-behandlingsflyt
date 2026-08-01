@@ -1,0 +1,197 @@
+package no.nav.aap.behandlingsflyt.steg.medlemskap
+
+import no.nav.aap.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.lovvalg.EnhetGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
+import no.nav.aap.misc.aordning.ArbeidsInntektMåned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnummer
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.utils.withMdc
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.medlemskap.MedlemskapDataIntern
+import java.time.YearMonth
+import java.util.concurrent.CompletableFuture
+
+class ForutgåendeMedlemskapInformasjonskrav private constructor(
+    private val sakService: SakService,
+    private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
+    private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val medlemskapGateway: MedlemskapGateway,
+    private val arbeidsforholdGateway: ArbeidsforholdGateway,
+    private val inntektkomponentenGateway: InntektkomponentenGateway,
+    private val enhetsregisteretGateway: EnhetsregisteretGateway,
+) : Informasjonskrav<ForutgåendeMedlemskapInformasjonskrav.MedlemsskapInput, ForutgåendeMedlemskapInformasjonskrav.MedlemsskapReggisterdata> {
+
+    override val navn = Companion.navn
+
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
+        return kontekst.erFørstegangsbehandlingEllerRevurdering()
+                && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+    }
+
+    data class MedlemsskapInput(val sak: Sak) : InformasjonskravInput
+
+    data class MedlemsskapReggisterdata(
+        val medlemskapPerioder: List<MedlemskapDataIntern>,
+        val arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
+        val inntektGrunnlag: List<ArbeidsInntektMåned>,
+        val enhetGrunnlag: List<EnhetGrunnlag>
+    ) : InformasjonskravRegisterdata
+
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): MedlemsskapInput {
+        return MedlemsskapInput(sakService.hent(kontekst.sakId))
+    }
+
+    override fun hentData(input: MedlemsskapInput): MedlemsskapReggisterdata {
+        val sak = input.sak
+        val executor = informasjonskravExecutor
+        val medlemskapPerioderFuture = CompletableFuture.supplyAsync(withMdc {
+            medlemskapGateway.innhent(
+                sak.person,
+                Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom)
+            )
+        }, executor)
+        val arbeidGrunnlagFuture =
+            CompletableFuture.supplyAsync(withMdc { innhentAARegisterGrunnlag5år(sak) }, executor)
+        val inntektGrunnlagFuture = CompletableFuture.supplyAsync(withMdc { innhentAInntektGrunnlag5år(sak) }, executor)
+
+        val medlemskapPerioder = medlemskapPerioderFuture.get()
+        val arbeidGrunnlag = arbeidGrunnlagFuture.get()
+        val inntektGrunnlag = inntektGrunnlagFuture.get()
+        val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag, arbeidGrunnlag)
+
+        return MedlemsskapReggisterdata(
+            medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag
+        )
+    }
+
+    override fun oppdater(
+        input: MedlemsskapInput,
+        registerdata: MedlemsskapReggisterdata,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        val (medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag) = registerdata
+
+        val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        // TODO: kun lagre hvis forskjell!!
+        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
+
+        val nyeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
+    }
+
+    private fun innhentAARegisterGrunnlag5år(sak: Sak): List<ArbeidINorgeGrunnlag> {
+        val request = ArbeidsforholdRequest(
+            arbeidstakerId = sak.person.aktivIdent().identifikator,
+            historikk = true
+        )
+        return arbeidsforholdGateway.hentAARegisterData(request)
+    }
+
+    private fun innhentAInntektGrunnlag5år(sak: Sak): List<ArbeidsInntektMåned> {
+        return inntektkomponentenGateway.hentAInntekt(
+            sak.person.aktivIdent().identifikator,
+            YearMonth.from(sak.rettighetsperiode.fom.minusYears(5)),
+            YearMonth.from(sak.rettighetsperiode.fom)
+        ).arbeidsInntektMåned
+    }
+
+    private fun innhentEREGGrunnlag(
+        inntektGrunnlag: List<ArbeidsInntektMåned>,
+        aaregGrunnlag: List<ArbeidINorgeGrunnlag>
+    ): List<EnhetGrunnlag> {
+        if (inntektGrunnlag.isEmpty() && aaregGrunnlag.isEmpty()) return emptyList()
+
+        val orgnumreInntekt = inntektGrunnlag.flatMap {
+            it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
+                inntekt.virksomhet.identifikator
+            }
+        }.toSet()
+        val orgnumreAareg = aaregGrunnlag.map { it.identifikator }.toSet()
+        val orgnumre = orgnumreInntekt + orgnumreAareg
+
+        // EREG har ikke batch-oppslag
+        val futures = orgnumre.map { orgnummer ->
+            CompletableFuture.supplyAsync(withMdc {
+                val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
+                response?.let {
+                    EnhetGrunnlag(
+                        orgnummer = it.organisasjonsnummer,
+                        orgNavn = it.navn.sammensattnavn
+                    )
+                }
+            }, informasjonskravExecutor)
+        }
+        return futures.mapNotNull { it.get() }
+    }
+
+    private fun lagre(
+        behandlingId: BehandlingId,
+        medlemskapGrunnlag: List<MedlemskapDataIntern>,
+        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
+        inntektGrunnlag: List<ArbeidsInntektMåned>,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ) {
+        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(
+            behandlingId,
+            medlemskapGrunnlag
+        ) else null
+        grunnlagRepository.lagreArbeidsforholdOgInntektINorge(
+            behandlingId,
+            arbeidGrunnlag,
+            inntektGrunnlag,
+            medlId,
+            enhetGrunnlag
+        )
+    }
+
+    companion object : Informasjonskravkonstruktør {
+        override val navn = InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP
+
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): ForutgåendeMedlemskapInformasjonskrav {
+            val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+            return ForutgåendeMedlemskapInformasjonskrav(
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                medlemskapForutgåendeRepository = repositoryProvider.provide(),
+                grunnlagRepository = grunnlagRepository,
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                medlemskapGateway = gatewayProvider.provide(),
+                arbeidsforholdGateway = gatewayProvider.provide(),
+                inntektkomponentenGateway = gatewayProvider.provide(),
+                enhetsregisteretGateway = gatewayProvider.provide()
+            )
+        }
+    }
+}

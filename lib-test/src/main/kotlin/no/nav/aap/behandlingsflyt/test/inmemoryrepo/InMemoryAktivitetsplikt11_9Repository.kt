@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
+import no.nav.aap.behandling.BehandlingId
 
 @Suppress("ClassName")
 object InMemoryAktivitetsplikt11_9Repository : Aktivitetsplikt11_9Repository {

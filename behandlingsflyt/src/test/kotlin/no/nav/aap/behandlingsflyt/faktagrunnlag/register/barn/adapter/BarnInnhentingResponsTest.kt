@@ -1,13 +1,14 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.barnetillegg.Barn
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.BarnIdentifikator
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.BarnInnhentingRespons
 
 class BarnInnhentingResponsTest {
 

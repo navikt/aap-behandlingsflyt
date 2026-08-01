@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import java.util.*
 
 @JvmInline

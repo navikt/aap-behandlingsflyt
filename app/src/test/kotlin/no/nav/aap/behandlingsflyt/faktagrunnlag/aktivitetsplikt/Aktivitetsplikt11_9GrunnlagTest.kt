@@ -1,11 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.junit.jupiter.api.Assertions.*
 import java.time.Instant
 import kotlin.test.Test
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
+import no.nav.aap.aktivitetsplikt.Brudd
+import no.nav.aap.aktivitetsplikt.Grunn
 
 class Aktivitetsplikt11_9GrunnlagTest {
 

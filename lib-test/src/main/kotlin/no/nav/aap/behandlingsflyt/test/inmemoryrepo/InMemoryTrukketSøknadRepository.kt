@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadVurdering
+import no.nav.aap.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryTrukketSøknadRepository : TrukketSøknadRepository {

@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.FatteVedtakLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -64,7 +65,7 @@ class FatteVedtakLøserTest {
         )
 
         val fatteVedtakLøser = MockDataSource().transaction {
-            FatteVedtakLøser(repositoryRegistry.provider(it), createGatewayProvider {register<AlleAvskruddUnleash>() })
+            FatteVedtakLøser(repositoryRegistry.provider(it), createGatewayProvider { register<AlleAvskruddUnleash>() })
         }
 
         // Totrinnsvurdering ikke godkjent.

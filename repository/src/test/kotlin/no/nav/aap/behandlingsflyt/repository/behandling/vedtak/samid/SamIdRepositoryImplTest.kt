@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
+import no.nav.aap.behandlingsflyt.steg.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource

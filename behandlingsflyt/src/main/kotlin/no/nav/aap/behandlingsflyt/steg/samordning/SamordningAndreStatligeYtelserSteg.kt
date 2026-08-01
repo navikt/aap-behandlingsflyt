@@ -1,0 +1,78 @@
+package no.nav.aap.behandlingsflyt.steg.samordning
+
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+class SamordningAndreStatligeYtelserSteg(
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val andreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
+) : BehandlingSteg {
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING,
+                    VurderingType.MIGERING_FRA_ARENA -> {
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            else -> kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+                        }
+                    }
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
+                    VurderingType.IKKE_RELEVANT -> false
+                }
+            },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = {
+                kontekst.forrigeBehandlingId
+                    ?.let { andreStatligeYtelserRepository.hentHvisEksisterer(it) }
+                    ?.also { andreStatligeYtelserRepository.lagre(kontekst.behandlingId, it.vurdering) }
+            },
+            kontekst = kontekst
+        )
+
+        return Fullført
+    }
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return SamordningAndreStatligeYtelserSteg(
+                avklaringsbehovRepository = repositoryProvider.provide(),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                andreStatligeYtelserRepository = repositoryProvider.provide(),
+            )
+        }
+
+        override fun type(): StegType {
+            return StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER
+        }
+    }
+}

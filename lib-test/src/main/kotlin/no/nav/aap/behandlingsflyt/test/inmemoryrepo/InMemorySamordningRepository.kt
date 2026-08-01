@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.misc.Faktagrunnlag
+import no.nav.aap.samordning.SamordningGrunnlag
+import no.nav.aap.samordning.SamordningPeriode
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.samordning.SamordningRepository
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemorySamordningRepository : SamordningRepository {

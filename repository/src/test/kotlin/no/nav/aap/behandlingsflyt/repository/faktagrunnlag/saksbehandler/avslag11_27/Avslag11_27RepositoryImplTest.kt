@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avslag11_27
 
-import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.samordning.avslag11_27.Avslag11_27Vurdering
+import no.nav.aap.samordning.Ytelse
+import no.nav.aap.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource

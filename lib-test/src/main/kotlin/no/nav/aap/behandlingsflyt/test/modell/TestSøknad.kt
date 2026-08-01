@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.modell
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.personopplysninger.Dødsdato
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.misc.Ident
 
 class TestSøknad(
     val identer: Set<Ident>,

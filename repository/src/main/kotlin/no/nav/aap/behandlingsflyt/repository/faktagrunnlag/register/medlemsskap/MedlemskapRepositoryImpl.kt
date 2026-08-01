@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.medlemskap.KildesystemKode
+import no.nav.aap.medlemskap.KildesystemMedl
+import no.nav.aap.medlemskap.MedlemskapDataIntern
+import no.nav.aap.behandlingsflyt.steg.medlemskap.MedlemskapRepository
+import no.nav.aap.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.medlemskap.Unntak
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.repository.RepositoryFactory

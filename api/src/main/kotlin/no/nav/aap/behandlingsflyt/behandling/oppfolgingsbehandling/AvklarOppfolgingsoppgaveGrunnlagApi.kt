@@ -4,7 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
+import no.nav.aap.behandlingsflyt.steg.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -30,7 +30,7 @@ enum class KonsekvensAvOppfølging {
 }
 
 /**
- * @param årsak Skal kun være null om [konsekvensAvOppfølging] er [no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging.INGEN].
+ * @param årsak Skal kun være null om [konsekvensAvOppfølging] er [no.nav.aap.behandlingsflyt.steg.oppfølgingsbehandling.KonsekvensAvOppfølging.INGEN].
  */
 data class OppfølgingsoppgaveGrunnlagResponse(
     val konsekvensAvOppfølging: KonsekvensAvOppfølging,
@@ -94,8 +94,8 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
                     grunnlag = oppfølgingsbehandlingvurdering?.let {
                         OppfølgingsoppgaveGrunnlagResponse(
                             konsekvensAvOppfølging = when (it.konsekvensAvOppfølging) {
-                                no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging.INGEN -> KonsekvensAvOppfølging.INGEN
-                                no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV
+                                no.nav.aap.behandlingsflyt.steg.oppfølgingsbehandling.KonsekvensAvOppfølging.INGEN -> KonsekvensAvOppfølging.INGEN
+                                no.nav.aap.behandlingsflyt.steg.oppfølgingsbehandling.KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV
                             },
                             opplysningerTilRevurdering = it.opplysningerTilRevurdering,
                             årsak = it.årsak,

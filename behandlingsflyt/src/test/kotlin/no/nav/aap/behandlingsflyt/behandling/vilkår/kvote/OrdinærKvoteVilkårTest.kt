@@ -1,19 +1,21 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.kvote
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteBruktOpp
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
+import no.nav.aap.rettighetstype.KvoteBruktOpp
+import no.nav.aap.rettighetstype.KvoteOk
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.kvote.Kvoter
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.Vilkår
+import no.nav.aap.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.kvote.OrdinærKvoteFaktagrunnlag
+import no.nav.aap.kvote.OrdinærKvoteVilkår
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

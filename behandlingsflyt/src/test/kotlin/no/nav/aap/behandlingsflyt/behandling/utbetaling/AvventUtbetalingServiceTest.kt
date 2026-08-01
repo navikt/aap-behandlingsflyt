@@ -3,27 +3,27 @@ package no.nav.aap.behandlingsflyt.behandling.utbetaling
 import io.mockk.checkUnnecessaryStub
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.Vedtak
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakId
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakService
+import no.nav.aap.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
+import no.nav.aap.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
+import no.nav.aap.behandlingsflyt.steg.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserGrunnlag
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
+import no.nav.aap.behandlingsflyt.steg.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
@@ -304,7 +304,7 @@ class AvventUtbetalingServiceTest {
                                 periode = Periode(LocalDate.parse("2025-01-04"), LocalDate.parse("2025-01-12")),
                             )
                         ),
-                    vurdertTidspunkt = LocalDateTime.now()
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
         every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null

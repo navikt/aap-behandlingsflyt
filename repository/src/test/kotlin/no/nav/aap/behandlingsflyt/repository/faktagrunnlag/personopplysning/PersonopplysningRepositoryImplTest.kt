@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.personopplysninger.PersonStatus
+import no.nav.aap.personopplysninger.Personopplysning
+import no.nav.aap.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.dbconnect.transaction

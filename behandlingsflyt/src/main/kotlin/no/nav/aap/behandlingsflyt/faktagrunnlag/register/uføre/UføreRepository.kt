@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.beregning.Uføre
+import no.nav.aap.beregning.UføreGrunnlag
 import no.nav.aap.lookup.repository.Repository
 
 interface UføreRepository : Repository {

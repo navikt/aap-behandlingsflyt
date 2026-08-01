@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
+import no.nav.aap.beregning.UføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.beregning.Uføre
 
 object InMemoryUføreRepository : UføreRepository {
     private val mutex = Any()
@@ -18,7 +19,7 @@ object InMemoryUføreRepository : UføreRepository {
 
     override fun lagre(
         behandlingId: BehandlingId,
-        uføre: Set<no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre>
+        uføre: Set<Uføre>
     ) = synchronized(mutex) {
         grunnlag[behandlingId] = UføreGrunnlag(uføre)
     }

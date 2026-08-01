@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertFritakMeldepliktLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.PeriodisertFritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling

@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerGateway
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig

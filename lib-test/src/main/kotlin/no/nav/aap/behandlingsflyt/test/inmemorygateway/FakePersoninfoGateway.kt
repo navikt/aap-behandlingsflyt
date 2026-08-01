@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.inmemorygateway
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.datadeling.sam
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.komponenter.gateway.Gateway
 
 interface SamGateway: Gateway {

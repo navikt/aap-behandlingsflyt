@@ -1,0 +1,53 @@
+package no.nav.aap.misc.institusjonsopphold
+
+import java.time.LocalDate
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
+
+class Institusjonsopphold(
+    val institusjonstype: Institusjonstype,
+    val kategori: Oppholdstype,
+    val startdato: LocalDate,
+    val sluttdato: LocalDate?,
+    val orgnr: String? = null,
+    val institusjonsnavn: String
+) {
+    fun periode(): Periode {
+        return Periode(startdato, sluttdato ?: Tid.MAKS)
+    }
+
+    fun tilInstitusjonSegment(): Segment<Institusjon> =
+        Segment(
+            periode(),
+            Institusjon(
+                type = institusjonstype,
+                kategori = kategori,
+                orgnr = requireNotNull(orgnr) {
+                    """Orgnr er nullable i følge inst2-swagger, men databasen krever not null.
+                        | Dette burde kanskjehåndteres en dag?""".trimMargin()
+                },
+                navn = institusjonsnavn,
+            )
+        )
+
+    companion object {
+        fun nyttOpphold(
+            institusjonstype: String,
+            kategori: String?,
+            startdato: LocalDate,
+            sluttdato: LocalDate?,
+            orgnr: String?,
+            institusjonsnavn: String
+        ): Institusjonsopphold {
+            return Institusjonsopphold(
+                Institusjonstype.valueOf(institusjonstype),
+                kategori?.let(Oppholdstype::valueOf) ?: Oppholdstype.UKJENT,
+                startdato,
+                sluttdato,
+                orgnr,
+                institusjonsnavn
+            )
+        }
+    }
+}

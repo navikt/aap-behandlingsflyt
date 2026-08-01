@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.inntektsbortfall
 
-import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.inntektsbortfall.InntektsbortfallRepository
+import no.nav.aap.beregning.InntektsbortfallVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory

@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -13,6 +12,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Instant
 import java.util.UUID
+import no.nav.aap.behandlingsflyt.steg.krav.KlageKravLøsningDto
+import no.nav.aap.behandlingsflyt.steg.krav.KravVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.steg.krav.RelevantKravLøsningDto
+import no.nav.aap.behandlingsflyt.steg.krav.TilleggsopplysningKravLøsningDto
+import no.nav.aap.krav.OverstyrMuligRettFra
+import no.nav.aap.krav.OverstyrMuligRettFraÅrsak
+import no.nav.aap.krav.RelevantKrav
+import no.nav.aap.krav.Søknadsdato
+import no.nav.aap.krav.SøknadsdatoÅrsak
+import no.nav.aap.krav.Tilleggsopplysning
 
 class KravVurderingLøsningDtoTest {
 

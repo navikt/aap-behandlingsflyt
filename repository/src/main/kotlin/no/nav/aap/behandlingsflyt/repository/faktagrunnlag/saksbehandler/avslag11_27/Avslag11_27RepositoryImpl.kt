@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avslag11_27
 
-import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
-import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
-import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.samordning.avslag11_27.Avslag11_27Grunnlag
+import no.nav.aap.behandlingsflyt.steg.samordning.Avslag11_27Repository
+import no.nav.aap.samordning.avslag11_27.Avslag11_27Vurdering
+import no.nav.aap.samordning.Ytelse
+import no.nav.aap.krav.Kravreferanse
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory

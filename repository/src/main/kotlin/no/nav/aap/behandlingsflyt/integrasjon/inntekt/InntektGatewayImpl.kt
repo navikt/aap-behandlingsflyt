@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.inntekt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅrFraRegister
+import no.nav.aap.misc.inntekt.InntektPerÅrFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse

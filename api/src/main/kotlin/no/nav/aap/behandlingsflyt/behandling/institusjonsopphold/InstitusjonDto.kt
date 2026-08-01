@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.misc.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.steg.institusjon.lagOppholdId
 
 data class InstitusjonsoppholdDto(
     val oppholdId: String?,

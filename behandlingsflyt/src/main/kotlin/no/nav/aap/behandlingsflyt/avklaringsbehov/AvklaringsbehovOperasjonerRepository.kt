@@ -1,0 +1,34 @@
+package no.nav.aap.behandlingsflyt.avklaringsbehov
+
+import no.nav.aap.misc.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.lookup.repository.Repository
+import java.time.LocalDate
+
+/**
+ * Kun for bruk innad i Avklaringsbehovene
+ */
+interface AvklaringsbehovOperasjonerRepository : Repository {
+    fun hent(behandlingId: BehandlingId): List<Avklaringsbehov>
+    fun hentAlleAvklaringsbehovForSak(behandlingIder: List<BehandlingId>): List<AvklaringsbehovForSak>
+    fun opprett(
+        behandlingId: BehandlingId,
+        definisjon: Definisjon,
+        funnetISteg: StegType,
+        frist: LocalDate? = null,
+        begrunnelse: String = "",
+        grunn: ÅrsakTilSettPåVent? = null,
+        endretAv: Bruker = SYSTEMBRUKER,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
+        perioderVedtaketBehøverVurdering: Set<Periode>? = null,
+    )
+
+    fun kreverToTrinn(avklaringsbehovId: Long, kreverToTrinn: Boolean)
+    fun endre(avklaringsbehovId: Long, endring: Endring)
+    fun endreVentepunkt(avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType)
+}

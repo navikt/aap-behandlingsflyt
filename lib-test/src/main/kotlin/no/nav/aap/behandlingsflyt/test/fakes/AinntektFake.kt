@@ -6,7 +6,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
+import no.nav.aap.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.math.MathContext

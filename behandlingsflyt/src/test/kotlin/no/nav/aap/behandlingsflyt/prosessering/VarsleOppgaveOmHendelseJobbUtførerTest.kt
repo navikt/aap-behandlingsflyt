@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.student.StudentVurdering
+import no.nav.aap.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.MarkeringDto
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhetResponse
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingsbehandlingOpp
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStudentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider

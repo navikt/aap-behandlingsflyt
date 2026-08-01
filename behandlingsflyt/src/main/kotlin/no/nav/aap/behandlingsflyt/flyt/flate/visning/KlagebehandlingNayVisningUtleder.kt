@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt.flate.visning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @Suppress("unused")

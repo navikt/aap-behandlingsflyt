@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandling.BehandlingId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Clock
@@ -9,6 +9,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.OpphevetStansEllerOpphør
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.StansOpphørGrunnlag
+import no.nav.aap.stansopphør.Opphør
+import no.nav.aap.stansopphør.Stans
 
 class StansOpphørGrunnlagTest {
     @Test

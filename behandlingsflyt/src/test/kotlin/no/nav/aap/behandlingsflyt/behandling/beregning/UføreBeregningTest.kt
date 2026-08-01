@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.beregning.Grunnlag11_19
+import no.nav.aap.beregning.GrunnlagUføre
+import no.nav.aap.beregning.InntektPerÅr
+import no.nav.aap.beregning.Uføre
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.beregning.Månedsinntekt
+import no.nav.aap.beregning.UføreBeregning
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent

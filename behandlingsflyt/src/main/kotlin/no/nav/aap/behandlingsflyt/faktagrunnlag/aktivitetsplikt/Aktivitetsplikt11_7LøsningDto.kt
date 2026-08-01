@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.aktivitetsplikt.Utfall
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime

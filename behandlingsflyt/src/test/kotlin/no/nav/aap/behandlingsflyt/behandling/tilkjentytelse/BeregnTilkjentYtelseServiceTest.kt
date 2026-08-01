@@ -1,36 +1,39 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
+import no.nav.aap.kvote.Kvote
+import no.nav.aap.underveis.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.FastsettGrenseverdiArbeidRegel
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.GraderingArbeidRegel
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.MeldepliktRegel
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.UtledMeldeperiodeRegel
+import no.nav.aap.underveis.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.barnetillegg.BarnetilleggGrunnlag
+import no.nav.aap.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.beregning.Grunnlag
+import no.nav.aap.beregning.Grunnlag11_19
+import no.nav.aap.samordning.SamordningGrunnlag
+import no.nav.aap.samordning.SamordningPeriode
+import no.nav.aap.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
+import no.nav.aap.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
+import no.nav.aap.samordning.SamordningUføreGrunnlag
+import no.nav.aap.samordning.SamordningUføreVurdering
+import no.nav.aap.samordning.SamordningUføreVurderingPeriode
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.underveis.UnderveisGrunnlag
+import no.nav.aap.underveis.Underveisperiode
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.samordning.barnepensjon.BarnepensjonGrunnlag
+import no.nav.aap.samordning.barnepensjon.BarnepensjonPeriode
+import no.nav.aap.samordning.barnepensjon.BarnepensjonVurdering
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
@@ -48,6 +51,11 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.tilkjentytelse.Minstesats
+import no.nav.aap.tilkjentytelse.Tilkjent
+import no.nav.aap.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -1489,11 +1497,11 @@ class BeregnTilkjentYtelseServiceTest {
 
         // Barnepensjon: 10335.66 per måned
         // Dagsats = 10335.66 * 12 / 260 = 477.03, avrundet til 477 (heltall)
-        val barnepensjonGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag(
-            vurdering = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering(
+        val barnepensjonGrunnlag = BarnepensjonGrunnlag(
+            vurdering = BarnepensjonVurdering(
                 begrunnelse = "Mottar barnepensjon",
                 perioder = setOf(
-                    no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode(
+                    BarnepensjonPeriode(
                         fom = YearMonth.of(2024, 1),
                         tom = YearMonth.of(2024, 1),
                         månedsats = Beløp("10335.66")
@@ -1547,11 +1555,11 @@ class BeregnTilkjentYtelseServiceTest {
 
         // Barnepensjon: 25000 per måned
         // Barnepensjon dagsats = 25000 * 12 / 260 = 1154
-        val barnepensjonGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag(
-            vurdering = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering(
+        val barnepensjonGrunnlag = BarnepensjonGrunnlag(
+            vurdering = BarnepensjonVurdering(
                 begrunnelse = "Mottar barnepensjon",
                 perioder = setOf(
-                    no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode(
+                    BarnepensjonPeriode(
                         fom = YearMonth.of(2025, 1),
                         tom = YearMonth.of(2025, 1),
                         månedsats = Beløp("25000")

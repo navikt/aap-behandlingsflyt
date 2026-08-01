@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
+import no.nav.aap.student.ErStudentStatus
+import no.nav.aap.student.OppgittStudent
+import no.nav.aap.student.SkalGjenopptaStudieStatus
+import no.nav.aap.student.StudentVurdering
+import no.nav.aap.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.test.april

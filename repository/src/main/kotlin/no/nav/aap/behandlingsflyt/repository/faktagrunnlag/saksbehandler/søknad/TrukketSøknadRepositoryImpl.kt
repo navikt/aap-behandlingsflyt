@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad
 
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory

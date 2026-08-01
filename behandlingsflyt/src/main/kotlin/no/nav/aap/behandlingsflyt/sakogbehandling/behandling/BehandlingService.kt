@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
+import no.nav.aap.behandling.BehandlingId
 
 class BehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,

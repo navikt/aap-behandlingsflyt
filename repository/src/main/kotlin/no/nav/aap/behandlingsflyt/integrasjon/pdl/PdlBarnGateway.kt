@@ -1,19 +1,16 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.barnetillegg.Barn
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.BarnGateway
+import no.nav.aap.personopplysninger.Dødsdato
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.BarnInnhentingRespons
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.gateway.Factory
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import kotlin.text.filter
-import kotlin.text.mapNotNull
-import kotlin.text.orEmpty
 
 class PdlBarnGateway : BarnGateway {
     private val log = LoggerFactory.getLogger(javaClass)

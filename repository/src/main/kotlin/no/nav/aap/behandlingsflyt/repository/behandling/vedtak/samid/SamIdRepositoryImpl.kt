@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.samordning.samid.SamIdOgTpNr
+import no.nav.aap.behandlingsflyt.steg.samordning.samid.SamIdRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 

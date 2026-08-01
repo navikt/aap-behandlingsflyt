@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.tjenestepensjon
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonOrdning
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonYtelse
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
@@ -38,29 +38,31 @@ class TjenestePensjonRepositoryImplTest {
             val sak = sak(dbConnect)
             val behandling = finnEllerOpprettBehandling(dbConnect, sak)
 
-            val tjenestePensjon = listOf(TjenestePensjonForhold(
-                ordning = TjenestePensjonOrdning(
-                    navn = "Statens PensjonsKasse",
-                    tpNr = "3010",
-                    orgNr = "123445675645"
-                ),
-                ytelser = setOf(
-                    TjenestePensjonYtelse(
-                        innmeldtYtelseFom = null,
-                        ytelseType = YtelseTypeCode.ALDER,
-                        ytelseIverksattFom = LocalDate.of(2020, 1, 1),
-                        ytelseIverksattTom = LocalDate.of(2025,4,22),
-                        ytelseId = 1234L
+            val tjenestePensjon = listOf(
+                TjenestePensjonForhold(
+                    ordning = TjenestePensjonOrdning(
+                        navn = "Statens PensjonsKasse",
+                        tpNr = "3010",
+                        orgNr = "123445675645"
                     ),
-                    TjenestePensjonYtelse(
-                        innmeldtYtelseFom = null,
-                        ytelseType = YtelseTypeCode.BETINGET_TP,
-                        ytelseIverksattFom = LocalDate.of(2020, 1, 1),
-                        ytelseIverksattTom = null,
-                        ytelseId = 1235L
+                    ytelser = setOf(
+                        TjenestePensjonYtelse(
+                            innmeldtYtelseFom = null,
+                            ytelseType = YtelseTypeCode.ALDER,
+                            ytelseIverksattFom = LocalDate.of(2020, 1, 1),
+                            ytelseIverksattTom = LocalDate.of(2025, 4, 22),
+                            ytelseId = 1234L
+                        ),
+                        TjenestePensjonYtelse(
+                            innmeldtYtelseFom = null,
+                            ytelseType = YtelseTypeCode.BETINGET_TP,
+                            ytelseIverksattFom = LocalDate.of(2020, 1, 1),
+                            ytelseIverksattTom = null,
+                            ytelseId = 1235L
+                        )
                     )
                 )
-            ))
+            )
 
             TjenestePensjonRepositoryImpl(dbConnect).lagre(behandling.id, tjenestePensjon)
 

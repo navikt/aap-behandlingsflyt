@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
+import no.nav.aap.yrkesskade.SkadekombinasjonRegister
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.time.LocalDate
 

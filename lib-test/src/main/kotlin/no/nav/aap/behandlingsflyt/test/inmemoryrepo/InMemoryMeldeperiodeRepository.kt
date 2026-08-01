@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeUtleder
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 
 object InMemoryMeldeperiodeRepository: MeldeperiodeRepository {

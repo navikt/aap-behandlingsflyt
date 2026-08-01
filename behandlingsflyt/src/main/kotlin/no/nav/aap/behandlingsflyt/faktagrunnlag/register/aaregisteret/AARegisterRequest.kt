@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
+import no.nav.aap.lovvalg.Arbeidsforholdtype
 
 data class ArbeidsforholdRequest(
     val arbeidstakerId: String,

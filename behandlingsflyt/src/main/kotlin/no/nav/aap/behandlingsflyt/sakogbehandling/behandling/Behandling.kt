@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDateTime
+import no.nav.aap.behandling.BehandlingId
 
 class Behandling(
     val id: BehandlingId,

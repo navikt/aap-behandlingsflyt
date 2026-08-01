@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.avslag11_27.flate
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.samordning.Ytelse
 
 data class Avslag11_27VurderingDto(
     val referanse: String,

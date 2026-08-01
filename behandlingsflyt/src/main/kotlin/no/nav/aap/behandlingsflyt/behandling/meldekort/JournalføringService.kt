@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Tema
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Variantformat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper

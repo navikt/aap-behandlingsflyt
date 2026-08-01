@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
+import no.nav.aap.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandling.BehandlingId
 import java.time.LocalDateTime
 
 object InMemoryEtableringEgenVirksomRepository : EtableringEgenVirksomhetRepository {

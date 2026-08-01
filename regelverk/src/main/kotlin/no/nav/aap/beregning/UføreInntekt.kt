@@ -1,0 +1,32 @@
+package no.nav.aap.beregning
+
+import java.time.Year
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
+
+/**
+ * @param år Hvilket år inntekten gjelder for.
+ * @param inntektIKroner Inntekt i kroner for dette året.
+ * @param inntektJustertForUføregrad Inntekter oppjustert for uføregrad etter §11-28, fjerde ledd.
+ */
+data class UføreInntekt(
+    val år: Year,
+    val inntektIKroner: Beløp,
+    val inntektIG: GUnit,
+    val inntektJustertForUføregrad: Beløp,
+    val inntektIGJustertForUføregrad: GUnit,
+    val grunnbeløp: Beløp,
+    val inntektsPerioder: List<UføreInntektPeriodisert>,
+)
+
+/**
+ * @param uføregrad Uføregrad i en gitt periode.
+ */
+data class UføreInntektPeriodisert(
+    val periode: Periode,
+    val inntektIKroner: Beløp,
+    val uføregrad: Prosent,
+    val inntektJustertForUføregrad: Beløp
+)

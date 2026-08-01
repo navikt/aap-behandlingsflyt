@@ -9,14 +9,14 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.PeriodisertLovvalgMedlemskapGrunnlagResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.steg.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.beregning.Grunnlag11_19
+import no.nav.aap.beregning.GrunnlagInntekt
+import no.nav.aap.medlemskap.KildesystemKode
+import no.nav.aap.medlemskap.KildesystemMedl
+import no.nav.aap.medlemskap.MedlemskapDataIntern
+import no.nav.aap.behandlingsflyt.steg.medlemskap.MedlemskapRepository
+import no.nav.aap.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.VilkårDTO
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -30,7 +30,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -78,6 +77,7 @@ import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
+import no.nav.aap.misc.Ident
 
 @Fakes
 // FIXME testene i klassen bruker samme database og er timing-sensitive. Derfor SAME_THREAD.

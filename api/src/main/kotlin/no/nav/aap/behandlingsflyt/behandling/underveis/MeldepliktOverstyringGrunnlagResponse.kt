@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
+import no.nav.aap.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate

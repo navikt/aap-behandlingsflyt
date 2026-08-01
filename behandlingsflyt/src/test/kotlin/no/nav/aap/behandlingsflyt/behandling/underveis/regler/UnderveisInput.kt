@@ -1,22 +1,23 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
+import no.nav.aap.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.kvote.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeUtleder
+import no.nav.aap.rettighetstype.RettighetstypeGrunnlag
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.Vilkår
+import no.nav.aap.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.arbeidsevne.ArbeidsevneGrunnlag
+import no.nav.aap.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.UnderveisInput
 
 fun tomUnderveisInput(
     rettighetsperiode: Periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 1)),

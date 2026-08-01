@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.barnepensjon
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering
+import no.nav.aap.samordning.barnepensjon.BarnepensjonGrunnlag
+import no.nav.aap.samordning.barnepensjon.BarnepensjonVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.verdityper.Beløp
 

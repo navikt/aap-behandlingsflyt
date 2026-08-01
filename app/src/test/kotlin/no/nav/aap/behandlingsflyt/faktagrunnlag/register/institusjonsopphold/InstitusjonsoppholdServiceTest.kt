@@ -1,9 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.steg.institusjon.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.misc.institusjonsopphold.Institusjonsopphold
+import no.nav.aap.misc.institusjonsopphold.InstitusjonsoppholdGrunnlag
+import no.nav.aap.misc.institusjonsopphold.Institusjonstype
+import no.nav.aap.misc.institusjonsopphold.Oppholdene
+import no.nav.aap.misc.institusjonsopphold.Oppholdstype
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

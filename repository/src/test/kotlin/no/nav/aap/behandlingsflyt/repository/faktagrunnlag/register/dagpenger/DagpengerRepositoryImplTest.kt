@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.dagpenger
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
@@ -43,16 +45,16 @@ class DagpengerRepositoryImplTest {
                             fom = java.time.LocalDate.of(2023,1,1),
                             tom = java.time.LocalDate.of(2023,3,31)
                         ),
-                        kilde = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde.ARENA,
-                        dagpengerYtelseType = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
+                        kilde = DagpengerKilde.ARENA,
+                        dagpengerYtelseType = DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
                     ),
                     DagpengerPeriode(
                         periode = no.nav.aap.komponenter.type.Periode(
                             fom = java.time.LocalDate.of(2023,4,1),
                             tom = java.time.LocalDate.of(2023,6,30)
                         ),
-                        kilde = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde.DP_SAK,
-                        dagpengerYtelseType = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType.DAGPENGER_PERMITTERING_ORDINAER
+                        kilde = DagpengerKilde.DP_SAK,
+                        dagpengerYtelseType = DagpengerYtelseType.DAGPENGER_PERMITTERING_ORDINAER
                     )
                 )
 
@@ -94,8 +96,8 @@ class DagpengerRepositoryImplTest {
                             fom = java.time.LocalDate.of(2023,1,1),
                             tom = java.time.LocalDate.of(2023,3,31)
                         ),
-                        kilde = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde.ARENA,
-                        dagpengerYtelseType = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
+                        kilde = DagpengerKilde.ARENA,
+                        dagpengerYtelseType = DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
                     )
                 )
 

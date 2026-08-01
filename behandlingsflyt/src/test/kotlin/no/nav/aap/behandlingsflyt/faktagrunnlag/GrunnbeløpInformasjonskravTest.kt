@@ -1,15 +1,16 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.prosessering.gregulering.GReguleringService
+import no.nav.aap.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.tilkjentytelse.Minstesats
+import no.nav.aap.tilkjentytelse.Tilkjent
+import no.nav.aap.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.underveis.Underveisperiode
+import no.nav.aap.underveis.UnderveisÅrsak
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.beregning.Grunnbeløp
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
+import no.nav.aap.misc.Faktagrunnlag
 
 class GrunnbeløpInformasjonskravTest {
 
@@ -264,7 +266,7 @@ class GrunnbeløpInformasjonskravTest {
             meldePeriode = Periode(fom, tom),
             utfall = utfall,
             rettighetsType = if (utfall == Utfall.OPPFYLT) RettighetsType.BISTANDSBEHOV else null,
-            avslagsårsak = if (utfall == Utfall.IKKE_OPPFYLT) no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT else null,
+            avslagsårsak = if (utfall == Utfall.IKKE_OPPFYLT) UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT else null,
             grenseverdi = `100_PROSENT`,
             institusjonsoppholdReduksjon = `0_PROSENT`,
             arbeidsgradering = ArbeidsGradering(
@@ -299,7 +301,7 @@ class GrunnbeløpInformasjonskravTest {
                     samordningArbeidsgiverGradering = `0_PROSENT`,
                     meldepliktGradering = `0_PROSENT`,
                 ),
-                grunnlagsfaktor = GUnit(java.math.BigDecimal("2.0")),
+                grunnlagsfaktor = GUnit(BigDecimal("2.0")),
                 grunnbeløp = grunnbeløp,
                 antallBarn = 0,
                 barnetilleggsats = Beløp(0),

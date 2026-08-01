@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.beregning.InntektPerÅr
+import no.nav.aap.beregning.Uføre
+import no.nav.aap.beregning.Månedsinntekt
+import no.nav.aap.beregning.UføreInntektUtleder
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.misc.inntekt.AndreYtelserSøknad
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 
 interface AndreYtelserOppgittISøknadRepository : Repository {

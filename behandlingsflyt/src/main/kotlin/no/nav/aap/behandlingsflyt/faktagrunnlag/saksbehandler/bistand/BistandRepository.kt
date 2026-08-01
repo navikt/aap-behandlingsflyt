@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 import java.time.LocalDateTime
+import no.nav.aap.bistand.BistandGrunnlag
+import no.nav.aap.bistand.Bistandsvurdering
 
 interface BistandRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): BistandGrunnlag?

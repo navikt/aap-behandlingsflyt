@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring
 
-import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
-import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 

@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgang
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
+import no.nav.aap.overganguføre.OvergangUføreVurdering
+import no.nav.aap.overganguføre.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import java.time.LocalDate

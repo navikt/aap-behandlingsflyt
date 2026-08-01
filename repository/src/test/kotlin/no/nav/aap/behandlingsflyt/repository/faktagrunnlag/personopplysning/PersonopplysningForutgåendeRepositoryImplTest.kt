@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.FolkeregisterStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
+import no.nav.aap.personopplysninger.Dødsdato
+import no.nav.aap.personopplysninger.AdresseType
+import no.nav.aap.personopplysninger.FolkeregisterStatus
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.personopplysninger.PersonStatus
+import no.nav.aap.personopplysninger.PersonopplysningMedHistorikk
+import no.nav.aap.personopplysninger.Statsborgerskap
+import no.nav.aap.personopplysninger.UtenlandsAdresse
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction

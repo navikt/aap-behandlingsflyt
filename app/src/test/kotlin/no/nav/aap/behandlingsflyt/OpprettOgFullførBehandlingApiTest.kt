@@ -6,21 +6,20 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AfpDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.TpOrdning
 import no.nav.aap.behandlingsflyt.test.AndreUtbetalingerApiDto
 import no.nav.aap.behandlingsflyt.test.AndreUtbetalingerYtelserApiDto
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -54,6 +53,7 @@ import java.io.InputStream
 import java.net.URI
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.milliseconds
+import no.nav.aap.misc.Ident
 
 @Fakes
 @Execution(ExecutionMode.SAME_THREAD)

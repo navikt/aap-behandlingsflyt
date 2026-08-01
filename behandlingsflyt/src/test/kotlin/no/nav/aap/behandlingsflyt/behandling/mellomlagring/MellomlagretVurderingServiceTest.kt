@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -18,6 +18,9 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurderingRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurderingService
 
 class MellomlagretVurderingServiceTest {
 

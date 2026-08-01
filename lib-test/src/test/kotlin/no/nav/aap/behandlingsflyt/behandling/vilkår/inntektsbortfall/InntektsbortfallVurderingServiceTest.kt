@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.`vilkår`.inntektsbortfall
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.steg.inntektsbortfall.InntektsbortfallVurderingService
+import no.nav.aap.beregning.Grunnbeløp
+import no.nav.aap.beregning.InntektPerÅr
+import no.nav.aap.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars

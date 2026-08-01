@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.steg.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository

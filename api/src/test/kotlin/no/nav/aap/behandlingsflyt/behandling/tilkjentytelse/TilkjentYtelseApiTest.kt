@@ -6,7 +6,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
+import no.nav.aap.behandlingsflyt.steg.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
@@ -33,6 +33,10 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.tilkjentytelse.Minstesats
+import no.nav.aap.tilkjentytelse.Tilkjent
+import no.nav.aap.tilkjentytelse.TilkjentYtelsePeriode
 
 @Fakes
 class TilkjentYtelseApiTest : BaseApiTest() {

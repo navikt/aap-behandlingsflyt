@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.komponenter.type.Periode
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.String
+import no.nav.aap.etableringegenvirksomhet.EierVirksomhet
+import no.nav.aap.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 
 data class EtableringEgenVirksomhetLøsningDto(
     override val begrunnelse: String,

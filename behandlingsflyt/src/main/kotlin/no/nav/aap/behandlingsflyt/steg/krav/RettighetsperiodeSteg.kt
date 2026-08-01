@@ -1,0 +1,154 @@
+package no.nav.aap.behandlingsflyt.steg.krav
+
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.steg.rettighetsperiode.VurderRettighetsperiodeRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.vilkårsresultat.Vilkårtype
+import org.slf4j.LoggerFactory
+
+class RettighetsperiodeSteg(
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val sakService: SakService,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
+) : BehandlingSteg {
+
+    private val logger = LoggerFactory.getLogger(RettighetsperiodeSteg::class.java)
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        logger.info("Utfører rettighetsperiodesteg for behandling=${kontekst.behandlingId}")
+
+        val rettighetsperiodeVurdering = rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId)
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            kontekst = kontekst,
+            definisjon = Definisjon.VURDER_RETTIGHETSPERIODE,
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING ->
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                                && manueltTriggetVurderingsbehov(kontekst)
+
+                    VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.MIGERING_FRA_ARENA,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
+                    VurderingType.IKKE_RELEVANT ->
+                        false
+                }
+            },
+            erTilstrekkeligVurdert = {
+                rettighetsperiodeVurdering != null
+            },
+            tilbakestillGrunnlag = {
+                val vedtattVurdering = kontekst.forrigeBehandlingId
+                    ?.let { rettighetsperiodeRepository.hentVurdering(it) }
+                rettighetsperiodeRepository.lagreVurdering(kontekst.behandlingId, vedtattVurdering)
+            },
+        )
+
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA, -> {
+                if (tidligereVurderinger.muligMedRettTilAAP(
+                        kontekst,
+                        type()
+                    ) && manueltTriggetVurderingsbehov(kontekst)
+                ) {
+                    oppdaterVilkårsresultatForNyPeriode(kontekst)
+                }
+            }
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.G_REGULERING,
+            VurderingType.IKKE_RELEVANT,
+            VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.OVERGANG_UFORE_STANS -> {
+                // Ikke relevant
+            }
+        }
+        return Fullført
+    }
+
+    private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)) {
+            return true
+        }
+
+        // HELHETLIG_VURDERING skal kun trigge avklaringsbehov dersom det tidligere er lagt inn overstyring av
+        // rettighetsperiode. Hvis ikke må alle behandlinger vurdere denne ved helhetlig vurdering.
+        if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.HELHETLIG_VURDERING)
+            && rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId) != null
+        ) {
+            return true
+        }
+        return false
+    }
+
+    private fun oppdaterVilkårsresultatForNyPeriode(kontekst: FlytKontekstMedPerioder) {
+        // TODO: Hva hvis man innskrenker perioden - må innskrenke vilkår og underveis?
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val rettighetsperiode = sakService.hent(kontekst.sakId).rettighetsperiode
+
+        Vilkårtype
+            .entries
+            .filter { it.obligatorisk }
+            .forEach { vilkårstype ->
+                vilkårsresultat
+                    .leggTilHvisIkkeEksisterer(vilkårstype)
+                    .leggTilIkkeVurdertPeriode(rettighetsperiode)
+                    .fjernHvisUtenforRettighetsperiode(rettighetsperiode)
+
+            }
+
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+    }
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return RettighetsperiodeSteg(
+                vilkårsresultatRepository = repositoryProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+                rettighetsperiodeRepository = repositoryProvider.provide(),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+            )
+        }
+
+        override fun type(): StegType {
+            return StegType.VURDER_RETTIGHETSPERIODE
+        }
+
+        override fun toString(): String {
+            return "FlytSteg(type:${type()})"
+        }
+    }
+}

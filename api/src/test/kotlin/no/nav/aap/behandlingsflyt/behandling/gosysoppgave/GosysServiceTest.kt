@@ -1,12 +1,17 @@
 package no.nav.aap.behandlingsflyt.behandling.gosysoppgave
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.misc.Ident
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.steg.iverksett.Behandlingstema
+import no.nav.aap.behandlingsflyt.steg.iverksett.GosysOppgaveGateway
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.steg.iverksett.GosysService
+import no.nav.aap.behandlingsflyt.steg.iverksett.OppgaveType
+import no.nav.aap.behandlingsflyt.steg.iverksett.Prioritet
 
 class GosysServiceTest {
 

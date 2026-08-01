@@ -5,13 +5,13 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakePersoninfoGateway
 import no.nav.aap.behandlingsflyt.test.inmemorygateway.FakeTilgangGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
+import no.nav.aap.misc.Ident
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

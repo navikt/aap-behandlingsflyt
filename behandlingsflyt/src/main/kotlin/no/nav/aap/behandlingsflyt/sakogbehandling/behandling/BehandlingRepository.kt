@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.behandling
 
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling

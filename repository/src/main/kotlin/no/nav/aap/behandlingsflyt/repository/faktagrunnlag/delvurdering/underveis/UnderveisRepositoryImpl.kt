@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.kvote.Kvote
+import no.nav.aap.misc.Faktagrunnlag
+import no.nav.aap.underveis.ArbeidsGradering
+import no.nav.aap.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisRepository
+import no.nav.aap.underveis.Underveisperiode
+import no.nav.aap.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection

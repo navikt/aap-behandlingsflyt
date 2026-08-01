@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.flyt.steg.StegOrkestrator
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyBehandlingHendelseService
 import no.nav.aap.behandlingsflyt.flyt.testutil.DummyInformasjonskravGrunnlag

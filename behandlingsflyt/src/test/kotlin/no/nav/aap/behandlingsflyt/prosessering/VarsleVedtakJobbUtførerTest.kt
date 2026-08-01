@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.tilkjentytelse.Minstesats
+import no.nav.aap.tilkjentytelse.Tilkjent
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode

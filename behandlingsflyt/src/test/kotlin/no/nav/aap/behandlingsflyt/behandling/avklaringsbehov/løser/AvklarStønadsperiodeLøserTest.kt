@@ -1,20 +1,20 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStønadsperiodeLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StansEllerOpphørDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StansOpphørVurderingTypeDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeLøsningDto
+import no.nav.aap.misc.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarStønadsperiodeLøsning
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.krav.Kravreferanse
+import no.nav.aap.krav.RelevantKrav
+import no.nav.aap.krav.Søknadsdato
+import no.nav.aap.krav.SøknadsdatoÅrsak
+import no.nav.aap.krav.Tilleggsopplysning
+import no.nav.aap.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.steg.stønadsperiode.StansEllerOpphørDto
+import no.nav.aap.behandlingsflyt.steg.stønadsperiode.StansOpphørVurderingTypeDto
+import no.nav.aap.behandlingsflyt.steg.stønadsperiode.StønadsperiodeLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.august
@@ -31,6 +31,7 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.test.assertEquals
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklarStønadsperiodeLøser
 
 class AvklarStønadsperiodeLøserTest {
     private val løser = AvklarStønadsperiodeLøser(InMemoryKravRepository, InMemoryStønadsperiodeRepository)

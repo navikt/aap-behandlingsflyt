@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.tilkjentytelse.TilkjentYtelseGrunnlag
+import no.nav.aap.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.steg.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {

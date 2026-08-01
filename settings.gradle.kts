@@ -11,5 +11,6 @@ include(
     "repository",
     "lib-test",
     "kontrakt",
-    "docs"
+    "docs",
+    "regelverk"
 )

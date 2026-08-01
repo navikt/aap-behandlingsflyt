@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import java.time.LocalDate
 
 class SettPåVentRequest(

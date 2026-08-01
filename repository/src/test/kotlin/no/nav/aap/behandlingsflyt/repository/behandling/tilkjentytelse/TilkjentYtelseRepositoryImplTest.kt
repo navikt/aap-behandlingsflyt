@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.tilkjentytelse.Minstesats
+import no.nav.aap.tilkjentytelse.Tilkjent
+import no.nav.aap.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag

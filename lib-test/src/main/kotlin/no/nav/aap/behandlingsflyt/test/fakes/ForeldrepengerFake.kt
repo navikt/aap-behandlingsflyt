@@ -6,12 +6,12 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Utbetalingsgrad
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.Anvist
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.Utbetalingsgrad
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.Ytelse
+import no.nav.aap.behandlingsflyt.steg.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 import java.time.LocalDate
 

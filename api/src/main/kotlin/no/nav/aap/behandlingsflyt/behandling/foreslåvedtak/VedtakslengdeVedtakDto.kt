@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.foreslåvedtak
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.type.Periode
 
 data class VedtakslengdeVedtakDto(

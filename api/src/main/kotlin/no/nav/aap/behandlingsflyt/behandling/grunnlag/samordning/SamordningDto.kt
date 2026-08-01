@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.steg.samordning.EndringStatus
+import no.nav.aap.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonOrdning
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 

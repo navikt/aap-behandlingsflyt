@@ -1,19 +1,19 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.kvote
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteBruktOpp
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
+import no.nav.aap.rettighetstype.KvoteBruktOpp
+import no.nav.aap.rettighetstype.KvoteOk
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
-import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
-import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.kvote.Kvoter
+import no.nav.aap.underveis.Hverdager
+import no.nav.aap.underveis.Hverdager.Companion.plusHverdager
+import no.nav.aap.sykepengererstatning.SykepengerErstatningFaktagrunnlag
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.Vilkår
+import no.nav.aap.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.test.januar
@@ -21,6 +21,8 @@ import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.kvote.SykepengeerstatningKvoteFaktagrunnlag
+import no.nav.aap.kvote.SykepengeerstatningKvoteVilkår
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import no.nav.aap.oppholdskrav.OppholdskravVurdering
 
 data class OppholdskravGrunnlagResponse(
     override val harTilgangTilÅSaksbehandle: Boolean,

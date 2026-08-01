@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.årmåned.validerPerioder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.årmåned.ÅrMånedPeriodeLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.årmåned.validerPerioder
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.årmåned.ÅrMånedPeriodeLøsning
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow

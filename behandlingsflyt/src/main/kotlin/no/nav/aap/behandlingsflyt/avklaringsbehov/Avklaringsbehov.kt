@@ -1,0 +1,289 @@
+package no.nav.aap.behandlingsflyt.avklaringsbehov
+
+import no.nav.aap.misc.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
+import java.time.LocalDate
+import java.time.LocalDateTime
+
+class Avklaringsbehov(
+    val id: Long,
+    val definisjon: Definisjon,
+    historikk: List<Endring> = emptyList(),
+    val funnetISteg: StegType,
+    private var kreverToTrinn: Boolean?
+) {
+
+    val historikk: List<Endring>
+        field = historikk.ifEmpty {
+            mutableListOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    begrunnelse = "",
+                    endretAv = SYSTEMBRUKER
+                )
+            )
+        }.toMutableList()
+
+    val aktivHistorikk: List<Endring>
+        get() = historikk.takeLastWhile {
+            it.status != Status.AVBRUTT
+        }
+
+    val perioderVedtaketBehøverVurdering: List<Periode>?
+        get() = aktivHistorikk
+            .lastOrNull { it.status.erÅpent() }
+            ?.perioderVedtaketBehøverVurdering
+            ?.sorted()
+
+    fun erTotrinn(): Boolean {
+        if (definisjon.kreverToTrinn) {
+            return true
+        }
+        return kreverToTrinn == true
+    }
+
+    fun brukere(): List<Bruker> {
+        return historikk.filter { it.status == Status.AVSLUTTET }.map { it.endretAv }
+    }
+
+    fun erTotrinnsVurdert(): Boolean {
+        return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOfOrNull { it }?.status
+    }
+
+    fun erKvalitetssikret(): Boolean {
+        return Status.KVALITETSSIKRET == aktivHistorikk.maxOfOrNull { it }?.status
+    }
+
+    fun harBlittKvalitetssikretTidligere(): Boolean {
+        return Status.KVALITETSSIKRET == aktivHistorikk.filter {
+            it.status in setOf(
+                Status.KVALITETSSIKRET, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+            )
+        }.maxOfOrNull { it }?.status
+    }
+
+    internal fun vurderTotrinn(
+        begrunnelse: String,
+        godkjent: Boolean,
+        vurdertAv: Bruker,
+        årsakTilRetur: List<ÅrsakTilRetur>,
+    ) {
+        require(definisjon.kreverToTrinn)
+        val status = if (godkjent) {
+            Status.TOTRINNS_VURDERT
+        } else {
+            Status.SENDT_TILBAKE_FRA_BESLUTTER
+        }
+        historikk += Endring(
+            status = status,
+            begrunnelse = begrunnelse,
+            endretAv = vurdertAv,
+            årsakTilRetur = årsakTilRetur,
+        )
+    }
+
+    internal fun vurderKvalitet(
+        begrunnelse: String,
+        godkjent: Boolean,
+        vurdertAv: Bruker,
+        årsakTilRetur: List<ÅrsakTilRetur>,
+    ) {
+        require(definisjon.kvalitetssikres)
+        val status = if (godkjent) {
+            Status.KVALITETSSIKRET
+        } else {
+            Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+        }
+        historikk += Endring(
+            status = status,
+            begrunnelse = begrunnelse,
+            endretAv = vurdertAv,
+            årsakTilRetur = årsakTilRetur,
+        )
+    }
+
+    internal fun reåpne(
+        frist: LocalDate? = null,
+        begrunnelse: String = "",
+        venteårsak: ÅrsakTilSettPåVent? = null,
+        bruker: Bruker = SYSTEMBRUKER,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+    ) {
+        require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
+        if (definisjon.erVentebehov()) {
+            requireNotNull(frist)
+            requireNotNull(venteårsak)
+        }
+        historikk += Endring(
+            status = Status.OPPRETTET,
+            begrunnelse = begrunnelse,
+            grunn = venteårsak,
+            frist = frist,
+            endretAv = bruker,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+        )
+    }
+
+    internal fun oppdaterPerioder(
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?
+    ): Boolean {
+        val siste = historikk.last()
+        require(siste.status.erÅpent()) {
+            "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
+        }
+        if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering) {
+            historikk += siste.copy(
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                tidsstempel = LocalDateTime.now()
+            )
+            return true
+        }
+        return false
+    }
+
+    fun erÅpent(): Boolean {
+        return status().erÅpent()
+    }
+
+    fun skalStoppeHer(stegType: StegType): Boolean {
+        return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent()
+    }
+
+    internal fun løs(begrunnelse: String, endretAv: Bruker) {
+        løs(begrunnelse, endretAv, definisjon.kreverToTrinn)
+    }
+
+    internal fun løs(begrunnelse: String, endretAv: Bruker, kreverToTrinn: Boolean) {
+        if (this.kreverToTrinn != true) {
+            this.kreverToTrinn = kreverToTrinn
+        }
+        historikk.add(
+            Endring(
+                status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = endretAv
+            )
+        )
+    }
+
+    internal fun avbryt() {
+        historikk += Endring(
+            status = Status.AVBRUTT, begrunnelse = "", endretAv = SYSTEMBRUKER
+        )
+    }
+
+    internal fun avslutt(begrunnelse: String) {
+        check(historikk.any { it.status == Status.AVSLUTTET }) {
+            "Et steg burde vel ha vært løst minst en gang for å kunne regnes som avsluttet?"
+        }
+
+        historikk += Endring(
+            status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = SYSTEMBRUKER
+        )
+    }
+
+    fun erIkkeAvbrutt(): Boolean {
+        return Status.AVBRUTT != status()
+    }
+
+    fun erAvsluttet(): Boolean {
+        return status().erAvsluttet()
+    }
+
+    fun harAvsluttetStatusIHistorikken(): Boolean {
+        return historikk.any { it.status == Status.AVSLUTTET }
+    }
+
+    fun sistAvsluttet(): LocalDateTime {
+        return historikk.filter { it.status == Status.AVSLUTTET }.maxOf { it.tidsstempel }
+    }
+
+    fun sistAvsluttetOrNull(): LocalDateTime? {
+        return historikk.filter { it.status == Status.AVSLUTTET }.maxOfOrNull { it.tidsstempel }
+    }
+
+    fun status(): Status {
+        return historikk.maxOf { it }.status
+    }
+
+    fun begrunnelse(): String = historikk.maxOf { it }.begrunnelse
+    fun venteårsak(): ÅrsakTilSettPåVent? = historikk.filter { it.status == Status.OPPRETTET }.maxOf { it }.grunn
+    fun endretAv(): Bruker = historikk.maxOf { it }.endretAv
+    fun årsakTilRetur(): List<ÅrsakTilRetur> = historikk.maxOf { it }.årsakTilRetur
+
+    fun skalLøsesISteg(type: StegType): Boolean {
+        return definisjon.skalLøsesISteg(type, funnetISteg)
+    }
+
+    fun erForeslåttVedtak(): Boolean {
+        return definisjon == Definisjon.FORESLÅ_VEDTAK
+    }
+
+    fun erForeslåttVedtakVedtakslengde(): Boolean {
+        return definisjon == Definisjon.FORESLÅ_VEDTAK_VEDTAKSLENGDE
+    }
+
+    fun erLovvalgOgMedlemskap(): Boolean {
+        return definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP
+    }
+
+    fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
+        return aktivHistorikk.any { it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
+    }
+
+    fun harVærtSendtTilbakeFraKvalitetssikrerTidligere(): Boolean {
+        return aktivHistorikk.any { it.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+    }
+
+    fun løsesISteg(): StegType {
+        if (definisjon.løsesISteg == StegType.UDEFINERT) {
+            return funnetISteg
+        }
+        return definisjon.løsesISteg
+    }
+
+    fun erVentepunkt(): Boolean {
+        return definisjon.type == Definisjon.BehovType.VENTEPUNKT
+    }
+
+    fun frist(): LocalDate {
+        return requireNotNull(historikk.last { it.status == Status.OPPRETTET && it.frist != null }.frist)
+        { "Prøvde å finne frist, men historikk er tom. Definisjon $definisjon. Funnet i steg $funnetISteg. ID: $id. Historikk: $historikk." }
+    }
+
+    fun fristUtløpt(): Boolean {
+        return frist().isBefore(LocalDate.now()) || frist().isEqual(LocalDate.now())
+    }
+
+    fun kreverKvalitetssikring(): Boolean {
+        return definisjon.kvalitetssikres
+    }
+
+    fun erAutomatisk(): Boolean {
+        return definisjon.erAutomatisk()
+    }
+
+    fun sistEndret(): LocalDateTime {
+        return historikk.last().tidsstempel
+    }
+
+    fun perioderVedtaketBehøverVurdering(): Set<Periode>? {
+        return perioderVedtaketBehøverVurdering?.toSet()
+    }
+
+    fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
+    }
+
+
+    override fun toString(): String {
+        return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"
+    }
+}

@@ -6,8 +6,8 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveResponse
+import no.nav.aap.behandlingsflyt.steg.iverksett.OpprettOppgaveRequest
+import no.nav.aap.behandlingsflyt.steg.iverksett.OpprettOppgaveResponse
 
 class GosysFake : FakeServer() {
     override val server = embeddedServer(Netty, port = 0, module = module())

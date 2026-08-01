@@ -1,15 +1,15 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
+import no.nav.aap.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.misc.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapNorskOgAvslag
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.type.Periode
@@ -21,11 +21,12 @@ class ForutgåendeMedlemskapvilkåret(
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
+        val medlemskapArbeidInntektGrunnlag = grunnlag.medlemskapArbeidInntektGrunnlag
         val brukManuellVurderingForForutgåendeMedlemskap =
-            grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
+            medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
         if (brukManuellVurderingForForutgåendeMedlemskap) {
-            val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
+            val gjeldendeVurderinger = medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
 
             val vilkårsvurderinger = gjeldendeVurderinger
                 .map { vurdering ->

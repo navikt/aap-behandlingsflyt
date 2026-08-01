@@ -15,6 +15,10 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
+import no.nav.aap.medlemskap.KildesystemKode
+import no.nav.aap.medlemskap.KildesystemMedl
+import no.nav.aap.medlemskap.MedlemskapDataIntern
+import no.nav.aap.medlemskap.Unntak
 
 
 internal class MedlemskapRepositoryImplTest {

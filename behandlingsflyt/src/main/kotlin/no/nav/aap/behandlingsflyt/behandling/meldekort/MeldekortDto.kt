@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.meldekort
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakjustertMeldefrist
+import no.nav.aap.underveis.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.helligdagsunntakjustertMeldefrist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse

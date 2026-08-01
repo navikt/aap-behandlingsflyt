@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.beregning.BeregningGrunnlag
+import no.nav.aap.beregning.BeregningstidspunktVurdering
+import no.nav.aap.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.lookup.repository.Repository
 
 interface BeregningVurderingRepository : Repository {

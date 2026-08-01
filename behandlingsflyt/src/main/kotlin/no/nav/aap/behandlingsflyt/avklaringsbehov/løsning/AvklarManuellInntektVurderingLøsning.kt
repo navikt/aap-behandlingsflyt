@@ -1,0 +1,31 @@
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løsning
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.AvklarManuellInntektVurderingLøser
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_MANUELL_INNTEKT
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(value = FASTSETT_MANUELL_INNTEKT)
+class AvklarManuellInntektVurderingLøsning(
+    @param:JsonProperty(
+        "manuellVurderingForManglendeInntekt",
+        required = true
+    ) val manuellVurderingForManglendeInntekt: ManuellInntektVurderingDto,
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = FASTSETT_MANUELL_INNTEKT
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`7001`
+) : EnkeltAvklaringsbehovLøsning {
+    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
+        return AvklarManuellInntektVurderingLøser(repositoryProvider).løs(kontekst, this)
+    }
+}

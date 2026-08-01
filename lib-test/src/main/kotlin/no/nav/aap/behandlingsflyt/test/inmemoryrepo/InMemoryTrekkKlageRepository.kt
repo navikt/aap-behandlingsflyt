@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageRepository
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryTrekkKlageRepository : TrekkKlageRepository {

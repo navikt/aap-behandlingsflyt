@@ -1,16 +1,16 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.barnetillegg.Barn
+import no.nav.aap.barnetillegg.BarnGrunnlag
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.BarnRepository
+import no.nav.aap.barnetillegg.OppgitteBarn
+import no.nav.aap.barnetillegg.RegisterBarn
+import no.nav.aap.barnetillegg.SaksbehandlerOppgitteBarn
+import no.nav.aap.barnetillegg.VurderteBarn
+import no.nav.aap.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.VurdertBarn
+import no.nav.aap.misc.Ident
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime

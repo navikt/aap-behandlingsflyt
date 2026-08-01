@@ -1,14 +1,16 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.misc.SYSTEMBRUKER
+import no.nav.aap.vedtakslengde.ÅrMedHverdager
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
+import no.nav.aap.vedtakslengde.VedtakslengdeGrunnlag
+import no.nav.aap.vedtakslengde.VedtakslengdeVurdering
 
 class VedtakslengdeGrunnlagTest {
 
@@ -277,7 +279,8 @@ class VedtakslengdeGrunnlagTest {
                 behandlingId = behandling2,
                 opprettet = Instant.parse("2025-01-01T12:00:00Z"),
             )
-            val grunnlag = VedtakslengdeGrunnlag(listOf(automatiskBehandling1, manuellBehandling1, automatiskBehandling2))
+            val grunnlag =
+                VedtakslengdeGrunnlag(listOf(automatiskBehandling1, manuellBehandling1, automatiskBehandling2))
 
             val segmenter = grunnlag.gjeldendeVurderinger(fraDato).segmenter().toList()
             assertThat(segmenter).hasSize(2)

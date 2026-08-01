@@ -1,0 +1,201 @@
+package no.nav.aap.behandlingsflyt.steg.beregning
+
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.steg.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.steg.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.beregning.BeregningGrunnlag
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.sykdom.YrkesskadeSak
+
+class BeregningAvklarFaktaSteg private constructor(
+    private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val sykdomRepository: SykdomRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovService: AvklaringsbehovService,
+) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        beregningVurderingRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        yrkesskadeRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+    )
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val behandlingId = kontekst.behandlingId
+
+        // Beregningstidspunkt
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            kontekst = kontekst,
+            definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING,
+                    VurderingType.MIGERING_FRA_ARENA -> {
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            !eksistererVedtattVurdering(kontekst.forrigeBehandlingId) -> true
+                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
+                            manueltTriggetVurderingsbehovBeregning(kontekst) -> true
+                            manueltTriggetVurderingsbehovYrkesskade(kontekst) -> false
+                            else -> true
+                        }
+                    }
+
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
+                    VurderingType.IKKE_RELEVANT ->
+                        false
+                }
+            },
+            erTilstrekkeligVurdert = {
+                val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+                beregningVurdering?.tidspunktVurdering != null
+            },
+            tilbakestillGrunnlag = {
+                val vedtattVurdering = kontekst.forrigeBehandlingId
+                    ?.let { beregningVurderingRepository.hentHvisEksisterer(it) }
+                    ?.tidspunktVurdering
+
+                beregningVurderingRepository.lagre(kontekst.behandlingId, vedtattVurdering)
+            },
+        )
+
+        // Yrkesskadeinntekt
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            kontekst = kontekst,
+            definisjon = Definisjon.FASTSETT_YRKESSKADEINNTEKT,
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING,
+                    VurderingType.MIGERING_FRA_ARENA -> {
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
+                            else -> harYrkesskadeMedÅrsakssammenheng(behandlingId)
+
+                        }
+                    }
+
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
+                    VurderingType.IKKE_RELEVANT ->
+                        false
+                }
+            },
+            erTilstrekkeligVurdert = {
+                val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+                val yrkesskadeVurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
+                val relevanteSaker = yrkesskadeVurdering?.relevanteSaker.orEmpty()
+                harFastsattBeløpForAlleRelevanteYrkesskadesaker(relevanteSaker, beregningGrunnlag)
+            },
+            tilbakestillGrunnlag = {
+                val vedtattVurderinger = kontekst.forrigeBehandlingId
+                    ?.let { beregningVurderingRepository.hentHvisEksisterer(it) }
+                    ?.yrkesskadeBeløpVurdering?.vurderinger
+                    ?: emptyList()
+
+                val nyeVurderinger = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+                    ?.yrkesskadeBeløpVurdering?.vurderinger
+
+                if (nyeVurderinger != vedtattVurderinger) {
+                    beregningVurderingRepository.lagre(kontekst.behandlingId, vedtattVurderinger)
+                }
+            },
+        )
+        return Fullført
+    }
+
+    private fun eksistererVedtattVurdering(forrigeBehandlingId: BehandlingId?): Boolean {
+        if (forrigeBehandlingId == null)
+            return false
+
+        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(forrigeBehandlingId)
+        return beregningVurdering?.tidspunktVurdering != null
+    }
+
+    private fun manueltTriggetVurderingsbehovBeregning(kontekst: FlytKontekstMedPerioder): Boolean {
+        return kontekst.vurderingsbehovRelevanteForSteg.any {
+            it in listOf(
+                Vurderingsbehov.MOTTATT_SØKNAD,
+                Vurderingsbehov.HELHETLIG_VURDERING,
+                Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                Vurderingsbehov.REVURDER_BEREGNING
+            )
+        }
+    }
+
+    private fun manueltTriggetVurderingsbehovYrkesskade(kontekst: FlytKontekstMedPerioder): Boolean {
+        return kontekst.vurderingsbehovRelevanteForSteg.any {
+            it in listOf(
+                Vurderingsbehov.MOTTATT_SØKNAD,
+                Vurderingsbehov.HELHETLIG_VURDERING,
+                Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                Vurderingsbehov.REVURDER_YRKESSKADE,
+                Vurderingsbehov.REVURDER_BEREGNING
+            )
+        }
+    }
+
+    private fun harYrkesskadeMedÅrsakssammenheng(behandlingId: BehandlingId): Boolean {
+        val yrkesskadeVurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
+        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        return yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+                && yrkesskadeVurdering?.erÅrsakssammenheng == true
+    }
+
+    private fun harFastsattBeløpForAlleRelevanteYrkesskadesaker(
+        relevanteSaker: List<YrkesskadeSak>,
+        beregningGrunnlag: BeregningGrunnlag?
+    ): Boolean {
+        val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger.orEmpty()
+        return relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak.referanse } }
+    }
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return BeregningAvklarFaktaSteg(repositoryProvider, gatewayProvider)
+        }
+
+        override val rekkefølge: List<Definisjon> = listOf(
+            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
+            Definisjon.FASTSETT_YRKESSKADEINNTEKT,
+        )
+
+        override fun type(): StegType {
+            return StegType.FASTSETT_BEREGNINGSTIDSPUNKT
+        }
+    }
+}

@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.utledStansEllerOpphør
-import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetstypeSteg
+import no.nav.aap.behandlingsflyt.steg.underveis.RettighetstypeService
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.StansOpphørGrunnlag
+import no.nav.aap.underveis.UnderveisÅrsak
+import no.nav.aap.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.steg.rettighetstype.RettighetstypeSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepositoryImpl

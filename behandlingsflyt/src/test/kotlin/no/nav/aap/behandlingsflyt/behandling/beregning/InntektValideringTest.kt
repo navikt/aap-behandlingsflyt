@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.beregning.InntektPerÅr
+import no.nav.aap.beregning.InntektValidering
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow

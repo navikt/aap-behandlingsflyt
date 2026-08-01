@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.prometheus
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig

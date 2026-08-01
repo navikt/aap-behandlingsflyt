@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.rettighet
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
+import no.nav.aap.behandlingsflyt.steg.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver

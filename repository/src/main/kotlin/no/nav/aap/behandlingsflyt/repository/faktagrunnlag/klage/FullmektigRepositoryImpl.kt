@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.FullmektigVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.IdentMedType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.fullmektig.NavnOgAdresse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.json.DefaultJsonMapper

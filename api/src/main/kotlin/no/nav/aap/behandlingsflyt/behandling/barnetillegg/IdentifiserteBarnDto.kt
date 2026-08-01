@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.barnetillegg.Relasjon
+import no.nav.aap.misc.Ident
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 

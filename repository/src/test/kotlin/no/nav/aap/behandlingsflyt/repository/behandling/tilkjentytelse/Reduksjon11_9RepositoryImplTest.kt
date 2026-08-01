@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
+import no.nav.aap.tilkjentytelse.Reduksjon11_9
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling

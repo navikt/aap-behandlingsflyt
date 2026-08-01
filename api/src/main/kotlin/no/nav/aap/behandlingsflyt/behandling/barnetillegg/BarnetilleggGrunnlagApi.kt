@@ -4,16 +4,16 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.filtrerBortMigrerteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator.BarnIdent
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.barnetillegg.Barn
+import no.nav.aap.barnetillegg.BarnGrunnlag
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.BarnRepository
+import no.nav.aap.barnetillegg.OppgitteBarn
+import no.nav.aap.barnetillegg.SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
+import no.nav.aap.barnetillegg.filtrerBortMigrerteBarn
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.barnetillegg.BarnIdentifikator.BarnIdent
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.VurderingAvForeldreAnsvarDto
+import no.nav.aap.barnetillegg.VurdertBarn
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -31,6 +31,8 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+import no.nav.aap.barnetillegg.RettTilBarnetillegg
+import no.nav.aap.behandlingsflyt.steg.barnetillegg.BarnetilleggService
 
 private val log = LoggerFactory.getLogger("barnetilleggApi")
 

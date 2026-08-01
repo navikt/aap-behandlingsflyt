@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
-import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status

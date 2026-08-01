@@ -5,8 +5,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.Runs
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.prosessering.gregulering.GReguleringService
+import no.nav.aap.beregning.Grunnbeløp
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember

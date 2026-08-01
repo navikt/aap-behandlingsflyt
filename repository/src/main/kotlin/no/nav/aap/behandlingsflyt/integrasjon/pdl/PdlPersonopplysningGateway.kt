@@ -1,22 +1,22 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.FolkeregisterStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.bosatt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.doed
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.foedselsregistrert
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.forsvunnet
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.ikkeBosatt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.inaktiv
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.midlertidig
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.opphort
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.utflyttet
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
+import no.nav.aap.personopplysninger.Dødsdato
+import no.nav.aap.personopplysninger.AdresseType
+import no.nav.aap.personopplysninger.FolkeregisterStatus
+import no.nav.aap.personopplysninger.PersonStatus.bosatt
+import no.nav.aap.personopplysninger.PersonStatus.doed
+import no.nav.aap.personopplysninger.PersonStatus.foedselsregistrert
+import no.nav.aap.personopplysninger.PersonStatus.forsvunnet
+import no.nav.aap.personopplysninger.PersonStatus.ikkeBosatt
+import no.nav.aap.personopplysninger.PersonStatus.inaktiv
+import no.nav.aap.personopplysninger.PersonStatus.midlertidig
+import no.nav.aap.personopplysninger.PersonStatus.opphort
+import no.nav.aap.personopplysninger.PersonStatus.utflyttet
+import no.nav.aap.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.UtenlandsAdresse
+import no.nav.aap.personopplysninger.PersonopplysningMedHistorikk
+import no.nav.aap.personopplysninger.Statsborgerskap
+import no.nav.aap.personopplysninger.UtenlandsAdresse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import org.intellij.lang.annotations.Language
 
@@ -48,7 +48,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
         )
     }
 
-    private fun pdlStatusTilDomene(status: PersonStatus): no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus =
+    private fun pdlStatusTilDomene(status: PersonStatus): no.nav.aap.personopplysninger.PersonStatus =
         when (status) {
             PersonStatus.bosatt -> bosatt
             PersonStatus.utflyttet -> utflyttet

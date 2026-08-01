@@ -5,7 +5,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 
 class TjenestePensjonFake(private val fakePersoner: () -> TestPersonService) : FakeServer() {

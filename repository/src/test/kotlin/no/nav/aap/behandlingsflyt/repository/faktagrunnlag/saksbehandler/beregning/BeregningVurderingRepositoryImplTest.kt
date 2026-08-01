@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
+import no.nav.aap.beregning.BeregningstidspunktVurdering
+import no.nav.aap.beregning.YrkesskadeBeløpVurdering
+import no.nav.aap.beregning.ÅrsakBeregningstidspunkt
+import no.nav.aap.beregning.ÅrsakYtterligereNedsatt
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction

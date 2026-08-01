@@ -1,0 +1,86 @@
+package no.nav.aap.behandlingsflyt.steg
+
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.steg.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.TjenestePensjonRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+class TjenestepensjonRefusjonskravSteg private constructor(
+    private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val tjenestePensjonRepository: TjenestePensjonRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        tjenestePensjonRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
+    )
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = Definisjon.SAMORDNING_REFUSJONS_KRAV,
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING,
+                    VurderingType.MIGERING_FRA_ARENA -> {
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
+                            Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON in kontekst.vurderingsbehovRelevanteForSteg -> true
+                            else -> tjenestePensjonRepository.hent(kontekst.behandlingId).isNotEmpty()
+                        }
+                    }
+
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
+                    VurderingType.IKKE_RELEVANT -> false
+                }
+            },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = {
+                kontekst.forrigeBehandlingId
+                    ?.let { tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(it) }
+                    ?.also {
+                        tjenestepensjonRefusjonsKravVurderingRepository.lagre(kontekst.sakId, kontekst.behandlingId, it)
+                    }
+            },
+            kontekst = kontekst,
+        )
+
+        return Fullført
+    }
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return TjenestepensjonRefusjonskravSteg(repositoryProvider, gatewayProvider)
+        }
+
+        override fun type(): StegType {
+            return StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV
+        }
+    }
+}

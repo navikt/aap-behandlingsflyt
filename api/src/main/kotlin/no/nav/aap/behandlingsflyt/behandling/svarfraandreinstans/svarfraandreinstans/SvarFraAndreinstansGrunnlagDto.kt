@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjoeringsUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TrygderettUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.avsluttetTidspunkt
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.opprettetTidspunkt
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import java.time.LocalDateTime
 
 data class SvarFraAndreinstansGrunnlagDto(

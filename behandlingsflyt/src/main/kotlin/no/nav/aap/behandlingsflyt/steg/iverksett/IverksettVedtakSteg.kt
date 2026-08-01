@@ -1,0 +1,301 @@
+package no.nav.aap.behandlingsflyt.steg.iverksett
+
+import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.steg.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.avklaringsbehov.mellomlagring.MellomlagretVurderingRepository
+import no.nav.aap.behandlingsflyt.steg.krav.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.steg.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.Vedtak
+import no.nav.aap.behandlingsflyt.steg.fattevedtak.VedtakService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
+import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.HåndterUbehandledeMeldekortForSakJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.misc.Ident
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
+import org.slf4j.LoggerFactory
+
+class IverksettVedtakSteg private constructor(
+    private val sakRepository: SakRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val refusjonkravRepository: RefusjonkravRepository,
+    private val utbetalingService: UtbetalingService,
+    private val vedtakService: VedtakService,
+    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val gosysService: GosysService,
+    private val flytJobbRepository: FlytJobbRepository,
+    private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
+    private val resultatUtleder: ResultatUtleder,
+) : BehandlingSteg {
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (harTrukketSøknadIBehandlingen(kontekst) || harAvbruttRevurderingIBehandlingen(kontekst)) {
+            return Fullført
+        }
+
+        /** Denne lagringen skjer nå i `FatteVedtakSteg`, siden det er i det steget
+         * at vedtaket fattes. Det kan i prinsippet være åpne behandlinger som
+         * er forbi `FatteVedtakSteg` men som ikke har fullført `IverksettVedtakSteg`,
+         * så vi lagrer her også til vi er sikre på at ingen behandlinger faller mellom to stoler.
+         */
+        lagreVedtak(kontekst)
+
+        val vedtak = vedtakService.hentVedtak(behandlingId = kontekst.behandlingId)
+            ?: error("Forventet å finne et vedtak for behandling ${kontekst.behandlingId} ved iverksetting")
+
+
+        val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
+        if (tilkjentYtelseDto != null) {
+            utbetal(kontekst)
+            lagGysOppgaveHvisRelevant(kontekst, vedtak)
+        } else {
+            log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: ${vedtak.virkningstidspunkt}.")
+        }
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører.Companion).medPayload(kontekst.behandlingId)
+                .forSak(kontekst.sakId.id)
+        )
+        mellomlagretVurderingRepository.slett(kontekst.behandlingId)
+
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
+            flytJobbRepository.leggTil(
+                HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(kontekst.sakId)
+            )
+        }
+
+        return Fullført
+    }
+
+
+    private fun utbetal(kontekst: FlytKontekstMedPerioder) {
+        /**
+         * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
+         * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
+         */
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører.Companion)
+                .medPayload(kontekst.behandlingId)
+                .forSak(sakId = kontekst.sakId.toLong())
+        )
+    }
+
+    private fun opprettGosysOppgaverForSosialrefusjon(
+        navKontorerSomSkalHaOppgave: Set<NavKontorPeriodeDto>,
+        aktivIdent: Ident,
+        kontekst: FlytKontekstMedPerioder
+    ) {
+        navKontorerSomSkalHaOppgave.forEach { navKontor ->
+            // TODO: Opprett egen jobb-kjøring for å opprette gosysoppgave
+            if (navKontor.enhetsNummer.isNotEmpty()) {
+                log.info("Oppretter Gosysoppgave for $navKontor")
+                gosysService.opprettRefusjonskravOppgave(
+                    aktivIdent,
+                    kontekst.behandlingId.toString(),
+                    kontekst.behandlingId,
+                    navKontor,
+                    navKontorerSomSkalHaOppgave.isNotEmpty()
+                )
+            }
+        }
+    }
+
+    private fun finnVedtakMedTidligsteVirkningstidspunkt(behandling: Behandling): Vedtak? {
+        val alleBehandling =
+            behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
+        val vedtakPåBehandling = alleBehandling.mapNotNull {
+            vedtakService.hentVedtak(it.id)
+        }
+
+        val vedtakMedVirkningstidspunkt = vedtakPåBehandling
+            .filter { it.virkningstidspunkt != null }
+
+        val tidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
+            .mapNotNull { it.virkningstidspunkt }.minOrNull()
+            ?: error("Ingen vedtak med virkningstidspunkt funnet")
+
+        val alleVedtakMedTidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
+            .filter { tidligsteVirkningstidspunkt.isEqual(it.virkningstidspunkt) }
+
+        if (alleVedtakMedTidligsteVirkningstidspunkt.size == 1 && alleVedtakMedTidligsteVirkningstidspunkt.first().behandlingId == behandling.id) {
+            return alleVedtakMedTidligsteVirkningstidspunkt.first()
+        }
+        return null
+    }
+
+    private fun utledTidligsteMuligeVedtakstidspunkt(behandling: Behandling, vedtakstidspunkt: LocalDate): LocalDate {
+        behandling.forrigeBehandlingId ?: return vedtakstidspunkt
+
+        val alleYtelsesbehandlingerPåSak =
+            behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
+
+        val oppfylteVurderinger = alleYtelsesbehandlingerPåSak.filter {
+            !resultatUtleder.erRentAvslag(it)
+        }
+
+        val alleInnvilgedeVedtak = oppfylteVurderinger.mapNotNull {
+            vedtakService.hentVedtak(it.id)
+        }
+
+        return alleInnvilgedeVedtak.minByOrNull { it.vedtakstidspunkt }?.vedtakstidspunkt?.toLocalDate()
+            ?: vedtakstidspunkt
+    }
+
+    private fun finnTidligesteVedtakstidspunktFraTidligereBehandlinger(
+        behandling: Behandling,
+        vedtakstidspunkt: LocalDate
+    ): LocalDate {
+        val forrigeBehandlingId = behandling.forrigeBehandlingId
+            ?: return vedtakstidspunkt
+
+        val vedtak = vedtakService.hentVedtak(forrigeBehandlingId)
+        val forrigeVedtakstidspunkt = vedtak?.vedtakstidspunkt
+        val nyTidligsteedtakstidspunkt = if (vedtak?.vedtakstidspunkt != null) {
+            minOf(forrigeVedtakstidspunkt.toLocalDate(), vedtakstidspunkt)
+        } else vedtakstidspunkt
+        val forrigeBehandling = behandlingRepository.hent(behandlingId = forrigeBehandlingId)
+        return finnTidligesteVedtakstidspunktFraTidligereBehandlinger(forrigeBehandling, nyTidligsteedtakstidspunkt)
+    }
+
+
+    fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(
+        kontekst: FlytKontekstMedPerioder,
+        behandling: Behandling,
+        vedtak: Vedtak
+    ) {
+        val navkontorSosialRefusjon =
+            refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: emptyList()
+        if (navkontorSosialRefusjon.isNotEmpty()) {
+            val erInnvilgetMedEtterbetaling =
+                vedtak.virkningstidspunkt != null && vedtak.virkningstidspunkt < vedtak.vedtakstidspunkt.toLocalDate()
+
+            if (!erInnvilgetMedEtterbetaling) {
+                return
+            }
+            val vedtakMedTidligsteVirkingsdato = finnVedtakMedTidligsteVirkningstidspunkt(behandling)
+            if (vedtakMedTidligsteVirkingsdato?.virkningstidspunkt == null) {
+                log.info("Tidligste virkningsdato er i en tidligere eller sametiding behandling enn ${kontekst.behandlingId}, så ingen oppgave opprettes")
+                return
+            }
+
+            val tidligsteMuligeVedtakstidspunkt =
+                utledTidligsteMuligeVedtakstidspunkt(
+                    behandling,
+                    vedtak.vedtakstidspunkt.toLocalDate()
+                )
+
+            val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
+                .filter { it.harKrav && it.navKontor != null }
+                .map {
+                    it.tilNavKontorPeriodeDto(
+                        virkningsdato = vedtakMedTidligsteVirkingsdato.virkningstidspunkt,
+                        vedtaksdato = tidligsteMuligeVedtakstidspunkt.minusDays(1)
+                    )
+                }
+                .toSet()
+
+            log.info("Fant ${gjeldendeSosialRefusjonDtoer.size} refusjonskrav som skal få oppgave")
+            val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
+
+            opprettGosysOppgaverForSosialrefusjon(gjeldendeSosialRefusjonDtoer, aktivIdent, kontekst)
+        }
+    }
+
+    fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder, vedtak: Vedtak) {
+        val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
+        if (!resultatUtleder.erRentAvslag(behandling)) {
+            opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst, behandling, vedtak)
+        } else {
+            log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
+
+        }
+    }
+
+    fun lagreVedtak(kontekst: FlytKontekstMedPerioder) {
+        if (vedtakService.hentVedtak(kontekst.behandlingId) != null) {
+            /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
+            return
+        }
+        log.warn("Forventet å finne allerede lagret vedtak fra FatteVedtakSteg. Lagrer vedtak...")
+
+        val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
+        val vedtakstidspunkt = stegHistorikk
+            .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
+            ?.tidspunkt()
+            ?: error("Forventet å finne et avsluttet fatte vedtak steg")
+
+        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
+        vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
+    }
+
+
+    private fun harAvbruttRevurderingIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
+        kontekst.behandlingType == TypeBehandling.Revurdering && avbrytRevurderingService.revurderingErAvbrutt(
+            kontekst.behandlingId
+        )
+
+    private fun harTrukketSøknadIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
+        kontekst.behandlingType == TypeBehandling.Førstegangsbehandling && trukketSøknadService.søknadErTrukket(
+            kontekst.behandlingId
+        )
+
+
+    companion object : FlytSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
+            val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+            val gosysService = GosysService(gatewayProvider)
+            val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
+                vilkårsresultatRepository = repositoryProvider.provide(),
+            )
+            val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
+            val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
+            return IverksettVedtakSteg(
+                sakRepository = sakRepository,
+                refusjonkravRepository = refusjonkravRepository,
+                behandlingRepository = behandlingRepository,
+                utbetalingService = UtbetalingService(
+                    repositoryProvider = repositoryProvider,
+                    gatewayProvider = gatewayProvider
+                ),
+                vedtakService = VedtakService(repositoryProvider, gatewayProvider),
+                virkningstidspunktUtleder = virkningstidspunktUtlederService,
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+                flytJobbRepository = flytJobbRepository,
+                mellomlagretVurderingRepository = mellomlagretVurderingRepository,
+                gosysService = gosysService,
+                resultatUtleder = resultatUtleder,
+                )
+        }
+
+        override fun type(): StegType {
+            return StegType.IVERKSETT_VEDTAK
+        }
+    }
+}

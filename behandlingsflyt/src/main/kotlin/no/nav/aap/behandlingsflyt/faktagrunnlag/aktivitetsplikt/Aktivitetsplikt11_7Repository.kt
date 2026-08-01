@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Varsel
+import no.nav.aap.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.brev.BrevbestillingReferanse
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
 import java.time.LocalDate
 

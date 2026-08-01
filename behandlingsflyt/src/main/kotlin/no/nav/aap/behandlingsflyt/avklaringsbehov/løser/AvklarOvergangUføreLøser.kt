@@ -1,0 +1,130 @@
+package no.nav.aap.behandlingsflyt.avklaringsbehov.løser
+
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.overganguføre.OvergangUføreGrunnlag
+import no.nav.aap.behandlingsflyt.steg.overgangufore.OvergangUføreRepository
+import no.nav.aap.overganguføre.OvergangUføreValidering.nårVurderingErKonsistentMedSykdomOgBistand
+import no.nav.aap.overganguføre.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.steg.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.utils.toHumanReadable
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
+import kotlin.collections.orEmpty
+
+class AvklarOvergangUføreLøser(
+    private val overgangUforeRepository: OvergangUføreRepository,
+    private val sakRepository: SakRepository,
+    private val sykdomRepository: SykdomRepository,
+    private val bistandRepository: BistandRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
+) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
+
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        overgangUforeRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        bistandRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+    )
+
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: AvklarOvergangUføreLøsning
+    ): LøsningsResultat {
+        val løsninger = løsning.løsningerForPerioder
+
+        val (behandlingId, sakId, forrigeBehandlingId) = kontekst.kontekst.let {
+            Triple(
+                it.behandlingId,
+                it.sakId,
+                it.forrigeBehandlingId
+            )
+        }
+
+        val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
+
+        val vedtatteVurderinger = forrigeBehandlingId
+            ?.let { overgangUforeRepository.hentHvisEksisterer(it) }
+            ?.vurderinger
+            .orEmpty()
+
+        val nyeVurderinger = løsninger.map {
+            it.tilOvergangUføreVurdering(
+                kontekst.bruker,
+                behandlingId
+            )
+        }
+
+        val nyTidslinje = OvergangUføreGrunnlag(
+            vurderinger = nyeVurderinger + vedtatteVurderinger
+        ).somOvergangUforevurderingstidslinje()
+        valider(behandlingId, rettighetsperiode.fom, nyTidslinje)
+        validerVurderingsPerioder(behandlingId, nyTidslinje)
+        overgangUforeRepository.lagre(
+            behandlingId = behandlingId,
+            overgangUføreVurderinger = nyeVurderinger + vedtatteVurderinger
+        )
+
+        return LøsningsResultat(
+            begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
+        )
+    }
+
+    private fun validerVurderingsPerioder(
+        behandlingId: BehandlingId,
+        nyTidslinje: Tidslinje<OvergangUføreVurdering>
+    ) {
+        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+            .hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
+        val perioderVedtaketBehøverVurdering = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty()
+            .somTidslinje { it }
+
+        val perioderDekket = nyTidslinje.map { true }.komprimer()
+        val perioderSomManglerLøsning = perioderVedtaketBehøverVurdering
+            .leftJoin(perioderDekket) { _, dekket -> dekket != null }
+            .filter { !it.verdi }.perioder().toSet()
+
+        if (perioderSomManglerLøsning.isNotEmpty()) {
+            throw UgyldigForespørselException("Du mangler vurdering for ${perioderSomManglerLøsning.toHumanReadable()}")
+        }
+    }
+
+    override fun forBehov(): Definisjon {
+        return Definisjon.AVKLAR_OVERGANG_UFORE
+    }
+
+    private fun valider(
+        behandlingId: BehandlingId,
+        kravdato: LocalDate,
+        nyTidslinje: Tidslinje<OvergangUføreVurdering>
+    ) {
+        val sykdomTidslinje = sykdomRepository.hentHvisEksisterer(behandlingId)
+            ?.somSykdomsvurderingstidslinje()
+            .orEmpty()
+        val bistandTidslinje = bistandRepository.hentHvisEksisterer(behandlingId)
+            ?.somBistandsvurderingstidslinje()
+            .orEmpty()
+        val inkonsistentePerioder = nårVurderingErKonsistentMedSykdomOgBistand(
+            overgangUføreTidslinje = nyTidslinje,
+            sykdomstidslinje = sykdomTidslinje,
+            bistandstidslinje = bistandTidslinje,
+            kravdato = kravdato
+        ).filter { !it.verdi }.perioder().toSet()
+        if (inkonsistentePerioder.isNotEmpty()) {
+            throw UgyldigForespørselException(
+                "Vurderingene for ${inkonsistentePerioder.toHumanReadable()} stemmer ikke med periodene i § 11-6 Sykdom og bistand."
+            )
+        }
+    }
+}

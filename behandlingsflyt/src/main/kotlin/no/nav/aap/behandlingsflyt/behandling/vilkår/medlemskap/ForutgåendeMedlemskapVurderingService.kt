@@ -1,17 +1,17 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
+import no.nav.aap.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.lovvalg.Arbeidsforholdtype
+import no.nav.aap.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
+import no.nav.aap.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.lovvalg.Skipsregister
+import no.nav.aap.lovvalg.Skipstype
+import no.nav.aap.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.personopplysninger.PersonStatus
+import no.nav.aap.personopplysninger.PersonopplysningMedHistorikkGrunnlag
+import no.nav.aap.personopplysninger.erGyldigIPeriode
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapGapGjennomslipp
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapInntektsvurdering
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapUtfall
@@ -19,6 +19,10 @@ import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapNorskOgUtfallInntekt
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapStandardGjennomslipp
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.medlemskap.Indikasjon
+import no.nav.aap.medlemskap.Kilde
+import no.nav.aap.medlemskap.VurdertPeriode
 import java.time.YearMonth
 
 class ForutgåendeMedlemskapVurderingService {
@@ -105,7 +109,7 @@ class ForutgåendeMedlemskapVurderingService {
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val relevantePerioder = grunnlag.filter {
-            (it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato))
+            (it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato!!))
                     || forutgåendePeriode.inneholder(it.startdato)
                     || (it.sluttdato == null && it.startdato.isBefore(forutgåendePeriode.fom))
         }
@@ -158,8 +162,8 @@ class ForutgåendeMedlemskapVurderingService {
             )
         }
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
-            (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato)) || (it.fraDato != null && forutgåendePeriode.inneholder(
-                it.fraDato
+            (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato!!)) || (it.fraDato != null && forutgåendePeriode.inneholder(
+                it.fraDato!!
             ))
         }
         val arbeidUtlandPerioder: MutableList<OppgittJobbetIUtlandGrunnlag> = mutableListOf()
@@ -228,8 +232,8 @@ class ForutgåendeMedlemskapVurderingService {
         }
 
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
-            (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato)) || (it.fraDato != null && forutgåendePeriode.inneholder(
-                it.fraDato
+            (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato!!)) || (it.fraDato != null && forutgåendePeriode.inneholder(
+                it.fraDato!!
             )) && !it.iArbeid
         }
 

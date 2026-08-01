@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.integrasjon.ufore
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.beregning.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
+import no.nav.aap.misc.uføre.UføreSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadResponse
 import no.nav.aap.behandlingsflyt.prometheus

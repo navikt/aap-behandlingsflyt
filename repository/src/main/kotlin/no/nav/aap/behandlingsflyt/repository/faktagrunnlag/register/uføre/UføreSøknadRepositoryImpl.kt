@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadGrunnlag
+import no.nav.aap.misc.uføre.UføreSøknad
+import no.nav.aap.misc.uføre.UføreSøknadGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknadRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 

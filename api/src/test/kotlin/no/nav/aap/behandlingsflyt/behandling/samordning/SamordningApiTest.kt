@@ -8,8 +8,8 @@ import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseVurderingGrunnlagDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.misc.SamordningYtelse
+import no.nav.aap.misc.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -24,6 +24,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.steg.samordning.EndringStatus
+import no.nav.aap.samordning.Ytelse
 
 
 @Fakes

@@ -6,10 +6,10 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerPeriodeResponse
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerRequest
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.TiltakspengerVedtakResponse
+import no.nav.aap.behandlingsflyt.steg.samordning.andrestatligeytelservurdering.gateway.TiltakspengerYtelseType
 import no.nav.aap.behandlingsflyt.test.TestPersonService
 
 class TiltakspengerFake(private val fakePersoner: () -> TestPersonService) : FakeServer() {

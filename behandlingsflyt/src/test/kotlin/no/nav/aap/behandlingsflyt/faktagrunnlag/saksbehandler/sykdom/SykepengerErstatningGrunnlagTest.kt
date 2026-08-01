@@ -1,10 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.*
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.sykepengererstatning.SykepengerErstatningGrunnlag
+import no.nav.aap.sykepengererstatning.SykepengerGrunn
+import no.nav.aap.sykepengererstatning.SykepengerVurdering
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

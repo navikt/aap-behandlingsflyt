@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
 import no.nav.aap.behandlingsflyt.prometheus
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.misc.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken

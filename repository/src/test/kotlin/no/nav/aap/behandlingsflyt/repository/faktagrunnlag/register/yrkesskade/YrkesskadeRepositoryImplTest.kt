@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.SkadekombinasjonRegister
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
+import no.nav.aap.yrkesskade.SkadekombinasjonRegister
+import no.nav.aap.yrkesskade.Yrkesskade
+import no.nav.aap.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.komponenter.dbconnect.transaction

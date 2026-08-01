@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.stønadsperiode
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.stønadsperiode.RelevantKravType
+import no.nav.aap.stønadsperiode.StønadsperiodeVurdering
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate

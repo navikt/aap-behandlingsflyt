@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
+import no.nav.aap.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
+import no.nav.aap.lovvalg.Arbeidsforholdtype
+import no.nav.aap.lovvalg.Fartsomraade
+import no.nav.aap.lovvalg.Skipsregister
+import no.nav.aap.lovvalg.Skipstype
+import no.nav.aap.lovvalg.Yrke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.prometheus

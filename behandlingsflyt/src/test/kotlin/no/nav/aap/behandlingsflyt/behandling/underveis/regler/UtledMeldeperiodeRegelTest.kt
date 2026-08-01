@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.MELDEPERIODE_LENGDE
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.UtledMeldeperiodeRegel.Companion.MELDEPERIODE_LENGDE
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.august
@@ -8,9 +8,11 @@ import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.underveis.Vurdering
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.steg.underveis.regler.UtledMeldeperiodeRegel
 
 class UtledMeldeperiodeRegelTest {
 

@@ -1,6 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.YtelseTypeCode
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
+import no.nav.aap.behandlingsflyt.steg.samordning.tjenestepensjon.gateway.TpOrdning
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language

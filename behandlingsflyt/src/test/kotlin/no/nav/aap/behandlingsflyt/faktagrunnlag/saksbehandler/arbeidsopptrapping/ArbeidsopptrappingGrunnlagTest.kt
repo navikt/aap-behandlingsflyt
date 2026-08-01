@@ -1,12 +1,15 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
+import no.nav.aap.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
+import no.nav.aap.arbeidsopptrapping.ArbeidsopptrappingVurdering
+import no.nav.aap.arbeidsopptrapping.perioderMedArbeidsopptrapping
 
 class ArbeidsopptrappingGrunnlagTest {
     @Test

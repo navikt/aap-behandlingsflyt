@@ -1,26 +1,26 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KvoteOk
+import no.nav.aap.rettighetstype.KvoteOk
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktVurdering
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Oppfylt
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
+import no.nav.aap.underveis.Avslag
+import no.nav.aap.underveis.Hverdager
+import no.nav.aap.kvote.Kvote
+import no.nav.aap.underveis.MeldepliktVurdering
+import no.nav.aap.underveis.Oppfylt
+import no.nav.aap.underveis.VarighetVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
-import no.nav.aap.behandlingsflyt.behandling.vilkår.kvote.OrdinærKvoteFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.kvote.OrdinærKvoteVilkår
-import no.nav.aap.behandlingsflyt.behandling.vilkår.kvote.SykepengeerstatningKvoteFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.kvote.SykepengeerstatningKvoteVilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.kvote.OrdinærKvoteFaktagrunnlag
+import no.nav.aap.kvote.OrdinærKvoteVilkår
+import no.nav.aap.kvote.SykepengeerstatningKvoteFaktagrunnlag
+import no.nav.aap.kvote.SykepengeerstatningKvoteVilkår
+import no.nav.aap.rettighetstype.RettighetstypeGrunnlag
+import no.nav.aap.vilkårsresultat.Avslagsårsak
+import no.nav.aap.vilkårsresultat.RettighetsType
+import no.nav.aap.vilkårsresultat.Utfall
+import no.nav.aap.vilkårsresultat.Vilkår
+import no.nav.aap.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.test.januar
@@ -30,6 +30,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.behandlingsflyt.steg.underveis.UnderveisService
+import no.nav.aap.kvote.Kvoter
 
 class UnderveisServiceTest {
     private val kvoter = tomKvoter
