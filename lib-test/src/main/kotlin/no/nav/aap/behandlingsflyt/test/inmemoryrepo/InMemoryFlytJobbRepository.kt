@@ -19,7 +19,6 @@ object InMemoryFlytJobbRepository: FlytJobbRepository {
 
     override fun hentFeilmeldingForOppgave(id: Long) = ""
 
-    override fun hentJobberMedHistorikkForSak(sakid: Long): List<JobbInputMedHistorikk> {
-        TODO("Not yet implemented")
-    }
+    override fun hentJobberMedHistorikkForSak(sakid: Long): List<JobbInputMedHistorikk> =
+        jobber.filter { it.sakId() == sakid }.map { JobbInputMedHistorikk(it, emptyList()) }
 }

@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory
 class RettighetstypeSteg(
     val rettighetstypeRepository: RettighetstypeRepository,
     val vilkårsresultatRepository: VilkårsresultatRepository,
+    val vilkårService: VilkårService,
     val stansOpphørRepository: StansOpphørRepository,
     val unleashGateway: UnleashGateway,
     val kvoteService: KvoteService,
@@ -43,6 +45,7 @@ class RettighetstypeSteg(
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         rettighetstypeRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
         stansOpphørRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
         kvoteService = KvoteService(),
@@ -72,15 +75,17 @@ class RettighetstypeSteg(
         /** Kvotene lagres som vilkårsvurderinger, men er ikke implementert som Krav ved vurdering av rettighetstype,
          *  ettersom kravspesfikasjonen er input til kvotevurderingen
          */
-        OrdinærKvoteVilkår(vilkårsresultat).vurder(OrdinærKvoteFaktagrunnlag(kvotevurdering, kvoter))
+        vilkårService.vurderVilkår(
+            kontekst.behandlingId, OrdinærKvoteFaktagrunnlag(kvotevurdering, kvoter),
+            OrdinærKvoteVilkår
+        )
 
-        SykepengeerstatningKvoteVilkår(vilkårsresultat).vurder(
-            SykepengeerstatningKvoteFaktagrunnlag(
+        vilkårService.vurderVilkår(
+            kontekst.behandlingId, SykepengeerstatningKvoteFaktagrunnlag(
                 kvotevurdering,
                 kvoter
-            )
+            ), SykepengeerstatningKvoteVilkår
         )
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
         when (kontekst.vurderingType) {
             /* Følgende påvirker rettighetstypen / stans / opphør. */
