@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
@@ -33,6 +34,7 @@ class RettighetstypeStegTest {
     private val steg = RettighetstypeSteg(
         rettighetstypeRepository = rettighetstypeRepository,
         vilkårsresultatRepository = vilkårsresultatRepository,
+        vilkårService = VilkårService(vilkårsresultatRepository),
         stansOpphørRepository = stansOpphørRepository,
         unleashGateway = AlleAvskruddUnleash,
         kvoteService = kvoteService,

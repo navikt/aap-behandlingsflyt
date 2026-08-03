@@ -51,7 +51,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 1000
                 )
             ),
             kilde = "TEST",
@@ -74,7 +73,6 @@ class InMemorySamordningYtelseRepositoryTest {
         assertThat(tilYtelse?.ytelser?.first()?.kilde).isEqualTo("TEST")
         assertThat(tilYtelse?.ytelser?.first()?.saksRef).isEqualTo("REF123")
         assertThat(tilYtelse?.ytelser?.first()?.ytelsePerioder).hasSize(1)
-        assertThat(tilYtelse?.ytelser?.first()?.ytelsePerioder?.first()?.kronesum).isEqualTo(1000)
 
         // Verify that the grunnlagId is the same (reference to the same data)
         assertThat(tilYtelse?.grunnlagId).isEqualTo(fraYtelse?.grunnlagId)
@@ -115,7 +113,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 1000
                 )
             ),
             kilde = "TEST1",
@@ -131,7 +128,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 2000
                 )
             ),
             kilde = "TEST2",
@@ -147,7 +143,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 3000
                 )
             ),
             kilde = "TEST3",
@@ -168,7 +163,6 @@ class InMemorySamordningYtelseRepositoryTest {
         assertThat(eldsteGrunnlag?.ytelser?.first()?.kilde).isEqualTo("TEST1")
         assertThat(eldsteGrunnlag?.ytelser?.first()?.saksRef).isEqualTo("REF1")
         assertThat(eldsteGrunnlag?.ytelser?.first()?.ytelsePerioder).hasSize(1)
-        assertThat(eldsteGrunnlag?.ytelser?.first()?.ytelsePerioder?.first()?.kronesum).isEqualTo(1000)
 
         // Also verify that hentHvisEksisterer returns the newest one (ytelse3)
         val nyesteGrunnlag = samordningYtelseRepo.hentHvisEksisterer(behandlingId)
@@ -195,7 +189,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 1000
                 )
             ),
             kilde = "TEST1",
@@ -211,7 +204,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 2000
                 )
             ),
             kilde = "TEST2",
@@ -232,7 +224,6 @@ class InMemorySamordningYtelseRepositoryTest {
         assertThat(savedYtelse1?.ytelseType).isEqualTo(Ytelse.SYKEPENGER)
         assertThat(savedYtelse1?.saksRef).isEqualTo("REF1")
         assertThat(savedYtelse1?.ytelsePerioder).hasSize(1)
-        assertThat(savedYtelse1?.ytelsePerioder?.first()?.kronesum).isEqualTo(1000)
 
         // Verify second ytelse
         val savedYtelse2 = grunnlag?.ytelser?.find { it.kilde == "TEST2" }
@@ -240,7 +231,6 @@ class InMemorySamordningYtelseRepositoryTest {
         assertThat(savedYtelse2?.ytelseType).isEqualTo(Ytelse.FORELDREPENGER)
         assertThat(savedYtelse2?.saksRef).isEqualTo("REF2")
         assertThat(savedYtelse2?.ytelsePerioder).hasSize(1)
-        assertThat(savedYtelse2?.ytelsePerioder?.first()?.kronesum).isEqualTo(2000)
     }
 
     @Test
@@ -260,7 +250,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 1000
                 )
             ),
             kilde = "TEST1",
@@ -276,7 +265,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 2000
                 )
             ),
             kilde = "TEST2",
@@ -345,7 +333,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 1000
                 )
             ),
             kilde = "SOURCE",
@@ -361,7 +348,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         tom = LocalDate.of(2023, 12, 31)
                     ),
                     gradering = null,
-                    kronesum = 2000
                 )
             ),
             kilde = "TARGET",
@@ -394,7 +380,6 @@ class InMemorySamordningYtelseRepositoryTest {
                         assertThat(ytelsePeriode.periode.fom).isEqualTo(LocalDate.of(2023, 2, 1))
                         assertThat(ytelsePeriode.periode.tom).isEqualTo(LocalDate.of(2023, 12, 31))
                         assertThat(ytelsePeriode.gradering).isNull()
-                        assertThat(ytelsePeriode.kronesum).isEqualTo(2000)
                     }
                 )
             },

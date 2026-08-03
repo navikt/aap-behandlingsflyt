@@ -23,6 +23,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -53,6 +55,7 @@ class HendelseMottattHåndteringJobbUtfører(
     private val håndterFolkeregisterIdentHendelseService: HåndterFolkeregisterIdentHendelseService,
     private val behandlingService: BehandlingService,
     private val trukketSøknadService: TrukketSøknadService,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -135,7 +138,9 @@ class HendelseMottattHåndteringJobbUtfører(
                 )
             }
 
-            InnsendingType.DIALOGMELDING -> {
+            InnsendingType.DIALOGMELDING if (
+                unleashGateway.isDisabled(BehandlingsflytFeature.HandterDialogmeldingSomLegeerklaering)
+            ) -> {
                 håndterDialogMeldingService.håndterMottattDialogMelding(
                     sakId = sakId,
                     referanse = referanse,
@@ -177,7 +182,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 )
             }
 
-            InnsendingType.LEGEERKLÆRING -> {
+            InnsendingType.LEGEERKLÆRING, InnsendingType.DIALOGMELDING -> {
                 val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
                 if (sisteYtelsesBehandling != null &&
                     trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
@@ -254,6 +259,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 håndterFolkeregisterIdentHendelseService = HåndterFolkeregisterIdentHendelseService(repositoryProvider, gatewayProvider),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
+                unleashGateway = gatewayProvider.provide<UnleashGateway>(),
             )
         }
 

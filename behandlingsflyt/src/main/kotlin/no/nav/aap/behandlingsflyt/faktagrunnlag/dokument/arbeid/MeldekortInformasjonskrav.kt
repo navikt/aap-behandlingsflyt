@@ -17,8 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -30,7 +28,6 @@ class MeldekortInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val meldekortRepository: MeldekortRepository,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
     override val navn = Companion.navn
 
@@ -45,7 +42,6 @@ class MeldekortInformasjonskrav private constructor(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<MeldekortRepository>(),
                 repositoryProvider.provide<FlytJobbRepository>(),
-                gatewayProvider.provide<UnleashGateway>(),
             )
         }
     }
@@ -91,8 +87,7 @@ class MeldekortInformasjonskrav private constructor(
             )
             allePlussNye.add(nyttMeldekort)
 
-            val endretAvSaksbehandler = unleashGateway.isEnabled(BehandlingsflytFeature.MeldekortEndretAvSaksbehandler)
-                && ubehandletMeldekort.opprettetAv != null
+            val endretAvSaksbehandler = ubehandletMeldekort.opprettetAv != null
             if (ubehandletMeldekort.digitalisertAvPostmottak == true || endretAvSaksbehandler) {
                 flytJobbRepository.leggTil(
                     JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører).medPayload(

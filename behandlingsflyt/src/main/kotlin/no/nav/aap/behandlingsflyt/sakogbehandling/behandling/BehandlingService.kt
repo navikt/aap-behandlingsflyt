@@ -180,6 +180,8 @@ class BehandlingService(
 
         val mottokOppfølgingsOppgave = vurderingsbehov.any { it.type == Vurderingsbehov.OPPFØLGINGSOPPGAVE }
 
+        val mottokMigreringFraArena = vurderingsbehov.any { it.type == Vurderingsbehov.MIGRERING_FRA_ARENA }
+
         return when {
             mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
             mottokKabalHendelse -> Ordinær(
@@ -196,7 +198,7 @@ class BehandlingService(
                 )
             )
 
-            /* Tilbakekreving kommer kanskje som et case her ... */
+            mottokMigreringFraArena -> Ordinær(opprettMigreringFraArenaBehandling(sakId, vurderingsbehovOgÅrsak))
 
             sisteYtelsesbehandling == null ->
                 Ordinær(opprettFørstegangsbehandling(sakId, vurderingsbehovOgÅrsak))
@@ -335,6 +337,16 @@ class BehandlingService(
     }
 
     private fun opprettFørstegangsbehandling(
+        sakId: SakId,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
+    ): Behandling = behandlingRepository.opprettBehandling(
+        sakId = sakId,
+        typeBehandling = TypeBehandling.Førstegangsbehandling,
+        forrigeBehandlingId = null,
+        vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak
+    )
+
+    private fun opprettMigreringFraArenaBehandling(
         sakId: SakId,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling = behandlingRepository.opprettBehandling(

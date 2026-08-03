@@ -116,26 +116,33 @@ class UnderveisService(
             )
         }
 
-        internal fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
-            .map {
-                Underveisperiode(
-                    periode = it.periode,
-                    meldePeriode = it.verdi.meldeperiode(),
-                    utfall = it.verdi.utfall(),
-                    rettighetsType = it.verdi.endeligRettighetsType(),
-                    avslagsårsak = it.verdi.avslagsårsak(),
-                    grenseverdi = it.verdi.grenseverdi(),
-                    arbeidsgradering = it.verdi.arbeidsgradering(),
-                    trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
-                    brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
-                    institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
-                    meldepliktStatus = it.verdi.meldepliktVurdering?.status,
-                    meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
-                        Prosent.`0_PROSENT`
-                    else
-                        Prosent.`100_PROSENT`
-                )
+        internal fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> =
+            vurderRegler.segmenter()
+                .map {
+                    Underveisperiode(
+                        periode = it.periode,
+                        meldePeriode = it.verdi.meldeperiode(),
+                        utfall = it.verdi.utfall(),
+                        rettighetsType = it.verdi.endeligRettighetsType(),
+                        avslagsårsak = it.verdi.avslagsårsak(),
+                        grenseverdi = it.verdi.grenseverdi(),
+                        arbeidsgradering = it.verdi.arbeidsgradering(),
+                        trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
+                        brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
+                        institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
+                        meldepliktStatus = it.verdi.meldepliktVurdering?.status,
+                        meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
+                            Prosent.`0_PROSENT`
+                        else
+                            Prosent.`100_PROSENT`
+                    )
+                }
+
+        internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
+            return regelset.fold(tidslinjeOf(input.periodeForVurdering to Vurdering())) { resultat, regel ->
+                regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
             }
+        }
     }
 
     fun vurder(behandlingId: BehandlingId): Tidslinje<Vurdering> {
@@ -148,12 +155,6 @@ class UnderveisService(
             input
         )
         return vurderRegler
-    }
-
-    internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
-        return regelset.fold(tidslinjeOf(input.periodeForVurdering to Vurdering())) { resultat, regel ->
-            regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
-        }
     }
 
     private fun genererInput(behandlingId: BehandlingId): UnderveisInput {

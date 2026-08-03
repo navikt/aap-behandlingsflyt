@@ -70,12 +70,12 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
-        BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.MotorV2 to true,
+        BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling to true,
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
@@ -84,6 +84,8 @@ object LokalUnleash : FakeUnleashBase(
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
+        BehandlingsflytFeature.StrekkAvslagOverHelg to true,
+        BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

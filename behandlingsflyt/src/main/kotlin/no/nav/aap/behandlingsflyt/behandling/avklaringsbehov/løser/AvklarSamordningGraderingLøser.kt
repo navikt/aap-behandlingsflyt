@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -17,21 +16,18 @@ import java.time.LocalDateTime
 
 class AvklarSamordningGraderingLøser(
     private val samordningYtelseVurderingRepository: SamordningVurderingRepository,
-    private val samordningYtelseRepository: SamordningYtelseRepository,
+    private val samordningService: SamordningService,
 ) : AvklaringsbehovsLøser<AvklarSamordningGraderingLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         samordningYtelseVurderingRepository = repositoryProvider.provide(),
-        samordningYtelseRepository = repositoryProvider.provide(),
+        samordningService = SamordningService(repositoryProvider)
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSamordningGraderingLøsning): LøsningsResultat {
         val vurderingerForSamordning = løsning.vurderingerForSamordning
             .also(VurderingerForSamordning::valider)
 
-        val samordningService = SamordningService(samordningYtelseVurderingRepository, samordningYtelseRepository)
-
-        val samordningYtelseGrunnlag = samordningYtelseRepository.hentHvisEksisterer(kontekst.behandlingId())
         val samordningsvurderinger = SamordningVurderingGrunnlag(
             begrunnelse = vurderingerForSamordning.begrunnelse,
             vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map {
@@ -41,7 +37,6 @@ class AvklarSamordningGraderingLøser(
                         SamordningVurderingPeriode(
                             periode = vurdering.periode,
                             gradering = vurdering.gradering?.let(::Prosent),
-                            kronesum = vurdering.kronesum,
                             manuell = vurdering.manuell
                         )
                     }.toSet()
@@ -51,9 +46,10 @@ class AvklarSamordningGraderingLøser(
             vurdertTidspunkt = LocalDateTime.now()
         )
 
-        val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
-            samordningYtelseGrunnlag, samordningService.vurderingTidslinje(samordningsvurderinger)
-        )
+        val perioderSomIkkeHarBlittVurdert =
+            samordningService.samordningGrunnlag(kontekst.behandlingId())
+                .copy(vurderingGrunnlag = samordningsvurderinger)
+                .perioderSomIkkeHarBlittVurdert()
 
         if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
             throw UgyldigForespørselException(message = "Har ikke vurdert alle perioder for samordning med andre folketrygdytelser")

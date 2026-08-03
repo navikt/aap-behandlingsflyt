@@ -647,7 +647,7 @@ open class AbstraktFlytOrkestratorTest(
     protected fun Behandling.løsUtenSamordning(): Behandling {
         return this.løsAvklaringsBehov(
             AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning("", true, null, emptyList())
+                vurderingerForSamordning = VurderingerForSamordning("", emptyList())
             )
         )
     }

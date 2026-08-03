@@ -11,9 +11,12 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.within
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class AvklaringsbehovRepositoryTest {
     companion object {
@@ -29,6 +32,30 @@ class AvklaringsbehovRepositoryTest {
         @AfterAll
         @JvmStatic
         fun tearDown() = dataSource.close()
+    }
+
+    @Test
+    fun `leser og skriver tidspunkt riktig`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repository = AvklaringsbehovRepositoryImpl(connection)
+            val avklaringsbehovene = Avklaringsbehovene(repository, behandling.id)
+            avklaringsbehovene.leggTil(
+                Definisjon.AVKLAR_SYKDOM,
+                StegType.AVKLAR_SYKDOM,
+                begrunnelse = "",
+                bruker = SYSTEMBRUKER,
+                perioderVedtaketBehøverVurdering = null,
+                perioderSomIkkeErTilstrekkeligVurdert = null
+            )
+
+            val avklarSykdom= repository.hentAvklaringsbehovene(behandling.id)
+                .hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)!!
+            val endring = avklarSykdom.historikk[0]
+            assertThat(endring.tidsstempel)
+                .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES))
+        }
     }
 
     @Test

@@ -142,7 +142,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 return@mapNotNull null
             }
 
-            val sak = InMemorySakRepository.hent(behandling.sakId)
+            val sak = InMemorySakRepository.hentHvisFinnes(behandling.sakId) ?: return@mapNotNull null
             if (sak.person.id != personId) {
                 return@mapNotNull null
             }
