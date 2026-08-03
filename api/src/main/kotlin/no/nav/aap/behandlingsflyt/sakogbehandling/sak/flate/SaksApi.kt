@@ -248,12 +248,11 @@ fun NormalOpenAPIRoute.saksApi(
                         LocalDate.now(), LocalDate.now().plusYears(1).minusDays(1)
                     )
 
-                    val sak = personOgSakService.finnEllerOpprett(
+                    val sak = personOgSakService.opprettSakMedArenaMigrering(
                         ident = ident,
                         søknadsdato = LocalDate.now(),
+                        saksnummerArena = dto.saksnummerArena,
                     )
-
-                    // TODO: Vi må på en eller annen måte knytte saken mot arena-saken man migrerer fra!
 
                     mottattHendelseService.registrerMottattHendelse(
                         Innsending(

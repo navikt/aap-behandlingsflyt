@@ -70,6 +70,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -151,7 +152,8 @@ class StatistikkJobbUtførerTest {
                 identGateway,
                 FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                SakRepositoryImpl(connection),
+                ArenaMigreringRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident, søknadsdato = LocalDate.now().minusDays(10)
             )
@@ -332,7 +334,8 @@ class StatistikkJobbUtførerTest {
                 identGateway,
                 FakeApiInternGateway.konstruer(),
                 PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                SakRepositoryImpl(connection),
+                ArenaMigreringRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident, søknadsdato = LocalDate.now().minusDays(10).plusDays(1)
             )

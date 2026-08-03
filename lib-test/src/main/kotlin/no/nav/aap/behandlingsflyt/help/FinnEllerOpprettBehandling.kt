@@ -77,6 +77,7 @@ fun sak(
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
         repositoryProvider.provide(),
+        repositoryProvider.provide(),
         repositoryProvider.provide()
     ).finnEllerOpprett(ident(), søknadsdato)
 }

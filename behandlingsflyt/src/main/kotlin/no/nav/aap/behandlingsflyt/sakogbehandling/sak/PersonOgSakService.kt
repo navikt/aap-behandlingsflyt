@@ -8,12 +8,14 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class PersonOgSakService(
     private val pdlGateway: IdentGateway,
     private val apiInternGateway: ApiInternGateway,
     private val personRepository: PersonRepository,
     private val sakRepository: SakRepository,
+    private val arenaMigreringRepository: ArenaMigreringRepository,
 ) {
     constructor(
         gatewayProvider: GatewayProvider,
@@ -22,7 +24,8 @@ class PersonOgSakService(
         gatewayProvider.provide<IdentGateway>(),
         gatewayProvider.provide<ApiInternGateway>(),
         repositoryProvider.provide<PersonRepository>(),
-        repositoryProvider.provide<SakRepository>()
+        repositoryProvider.provide<SakRepository>(),
+        repositoryProvider.provide<ArenaMigreringRepository>()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -35,6 +38,19 @@ class PersonOgSakService(
         val person = personRepository.finnEllerOpprett(identliste)
 
         return sakRepository.finnEllerOpprett(person, søknadsdato)
+    }
+
+    fun opprettSakMedArenaMigrering(ident: Ident, søknadsdato: LocalDate, saksnummerArena: String): Sak {
+        val sak = finnEllerOpprett(ident, søknadsdato)
+        arenaMigreringRepository.lagre(
+            ArenaMigrering(
+                sakId = sak.id,
+                saksnummerArena = saksnummerArena,
+                ident = ident.identifikator,
+                migrertTidspunkt = LocalDateTime.now(),
+            )
+        )
+        return sak
     }
 
     private fun rapporterHvisOppretterPersonSomFinnesIArena(identliste: List<Ident>) {

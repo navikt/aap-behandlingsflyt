@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -185,7 +186,8 @@ class PersonOgSakServiceTest {
                     pdlGateway,
                     apiInternGateway,
                     repositoryProvider.provide<PersonRepository>(),
-                    repositoryProvider.provide<SakRepository>()
+                    repositoryProvider.provide<SakRepository>(),
+                    repositoryProvider.provide<ArenaMigreringRepository>()
                 )
 
                 val opprinneligSak = service.finnEllerOpprett(ident, LocalDate.now())
@@ -230,7 +232,8 @@ class PersonOgSakServiceTest {
                     pdlGateway,
                     apiInternGateway,
                     repositoryProvider.provide<PersonRepository>(),
-                    sakRepository
+                    sakRepository,
+                    repositoryProvider.provide<ArenaMigreringRepository>()
                 )
 
                 val opprinneligSak = service.finnEllerOpprett(ident, søknadsdato)
@@ -283,7 +286,8 @@ class PersonOgSakServiceTest {
                     pdlGateway,
                     apiInternGateway,
                     repositoryProvider.provide<PersonRepository>(),
-                    sakRepository
+                    sakRepository,
+                    repositoryProvider.provide<ArenaMigreringRepository>()
                 )
 
                 val opprinneligSak = service.finnEllerOpprett(ident, søknadsdato)
@@ -366,7 +370,8 @@ class PersonOgSakServiceTest {
                         pdlGateway,
                         apiInternGateway,
                         repositoryProvider.provide<PersonRepository>(),
-                        repositoryProvider.provide<SakRepository>()
+                        repositoryProvider.provide<SakRepository>(),
+                        repositoryProvider.provide<ArenaMigreringRepository>()
                     ).finnSakerFor(ident)
                 }
             }
@@ -412,7 +417,8 @@ class PersonOgSakServiceTest {
             pdlGateway,
             apiInternGateway,
             repositoryProvider.provide<PersonRepository>(),
-            repositoryProvider.provide<SakRepository>()
+            repositoryProvider.provide<SakRepository>(),
+            repositoryProvider.provide<ArenaMigreringRepository>()
         )
         return service
     }
