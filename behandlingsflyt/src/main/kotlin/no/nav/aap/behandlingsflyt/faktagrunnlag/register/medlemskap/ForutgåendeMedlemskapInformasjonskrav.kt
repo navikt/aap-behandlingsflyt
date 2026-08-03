@@ -25,6 +25,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
@@ -41,6 +43,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     private val arbeidsforholdGateway: ArbeidsforholdGateway,
     private val inntektkomponentenGateway: InntektkomponentenGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
+    private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<ForutgåendeMedlemskapInformasjonskrav.MedlemsskapInput, ForutgåendeMedlemskapInformasjonskrav.MedlemsskapReggisterdata> {
 
     override val navn = Companion.navn
@@ -50,8 +53,14 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering()
+        val fellesRegler = kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+
+        if (fellesRegler && unleashGateway.isEnabled(BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag) && oppdatert != null) {
+            return false
+        }
+
+        return fellesRegler
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
@@ -189,7 +198,8 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
                 medlemskapGateway = gatewayProvider.provide(),
                 arbeidsforholdGateway = gatewayProvider.provide(),
                 inntektkomponentenGateway = gatewayProvider.provide(),
-                enhetsregisteretGateway = gatewayProvider.provide()
+                enhetsregisteretGateway = gatewayProvider.provide(),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
     }

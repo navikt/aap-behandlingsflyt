@@ -45,6 +45,7 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -502,6 +503,7 @@ class InformasjonskravGrunnlagTest {
                     arbeidsForholdGateway = gatewayProvider.provide(),
                     enhetsregisteretGateway = gatewayProvider.provide(),
                     inntektskomponentenGateway = gatewayProvider.provide(),
+                    unleashGateway = LokalUnleash,
                 )
             }
         }
