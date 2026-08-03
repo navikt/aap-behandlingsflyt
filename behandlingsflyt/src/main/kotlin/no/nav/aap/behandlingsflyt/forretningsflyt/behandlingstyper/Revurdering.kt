@@ -369,6 +369,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.OPPHOLDSKRAV,
+                    Vurderingsbehov.AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )

@@ -130,6 +130,7 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.OVERGANG_UFORE,
                 Vurderingsbehov.OVERGANG_ARBEID,
                 Vurderingsbehov.OPPHOLDSKRAV,
+                Vurderingsbehov.AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET,
                 Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
                 Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING,
                 Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
