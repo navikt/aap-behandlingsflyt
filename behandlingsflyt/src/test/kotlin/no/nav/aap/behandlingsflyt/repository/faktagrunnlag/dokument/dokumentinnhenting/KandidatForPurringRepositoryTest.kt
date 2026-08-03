@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -91,7 +92,7 @@ internal class KandidatForPurringRepositoryTest {
             avklaringsbehov1.løsAvklaringsbehov(
                 definisjon = Definisjon.BESTILL_LEGEERKLÆRING,
                 begrunnelse = "tatt av vent manuelt",
-                endretAv = "saksbehandler",
+                endretAv = Bruker("saksbehandler"),
             )
 
             val kandidaterTreUkerFraIDag = KandidatForPurringRepositoryImpl(connection).finnKandidaterForPurring(LocalDate.now(clockTreUkerOgEnDagFremITid))

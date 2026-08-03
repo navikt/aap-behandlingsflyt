@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
 
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -25,8 +27,8 @@ class KandidatForPurringRepositoryImpl(
                 ORDER BY AVKLARINGSBEHOV_ID, OPPRETTET_TID DESC
              ) ae ON ae.AVKLARINGSBEHOV_ID = a.id
             WHERE b.STATUS in ('${Status.UTREDES.name}', '${Status.OPPRETTET.name}')
-            AND a.definisjon = '9003'
-            AND ae.status = 'OPPRETTET'
+            AND a.definisjon = '${Definisjon.BESTILL_LEGEERKLÆRING.kode.name}'
+            AND ae.status = '${AvklaringsbehovStatus.OPPRETTET.name}'
             AND ae.frist >= ?
             AND ae.opprettet_tid::date = ?
         """.trimIndent()
