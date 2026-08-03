@@ -608,7 +608,6 @@ open class AbstraktFlytOrkestratorTest(
             AvklarManuellInntektVurderingLøsning(
                 manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                     begrunnelse = "Mangler ligning",
-                    belop = null,
                     vurderinger = (2022..2025).map {
                         ÅrsVurdering(
                             beløp = BigDecimal(inntektPerÅr),
