@@ -22,8 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -36,7 +34,6 @@ class AvklarOppfølgingSteg(
     private val mottaDokumentService: MottaDokumentService,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val unleashGateway: UnleashGateway
 ) :
     BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -58,7 +55,7 @@ class AvklarOppfølgingSteg(
         )
         håndterVurderingAvOppfølging(kontekst)
 
-        if (!ventebehovVurdertFraFør(kontekst) && unleashGateway.isEnabled(BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang)) {
+        if (!ventebehovVurdertFraFør(kontekst)) {
             return FantVentebehov(
                 ventebehov = Ventebehov(
                     definisjon = Definisjon.VENT_PÅ_OPPFØLGING_NY,
@@ -121,7 +118,6 @@ class AvklarOppfølgingSteg(
                 mottaDokumentService = MottaDokumentService(repositoryProvider.provide()),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 avklaringsbehovRepository = repositoryProvider.provide(),
-                unleashGateway = gatewayProvider.provide()
             )
         }
 

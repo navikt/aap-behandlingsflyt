@@ -52,6 +52,7 @@ class InntektsbortfallSteg private constructor(
                         }
                     }
 
+                    VurderingType.MIGERING_FRA_ARENA,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.UTVID_VEDTAKSLENGDE,

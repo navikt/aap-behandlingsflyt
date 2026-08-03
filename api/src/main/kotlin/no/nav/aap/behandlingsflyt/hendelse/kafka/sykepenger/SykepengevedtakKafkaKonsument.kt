@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 const val SYKEPENGEVEDTAK_EVENT_TOPIC = "tbd.boo"
 
 class SykepengevedtakKafkaKonsument(
-    config: KafkaConsumerConfig<String, String>,
+    config: KafkaConsumerConfig,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,

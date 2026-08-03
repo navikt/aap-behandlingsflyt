@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -115,7 +116,7 @@ internal class BarnRepositoryImplTest {
             barnRepository.lagreOppgitteBarn(
                 behandling.id, OppgitteBarn(oppgitteBarn = listOf(oppgittBarn))
             )
-            barnRepository.lagreVurderinger(behandling.id, "ident", vurderteBarn)
+            barnRepository.lagreVurderinger(behandling.id, Bruker("ident"), vurderteBarn)
             behandling
         }
 

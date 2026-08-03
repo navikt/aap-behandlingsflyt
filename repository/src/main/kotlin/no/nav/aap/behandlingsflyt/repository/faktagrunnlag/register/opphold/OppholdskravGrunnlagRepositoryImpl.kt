@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -72,7 +73,7 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
                     fom = row.getLocalDate("FOM"),
                     tom = row.getLocalDateOrNull("TOM"),
                     opprettet = row.getLocalDateTime("OPPRETTET_TID"),
-                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertAv = row.getBruker("VURDERT_AV"),
                     begrunnelse = row.getString("BEGRUNNELSE"),
                     grunnlagId = row.getLong("GRUNNLAG_ID"),
                     vurderingId = row.getLong("VURDERING_ID"),
@@ -113,7 +114,7 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
         val fom: LocalDate,
         val tom: LocalDate?,
         val opprettet: LocalDateTime,
-        val vurdertAv: String,
+        val vurdertAv: Bruker,
         val begrunnelse: String,
         val land: String?,
         val oppfylt: Boolean,
@@ -167,7 +168,7 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setString(2, oppholdskravVurdering.vurdertAv)
+                setBruker(2, oppholdskravVurdering.vurdertAv)
             }
         }
 

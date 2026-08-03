@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
+import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -166,8 +166,10 @@ class AvsluttetBehandlingTilStatistikk(
         val perioderMedArbeidsopptrapping =
             arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
 
+        val resultat = hentResultat(behandling)
+
         val vedtattStansOpphør = if (behandling.typeBehandling()
-                .erYtelsesbehandling() && !avbrytRevurderingService.revurderingErAvbrutt(behandling.id)
+                .erYtelsesbehandling() && !(avbrytRevurderingService.revurderingErAvbrutt(behandling.id) || resultat == ResultatKode.TRUKKET)
         ) stansOpphørService.vedtattStansOpphør(behandling.id) else emptyList()
 
         val diagnoserPeriodisert = hentDiagnose(behandling)
@@ -189,14 +191,16 @@ class AvsluttetBehandlingTilStatistikk(
                 }),
             tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
             beregningsGrunnlag = beregningsGrunnlagDTO,
-            diagnoser = diagnoserPeriodisert.lastOrNull()?.let { Diagnoser(
-                kodeverk = it.kodeverk,
-                diagnosekode = it.diagnosekode,
-                bidiagnoser = it.bidiagnoser
-            ) },
+            diagnoser = diagnoserPeriodisert.lastOrNull()?.let {
+                Diagnoser(
+                    kodeverk = it.kodeverk,
+                    diagnosekode = it.diagnosekode,
+                    bidiagnoser = it.bidiagnoser
+                )
+            },
             diagnoserPeriodisert = diagnoserPeriodisert,
             rettighetstypePerioder = rettighetstypePerioder,
-            resultat = hentResultat(behandling),
+            resultat = resultat,
             vedtakstidspunkt = vedtakTidspunkt,
             fritaksvurderinger = fritaksvurderinger,
             perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) },
@@ -213,7 +217,8 @@ class AvsluttetBehandlingTilStatistikk(
                     SamordningDTO.Arbeidsgiver(fom = it.periode.fom, tom = it.periode.tom)
                 }
 
-        val samordningYtelserSamornding = samordningService.tidslinje(behandling.id).segmenter()
+        val samordningYtelserSamornding = samordningService.samordningGrunnlag(behandling.id)
+            .vurder().segmenter()
             .flatMap { (periode, verdi) ->
                 verdi.ytelsesGraderinger.map { ytelseGradering ->
                     SamordningDTO.StatligeYtelser(

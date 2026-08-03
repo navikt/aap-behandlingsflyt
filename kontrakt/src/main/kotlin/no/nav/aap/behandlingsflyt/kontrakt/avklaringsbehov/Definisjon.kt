@@ -24,7 +24,8 @@ public enum class Definisjon(
     @param:JsonProperty("løsesISteg") public val løsesISteg: StegType = StegType.UDEFINERT,
     public val kreverToTrinn: Boolean = false,
     public val kvalitetssikres: Boolean = false,
-    public val løsesAv: List<Rolle>
+    public val løsesAv: List<Rolle>,
+    public val måRevurderesEtterOpphør: Boolean = true
 ) {
     MANUELT_SATT_PÅ_VENT(
         kode = AvklaringsbehovKode.`9001`,
@@ -194,14 +195,16 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        måRevurderesEtterOpphør = false
     ),
     FASTSETT_YRKESSKADEINNTEKT(
         kode = AvklaringsbehovKode.`5014`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        måRevurderesEtterOpphør = false
     ),
     VURDER_INNTEKTSBORTFALL(
         kode = AvklaringsbehovKode.`5040`,
@@ -360,6 +363,14 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5038`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.KRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+        kreverToTrinn = true
+    ),
+
+    AVKLAR_STØNADSPERIODE(
+        kode = AvklaringsbehovKode.`5039`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.AVKLAR_STØNADSPERIODE,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),

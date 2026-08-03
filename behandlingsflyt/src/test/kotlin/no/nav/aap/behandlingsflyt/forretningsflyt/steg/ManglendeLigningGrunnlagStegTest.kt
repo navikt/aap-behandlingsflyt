@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -139,8 +140,8 @@ class ManglendeLigningGrunnlagStegTest {
     }
 
     @ParameterizedTest
-    @EnumSource(VurderingType::class, mode = Mode.EXCLUDE, names = ["FØRSTEGANGSBEHANDLING", "REVURDERING"])
-    fun `oppretter ikke avklaringsbehov for vurderingstyper som ikke er FØRSTEGANGSBEHANDLING eller REVURDERING`(
+    @EnumSource(VurderingType::class, mode = Mode.EXCLUDE, names = ["FØRSTEGANGSBEHANDLING", "REVURDERING", "MIGERING_FRA_ARENA"])
+    fun `oppretter ikke avklaringsbehov for vurderingstyper som ikke er FØRSTEGANGSBEHANDLING eller REVURDERING eller MIGERING_FRA_ARENA`(
         vurderingType: VurderingType
     ) {
         val (_, behandling) = opprettInMemorySakOgBehandling()
@@ -165,11 +166,7 @@ class ManglendeLigningGrunnlagStegTest {
     @Test
     fun `oppretter avklaringsbehov ved manuell revurdering og tidligere vurdering tilsier mulig rett til AAP`() {
         val (_, behandling) = opprettInMemorySakOgBehandling(
-            vurderingsbehov = listOf(
-                VurderingsbehovMedPeriode(
-                    Vurderingsbehov.BARNETILLEGG
-                )
-            )
+            vurderingsbehov = listOf(Vurderingsbehov.BARNETILLEGG)
         )
         val flytKontekst = flytKontekstMedPerioder {
             this.behandling = behandling
@@ -196,11 +193,11 @@ class ManglendeLigningGrunnlagStegTest {
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(behandling: Behandling) {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
         avklaringsbehovene.leggTil(Definisjon.FASTSETT_MANUELL_INNTEKT, StegType.MANGLENDE_LIGNING, null, null)
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", "saksbehandler")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", Bruker("saksbehandler"))
         avklaringsbehovene.løsAvklaringsbehov(
             Definisjon.FASTSETT_MANUELL_INNTEKT,
             begrunnelse = "",
-            endretAv = "Krongov"
+            endretAv = Bruker("Krongov")
         )
     }
 
@@ -210,8 +207,7 @@ class ManglendeLigningGrunnlagStegTest {
         manuellInntektGrunnlagRepository = inMemoryRepositoryProvider.provide(),
         tidligereVurderinger = tidligereVurderinger,
         beregningService = BeregningService(inMemoryRepositoryProvider),
-        avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
-        unleashGateway = minimalGatewayProvider().provide(),
+        avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider())
     )
 
     private fun lagreBeregningstidspunkt(behandling: Behandling) {
@@ -221,7 +217,7 @@ class ManglendeLigningGrunnlagStegTest {
                 nedsattArbeidsevneEllerStudieevneDato = sisteÅr.plusYears(1).atDay(1),
                 ytterligereNedsattBegrunnelse = "...",
                 ytterligereNedsattArbeidsevneDato = null,
-                vurdertAv = "..."
+                vurdertAv = Bruker("...")
             )
         )
     }
@@ -246,19 +242,19 @@ class ManglendeLigningGrunnlagStegTest {
             år = sisteÅr,
             begrunnelse = "begrunnelse",
             belop = Beløp(350_000),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             opprettet = LocalDateTime.now()
         ), ManuellInntektVurdering(
             år = sisteÅr.minusYears(1),
             begrunnelse = "begrunnelse",
             belop = Beløp(350_000),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             opprettet = LocalDateTime.now()
         ), ManuellInntektVurdering(
             år = sisteÅr.minusYears(2),
             begrunnelse = "begrunnelse",
             belop = Beløp(350_000),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             opprettet = LocalDateTime.now()
         )
     )

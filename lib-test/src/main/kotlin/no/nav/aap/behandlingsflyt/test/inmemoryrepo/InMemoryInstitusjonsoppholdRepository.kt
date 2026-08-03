@@ -9,17 +9,26 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Son
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.Factory
+import java.time.Clock
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicLong
 
-object InMemoryInstitusjonsoppholdRepository : InstitusjonsoppholdRepository {
+class InMemoryInstitusjonsoppholdRepository(private val clock: Clock = Clock.systemDefaultZone()) :
+    InstitusjonsoppholdRepository {
 
     private val idSeq = AtomicLong(1)
     private val memory = HashMap<BehandlingId, InstitusjonsoppholdGrunnlag>()
     private val lock = Any()
 
-    fun reset() = synchronized(lock) { memory.clear() }
+    companion object : Factory<InstitusjonsoppholdRepository> {
+        override fun konstruer(connection: DBConnection): InstitusjonsoppholdRepository {
+            return InMemoryInstitusjonsoppholdRepository()
+        }
+    }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? =
         synchronized(lock) { memory[behandlingId] }
@@ -37,14 +46,14 @@ object InMemoryInstitusjonsoppholdRepository : InstitusjonsoppholdRepository {
 
     override fun lagreSoningsVurdering(
         behandlingId: BehandlingId,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         soningsvurderinger: List<Soningsvurdering>
     ) = synchronized(lock) {
         val eksisterende = memory[behandlingId] ?: InstitusjonsoppholdGrunnlag()
         memory[behandlingId] = eksisterende.copy(
             soningsVurderinger = Soningsvurderinger(
                 vurdertAv = vurdertAv,
-                vurdertTidspunkt = LocalDateTime.now(),
+                vurdertTidspunkt = LocalDateTime.now(clock),
                 vurderinger = soningsvurderinger
             )
         )
@@ -59,7 +68,7 @@ object InMemoryInstitusjonsoppholdRepository : InstitusjonsoppholdRepository {
             helseoppholdvurderinger = Helseoppholdvurderinger(
                 vurderinger = helseinstitusjonVurderinger,
                 id = idSeq.getAndIncrement(),
-                vurdertTidspunkt = LocalDateTime.now(),
+                vurdertTidspunkt = LocalDateTime.now(clock),
             )
         )
     }
@@ -68,7 +77,7 @@ object InMemoryInstitusjonsoppholdRepository : InstitusjonsoppholdRepository {
         synchronized(lock) {
             memory[behandlingId]?.helseoppholdvurderinger?.vurderinger
                 ?.groupBy { it.periode }
-                ?: emptyMap()
+                .orEmpty()
         }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId): Unit =

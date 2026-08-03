@@ -2,9 +2,15 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvir
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.Repository
+import java.time.LocalDateTime
 
 interface EtableringEgenVirksomhetRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): EtableringEgenVirksomhetGrunnlag?
+    fun hentEtableringEgenVirksomhetVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<EtableringEgenVirksomhetVurdering>?
+
     fun lagre(behandlingId: BehandlingId, etableringEgenvirksomhetVurderinger: List<EtableringEgenVirksomhetVurdering>)
     override fun slett(behandlingId: BehandlingId)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

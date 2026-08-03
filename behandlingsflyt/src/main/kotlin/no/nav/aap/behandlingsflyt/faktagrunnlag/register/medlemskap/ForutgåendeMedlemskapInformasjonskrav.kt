@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -30,7 +31,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.YearMonth
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
 
 class ForutgåendeMedlemskapInformasjonskrav private constructor(
     private val sakService: SakService,
@@ -40,7 +40,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     private val medlemskapGateway: MedlemskapGateway,
     private val arbeidsforholdGateway: ArbeidsforholdGateway,
     private val inntektkomponentenGateway: InntektkomponentenGateway,
-    private val enhetsregisteretGateway: EnhetsregisteretGateway
+    private val enhetsregisteretGateway: EnhetsregisteretGateway,
 ) : Informasjonskrav<ForutgåendeMedlemskapInformasjonskrav.MedlemsskapInput, ForutgåendeMedlemskapInformasjonskrav.MedlemsskapReggisterdata> {
 
     override val navn = Companion.navn
@@ -70,6 +70,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
 
     override fun hentData(input: MedlemsskapInput): MedlemsskapReggisterdata {
         val sak = input.sak
+        val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture.supplyAsync(withMdc {
             medlemskapGateway.innhent(
                 sak.person,
@@ -138,7 +139,6 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         val orgnumre = orgnumreInntekt + orgnumreAareg
 
         // EREG har ikke batch-oppslag
-        val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
             CompletableFuture.supplyAsync(withMdc {
                 val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
@@ -148,7 +148,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
                         orgNavn = it.navn.sammensattnavn
                     )
                 }
-            }, executor)
+            }, informasjonskravExecutor)
         }
         return futures.mapNotNull { it.get() }
     }
@@ -174,8 +174,6 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
-        private val executor = Executors.newVirtualThreadPerTaskExecutor()
-
         override val navn = InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP
 
         override fun konstruer(

@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAktivitetsplikt11_7R
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -70,7 +71,7 @@ class VurderAktivitetsplikt11_7StegTest {
                     begrunnelse = "Ok",
                     erOppfylt = true,
                     utfall = null,
-                    vurdertAv = "A987652",
+                    vurdertAv = Bruker("A987652"),
                     fom = kontekst.rettighetsperiode.fom.plusDays(10),
                     opprettet = Instant.now(),
                     vurdertIBehandling = kontekst.behandlingId,
@@ -82,7 +83,7 @@ class VurderAktivitetsplikt11_7StegTest {
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_BRUDD_11_7,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         steg.utfør(kontekst)
@@ -192,7 +193,7 @@ class VurderAktivitetsplikt11_7StegTest {
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_BRUDD_11_7,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         InMemoryAktivitetsplikt11_7Repository.lagre(
@@ -201,7 +202,7 @@ class VurderAktivitetsplikt11_7StegTest {
                     begrunnelse = "Ok",
                     erOppfylt = false,
                     utfall = Utfall.STANS,
-                    vurdertAv = "A987652",
+                    vurdertAv = Bruker("A987652"),
                     fom = kontekst.rettighetsperiode.fom.plusDays(10),
                     opprettet = Instant.now(),
                     vurdertIBehandling = kontekst.behandlingId,
@@ -217,7 +218,7 @@ class VurderAktivitetsplikt11_7StegTest {
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
         val brevbestillingReferanse = BrevbestillingReferanse(UUID.randomUUID())
         InMemoryBrevbestillingRepository.lagre(
@@ -242,7 +243,7 @@ class VurderAktivitetsplikt11_7StegTest {
             funnetISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
             frist = null,
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
     }
 

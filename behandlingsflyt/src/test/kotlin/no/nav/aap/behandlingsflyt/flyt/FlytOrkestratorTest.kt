@@ -91,8 +91,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         // Tilbake til AVKLAR_SYKDOM
         dataSource.transaction { connection ->
-            assertThat(BehandlingRepositoryImpl(connection).hentAktivtSteg(behandling.id))
-                .extracting { it?.steg() }
+            assertThat(BehandlingRepositoryImpl(connection).hent(behandling.id))
+                .extracting { it?.aktivtSteg() }
                 .isEqualTo(StegType.AVKLAR_SYKDOM)
         }
     }

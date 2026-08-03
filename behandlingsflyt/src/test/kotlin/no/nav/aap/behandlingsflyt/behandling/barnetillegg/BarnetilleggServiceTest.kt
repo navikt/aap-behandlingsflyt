@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -254,7 +255,7 @@ class BarnetilleggServiceTest {
         // Lagre vurdering
         InMemoryBarnRepository.lagreVurderinger(
             behandling.id,
-            vurdertAv = "Fredrik",
+            vurdertAv = Bruker("Fredrik"),
             vurderteBarn = listOf(
                 VurdertBarn(
                     ident = BarnIdentifikator.NavnOgFødselsdato(navn, fødselsdato),
@@ -288,7 +289,7 @@ class BarnetilleggServiceTest {
 
         InMemoryBarnRepository.lagreVurderinger(
             behandling.id,
-            "test-ident",
+            Bruker("test-ident"),
             listOf(vurdertBarn)
         )
     }

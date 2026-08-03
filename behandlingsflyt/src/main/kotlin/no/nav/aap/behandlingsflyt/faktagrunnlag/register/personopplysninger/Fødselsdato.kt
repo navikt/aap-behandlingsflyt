@@ -7,7 +7,7 @@ import java.time.temporal.ChronoUnit
 data class Fødselsdato(val dato: LocalDate) {
 
     init {
-        if (dato.isAfter(LocalDate.now())) throw IllegalArgumentException("Kan ikke sette fødselsdato inn i fremtiden")
+        require(dato.isAfter(LocalDate.now()).not()) { "Kan ikke sette fødselsdato inn i fremtiden" }
     }
 
     fun alderPåDato(gittDato: LocalDate): Int {

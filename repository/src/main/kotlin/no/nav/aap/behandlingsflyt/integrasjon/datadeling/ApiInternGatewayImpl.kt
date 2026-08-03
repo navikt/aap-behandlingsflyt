@@ -9,6 +9,7 @@ import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
@@ -27,6 +28,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SamIdOgTpnr
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisperiodeDatadelingDTO
@@ -117,7 +119,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
         sak: Sak,
         behandling: Behandling,
         vedtakId: Long,
-        samId: String?,
+        samId: List<SamIdOgTpNr>,
         tilkjent: List<TilkjentYtelsePeriode>,
         beregningsgrunnlag: BigDecimal?,
         vedtaksDato: LocalDate,
@@ -170,7 +172,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     muligMaksdato = muligMaksdato,
                     vedtakId = vedtakId,
-                    samId = samId,
+                    samIdOgTpr = samId.map { SamIdOgTpnr(it.samId.toString(), it.tpNr?.toString()) },
                     stansOpphørVurdering = stansOpphørGrunnlag.orEmpty().map {
                         GjeldendeStansEllerOpphørDTO(
                             fom = it.fom,

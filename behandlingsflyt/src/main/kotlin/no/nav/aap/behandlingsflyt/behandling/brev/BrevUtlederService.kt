@@ -157,7 +157,7 @@ class BrevUtlederService(
             it.brukerHarFåttVedtakOmUføretrygd in setOf(
                 UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
                 UføreSøknadVedtakResultat.JA_INNVILGET_FULL
-            ) && it.vurdertAv == SYSTEMBRUKER.ident && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
+            ) && it.vurdertAv == SYSTEMBRUKER && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
         }
 
         when (behandling.typeBehandling()) {
@@ -198,13 +198,11 @@ class BrevUtlederService(
                 }
 
                 if (automatiskUførevedtakVurdering?.brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT
-                    && unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
                 ) {
                     return Vedtak11_18OpphørDelvisUfør(automatiskUførevedtakVurdering.fom)
                 }
 
                 if (automatiskUførevedtakVurdering?.brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtakResultat.JA_INNVILGET_FULL
-                    && unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskStans1118)
                 ) {
                     return Vedtak11_18OpphørFullUfør(automatiskUførevedtakVurdering.fom)
                 }
@@ -434,16 +432,18 @@ class BrevUtlederService(
 
     private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(hentAvslagsårsaker(behandling.id))
+        val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id)
+        val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
+
         if (Miljø.erDev() && avslagsårsak != null) {
-            if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
-                return AvslagBrev.AvslagUnder17År9Måneder
-            }
+            /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
+                return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
+            }*/
             if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
             ) {
-                return AvslagBrev.AvslagSykdomsvilkåret
+                return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)

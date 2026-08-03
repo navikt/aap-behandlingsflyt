@@ -31,11 +31,12 @@ data class FlytKontekstMedPerioder(
     }
 
     fun erFørstegangsbehandlingEllerRevurdering(): Boolean {
-        return vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING)
+        // Migrering skal i stor grad behandles som en førstegangsbehandling, så ting som er releavnt for førstegangsbehandling er og relevant for migreringssaker
+        return vurderingType in setOf(VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGERING_FRA_ARENA)
     }
 
-    fun erFørstegangsbehandling(): Boolean {
-        return vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
+    fun erMigreringFraArena(): Boolean {
+        return vurderingType == VurderingType.MIGERING_FRA_ARENA
     }
 
     fun erRevurderingMedVurderingsbehov(behov: Vurderingsbehov): Boolean {
@@ -46,5 +47,14 @@ data class FlytKontekstMedPerioder(
     fun erVurderingsbehovEndretEtterOppdatertInformasjonskrav(oppdatert: InformasjonskravOppdatert?): Boolean {
         val nyesteVurderingsbehov = vurderingsbehovRelevanteForStegMedPerioder.maxOfOrNull { it.oppdatertTid }
         return nyesteVurderingsbehov != null && (oppdatert == null || nyesteVurderingsbehov > oppdatert.tidOppdatert)
+    }
+    
+    fun tilFlytKontekst(): FlytKontekst{
+        return FlytKontekst(
+            sakId = sakId,
+            behandlingId = behandlingId,
+            forrigeBehandlingId = forrigeBehandlingId,
+            behandlingType = behandlingType
+        )
     }
 }

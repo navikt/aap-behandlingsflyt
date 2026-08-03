@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.VurderingEndretService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
@@ -129,10 +130,11 @@ class KvalitetssikringsStegTest {
             ),
             tidligereVurderinger = FakeTidligereVurderinger(),
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
-            unleashGateway = AlleAvskruddUnleash,
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
             behandlingRepository = inMemoryRepositoryProvider.provide(),
-            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
+            vurderingEndretService = VurderingEndretService(inMemoryRepositoryProvider),
+            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider()),
+            unleashGateway = AlleAvskruddUnleash
         )
 
         fun kjørSteg() {
@@ -151,7 +153,7 @@ class KvalitetssikringsStegTest {
                 perioderSomIkkeErTilstrekkeligVurdert = setOf(periode),
                 perioderVedtaketBehøverVurdering = setOf(periode)
             )
-            avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", VEILEDER)
+            avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", Bruker(VEILEDER))
 
             assertThat(avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.erÅpent())
                 .`as`("Avklaringsbehov $definisjon skal være lukket etter løsning")
@@ -172,7 +174,6 @@ class KvalitetssikringsStegTest {
                             godkjent = it in godkjente,
                             begrunnelse = if (it in underkjente) "Ikke godkjent" else null,
                             grunner = emptyList(),
-                            markeringer = emptyList()
                         )
                     }
                 )
@@ -181,7 +182,7 @@ class KvalitetssikringsStegTest {
             avklaringsbehovene.løsAvklaringsbehov(
                 Definisjon.KVALITETSSIKRING,
                 resultat.begrunnelse,
-                KVALITETSSIKRER,
+                Bruker(KVALITETSSIKRER),
                 resultat.kreverToTrinn
             )
         }

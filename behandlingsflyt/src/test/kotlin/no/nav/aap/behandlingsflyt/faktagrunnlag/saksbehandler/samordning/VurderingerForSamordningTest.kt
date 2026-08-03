@@ -5,16 +5,15 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 class VurderingerForSamordningTest {
     @Test
     fun `skal kaste exception når perioder for samme ytelsetype overlapper`() {
-        org.junit.jupiter.api.assertThrows<UgyldigForespørselException> {
+        assertThrows<UgyldigForespørselException> {
             VurderingerForSamordning(
                 begrunnelse = "...",
-                maksDatoEndelig = false,
-                fristNyRevurdering = LocalDate.now(),
                 vurderteSamordningerData = listOf(
                     SamordningVurderingData(
                         ytelseType = Ytelse.OMSORGSPENGER,
@@ -34,11 +33,9 @@ class VurderingerForSamordningTest {
     @Test
     fun `skal ikke kaste exception når perioder for samme ytelsetype ikke overlapper`() {
         // Should not throw exception
-        assertDoesNotThrow({
+        assertDoesNotThrow {
             VurderingerForSamordning(
                 begrunnelse = "...",
-                maksDatoEndelig = false,
-                fristNyRevurdering = LocalDate.now(),
                 vurderteSamordningerData = listOf(
                     SamordningVurderingData(
                         ytelseType = Ytelse.OMSORGSPENGER,
@@ -52,17 +49,15 @@ class VurderingerForSamordningTest {
                     )
                 )
             ).valider()
-        })
+        }
     }
 
     @Test
     fun `skal ikke kaste exception når perioder for ulike ytelsetyper overlapper`() {
         // Should not throw exception
-        assertDoesNotThrow({
+        assertDoesNotThrow {
             VurderingerForSamordning(
                 begrunnelse = "...",
-                maksDatoEndelig = false,
-                fristNyRevurdering = LocalDate.now(),
                 vurderteSamordningerData = listOf(
                     SamordningVurderingData(
                         ytelseType = Ytelse.OMSORGSPENGER,
@@ -76,6 +71,6 @@ class VurderingerForSamordningTest {
                     )
                 )
             ).valider()
-        })
+        }
     }
 }

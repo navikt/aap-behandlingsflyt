@@ -8,6 +8,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -40,7 +41,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             år = Year.of(2024),
             begrunnelse = "hipp som happ",
             belop = BigDecimal(123.40).let(::Beløp),
-            vurdertAv = "Kungen"
+            vurdertAv = Bruker("Kungen")
         )
         dataSource.transaction {
             val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
@@ -100,7 +101,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             år = Year.of(2022),
             begrunnelse = "endring i uføregrad",
             belop = BigDecimal(100_000).let(::Beløp),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             månedsPeriode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 2, 28)),
         )
         val marDes = ManuellInntektVurdering(
@@ -108,7 +109,7 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             begrunnelse = "endring i uføregrad",
             belop = BigDecimal(500_000).let(::Beløp),
             eøsBeløp = BigDecimal(25_000).let(::Beløp),
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             månedsPeriode = Periode(LocalDate.of(2022, 3, 1), LocalDate.of(2022, 12, 31)),
         )
 
@@ -141,14 +142,14 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             år = Year.of(2024),
             begrunnelse = "begrunnelse 2024",
             belop = BigDecimal(100).let(::Beløp),
-            vurdertAv = "saksbehandler"
+            vurdertAv = Bruker("saksbehandler")
         )
 
         val manuellVurdering2025 = ManuellInntektVurdering(
             år = Year.of(2025),
             begrunnelse = "begrunnelse 2025",
             belop = BigDecimal(200).let(::Beløp),
-            vurdertAv = "saksbehandler"
+            vurdertAv = Bruker("saksbehandler")
         )
 
         dataSource.transaction {
@@ -172,14 +173,14 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             år = Year.of(2024),
             begrunnelse = "begrunnelse 2024",
             belop = BigDecimal(100).let(::Beløp),
-            vurdertAv = "saksbehandler"
+            vurdertAv = Bruker("saksbehandler")
         )
 
         val manuellVurdering2025 = ManuellInntektVurdering(
             år = Year.of(2025),
             begrunnelse = "begrunnelse 2025",
             belop = BigDecimal(200).let(::Beløp),
-            vurdertAv = "saksbehandler"
+            vurdertAv = Bruker("saksbehandler"),
         )
 
         dataSource.transaction {
@@ -209,13 +210,13 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             år = Year.of(2024),
             begrunnelse = "skal slettes",
             belop = BigDecimal(100).let(::Beløp),
-            vurdertAv = "saksbehandler"
+            vurdertAv = Bruker("saksbehandler")
         )
         val vurderingBeholdt = ManuellInntektVurdering(
             år = Year.of(2024),
             begrunnelse = "skal beholdes",
             belop = BigDecimal(200).let(::Beløp),
-            vurdertAv = "annen saksbehandler"
+            vurdertAv = Bruker("annen saksbehandler")
         )
 
         dataSource.transaction {

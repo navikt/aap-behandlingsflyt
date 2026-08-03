@@ -6,9 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse.SamordningAnnenFullYtelseFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse.SamordningAnnenFullYtelseVilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -18,6 +17,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -28,8 +29,9 @@ class SamordningAvslagSteg(
     private val samordningUføreRepository: SamordningUføreRepository,
     private val avslag1127repository: Avslag11_27Repository,
     private val kravRepository: KravRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårService: VilkårService,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         samordningService = SamordningService(repositoryProvider),
@@ -37,8 +39,9 @@ class SamordningAvslagSteg(
         samordningUføreRepository = repositoryProvider.provide(),
         avslag1127repository = repositoryProvider.provide(),
         kravRepository = repositoryProvider.provide(),
-        vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -48,10 +51,8 @@ class SamordningAvslagSteg(
             return Fullført
         }
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val grunnlag = utledFaktagrunnlag(kontekst)
-        SamordningAnnenFullYtelseVilkår(vilkårsresultat).vurder(grunnlag)
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        vilkårService.vurderVilkår(kontekst.behandlingId, grunnlag, SamordningAnnenFullYtelseVilkår)
 
         return Fullført
     }
@@ -59,15 +60,12 @@ class SamordningAvslagSteg(
     private fun utledFaktagrunnlag(kontekst: FlytKontekstMedPerioder) =
         SamordningAnnenFullYtelseFaktagrunnlag(
             rettighetsperiode = kontekst.rettighetsperiode,
-            samordningTidslinje = samordningService.tidslinje(kontekst.behandlingId),
-            samordningGrunnlag = SamordningYtelseVurderingGrunnlag(
-                ytelseGrunnlag = samordningService.hentYtelser(kontekst.behandlingId),
-                vurderingGrunnlag = samordningService.hentVurderinger(kontekst.behandlingId),
-            ),
+            samordningGrunnlag = samordningService.samordningGrunnlag(kontekst.behandlingId),
             uføreRegisterGrunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId),
             uføreVurderingGrunnlag = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId),
             avslag1127grunnlag = avslag1127repository.hentHvisEksisterer(kontekst.behandlingId),
-            kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+            kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId),
+            strekkAvslagOverHelger = unleashGateway.isEnabled(BehandlingsflytFeature.StrekkAvslagOverHelg)
         )
 
     companion object : FlytSteg {

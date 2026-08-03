@@ -21,11 +21,11 @@ object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevReposi
         return grunnlag[behandlingId]
     }
 
-    override fun hentAktivPåTidspunkt(
+    override fun hentSykdomsvurderingForBrevPåTidspunkt(
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime
     ): SykdomsvurderingForBrev? {
-        TODO("Not yet implemented")
+        return null
     }
 
     override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {

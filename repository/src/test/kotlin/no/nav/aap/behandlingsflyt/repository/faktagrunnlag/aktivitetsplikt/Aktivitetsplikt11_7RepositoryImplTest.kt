@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -51,7 +52,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
             val vurdering = Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Begrunnelse",
                 erOppfylt = true,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 fom = 1 januar 2023,
                 opprettet = Instant.parse("2023-01-01T12:00:00Z"),
                 vurdertIBehandling = behandling.id,
@@ -74,7 +75,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
                 begrunnelse = "Begrunnelse 2",
                 erOppfylt = false,
                 utfall = Utfall.STANS,
-                vurdertAv = "ident2",
+                vurdertAv = Bruker("ident2"),
                 fom = 1 februar 2023,
                 opprettet = Instant.parse("2023-01-02T12:10:00Z"),
                 vurdertIBehandling = behandling.id,

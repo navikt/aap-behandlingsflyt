@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -28,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.JobbInput
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -78,7 +78,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         årsakerPåTidligereBehandling: List<VurderingsbehovMedPeriode> = emptyList(),
     ): OpprettBehandlingFritakMeldepliktJobbUtfører {
         val sakServiceMock = mockk<SakService>()
-        val behandlingRepositoryMock = mockk<BehandlingRepository>()
         val meldeperiodeRepositoryMock = mockk<MeldeperiodeRepository>()
         val meldepliktRepositoryMock = mockk<MeldepliktRepository>()
 
@@ -91,7 +90,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             opprettetTidspunkt = LocalDateTime.now(),
         )
 
-        every { behandlingRepositoryMock.finnSisteOpprettedeBehandlingFor(any(), any()) } returns Behandling(
+        every { behandlingServiceMock.finnÅpenYtelsesbehandling(any()) } returns Behandling(
             id = BehandlingId(457L),
             forrigeBehandlingId = BehandlingId(456L),
             referanse = BehandlingReferanse(UUID.randomUUID()),
@@ -101,8 +100,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVSLUTTER,
-                stegType = StegType.IVERKSETT_VEDTAK,
-                aktiv = true
+                stegType = StegType.IVERKSETT_VEDTAK
             ),
             årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
             opprettetTidspunkt = LocalDateTime.now(),
@@ -120,14 +118,13 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             vurderingsbehov = årsakerPåTidligereBehandling,
             stegTilstand = StegTilstand(
                 stegStatus = StegStatus.AVKLARINGSPUNKT,
-                stegType = StegType.FORESLÅ_VEDTAK,
-                aktiv = true
+                stegType = StegType.FORESLÅ_VEDTAK
             ),
             opprettetTidspunkt = LocalDateTime.now(),
             versjon = 0L
         )
 
-        every { behandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
+        every { behandlingServiceMock.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns fakeBehandling
         every {
             behandlingServiceMock.finnEllerOpprettBehandling(
                 sakId,
@@ -162,9 +159,9 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             vurderinger = listOf(
                 Fritaksvurdering(
                     harFritak = fritak,
-                    fraDato = LocalDate.now(),
+                    fom = LocalDate.now(),
                     begrunnelse = "bla bla",
-                    vurdertAv = "saksbehandler1",
+                    vurdertAv = Bruker("saksbehandler1"),
                     opprettetTid = LocalDateTime.now(),
                     vurdertIBehandling = fakeBehandling.id,
                 )
@@ -174,7 +171,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,
-            behandlingRepository = behandlingRepositoryMock,
             meldeperiodeRepository = meldeperiodeRepositoryMock,
             meldepliktRepository = meldepliktRepositoryMock,
             behandlingService = behandlingServiceMock,

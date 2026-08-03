@@ -293,7 +293,6 @@ class SamordningYtelseRepositoryImplTest {
                                     tom = LocalDate.of(2023, 12, 31)
                                 ),
                                 gradering = null,
-                                kronesum = 1000
                             )
                         ),
                         kilde = "TEST1",
@@ -312,7 +311,6 @@ class SamordningYtelseRepositoryImplTest {
                                     tom = LocalDate.of(2024, 12, 31)
                                 ),
                                 gradering = null,
-                                kronesum = 1000
                             )
                         ),
                         kilde = "TEST1",
@@ -325,6 +323,4 @@ class SamordningYtelseRepositoryImplTest {
             }
         }
     }
-
-
 }

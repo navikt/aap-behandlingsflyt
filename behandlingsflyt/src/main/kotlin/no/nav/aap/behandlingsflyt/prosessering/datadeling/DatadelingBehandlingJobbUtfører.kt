@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
+import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -68,6 +68,7 @@ class DatadelingBehandlingJobbUtfører(
             .mapNotNull { it.rettighetsType }.komprimer()
 
         val vedtakId = vedtakRepository.hentId(behandling.id)
+        // Todo: Dele ut både tp-nr og sam-id!
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
         val beregningsgrunnlagGUnit =

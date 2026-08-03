@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -46,7 +46,7 @@ internal class KravRepositoryImplTest {
         @JvmStatic
         fun tearDown() = dataSource.close()
 
-        private fun nyttKrav(behandlingId: BehandlingId) = NyttKrav(
+        private fun nyttKrav(behandlingId: BehandlingId) = RelevantKrav(
             referanse = Kravreferanse.ny(),
             journalpostId = JournalpostId("JP-001"),
             vurdertAv = Bruker("Z123456"),

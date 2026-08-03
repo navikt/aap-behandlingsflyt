@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.utils.Validation
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -12,7 +13,7 @@ data class ManuellVurderingForForutgåendeMedlemskap(
     val harForutgåendeMedlemskap: Boolean,
     val varMedlemMedNedsattArbeidsevne: Boolean?,
     val medlemMedUnntakAvMaksFemAar: Boolean?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime,
     val overstyrt: Boolean = false,
     val vurdertIBehandling: BehandlingId,
@@ -46,7 +47,7 @@ data class PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
         harForutgåendeMedlemskap = harForutgåendeMedlemskap,
         varMedlemMedNedsattArbeidsevne = varMedlemMedNedsattArbeidsevne,
         medlemMedUnntakAvMaksFemAar = medlemMedUnntakAvMaksFemAar,
-        vurdertAv = kontekst.bruker.ident,
+        vurdertAv = kontekst.bruker,
         vurdertTidspunkt = LocalDateTime.now(),
         overstyrt = overstyrt
     )

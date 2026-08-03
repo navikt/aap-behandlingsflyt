@@ -36,7 +36,7 @@ class VentebehovEvaluererServiceImpl(private val repositoryProvider: RepositoryP
             avklaringsbehovene.løsAvklaringsbehov(
                 definisjon = ventebehov.definisjon,
                 begrunnelse = "Ventebehov løst.",
-                endretAv = SYSTEMBRUKER.ident
+                endretAv = SYSTEMBRUKER
             )
         }
 

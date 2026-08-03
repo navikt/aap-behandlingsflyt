@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -44,7 +45,7 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
         val vurdering = SykdomsvurderingForBrev(
             behandlingId = behandling.id,
             vurdering = "en vurdering",
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             vurdertTidspunkt = LocalDateTime.now(),
         )
 
@@ -63,7 +64,7 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
 
         val oppdatertVurdering = vurdering.copy(
             vurdering = "oppdatert vurdering",
-            vurdertAv = "annen saksbehandler"
+            vurdertAv = Bruker("annen saksbehandler")
         )
 
         val oppdatertLagretVurdering = dataSource.transaction { connection ->
@@ -84,7 +85,7 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
         val vurdering = SykdomsvurderingForBrev(
             behandlingId = behandling.id,
             vurdering = "en vurdering",
-            vurdertAv = "saksbehandler",
+            vurdertAv = Bruker("saksbehandler"),
             vurdertTidspunkt = LocalDateTime.now(),
         )
 
@@ -94,7 +95,7 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
 
         val oppdatertVurdering = vurdering.copy(
             vurdering = "oppdatert vurdering",
-            vurdertAv = "annen saksbehandler",
+            vurdertAv = Bruker("annen saksbehandler"),
             vurdertTidspunkt = LocalDateTime.now(),
         )
 
@@ -117,7 +118,7 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
         val vurdering = SykdomsvurderingForBrev(
             behandlingId = behandling.id,
             vurdering = "en vurdering",
-            vurdertAv = "saksbehandler"
+            vurdertAv = Bruker("saksbehandler")
         )
 
         dataSource.transaction { connection ->
@@ -131,7 +132,7 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
         val nyVurdering = SykdomsvurderingForBrev(
             behandlingId = revurdering.id,
             vurdering = "en ny vurdering",
-            vurdertAv = "saksbehandler"
+            vurdertAv = Bruker("saksbehandler")
         )
 
         dataSource.transaction { connection ->

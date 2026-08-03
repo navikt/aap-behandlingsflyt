@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -40,7 +41,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
-                vurdertAv = "NAVident",
+                vurdertAv = Bruker("NAVident"),
                 vurdertDato = LocalDateTime.now()
             )
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
@@ -68,7 +69,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = null,
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.Nei,
-                vurdertAv = "NAVident",
+                vurdertAv = Bruker("NAVident"),
                 vurdertDato = LocalDateTime.now()
             )
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
@@ -94,7 +95,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
-                vurdertAv = "NAVident",
+                vurdertAv = Bruker("NAVident"),
                 vurdertDato = LocalDateTime.now()
             )
 

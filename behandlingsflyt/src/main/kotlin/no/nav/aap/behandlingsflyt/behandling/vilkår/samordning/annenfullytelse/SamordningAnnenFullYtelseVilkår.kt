@@ -1,48 +1,32 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse
 
-import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
-import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
+import java.time.DayOfWeek
 
-data class SamordningAnnenFullYtelseFaktagrunnlag(
-    val rettighetsperiode: Periode,
-    val samordningTidslinje: Tidslinje<SamordningGradering>,
-    val samordningGrunnlag: SamordningYtelseVurderingGrunnlag?,
-    val uføreRegisterGrunnlag: UføreGrunnlag?,
-    val uføreVurderingGrunnlag: SamordningUføreGrunnlag?,
-    val avslag1127grunnlag: Avslag11_27Grunnlag?,
-    val kravGrunnlag: KravGrunnlag?,
-) : Faktagrunnlag
+object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYtelseFaktagrunnlag> {
 
-class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
-    Vilkårsvurderer<SamordningAnnenFullYtelseFaktagrunnlag> {
+    override val vilkårtype: Vilkårtype = Vilkårtype.SAMORDNING
 
-    private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING)
-
-    override fun vurder(grunnlag: SamordningAnnenFullYtelseFaktagrunnlag) {
-        val uføreTidslinje = grunnlag.uføreVurderingGrunnlag?.vurdering?.tilTidslinje().orEmpty()
-        val avslag11_27Tidslinje = grunnlag.avslag1127grunnlag
-            ?.tilTidslinje(grunnlag.kravGrunnlag)
+    override fun vurder(faktagrunnlag: SamordningAnnenFullYtelseFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
+        val uføreTidslinje = faktagrunnlag.uføreVurderingGrunnlag?.vurdering?.tilTidslinje().orEmpty()
+        val avslag11_27Tidslinje = faktagrunnlag.avslag1127grunnlag
+            ?.tilTidslinje(faktagrunnlag.kravGrunnlag)
             .orEmpty()
+
+        val samordningTidslinje = faktagrunnlag.samordningGrunnlag?.vurder().orEmpty()
 
         /* NB: bevisst valg å ikke gi avslag selv om summen av samordninger blir til 100%. */
         val samordningVurderinger =
-            grunnlag.samordningTidslinje.outerJoinNotNull(uføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
+            samordningTidslinje.outerJoinNotNull(uføreTidslinje) { andreYtelserSamordning, samordningUføreGradering ->
                 val samordningerYtelser =
                     andreYtelserSamordning?.ytelsesGraderinger.orEmpty()
                         .map { it.ytelse.toString() to it.gradering }
@@ -56,7 +40,7 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
                         manuellVurdering = false,
                         begrunnelse = "Ikke full ytelse av samordninger",
                         avslagsårsak = null,
-                        faktagrunnlag = grunnlag,
+                        faktagrunnlag = faktagrunnlag,
                     )
                 else
                     Vilkårsvurdering(
@@ -64,7 +48,7 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
                         manuellVurdering = false,
                         begrunnelse = "Full ytelse ${samordninger.joinToString { (navn, _) -> navn }}",
                         avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE,
-                        faktagrunnlag = grunnlag,
+                        faktagrunnlag = faktagrunnlag,
                     )
             }
 
@@ -75,7 +59,7 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
                     manuellVurdering = true,
                     begrunnelse = "§ 11-27 avslag",
                     avslagsårsak = Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG,
-                    faktagrunnlag = grunnlag,
+                    faktagrunnlag = faktagrunnlag,
                 )
             else
                 Vilkårsvurdering(
@@ -83,7 +67,7 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
                     manuellVurdering = true,
                     begrunnelse = "§ 11-27 ikke avslag",
                     avslagsårsak = null,
-                    faktagrunnlag = grunnlag,
+                    faktagrunnlag = faktagrunnlag,
                 )
         }
 
@@ -96,8 +80,38 @@ class SamordningAnnenFullYtelseVilkår(vilkårsresultat: Vilkårsresultat) :
                 else -> samordning
             }
         }
+        return strekkAvslagOverHelg(vurderinger).begrensetTil(faktagrunnlag.rettighetsperiode)
+    }
 
-        vilkår.nullstillTidslinje()
-        vilkår.leggTilVurderinger(vurderinger.begrensetTil(grunnlag.rettighetsperiode))
+    /**
+     * Strekker et avslag gjennom helga når det er avslag (IKKE_OPPFYLT) på et segment
+     * som slutter på fredag og på et segment som starter påfølgende mandag, med kun
+     * lørdag og søndag som hull imellom. Dette unngår merkelige hull i
+     * rettighetstype-tidslinja over helga.
+     */
+    private fun strekkAvslagOverHelg(
+        tidslinje: Tidslinje<Vilkårsvurdering>,
+    ): Tidslinje<Vilkårsvurdering> {
+        // før og etter er segmenter (ikke ukedager); vi sjekker ukedag på kant-datoene.
+        val helgeSegmenter = tidslinje.segmenter().windowed(2).mapNotNull { (før, etter) ->
+            val sisteDagFør = før.periode.tom
+            val førsteDagEtter = etter.periode.fom
+
+            val erRentHelgehull =
+                sisteDagFør.dayOfWeek == DayOfWeek.FRIDAY &&
+                    førsteDagEtter.dayOfWeek == DayOfWeek.MONDAY &&
+                    førsteDagEtter == sisteDagFør.plusDays(3)
+
+            val beggeErAvslag =
+                før.verdi.utfall == Utfall.IKKE_OPPFYLT &&
+                    etter.verdi.utfall == Utfall.IKKE_OPPFYLT
+
+            if (erRentHelgehull && beggeErAvslag)
+                Segment(Periode(sisteDagFør.plusDays(1), førsteDagEtter.minusDays(1)), før.verdi)
+            else
+                null
+        }
+
+        return tidslinje.mergePrioriterVenstre(Tidslinje(helgeSegmenter))
     }
 }

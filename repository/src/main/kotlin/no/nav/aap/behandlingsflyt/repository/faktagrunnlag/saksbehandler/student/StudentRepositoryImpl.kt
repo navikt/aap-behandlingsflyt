@@ -173,7 +173,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 setBoolean(5, studentvurdering.harBehovForBehandling)
                 setLocalDate(6, studentvurdering.avbruttStudieDato)
                 setBoolean(7, studentvurdering.avbruddMerEnn6Måneder)
-                setString(8, studentvurdering.vurdertAv)
+                setBruker(8, studentvurdering.vurdertAv)
                 setLocalDate(9, studentvurdering.fom)
                 setLocalDate(10, studentvurdering.tom)
                 setLong(11, studentvurdering.vurdertIBehandling.toLong())
@@ -274,7 +274,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             row.getBooleanOrNull("har_behov_for_behandling"),
             row.getLocalDateOrNull("avbrutt_dato"),
             row.getBooleanOrNull("avbrudd_mer_enn_6_maaneder"),
-            row.getString("vurdert_av"),
+            row.getBruker("vurdert_av"),
             row.getLocalDateTime("vurdert_tidspunkt"),
             row.getLong("vurdert_i_behandling").let(::BehandlingId),
             diagnose = row.getStringOrNull("kodeverk")

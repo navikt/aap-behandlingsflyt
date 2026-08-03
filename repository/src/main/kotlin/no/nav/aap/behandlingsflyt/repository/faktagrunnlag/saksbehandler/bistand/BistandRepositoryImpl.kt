@@ -8,6 +8,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -56,11 +57,11 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
             erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING"),
-            vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
+            fom = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
             tom = row.getLocalDateOrNull("TOM"),
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
             overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
         )
@@ -78,6 +79,30 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 deaktiverEksisterende(behandlingId)
             }
             lagre(behandlingId, nyttGrunnlag)
+        }
+    }
+
+    override fun hentBistandsvurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<Bistandsvurdering>? {
+        val query = """
+            SELECT bg.bistand_vurderinger_id
+            FROM bistand_grunnlag bg
+            WHERE bg.behandling_id = ?
+                AND bg.opprettet_tid <= ?
+            ORDER BY bg.opprettet_tid DESC
+            LIMIT 1
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLocalDateTime(2, tidspunkt)
+            }
+            setRowMapper { row ->
+                mapBistandsvurderinger(row.getLongOrNull("bistand_vurderinger_id"))
+            }
         }
     }
 
@@ -139,8 +164,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setBoolean(2, vurdering.erBehovForAktivBehandling)
                 setBoolean(3, vurdering.erBehovForArbeidsrettetTiltak)
                 setBoolean(4, vurdering.erBehovForAnnenOppfølging)
-                setLocalDate(5, vurdering.vurderingenGjelderFra)
-                setString(6, vurdering.vurdertAv)
+                setLocalDate(5, vurdering.fom)
+                setBruker(6, vurdering.vurdertAv)
                 setString(7, vurdering.overgangBegrunnelse)
                 setBoolean(8, vurdering.skalVurdereAapIOvergangTilArbeid)
                 setLong(9, bistandvurderingerId)

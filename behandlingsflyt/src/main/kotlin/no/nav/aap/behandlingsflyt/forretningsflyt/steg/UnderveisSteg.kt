@@ -31,6 +31,9 @@ class UnderveisSteg(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            return Fullført
+        }
         underveisService.vurder(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.FORESLÅ_UTTAK,
@@ -53,7 +56,8 @@ class UnderveisSteg(
 
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA -> {
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN in kontekst.vurderingsbehovRelevanteForSteg
             }
             VurderingType.UTVID_VEDTAKSLENGDE,

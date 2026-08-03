@@ -69,7 +69,7 @@ class FormkravSteg (
                 Ventebehov(
                     definisjon = Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV,
                     grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
-                    frist = varsel?.svarfrist,
+                    frist = varsel.svarfrist,
                 )
             )
         }

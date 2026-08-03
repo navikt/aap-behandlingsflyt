@@ -45,49 +45,6 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
 
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
-            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
-                modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))
-            ) { req ->
-
-                val dto = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val avklaringsbehovRepository =
-                        repositoryProvider.provide<AvklaringsbehovRepository>()
-
-                    val behandling: Behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val avklaringsbehovene =
-                        avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val flyt = behandling.flyt()
-                    val vurderingEndretService = VurderingEndretService(repositoryProvider)
-
-                    val vurderinger =
-                        kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt, vurderingEndretService)
-
-                    KvalitetssikringGrunnlagDto(
-                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
-                            kanSaksbehandle(),
-                            avklaringsbehovene,
-                            bruker(),
-                            unleashGateway
-                        ),
-                        vurderinger = vurderinger.map { it.tilTotrinnsVurdering() },
-                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
-                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
-                            avklaringsbehovene,
-                            bruker()
-                        )
-                    )
-                }
-                respond(dto)
-            }
-        }
-
-        route("/{referanse}/grunnlag/kvalitetssikring/v2") {
             getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
@@ -138,7 +95,7 @@ private fun utledHarTilgangTilÅSaksbehandle(
     bruker: Bruker,
     unleashGateway: UnleashGateway
 ): Boolean {
-    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)) {
         kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
         kanSaksbehandle
@@ -150,7 +107,7 @@ private fun brukerHarGjortVilkårsvurderingerPåBehandling(
     bruker: Bruker
 ): Boolean {
     return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
-        .any { it.brukere().contains(bruker.ident) }
+        .any { bruker in it.brukere() }
 }
 
 private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
@@ -207,7 +164,8 @@ private fun kvalitetssikringsVurdering(
     flyt: BehandlingFlyt,
     vurderingEndretService: VurderingEndretService
 ): List<TotrinnsVurderingResponse> {
-    val sistKvalitetssikret = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
+    val sistKvalitetssikret =
+        avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
     return avklaringsbehovene.alle()
         .filter { it.erIkkeAvbrutt() }
         .filter { it.definisjon.kvalitetssikres }
