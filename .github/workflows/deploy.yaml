@@ -120,6 +120,7 @@ jobs:
       needs: build
       concurrency:
           group: kontrakt
+          queue: max
       permissions:
           contents: write
           packages: write
@@ -179,6 +180,7 @@ jobs:
         id-token: write
     concurrency:
       group: deploy-dev
+      queue: max
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: nais/deploy/actions/deploy@fc3eae3edebabdf67f7592102ae16176d5ba3b5f # v2
@@ -194,6 +196,7 @@ jobs:
       runs-on: ubuntu-latest
       concurrency:
         group: deploy-prod
+        queue: max
       permissions:
           contents: read
           id-token: write
