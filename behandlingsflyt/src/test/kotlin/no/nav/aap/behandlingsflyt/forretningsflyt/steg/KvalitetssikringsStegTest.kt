@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.VurderingEndretService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
@@ -131,7 +132,9 @@ class KvalitetssikringsStegTest {
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
             behandlingRepository = inMemoryRepositoryProvider.provide(),
-            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
+            vurderingEndretService = VurderingEndretService(inMemoryRepositoryProvider),
+            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider()),
+            unleashGateway = AlleAvskruddUnleash
         )
 
         fun kjørSteg() {

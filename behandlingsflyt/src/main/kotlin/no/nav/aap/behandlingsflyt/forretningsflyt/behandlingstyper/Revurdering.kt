@@ -95,11 +95,11 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = KravSteg,
                 informasjonskrav = emptyList(),
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.VURDER_KRAV)
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.MIGRERING_FRA_ARENA, Vurderingsbehov.VURDER_KRAV)
             )
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.MIGRERING_FRA_ARENA),
                 informasjonskrav = emptyList()
             )
             .medSteg(
@@ -127,6 +127,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                     Vurderingsbehov.HELHETLIG_VURDERING,
@@ -139,8 +140,9 @@ object Revurdering : BehandlingType {
                 steg = VurderStudentSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.REVURDER_STUDENT,
-                    Vurderingsbehov.HELHETLIG_VURDERING
+                    Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
             .medSteg(
@@ -153,6 +155,7 @@ object Revurdering : BehandlingType {
                 ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -160,12 +163,13 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.OVERGANG_ARBEID,
-                    Vurderingsbehov.REVURDER_STUDENT
+                    Vurderingsbehov.REVURDER_STUDENT,
                 )
             )
             .medSteg(
                 steg = VurderBistandsbehovSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -178,13 +182,15 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = EtableringEgenVirksomhetSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET
+                    Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET,
                 )
             )
             .medSteg(
                 steg = ArbeidsopptrappingSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -196,6 +202,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = FritakMeldepliktSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -207,6 +214,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = FastsettArbeidsevneSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -223,6 +231,7 @@ object Revurdering : BehandlingType {
                 ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -236,6 +245,7 @@ object Revurdering : BehandlingType {
                 steg = OvergangArbeidSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -247,6 +257,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REFUSJONSKRAV,
@@ -255,6 +266,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SykdomsvurderingBrevSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -267,6 +279,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = VurderYrkesskadeSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.REVURDER_YRKESSKADE,
@@ -276,6 +289,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = AvklarStudentStegV2, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.REVURDER_STUDENT,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
@@ -283,6 +297,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = VurderSykepengeErstatningSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
@@ -293,6 +308,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = BeregningAvklarFaktaSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.REVURDER_BEREGNING,
                     Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
@@ -306,6 +322,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(InntektInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.REVURDER_BEREGNING,
                     Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
@@ -315,6 +332,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = FastsettGrunnlagSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.REVURDER_BEREGNING,
                     Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
@@ -324,6 +342,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = InntektsbortfallSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_INNTEKTSBORTFALL,
@@ -337,6 +356,7 @@ object Revurdering : BehandlingType {
                 ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.REVURDER_MEDLEMSKAP,
                     Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
                     Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT,
@@ -347,7 +367,9 @@ object Revurdering : BehandlingType {
                 steg = VurderOppholdskravSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.OPPHOLDSKRAV,
+                    Vurderingsbehov.AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
@@ -357,6 +379,7 @@ object Revurdering : BehandlingType {
                 steg = BarnetilleggSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.BARNETILLEGG,
                     Vurderingsbehov.DØDSFALL_BARN,
                     Vurderingsbehov.HELHETLIG_VURDERING,
@@ -370,6 +393,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING,
                     Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON,
                     Vurderingsbehov.INSTITUSJONSOPPHOLD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.MOTTATT_SØKNAD
                 )
             )
@@ -379,6 +403,7 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                     Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+                    Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 ),
@@ -414,6 +439,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(DagpengerInformasjonskrav, TiltakspengerInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                     Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
@@ -470,7 +496,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = MeldingOmVedtakBrevSteg,
-                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGReguleringUnntattMigrering()
             )
             .medSteg(
                 steg = OpprettRevurderingSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()

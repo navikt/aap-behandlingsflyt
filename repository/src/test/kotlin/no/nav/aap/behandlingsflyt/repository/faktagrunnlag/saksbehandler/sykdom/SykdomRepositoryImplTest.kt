@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.within
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 internal class SykdomRepositoryImplTest {
     companion object {
@@ -92,8 +94,11 @@ internal class SykdomRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val sykdomsvurdering1 = sykdomsvurdering1(behandling.id)
             sykdomRepo.lagre(behandling.id, listOf(sykdomsvurdering1))
-            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+            val sykdomsvurderinger = sykdomRepo.hent(behandling.id).sykdomsvurderinger
+            assertThat(sykdomsvurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(listOf(sykdomsvurdering1))
+            assertThat(sykdomsvurderinger[0].opprettet)
+                .isCloseTo(sykdomsvurdering1.opprettet, within(1, ChronoUnit.SECONDS))
         }
     }
 

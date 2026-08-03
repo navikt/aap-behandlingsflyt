@@ -240,6 +240,10 @@ class Avklaringsbehovene(
             .filterNot { it.erForeslåttVedtak() || it.erForeslåttVedtakVedtakslengde() }
     }
 
+    fun avklaringsbehovSomKreverKvalitetssikring(): List<Avklaringsbehov> {
+        return alle().filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() && avklaringsbehov.erIkkeAvbrutt() }
+    }
+
     fun harAvklaringsbehovSomKreverToTrinn(): Boolean {
         return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() }
     }

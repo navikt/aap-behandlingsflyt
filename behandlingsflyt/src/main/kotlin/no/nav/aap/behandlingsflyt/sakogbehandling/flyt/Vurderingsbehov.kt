@@ -46,6 +46,7 @@ enum class Vurderingsbehov {
     LOVVALG_OG_MEDLEMSKAP,
     FORUTGAENDE_MEDLEMSKAP,
     OPPHOLDSKRAV,
+    AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET,
     SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
     BRUKER_TILBAKE_I_ARBEID,
     REVURDER_SYKEPENGEERSTATNING, // Sykdomstegene, men de som ligger på på NAY og ikke kontor
@@ -55,7 +56,7 @@ enum class Vurderingsbehov {
     INSTITUSJONSOPPHOLD_SONING,
     SAMORDNING_OG_AVREGNING,
     REFUSJONSKRAV,
-    UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
+    UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT,
     FASTSATT_PERIODE_PASSERT,
 
     /**
@@ -85,7 +86,8 @@ enum class Vurderingsbehov {
     ETABLERING_EGEN_VIRKSOMHET,
     AKTIVITETSPLIKTBEHANDLING_AVBRUTT,
     VURDER_AVSLAG_11_27,
-    VURDER_ARBEIDSOPPTRAPPING
+    VURDER_ARBEIDSOPPTRAPPING,
+    MIGRERING_FRA_ARENA
     ;
 
     companion object {
@@ -101,6 +103,13 @@ enum class Vurderingsbehov {
          */
         fun alleInklusivGRegulering(): List<Vurderingsbehov> {
             return Vurderingsbehov.entries.toList()
+        }
+
+        /**
+         * Alle med funksjonell verdi - unntatt migrering
+         */
+        fun alleInklusivGReguleringUnntattMigrering(): List<Vurderingsbehov> {
+            return Vurderingsbehov.entries.filter { it != MIGRERING_FRA_ARENA }.toList()
         }
 
         fun forAktivitetspliktbehandling(): List<Vurderingsbehov> {
@@ -160,6 +169,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
         EksponertÅrsak.OPPHOLDSKRAV -> Vurderingsbehov.OPPHOLDSKRAV
+        EksponertÅrsak.AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET -> Vurderingsbehov.AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET
         EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
         EksponertÅrsak.OVERGANG_UFORE_AUTOMATISK_STANS -> Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
@@ -180,4 +190,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.BRUKER_TILBAKE_I_ARBEID -> Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID
         EksponertÅrsak.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON -> Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON
         EksponertÅrsak.FERIE_I_SYKEPENGEPERIODE -> Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE
+        EksponertÅrsak.MIGRERING_FRA_ARENA -> Vurderingsbehov.MIGRERING_FRA_ARENA
     }

@@ -243,7 +243,6 @@ class TestScenarioOrkestrator(
             AvklarManuellInntektVurderingLøsning(
                 manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                     begrunnelse = "Manuell inntekt vurdering ok",
-                    belop = null,
                     vurderinger = manglendeInntektsÅr.mapIndexed { index, år ->
                         ÅrsVurdering(
                             beløp = BigDecimal(500000.00 + (index * 10000)),
