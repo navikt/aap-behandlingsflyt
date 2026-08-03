@@ -230,9 +230,17 @@ fun NormalOpenAPIRoute.saksApi(
                     personOgSakService.finnSakerFor(ident)
                 }
 
-                // TODO: I tillegg til å verifisere dette må vi sjekke at Arenasaken er i riktig status og kan migreres
-
                 if (eksisterendeSaker.isNotEmpty()) {
+                    return@authorizedPost respondWithStatus(HttpStatusCode.BadRequest)
+                }
+
+                val arenaSak = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val personOgSakService = PersonOgSakService(gatewayProvider, repositoryProvider)
+                    personOgSakService.finnArenasakForBruker(Ident(dto.ident), dto.saksnummerArena)
+                }
+
+                if (arenaSak == null || arenaSak.statuskode != "AKTIV") {
                     return@authorizedPost respondWithStatus(HttpStatusCode.BadRequest)
                 }
 

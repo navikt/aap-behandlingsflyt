@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakOppsummering
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import io.mockk.Called
 import io.mockk.checkUnnecessaryStub
 import io.mockk.clearMocks
@@ -408,6 +410,62 @@ class PersonOgSakServiceTest {
                 apiInternGateway.hentArenaStatus(setOf(aktivIdent.identifikator, gammelIdent.identifikator))
                 pdlGateway.hentAlleIdenterForPerson(gammelIdent)
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("finnArenasakForBruker")
+    inner class FinnArenasakForBrukerTest {
+
+        private val arenaSak = ArenaSakOppsummering(
+            sakId = "123",
+            lopenummer = 1,
+            aar = 2024,
+            antallVedtak = 1,
+            statuskode = "AKTIV",
+            statusnavn = "Aktiv",
+            sakstype = "AAP",
+            regDato = LocalDate.of(2024, 1, 1),
+            avsluttetDato = null,
+        )
+
+        @Test
+        fun `returnerer arenasak når saksnummer matcher`() {
+            val ident = ident()
+            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(listOf(arenaSak))
+
+            val result = dataSource.transaction { connection ->
+                initPersonOgSakService(connection).finnArenasakForBruker(ident, "2024-1")
+            }
+
+            assertThat(result).isEqualTo(arenaSak)
+            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
+        }
+
+        @Test
+        fun `returnerer null når sak med gitt saksnummer ikke finnes`() {
+            val ident = ident()
+            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(listOf(arenaSak))
+
+            val result = dataSource.transaction { connection ->
+                initPersonOgSakService(connection).finnArenasakForBruker(ident, "2023-5")
+            }
+
+            assertThat(result).isNull()
+            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
+        }
+
+        @Test
+        fun `returnerer null når listen er tom`() {
+            val ident = ident()
+            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(emptyList())
+
+            val result = dataSource.transaction { connection ->
+                initPersonOgSakService(connection).finnArenasakForBruker(ident, "2024-1")
+            }
+
+            assertThat(result).isNull()
+            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
         }
     }
 

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -62,6 +63,11 @@ class PersonOgSakService(
         if (!personFinnesIKelvin && personFinnesIArena) {
             log.info("Oppretter person som har historikk i AAP-Arena i Kelvin")
         }
+    }
+
+    fun finnArenasakForBruker(ident: Ident, saksnummerArena: String): ArenaSakOppsummering? {
+        val saker = apiInternGateway.hentSakerForPerson(ident.identifikator).saker
+        return saker.find { "${it.aar}-${it.lopenummer}" == saksnummerArena }
     }
 
     fun finnSakerFor(ident: Ident): List<Sak> {
