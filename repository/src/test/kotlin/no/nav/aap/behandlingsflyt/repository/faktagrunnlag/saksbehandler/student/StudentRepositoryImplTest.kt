@@ -66,8 +66,8 @@ class StudentRepositoryImplTest {
             avbruddMerEnn6Måneder = true,
             vurdertAv = Bruker("Gokken Gokkestad"),
             vurdertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+            vurdertIBehandling = behandling.id,
             diagnose = Diagnose("ICD-10", "A00.0", listOf("KOLERA")),
-            vurdertIBehandling = behandling.id
         )
         val studentvurdering2 = StudentVurdering(
             fom = 2 april 2020,
@@ -82,7 +82,7 @@ class StudentRepositoryImplTest {
             vurdertAv = Bruker("Gokken Gokkestad"),
             vurdertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
             vurdertIBehandling = behandling.id,
-            diagnose = null
+            diagnose = null,
         )
 
         dataSource.transaction {
