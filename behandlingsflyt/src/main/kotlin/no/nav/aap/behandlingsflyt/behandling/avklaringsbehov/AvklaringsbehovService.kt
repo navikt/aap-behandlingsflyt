@@ -276,7 +276,25 @@ class AvklaringsbehovService(
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null }, // TODO: Gjør required når alle steg er oppdatert
+        /**
+         * Vilkåret [nårVurderingErRelevant] avgjør relevans for. Når denne er satt, hentes
+         * "hvilke perioder ble vurdert i forrige behandling" fra det persisterte vilkårsresultatet
+         * til forrige behandling, i stedet for å kjøre dagens [nårVurderingErRelevant] på nytt mot
+         * forrige behandlings tilstand.
+         *
+         * Replay-varianten (`vilkårtype == null`) har en kjent svakhet: endres relevans-/automatikklogikken
+         * (f.eks. i en automatisk vurderingstjeneste), så endres retroaktivt hva som anses som "vurdert" i
+         * forrige behandling, selv om ingen ny vurdering faktisk er gjort. Persistert vilkårsresultat er et
+         * historisk faktum og upåvirket av senere kodeendringer.
+         *
+         * Kan kun brukes når det finnes nøyaktig ett vilkår per avklaringsbehov (1:1). Ikke bruk for steg som
+         * enten løfter flere avklaringsbehov mot samme vilkår, eller som ikke skriver noe [Vilkårtype] i det
+         * hele tatt.
+         *
+         * TODO: Gjør required (eller fjern default) når flere steg er vurdert og konvertert.
+         */
+        vilkårtype: Vilkårtype? = null
     ) {
         val perioderVilkåretErRelevant by lazy { nårVurderingErRelevant(kontekst) }
 
@@ -284,7 +302,8 @@ class AvklaringsbehovService(
             perioderSomBehøverVurdering(
                 kontekst,
                 perioderVilkåretErRelevant,
-                nårVurderingErRelevant
+                nårVurderingErRelevant,
+                vilkårtype
             )
         }
 
@@ -379,7 +398,8 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null }, // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+        vilkårtype: Vilkårtype? = null
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -389,7 +409,8 @@ class AvklaringsbehovService(
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             nårVurderingErGyldig = { null },
             tilbakestillGrunnlag = tilbakestillGrunnlag,
-            gjeldendeVurderinger = gjeldendeVurderinger
+            gjeldendeVurderinger = gjeldendeVurderinger,
+            vilkårtype = vilkårtype
         )
     }
 
@@ -418,7 +439,12 @@ class AvklaringsbehovService(
         nårVurderingErGyldig: () -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null }, // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+        /**
+         * Se dokumentasjon på privat [oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår].
+         * Kun trygt å sette når vilkåret [nårVurderingErRelevant] vurderer eies 1:1 av dette avklaringsbehovet.
+         */
+        vilkårtype: Vilkårtype? = null
     ) {
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
@@ -428,7 +454,8 @@ class AvklaringsbehovService(
             perioderSomIkkeErTilstrekkeligVurdert = { null },
             nårVurderingErGyldig = nårVurderingErGyldig,
             tilbakestillGrunnlag = tilbakestillGrunnlag,
-            gjeldendeVurderinger = gjeldendeVurderinger
+            gjeldendeVurderinger = gjeldendeVurderinger,
+            vilkårtype = vilkårtype
         )
     }
 
@@ -436,10 +463,11 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         perioderVilkåretErRelevant: Tidslinje<Boolean>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        vilkårtype: Vilkårtype?,
     ): Set<Periode> {
         return Tidslinje.map3(
             perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
-            perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant),
+            perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant, vilkårtype),
             nårEndringIKrav(kontekst)
         ) { erRelevant, erVurdert, erKravEndret ->
             erRelevant == true && (erVurdert != true || erKravEndret == true)
@@ -475,30 +503,50 @@ class AvklaringsbehovService(
         }
     }
 
+    /**
+     * Hvilke perioder ble vurdert i forrige behandling?
+     *
+     * Hvis [vilkårtype] er satt, leses dette fra det persisterte vilkårsresultatet til forrige
+     * behandling: en periode regnes som vurdert hvis utfallet der er noe annet enn `IKKE_VURDERT`
+     * (dvs. dekker både automatiske og manuelle vurderinger, og eksplisitt "ikke relevant"). Dette
+     * er et historisk faktum som ikke endrer seg selv om dagens relevans-/automatikklogikk endres.
+     *
+     * Hvis [vilkårtype] er `null`, faller vi tilbake til å kjøre dagens [nårVurderingErRelevant] på
+     * nytt mot forrige behandlings tilstand (replay). Denne varianten har en kjent svakhet: endres
+     * koden [nårVurderingErRelevant] kaller inn i (f.eks. en automatisk vurderingstjeneste), kan
+     * forrige behandling retroaktivt framstå som vurdert (eller uvurdert) selv om ingenting faktisk
+     * ble gjort der.
+     */
     private fun perioderVilkåretErVurdert(
         kontekst: FlytKontekstMedPerioder,
-        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        vilkårtype: Vilkårtype?,
     ): Tidslinje<Boolean> {
-        return kontekst.forrigeBehandlingId
-            ?.let { forrigeBehandlingId ->
-                val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                val forrigeRettighetsperiode =
-                    /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                    vilkårsresultatRepository.hent(forrigeBehandlingId)
-                        .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                        .tidslinje()
-                        .helePerioden()
+        val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return Tidslinje.empty()
 
-                nårVurderingErRelevant(
-                    kontekst.copy(
-                        /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                        behandlingId = forrigeBehandlingId,
-                        forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                        rettighetsperiode = forrigeRettighetsperiode,
-                        behandlingType = forrigeBehandling.typeBehandling(),
-                    )
-                )
-            }
-            .orEmpty()
+        if (vilkårtype != null) {
+            return vilkårsresultatRepository.hent(forrigeBehandlingId)
+                .finnVilkår(vilkårtype)
+                .tidslinje()
+                .mapValue { it.erVurdert() }
+        }
+
+        val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
+        val forrigeRettighetsperiode =
+            /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
+            vilkårsresultatRepository.hent(forrigeBehandlingId)
+                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+                .tidslinje()
+                .helePerioden()
+
+        return nårVurderingErRelevant(
+            kontekst.copy(
+                /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
+                behandlingId = forrigeBehandlingId,
+                forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
+                rettighetsperiode = forrigeRettighetsperiode,
+                behandlingType = forrigeBehandling.typeBehandling(),
+            )
+        )
     }
 }

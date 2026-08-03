@@ -59,6 +59,7 @@ class VurderLovvalgSteg private constructor(
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { perioderVurderingErGyldig(kontekst, grunnlag.value) },
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
+            vilkårtype = Vilkårtype.LOVVALG,
         )
 
         when (kontekst.vurderingType) {
