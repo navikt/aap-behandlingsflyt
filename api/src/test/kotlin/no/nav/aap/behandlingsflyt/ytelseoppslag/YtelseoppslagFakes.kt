@@ -6,7 +6,22 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import java.time.LocalDate
+
+/** Står inn for PDL: identer (aktive og historiske) per person. */
+internal object FakeIdentGateway : IdentGateway {
+    var identer: Map<String, List<Ident>> = emptyMap()
+
+    fun reset() {
+        identer = emptyMap()
+    }
+
+    /** Tom liste = personen er ukjent i PDL. */
+    override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> =
+        identer[ident.identifikator].orEmpty()
+}
 
 internal object FakeSykepengerGateway : SykepengerGateway {
     var perioder: List<UtbetaltePerioder> = emptyList()

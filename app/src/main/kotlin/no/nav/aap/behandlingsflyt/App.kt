@@ -273,8 +273,8 @@ internal fun Application.server(
 
             apiRouting {
                 personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                sykepengeperioderApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                foreldrepengeperioderApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykepengeperioderApi(gatewayProvider)
+                foreldrepengeperioderApi(gatewayProvider)
                 saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 flytApi(fellesDataSource, repositoryRegistry, gatewayProvider)

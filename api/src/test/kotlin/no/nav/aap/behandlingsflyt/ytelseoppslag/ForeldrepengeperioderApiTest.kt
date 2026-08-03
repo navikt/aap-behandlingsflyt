@@ -14,11 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -39,7 +35,6 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
     @Test
     fun `returnerer foreldrepengeperioder for person`() {
         val ident = "22345678901"
-        InMemoryPersonRepository.finnEllerOpprett(listOf(Ident(ident)))
 
         val tom = LocalDate.of(2026, 7, 1)
         val fom = tom.minusWeeks(52)
@@ -53,7 +48,7 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                foreldrepengeperioderApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider)
+                foreldrepengeperioderApi(gatewayProvider)
             }
 
             val response = createClient().post(FORELDREPENGEPERIODER_PATH) {
@@ -88,7 +83,6 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
     @Test
     fun `filtrerer bort andre ytelser enn foreldrepenger`() {
         val ident = "22345678903"
-        InMemoryPersonRepository.finnEllerOpprett(listOf(Ident(ident)))
 
         val periode = Periode(LocalDate.of(2026, 3, 1), LocalDate.of(2026, 4, 1))
         FakeForeldrepengerGateway.ytelserPerIdent = mapOf(
@@ -97,7 +91,7 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                foreldrepengeperioderApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider)
+                foreldrepengeperioderApi(gatewayProvider)
             }
 
             val response = createClient().post(FORELDREPENGEPERIODER_PATH) {
@@ -112,27 +106,22 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `slår opp både aktiv og historisk ident`() {
-        val aktivIdent = "22345678902"
-        val historiskIdent = "20987654322"
-        InMemoryPersonRepository.finnEllerOpprett(
-            listOf(Ident(historiskIdent, aktivIdent = false), Ident(aktivIdent))
-        )
+    fun `sender kun innsendt ident - fpabakus finner selv de andre identene`() {
+        val innsendtIdent = "22345678902"
 
         testApplication {
             installApplication {
-                foreldrepengeperioderApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider)
+                foreldrepengeperioderApi(gatewayProvider)
             }
 
             val response = createClient().post(FORELDREPENGEPERIODER_PATH) {
                 header("Authorization", "Bearer ${getToken().token()}")
                 contentType(ContentType.Application.Json)
-                setBody(oppslag(aktivIdent))
+                setBody(oppslag(innsendtIdent))
             }
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            assertThat(FakeForeldrepengerGateway.identerBrukt)
-                .containsExactlyInAnyOrder(aktivIdent, historiskIdent)
+            assertThat(FakeForeldrepengerGateway.identerBrukt).containsExactly(innsendtIdent)
         }
     }
 
@@ -140,7 +129,7 @@ class ForeldrepengeperioderApiTest : BaseApiTest() {
     fun `ukjent person gir tom liste`() {
         testApplication {
             installApplication {
-                foreldrepengeperioderApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider)
+                foreldrepengeperioderApi(gatewayProvider)
             }
 
             val ukjentIdent = "22345678909"

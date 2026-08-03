@@ -13,9 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -27,15 +24,19 @@ class SykepengeperioderApiTest : BaseApiTest() {
 
     private val gatewayProvider = createGatewayProvider {
         register<FakeSykepengerGateway>()
+        register<FakeIdentGateway>()
     }
 
     @BeforeEach
-    fun reset() = FakeSykepengerGateway.reset()
+    fun reset() {
+        FakeSykepengerGateway.reset()
+        FakeIdentGateway.reset()
+    }
 
     @Test
     fun `returnerer sykepengeperioder for person`() {
         val ident = "12345678901"
-        InMemoryPersonRepository.finnEllerOpprett(listOf(Ident(ident)))
+        FakeIdentGateway.identer = mapOf(ident to listOf(Ident(ident)))
 
         val tom = LocalDate.of(2026, 7, 1)
         val fom = tom.minusMonths(4)
@@ -47,7 +48,7 @@ class SykepengeperioderApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                sykepengeperioderApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider)
+                sykepengeperioderApi(gatewayProvider)
             }
 
             val response = createClient().post(SYKEPENGEPERIODER_PATH) {
@@ -75,16 +76,16 @@ class SykepengeperioderApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `slår opp både aktiv og historisk ident`() {
+    fun `slår opp både aktiv og historisk ident fra pdl`() {
         val aktivIdent = "12345678902"
         val historiskIdent = "10987654322"
-        InMemoryPersonRepository.finnEllerOpprett(
-            listOf(Ident(historiskIdent, aktivIdent = false), Ident(aktivIdent))
+        FakeIdentGateway.identer = mapOf(
+            aktivIdent to listOf(Ident(historiskIdent, aktivIdent = false), Ident(aktivIdent))
         )
 
         testApplication {
             installApplication {
-                sykepengeperioderApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider)
+                sykepengeperioderApi(gatewayProvider)
             }
 
             val response = createClient().post(SYKEPENGEPERIODER_PATH) {
@@ -99,10 +100,10 @@ class SykepengeperioderApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `ukjent person gir tom liste og bruker innsendt ident`() {
+    fun `person ukjent i pdl gir tom liste og bruker innsendt ident`() {
         testApplication {
             installApplication {
-                sykepengeperioderApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider)
+                sykepengeperioderApi(gatewayProvider)
             }
 
             val ukjentIdent = "12345678909"
@@ -121,14 +122,14 @@ class SykepengeperioderApiTest : BaseApiTest() {
     @Test
     fun `videresender oppslagsvinduet til gatewayen`() {
         val ident = "12345678904"
-        InMemoryPersonRepository.finnEllerOpprett(listOf(Ident(ident)))
+        FakeIdentGateway.identer = mapOf(ident to listOf(Ident(ident)))
 
         val fom = LocalDate.of(2026, 3, 1)
         val tom = LocalDate.of(2026, 7, 1)
 
         testApplication {
             installApplication {
-                sykepengeperioderApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider)
+                sykepengeperioderApi(gatewayProvider)
             }
 
             val response = createClient().post(SYKEPENGEPERIODER_PATH) {

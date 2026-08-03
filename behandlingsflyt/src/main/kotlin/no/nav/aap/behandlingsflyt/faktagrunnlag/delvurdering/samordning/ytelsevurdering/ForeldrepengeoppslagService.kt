@@ -4,10 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.time.measureTimedValue
@@ -15,32 +13,24 @@ import kotlin.time.measureTimedValue
 
 class ForeldrepengeoppslagService(
     private val foreldrepengerGateway: ForeldrepengerGateway,
-    private val personRepository: PersonRepository,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(gatewayProvider: GatewayProvider) : this(
         foreldrepengerGateway = gatewayProvider.provide<ForeldrepengerGateway>(),
-        personRepository = repositoryProvider.provide<PersonRepository>(),
     )
 
+    /**
+     * Fpabakus slår selv opp aktøren i PDL og finner data på tvers av alle identene
+     * til personen, så det er nok å sende én ident.
+     */
     fun hentForeldrepengeperioder(personident: String, oppslagsperiode: Periode): List<ForeldrepengeUtbetaling> {
-        val identer = personRepository.finnAlleIdenter(personident)
-
-        val (perioder, duration) = measureTimedValue {
-            identer
-                .flatMap { ident -> hentForIdent(ident, oppslagsperiode) }
-                .distinct()
+        val (respons, duration) = measureTimedValue {
+            foreldrepengerGateway.hentVedtakYtelseForPerson(
+                ForeldrepengerRequest(Aktør(personident), oppslagsperiode)
+            )
         }
-        log.info("Hentet foreldrepengeperioder for ${identer.size} ident(er). Tok ${duration.inWholeMilliseconds} ms")
-
-        return perioder
-    }
-
-    private fun hentForIdent(ident: String, oppslagsperiode: Periode): List<ForeldrepengeUtbetaling> {
-        val respons = foreldrepengerGateway.hentVedtakYtelseForPerson(
-            ForeldrepengerRequest(Aktør(ident), oppslagsperiode)
-        )
+        log.info("Hentet foreldrepengeperioder. Tok ${duration.inWholeMilliseconds} ms")
 
         return respons.ytelser
             .filter { it.ytelse == Ytelser.FORELDREPENGER }
@@ -71,4 +61,3 @@ data class ForeldrepengeUtbetaling(
     val ytelseStatus: String,
     val vedtattTidspunkt: LocalDate,
 )
-
