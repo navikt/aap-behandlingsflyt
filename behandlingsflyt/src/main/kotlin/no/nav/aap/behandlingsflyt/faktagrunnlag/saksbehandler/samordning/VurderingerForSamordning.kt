@@ -3,15 +3,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
-import java.math.BigDecimal
-import java.time.LocalDate
 
 data class VurderingerForSamordning(
     val begrunnelse: String?,
-    @Deprecated("Ikke lenger i bruk")
-    val maksDatoEndelig: Boolean? = null,
-    @Deprecated("Ikke lenger i bruk")
-    val fristNyRevurdering: LocalDate? = null,
     val vurderteSamordningerData: List<SamordningVurderingData>
 ) {
     fun valider() {
@@ -34,6 +28,5 @@ data class SamordningVurderingData(
     val ytelseType: Ytelse,
     val periode: Periode,
     val gradering: Int?,
-    val kronesum: BigDecimal? = null,
     val manuell: Boolean? = null
 )

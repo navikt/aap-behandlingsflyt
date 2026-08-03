@@ -45,7 +45,7 @@ class VurderStudentSteg private constructor(
             definisjon = Definisjon.AVKLAR_STUDENT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING -> {
+                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA-> {
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
                                 (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg) && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
                     }
@@ -78,7 +78,7 @@ class VurderStudentSteg private constructor(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MIGERING_FRA_ARENA -> {
                 vurderStudentvilkår(kontekst)
             }
 

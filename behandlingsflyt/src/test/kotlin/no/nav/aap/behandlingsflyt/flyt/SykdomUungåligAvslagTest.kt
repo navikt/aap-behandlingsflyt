@@ -181,6 +181,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
     }
 
 
+    @Suppress("DANGEROUS_CHARACTERS")
     @Test
     fun `Oppfyller 11-5 med YS og kun 30% nedsatt, 11-6 OK, 11-22 YS ikke årsaksammenhengende`() {
         val søknadsdato = 1 april 2025

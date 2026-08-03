@@ -40,6 +40,9 @@ public enum class ÅrsakTilOpprettelse {
     // Uføre
     UFØRE_VEDTAK_HENDELSE,
 
+    // Migrering fra Arena
+    MIGRERING_FRA_ARENA,
+
     // Udefinert
     UDEFINERT
 }

@@ -1,12 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
@@ -18,15 +16,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somSykdomsv
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
-import org.slf4j.LoggerFactory
 
-class SykdomsvilkårUtenVissVarighet(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
-    private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-    private val log = LoggerFactory.getLogger(javaClass)
+object SykdomsvilkårUtenVissVarighet :
+    Vilkårsvurderer<SykdomsFaktagrunnlag> {
+    override val vilkårtype: Vilkårtype = Vilkårtype.SYKDOMSVILKÅRET
 
-    override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
-        val tidslinje = vurderVilkårUtenMutering(grunnlag)
-        vilkår.leggTilVurderinger(tidslinje)
+    override fun vurder(faktagrunnlag: SykdomsFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
+        return vurderVilkårUtenMutering(faktagrunnlag)
     }
 
     fun vurderVilkårUtenMutering(

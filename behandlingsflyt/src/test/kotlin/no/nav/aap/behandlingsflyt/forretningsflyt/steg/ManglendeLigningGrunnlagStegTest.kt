@@ -140,8 +140,8 @@ class ManglendeLigningGrunnlagStegTest {
     }
 
     @ParameterizedTest
-    @EnumSource(VurderingType::class, mode = Mode.EXCLUDE, names = ["FØRSTEGANGSBEHANDLING", "REVURDERING"])
-    fun `oppretter ikke avklaringsbehov for vurderingstyper som ikke er FØRSTEGANGSBEHANDLING eller REVURDERING`(
+    @EnumSource(VurderingType::class, mode = Mode.EXCLUDE, names = ["FØRSTEGANGSBEHANDLING", "REVURDERING", "MIGERING_FRA_ARENA"])
+    fun `oppretter ikke avklaringsbehov for vurderingstyper som ikke er FØRSTEGANGSBEHANDLING eller REVURDERING eller MIGERING_FRA_ARENA`(
         vurderingType: VurderingType
     ) {
         val (_, behandling) = opprettInMemorySakOgBehandling()

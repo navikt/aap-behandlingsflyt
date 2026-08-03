@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MIGRER_RETT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.UTVID_VEDTAKSLENGDE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.OVERGANG_UFORE_STANS
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MIGERING_FRA_ARENA
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -58,7 +59,8 @@ class FlytKontekstMedPeriodeService(
 
     companion object {
         fun prioritertType(vurderingTyper: Set<VurderingType>, typeBehandling: TypeBehandling): VurderingType {
-            if (typeBehandling == TypeBehandling.Førstegangsbehandling) {
+            // Migrering er en førstegangsbehandling, så den må ikke overskrives til førstegangsbehandling for vurdering-type
+            if (typeBehandling == TypeBehandling.Førstegangsbehandling && MIGERING_FRA_ARENA !in vurderingTyper) {
                 return FØRSTEGANGSBEHANDLING
             }
             return when {
@@ -72,6 +74,7 @@ class FlytKontekstMedPeriodeService(
                 MIGRER_RETTIGHETSPERIODE in vurderingTyper -> MIGRER_RETTIGHETSPERIODE
                 AUTOMATISK_BREV in vurderingTyper -> AUTOMATISK_BREV
                 OVERGANG_UFORE_STANS in vurderingTyper -> OVERGANG_UFORE_STANS
+                MIGERING_FRA_ARENA in vurderingTyper -> MIGERING_FRA_ARENA
                 else -> IKKE_RELEVANT
             }
         }
@@ -150,6 +153,7 @@ class FlytKontekstMedPeriodeService(
                 Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> AUTOMATISK_BREV
                 Vurderingsbehov.G_REGULERING -> G_REGULERING
                 Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS -> OVERGANG_UFORE_STANS
+                Vurderingsbehov.MIGRERING_FRA_ARENA -> MIGERING_FRA_ARENA
             }
         }
     }

@@ -47,3 +47,4 @@ jobs:
               with:
                 report_paths: '**/build/test-results/test/TEST-*.xml'
                 check_name: 'JUnit Test Report for ${{ matrix.gradle_args }}'
+                truncate_stack_traces: false

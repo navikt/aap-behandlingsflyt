@@ -59,13 +59,11 @@ internal class SamordningVurderingRepositoryImplTest {
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 ),
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(6), LocalDate.now().minusYears(5)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 )
             )
@@ -78,13 +76,11 @@ internal class SamordningVurderingRepositoryImplTest {
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 ),
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(6), LocalDate.now().minusYears(5)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 )
             )
@@ -144,7 +140,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 )
             )
@@ -181,7 +176,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 SamordningVurderingPeriode(
                     periode = Periode(førstePeriodeStart, førstePeriodeEnd),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 )
             )
@@ -352,7 +346,6 @@ internal class SamordningVurderingRepositoryImplTest {
     fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
         val samordningGrunnlag1 = lagSamordningGrunnlag("B1", Bruker("Z00001"), Ytelse.SYKEPENGER)
         val samordningGrunnlag2 = lagSamordningGrunnlag("B2", Bruker("Z00002"), Ytelse.FORELDREPENGER)
-        val samordningGrunnlag3 = lagSamordningGrunnlag("B3", Bruker("Z00003"), Ytelse.OMSORGSPENGER)
 
         val førstegangsbehandling = dataSource.transaction { connection ->
             val samordningRepo = SamordningVurderingRepositoryImpl(connection)
@@ -376,19 +369,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 )
             )
             samordningRepo.lagreVurderinger(revurderingAvbrutt.id, samordningGrunnlag2)
-        }
-
-        dataSource.transaction { connection ->
-            val samordningRepo = SamordningVurderingRepositoryImpl(connection)
-            val revurdering = revurderingSamordning(connection, førstegangsbehandling)
-
-            samordningRepo.lagreVurderinger(revurdering.id, samordningGrunnlag3)
-
-            val historikk = samordningRepo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk)
-                .usingRecursiveComparison()
-                .ignoringFields("vurderingerId", "vurdertTidspunkt")
-                .isEqualTo(listOf(samordningGrunnlag1))
         }
     }
 

@@ -14,11 +14,11 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MigrerStansOgOpphor,
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
-    MeldekortEndretAvSaksbehandler,
     StudentV2,
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     MotorV2,
+    IngenStoppHendelseVedAtomaerBehandling,
 
     // --- Krav ---
     KravSteg, // Visning
@@ -30,6 +30,9 @@ enum class BehandlingsflytFeature : FeatureToggle {
     // ------
     Avslag11_27,
     SkalViseAlleSykdomssteg,
+    StrekkAvslagOverHelg,
+    MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
+    HandterDialogmeldingSomLegeerklaering,
     HoppOverKvalitetssikringVedIngenEndring
     ;
 

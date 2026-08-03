@@ -53,7 +53,7 @@ class BekreftVurderingerOppfølgingSteg(
         kontekst: FlytKontekstMedPerioder, avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGERING_FRA_ARENA -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     /// Blir kanskje feil?
                     return false

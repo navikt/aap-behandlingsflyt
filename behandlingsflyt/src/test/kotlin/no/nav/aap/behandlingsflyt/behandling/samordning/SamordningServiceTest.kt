@@ -1,29 +1,22 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -64,10 +57,7 @@ internal class SamordningServiceTest {
             val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
             val service = SamordningService(ytelseVurderingRepo, samordningYtelseRepository)
 
-            val hentedeVurderinger = service.hentVurderinger(behandlingId)
-            val hentedeYtelser = service.hentYtelser(behandlingId)
-            val tidligereVurderinger = service.vurderingTidslinje(hentedeVurderinger)
-            assertThat(service.vurder(hentedeYtelser, tidligereVurderinger).segmenter()).isNotEmpty
+            assertThat(service.samordningGrunnlag(behandlingId).vurder().segmenter()).isNotEmpty
         }
     }
 
@@ -112,27 +102,19 @@ internal class SamordningServiceTest {
                             )
                         )
                     ),
-                vurdertTidspunkt = LocalDateTime.now()
+                    vurdertTidspunkt = LocalDateTime.now()
                 )
             )
         }
 
         val (ytelser, vurderinger) = dataSource.transaction { connection ->
-            val service = SamordningService(
+            SamordningService(
                 SamordningVurderingRepositoryImpl(connection),
                 SamordningYtelseRepositoryImpl(connection)
-            )
-            Pair(service.hentYtelser(behandlingId), service.hentVurderinger(behandlingId))
+            ).samordningGrunnlag(behandlingId)
         }
-        val ikkeVurdertePerioder = dataSource.transaction { connection ->
-            val service = SamordningService(
-                SamordningVurderingRepositoryImpl(connection),
-                SamordningYtelseRepositoryImpl(connection)
-            )
-
-            val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
-            service.perioderSomIkkeHarBlittVurdert(ytelser, tidligereVurderinger)
-        }
+        val ikkeVurdertePerioder =
+            SamordningYtelseVurderingGrunnlag(ytelser, vurderinger).perioderSomIkkeHarBlittVurdert()
 
         // Forvent at ikke-vurderte perioder er fra 1 jan til 4 jan
         assertThat(ikkeVurdertePerioder.segmenter()).hasSize(1)
@@ -163,18 +145,17 @@ internal class SamordningServiceTest {
                             SamordningYtelsePeriode(
                                 Periode(13 mars 2025, 31 mars 2025),
                                 Prosent.`70_PROSENT`,
-                                kronesum = null
                             ),
                             SamordningYtelsePeriode(
                                 Periode(13 mars 2025, 15 mars 2025),
                                 Prosent.`50_PROSENT`,
-                                kronesum = null
                             )
                         ),
                         kilde = "kilde"
                     )
                 ),
             )
+            samordningYtelseRepository.lagre(behandlingId, grunnlag.ytelser)
 
             val vurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
@@ -198,11 +179,11 @@ internal class SamordningServiceTest {
                         )
                     )
                 ),
-            vurdertTidspunkt = LocalDateTime.now()
+                vurdertTidspunkt = LocalDateTime.now()
             )
+            ytelseVurderingRepo.lagreVurderinger(behandlingId, vurderinger)
 
-            val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
-            val samordningGradering = service.vurder(grunnlag, tidligereVurderinger).segmenter().toList()
+            val samordningGradering = service.samordningGrunnlag(behandlingId).vurder().segmenter().toList()
 
             assertThat(samordningGradering).hasSize(2)
 
@@ -215,44 +196,6 @@ internal class SamordningServiceTest {
                 assertThat(periode).isEqualTo(Periode(16 mars 2025, 31 mars 2025))
                 assertThat(verdi.gradering).isEqualTo(Prosent(70))
             }
-        }
-    }
-
-    @Test
-    fun `ytelser fra register med overlappende segmenter slås sammen ved sjekk av manglende vurderinger`() {
-        dataSource.transaction { connection ->
-            val service = SamordningService(
-                SamordningVurderingRepositoryImpl(connection),
-                SamordningYtelseRepositoryImpl(connection)
-            )
-
-            val grunnlag = SamordningYtelseGrunnlag(
-                1L,
-                setOf(
-                    SamordningYtelse(
-                        Ytelse.SYKEPENGER,
-                        setOf(
-                            SamordningYtelsePeriode(
-                                Periode(1 januar 2024, 10 januar 2024),
-                                Prosent.`70_PROSENT`,
-                                kronesum = null
-                            ),
-                            SamordningYtelsePeriode(
-                                Periode(9 januar 2024, 13 januar 2024),
-                                Prosent.`50_PROSENT`,
-                                kronesum = null
-                            )
-                        ),
-                        kilde = "kilde"
-                    )
-                ),
-            )
-
-            val ikkeVurdertePerioder = service.perioderSomIkkeHarBlittVurdert(grunnlag, Tidslinje.empty())
-
-            assertThat(ikkeVurdertePerioder.segmenter().first().periode).isEqualTo(
-                Periode(1 januar 2024, 13 januar 2024)
-            )
         }
     }
 
@@ -275,7 +218,7 @@ internal class SamordningServiceTest {
                     )
                 )
             ),
-        vurdertTidspunkt = LocalDateTime.now()
+            vurdertTidspunkt = LocalDateTime.now()
         )
     ) {
         samordningVurderingRepo.lagreVurderinger(behandlingId, vurderinger)
@@ -303,19 +246,9 @@ internal class SamordningServiceTest {
     }
 
     private fun opprettSakdata(connection: DBConnection): BehandlingId {
-        val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
-        val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
-            person,
-            LocalDate.now()
-        ).id
-        return BehandlingRepositoryImpl(connection).opprettBehandling(
-            sakId,
-            TypeBehandling.Førstegangsbehandling,
-            null,
-            VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                årsak = ÅrsakTilOpprettelse.SØKNAD
-            )
-        ).id
+        val sak = sak(connection)
+        val behandling = finnEllerOpprettBehandling(connection, sak)
+
+        return behandling.id
     }
 }
