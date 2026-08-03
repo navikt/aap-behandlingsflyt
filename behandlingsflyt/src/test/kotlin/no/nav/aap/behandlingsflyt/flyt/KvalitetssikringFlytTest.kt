@@ -4,9 +4,11 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -14,7 +16,7 @@ import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 
-class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedKSToggle::class) {
 
     lateinit var sak: Sak
     lateinit var behandling: Behandling
@@ -180,11 +182,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
             .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .løsSykdom(fom)
             .bekreftVurderinger()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov)
-                    .anyMatch { it.definisjon == Definisjon.KVALITETSSIKRING }
-            }
-            .kvalitetssikre()
             .fattVedtak()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).hasSize(1)
@@ -220,7 +217,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
     }
 
     @Test
-    fun `Ny kvalitetssikring skal skje dersom beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM`() {
+    fun `Skal hoppe over kvalitetssikring hvis beslutter underkjenner VURDER_RETTIGHETSPERIODE og AVKLAR_SYKDOM uten endring`() {
         sak.opprettManuellRevurdering(vurderingsbehov = Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
 
         behandling
@@ -247,7 +244,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
 
         val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
             .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
-        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
     }
 
     @Test
@@ -321,4 +318,39 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskrud
                 ).containsOnly(Definisjon.KVALITETSSIKRING)
             }
     }
+
+    @Test
+    fun `Skal hoppe over kvalitetssikring hvis behandling trekkes tilbake og ingen endringer gjøres`() {
+        val etterKvalitetssikring = behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+
+        assertThat(etterKvalitetssikring.aktivtSteg()).isEqualTo(StegType.FASTSETT_BEREGNINGSTIDSPUNKT)
+
+        // send inn legeerklæring
+        val sendInnLegeerklæring = etterKvalitetssikring.leggTilVurderingsbehov(Vurderingsbehov.LEGEERKLÆRING)
+        assertThat(sendInnLegeerklæring.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
+
+        // løs på nytt
+        val tilbakeTilKvalitetssikringIgjenUtenEndring = sendInnLegeerklæring
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+
+        // hopper over kvalitetssikring
+        assertThat(tilbakeTilKvalitetssikringIgjenUtenEndring.aktivtSteg()).isEqualTo(StegType.FASTSETT_BEREGNINGSTIDSPUNKT)
+    }
 }
+
+object UnleashMedKSToggle : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.IngenValidering,
+        BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring
+    )
+)
