@@ -74,23 +74,25 @@ class SakOgBehandlingService(
         var søknadErTrukket: Boolean? = null
         val sak = sakRepository.hent(saksnummer)
 
-        val behandlinger =
-            behandlingRepository.hentAlleFor(sak.id).map { behandling ->
-                if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-                    søknadErTrukket =
-                        resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
-                }
-                val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
-                BehandlinginfoDTO(
-                    referanse = behandling.referanse.referanse,
-                    typeBehandling = behandlingService.utledFaktiskBehandlingstype(behandling),
-                    status = behandling.status(),
-                    vurderingsbehov = vurderingsbehov,
-                    årsakTilOpprettelse = behandling.årsakTilOpprettelse,
-                    opprettet = behandling.opprettetTidspunkt,
-                    eksternSaksbehandlingsløsningUrl = null,
-                )
+        val alleBehandlinger = behandlingRepository.hentAlleFor(sak.id)
+        val behandlingstyper = behandlingService.utledFaktiskBehandlingstyper(alleBehandlinger)
+
+        val behandlinger = alleBehandlinger.map { behandling ->
+            if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+                søknadErTrukket =
+                    resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
             }
+            val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
+            BehandlinginfoDTO(
+                referanse = behandling.referanse.referanse,
+                typeBehandling = behandlingstyper[behandling.id] ?: behandling.typeBehandling(),
+                status = behandling.status(),
+                vurderingsbehov = vurderingsbehov,
+                årsakTilOpprettelse = behandling.årsakTilOpprettelse,
+                opprettet = behandling.opprettetTidspunkt,
+                eksternSaksbehandlingsløsningUrl = null,
+            )
+        }
 
         val tilbakekrevingsbehandlinger = tilbakekrevingRepository.hent(sak.id).map { tilbakekrevingBehandling ->
             BehandlinginfoDTO(

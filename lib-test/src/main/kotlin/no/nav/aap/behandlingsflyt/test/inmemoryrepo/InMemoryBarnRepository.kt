@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
@@ -42,7 +43,7 @@ object InMemoryBarnRepository : BarnRepository {
                         VurderteBarn(
                             id = 0,
                             barn = it,
-                            vurdertAv = "ingen",
+                            vurdertAv = Bruker("ingen"),
                             vurdertTidspunkt = LocalDateTime.now()
                         )
                     }
@@ -59,7 +60,7 @@ object InMemoryBarnRepository : BarnRepository {
                 VurderteBarn(
                     id = 0,
                     barn = it,
-                    vurdertAv = "ingen",
+                    vurdertAv = Bruker("ingen"),
                     vurdertTidspunkt = LocalDateTime.now()
                 )
             }
@@ -105,7 +106,7 @@ object InMemoryBarnRepository : BarnRepository {
 
     override fun lagreVurderinger(
         behandlingId: BehandlingId,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         vurderteBarn: List<VurdertBarn>
     ) {
         synchronized(lock) {

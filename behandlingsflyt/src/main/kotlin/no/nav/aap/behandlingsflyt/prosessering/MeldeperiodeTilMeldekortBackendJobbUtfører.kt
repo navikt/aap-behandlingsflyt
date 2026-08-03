@@ -13,9 +13,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -33,6 +36,7 @@ import java.time.LocalDate
 
 class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val sakService: SakService,
+    private val behandlingService: BehandlingService,
     private val meldekortGateway: MeldekortGateway,
     private val behandlingRepository: BehandlingRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
@@ -40,6 +44,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
     private val meldepliktRepository: MeldepliktRepository,
     private val trukketSøknadService: TrukketSøknadService,
     private val vedtakService: VedtakService,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -55,22 +60,35 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 opplysningerVedTrukketSøknad(sak)
 
             behandling.status().erAvsluttet() -> {
-                val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                val gjeldendeYtelsesbehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling)) {
+                    behandlingService.finnGjeldendeYtelsesbehandling(sakId) ?: behandling
+                } else {
+                    behandling
+                }
+
+                if (gjeldendeYtelsesbehandling.id != behandling.id) {
+                    log.warn(
+                        "Overfører meldeperioder til meldekort-backend for gjeldende ytelsesbehandling [${gjeldendeYtelsesbehandling.id}] som er en annenn enn den som trigget jobben [${behandling.id}] for sak $sakId. " +
+                                "Det som trolig har skjedd er at behandlingen som trigget jobben ble iverksatt før, men avsluttet etter gjeldende ytelsesbehandling som har siste fattede vedtak."
+                    )
+                }
+
+                val underveisGrunnlag = underveisRepository.hentHvisEksisterer(gjeldendeYtelsesbehandling.id)
                 val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden()
-                    ?: error("Skal ha underveisperiode for avsluttet behandling ${behandling.id}")
-                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, underveisperiode)
+                    ?: error("Skal ha underveisperiode for avsluttet behandling ${gjeldendeYtelsesbehandling.id}")
+                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(gjeldendeYtelsesbehandling.id, underveisperiode)
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
                     vedtaksdatoFørsteInnvilgelse = vedtakService.vedtakstidspunktFørsteInnvilgelse(sak)?.toLocalDate(),
-                    meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id),
+                    meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(gjeldendeYtelsesbehandling.id),
                     underveisGrunnlag = underveisGrunnlag
                 )
             }
 
             behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling -> {
                 val meldeperioder =
-                    meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiodeEttÅrFraStartDato())
+                    meldeperiodeRepository.hentMeldeperioder(behandling.id, sak.rettighetsperiodeEttÅrFraStartDato())
                 opplysningerFørVedtak(sak, meldeperioder)
             }
 
@@ -80,7 +98,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         if (opplysningerTilMeldekortBackend != null) {
             val antallMeldePerioder = opplysningerTilMeldekortBackend.meldeperioder.size
             val antallOpplysningsbehov = opplysningerTilMeldekortBackend.opplysningsbehov.size
-            log.info("Sender $antallMeldePerioder meldeperioder og $antallOpplysningsbehov opplysningsbehov til meldekort-backend for behandling $behandlingId")
+            log.info("Sender $antallMeldePerioder meldeperioder og $antallOpplysningsbehov opplysningsbehov til meldekort-backend for behandling ${behandling.id}")
             meldekortGateway.oppdaterMeldeperioder(opplysningerTilMeldekortBackend)
         }
     }
@@ -96,6 +114,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return MeldeperiodeTilMeldekortBackendJobbUtfører(
                 sakService = SakService(repositoryProvider, gatewayProvider),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 meldekortGateway = gatewayProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide(),
@@ -103,6 +122,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 meldepliktRepository = repositoryProvider.provide(),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 

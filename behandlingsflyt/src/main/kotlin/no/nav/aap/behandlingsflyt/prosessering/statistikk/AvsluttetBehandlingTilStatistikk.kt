@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.StansOpphørService
+import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -217,7 +217,8 @@ class AvsluttetBehandlingTilStatistikk(
                     SamordningDTO.Arbeidsgiver(fom = it.periode.fom, tom = it.periode.tom)
                 }
 
-        val samordningYtelserSamornding = samordningService.tidslinje(behandling.id).segmenter()
+        val samordningYtelserSamornding = samordningService.samordningGrunnlag(behandling.id)
+            .vurder().segmenter()
             .flatMap { (periode, verdi) ->
                 verdi.ytelsesGraderinger.map { ytelseGradering ->
                     SamordningDTO.StatligeYtelser(

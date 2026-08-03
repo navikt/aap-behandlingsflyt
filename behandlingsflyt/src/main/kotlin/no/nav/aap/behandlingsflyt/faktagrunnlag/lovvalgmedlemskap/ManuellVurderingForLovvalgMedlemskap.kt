@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.enums.enumEntries
@@ -11,7 +12,7 @@ import kotlin.enums.enumEntries
 data class ManuellVurderingForLovvalgMedlemskap(
     val lovvalg: LovvalgDto,
     val medlemskap: MedlemskapDto?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertDato: LocalDateTime,
     val overstyrt: Boolean = false,
     val fom: LocalDate,
@@ -44,7 +45,7 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
         vurdertIBehandling = kontekst.behandlingId(),
         lovvalg = lovvalg,
         medlemskap = medlemskap,
-        vurdertAv = kontekst.bruker.ident,
+        vurdertAv = kontekst.bruker,
         vurdertDato = LocalDateTime.now(),
         overstyrt = overstyrt
     )

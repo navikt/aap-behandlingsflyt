@@ -7,9 +7,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryAvslag11_27Repository : Avslag11_27Repository {
-    private val store = ConcurrentHashMap<BehandlingId, List<Avslag11_27Vurdering>>()
+    private val store = ConcurrentHashMap<BehandlingId, Set<Avslag11_27Vurdering>>()
 
-    override fun lagre(behandlingId: BehandlingId, vurderinger: List<Avslag11_27Vurdering>) {
+    override fun lagre(behandlingId: BehandlingId, vurderinger: Set<Avslag11_27Vurdering>) {
         store[behandlingId] = vurderinger
     }
 

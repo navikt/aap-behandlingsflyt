@@ -8,10 +8,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
@@ -24,6 +26,8 @@ import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
+import no.nav.aap.komponenter.verdityper.Bruker
 
 class SoningRegelTest {
 
@@ -50,30 +54,34 @@ class SoningRegelTest {
                     )
                 )
             ),
-            soningsvurderinger = listOf(
-                Soningsvurdering(
-                    skalOpphøre = true,
-                    begrunnelse = "Formue under forvaring",
-                    fraDato = LocalDate.of(2024, 1, 6)
+            soningsvurderinger = Soningsvurderinger(
+                vurderinger = listOf(
+                    Soningsvurdering(
+                        skalOpphøre = true,
+                        begrunnelse = "Formue under forvaring",
+                        fraDato = LocalDate.of(2024, 1, 6)
+                    ),
+                    Soningsvurdering(
+                        skalOpphøre = true,
+                        begrunnelse = "Soner i fengsel",
+                        fraDato = LocalDate.of(2024, 1, 11)
+                    ),
+                    Soningsvurdering(
+                        skalOpphøre = false,
+                        begrunnelse = "Jobber utenfor anstalten",
+                        fraDato = LocalDate.of(2024, 1, 16)
+                    ),
+                    Soningsvurdering(
+                        skalOpphøre = false,
+                        begrunnelse = "Fotlenke",
+                        fraDato = LocalDate.of(2024, 2, 6)
+                    ),
                 ),
-                Soningsvurdering(
-                    skalOpphøre = true,
-                    begrunnelse = "Soner i fengsel",
-                    fraDato = LocalDate.of(2024, 1, 11)
-                ),
-                Soningsvurdering(
-                    skalOpphøre = false,
-                    begrunnelse = "Jobber utenfor anstalten",
-                    fraDato = LocalDate.of(2024, 1, 16)
-                ),
-                Soningsvurdering(
-                    skalOpphøre = false,
-                    begrunnelse = "Fotlenke",
-                    fraDato = LocalDate.of(2024, 2, 6)
-                ),
+                vurdertAv = Bruker("ident"),
+                vurdertTidspunkt = LocalDateTime.now()
             ),
             barnetillegg = emptyList(),
-            helsevurderinger = emptyList(),
+            helsevurderinger = null,
             rettighetsperiode = periode,
         )
 

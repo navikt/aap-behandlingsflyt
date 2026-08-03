@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.PåklagetBehand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -44,7 +45,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
             opprettet = Instant.now()
             )
             
@@ -52,7 +53,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val grunnlag = påklagetBehandlingRepository.hentHvisEksisterer(klageBehandling.id)!!
             assertThat(grunnlag.vurdering.påklagetVedtakType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
             assertThat(grunnlag.vurdering.påklagetBehandling).isEqualTo(behandling.id)
-            assertThat(grunnlag.vurdering.vurdertAv).isEqualTo("ident")
+            assertThat(grunnlag.vurdering.vurdertAv).isEqualTo(Bruker("ident"))
             assertNotNull(grunnlag.vurdering.opprettet)
         }
     }
@@ -68,7 +69,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
             opprettet = Instant.now()
             )
 
@@ -77,7 +78,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
             assertThat(vurderingMedReferanse.påklagetVedtakType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
             assertThat(vurderingMedReferanse.påklagetBehandling).isEqualTo(behandling.id)
             assertThat(vurderingMedReferanse.referanse?.referanse).isEqualTo(behandling.referanse.referanse)
-            assertThat(vurderingMedReferanse.vurdertAv).isEqualTo("ident")
+            assertThat(vurderingMedReferanse.vurdertAv).isEqualTo(Bruker("ident"))
             assertNotNull(vurderingMedReferanse.opprettet)
         }
     }

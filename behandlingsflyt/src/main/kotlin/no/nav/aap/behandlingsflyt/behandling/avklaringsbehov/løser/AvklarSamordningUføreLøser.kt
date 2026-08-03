@@ -42,7 +42,7 @@ class AvklarSamordningUføreLøser(
                         uføregradTilSamordning = it.uføregradTilSamordning.let(::Prosent)
                     )
                 },
-                vurdertAv = kontekst.bruker.ident
+                vurdertAv = kontekst.bruker
             )
         )
         return LøsningsResultat("Vurdert samordning uføre")

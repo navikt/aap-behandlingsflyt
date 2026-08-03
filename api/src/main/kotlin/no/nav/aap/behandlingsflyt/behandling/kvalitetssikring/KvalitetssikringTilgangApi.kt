@@ -46,7 +46,7 @@ fun NormalOpenAPIRoute.kvalitetssikringTilgangApi(dataSource: DataSource, reposi
 
                 KvalitetssikringTilgangDto(
                     harTilgangTilÅKvalitetssikre = kanSaksbehandle() && !avklaringsbehovSomKreverKvalitetssikring.any {
-                        it.brukere().contains(innloggetBruker.ident)
+                        innloggetBruker in it.brukere()
                     }
                 )
             }

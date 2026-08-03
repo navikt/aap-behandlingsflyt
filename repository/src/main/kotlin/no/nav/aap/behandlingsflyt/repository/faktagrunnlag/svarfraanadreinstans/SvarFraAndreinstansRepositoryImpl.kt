@@ -44,7 +44,7 @@ class SvarFraAndreinstansRepositoryImpl(private val connection: DBConnection) : 
             konsekvens = row.getEnum("KONSEKVENS"),
             vilkårSomOmgjøres = row.getArray("vilkaar_som_skal_omgjoeres", String::class)
                 .mapNotNull { Hjemmel.fraHjemmel(it) },
-            vurdertAv = row.getString("VURDERT_AV"),
+            vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant("opprettet_tid")
         )
     }
@@ -93,7 +93,7 @@ class SvarFraAndreinstansRepositoryImpl(private val connection: DBConnection) : 
                 setString(1, vurdering.begrunnelse)
                 setEnumName(2, vurdering.konsekvens)
                 setArray(3, vurdering.vilkårSomOmgjøres.map { it.hjemmel })
-                setString(4, vurdering.vurdertAv)
+                setBruker(4, vurdering.vurdertAv)
                 setInstant(5, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->

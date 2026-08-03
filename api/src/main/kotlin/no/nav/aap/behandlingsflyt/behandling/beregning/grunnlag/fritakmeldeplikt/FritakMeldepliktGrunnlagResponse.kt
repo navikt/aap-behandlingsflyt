@@ -41,8 +41,8 @@ fun Tidslinje<Fritaksvurdering>.toResponse(
 
 fun Fritaksvurdering.toResponse(
     vurdertAvService: VurdertAvService,
-    fom: LocalDate = this.fraDato,
-    tom: LocalDate? = this.tilDato,
+    fom: LocalDate = this.fom,
+    tom: LocalDate? = this.tom,
 ) =
     PeriodisertFritakMeldepliktVurderingResponse(
         fom = fom,

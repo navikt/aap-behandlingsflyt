@@ -31,7 +31,7 @@ class AvklarBarnetilleggLøser(
         val oppdatertTilstand =
             oppdaterTilstandBasertPåNyeVurderinger(emptyList(), løsning.vurderingerForBarnetillegg.vurderteBarn)
 
-        barnRepository.lagreVurderinger(kontekst.kontekst.behandlingId, kontekst.bruker.ident, oppdatertTilstand)
+        barnRepository.lagreVurderinger(kontekst.kontekst.behandlingId, kontekst.bruker, oppdatertTilstand)
 
         return LøsningsResultat(begrunnelse = "Vurdert barnetillegg")
     }

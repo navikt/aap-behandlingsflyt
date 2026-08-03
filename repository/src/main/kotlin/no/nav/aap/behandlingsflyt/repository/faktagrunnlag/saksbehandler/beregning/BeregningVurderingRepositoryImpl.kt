@@ -45,7 +45,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                     row.getLocalDate("NEDSATT_ARBEIDSEVNE_DATO"),
                     row.getStringOrNull("YTTERLIGERE_NEDSATT_BEGRUNNELSE"),
                     row.getLocalDateOrNull("YTTERLIGERE_NEDSATT_ARBEIDSEVNE_DATO"),
-                    row.getString("VURDERT_AV"),
+                    row.getBruker("VURDERT_AV"),
                     row.getLocalDateTime("OPPRETTET_TID"),
                     årsak = row.getEnumOrNull("AARSAK_BEREGNINGSTIDSPUNKT"),
                     ytterligereNedsattÅrsak = row.getEnumOrNull("AARSAK_YTTERLIGERE_NEDSATT"),
@@ -74,7 +74,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                     antattÅrligInntekt = Beløp(row.getBigDecimal("ANTATT_ARLIG_INNTEKT")),
                     referanse = row.getString("REFERANSE"),
                     begrunnelse = row.getString("BEGRUNNELSE"),
-                    vurdertAv = row.getString("VURDERT_AV"),
+                    vurdertAv = row.getBruker("VURDERT_AV"),
                     vurdertTidspunkt = row.getLocalDateTime("OPPRETTET_TID")
                 )
             }
@@ -278,7 +278,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 setLocalDate(2, vurdering.nedsattArbeidsevneEllerStudieevneDato)
                 setLocalDate(3, vurdering.ytterligereNedsattArbeidsevneDato)
                 setString(4, vurdering.ytterligereNedsattBegrunnelse)
-                setString(5, vurdering.vurdertAv)
+                setBruker(5, vurdering.vurdertAv)
                 setString(6, vurdering.årsak?.name)
                 setString(7, vurdering.ytterligereNedsattÅrsak?.name)
             }
@@ -307,7 +307,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
                 setString(2, vurdering.begrunnelse)
                 setString(3, vurdering.referanse)
                 setBigDecimal(4, vurdering.antattÅrligInntekt.avrundOppTilNærmesteTusen())
-                setString(5, vurdering.vurdertAv)
+                setBruker(5, vurdering.vurdertAv)
             }
         }
 

@@ -28,7 +28,7 @@ data class SykestipendvurderingResponse(
                     definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
                     behandlingId = sykestipendVurdering.vurdertIBehandling,
                     vurdertAv = vurdertAvService.medNavnOgEnhet(
-                        sykestipendVurdering.vurdertAv.ident,
+                        sykestipendVurdering.vurdertAv,
                         sykestipendVurdering.opprettet,
                     ),
                 )

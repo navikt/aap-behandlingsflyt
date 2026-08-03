@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -74,7 +75,6 @@ class FormkravStegTest {
                 kontekst = any(),
             )
         } returns Unit
-        InMemoryAvklaringsbehovRepository.clearMemory()
     }
 
     @Test
@@ -91,7 +91,7 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val steg = FormkravSteg(
@@ -147,14 +147,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(2L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -185,7 +185,7 @@ class FormkravStegTest {
                 erSignert = true,
                 erFristOverholdt = true,
                 likevelBehandles = null,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             )
         )
@@ -211,14 +211,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -248,7 +248,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = false,
                 likevelBehandles = false,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             )
         )
@@ -278,14 +278,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -315,7 +315,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = null,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
@@ -357,7 +357,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = null,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
@@ -378,7 +378,7 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         InMemoryAvklaringsbehovRepository.opprett(
@@ -387,14 +387,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -437,14 +437,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -474,7 +474,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = false,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
@@ -510,14 +510,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -547,7 +547,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = true,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(

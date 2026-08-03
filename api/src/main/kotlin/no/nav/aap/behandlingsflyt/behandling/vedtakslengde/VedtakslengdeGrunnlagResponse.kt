@@ -38,7 +38,7 @@ fun VedtakslengdeVurdering.toResponse(
     vurderingerMeta = vurdertAvService.byggVurderingerMeta(
         definisjon = Definisjon.AVKLAR_VEDTAKSLENGDE,
         behandlingId = vurdertIBehandling,
-        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv.ident, opprettet),
+        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettet),
     ),
     sluttdato = sluttdato,
     utvidetMed = utvidetMed,

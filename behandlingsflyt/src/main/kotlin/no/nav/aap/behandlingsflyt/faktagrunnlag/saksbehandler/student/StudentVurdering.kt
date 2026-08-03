@@ -17,7 +17,7 @@ data class StudentVurdering(
     val harBehovForBehandling: Boolean?,
     val avbruttStudieDato: LocalDate?,
     val avbruddMerEnn6Måneder: Boolean?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
     val vurdertIBehandling: BehandlingId,
     val diagnose: Diagnose?
@@ -56,7 +56,7 @@ data class PeriodisertStudentDto(
             harBehovForBehandling = harBehovForBehandling,
             avbruttStudieDato = avbruttStudieDato,
             avbruddMerEnn6Måneder = avbruddMerEnn6Måneder,
-            vurdertAv = bruker.ident,
+            vurdertAv = bruker,
             vurdertTidspunkt = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling,
             diagnose = kodeverk?.let {

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -30,7 +31,7 @@ data class BeregningstidspunktVurdering(
     val nedsattArbeidsevneEllerStudieevneDato: LocalDate,
     val ytterligereNedsattBegrunnelse: String?,
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime? = null,
     val årsak: ÅrsakBeregningstidspunkt? = null,
     val ytterligereNedsattÅrsak: ÅrsakYtterligereNedsatt? = null,

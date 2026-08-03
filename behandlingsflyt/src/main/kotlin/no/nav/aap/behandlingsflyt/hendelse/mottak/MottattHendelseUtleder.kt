@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArenaV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
+import no.nav.aap.komponenter.verdityper.Bruker
 
 object MottattHendelseUtleder {
 
@@ -42,6 +44,7 @@ object MottattHendelseUtleder {
             InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE -> throw IllegalArgumentException("Foreldrepengevedtakhendelser skal trigge sjekk av informasjonskrav og ikke opprette en behandling direkte")
             InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT -> throw IllegalArgumentException("Folkeregisteridenthendelser skal trigge oppdatering av person og sak - ikke opprette en behandling")
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
+            InnsendingType.MIGRERING_FRA_ARENA -> ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
         }
     }
 
@@ -102,11 +105,13 @@ object MottattHendelseUtleder {
             InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE,
             InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT,
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> emptyList()
+
+            InnsendingType.MIGRERING_FRA_ARENA -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MIGRERING_FRA_ARENA))
         }
     }
 
-    fun utledOpprettetAv(melding: Melding?): String? = when (melding) {
-        is ManuellRevurderingV0 -> melding.opprettetAv
+    fun utledOpprettetAv(melding: Melding?): Bruker? = when (melding) {
+        is ManuellRevurderingV0 -> melding.opprettetAv?.let(::Bruker)
         else -> null
     }
 
@@ -116,6 +121,7 @@ object MottattHendelseUtleder {
         is PdlHendelseV0 -> melding.beskrivelse
         is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
         is AnnetRelevantDokument -> melding.begrunnelse
+        is MigreringFraArenaV0 -> melding.beskrivelse
         else -> null
     }
 

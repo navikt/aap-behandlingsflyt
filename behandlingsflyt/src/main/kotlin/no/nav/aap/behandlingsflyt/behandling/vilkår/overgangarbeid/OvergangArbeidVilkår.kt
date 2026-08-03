@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangArbeidFaktagrunnlag> {
@@ -22,7 +24,8 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
     override fun vurder(grunnlag: OvergangArbeidFaktagrunnlag) {
         vilkår.leggTilVurderinger(
             grunnlag.overgangArbeidGrunnlag
-                .gjeldendeVurderinger(maksDato = grunnlag.rettighetsperiode.tom)
+                .gjeldendeVurderinger()
+                .begrensetTil(Periode(Tid.MIN, grunnlag.rettighetsperiode.tom))
                 .mapMedDatoTilDatoVarighet(
                     harBegrensetVarighet = { it.brukerRettPåAAP },
                     varighet = {

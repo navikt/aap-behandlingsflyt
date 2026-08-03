@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -98,14 +99,9 @@ class AndreinstansService(
         return enhet
     }
 
-    private fun utledSisteSaksbehandler(avklaringsbehovene: Avklaringsbehovene): String {
+    private fun utledSisteSaksbehandler(avklaringsbehovene: Avklaringsbehovene): Bruker {
         return avklaringsbehovene.alle().mapNotNull { avklaringsbehov ->
             avklaringsbehov.historikk.filter { it.endretAv.erNavIdent() && it.status == Status.AVSLUTTET }.maxOrNull()
         }.max().endretAv
     }
-
-    private fun String.erNavIdent(): Boolean {
-        return this.matches(Regex("\\w\\d{6}"))
-    }
-
 }

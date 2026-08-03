@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.Over
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import java.time.LocalDateTime
 
 object InMemoryOvergangUføreRepository: OvergangUføreRepository {
     private val mutex = Any()
@@ -14,10 +15,17 @@ object InMemoryOvergangUføreRepository: OvergangUføreRepository {
         grunnlag[behandlingId]
     }
 
-    override fun hentHistoriskeOvergangUforeVurderinger(
+    override fun hentHistoriskeOvergangUføreVurderinger(
         sakId: SakId,
         behandlingId: BehandlingId
     ) = emptyList<OvergangUføreVurdering>()
+
+    override fun hentOvergangUføreVurderingPåTidspunkt(
+        behandlingId: BehandlingId,
+        tidspunkt: LocalDateTime
+    ): List<OvergangUføreVurdering> {
+        return emptyList()
+    }
 
     override fun lagre(
         behandlingId: BehandlingId,

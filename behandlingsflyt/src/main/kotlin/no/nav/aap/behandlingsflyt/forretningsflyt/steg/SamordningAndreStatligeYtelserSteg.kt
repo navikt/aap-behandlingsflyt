@@ -28,7 +28,8 @@ class SamordningAndreStatligeYtelserSteg(
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
-                    VurderingType.REVURDERING -> {
+                    VurderingType.REVURDERING,
+                    VurderingType.MIGERING_FRA_ARENA -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             else -> kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()

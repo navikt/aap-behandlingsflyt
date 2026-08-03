@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -67,7 +68,7 @@ class AktivitetspliktInformasjonskravTest {
                 erOppfylt = false,
                 utfall = Utfall.STANS,
                 fom = sak.rettighetsperiode.fom.plusMonths(2),
-                vurdertAv = "Saksbehandler",
+                vurdertAv = Bruker("Saksbehandler"),
                 opprettet = sak.rettighetsperiode.fom.plusMonths(2).plusWeeks(1).atStartOfDay()
                     .toInstant(ZoneOffset.UTC),
                 vurdertIBehandling = behandlingId,
@@ -83,7 +84,7 @@ class AktivitetspliktInformasjonskravTest {
                 erOppfylt = false,
                 utfall = Utfall.OPPHØR,
                 fom = sak.rettighetsperiode.fom.plusMonths(3),
-                vurdertAv = "Saksbehandler",
+                vurdertAv = Bruker("Saksbehandler"),
                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
                     .toInstant(ZoneOffset.UTC),
                 vurdertIBehandling = behandlingId,
@@ -100,7 +101,7 @@ class AktivitetspliktInformasjonskravTest {
                 begrunnelse = "Begrunnelse 3",
                 erOppfylt = true,
                 fom = sak.rettighetsperiode.fom.plusMonths(3),
-                vurdertAv = "Saksbehandler",
+                vurdertAv = Bruker("Saksbehandler"),
                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
                     .toInstant(ZoneOffset.UTC),
                 vurdertIBehandling = behandlingId,
@@ -153,7 +154,7 @@ class AktivitetspliktInformasjonskravTest {
                                 erOppfylt = false,
                                 utfall = Utfall.OPPHØR,
                                 fom = sak.rettighetsperiode.fom.plusMonths(3),
-                                vurdertAv = "Saksbehandler",
+                                vurdertAv = Bruker("Saksbehandler"),
                                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
                                     .toInstant(ZoneOffset.UTC),
                                 vurdertIBehandling = aktivitetspliktBehandling2.id,

@@ -1,4 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.ansattinfo
 
-data class AnsattInfo(val navIdent: String, val navn: String, val enhetsnummer: String)
-data class AnsattVisningsnavn(val navident: String, val visningsnavn: String)
+import no.nav.aap.komponenter.verdityper.Bruker
+
+data class AnsattInfo(val navIdent: Bruker, val navn: String, val enhetsnummer: String)
+data class AnsattVisningsnavn(val navident: Bruker, val visningsnavn: String)

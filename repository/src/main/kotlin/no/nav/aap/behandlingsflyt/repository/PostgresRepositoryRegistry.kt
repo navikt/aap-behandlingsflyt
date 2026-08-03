@@ -75,6 +75,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettigh
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.samordning.BarnepensjonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.SykestipendRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
@@ -86,7 +87,6 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.test.TestAutomatiskMeldekortSakRepositoryImpl
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 
@@ -178,4 +178,5 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<KravRepositoryImpl>()
     .register<TestAutomatiskMeldekortSakRepositoryImpl>()
     .register<Avslag11_27RepositoryImpl>()
+    .register<StønadsperiodeRepositoryImpl>()
     .register<KandidatForPurringRepositoryImpl>()

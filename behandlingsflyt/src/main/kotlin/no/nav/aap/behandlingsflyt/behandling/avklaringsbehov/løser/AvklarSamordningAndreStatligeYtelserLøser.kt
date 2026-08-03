@@ -25,7 +25,7 @@ class AvklarSamordningAndreStatligeYtelserLøser(
             kontekst.behandlingId(),
             SamordningAndreStatligeYtelserVurdering(
                 begrunnelse = løsning.samordningAndreStatligeYtelserVurdering.begrunnelse,
-                vurdertAv = kontekst.bruker.ident,
+                vurdertAv = kontekst.bruker,
                 vurdertTidspunkt = LocalDateTime.now(),
                 vurderingPerioder = løsning.samordningAndreStatligeYtelserVurdering.vurderingPerioder.map {
                     SamordningAndreStatligeYtelserVurderingPeriode(

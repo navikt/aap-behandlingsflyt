@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -61,7 +62,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 30 juni 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                         SamordningYtelsePeriode(
                             periode = Periode(
@@ -69,7 +69,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 31 desember 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 30000
                         )
                     )
                 )
@@ -87,7 +86,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 desember 2023
                     ),
                     gradering = Prosent.`100_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -117,7 +115,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 30 juni 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                         SamordningYtelsePeriode(
                             periode = Periode(
@@ -125,7 +122,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 31 desember 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 30000
                         )
                     )
                 )
@@ -143,7 +139,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         30 september 2023
                     ),
                     gradering = Prosent.`100_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -172,7 +167,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 30 juni 2023,
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                     )
                 )
@@ -190,7 +184,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         30 september 2024,
                     ),
                     gradering = Prosent.`100_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -219,7 +212,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 30 juni 2023,
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                     )
                 )
@@ -237,7 +229,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         30 september 2024,
                     ),
                     gradering = Prosent.`100_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -267,7 +258,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 31 desember 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                     )
                 )
@@ -285,7 +275,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 desember 2023
                     ),
                     gradering = Prosent.`100_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -314,7 +303,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 31 desember 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                     )
                 )
@@ -347,7 +335,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 desember 2023
                     ),
                     gradering = Prosent.`100_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -376,7 +363,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 31 mai 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                         SamordningYtelsePeriode(
                             periode = Periode(
@@ -384,7 +370,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 30 juni 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                     )
                 )
@@ -402,7 +387,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         30 juni 2023
                     ),
                     gradering = Prosent(40),
-                    kronesum = 25000
                 )
             )
         )
@@ -431,7 +415,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 31 mai 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                         SamordningYtelsePeriode(
                             periode = Periode(
@@ -439,7 +422,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                                 tom = 30 juni 2023
                             ),
                             gradering = Prosent.`100_PROSENT`,
-                            kronesum = 15000
                         ),
                     )
                 )
@@ -457,7 +439,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         30 juni 2023
                     ),
                     gradering = Prosent(40),
-                    kronesum = 25000
                 )
             )
         )
@@ -488,7 +469,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -503,7 +484,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 desember 2023
                     ),
                     gradering = Prosent.`100_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -529,7 +509,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -544,7 +524,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 desember 2023
                     ),
                     gradering = Prosent.`100_PROSENT`,
-                    kronesum = 25000
+
                 )
             )
         )
@@ -570,7 +550,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -585,7 +565,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 oktober 2023
                     ),
                     gradering = Prosent.`70_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -611,7 +590,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -626,7 +605,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 oktober 2023
                     ),
                     gradering = Prosent.`70_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -652,7 +630,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -667,7 +645,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 oktober 2023
                     ),
                     gradering = Prosent.`70_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -693,7 +670,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -708,7 +685,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 oktober 2023
                     ),
                     gradering = Prosent.`50_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -721,7 +697,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         val vurderingsGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "Test",
             vurderinger = emptySet(),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -736,7 +712,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
                         31 oktober 2023
                     ),
                     gradering = Prosent.`50_PROSENT`,
-                    kronesum = 25000
                 )
             )
         )
@@ -762,7 +737,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
                     )
                 )
             ),
-            vurdertAv = "ident",
+            vurdertAv = Bruker("ident"),
             vurdertTidspunkt = LocalDateTime.now()
         )
 

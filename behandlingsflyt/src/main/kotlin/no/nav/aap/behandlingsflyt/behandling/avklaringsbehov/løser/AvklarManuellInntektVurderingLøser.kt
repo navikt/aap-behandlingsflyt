@@ -42,7 +42,7 @@ class AvklarManuellInntektVurderingLøser(
                     ManuellInntektVurdering(
                         begrunnelse = begrunnelse,
                         belop = vurdering.beløp?.let { Beløp(it) },
-                        vurdertAv = kontekst.bruker.ident,
+                        vurdertAv = kontekst.bruker,
                         år = Year.of(vurdering.år),
                         eøsBeløp = vurdering.eøsBeløp?.let { Beløp(it) },
                         ferdigLignetPGI = vurdering.ferdigLignetPGI?.let { Beløp(it) },
@@ -54,7 +54,7 @@ class AvklarManuellInntektVurderingLøser(
                     ManuellInntektVurdering(
                         begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse,
                         belop = Beløp(løsning.manuellVurderingForManglendeInntekt.belop!!),
-                        vurdertAv = kontekst.bruker.ident,
+                        vurdertAv = kontekst.bruker,
                         år = sisteRelevanteÅr
                     )
                 )

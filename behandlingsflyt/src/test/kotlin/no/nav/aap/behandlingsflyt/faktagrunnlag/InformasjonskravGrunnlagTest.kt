@@ -358,6 +358,36 @@ class InformasjonskravGrunnlagTest {
         }
     }
 
+    @Test
+    fun `klargjør kjøres kun en gang per informasjonskrav`() {
+        dataSource.transaction { connection ->
+            val (_, kontekst) = klargjør(connection)
+            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
+                InformasjonskravRepositoryImpl(connection),
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            )
+            val tellendeInformasjonskrav = TellendeInformasjonskrav()
+            val konstruktør = object : Informasjonskravkonstruktør {
+                override val navn: InformasjonskravNavn = tellendeInformasjonskrav.navn
+
+                override fun konstruer(
+                    repositoryProvider: RepositoryProvider,
+                    gatewayProvider: GatewayProvider
+                ): Informasjonskrav<IngenInput, IngenRegisterData> {
+                    return tellendeInformasjonskrav
+                }
+            }
+
+            informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
+                listOf(StegType.KRAV to konstruktør),
+                kontekst
+            )
+
+            assertThat(tellendeInformasjonskrav.antallKlargjøringer).isEqualTo(1)
+        }
+    }
+
     private fun simulerRettPåAAP(
         underveisRepository: UnderveisRepositoryImpl,
         førstegangsbehandling: Behandling,
@@ -496,4 +526,30 @@ class InformasjonskravGrunnlagTest {
                 )
             }
         }
+
+    private class TellendeInformasjonskrav : Informasjonskrav<IngenInput, IngenRegisterData> {
+        var antallKlargjøringer: Int = 0
+            private set
+
+        override val navn: InformasjonskravNavn = InformasjonskravNavn.GRUNNBELØP
+
+        override fun erRelevant(
+            kontekst: FlytKontekstMedPerioder,
+            steg: StegType,
+            oppdatert: InformasjonskravOppdatert?
+        ): Boolean = true
+
+        override fun klargjør(kontekst: FlytKontekstMedPerioder): IngenInput {
+            antallKlargjøringer++
+            return IngenInput
+        }
+
+        override fun hentData(input: IngenInput): IngenRegisterData = IngenRegisterData
+
+        override fun oppdater(
+            input: IngenInput,
+            registerdata: IngenRegisterData,
+            kontekst: FlytKontekstMedPerioder
+        ): Informasjonskrav.Endret = Informasjonskrav.Endret.IKKE_ENDRET
+    }
 }

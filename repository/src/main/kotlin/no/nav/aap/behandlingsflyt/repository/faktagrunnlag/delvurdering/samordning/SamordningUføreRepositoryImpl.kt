@@ -38,7 +38,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
                     vurdering =
                         SamordningUføreVurdering(
                             begrunnelse = it.getString("begrunnelse"),
-                            vurdertAv = it.getString("vurdert_av"),
+                            vurdertAv = it.getBruker("vurdert_av"),
                             vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
                             vurderingPerioder = vurderingPerioder
                         )
@@ -95,7 +95,7 @@ class SamordningUføreRepositoryImpl(private val connection: DBConnection) : Sam
         val vurderingId = connection.executeReturnKey(samordingUføreVurderingQuery) {
             setParams {
                 setString(1, vurdering.begrunnelse)
-                setString(2, vurdering.vurdertAv)
+                setBruker(2, vurdering.vurdertAv)
             }
         }
 

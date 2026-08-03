@@ -29,7 +29,7 @@ data class OvergangArbeidVurderingResponse(
                         vurdertAvService = vurdertAvService,
                         fom = segment.fom(),
                         tom = if (index == segmenter.size - 1)
-                            segment.verdi.vurderingenGjelderTil
+                            segment.verdi.tom
                         else
                             segment.tom(),
                     )
@@ -39,8 +39,8 @@ data class OvergangArbeidVurderingResponse(
         fun fraDomene(
             overgangArbeidVurdering: OvergangArbeidVurdering,
             vurdertAvService: VurdertAvService,
-            fom: LocalDate = overgangArbeidVurdering.vurderingenGjelderFra,
-            tom: LocalDate? = overgangArbeidVurdering.vurderingenGjelderTil,
+            fom: LocalDate = overgangArbeidVurdering.fom,
+            tom: LocalDate? = overgangArbeidVurdering.tom,
         ) = OvergangArbeidVurderingResponse(
             begrunnelse = overgangArbeidVurdering.begrunnelse,
             brukerRettPåAAP = overgangArbeidVurdering.brukerRettPåAAP,

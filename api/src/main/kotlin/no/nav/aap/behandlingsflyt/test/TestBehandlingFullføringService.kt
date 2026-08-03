@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TjenestepensjonRefusjonskravLøsning
@@ -148,7 +149,7 @@ class TestBehandlingFullføringService(
         repeat(maksForsøk) {
             val behandling = dataSource.transaction(readOnly = true) { connection ->
                 BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                    .finnSisteYtelsesbehandlingFor(sak.id)
+                    .finnÅpenYtelsesbehandling(sak.id)
             }
             if (behandling != null && behandling.status() != Status.AVSLUTTET) {
                 return behandling.id
@@ -162,7 +163,7 @@ class TestBehandlingFullføringService(
     private fun erBehandlingAvsluttet(sak: Sak): Boolean {
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(sak.id)
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
         } ?: return false
         return behandling.status() == Status.AVSLUTTET
     }
@@ -199,7 +200,7 @@ class TestBehandlingFullføringService(
 
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(sak.id)
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
         }
 
         if (behandling == null || behandling.id != forventetBehandlingId || behandling.status() == Status.AVSLUTTET) {
@@ -451,7 +452,7 @@ class TestBehandlingFullføringService(
         )
 
         Definisjon.AVKLAR_SAMORDNING_GRADERING -> AvklarSamordningGraderingLøsning(
-            vurderingerForSamordning = VurderingerForSamordning("", true, null, emptyList())
+            vurderingerForSamordning = VurderingerForSamordning("", emptyList())
         )
 
         Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND -> AvklarSamordningSykestipendLøsning(
@@ -500,21 +501,32 @@ class TestBehandlingFullføringService(
         )
 
         Definisjon.SKRIV_VEDTAKSBREV -> {
-            val brevbestilling = dataSource.transaction(readOnly = true) { connection ->
-                repositoryRegistry.provider(connection)
-                    .provide<BrevbestillingRepository>()
-                    .hent(behandlingId)
-                    .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
-                    ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
-            }
+            val brevbestilling = hentVedtaksbrev(behandlingId)
             SkrivVedtaksbrevLøsning(
                 brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
-                handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
+            )
+        }
+
+        Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER -> {
+            val brevbestilling = hentVedtaksbrev(behandlingId)
+            SkrivVedtaksbrevKlageLøsning(
+                brevbestillingReferanse = brevbestilling.referanse.brevbestillingReferanse,
+                handling = SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT,
             )
         }
 
         else -> null
     }
+
+    private fun hentVedtaksbrev(behandlingId: BehandlingId) =
+        dataSource.transaction(readOnly = true) { connection ->
+            repositoryRegistry.provider(connection)
+                .provide<BrevbestillingRepository>()
+                .hent(behandlingId)
+                .firstOrNull { it.typeBrev.erVedtak() && !it.typeBrev.erAutomatiskBrev() }
+                ?: error("Fant ikke vedtaksbrev for behandling $behandlingId")
+        }
 
     private fun hentFørsteYrkesskade(behandlingId: BehandlingId) =
         dataSource.transaction(readOnly = true) { connection ->

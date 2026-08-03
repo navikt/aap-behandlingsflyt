@@ -34,7 +34,7 @@ class AvklarSykdomLøsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
-        return AvklarSykdomLøser(repositoryProvider).løs(kontekst, this)
+        return AvklarSykdomLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 
     override fun hentLagredeLøstePerioder(

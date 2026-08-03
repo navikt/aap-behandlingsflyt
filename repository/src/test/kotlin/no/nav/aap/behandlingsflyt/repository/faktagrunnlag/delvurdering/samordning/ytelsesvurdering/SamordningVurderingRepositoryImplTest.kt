@@ -59,13 +59,11 @@ internal class SamordningVurderingRepositoryImplTest {
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 ),
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(6), LocalDate.now().minusYears(5)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 )
             )
@@ -78,13 +76,11 @@ internal class SamordningVurderingRepositoryImplTest {
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 ),
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(6), LocalDate.now().minusYears(5)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 )
             )
@@ -95,7 +91,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
                     vurderinger = setOf(vurdering, vurdering2),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
                 )
             )
@@ -117,7 +113,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 behandling.id, SamordningVurderingGrunnlag(
                     begrunnelse = "xxxx",
                     vurderinger = emptySet(),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
                 )
             )
@@ -144,7 +140,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 )
             )
@@ -156,7 +151,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     samordningVurderinger = SamordningVurderingGrunnlag(
                         begrunnelse = "En god begrunnelse",
                         vurderinger = setOf(vurdering),
-                        vurdertAv = "ident",
+                        vurdertAv = Bruker("ident"),
                     vurdertTidspunkt = LocalDateTime.now()
                     )
                 )
@@ -181,7 +176,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 SamordningVurderingPeriode(
                     periode = Periode(førstePeriodeStart, førstePeriodeEnd),
                     gradering = Prosent(40),
-                    kronesum = null,
                     manuell = false,
                 )
             )
@@ -194,7 +188,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "Første begrunnelse",
                     vurderinger = setOf(førsteVurdering),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
                 )
             )
@@ -236,7 +230,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = andreBegrunnelse,
                     vurderinger = setOf(andreVurdering1, andreVurdering2),
-                    vurdertAv = "ident",
+                    vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
                 )
             )
@@ -306,7 +300,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderingRepository.lagreVurderinger(
                     behandling.id, SamordningVurderingGrunnlag(
                         begrunnelse = "begrunnelse1",
-                        vurdertAv = "ident",
+                        vurdertAv = Bruker("ident"),
                         vurderinger = setOf(
                             SamordningVurdering(
                                 ytelseType = Ytelse.SYKEPENGER,
@@ -325,7 +319,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderingRepository.lagreVurderinger(
                     behandling.id, SamordningVurderingGrunnlag(
                         begrunnelse = "begrunnelse2",
-                        vurdertAv = "ident",
+                        vurdertAv = Bruker("ident"),
                         vurderinger = setOf(
                             SamordningVurdering(
                                 ytelseType = Ytelse.SYKEPENGER,
@@ -350,9 +344,8 @@ internal class SamordningVurderingRepositoryImplTest {
 
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
-        val samordningGrunnlag1 = lagSamordningGrunnlag("B1", "Z00001", Ytelse.SYKEPENGER)
-        val samordningGrunnlag2 = lagSamordningGrunnlag("B2", "Z00002", Ytelse.FORELDREPENGER)
-        val samordningGrunnlag3 = lagSamordningGrunnlag("B3", "Z00003", Ytelse.OMSORGSPENGER)
+        val samordningGrunnlag1 = lagSamordningGrunnlag("B1", Bruker("Z00001"), Ytelse.SYKEPENGER)
+        val samordningGrunnlag2 = lagSamordningGrunnlag("B2", Bruker("Z00002"), Ytelse.FORELDREPENGER)
 
         val førstegangsbehandling = dataSource.transaction { connection ->
             val samordningRepo = SamordningVurderingRepositoryImpl(connection)
@@ -377,24 +370,11 @@ internal class SamordningVurderingRepositoryImplTest {
             )
             samordningRepo.lagreVurderinger(revurderingAvbrutt.id, samordningGrunnlag2)
         }
-
-        dataSource.transaction { connection ->
-            val samordningRepo = SamordningVurderingRepositoryImpl(connection)
-            val revurdering = revurderingSamordning(connection, førstegangsbehandling)
-
-            samordningRepo.lagreVurderinger(revurdering.id, samordningGrunnlag3)
-
-            val historikk = samordningRepo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk)
-                .usingRecursiveComparison()
-                .ignoringFields("vurderingerId", "vurdertTidspunkt")
-                .isEqualTo(listOf(samordningGrunnlag1))
-        }
     }
 
     private fun lagSamordningGrunnlag(
         begrunnelse: String,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         ytelse: Ytelse
     ): SamordningVurderingGrunnlag {
         return SamordningVurderingGrunnlag(

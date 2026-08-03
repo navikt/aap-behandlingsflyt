@@ -22,7 +22,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, vurderinger: List<Avslag11_27Vurdering>) {
+    override fun lagre(behandlingId: BehandlingId, vurderinger: Set<Avslag11_27Vurdering>) {
         if (hentHvisEksisterer(behandlingId) != null) {
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
@@ -45,7 +45,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): Avslag11_27Grunnlag? {
-        val vurderinger = connection.queryList(
+        val vurderinger = connection.querySet(
             """
             SELECT
                 v.referanse                       AS v_referanse,
@@ -74,7 +74,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                     harSykepengegrunnlagOver2G = it.getBooleanOrNull("v_har_sykepengegrunnlag_over_2g"),
                     skalAvslås1127 = it.getBoolean("v_skal_avslaas_1127"),
                     vurdertIBehandling = BehandlingId(it.getLong("v_vurdert_i_behandling")),
-                    vurdertTidspunkt = it.getInstant("v_vurdert_tidspunkt"),
+                    opprettet = it.getInstant("v_vurdert_tidspunkt"),
                     vurdertAv = Bruker(it.getString("v_vurdert_av"))
                 )
             }
@@ -178,7 +178,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         }
     }
 
-    private fun lagreAvslag11_27Vurderinger(vurderinger: List<Avslag11_27Vurdering>): Long {
+    private fun lagreAvslag11_27Vurderinger(vurderinger: Set<Avslag11_27Vurdering>): Long {
 
         val vuderingerId = connection.executeReturnKey(
             "INSERT INTO avslag_11_27_vurderinger (opprettet_tid) VALUES (?)"
@@ -203,7 +203,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                 setBoolean(5, vurdering.harSykepengegrunnlagOver2G)
                 setBoolean(6, vurdering.skalAvslås1127)
                 setLong(7, vurdering.vurdertIBehandling.toLong())
-                setInstant(8, vurdering.vurdertTidspunkt)
+                setInstant(8, vurdering.opprettet)
                 setString(9, vurdering.vurdertAv.toString())
                 setLong(10, vuderingerId)
             }

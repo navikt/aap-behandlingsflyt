@@ -24,7 +24,7 @@ sealed class KravVurderingLøsningDto(
         opprettetTid: Instant,
     ): KravVurdering {
         return when (this) {
-            is NyttKravLøsningDto -> NyttKrav(
+            is RelevantKravLøsningDto -> RelevantKrav(
                 referanse = referanse?.let(::Kravreferanse) ?: Kravreferanse.ny(),
                 journalpostId = journalpostId,
                 vurdertAv = bruker,
@@ -45,7 +45,7 @@ sealed class KravVurderingLøsningDto(
                 opprettet = opprettetTid,
             )
 
-            is TrukketSøknadKravLøsningDto, is GjenopptakKravLøsningDto, is KlageKravLøsningDto -> throw UgyldigForespørselException(
+            is TrukketSøknadKravLøsningDto, is KlageKravLøsningDto -> throw UgyldigForespørselException(
                 "Kelvin støtter foreløpig ikke ${this.kravType}."
             )
         }
@@ -58,30 +58,14 @@ interface KravMedDatoDto {
     val overstyrMuligRettFra: OverstyrMuligRettFra?
 }
 
-@JsonTypeName(value = "NYTT_KRAV_AAP")
-data class NyttKravLøsningDto(
+@JsonTypeName(value = "RELEVANT_KRAV")
+data class RelevantKravLøsningDto(
     val referanse: UUID? = null,
     val journalpostId: JournalpostId,
     val begrunnelse: String,
     override val søknadsdato: Søknadsdato,
     override val overstyrMuligRettFra: OverstyrMuligRettFra?,
-) : KravVurderingLøsningDto(KravType.NYTT_KRAV_AAP), KravMedDatoDto {
-    fun muligRettFra(): LocalDate {
-        if (overstyrMuligRettFra != null) {
-            return overstyrMuligRettFra.dato
-        }
-        return søknadsdato.dato
-    }
-}
-
-@JsonTypeName(value = "GJENOPPTAK")
-data class GjenopptakKravLøsningDto(
-    val referanse: UUID? = null,
-    val journalpostId: JournalpostId,
-    val begrunnelse: String,
-    override val søknadsdato: Søknadsdato,
-    override val overstyrMuligRettFra: OverstyrMuligRettFra?,
-) : KravVurderingLøsningDto(KravType.GJENOPPTAK), KravMedDatoDto {
+) : KravVurderingLøsningDto(KravType.RELEVANT_KRAV), KravMedDatoDto {
     fun muligRettFra(): LocalDate {
         if (overstyrMuligRettFra != null) {
             return overstyrMuligRettFra.dato

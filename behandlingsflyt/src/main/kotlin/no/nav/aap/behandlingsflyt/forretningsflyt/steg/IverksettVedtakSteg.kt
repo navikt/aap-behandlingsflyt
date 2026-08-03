@@ -251,12 +251,12 @@ class IverksettVedtakSteg private constructor(
 
 
     private fun harAvbruttRevurderingIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
-        kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(
+        kontekst.behandlingType == TypeBehandling.Revurdering && avbrytRevurderingService.revurderingErAvbrutt(
             kontekst.behandlingId
         )
 
     private fun harTrukketSøknadIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
-        kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
+        kontekst.behandlingType == TypeBehandling.Førstegangsbehandling && trukketSøknadService.søknadErTrukket(
             kontekst.behandlingId
         )
 

@@ -86,50 +86,6 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                 respond(response)
             }
         }
-
-        // TODO: fjern v2-endepunkt når frontend er tilbake på v1
-        route("/{referanse}/grunnlag/kvalitetssikring/v2") {
-            getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagResponse>(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                påkrevdRolle = Definisjon.KVALITETSSIKRING.løsesAv,
-                modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))
-            ) { req ->
-
-                val response = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val avklaringsbehovRepository =
-                        repositoryProvider.provide<AvklaringsbehovRepository>()
-
-                    val behandling: Behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val avklaringsbehovene =
-                        avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val flyt = behandling.flyt()
-                    val vurderingEndretService = VurderingEndretService(repositoryProvider)
-
-                    val vurderinger =
-                        kvalitetssikringsVurdering(behandling.id, avklaringsbehovene, flyt, vurderingEndretService)
-
-                    KvalitetssikringGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
-                            kanSaksbehandle(),
-                            avklaringsbehovene,
-                            bruker(),
-                            unleashGateway
-                        ),
-                        vurderinger = vurderinger,
-                        historikk = utledKvalitetssikringHistorikk(avklaringsbehovene),
-                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
-                            avklaringsbehovene,
-                            bruker()
-                        )
-                    )
-                }
-                respond(response)
-            }
-        }
     }
 }
 
@@ -139,7 +95,7 @@ private fun utledHarTilgangTilÅSaksbehandle(
     bruker: Bruker,
     unleashGateway: UnleashGateway
 ): Boolean {
-    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)) {
         kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
         kanSaksbehandle
@@ -151,7 +107,7 @@ private fun brukerHarGjortVilkårsvurderingerPåBehandling(
     bruker: Bruker
 ): Boolean {
     return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
-        .any { it.brukere().contains(bruker.ident) }
+        .any { bruker in it.brukere() }
 }
 
 private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {

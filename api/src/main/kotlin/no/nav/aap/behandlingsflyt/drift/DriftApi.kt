@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -57,6 +58,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -256,18 +258,54 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/behandling/{referanse}/yrkesskade") {
+            authorizedGet<BehandlingReferanse, List<YrkesskadeDriftsinfoDto>>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { behandlingReferanse ->
+                val yrkesskader = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val behandling = repositoryProvider.provide<BehandlingRepository>()
+                        .hent(behandlingReferanse)
+
+                    repositoryProvider.provide<YrkesskadeRepository>()
+                        .hentHvisEksisterer(behandling.id)
+                        ?.yrkesskader
+                        ?.yrkesskader
+                        ?.map {
+                            YrkesskadeDriftsinfoDto(
+                                ref = it.ref,
+                                saksnummer = it.saksnummer,
+                                kildesystem = it.kildesystem,
+                                skadedato = it.skadedato,
+                                vedtaksdato = it.vedtaksdato,
+                            )
+                        }
+                        ?.also { krevDtoErUtenFødselsnummer(it) }
+                        .orEmpty()
+                }
+
+                respond(yrkesskader)
+            }
+        }
+
         @Suppress("unused")
         class StansOpphørDTO(
             val fom: LocalDate,
             val stansOpphør: String,
             val årsaker: List<String>,
         )
+
         @Suppress("unused")
         class RettighetstypePeriodeDto(
             val periode: Periode,
             val rettighetstypeUnderveis: RettighetsType?,
             val rettighetstypeGrunnlag: RettighetsType?,
         )
+
         @Suppress("unused")
         class DriftRettighetsinfoDto(
             val sisteDagMedRett: LocalDate?,
@@ -578,7 +616,7 @@ private data class ForenkletAvklaringsbehov(
     val perioderUgyldigVurdering: Set<Periode>?,
     val perioderKreverVurdering: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
-    val endretAv: String,
+    val endretAv: Bruker,
     val årsakTilSettPåVent: ÅrsakTilSettPåVent?,
     val fristSettPåVent: LocalDate?,
 )
@@ -603,6 +641,14 @@ private data class MottattDokumentDriftsinfoDTO(
     val type: InnsendingType,
     val kanal: Kanal,
     val status: MottattDokumentStatus = MottattDokumentStatus.MOTTATT,
+)
+
+private data class YrkesskadeDriftsinfoDto(
+    val ref: String,
+    val saksnummer: Int?,
+    val kildesystem: String,
+    val skadedato: LocalDate?,
+    val vedtaksdato: LocalDate?,
 )
 
 fun behandlingFraBrevbestilling(

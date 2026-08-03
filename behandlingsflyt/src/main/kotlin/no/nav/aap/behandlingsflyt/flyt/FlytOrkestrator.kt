@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -134,10 +135,10 @@ class FlytOrkestrator(
         if (avklaringsbehovene.erSattPåVent()) {
             val behovSomBleLøst = ventebehovEvaluererService.løsVentebehov(kontekst, avklaringsbehovene)
 
-            // Hvis fortsatt på vent
             if (!avklaringsbehovene.erSattPåVent()) {
                 // Behandlingen er tatt av vent og flyten flyttes tilbake til steget hvor den sto på vent
                 val tilbakeflyt = behandlingFlyt.tilbakeflyt(behovSomBleLøst)
+
                 if (!tilbakeflyt.erTom()) {
                     log.info(
                         "Tilbakeført etter tatt av vent fra '${behandling.aktivtSteg()}' til '${
@@ -147,6 +148,11 @@ class FlytOrkestrator(
                 }
                 tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
             }
+        }
+
+        // Ikke sjekk informasjonskrav og tilbakeføring etter iverksetting 
+        if (behandling.status().erAvsluttet()) {
+            return
         }
 
         førTilbakeTilTidligsteÅpneAvklaringsbehov(avklaringsbehovene, behandlingFlyt, behandling, kontekst)
@@ -219,9 +225,13 @@ class FlytOrkestrator(
         while (true) {
             if (gjeldendeSteg.type().status in stoppNårStatus) {
                 loggStopp(behandling, avklaringsbehovene)
-                val oppdatertBehandling = behandlingRepository.hent(behandling.id)
-                behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
-                return
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling)) {
+                    return
+                } else {
+                    val oppdatertBehandling = behandlingRepository.hent(behandling.id)
+                    behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
+                    return
+                }
             }
 
             val kontekstMedPerioder = flytKontekstMedPeriodeService.utled(kontekst, gjeldendeSteg.type())
@@ -349,6 +359,12 @@ class FlytOrkestrator(
         if (behandlingFlyt.erTom()) {
             return
         }
+
+        if (behandling.status().erAvsluttet()) {
+            log.warn("Prøvde å tilbakeføre avsluttet eller iverksatt behandling")
+            return
+        }
+
 
         log.info(
             "Tilbakefører ${behandling.aktivtSteg()} for behandling ${behandling.referanse}. Vurderingsbehov: ${

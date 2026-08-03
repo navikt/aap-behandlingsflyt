@@ -6,9 +6,12 @@ import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopp
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
@@ -19,12 +22,14 @@ import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Fakes
 class InstitusjonRegelTest {
@@ -235,39 +240,68 @@ class InstitusjonRegelTest {
                     )
                 )
             ),
-            soningsvurderinger = emptyList(),
+            soningsvurderinger = Soningsvurderinger(
+                vurderinger = listOf(
+                    Soningsvurdering(
+                        skalOpphøre = true,
+                        begrunnelse = "Formue under forvaring",
+                        fraDato = LocalDate.of(2024, 1, 6)
+                    ),
+                    Soningsvurdering(
+                        skalOpphøre = true,
+                        begrunnelse = "Soner i fengsel",
+                        fraDato = LocalDate.of(2024, 1, 11)
+                    ),
+                    Soningsvurdering(
+                        skalOpphøre = false,
+                        begrunnelse = "Jobber utenfor anstalten",
+                        fraDato = LocalDate.of(2024, 1, 16)
+                    ),
+                    Soningsvurdering(
+                        skalOpphøre = false,
+                        begrunnelse = "Fotlenke",
+                        fraDato = LocalDate.of(2024, 2, 6)
+                    ),
+                ),
+                vurdertAv = Bruker("ident"),
+                vurdertTidspunkt = LocalDateTime.now()
+            ),
             barnetillegg = emptyList(),
-            helsevurderinger = listOf(
-                HelseinstitusjonVurdering(
-                    periode = Periode(reduksjonStart1, opphold1Tom),
-                    begrunnelse = "kost og losji",
-                    faarFriKostOgLosji = true,
-                    forsoergerEktefelle = false,
-                    harFasteUtgifter = false,
-                    vurdertIBehandling = BehandlingId(1L),
-                    vurdertAv = "ident",
-                    vurdertTidspunkt = fom.atStartOfDay()
+            helsevurderinger = Helseoppholdvurderinger(
+                id = null,
+                vurderinger = listOf(
+                    HelseinstitusjonVurdering(
+                        periode = Periode(reduksjonStart1, opphold1Tom),
+                        begrunnelse = "kost og losji",
+                        faarFriKostOgLosji = true,
+                        forsoergerEktefelle = false,
+                        harFasteUtgifter = false,
+                        vurdertIBehandling = BehandlingId(1L),
+                        vurdertAv = Bruker("ident"),
+                        vurdertTidspunkt = fom.atStartOfDay()
+                    ),
+                    HelseinstitusjonVurdering(
+                        periode = Periode(reduksjonStart2, opphold2Tom),
+                        begrunnelse = "kost og losji",
+                        faarFriKostOgLosji = true,
+                        forsoergerEktefelle = false,
+                        harFasteUtgifter = false,
+                        vurdertIBehandling = BehandlingId(1L),
+                        vurdertAv = Bruker("ident"),
+                        vurdertTidspunkt = fom.atStartOfDay()
+                    ),
+                    HelseinstitusjonVurdering(
+                        periode = Periode(opphold3Fom, opphold3Tom),
+                        begrunnelse = "forsørger ektefelle",
+                        faarFriKostOgLosji = true,
+                        forsoergerEktefelle = true,
+                        harFasteUtgifter = false,
+                        vurdertIBehandling = BehandlingId(1L),
+                        vurdertAv = Bruker("ident"),
+                        vurdertTidspunkt = fom.atStartOfDay()
+                    ),
                 ),
-                HelseinstitusjonVurdering(
-                    periode = Periode(reduksjonStart2, opphold2Tom),
-                    begrunnelse = "kost og losji",
-                    faarFriKostOgLosji = true,
-                    forsoergerEktefelle = false,
-                    harFasteUtgifter = false,
-                    vurdertIBehandling = BehandlingId(1L),
-                    vurdertAv = "ident",
-                    vurdertTidspunkt = fom.atStartOfDay()
-                ),
-                HelseinstitusjonVurdering(
-                    periode = Periode(opphold3Fom, opphold3Tom),
-                    begrunnelse = "forsørger ektefelle",
-                    faarFriKostOgLosji = true,
-                    forsoergerEktefelle = true,
-                    harFasteUtgifter = false,
-                    vurdertIBehandling = BehandlingId(1L),
-                    vurdertAv = "ident",
-                    vurdertTidspunkt = fom.atStartOfDay()
-                ),
+                vurdertTidspunkt = LocalDateTime.now()
             ),
             rettighetsperiode = Periode(fom, fom.plusYears(3))
         )

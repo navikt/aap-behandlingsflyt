@@ -38,7 +38,7 @@ class Avslag11_27VisningUtlederTest {
         val ref = Kravreferanse(UUID.randomUUID())
 
         InMemoryAvslag11_27Repository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 Avslag11_27Vurdering(
                     referanse = ref,
                     begrunnelse = "b",
@@ -47,7 +47,7 @@ class Avslag11_27VisningUtlederTest {
                     harSykepengegrunnlagOver2G = null,
                     skalAvslås1127 = true,
                     vurdertIBehandling = behandling.id,
-                    vurdertTidspunkt = Instant.now(),
+                    opprettet = Instant.now(),
                     vurdertAv = Bruker("test"),
                 )
             )

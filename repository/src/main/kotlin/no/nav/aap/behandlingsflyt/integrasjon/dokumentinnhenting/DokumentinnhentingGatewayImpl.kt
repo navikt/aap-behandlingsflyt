@@ -9,7 +9,6 @@ import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
-import no.nav.aap.dokumentinnhenting.kontrakt.MarkerBestillingSomMottattDto
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -70,24 +69,6 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
             )
         )
         return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
-    }
-
-    override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerBestillingSomMottattDto): DialogmeldingStatusTilBehandslingsflytDto {
-        val request = PostRequest(
-            body = markerSomMottattRequest,
-            additionalHeaders = listOf(
-                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
-                Header("Accept", "application/json")
-            )
-        )
-
-        return requireNotNull(
-            client.post(
-                uri = URI.create("$syfoUri/status/markerbestillingmottatt"),
-                request = request,
-                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-            )
-        )
     }
 
     override fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto> {

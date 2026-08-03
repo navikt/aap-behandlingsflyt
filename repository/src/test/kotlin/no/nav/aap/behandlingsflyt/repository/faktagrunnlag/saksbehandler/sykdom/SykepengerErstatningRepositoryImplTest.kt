@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -42,8 +42,8 @@ internal class SykepengerErstatningRepositoryImplTest {
             begrunnelse = "urelatert",
             harRettPå = true,
             grunn = null,
-            vurdertAv = "saksbehandler",
-            gjelderFra = LocalDate.now(),
+            vurdertAv = Bruker("saksbehandler"),
+            fom = LocalDate.now(),
             vurdertIBehandling = behandling2.id,
         vurdertTidspunkt = LocalDateTime.now()
         )
@@ -52,8 +52,8 @@ internal class SykepengerErstatningRepositoryImplTest {
             begrunnelse = "yolo",
             harRettPå = true,
             grunn = null,
-            vurdertAv = "saksbehandler",
-            gjelderFra = LocalDate.now(),
+            vurdertAv = Bruker("saksbehandler"),
+            fom = LocalDate.now(),
             vurdertIBehandling = behandling.id,
         vurdertTidspunkt = LocalDateTime.now()
         )
@@ -62,9 +62,9 @@ internal class SykepengerErstatningRepositoryImplTest {
             begrunnelse = "yolo x2",
             harRettPå = false,
             grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
-            vurdertAv = "saksbehandler!!",
+            vurdertAv = Bruker("saksbehandler!!"),
             vurdertIBehandling = behandling.id,
-            gjelderFra = LocalDate.now(),
+            fom = LocalDate.now(),
         vurdertTidspunkt = LocalDateTime.now()
         )
 
@@ -81,7 +81,7 @@ internal class SykepengerErstatningRepositoryImplTest {
 
         assertThat(res.vurderinger)
             .usingRecursiveComparison()
-            .ignoringFields("vurdertTidspunkt")
+            .ignoringFields("vurdertTidspunkt", "opprettet")
             .isEqualTo(listOf(vurdering1, vurdering2))
 
         assertThat(res.vurderinger).allSatisfy { vurdering ->

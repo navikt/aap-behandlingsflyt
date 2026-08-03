@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.*
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -22,20 +23,20 @@ class SykepengerErstatningGrunnlagTest {
                 harRettPå = true,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = vurdertTidspunkt,
-                gjelderFra = 1 januar 2020,
-                gjelderTom = 31 januar 2020,
+                fom = 1 januar 2020,
+                tom = 31 januar 2020,
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering2",
                 harRettPå = false,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = null,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = vurdertTidspunkt,
-                gjelderFra = 1 februar 2020,
-                gjelderTom = null,
+                fom = 1 februar 2020,
+                tom = null,
             )
         )
 
@@ -66,30 +67,30 @@ class SykepengerErstatningGrunnlagTest {
                 harRettPå = true,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = vurdertTidspunkt1,
-                gjelderFra = 1 januar 2020,
-                gjelderTom = 31 mai 2020,
+                fom = 1 januar 2020,
+                tom = 31 mai 2020,
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering2",
                 harRettPå = false,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = null,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = vurdertTidspunkt1,
-                gjelderFra = 1 juni 2020,
-                gjelderTom = null,
+                fom = 1 juni 2020,
+                tom = null,
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering3",
                 harRettPå = true,
                 vurdertIBehandling = BehandlingId(2L),
                 grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = vurdertTidspunkt2,
-                gjelderFra = 15 april 2020,
-                gjelderTom = 15 juni 2020,
+                fom = 15 april 2020,
+                tom = 15 juni 2020,
             )
         )
 
@@ -126,20 +127,20 @@ class SykepengerErstatningGrunnlagTest {
                 harRettPå = false,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = null,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = vurdertTidspunkt,
-                gjelderFra = 1 februar 2020,
-                gjelderTom = null,
+                fom = 1 februar 2020,
+                tom = null,
             ),
             SykepengerVurdering(
                 begrunnelse = "vurdering1",
                 harRettPå = true,
                 vurdertIBehandling = BehandlingId(1L),
                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = vurdertTidspunkt,
-                gjelderFra = 1 januar 2020,
-                gjelderTom = 31 januar 2020,
+                fom = 1 januar 2020,
+                tom = 31 januar 2020,
             )
         )
 

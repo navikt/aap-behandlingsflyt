@@ -13,17 +13,21 @@ import java.time.LocalDateTime
 class Avklaringsbehov(
     val id: Long,
     val definisjon: Definisjon,
-    val historikk: MutableList<Endring> = mutableListOf(),
+    historikk: List<Endring> = emptyList(),
     val funnetISteg: StegType,
     private var kreverToTrinn: Boolean?
 ) {
-    init {
-        if (historikk.isEmpty()) {
-            historikk += Endring(
-                status = Status.OPPRETTET, begrunnelse = "", endretAv = SYSTEMBRUKER.ident
+
+    val historikk: List<Endring>
+        field = historikk.ifEmpty {
+            mutableListOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    begrunnelse = "",
+                    endretAv = SYSTEMBRUKER
+                )
             )
-        }
-    }
+        }.toMutableList()
 
     val aktivHistorikk: List<Endring>
         get() = historikk.takeLastWhile {
@@ -43,7 +47,7 @@ class Avklaringsbehov(
         return kreverToTrinn == true
     }
 
-    fun brukere(): List<String> {
+    fun brukere(): List<Bruker> {
         return historikk.filter { it.status == Status.AVSLUTTET }.map { it.endretAv }
     }
 
@@ -66,7 +70,7 @@ class Avklaringsbehov(
     internal fun vurderTotrinn(
         begrunnelse: String,
         godkjent: Boolean,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         årsakTilRetur: List<ÅrsakTilRetur>,
     ) {
         require(definisjon.kreverToTrinn)
@@ -86,7 +90,7 @@ class Avklaringsbehov(
     internal fun vurderKvalitet(
         begrunnelse: String,
         godkjent: Boolean,
-        vurdertAv: String,
+        vurdertAv: Bruker,
         årsakTilRetur: List<ÅrsakTilRetur>,
     ) {
         require(definisjon.kvalitetssikres)
@@ -121,7 +125,7 @@ class Avklaringsbehov(
             begrunnelse = begrunnelse,
             grunn = venteårsak,
             frist = frist,
-            endretAv = bruker.ident,
+            endretAv = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
         )
@@ -154,11 +158,11 @@ class Avklaringsbehov(
         return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent()
     }
 
-    internal fun løs(begrunnelse: String, endretAv: String) {
+    internal fun løs(begrunnelse: String, endretAv: Bruker) {
         løs(begrunnelse, endretAv, definisjon.kreverToTrinn)
     }
 
-    internal fun løs(begrunnelse: String, endretAv: String, kreverToTrinn: Boolean) {
+    internal fun løs(begrunnelse: String, endretAv: Bruker, kreverToTrinn: Boolean) {
         if (this.kreverToTrinn != true) {
             this.kreverToTrinn = kreverToTrinn
         }
@@ -171,7 +175,7 @@ class Avklaringsbehov(
 
     internal fun avbryt() {
         historikk += Endring(
-            status = Status.AVBRUTT, begrunnelse = "", endretAv = SYSTEMBRUKER.ident
+            status = Status.AVBRUTT, begrunnelse = "", endretAv = SYSTEMBRUKER
         )
     }
 
@@ -181,7 +185,7 @@ class Avklaringsbehov(
         }
 
         historikk += Endring(
-            status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = SYSTEMBRUKER.ident
+            status = Status.AVSLUTTET, begrunnelse = begrunnelse, endretAv = SYSTEMBRUKER
         )
     }
 
@@ -211,7 +215,7 @@ class Avklaringsbehov(
 
     fun begrunnelse(): String = historikk.maxOf { it }.begrunnelse
     fun venteårsak(): ÅrsakTilSettPåVent? = historikk.filter { it.status == Status.OPPRETTET }.maxOf { it }.grunn
-    fun endretAv(): String = historikk.maxOf { it }.endretAv
+    fun endretAv(): Bruker = historikk.maxOf { it }.endretAv
     fun årsakTilRetur(): List<ÅrsakTilRetur> = historikk.maxOf { it }.årsakTilRetur
 
     fun skalLøsesISteg(type: StegType): Boolean {
@@ -264,10 +268,6 @@ class Avklaringsbehov(
 
     fun erAutomatisk(): Boolean {
         return definisjon.erAutomatisk()
-    }
-
-    fun erBrevVentebehov(): Boolean {
-        return definisjon.erBrevVentebehov()
     }
 
     fun sistEndret(): LocalDateTime {
