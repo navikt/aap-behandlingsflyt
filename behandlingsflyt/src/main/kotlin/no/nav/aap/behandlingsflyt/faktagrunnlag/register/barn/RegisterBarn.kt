@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
+import java.time.LocalDate
+
 data class RegisterBarn(val id: Long, val barn: List<Barn>)
 
 fun List<Barn>.filtrerBortMigrerteBarn(): List<Barn> {
@@ -11,5 +13,12 @@ fun List<Barn>.filtrerBortMigrerteBarn(): List<Barn> {
                             annetBarn.fødselsdato == barn.fødselsdato &&
                             annetBarn.ident.hentIdent() != null
                 }
+    }
+}
+
+fun List<Barn>.filtrerBortBarnEldreEnnBruker(brukerFødselsdato: LocalDate): List<Barn> {
+    return this.filter { barn ->
+        val barnFødselsdato = barn.fødselsdato.toLocalDate()
+        barnFødselsdato.isAfter(brukerFødselsdato)
     }
 }
