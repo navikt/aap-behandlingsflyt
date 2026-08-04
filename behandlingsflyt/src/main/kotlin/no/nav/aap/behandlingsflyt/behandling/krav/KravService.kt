@@ -4,22 +4,43 @@ import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KravService(
     private val kravRepository: KravRepository,
-    private val stansOpphørService: StansOpphørService
+    private val stansOpphørService: StansOpphørService,
+    private val stønadsperiodeRepository: StønadsperiodeRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         kravRepository = repositoryProvider.provide(),
-        stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider)
+        stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider),
+        stønadsperiodeRepository = repositoryProvider.provide()
     )
+
+    fun genererStønadsperiodeTidslinje(
+        kravGrunnlag: KravGrunnlag,
+        stønadsperiodeGrunnlag: StønadsperiodeGrunnlag
+    ): Tidslinje<StønadsperiodeVurdering> {
+        val gjeldendeKravreferanser = kravGrunnlag.gjeldendeRelevanteKrav().map { it.referanse }
+
+        return stønadsperiodeGrunnlag.gjeldendeVurderinger()
+            .filter { stønadsperiodeVurdering -> stønadsperiodeVurdering.referanse in gjeldendeKravreferanser }
+            .sortedBy { it.startDato }
+            .somTidslinje { Periode(it.startDato, Tid.MAKS) }
+    }
 
     fun kravtypeTidslinje(kontekst: FlytKontekst): Tidslinje<RelevantKravType> {
         val kravTidslinje = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.kravtidslinje().orEmpty()
@@ -61,10 +82,4 @@ class KravService(
         // TODO: Sjekk § 12-vurdering for krav + stans/opphør-årsak
         return false
     }
-}
-
-enum class RelevantKravType {
-    GJENOPPTAK_ETTER_STANS,
-    GJENINNTREDEN_ETTER_OPPHØR,
-    NYTT_KRAV
 }

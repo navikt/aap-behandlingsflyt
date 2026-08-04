@@ -51,3 +51,4 @@ enum class Avslagstype {
     KUN_INNGANGSVILKÅR,
     UKJENT,
 }
+

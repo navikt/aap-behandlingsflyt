@@ -4,8 +4,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Periodiser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningMedPeriodiserteVurderinger
 import no.nav.aap.behandlingsflyt.behandling.krav.KravService
 import no.nav.aap.behandlingsflyt.behandling.krav.RelevantKravType
+import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -32,6 +38,9 @@ class AvklaringsbehovValidering(
     private val unleashGateway: UnleashGateway = gatewayProvider.provide()
     private val sakRepository: SakRepository = repositoryProvider.provide()
     private val kravService: KravService = KravService(repositoryProvider, gatewayProvider)
+    private val kravRepository: KravRepository = repositoryProvider.provide()
+    private val stønadsperiodeRepository: StønadsperiodeRepository = repositoryProvider.provide()
+    private val stansOpphørService: StansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider)
 
     fun validerPerioder(
         bruker: Bruker,
@@ -132,30 +141,46 @@ class AvklaringsbehovValidering(
         ) {
             return Tidslinje.empty()
         }
-        return kravService.kravtypeTidslinje(kontekst)
-            .map { kravPeriode, kravType ->
+
+        val vedtattStansOpphør = stansOpphørService.vedtattStansOpphør(kontekst.behandlingId)
+        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        return stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)?.tilTidslinje(kravGrunnlag).orEmpty()
+            .map { segmentPeriode, stønadsperiodeVurdering ->
                 erKravDekketAvLøsning(
-                    kravPeriode,
-                    kravType,
+                    segmentPeriode,
+                    stønadsperiodeVurdering,
                     definisjon,
-                    gjeldendeVurderinger
+                    gjeldendeVurderinger,
+                    vedtattStansOpphør
                 )
+
+//        return kravService.kravtypeTidslinje(kontekst)
+//            .map { kravPeriode, kravType ->
+//                erKravDekketAvLøsning(
+//                    kravPeriode,
+//                    kravType,
+//                    definisjon,
+//                    gjeldendeVurderinger
+//                )
+//            }
             }
     }
 
     private fun erKravDekketAvLøsning(
         kravPeriode: Periode,
-        kravType: RelevantKravType,
+        stønadsperiodeVurdering: StønadsperiodeVurdering,
         definisjon: Definisjon, gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
+        vedtattStansOpphør: List<GjeldendeStansEllerOpphør>
     ): Boolean {
-        return when (kravType) {
-            RelevantKravType.NYTT_KRAV -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
+        return when (stønadsperiodeVurdering.relevantKravType) {
+            RelevantKravType.NY_STØNADSPERIODE -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
 
-            RelevantKravType.GJENOPPTAK_ETTER_STANS -> true
+            RelevantKravType.GJENOPPTAK_ETTER_STANS -> stønadsperiodeVurdering.
             RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> !definisjon.måRevurderesEtterOpphør || harVurderingForKrav(
                 gjeldendeVurderinger,
                 kravPeriode
             )
+            RelevantKravType.AVSLAG -> throw NotImplementedError()
         }
     }
 
