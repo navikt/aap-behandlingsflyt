@@ -181,10 +181,10 @@ class SamordningAnnenFullYtelseVilkårTest {
         val resultat = vurder(
             grunnlag(avslag1127 = avslag1127(false), kravGrunnlag = kravGrunnlag())
         )
-        val segmenter = resultat.finnVilkår(Vilkårtype.SAMORDNING).tidslinje().segmenter()
-        Assertions.assertThat(segmenter).hasSize(1)
-        Assertions.assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.OPPFYLT)
-        Assertions.assertThat(segmenter.first().verdi.avslagsårsak).isNull()
+        val segmenter = resultat.segmenter()
+        assertThat(segmenter).hasSize(1)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(segmenter.first().verdi.avslagsårsak).isNull()
     }
 
     // ── prioritering: avslag11_27 vs samordning ───────────────────────────────
