@@ -88,12 +88,14 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 
 val postgresRepositoryRegistry = RepositoryRegistry()
     .register<PersonRepositoryImpl>()
     .register<SakRepositoryImpl>()
+    .register<ArenaMigreringRepositoryImpl>()
     .register<AvklaringsbehovRepositoryImpl>()
     .register<VilkårsresultatRepositoryImpl>()
     .register<PipRepositoryImpl>()
