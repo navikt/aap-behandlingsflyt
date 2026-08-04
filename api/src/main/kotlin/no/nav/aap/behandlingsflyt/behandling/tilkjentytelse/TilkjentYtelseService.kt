@@ -125,11 +125,13 @@ class TilkjentYtelseService(
                             barneTilleggsats = it.verdi.barnetilleggsats.verdi.toDouble(),
                             barnetillegg = it.verdi.barnetillegg.verdi().toDouble(),
                             barnepensjonDagsats = it.verdi.barnepensjonDagsats.verdi().toDouble(),
-                            arbeidGradering = 100.minus(
+                            // Returnerer kun en verdi her dersom det finnes et meldekort i meldeperioden
+                            arbeidGradering = sisteAktuelleMeldekort?.let { meldekort -> 100.minus(
                                 it.verdi.graderingGrunnlag.arbeidGradering.prosentverdi()
-                            ),
+                            ) },
                             samordningGradering = it.verdi.graderingGrunnlag.samordningGradering.prosentverdi()
-                                .plus(it.verdi.graderingGrunnlag.samordningUføregradering.prosentverdi()),
+                                .plus(it.verdi.graderingGrunnlag.samordningUføregradering.prosentverdi())
+                                .coerceAtMost(100),
                             institusjonGradering = it.verdi.graderingGrunnlag.institusjonGradering.prosentverdi(),
                             arbeidsgiverGradering = it.verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi(),
                             totalReduksjon = 100.minus(it.verdi.gradering.prosentverdi()),

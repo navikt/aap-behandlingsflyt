@@ -147,7 +147,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                         rettighetsperiode.fom.plusWeeks(4).minusDays(2),
                                         rettighetsperiode.fom.plusWeeks(6).minusDays(3)
                                     ),
-                                    felter = felter(dagsats = 600.0, effektivDagsats = 336.0)
+                                    felter = felter(dagsats = 600.0, effektivDagsats = 336.0, arbeidGradering = null)
                                 )
                             ),
                         ),
@@ -253,7 +253,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                             meldekortPeriode.fom.minusDays(2).minusWeeks(2),
                                             meldekortPeriode.fom.minusDays(3)
                                         ),
-                                        felter = felter(dagsats = 400.0, effektivDagsats = 236.0)
+                                        felter = felter(dagsats = 400.0, effektivDagsats = 236.0, arbeidGradering = null)
                                     )
                                 ),
                             )
@@ -342,7 +342,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                                             meldekortPeriode.fom.plusWeeks(4).minusDays(2),
                                             meldekortPeriode.fom.plusWeeks(6).minusDays(3)
                                         ),
-                                        felter = felter(dagsats = 1300.0, effektivDagsats = 686.0)
+                                        felter = felter(dagsats = 1300.0, effektivDagsats = 686.0, arbeidGradering = null)
                                     )
                                 ),
                             )
@@ -354,11 +354,11 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
     }
 
-    private fun felter(dagsats: Double, effektivDagsats: Double): Felter = Felter(
+    private fun felter(dagsats: Double, effektivDagsats: Double, arbeidGradering: Int? = 50): Felter = Felter(
         dagsats = dagsats,
         barneTilleggsats = 36.00,
         barnetillegg = 72.00,
-        arbeidGradering = 50,
+        arbeidGradering = arbeidGradering,
         samordningGradering = 80,
         institusjonGradering = 50,
         totalReduksjon = 50,
