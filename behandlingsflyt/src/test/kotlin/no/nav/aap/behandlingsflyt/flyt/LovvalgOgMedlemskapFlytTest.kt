@@ -174,6 +174,61 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
     }
 
     @Test
+    fun `revurdering skal kreve ny lovvalgsvurdering hvis vurderingen fra forrige behandling ikke lenger finnes`() {
+        // Person uten automatiske I_NORGE-kriterier - lovvalg krever manuell avklaring i førstegangsbehandlingen.
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+        val fom = sak.rettighetsperiode.fom
+
+        val fullførtFørstegangsbehandling = førstegangsbehandling
+            .løsLovvalg(fom, true)
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap(fom)
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        assertThat(fullførtFørstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        // Simulerer at den manuelle vurderingen som gjorde forrige behandling gyldig for lovvalg
+        // ikke lenger finnes/regnes som gyldig (f.eks. på grunn av en kodeendring i hva som gir
+        // automatisk oppfylt, eller fordi grunnlaget den bygde på har blitt fjernet). Behandlingen
+        // var fortsatt relevant for lovvalg, men mangler nå en reell/gyldig vurdering.
+        dataSource.transaction {
+            MedlemskapArbeidInntektRepositoryImpl(it).slett(fullførtFørstegangsbehandling.id)
+        }
+
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
+        )
+
+        val åpentLovvalgsbehov = hentÅpneAvklaringsbehov(revurdering.id)
+            .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+
+        // Uten nårVurderingErGyldigForBehandling ville forrige behandling blitt telt som «vurdert»
+        // utelukkende fordi den var relevant - selv om den reelle vurderingen er borte. Med fiksen
+        // flagges hele rettighetsperioden korrekt som at den trenger en ny vurdering.
+        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotNull
+        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotEmpty()
+
+        val oppdatertRevurdering = revurdering
+            .løsLovvalg(fom, true)
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(oppdatertRevurdering.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
     fun `skal kunne gjennomføre førstegangsbehandling med periodisert lovvalg og medlemskap`() {
         var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
 

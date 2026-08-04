@@ -275,6 +275,7 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
+        nårVurderingErGyldigForBehandling: ((FlytKontekstMedPerioder) -> Tidslinje<Boolean>)? = null,
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
     ) {
@@ -284,7 +285,8 @@ class AvklaringsbehovService(
             perioderSomBehøverVurdering(
                 kontekst,
                 perioderVilkåretErRelevant,
-                nårVurderingErRelevant
+                nårVurderingErRelevant,
+                nårVurderingErGyldigForBehandling,
             )
         }
 
@@ -416,6 +418,18 @@ class AvklaringsbehovService(
          * Det vil løftes avklaringsbehov for relevante perioder som mangler gyldig vurdering.
          */
         nårVurderingErGyldig: () -> Tidslinje<Boolean>,
+        /**
+         * Samme semantikk som [nårVurderingErGyldig], men tar imot en vilkårlig behandlingskontekst.
+         *
+         * Brukes i [perioderVilkåretErVurdert] for å avgjøre om forrige behandling faktisk hadde en gyldig
+         * vurdering — ikke bare om den ville vært relevant med gjeldende kode. Dette er nødvendig for å
+         * håndtere situasjoner der kodelogikken endrer hva som gir automatisk oppfylt: uten denne sjekken
+         * vil en forrige behandling som ble automatisk innvilget feilaktig telles som "vurdert", og
+         * avklaringsbehovet løftes aldri i ny behandling.
+         *
+         * Valgfri. Steg som kun har automatisk logikk som aldri endrer seg trenger ikke å sende med denne.
+         */
+        nårVurderingErGyldigForBehandling: ((FlytKontekstMedPerioder) -> Tidslinje<Boolean>)? = null,
         kontekst: FlytKontekstMedPerioder,
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
@@ -427,6 +441,7 @@ class AvklaringsbehovService(
             kontekst = kontekst,
             perioderSomIkkeErTilstrekkeligVurdert = { null },
             nårVurderingErGyldig = nårVurderingErGyldig,
+            nårVurderingErGyldigForBehandling = nårVurderingErGyldigForBehandling,
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             gjeldendeVurderinger = gjeldendeVurderinger
         )
@@ -436,10 +451,11 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         perioderVilkåretErRelevant: Tidslinje<Boolean>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        nårVurderingErGyldigForBehandling: ((FlytKontekstMedPerioder) -> Tidslinje<Boolean>)? = null,
     ): Set<Periode> {
         return Tidslinje.map3(
             perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
-            perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant),
+            perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant, nårVurderingErGyldigForBehandling),
             nårEndringIKrav(kontekst)
         ) { erRelevant, erVurdert, erKravEndret ->
             erRelevant == true && (erVurdert != true || erKravEndret == true)
@@ -477,7 +493,8 @@ class AvklaringsbehovService(
 
     private fun perioderVilkåretErVurdert(
         kontekst: FlytKontekstMedPerioder,
-        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        nårVurderingErGyldigForBehandling: ((FlytKontekstMedPerioder) -> Tidslinje<Boolean>)? = null,
     ): Tidslinje<Boolean> {
         return kontekst.forrigeBehandlingId
             ?.let { forrigeBehandlingId ->
@@ -489,15 +506,28 @@ class AvklaringsbehovService(
                         .tidslinje()
                         .helePerioden()
 
-                nårVurderingErRelevant(
-                    kontekst.copy(
-                        /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                        behandlingId = forrigeBehandlingId,
-                        forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                        rettighetsperiode = forrigeRettighetsperiode,
-                        behandlingType = forrigeBehandling.typeBehandling(),
-                    )
+                val forrigeKontekst = kontekst.copy(
+                    /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
+                    behandlingId = forrigeBehandlingId,
+                    forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
+                    rettighetsperiode = forrigeRettighetsperiode,
+                    behandlingType = forrigeBehandling.typeBehandling(),
                 )
+
+                val erRelevant = nårVurderingErRelevant(forrigeKontekst)
+
+                // Hvis steget leverer en kontekstsensitiv gyldighetssjekk, krever vi at vurderingen
+                // faktisk var gyldig i forrige behandling — ikke bare at den ville vært relevant med
+                // gjeldende kode. Dette forhindrer at en behandling som ble automatisk innvilget med
+                // gammel logikk feilaktig telles som "vurdert" etter en kodeendring.
+                if (nårVurderingErGyldigForBehandling != null) {
+                    val erGyldig = nårVurderingErGyldigForBehandling(forrigeKontekst)
+                    Tidslinje.map2(erRelevant, erGyldig) { relevant, gyldig ->
+                        relevant == true && gyldig == true
+                    }
+                } else {
+                    erRelevant
+                }
             }
             .orEmpty()
     }

@@ -463,6 +463,55 @@ class AvklaringsbehovServiceTest {
     }
 
     @Test
+    fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal opprette avklaringsbehov når forrige behandling var relevant, men ikke hadde en gyldig vurdering`() {
+        val (sak, _, revurdering) = opprettInMemorySakOgRevurdering()
+        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val kontekst = flytKontekstMedPerioder { this.behandling = revurdering }
+
+        // Forrige behandling var relevant for vurdering (samme sjekk gjelder for begge behandlinger),
+        // men den hadde ingen gyldig vurdering - f.eks. fordi den ble automatisk vurdert med en
+        // tidligere versjon av kodelogikken som nå regnes som ugyldig, eller fordi vurderingen som
+        // gjorde den gyldig har blitt fjernet i ettertid.
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = { tidslinjeOf(sak.rettighetsperiode to true) },
+            nårVurderingErGyldig = { tidslinjeOf(sak.rettighetsperiode to true) },
+            nårVurderingErGyldigForBehandling = { tidslinjeOf(sak.rettighetsperiode to false) },
+            kontekst = kontekst,
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+        )
+
+        val avklaringsbehov = Avklaringsbehovene(avklaringsbehovRepository, revurdering.id)
+            .hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov).isNotNull
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+    }
+
+    @Test
+    fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår skal ikke opprette avklaringsbehov når forrige behandling var relevant og hadde en gyldig vurdering`() {
+        val (sak, _, revurdering) = opprettInMemorySakOgRevurdering()
+        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val kontekst = flytKontekstMedPerioder { this.behandling = revurdering }
+
+        // Kontrast til testen over: her hadde forrige behandling en gyldig vurdering, så
+        // avklaringsbehovet skal ikke opprettes selv om vilkåret fortsatt er relevant.
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = { tidslinjeOf(sak.rettighetsperiode to true) },
+            nårVurderingErGyldig = { tidslinjeOf(sak.rettighetsperiode to true) },
+            nårVurderingErGyldigForBehandling = { tidslinjeOf(sak.rettighetsperiode to true) },
+            kontekst = kontekst,
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+        )
+
+        val avklaringsbehov = Avklaringsbehovene(avklaringsbehovRepository, revurdering.id)
+            .hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov).isNull()
+    }
+
+    @Test
     fun `oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert skal opprette avklaringsbehov for utilstrekkelig vurderte perioder`() {
         val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2006)

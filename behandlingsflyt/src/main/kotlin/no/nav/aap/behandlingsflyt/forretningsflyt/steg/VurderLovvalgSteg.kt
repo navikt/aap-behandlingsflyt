@@ -58,6 +58,7 @@ class VurderLovvalgSteg private constructor(
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { perioderVurderingErGyldig(kontekst, grunnlag.value) },
+            nårVurderingErGyldigForBehandling = { k -> perioderVurderingErGyldig(k, hentGrunnlag(k.sakId, k.behandlingId)) },
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
         )
 
@@ -71,6 +72,10 @@ class VurderLovvalgSteg private constructor(
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, kontekst.vurderingType)
                     .vurder(grunnlag)
+
+                // TODO: Hvis forrige behandling ikke har manuell vurdering, men godkjent vilkår
+                // -> Sjekk om det er kommet noen nye manuelle vurderinger: isåfall kjør vilkårsvurdering
+                // -> Hvis ikke: Kopier vilkår fra forrige behandling..?
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
 
