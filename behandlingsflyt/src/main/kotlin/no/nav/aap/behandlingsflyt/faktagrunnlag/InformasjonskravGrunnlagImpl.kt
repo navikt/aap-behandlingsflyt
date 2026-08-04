@@ -12,7 +12,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
 
 class InformasjonskravGrunnlagImpl(
     private val informasjonskravRepository: InformasjonskravRepository,
@@ -50,8 +49,6 @@ class InformasjonskravGrunnlagImpl(
                 krav.erRelevant(kontekst, steg, sisteOppdatering)
             }
 
-        val executor = Executors.newVirtualThreadPerTaskExecutor()
-
         // TODO: Finn en bedre måde å forhindre race conditions når async informasjonskrav avghenger av hverandre
         // Når SøknadService er relevant, må denne kjøre før de andre for å forhindre race conditions
         val søknadInformasjonskrav = informasjonskravene.find { it.second.navn == SøknadInformasjonskrav.navn }
@@ -77,16 +74,18 @@ class InformasjonskravGrunnlagImpl(
                 false
             }
 
-        log.info("Sjekker andre informasjonskrav for endringer")
+        log.info("Sjekker andre informasjonskrav for endringer. Antall: ${relevanteInformasjonskrav.size}")
 
         val sekvensiellKlargjøring = relevanteInformasjonskrav
-            .filter { !it.second.equals(SøknadInformasjonskrav) } // ikke kjør SøknadService dobbelt
+            .filter { it.second.navn != SøknadInformasjonskrav.navn } // ikke kjør SøknadService dobbelt
             .map { (konstruktør, krav) ->
                 Triple(konstruktør, krav, krav.klargjør(kontekst))
             }
+        val klargjortInputPerInformasjonskravNavn =
+            sekvensiellKlargjøring.associate { (_, krav, input) -> krav.navn to input }
 
         val parallellFaktaInnhenting = sekvensiellKlargjøring
-            .filter { (_, krav) -> !krav.equals(SøknadInformasjonskrav) } // ikke kjør SøknadService dobbelt
+            .filter { (_, krav) -> krav.navn != SøknadInformasjonskrav.navn } // ikke kjør SøknadService dobbelt
             .map { (konstruktør, informasjonskrav, input) ->
                 CompletableFuture.supplyAsync(withMdc {
                     val span = tracer.spanBuilder("informasjonskravinnhenting ${informasjonskrav.navn}")
@@ -101,16 +100,15 @@ class InformasjonskravGrunnlagImpl(
                     } finally {
                         span.end()
                     }
-                }, executor)
+                }, informasjonskravExecutor)
             }
 
         val sekvensiellLagringAvFakta = parallellFaktaInnhenting
             .map { it.join() }
             .map { (konstruktør, krav, registerdata) ->
-                val input = krav.klargjør(kontekst)
+                val input = klargjortInputPerInformasjonskravNavn.getValue(krav.navn)
                 Triple(konstruktør, krav.oppdater(input, registerdata, kontekst), input)
             }
-
 
         val endredeAsyncInformasjonskrav = sekvensiellLagringAvFakta
             .filter { (_, endret) -> endret == Informasjonskrav.Endret.ENDRET }

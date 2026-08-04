@@ -4,9 +4,11 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import java.util.Objects
 
 class Oppholdene(
-    val id: Long?,
+    val id: Long? = null,
     opphold: List<Segment<Institusjon>>
 ) {
+    constructor(opphold: List<Segment<Institusjon>>) : this(null, opphold)
+
     val opphold = opphold.sortedWith(
         compareBy<Segment<Institusjon>> { it.periode }
             .thenBy { it.verdi.orgnr }

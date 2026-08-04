@@ -15,6 +15,10 @@ public enum class StegType(
         gruppe = StegGruppe.KRAV,
         status = Status.UTREDES
     ),
+    AVKLAR_STØNADSPERIODE(
+        gruppe = StegGruppe.KRAV,
+        status = Status.UTREDES
+    ),
     SEND_FORVALTNINGSMELDING(
         gruppe = StegGruppe.SEND_FORVALTNINGSMELDING,
         status = Status.UTREDES
@@ -42,6 +46,10 @@ public enum class StegType(
     VURDER_ALDER(
         gruppe = StegGruppe.ALDER,
         status = Status.UTREDES,
+    ),
+    VURDER_AVSLAG_11_27(
+        gruppe = StegGruppe.AVSLAG_11_27,
+        status = Status.UTREDES
     ),
     AVKLAR_STUDENT(
         gruppe = StegGruppe.STUDENT,

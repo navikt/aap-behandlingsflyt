@@ -19,8 +19,8 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.komponenter.gateway.GatewayProvider.Companion.provide
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -57,7 +57,7 @@ class SykdomsvurderingBrevStegTest {
             behandling.id, SykdomsvurderingForBrev(
                 behandlingId = behandling.id,
                 vurdering = "En vurdering",
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
             )
         )
 
@@ -96,7 +96,7 @@ class SykdomsvurderingBrevStegTest {
             "..."
         )
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "...", "meg")
+            .løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "...", Bruker("meg"))
     }
 
     private fun flytKontekstMedPerioder(

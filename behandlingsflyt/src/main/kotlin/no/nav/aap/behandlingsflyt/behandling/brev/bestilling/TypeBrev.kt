@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 enum class TypeBrev {
     VEDTAK_AVSLAG,
+    VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER,
+    VEDTAK_AVSLAG_11_5,
     VEDTAK_INNVILGELSE,
     VEDTAK_UTVID_VEDTAKSLENGDE,
     VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP,
@@ -31,6 +33,8 @@ enum class TypeBrev {
     fun erVedtak(): Boolean {
         return setOf(
             VEDTAK_AVSLAG,
+            VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER,
+            VEDTAK_AVSLAG_11_5,
             VEDTAK_INNVILGELSE,
             VEDTAK_UTVID_VEDTAKSLENGDE,
             VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP,

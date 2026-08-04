@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
@@ -35,6 +36,8 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -72,7 +75,6 @@ class FormkravStegTest {
                 kontekst = any(),
             )
         } returns Unit
-        InMemoryAvklaringsbehovRepository.clearMemory()
     }
 
     @Test
@@ -89,7 +91,7 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val steg = FormkravSteg(
@@ -105,7 +107,9 @@ class FormkravStegTest {
                 InMemoryVilkårsresultatRepository,
                 trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
                 kravRepository = InMemoryKravRepository, InMemorySakRepository,
-                unleashGateway = gatewayProvider.provide()
+                unleashGateway = gatewayProvider.provide(),
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
+                
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -143,14 +147,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(2L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -166,7 +170,8 @@ class FormkravStegTest {
                 InMemoryVilkårsresultatRepository,
                 trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
                 InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash
+                AlleAvskruddUnleash,
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -180,7 +185,7 @@ class FormkravStegTest {
                 erSignert = true,
                 erFristOverholdt = true,
                 likevelBehandles = null,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             )
         )
@@ -206,14 +211,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -229,7 +234,8 @@ class FormkravStegTest {
                 InMemoryVilkårsresultatRepository,
                 trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
                 InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash
+                AlleAvskruddUnleash,
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -242,7 +248,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = false,
                 likevelBehandles = false,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             )
         )
@@ -272,14 +278,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -295,7 +301,8 @@ class FormkravStegTest {
                 InMemoryVilkårsresultatRepository,
                 trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
                 InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash
+                AlleAvskruddUnleash,
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -308,7 +315,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = null,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
@@ -350,7 +357,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = null,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
@@ -371,7 +378,7 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         InMemoryAvklaringsbehovRepository.opprett(
@@ -380,14 +387,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -403,7 +410,8 @@ class FormkravStegTest {
                 InMemoryVilkårsresultatRepository,
                 trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
                 InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash
+                AlleAvskruddUnleash,
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -429,14 +437,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -452,7 +460,8 @@ class FormkravStegTest {
                 InMemoryVilkårsresultatRepository,
                 trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
                 InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash
+                AlleAvskruddUnleash,
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -465,7 +474,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = false,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(
@@ -501,14 +510,14 @@ class FormkravStegTest {
             funnetISteg = StegType.FORMKRAV,
             frist = LocalDate.now().plusDays(1),
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
         avklaringsbehov.løsAvklaringsbehov(
             definisjon = Definisjon.VURDER_FORMKRAV,
             begrunnelse = "Vurdert ok",
-            endretAv = "Ident"
+            endretAv = Bruker("Ident")
         )
 
         val steg = FormkravSteg(
@@ -524,7 +533,8 @@ class FormkravStegTest {
                 InMemoryVilkårsresultatRepository,
                 trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
                 InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash
+                AlleAvskruddUnleash,
+                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -537,7 +547,7 @@ class FormkravStegTest {
                 erSignert = false,
                 erFristOverholdt = true,
                 likevelBehandles = true,
-                vurdertAv = "indent",
+                vurdertAv = Bruker("indent"),
                 opprettet = Instant.now(),
             ),
             varsel = FormkravVarsel(

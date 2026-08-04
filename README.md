@@ -3,11 +3,6 @@
 Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike behandlingstyper, og styrer prosessen med
 å drive saksflyten fremover.
 
-> **Note**
->
-> Repoet kan inneholde regelverksendringer som ikke enda er vedtatt.
-> Vi har derfor valgt å holde dette repoet lukket.
-
 ## API-dokumentasjon
 
 APIene er dokumentert med Swagger: https://aap-behandlingsflyt.intern.dev.nav.no/swagger-ui/index.html
@@ -52,17 +47,6 @@ Eller på en spesifikk modul:
 
 Detekt-konfigurasjonen finnes i `config/detekt/detekt.yml`.
 
-### Laste ned private pakker
-
-For at Gradle skal finne private pakker på Github, legg dette i `~/.gradle/gradle.properties`
-
-```
-githubUser=<github-brukernavn>
-githubPassword=<github-token>
-```
-
-Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.
-
 ### Kjøre lokalt
 
 Appen har ulike run-konfigurasjoner i IntelliJ for å kjøre mot "fake" data eller mot dev-gcp.
@@ -85,11 +69,13 @@ Velg konfigurasjonen `TestApp (med testcontainers)` i Run/Debug-menyen.
 
 Alternativt, for å unngå å starte IntelliJ, gå i rotmappen og kjør:
 
-```./gradlew runTestApp ```
+```shell
+./gradlew runTestApp
+```
 
 Alternativt, for å kjøre mot oppgave:
 
-```
+```shell
 docker-compose up -d
 ./gradlew runTestAppMotOppgave 
 ```
@@ -110,6 +96,16 @@ token=$(curl -s -XPOST http://localhost:8081/token | jq -r '.access_token')
 
 curl -X 'GET' \
   'http://0.0.0.0:8080/drift/api/jobb/rekjorAlleFeilede' \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer $token"
+```
+
+For å prosessere en behandling
+```shell
+token=$(curl -s -XPOST http://localhost:8081/saksbehandler | jq -r '.access_token')
+
+curl -X 'GET' \
+  'http://localhost:8080/api/behandling/c405ecde-ed3f-4bad-a8da-748a90342635/flyt/prosessering' \
   -H 'accept: application/json' \
   -H "Authorization: Bearer $token"
 ```
@@ -165,4 +161,12 @@ Etter dette vil appen kjøre mot reelle data. Her kan du velge om du vil koble d
 f.eks. gyldig token med cURL e.l.
 
 OBS: Krever at du har `EnvFile`-plugin i IntelliJ. 
+
+## Henvendelser
+
+Spørsmål knyttet til koden eller repositoryet kan stilles som issues her på GitHub.
+
+### For Nav-ansatte
+
+Interne henvendelser kan sendes via Slack i kanalen [`#ytelse-app-værsågod`](https://nav-it.slack.com/archives/C0312J501GX).
 

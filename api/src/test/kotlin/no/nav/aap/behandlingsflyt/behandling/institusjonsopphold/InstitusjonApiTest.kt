@@ -17,15 +17,14 @@ import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.util.*
 
@@ -194,7 +193,7 @@ class InstitusjonApiTest {
         private val sykehusC = Institusjon(Institusjonstype.HS, Oppholdstype.H, "333000333", "Sykehus C")
 
         private fun oppholdTidslinje(vararg segmenter: Pair<Periode, Institusjon>): Tidslinje<Institusjon> =
-            Tidslinje(segmenter.map { (periode, institusjon) -> Segment(periode, institusjon) })
+            segmenter.asList().somTidslinje({ it.first }, { it.second })
 
         private fun behovTidslinje(vararg perioder: Periode): Tidslinje<InstitusjonsoppholdVurdering> =
             Tidslinje(perioder.map { periode ->

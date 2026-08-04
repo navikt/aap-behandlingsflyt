@@ -35,7 +35,8 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
                         erStudent = req.erStudent,
                         harYrkesskade = req.harYrkesskade,
                         harMedlemskap = req.harMedlemskap,
-                        andreUtbetalinger = req.andreUtbetalinger
+                        andreUtbetalinger = req.andreUtbetalinger,
+                        søknadsdato = null,
                     )
                 }
                 respondWithStatus(HttpStatusCode.Accepted)

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -66,7 +67,7 @@ class AvklaringsbehovTest {
                 Endring(
                     status = Status.OPPRETTET,
                     begrunnelse = "Første behov",
-                    endretAv = "test",
+                    endretAv = Bruker("test"),
                     tidsstempel = LocalDateTime.now(),
                     perioderVedtaketBehøverVurdering = setOf(Periode(2 januar 2020, 1 februar 2020)),
                     perioderSomIkkeErTilstrekkeligVurdert = setOf(),
@@ -83,7 +84,7 @@ class AvklaringsbehovTest {
         assertThat(behov.perioderVedtaketBehøverVurdering()).containsExactly(Periode(1 januar 2020, 1 februar 2020))
         assertThat(behov.perioderSomIkkeErTilstrekkeligVurdert()).containsExactly(Periode(1 januar 2020, 2 januar 2020))
 
-        behov.løs("Løst", "test")
+        behov.løs("Løst", Bruker("test"))
 
         behov.reåpne(
             perioderVedtaketBehøverVurdering = setOf(Periode(1 januar 2020, 1 februar 2020)),

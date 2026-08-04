@@ -1,11 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -22,7 +20,6 @@ import java.time.LocalDate
 
 class OpprettBehandlingFritakMeldepliktJobbUtfører(
     private val sakService: SakService,
-    private val behandlingRepository: BehandlingRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val behandlingService: BehandlingService,
@@ -46,12 +43,14 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         }
     }
 
-    private fun skalHaFritakForPassertMeldeperiode(sak: Sak):Boolean {
+    private fun skalHaFritakForPassertMeldeperiode(sak: Sak): Boolean {
         val nå = LocalDate.now()
 
-        val sisteBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling,
-            TypeBehandling.Revurdering)) ?: return false
-        if (sisteBehandling.status().erÅpen() && Vurderingsbehov.FRITAK_MELDEPLIKT in sisteBehandling.vurderingsbehov().map { it.type }) {
+        val sisteBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id) ?: return false
+
+        if (sisteBehandling.status().erÅpen() && Vurderingsbehov.FRITAK_MELDEPLIKT in sisteBehandling.vurderingsbehov()
+                .map { it.type }
+        ) {
             return false
         }
         val sisteIverksatteBehandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id) ?: return false
@@ -59,11 +58,14 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         val aktuellPeriode = underveisPerioder.somTidslinje().helePerioden()
 
         // NB Sjekker 7 dager tilbake for å få med siste utbetaling som har fritak.
-        val sistePasserteMeldeperiode = meldeperiodeRepository.hentMeldeperioder(sisteIverksatteBehandling.id, aktuellPeriode).firstOrNull { it.inneholder(nå.minusDays(7)) } ?: return false
+        val sistePasserteMeldeperiode =
+            meldeperiodeRepository.hentMeldeperioder(sisteIverksatteBehandling.id, aktuellPeriode)
+                .firstOrNull { it.inneholder(nå.minusDays(7)) } ?: return false
 
         val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(sisteIverksatteBehandling.id) ?: return false
 
-        return meldepliktGrunnlag.tilTidslinje().begrensetTil(sistePasserteMeldeperiode).segmenter().any { it.verdi.harFritak }
+        return meldepliktGrunnlag.tilTidslinje().begrensetTil(sistePasserteMeldeperiode).segmenter()
+            .any { it.verdi.harFritak }
     }
 
 
@@ -71,7 +73,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettBehandlingFritakMeldepliktJobbUtfører(
                 sakService = SakService(repositoryProvider, gatewayProvider),
-                behandlingRepository = repositoryProvider.provide(),
                 meldeperiodeRepository = repositoryProvider.provide(),
                 meldepliktRepository = repositoryProvider.provide(),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),

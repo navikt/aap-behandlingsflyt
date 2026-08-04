@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -68,14 +69,11 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.Melde
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -116,7 +114,10 @@ import java.time.temporal.ChronoUnit
 
 @Fakes
 class StatistikkJobbUtførerTest {
-    private val gatewayProvider = minimalGatewayProvider()
+    private val gatewayProvider = minimalGatewayProvider {
+        register<FakePdlGateway>()
+        register<FakeApiInternGateway>()
+    }
 
     companion object {
         private lateinit var dataSource: TestDataSource
@@ -142,16 +143,9 @@ class StatistikkJobbUtførerTest {
             val ident = Ident(
                 identifikator = "456", aktivIdent = true
             )
-            val identGateway = object : IdentGateway {
-                override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
-                    return listOf(ident)
-                }
-            }
+
             val sak = PersonOgSakService(
-                identGateway,
-                FakeApiInternGateway.konstruer(),
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                gatewayProvider, postgresRepositoryRegistry.provider(connection)
             ).finnEllerOpprett(
                 ident, søknadsdato = LocalDate.now().minusDays(10)
             )
@@ -231,7 +225,8 @@ class StatistikkJobbUtførerTest {
             StatistikkJobbUtfører(
                 statistikkMetoder = StatistikkMetoder(
                     postgresRepositoryRegistry.provider(connection),
-                    minimalGatewayProvider()),
+                    minimalGatewayProvider()
+                ),
                 statistikkGateway = StatistikkGatewayImpl(),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
@@ -322,17 +317,9 @@ class StatistikkJobbUtførerTest {
             val ident = Ident(
                 identifikator = "123", aktivIdent = true
             )
-            val identGateway = object : IdentGateway {
-                override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
-                    return listOf(ident)
-                }
-            }
 
             val sak = PersonOgSakService(
-                identGateway,
-                FakeApiInternGateway.konstruer(),
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                gatewayProvider, postgresRepositoryRegistry.provider(connection)
             ).finnEllerOpprett(
                 ident, søknadsdato = LocalDate.now().minusDays(10).plusDays(1)
             )
@@ -368,7 +355,7 @@ class StatistikkJobbUtførerTest {
                     nedsattArbeidsevneEllerStudieevneDato = nedsattArbeidsevneDato,
                     ytterligereNedsattBegrunnelse = null,
                     ytterligereNedsattArbeidsevneDato = null,
-                    vurdertAv = "Z0000",
+                    vurdertAv = Bruker("Z0000"),
                 )
             )
 
@@ -504,7 +491,8 @@ class StatistikkJobbUtførerTest {
                 statistikkGateway = StatistikkGatewayImpl(),
                 statistikkMetoder = StatistikkMetoder(
                     postgresRepositoryRegistry.provider(connection),
-                    minimalGatewayProvider()),
+                    minimalGatewayProvider()
+                ),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -634,7 +622,8 @@ class StatistikkJobbUtførerTest {
                 klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
                 avsluttetBehandlingTilStatistikk = AvsluttetBehandlingTilStatistikk(
                     inMemoryRepositoryProvider,
-                    minimalGatewayProvider()),
+                    minimalGatewayProvider()
+                ),
             )
         )
 

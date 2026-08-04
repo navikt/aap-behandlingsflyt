@@ -1,13 +1,10 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.TestAutomatiskMeldekortSakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -28,9 +25,7 @@ import java.time.LocalDateTime
 
 class SendAutomatiskMeldekortJobbUtfører(
     private val automatiskMeldekortSakRepository: TestAutomatiskMeldekortSakRepository,
-    private val behandlingService: BehandlingService,
-    private val rettighetstypeRepository: RettighetstypeRepository,
-    private val meldeperiodeRepository: MeldeperiodeRepository,
+    private val underveisRepository: UnderveisRepository,
     private val flytJobbRepository: FlytJobbRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : JobbUtfører {
@@ -44,45 +39,27 @@ class SendAutomatiskMeldekortJobbUtfører(
         }
 
         val idag = LocalDate.now(clock)
-        val saker = automatiskMeldekortSakRepository.hentAlle()
+        val alle = automatiskMeldekortSakRepository.hentAlle()
+        log.info("Behandler ${alle.size} saker for automatisk meldekort")
 
-        log.info("Behandler ${saker.size} saker for automatisk meldekort")
+        val ubesvarte = underveisRepository.hentUbesvarteMeldeperioderForDollyJobb(alle, idag)
+        log.info("Fant ${ubesvarte.values.sumOf { it.size }} ubesvarte meldeperioder fordelt på ${ubesvarte.size} saker")
 
-        saker.forEach { sendMeldekortHvisAktiv(it, idag) }
+        ubesvarte.forEach { (sakId, perioder) ->
+            perioder.forEach { sendMeldekort(sakId, it) }
+        }
     }
-
-    private fun sendMeldekortHvisAktiv(sakId: SakId, idag: LocalDate) {
-        fullførteMeldeperioder(sakId, idag).forEach { sendMeldekort(sakId, it) }
-    }
-
-    private fun fullførteMeldeperioder(sakId: SakId, idag: LocalDate): List<Periode> =
-        behandlingService.finnSisteYtelsesbehandlingFor(sakId)
-            ?.takeIf { harAktivRettighet(it.id, idag) }
-            ?.let { sisteBehandling ->
-                meldeperiodeRepository.hentFørsteMeldeperiode(sisteBehandling.id)
-                    ?.let { førsteMeldeperiode ->
-                        meldeperiodeRepository
-                            .hentMeldeperioder(sisteBehandling.id, Periode(førsteMeldeperiode.fom, idag))
-                            .filter { it.tom < idag }
-                            .ifEmpty {
-                                log.info("Sak $sakId har ingen fullførte meldeperioder frem til $idag, hopper over")
-                                emptyList()
-                            }
-                    }
-                    ?: tomListeMedLogg("Sak $sakId har ingen fastsatt meldeperiode, hopper over")
-            }
-            ?: tomListeMedLogg("Sak $sakId har ingen aktiv ytelsesbehandling på $idag, hopper over")
 
     private fun sendMeldekort(sakId: SakId, periode: Periode) {
         val meldekort = MeldekortV0(
             harDuArbeidet = false,
-            timerArbeidPerPeriode = listOf(
+            timerArbeidPerPeriode = periode.dager().map {
                 ArbeidIPeriodeV0(
-                    fraOgMedDato = periode.fom,
-                    tilOgMedDato = periode.tom,
+                    fraOgMedDato = it,
+                    tilOgMedDato = it,
                     timerArbeid = 0.0,
                 )
-            ),
+            }
         )
 
         val jobb = HendelseMottattHåndteringJobbUtfører.nyJobb(
@@ -98,28 +75,16 @@ class SendAutomatiskMeldekortJobbUtfører(
         log.info("Opprettet automatisk meldekort-jobb for sak $sakId (periode ${periode.fom}–${periode.tom})")
     }
 
-    private fun harAktivRettighet(behandlingId: BehandlingId, idag: LocalDate): Boolean {
-        val grunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId) ?: return false
-        return grunnlag.rettighetstypeTidslinje.begrensetTil(Periode(idag, idag)).isNotEmpty()
-    }
-
     private fun journalpostReferanse() = InnsendingReferanse(
         type = InnsendingReferanse.Type.JOURNALPOST,
         verdi = Random.nextLong(1_000_000_000L, 9_999_999_999_999L).toString(),
     )
 
-    private fun tomListeMedLogg(melding: String): List<Periode> {
-        log.info(melding)
-        return emptyList()
-    }
-
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører =
             SendAutomatiskMeldekortJobbUtfører(
                 automatiskMeldekortSakRepository = repositoryProvider.provide(),
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                rettighetstypeRepository = repositoryProvider.provide(),
-                meldeperiodeRepository = repositoryProvider.provide(),
+                underveisRepository = repositoryProvider.provide(),
                 flytJobbRepository = repositoryProvider.provide(),
             )
 

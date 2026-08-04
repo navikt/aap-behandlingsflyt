@@ -11,11 +11,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Sykdo
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.BeforeParameterizedClassInvocation
+import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
@@ -23,10 +26,22 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+class OvergangArbeidFlytTest : AbstraktFlytOrkestratorSnapshotTest() {
+
+    @field:Parameter
+    lateinit var unleashGateway: KClass<out UnleashGateway>
+
+    override fun unleashGateway() = unleashGateway
+
+    lateinit var sak: Sak
+
+    @BeforeParameterizedClassInvocation(injectArguments = false)
+    fun settOppFGB() = snapshotEtterSetup {
+        sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
+    }
+
     @Test
     fun `Vurdering av 11-17`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
         val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
         val sluttdato = endringsdato.plusMonths(6).minusDays(1)
 
@@ -68,7 +83,6 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
 
     @Test
     fun `Endrer sykdomsvurdering slik at 11-17-vurdering ikke lenger er nødvendig`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
         val periodeEttAar = Periode(fom = sak.rettighetsperiode.fom, tom = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
 
         /* Gir AAP som arbeidssøker. */
@@ -104,7 +118,6 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
         2. Hvis det ikke finnes vurdert 11-17, så skal det trigge en vurdering av § 11-5 + 11-17.
          */
         val startDato = LocalDate.now()
-        val sak = happyCaseFørstegangsbehandling(startDato, sendMeldekort = false)
         val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
 
         /* Gir AAP som arbeidssøker. */
@@ -112,7 +125,7 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
         )
             .medKontekst {
-                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_SYKDOM);
+                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_SYKDOM)
             }
             .løsAvklaringsBehov(
                 AvklarSykdomLøsning(
@@ -146,13 +159,13 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
             )
             // 2.
             .medKontekst {
-                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_OVERGANG_ARBEID);
+                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_OVERGANG_ARBEID)
             }
 
             // 1.
             .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
             .medKontekst {
-                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).doesNotContain(Definisjon.AVKLAR_OVERGANG_ARBEID);
+                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).doesNotContain(Definisjon.AVKLAR_OVERGANG_ARBEID)
             }
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
@@ -162,7 +175,7 @@ class OvergangArbeidFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstr
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
         )
             .medKontekst {
-                assertThat( behandling.aktivtSteg() ).isEqualTo(StegType.OVERGANG_ARBEID);
+                assertThat( behandling.aktivtSteg() ).isEqualTo(StegType.OVERGANG_ARBEID)
             }
     }
 }

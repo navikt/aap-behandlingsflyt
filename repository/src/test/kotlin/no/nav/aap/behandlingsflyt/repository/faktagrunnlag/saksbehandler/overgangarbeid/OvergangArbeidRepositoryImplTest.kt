@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.overgangarbeid.OvergangArbeidRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -54,9 +55,9 @@ internal class OvergangArbeidRepositoryImplTest {
             val expected = OvergangArbeidVurdering(
                 begrunnelse = "test",
                 brukerRettPåAAP = true,
-                vurderingenGjelderFra = testDate,
-                vurdertAv = "Saks behandler",
-                vurderingenGjelderTil = null,
+                fom = testDate,
+                vurdertAv = Bruker("Saks behandler"),
+                tom = null,
                 opprettet = Instant.now(),
                 vurdertIBehandling = behandling.id
             )
@@ -84,9 +85,9 @@ internal class OvergangArbeidRepositoryImplTest {
                         OvergangArbeidVurdering(
                             begrunnelse = "test",
                             brukerRettPåAAP = true,
-                            vurderingenGjelderFra = LocalDate.now(),
-                            vurdertAv = "Saks behandler",
-                            vurderingenGjelderTil = null,
+                            fom = LocalDate.now(),
+                            vurdertAv = Bruker("Saks behandler"),
+                            tom = null,
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,
                         )
@@ -98,9 +99,9 @@ internal class OvergangArbeidRepositoryImplTest {
                         OvergangArbeidVurdering(
                             begrunnelse = "test",
                             brukerRettPåAAP = true,
-                            vurderingenGjelderFra = LocalDate.now(),
-                            vurdertAv = "Saks behandler",
-                            vurderingenGjelderTil = LocalDate.now().plusDays(2),
+                            fom = LocalDate.now(),
+                            vurdertAv = Bruker("Saks behandler"),
+                            tom = LocalDate.now().plusDays(2),
                             opprettet = Instant.now(),
                             vurdertIBehandling = behandling.id,
                         )

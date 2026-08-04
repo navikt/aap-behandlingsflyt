@@ -24,11 +24,11 @@ dependencies {
     dokkaPlugin("com.glureau:html-mermaid-dokka-plugin:0.6.0")
 }
 
-// https://docs.gradle.org/8.12.1/userguide/jvm_test_suite_plugin.html
+// https://docs.gradle.org/9.6.1/userguide/java_testing.html#java_testing
 testing {
     suites {
         @Suppress("UnstableApiUsage")
-        getByName<JvmTestSuite>("test") {
+        named<JvmTestSuite>("test") {
             useJUnitJupiter()
         }
     }
@@ -113,8 +113,8 @@ kotlin {
     jvmToolchain(21)
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
-        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_4)
+        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_4)
 
         // Bruk et unikt navn for <submodule>.kotlin_module for hver Gradle-submodul, for å unngå navnekollisjoner i
         // multi-modul prosjekt, hvor vi inkluderer flere av våre kotlin-moduler i samme jar-fil eller

@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 val UFØRE_VEDTAK_TOPIC = requiredConfigForKey("INTEGRASJON_UFORE_VEDTAK_TOPIC")
 
 class UførevedtakKafkaKonsument(
-    config: KafkaConsumerConfig<String, String>,
+    config: KafkaConsumerConfig,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,

@@ -44,6 +44,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
+import no.nav.aap.behandlingsflyt.behandling.grunnlag.avslag_11_27.avslag11_27GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
@@ -72,6 +73,7 @@ import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnl
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.stønadsperiode.stønadsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
@@ -80,6 +82,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -104,6 +107,8 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -116,9 +121,11 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.tilgang.TeamAap
 import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger as Slf4jLogger
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.*
 import java.util.logging.Level
@@ -157,6 +164,12 @@ internal object AppConfig {
      * Bruker kun 92 connections for å beholde noen til administrasjon.
      */
     const val hikariMaxPoolSize = 92 / 4 /* max connections / max antall pods */
+
+    /* PIP-endepunktene kalles av aap-tilgang mens andre requests venter på svar fra aap-tilgang.
+     * Uten dedikert pool konkurrerer PIP om de samme connectionene som de ventende requestene,
+     * noe som kan gi starvation og timeouts.
+     */
+    const val pipDataSourcePoolSize = 2
 }
 
 fun main() {
@@ -213,12 +226,17 @@ internal fun Application.server(
     val dedicatedMotorConnections = AppConfig.ANTALL_WORKERS_FOR_MOTOR * 2
     val fellesDataSource = initDatasource(
         dbConfig,
-        maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections,
+        maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections - AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
     )
     val motorDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = dedicatedMotorConnections,
+        prometheus = prometheus,
+    )
+    val pipDataSource = initDatasource(
+        dbConfig,
+        maximumPoolSize = AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
     )
     Migrering.migrate(fellesDataSource)
@@ -238,14 +256,14 @@ internal fun Application.server(
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
-        try {
-            // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
-            fellesDataSource.close()
-            motorDataSource.close()
-        } catch (_: Exception) {
-            // Ignorert
-        }
+        // Helt til slutt, nå som vi har stanset Motor, etc. Lukk executor og database-koblinger.
+        lukkRessurser(
+            environment.log,
+            listOf(informasjonskravExecutor, fellesDataSource, motorDataSource, pipDataSource)
+        )
     }
+    loggTidssoneForDatabase(fellesDataSource)
+    val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
 
     routing {
         authenticate(IdentityProvider.ENTRA_ID.value) {
@@ -285,9 +303,10 @@ internal fun Application.server(
                 beregningVurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(fellesDataSource, repositoryRegistry)
                 aldersGrunnlagApi(fellesDataSource, repositoryRegistry)
+                avslag11_27GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                motorApi(fellesDataSource)
-                behandlingsflytPipApi(fellesDataSource, repositoryRegistry)
+                motorApi(fellesDataSource, påkrevdeRollerMotor)
+                behandlingsflytPipApi(pipDataSource, repositoryRegistry)
                 auditlogApi(fellesDataSource, repositoryRegistry)
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -296,7 +315,8 @@ internal fun Application.server(
                 tidligereVurderingerApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                kravGrunnlagApi(fellesDataSource, repositoryRegistry)
+                kravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                stønadsperiodeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -339,6 +359,15 @@ internal fun Application.server(
         actuator(prometheus, motor)
     }
 
+}
+
+private fun Application.loggTidssoneForDatabase(dataSource: HikariDataSource) {
+    val tidssoneForDatabase = dataSource.transaction { connection ->
+        connection.queryFirst("show timezone") {
+            setRowMapper { it.getString("timezone") }
+        }
+    }
+    log.info("Tidssone for databasen: $tidssoneForDatabase")
 }
 
 private fun Application.startKafkakonsumenter(
@@ -416,6 +445,17 @@ private fun Application.startKafkakonsumenter(
     }
 }
 
+@Suppress("TooGenericExceptionCaught")
+private fun lukkRessurser(log: Slf4jLogger, resources: List<AutoCloseable>) {
+    resources.forEach { resource ->
+        try {
+            resource.close()
+        } catch (exception: Exception) {
+            log.error("Feil ved lukking av ressurs under nedstopping.", exception)
+        }
+    }
+}
+
 private fun <K, V> Application.startKonsument(konsument: KafkaKonsument<K, V>) {
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -440,6 +480,8 @@ fun Application.startMotor(
     gatewayProvider: GatewayProvider,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
     val motor = Motor(
         dataSource = dataSource,
         antallKammer = AppConfig.ANTALL_WORKERS_FOR_MOTOR,
@@ -448,6 +490,7 @@ fun Application.startMotor(
         prometheus = prometheus,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider,
+        enableV2 = { unleashGateway.isEnabled(BehandlingsflytFeature.MotorV2) },
     )
 
     dataSource.transaction { dbConnection ->

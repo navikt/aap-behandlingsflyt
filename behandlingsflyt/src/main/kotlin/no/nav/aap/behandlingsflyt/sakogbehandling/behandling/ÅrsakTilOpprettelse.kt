@@ -38,5 +38,8 @@ enum class ÅrsakTilOpprettelse {
     FAGSYSTEMINFO_BEHOV_HENDELSE,
 
     // Uføre
-    UFØRE_VEDTAK_HENDELSE
+    UFØRE_VEDTAK_HENDELSE,
+
+    // Migrering fra Arena
+    MIGRERING_FRA_ARENA
 }

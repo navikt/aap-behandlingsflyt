@@ -7,11 +7,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitets
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
+import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -20,13 +26,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,6 +57,14 @@ class FatteVedtakStegTest {
     val vedtakService = mockk<VedtakService>(relaxed = true)
     val virkningstidspunktUtleder = mockk<VirkningstidspunktUtleder>(relaxed = true)
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
+    val pdfgenGateway = mockk<PdfgenGateway>(relaxed = true)
+    val behandlingRepository = mockk<BehandlingRepository>(relaxed = true)
+    val sakRepository = mockk<SakRepository>(relaxed = true)
+    val vilkårsresultatRepository = mockk<VilkårsresultatRepository>(relaxed = true)
+    val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>(relaxed = true)
+    val underveisRepository = mockk<UnderveisRepository>(relaxed = true)
+    val mottattDokumentRepository = mockk<MottattDokumentRepository>(relaxed = true)
+    val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>(relaxed = true)
     val gatewayProvider = createGatewayProvider {
         register<AlleAvskruddUnleash>()
     }
@@ -81,7 +98,15 @@ class FatteVedtakStegTest {
         vedtakService = vedtakService,
         virkningstidspunktUtleder = virkningstidspunktUtleder,
         unleashGateway = gatewayProvider.provide(),
-        avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
+        avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService,
+        pdfgenGateway = pdfgenGateway,
+        behandlingRepository = behandlingRepository,
+        sakRepository = sakRepository,
+        vilkårsresultatRepository = vilkårsresultatRepository,
+        tilkjentYtelseRepository = tilkjentYtelseRepository,
+        underveisRepository = underveisRepository,
+        mottattDokumentRepository = mottattDokumentRepository,
+        beregningsgrunnlagRepository = beregningsgrunnlagRepository,
     )
 
     @Test
@@ -171,25 +196,25 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.SENDT_TILBAKE_FRA_BESLUTTER,
                     tidsstempel = nå.plusMinutes(5),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.TOTRINNS_VURDERT,
                     tidsstempel = nå.plusMinutes(7),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 )
             )
         )
@@ -202,25 +227,25 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(3),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(4),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(6),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(8),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -255,13 +280,13 @@ class FatteVedtakStegTest {
                     status = Status.SENDT_TILBAKE_FRA_BESLUTTER,
                     tidsstempel = nå.plusMinutes(3),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(4),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -274,13 +299,13 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -309,13 +334,13 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -368,7 +393,7 @@ class FatteVedtakStegTest {
             definisjon = definisjon,
             funnetISteg = definisjon.løsesISteg,
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov =
@@ -383,7 +408,9 @@ class FatteVedtakStegTest {
     }
 
     private fun sistAvsluttet(behandlingId: BehandlingId, definisjon: Definisjon): LocalDateTime {
-        return requireNotNull(InMemoryAvklaringsbehovRepository.hent(behandlingId).find { it.definisjon == definisjon })
+        return requireNotNull(
+            InMemoryAvklaringsbehovRepository.hent(behandlingId)
+                .find { it.definisjon == definisjon })
             .historikk
             .filter { it.status == Status.AVSLUTTET }
             .maxOf { it.tidsstempel }

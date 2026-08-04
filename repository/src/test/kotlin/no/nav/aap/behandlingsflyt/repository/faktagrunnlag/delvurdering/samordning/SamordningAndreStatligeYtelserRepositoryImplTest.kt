@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -44,7 +45,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
         // Lagre ytelse
         val vurdering = SamordningAndreStatligeYtelserVurdering(
             begrunnelse = "En fin begrunnelse",
-            vurdertAv = "Lokalsaksbehandler",
+            vurdertAv = Bruker("Lokalsaksbehandler"),
             vurderingPerioder = listOf(
                 SamordningAndreStatligeYtelserVurderingPeriode(
                     periode = periode,
@@ -78,7 +79,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
             samordningAndreStatligeYtelserRepository.lagre(
                 behandling.id, SamordningAndreStatligeYtelserVurdering(
                     begrunnelse = "En fin begrunnelse",
-                    vurdertAv = "Lokalsaksbehandler",
+                    vurdertAv = Bruker("Lokalsaksbehandler"),
                     vurderingPerioder = listOf(
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periode,
@@ -95,7 +96,7 @@ internal class SamordningAndreStatligeYtelserRepositoryImplTest {
             samordningAndreStatligeYtelserRepository.lagre(
                 behandling.id, SamordningAndreStatligeYtelserVurdering(
                     begrunnelse = "En fin begrunnelse",
-                    vurdertAv = "Lokalsaksbehandler",
+                    vurdertAv = Bruker("Lokalsaksbehandler"),
                     vurderingPerioder = listOf(
                         SamordningAndreStatligeYtelserVurderingPeriode(
                             periode = periode,

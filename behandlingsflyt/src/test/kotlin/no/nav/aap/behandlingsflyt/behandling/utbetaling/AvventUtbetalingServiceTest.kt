@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -113,7 +114,7 @@ class AvventUtbetalingServiceTest {
                 LocalDate.parse("2024-01-01"),
                 LocalDate.parse("2024-01-31"),
                 "Nav Løten",
-                "saksbehandler"
+                Bruker("saksbehandler")
             )
         )
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
@@ -174,7 +175,7 @@ class AvventUtbetalingServiceTest {
         every { behandlingRepositoryMock.hent(BehandlingId(1L)) } returns førstegangBehandling
         every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
-                listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", "saksbehandler"))
+                listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", Bruker("saksbehandler")))
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
@@ -202,7 +203,7 @@ class AvventUtbetalingServiceTest {
         every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
 
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
-                listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", "saksbehandler"))
+                listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", Bruker("saksbehandler")))
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
@@ -296,7 +297,7 @@ class AvventUtbetalingServiceTest {
                 SamordningAndreStatligeYtelserGrunnlag(
                     vurdering = SamordningAndreStatligeYtelserVurdering(
                         begrunnelse = "bla bla",
-                        vurdertAv = "noen",
+                        vurdertAv = Bruker("noen"),
                         vurderingPerioder = listOf(
                             SamordningAndreStatligeYtelserVurderingPeriode(
                                 ytelse = AndreStatligeYtelser.TILTAKSPENGER,
@@ -335,7 +336,7 @@ class AvventUtbetalingServiceTest {
                     vurdering = SamordningArbeidsgiverVurdering(
                         "Har fått sluttpakke",
                         listOf(Periode(LocalDate.of(2025, 1, 4), LocalDate.of(2025, 1, 12))),
-                        vurdertAv = "ident"
+                        vurdertAv = Bruker("ident")
                     )
                 )
 

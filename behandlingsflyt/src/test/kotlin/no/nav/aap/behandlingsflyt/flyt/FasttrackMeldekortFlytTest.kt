@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
@@ -20,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -30,16 +30,24 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import kotlin.test.Test
 
 class FasttrackMeldekortFlytTest :
-    AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+    AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+
+    val søknadsdato: LocalDate =  25 august 2025
+    lateinit var sak: Sak
+
+
+    @BeforeAll
+    fun settOppFGB() = snapshotEtterSetup {
+        sak = happyCaseFørstegangsbehandling(fom = søknadsdato)
+    }
 
     @Test
     fun `Meldekortgrunnlag skal flettes inn i åpen behandling før UnderveisSteg`() {
-        val søknadsdato = LocalDate.now().minusMonths(3)
-        val sak = happyCaseFørstegangsbehandling(søknadsdato)
         val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
         val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
@@ -77,8 +85,6 @@ class FasttrackMeldekortFlytTest :
 
     @Test
     fun `Åpen behandling skal tilbakeføres til UnderveisSteg etter fullført meldekortbehandling`() {
-        val sak = happyCaseFørstegangsbehandling()
-
         val revurderingGjelderFra = sak.rettighetsperiode.fom.plusWeeks(2)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, revurderingGjelderFra)
 
@@ -167,7 +173,6 @@ class FasttrackMeldekortFlytTest :
 
     @Test
     fun `sender inn to meldekort, resultat reflektert i åpen behandling`() {
-        val sak = happyCaseFørstegangsbehandling(fom = 25 august 2025)
         val fom = sak.rettighetsperiode.fom.plusWeeks(2)
         val åpenBehandling = revurdereFramTilOgMedSykdom(sak, fom)
         åpenBehandling

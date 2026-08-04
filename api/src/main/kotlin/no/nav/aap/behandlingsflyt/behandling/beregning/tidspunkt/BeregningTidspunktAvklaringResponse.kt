@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
 import java.time.LocalDate
 
 data class BeregningTidspunktAvklaringResponse(
@@ -16,4 +18,6 @@ data class BeregningstidspunktVurderingResponse(
     val ytterligereNedsattBegrunnelse: String?,
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
     val vurderingerMeta: VurderingerMetaResponse,
+    val årsak: ÅrsakBeregningstidspunkt?,
+    val ytterligereNedsattÅrsak: ÅrsakYtterligereNedsatt?,
 )

@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -34,57 +32,6 @@ class SykdomsvilkårTest {
     //  Sykdomsvurderinger som gjelder fra dato før rettighetsperiodens start gir avslag på sykdomsvilkåret
     //  Vilkåret bør vel kun bry seg om vurderinger innenfor rettighetsperioden?
 
-    @Test
-    fun `Nye vurderinger skal overskrive`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
-
-        val kravdato = LocalDate.now()
-        Sykdomsvilkår(vilkårsresultat).vurder(
-            SykdomsFaktagrunnlag(
-                kravDato = kravdato,
-                sisteDagMedMuligYtelse = kravdato.plusYears(3),
-                yrkesskadevurdering = null,
-                sykdomsvurderinger = listOf(
-                    sykdomsvurdering(
-                        vurderingenGjelderFra = kravdato,
-                        harSkadeSykdomEllerLyte = true,
-                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true
-                    )
-                ),
-                sykepengerErstatningFaktagrunnlag = null,
-                bistandvurderingFaktagrunnlag = bistandGrunnlag(LocalDate.now()),
-                sykepengeerstatningVilkår = Tidslinje()
-            )
-        )
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.OPPFYLT }
-
-        val faktagrunnlag = SykdomsFaktagrunnlag(
-            kravDato = kravdato,
-            sisteDagMedMuligYtelse = kravdato.plusYears(3),
-            yrkesskadevurdering = null,
-            sykdomsvurderinger = listOf(
-                sykdomsvurdering(
-                    vurderingenGjelderFra = kravdato,
-                    harSkadeSykdomEllerLyte = true,
-                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-                    erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneMerEnnHalvparten = false
-                )
-            ),
-            sykepengerErstatningFaktagrunnlag = null,
-            bistandvurderingFaktagrunnlag = null,
-            sykepengeerstatningVilkår = Tidslinje()
-        )
-        Sykdomsvilkår(vilkårsresultat).vurder(faktagrunnlag)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
-    }
-
     private fun bistandGrunnlag(
         startDato: LocalDate,
         sluttDato: LocalDate? = null,
@@ -101,8 +48,8 @@ class SykdomsvilkårTest {
                 erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
                 overgangBegrunnelse = "...",
                 skalVurdereAapIOvergangTilArbeid = null,
-                vurdertAv = "Foffer",
-                vurderingenGjelderFra = startDato,
+                vurdertAv = Bruker("Foffer"),
+                fom = startDato,
                 opprettet = Instant.now(),
                 tom = sluttDato
             )
@@ -111,8 +58,6 @@ class SykdomsvilkårTest {
 
     @Test
     fun `Ordinær etterfulgt av forbigående problemer`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
 
@@ -144,15 +89,11 @@ class SykdomsvilkårTest {
                 sykepengeerstatningVilkår = Tidslinje()
             )
 
-        Sykdomsvilkår(vilkårsresultat).vurder(
+        val resultat = Sykdomsvilkår.vurder(
             faktagrunnlag
         )
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
-
-        vilkår.tidslinje().assertTidslinje(
+        resultat.assertTidslinje(
             Segment(Periode(1 januar 2024, 7 januar 2024)) { vurdering ->
                 assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
             },
@@ -165,8 +106,6 @@ class SykdomsvilkårTest {
 
     @Test
     fun `Skal oppfylles for yrkesskade dersom nedsettelse over yrkesskadegrense og årsakssammenheng`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
 
@@ -179,7 +118,7 @@ class SykdomsvilkårTest {
                     relevanteSaker = emptyList(),
                     erÅrsakssammenheng = true,
                     andelAvNedsettelsen = Prosent(50),
-                    vurdertAv = "Z00000",
+                    vurdertAv = Bruker("Z00000"),
                     vurdertTidspunkt = opprettet
                 ),
                 sykdomsvurderinger = listOf(
@@ -206,15 +145,9 @@ class SykdomsvilkårTest {
                 sykepengeerstatningVilkår = Tidslinje()
             )
 
-        Sykdomsvilkår(vilkårsresultat).vurder(
-            faktagrunnlag
-        )
+        val resultat = Sykdomsvilkår.vurder(faktagrunnlag)
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
-
-        vilkår.tidslinje().assertTidslinje(
+        resultat.assertTidslinje(
             Segment(Periode(1 januar 2024, 31 desember 2024)) { vurdering ->
                 assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
                 assertThat(vurdering.innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG)
@@ -228,8 +161,6 @@ class SykdomsvilkårTest {
 
     @Test
     fun `Ikke syk, ikke vesentlig del, ikke nedstatt arbeidsevne skal gi avslag`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
 
@@ -242,7 +173,7 @@ class SykdomsvilkårTest {
                     relevanteSaker = emptyList(),
                     erÅrsakssammenheng = true,
                     andelAvNedsettelsen = Prosent(50),
-                    vurdertAv = "Z00000",
+                    vurdertAv = Bruker("Z00000"),
                     vurdertTidspunkt = opprettet
                 ),
                 sykdomsvurderinger = listOf(
@@ -269,15 +200,9 @@ class SykdomsvilkårTest {
                 sykepengeerstatningVilkår = Tidslinje()
             )
 
-        Sykdomsvilkår(vilkårsresultat).vurder(
-            faktagrunnlag
-        )
+        val resultat = Sykdomsvilkår.vurder(faktagrunnlag)
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(3)
-
-        vilkår.tidslinje().assertTidslinje(
+        resultat.assertTidslinje(
             Segment(Periode(1 januar 2024, 31 januar 2024)) { vurdering ->
                 assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
                 assertThat(vurdering.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL)

@@ -55,7 +55,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                     år = Year.of(it.getInt("ar")),
                     begrunnelse = it.getString("begrunnelse"),
                     belop = it.getBigDecimalOrNull("belop")?.let { verdi -> Beløp(verdi) },
-                    vurdertAv = it.getString("vurdert_av"),
+                    vurdertAv = it.getBruker("vurdert_av"),
                     opprettet = it.getLocalDateTime("opprettet_tid"),
                     eøsBeløp = it.getBigDecimalOrNull("eos_belop")?.let(::Beløp),
                     ferdigLignetPGI = it.getBigDecimalOrNull("ferdig_lignet_pgi")?.let(::Beløp),
@@ -103,7 +103,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 setInt(1, it.år.value)
                 setString(2, it.begrunnelse)
                 setBigDecimal(3, it.belop?.verdi)
-                setString(4, it.vurdertAv)
+                setBruker(4, it.vurdertAv)
                 setLong(5, manuellInntektVurderingerId)
                 setBigDecimal(6, it.eøsBeløp?.verdi)
                 setBigDecimal(7, it.ferdigLignetPGI?.verdi)

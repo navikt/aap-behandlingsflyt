@@ -10,8 +10,6 @@ object InMemoryBarnetilleggRepository : BarnetilleggRepository {
     private val memory = HashMap<BehandlingId, BarnetilleggGrunnlag>()
     private val lock = Any()
 
-    fun reset() = synchronized(lock) { memory.clear() }
-
     override fun hentHvisEksisterer(behandlingsId: BehandlingId): BarnetilleggGrunnlag? =
         synchronized(lock) { memory[behandlingsId] }
 

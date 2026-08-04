@@ -110,11 +110,12 @@ class IverksettVedtakSteg private constructor(
             // TODO: Opprett egen jobb-kjøring for å opprette gosysoppgave
             if (navKontor.enhetsNummer.isNotEmpty()) {
                 log.info("Oppretter Gosysoppgave for $navKontor")
-                gosysService.opprettOppgave(
+                gosysService.opprettRefusjonskravOppgave(
                     aktivIdent,
                     kontekst.behandlingId.toString(),
                     kontekst.behandlingId,
-                    navKontor
+                    navKontor,
+                    navKontorerSomSkalHaOppgave.isNotEmpty()
                 )
             }
         }
@@ -250,12 +251,12 @@ class IverksettVedtakSteg private constructor(
 
 
     private fun harAvbruttRevurderingIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
-        kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(
+        kontekst.behandlingType == TypeBehandling.Revurdering && avbrytRevurderingService.revurderingErAvbrutt(
             kontekst.behandlingId
         )
 
     private fun harTrukketSøknadIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
-        kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
+        kontekst.behandlingType == TypeBehandling.Førstegangsbehandling && trukketSøknadService.søknadErTrukket(
             kontekst.behandlingId
         )
 

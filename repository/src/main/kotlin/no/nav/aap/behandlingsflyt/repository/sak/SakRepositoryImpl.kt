@@ -319,4 +319,15 @@ where aktiv = true
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres
     }
+
+    fun backfillStansOpphørHentHvisFinnes(sakId: Long): Sak? {
+        return connection.queryFirstOrNull("SELECT * FROM SAK WHERE id = ?") {
+            setParams {
+                setLong(1, sakId)
+            }
+            setRowMapper { row ->
+                mapSak(row)
+            }
+        }
+    }
 }

@@ -40,7 +40,7 @@ class AvklarSoningsforholdLøser(
 
         soningRepository.lagreSoningsVurdering(
             kontekst.kontekst.behandlingId,
-            kontekst.bruker.ident,
+            kontekst.bruker,
             oppdaterteVurderinger
         )
 

@@ -419,6 +419,7 @@ class BehandlingFaktagrunnlag(
                 InnsendingType.ANNET_RELEVANT_DOKUMENT,
                 InnsendingType.MANUELL_REVURDERING,
                 InnsendingType.OMGJØRING_KLAGE_REVURDERING,
+                InnsendingType.MIGRERING_FRA_ARENA,
                 InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
                 InnsendingType.KABAL_HENDELSE,
                 InnsendingType.TILBAKEKREVING_HENDELSE,

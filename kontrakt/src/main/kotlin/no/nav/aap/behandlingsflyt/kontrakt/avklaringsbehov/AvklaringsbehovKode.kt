@@ -42,8 +42,10 @@ public const val AVKLAR_OPPHOLDSKRAV: String = "5035"
 public const val AVKLAR_SAMORDNING_BARNEPENSJON_KODE: String = "5036"
 public const val AVKLAR_STUDENT_KODE_V2: String = "5037"
 public const val VURDER_KRAV_KODE: String = "5038"
+public const val AVKLAR_STØNADSPERIODE_KODE: String = "5039"
 public const val VURDER_INNTEKTSBORTFALL: String = "5040"
 public const val SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE: String = "5041"
+public const val VURDER_AVSLAG_11_27_KODE: String = "5042"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
@@ -297,6 +299,11 @@ public enum class AvklaringsbehovKode {
     `5038`,
 
     /**
+     * [AVKLAR_STØNADSPERIODE_KODE]
+     */
+    `5039`,
+    
+    /**
      * [VURDER_INNTEKTSBORTFALL]
      */
     `5040`,
@@ -305,6 +312,11 @@ public enum class AvklaringsbehovKode {
      * [SKRIV_VEDTAKSBREV_SAKSBEHANDLER_KODE]
      */
     `5041`,
+
+    /**
+     * [VURDER_AVSLAG_11_27_KODE]
+     */
+    `5042`,
 
     /**
      * [SKRIV_BREV_KODE]

@@ -104,7 +104,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeTjenestePensjonGateway : TjenestePensjonGateway {
-        override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> = emptyList()
+        override fun hentTjenestePensjon(ident: String): List<TjenestePensjonForhold> = emptyList()
     }
 
     object FakeUføreRegisterGateway : UføreRegisterGateway {

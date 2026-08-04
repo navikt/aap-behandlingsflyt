@@ -28,6 +28,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     KVALITETSSIKRING(false, true),
     IVERKSETT_VEDTAK(false, true),
     BREV(true, true),
+    AVSLAG_11_27(true, false),
     UDEFINERT(false, true),
 
     // Klage

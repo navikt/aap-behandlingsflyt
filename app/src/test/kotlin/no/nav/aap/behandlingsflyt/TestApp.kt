@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreSøknad
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
@@ -28,7 +27,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -777,25 +776,11 @@ private fun mapKravVurdering(krav: KravVurderingTestDto, behandlingId: Behandlin
     
     val now = Instant.now()
     return when (krav.kravType) {
-        KravType.NYTT_KRAV_AAP -> NyttKrav(
+        KravType.RELEVANT_KRAV -> RelevantKrav(
             referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = Bruker("Testbruker"),
             begrunnelse = "Nytt krav",
-            vurdertIBehandling = behandlingId,
-            opprettet = now,
-            søknadsdato = Søknadsdato(
-                dato = krav.søknadsdato,
-                årsak = SøknadsdatoÅrsak.SøknadMottatt
-            ),
-            overstyrMuligRettFra = krav.overstyrMuligRettFra?.let { OverstyrMuligRettFra(it, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere) },
-            muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato
-        )
-        KravType.GJENOPPTAK -> Gjenopptak(
-            referanse = referanse,
-            journalpostId = journalpostId,
-            vurdertAv = Bruker("Testbruker"),
-            begrunnelse = "Gjenopptak",
             vurdertIBehandling = behandlingId,
             opprettet = now,
             søknadsdato = Søknadsdato(

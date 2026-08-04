@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
+import java.time.LocalDateTime
 
 interface RefusjonkravRepository: Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): List<RefusjonkravVurdering>?
