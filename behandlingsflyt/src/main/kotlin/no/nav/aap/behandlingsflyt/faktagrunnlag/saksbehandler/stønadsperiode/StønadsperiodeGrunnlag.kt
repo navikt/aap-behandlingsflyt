@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.VurderingForKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.VurderingForKravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
@@ -16,7 +17,7 @@ import java.time.LocalDate
 data class StønadsperiodeGrunnlag(
     override val vurderinger: Set<StønadsperiodeVurdering>
 ) : VurderingForKravGrunnlag<StønadsperiodeVurdering> {
-    fun tilTidslinje(kravGrunnlag: KravGrunnlag): Tidslinje<StønadsperiodeVurdering> {
+    override fun tilTidslinje(kravGrunnlag: KravGrunnlag): Tidslinje<StønadsperiodeVurdering> {
         val gjeldendeKravreferanser = kravGrunnlag.gjeldendeRelevanteKrav().map { it.referanse }
 
         return gjeldendeVurderinger()
@@ -39,13 +40,22 @@ data class StønadsperiodeVurdering(
     val startDato: LocalDate,
 ) : VurderingForKrav {
     init {
+
+        /// harGjenværendeKvote | harHattOrdinærSiste52Uker
+        /// true                                | true                                              | GJENINNTREKDEN/GJENOPPTAK
+        /// true                                | false                                             | NY_STØNADSPERIODE
+        /// false                                | true                                             | NY_STØNADSPERIODE
+        /// false                                | false                                             | NY_STØNADSPERIODE
+
+
         when (relevantKravType) {
             RelevantKravType.NY_STØNADSPERIODE -> require(
-                !harGjenværendeKvote && !harHattOrdinærSiste52Uker
+                !(harGjenværendeKvote && harHattOrdinærSiste52Uker)
             )
 
-            RelevantKravType.GJENOPPTAK_ETTER_STANS, RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> require(
-                harGjenværendeKvote || harHattOrdinærSiste52Uker
+            is RelevantKravType.GJENOPPTAK_ETTER_STANS,
+            RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> require(
+                harGjenværendeKvote && harHattOrdinærSiste52Uker
             )
 
             RelevantKravType.AVSLAG -> {}
@@ -53,9 +63,13 @@ data class StønadsperiodeVurdering(
     }
 }
 
-enum class RelevantKravType {
-    GJENOPPTAK_ETTER_STANS,
-    GJENINNTREDEN_ETTER_OPPHØR,
-    NY_STØNADSPERIODE,
-    AVSLAG
+sealed interface RelevantKravType {
+    data class GJENOPPTAK_ETTER_STANS(
+        val gjennopptakEtter: List<Avslagsårsak>,
+    ): RelevantKravType
+
+    data object GJENINNTREDEN_ETTER_OPPHØR: RelevantKravType
+    data object NY_STØNADSPERIODE: RelevantKravType
+    data object AVSLAG: RelevantKravType
 }
+

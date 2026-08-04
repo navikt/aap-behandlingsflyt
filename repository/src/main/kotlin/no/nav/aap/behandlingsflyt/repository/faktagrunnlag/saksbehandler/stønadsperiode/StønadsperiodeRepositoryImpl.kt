@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
@@ -70,6 +72,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 v.har_hatt_ordinar_siste_52_uker    AS v_har_hatt_ordinar_siste_52_uker,
                 v.har_gjenvaerende_kvote            AS v_har_gjenvaerende_kvote,
                 v.relevant_krav_type                AS v_relevant_krav_type,
+                v.avslagsaarsaker                   AS v_avslagsaarsaker,
                 v.vurdert_i_behandling              AS v_vurdert_i_behandling,
                 v.vurdert_tidspunkt                 AS v_vurdert_tidspunkt,
                 v.vurdert_av                        AS v_vurdert_av,
@@ -87,7 +90,16 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                         begrunnelse = it.getString("v_begrunnelse"),
                         harHattOrdinærSiste52Uker = it.getBoolean("v_har_hatt_ordinar_siste_52_uker"),
                         harGjenværendeKvote = it.getBoolean("v_har_gjenvaerende_kvote"),
-                        relevantKravType = it.getEnum("v_relevant_krav_type"),
+                        relevantKravType = when (val kravtype = it.getString("v_relevant_krav_type")) {
+                            "GJENOPPTAK_ETTER_STANS" -> RelevantKravType.GJENOPPTAK_ETTER_STANS(
+                                it.getArray("v_avslagsaarsaker", String::class).map(Avslagsårsak::valueOf)
+                            )
+
+                            "GJENINNTREDEN_ETTER_OPPHØR" -> RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR
+                            "NY_STØNADSPERIODE" -> RelevantKravType.NY_STØNADSPERIODE
+                            "AVSLAG" -> RelevantKravType.AVSLAG
+                            else -> error("ukjent kravtype $kravtype")
+                        },
                         vurdertIBehandling = BehandlingId(it.getLong("v_vurdert_i_behandling")),
                         opprettet = it.getInstant("v_vurdert_tidspunkt"),
                         vurdertAv = it.getBruker("v_vurdert_av"),
@@ -180,8 +192,8 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
 
         val query = """
                 INSERT INTO stonadsperiode_vurdering 
-                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, avslagsaarsaker, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -190,12 +202,30 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 setString(2, vurdering.begrunnelse)
                 setBoolean(3, vurdering.harHattOrdinærSiste52Uker)
                 setBoolean(4, vurdering.harGjenværendeKvote)
-                setEnumName(5, vurdering.relevantKravType)
-                setLong(6, vurdering.vurdertIBehandling.toLong())
-                setInstant(7, vurdering.opprettet)
-                setLong(8, vurderingerId)
-                setBruker(9, vurdering.vurdertAv)
-                setLocalDate(10, vurdering.startDato)
+                when (val kravType = vurdering.relevantKravType) {
+                    RelevantKravType.AVSLAG -> {
+                        setString(5, "AVSLAG")
+                        setArray(6, emptyList())
+                    }
+                    RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> {
+                        setString(5, "GJENINNTREDEN_ETTER_OPPHØR")
+                        setArray(6, emptyList())
+                    }
+                    is RelevantKravType.GJENOPPTAK_ETTER_STANS -> {
+                        setString(5, "GJENOPPTAK_ETTER_STANS")
+                        setArray(6, kravType.gjennopptakEtter.map(Avslagsårsak::toString))
+                    }
+                    RelevantKravType.NY_STØNADSPERIODE -> {
+                        setString(5, "NY_STØNADSPERIODE")
+                        setArray(6, emptyList())
+                    }
+                }
+
+                setLong(7, vurdering.vurdertIBehandling.toLong())
+                setInstant(8, vurdering.opprettet)
+                setLong(9, vurderingerId)
+                setBruker(10, vurdering.vurdertAv)
+                setLocalDate(11, vurdering.startDato)
             }
         }
 
