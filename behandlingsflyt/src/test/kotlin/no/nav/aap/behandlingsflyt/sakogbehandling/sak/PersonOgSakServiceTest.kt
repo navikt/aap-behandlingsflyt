@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakOppsummering
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import io.mockk.Called
 import io.mockk.checkUnnecessaryStub
 import io.mockk.clearMocks
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -185,7 +188,8 @@ class PersonOgSakServiceTest {
                     pdlGateway,
                     apiInternGateway,
                     repositoryProvider.provide<PersonRepository>(),
-                    repositoryProvider.provide<SakRepository>()
+                    repositoryProvider.provide<SakRepository>(),
+                    repositoryProvider.provide<ArenaMigreringRepository>()
                 )
 
                 val opprinneligSak = service.finnEllerOpprett(ident, LocalDate.now())
@@ -230,7 +234,8 @@ class PersonOgSakServiceTest {
                     pdlGateway,
                     apiInternGateway,
                     repositoryProvider.provide<PersonRepository>(),
-                    sakRepository
+                    sakRepository,
+                    repositoryProvider.provide<ArenaMigreringRepository>()
                 )
 
                 val opprinneligSak = service.finnEllerOpprett(ident, søknadsdato)
@@ -283,7 +288,8 @@ class PersonOgSakServiceTest {
                     pdlGateway,
                     apiInternGateway,
                     repositoryProvider.provide<PersonRepository>(),
-                    sakRepository
+                    sakRepository,
+                    repositoryProvider.provide<ArenaMigreringRepository>()
                 )
 
                 val opprinneligSak = service.finnEllerOpprett(ident, søknadsdato)
@@ -366,7 +372,8 @@ class PersonOgSakServiceTest {
                         pdlGateway,
                         apiInternGateway,
                         repositoryProvider.provide<PersonRepository>(),
-                        repositoryProvider.provide<SakRepository>()
+                        repositoryProvider.provide<SakRepository>(),
+                        repositoryProvider.provide<ArenaMigreringRepository>()
                     ).finnSakerFor(ident)
                 }
             }
@@ -406,13 +413,70 @@ class PersonOgSakServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("finnArenasakForBruker")
+    inner class FinnArenasakForBrukerTest {
+
+        private val arenaSak = ArenaSakOppsummering(
+            sakId = "123",
+            lopenummer = 1,
+            aar = 2024,
+            antallVedtak = 1,
+            statuskode = "AKTIV",
+            statusnavn = "Aktiv",
+            sakstype = "AAP",
+            regDato = LocalDate.of(2024, 1, 1),
+            avsluttetDato = null,
+        )
+
+        @Test
+        fun `returnerer arenasak når saksnummer matcher`() {
+            val ident = ident()
+            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(listOf(arenaSak))
+
+            val result = dataSource.transaction { connection ->
+                initPersonOgSakService(connection).finnArenasakForBruker(ident, "2024-1")
+            }
+
+            assertThat(result).isEqualTo(arenaSak)
+            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
+        }
+
+        @Test
+        fun `returnerer null når sak med gitt saksnummer ikke finnes`() {
+            val ident = ident()
+            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(listOf(arenaSak))
+
+            val result = dataSource.transaction { connection ->
+                initPersonOgSakService(connection).finnArenasakForBruker(ident, "2023-5")
+            }
+
+            assertThat(result).isNull()
+            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
+        }
+
+        @Test
+        fun `returnerer null når listen er tom`() {
+            val ident = ident()
+            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(emptyList())
+
+            val result = dataSource.transaction { connection ->
+                initPersonOgSakService(connection).finnArenasakForBruker(ident, "2024-1")
+            }
+
+            assertThat(result).isNull()
+            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
+        }
+    }
+
     private fun initPersonOgSakService(connection: DBConnection): PersonOgSakService {
         val repositoryProvider = postgresRepositoryRegistry.provider(connection)
         val service = PersonOgSakService(
             pdlGateway,
             apiInternGateway,
             repositoryProvider.provide<PersonRepository>(),
-            repositoryProvider.provide<SakRepository>()
+            repositoryProvider.provide<SakRepository>(),
+            repositoryProvider.provide<ArenaMigreringRepository>()
         )
         return service
     }

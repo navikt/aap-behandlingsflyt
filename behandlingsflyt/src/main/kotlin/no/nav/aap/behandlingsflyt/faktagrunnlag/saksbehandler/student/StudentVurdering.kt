@@ -20,7 +20,7 @@ data class StudentVurdering(
     val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
     val vurdertIBehandling: BehandlingId,
-    val diagnose: Diagnose?
+    val diagnose: Diagnose? = null,
 ) {
     fun erOppfylt(): Boolean {
         return harAvbruttStudie &&
@@ -41,9 +41,6 @@ data class PeriodisertStudentDto(
     val harBehovForBehandling: Boolean?,
     val avbruttStudieDato: LocalDate?,
     val avbruddMerEnn6Måneder: Boolean?,
-    val kodeverk: String? = null,
-    val hoveddiagnose: String? = null,
-    val bidiagnoser: List<String>? = emptyList(),
 ) : LøsningForPeriode {
     fun tilStudentVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): StudentVurdering {
         return StudentVurdering(
@@ -59,13 +56,6 @@ data class PeriodisertStudentDto(
             vurdertAv = bruker,
             vurdertTidspunkt = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling,
-            diagnose = kodeverk?.let {
-                Diagnose(
-                    kodeverk = it,
-                    hoveddiagnose = hoveddiagnose,
-                    bidiagnoser = bidiagnoser
-                )
-            }
         )
     }
 }
