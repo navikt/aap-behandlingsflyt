@@ -367,6 +367,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.OPPHOLDSKRAV,
+                    Vurderingsbehov.AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
@@ -400,6 +401,7 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                     Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+                    Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 ),
