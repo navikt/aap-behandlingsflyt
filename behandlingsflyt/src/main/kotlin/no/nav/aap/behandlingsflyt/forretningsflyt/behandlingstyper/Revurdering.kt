@@ -82,6 +82,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.migrering.AvklarMigreringsdatoSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 
 object Revurdering : BehandlingType {
@@ -91,6 +92,11 @@ object Revurdering : BehandlingType {
                 steg = StartBehandlingSteg,
                 informasjonskrav = listOf(SøknadInformasjonskrav, BarnInformasjonskrav),  // TODO: Mulig vi ønsker å endre disse ifb krav?
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
+            )
+            .medSteg(
+                steg = AvklarMigreringsdatoSteg,
+                informasjonskrav = emptyList(),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MIGRERING_FRA_ARENA)
             )
             .medSteg(
                 steg = KravSteg,
