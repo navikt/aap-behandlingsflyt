@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryInntektGrunnlagRepository
@@ -94,6 +95,7 @@ class InntektInformasjonskravTest {
         inntektRegisterGateway = poppGateway,
         inntektkomponentenGateway = aInntektGateway,
         tidligereVurderinger = FakeTidligereVurderinger(),
+        unleashGateway = LokalUnleash,
     )
 
     @Test
