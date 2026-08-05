@@ -108,7 +108,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Veldig relevante",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
                         relevanteYrkesskadeSaker = person.yrkesskade.map {
                             YrkesskadeSakDto(
                                 it.saksreferanse,
@@ -166,7 +165,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Veldig relevante",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
                         relevanteYrkesskadeSaker = person.yrkesskade.map {
                             YrkesskadeSakDto(
                                 it.saksreferanse,
@@ -195,7 +193,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Veldig relevante",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
                         relevanteYrkesskadeSaker = person.yrkesskade.map {
                             YrkesskadeSakDto(
                                 it.saksreferanse,
@@ -239,7 +236,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke lenger relevant, dette var feil i fgbh",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
                         relevanteYrkesskadeSaker = person.yrkesskade.map {
                             YrkesskadeSakDto(
                                 it.saksreferanse,
@@ -268,7 +264,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke lenger relevant, dette var feil i fgbh",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
                         relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
@@ -321,7 +316,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Veldig relevante",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
                         relevanteYrkesskadeSaker = person.yrkesskade.map {
                             YrkesskadeSakDto(
                                 it.saksreferanse,
@@ -447,7 +441,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke årsakssammenheng",
-                        relevanteSaker = emptyList(),
                         relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = true
@@ -536,7 +529,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Ikke årsakssammenheng",
-                        relevanteSaker = emptyList(),
                         relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = false
@@ -808,7 +800,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Alle fra Kompys er relevante, pluss at en manuell er lagt til",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse } + manuellReferanse,
                         relevanteYrkesskadeSaker = person.yrkesskade.map {
                             YrkesskadeSakDto(it.saksreferanse, null) // skadedato fra Kompys
                         } + YrkesskadeSakDto(manuellReferanse, manuellSkadedato), // manuelt registrert dato

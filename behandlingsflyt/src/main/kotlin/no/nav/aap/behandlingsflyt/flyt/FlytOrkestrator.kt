@@ -163,7 +163,11 @@ class FlytOrkestrator(
 
         log.info("Sjekker om noe skal tilbakeføres etter oppdatering av informasjonskrav eller nytt vurderingsbehov")
         val nyesteEndringForSteg = behandlingRepository.hentNyesteEndringForSteg(behandling.id)
-        val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste, behandling.vurderingsbehov(), nyesteEndringForSteg)
+        val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(
+            oppdaterFaktagrunnlagForKravliste,
+            behandling.vurderingsbehov(),
+            nyesteEndringForSteg
+        )
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(

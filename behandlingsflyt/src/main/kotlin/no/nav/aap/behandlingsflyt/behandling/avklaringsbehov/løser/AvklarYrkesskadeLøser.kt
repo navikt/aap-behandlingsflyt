@@ -29,7 +29,7 @@ class AvklarYrkesskadeLøser(
 
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
-        løsning.yrkesskadesvurdering.relevanteSaker().forEach { sak ->
+        løsning.yrkesskadesvurdering.relevanteYrkesskadeSaker.forEach { sak ->
             yrkesskadeGrunnlag?.yrkesskader?.yrkesskader?.forEach { ys ->
                 if (sak.referanse == ys.ref && ys.skadedato == null && sak.manuellYrkesskadeDato == null) {
                     throw UgyldigForespørselException("Skadedato må være satt for yrkesskade med referanse ${sak.referanse}.")
@@ -44,7 +44,7 @@ class AvklarYrkesskadeLøser(
             behandlingId = behandling.id,
             yrkesskadevurdering = Yrkesskadevurdering(
                 begrunnelse = løsning.yrkesskadesvurdering.begrunnelse,
-                relevanteSaker = løsning.yrkesskadesvurdering.relevanteSaker().map {
+                relevanteSaker = løsning.yrkesskadesvurdering.relevanteYrkesskadeSaker.map {
                     YrkesskadeSak(
                         it.referanse,
                         it.manuellYrkesskadeDato
