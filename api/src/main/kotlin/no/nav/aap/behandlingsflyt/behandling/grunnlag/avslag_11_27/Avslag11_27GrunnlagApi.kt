@@ -16,10 +16,8 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.getGrunnlag
 import java.time.ZoneId
 import javax.sql.DataSource
 
@@ -28,44 +26,43 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    route("/api/behandling/{referanse}/grunnlag/avslag-11-27").authorizedGet<BehandlingReferanse, Avslag11_27GrunnlagDto>(
-        AuthorizationParamPathConfig(
+    route("/api/behandling/{referanse}/grunnlag/avslag-11-27") {
+        getGrunnlag<BehandlingReferanse, Avslag11_27GrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-            operasjon = Operasjon.SE,
-            behandlingPathParam = BehandlingPathParam("referanse")
-        )
-    ) { req ->
-        val avslag11_27grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val avslag_11_27Repository = repositoryProvider.provide<Avslag11_27Repository>()
-            val kravRepository = repositoryProvider.provide<KravRepository>()
-            val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+            behandlingPathParam = BehandlingPathParam("referanse"),
+            påkrevdRolle = Definisjon.VURDER_AVSLAG_11_27.løsesAv
+        ) { req ->
+            val avslag11_27grunnlagDto = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val avslag_11_27Repository = repositoryProvider.provide<Avslag11_27Repository>()
+                val kravRepository = repositoryProvider.provide<KravRepository>()
+                val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
-            val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
-            val kravGrunnlag = kravRepository.hentHvisEksisterer(behandling.id)
+                val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
+                val kravGrunnlag = kravRepository.hentHvisEksisterer(behandling.id)
 
-            val kravMedDatoListe = kravGrunnlag?.gjeldendeVurderinger()
-                ?.filterIsInstance<RelevantKrav>()
-                .orEmpty()
+                val kravMedDatoListe = kravGrunnlag?.gjeldendeVurderinger()
+                    ?.filterIsInstance<RelevantKrav>()
+                    .orEmpty()
 
-            val kravListeDto = Avslag11_27KravDto.avslag11_27TilDto(kravMedDatoListe)
+                val kravListeDto = Avslag11_27KravDto.avslag11_27TilDto(kravMedDatoListe)
 
-            val alleVurderinger = avslag_11_27Repository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
+                val alleVurderinger = avslag_11_27Repository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
 
-            val nyVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.id }
+                val nyVurderinger = alleVurderinger.filter { it.vurdertIBehandling == behandling.id }
 
-            val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling != behandling.id }
+                val vedtatteVurderinger = alleVurderinger.filter { it.vurdertIBehandling != behandling.id }
 
-            Avslag11_27GrunnlagDto(
-                harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                krav = kravListeDto,
-                vurderinger = mapVurderingerTilDto(nyVurderinger, vurdertAvService),
-                vedtatteVurdering = mapVurderingerTilDto(vedtatteVurderinger, vurdertAvService)
-            )
+                Avslag11_27GrunnlagDto(
+                    harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                    krav = kravListeDto,
+                    vurderinger = mapVurderingerTilDto(nyVurderinger, vurdertAvService),
+                    vedtatteVurdering = mapVurderingerTilDto(vedtatteVurderinger, vurdertAvService)
+                )
+            }
+            respond(avslag11_27grunnlagDto)
         }
-
-        respond(avslag11_27grunnlagDto)
     }
 }
 
