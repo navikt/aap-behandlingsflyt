@@ -11,6 +11,14 @@ public enum class StegType(
         gruppe = StegGruppe.START_BEHANDLING,
         status = Status.OPPRETTET
     ),
+    AVKLAR_MIGRERINGSDATO(
+        gruppe = StegGruppe.MIGRERING,
+        status = Status.UTREDES,
+    ),
+    AVKLAR_RESTKVOTE_MIGRERING(
+        gruppe = StegGruppe.MIGRERING,
+        status = Status.UTREDES,
+    ),
     KRAV(
         gruppe = StegGruppe.KRAV,
         status = Status.UTREDES
@@ -330,16 +338,4 @@ public enum class StegType(
         status = Status.UTREDES,
         tekniskSteg = true,
     ), // Forbeholdt deklarasjon for avklaringsbehov som
-
-
-    // Migreringssteg start
-    AVKLAR_MIGRERINGSDATO(
-        gruppe = StegGruppe.MIGRERING,
-        status = Status.UTREDES,
-    ),
-    AVKLAR_RESTKVOTE_MIGRERING(
-        gruppe = StegGruppe.MIGRERING,
-        status = Status.UTREDES,
-    ),
-    // Migreringssteg slutt
 }
