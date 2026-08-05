@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 class StudentVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<StudentFaktagrunnlag> {
     companion object {
-        fun utledVarighetSluttdato(fraDato: LocalDate) = fraDato.plusMonths(6).minusDays(1)
+        fun utledVarighetSluttdato(fraDato: LocalDate): LocalDate = fraDato.plusMonths(6).minusDays(1)
     }
 
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.STUDENT)
