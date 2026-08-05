@@ -56,7 +56,7 @@ private val vilkårtypeForAvslagsårsak: Map<Avslagsårsak, Set<Vilkårtype>> = 
     .flatMap { vilkårtype -> vilkårtype.avslagsårsaker.map { it to vilkårtype } }
     .groupBy { it.first }
     .toMap()
-    .mapValues { it -> it.value.map { it.second }.toSet() }
+    .mapValues { it.value.map { it.second }.toSet() }
 
 val Avslagsårsak.vilkårstyper: Set<Vilkårtype>
     get() = vilkårtypeForAvslagsårsak[this].orEmpty()
