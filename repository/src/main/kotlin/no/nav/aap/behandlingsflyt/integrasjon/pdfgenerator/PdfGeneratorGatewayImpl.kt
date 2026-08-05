@@ -1,7 +1,7 @@
-package no.nav.aap.behandlingsflyt.integrasjon.pdfgen
+package no.nav.aap.behandlingsflyt.integrasjon.pdfgenerator
 
-import no.nav.aap.behandlingsflyt.behandling.meldekort.MeldekortPdfRequest
-import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfGeneratorGateway
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.Dokument
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
@@ -22,10 +22,8 @@ class PdfGeneratorGatewayImpl : PdfGeneratorGateway {
         prometheus = prometheus,
     )
 
-
-/*
-    override fun genererVurderingerOppsummeringDokument(request: MeldekortPdfRequest): ByteArray {
-        val uri = baseUri.resolve("/api/v1/genpdf/aap-saksbehandling-meldekort/meldekort")
+    override fun genererVurderingerOppsummeringDokument(request: Dokument): ByteArray {
+        val uri = baseUri.resolve("/api/v1/genpdf/innsikt/vurderinger")
         val httpRequest = PostRequest(
             body = request,
             additionalHeaders = listOf(
@@ -36,7 +34,7 @@ class PdfGeneratorGatewayImpl : PdfGeneratorGateway {
         return requireNotNull(
             client.post(uri, httpRequest) { body, _ -> body.readBytes() }
         )
-    }*/
+    }
 
     companion object : Factory<PdfGeneratorGateway> {
         override fun konstruer(): PdfGeneratorGateway = PdfGeneratorGatewayImpl()
