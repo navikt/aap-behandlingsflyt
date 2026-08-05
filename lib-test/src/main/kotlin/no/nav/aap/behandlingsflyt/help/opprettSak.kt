@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMigreringRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -24,6 +25,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
+import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
 import java.time.LocalDate
 
 fun opprettSak(connection: DBConnection, søknadsdato: LocalDate): Sak {
@@ -35,7 +37,8 @@ fun opprettSak(connection: DBConnection, ident: Ident, søknadsdato: LocalDate):
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
         PersonRepositoryImpl(connection),
-        SakRepositoryImpl(connection)
+        SakRepositoryImpl(connection),
+        ArenaMigreringRepositoryImpl(connection)
     ).finnEllerOpprett(ident, søknadsdato)
 }
 
@@ -44,7 +47,8 @@ fun opprettInMemorySak(søknadsdato: LocalDate = LocalDate.now(), ident: Ident =
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
         InMemoryPersonRepository,
-        InMemorySakRepository
+        InMemorySakRepository,
+        InMemoryArenaMigreringRepository
     ).finnEllerOpprett(ident, søknadsdato)
 }
 

@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
@@ -28,13 +28,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.YearMonth
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.*
 
 
 class LovvalgInformasjonskrav internal constructor(
@@ -45,7 +46,8 @@ class LovvalgInformasjonskrav internal constructor(
     private val medlemskapGateway: MedlemskapGateway,
     private val arbeidsForholdGateway: ArbeidsforholdGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
-    private val inntektskomponentenGateway: InntektkomponentenGateway
+    private val inntektskomponentenGateway: InntektkomponentenGateway,
+    private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<LovvalgInformasjonskrav.LovvalgInput, LovvalgInformasjonskrav.LovvalgRegisterData> {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -68,8 +70,14 @@ class LovvalgInformasjonskrav internal constructor(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering()
+        val fellesRegler = kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+
+        if (fellesRegler && unleashGateway.isEnabled(BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag) && oppdatert != null) {
+            return false
+        }
+
+        return fellesRegler
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
@@ -209,6 +217,7 @@ class LovvalgInformasjonskrav internal constructor(
                 arbeidsForholdGateway = gatewayProvider.provide(),
                 enhetsregisteretGateway = gatewayProvider.provide(),
                 inntektskomponentenGateway = gatewayProvider.provide(),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
     }

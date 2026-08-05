@@ -68,10 +68,7 @@ class HåndterKlageService(
 
                 if (behandling.status().erÅpen()) {
                     val behandlingSkrivelås = låsRepository.låsBehandling(behandling.id)
-                    prosesserBehandling.triggProsesserBehandling(
-                        behandling,
-                        vurderingsbehov = vurderingsbehov.map { it.type }
-                    )
+                    prosesserBehandling.triggProsesserBehandling(behandling)
                     låsRepository.verifiserSkrivelås(behandlingSkrivelås)
                 }
                 mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
@@ -137,10 +134,7 @@ class HåndterKlageService(
             else -> throw IllegalStateException("Forventet ordinær behandling ved omgjøring etter klage")
         }
 
-        prosesserBehandling.triggProsesserBehandling(
-            opprettetBehandling,
-            vurderingsbehov = vurderingsbehovForYtelsesbehandling.map { it.type }
-        )
+        prosesserBehandling.triggProsesserBehandling(opprettetBehandling)
 
         if (behandlingSkrivelås != null) {
             låsRepository.verifiserSkrivelås(behandlingSkrivelås)

@@ -608,7 +608,6 @@ open class AbstraktFlytOrkestratorTest(
             AvklarManuellInntektVurderingLøsning(
                 manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                     begrunnelse = "Mangler ligning",
-                    belop = null,
                     vurderinger = (2022..2025).map {
                         ÅrsVurdering(
                             beløp = BigDecimal(inntektPerÅr),
@@ -1155,7 +1154,6 @@ open class AbstraktFlytOrkestratorTest(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "",
-                        relevanteSaker = emptyList(),
                         relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = true
@@ -1200,7 +1198,6 @@ open class AbstraktFlytOrkestratorTest(
             AvklarYrkesskadeLøsning(
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "begrunnelse",
-                    relevanteSaker = yrkesskader.map { it.saksreferanse },
                     relevanteYrkesskadeSaker = yrkesskader.map {
                         YrkesskadeSakDto(
                             it.saksreferanse,
@@ -1344,7 +1341,6 @@ open class AbstraktFlytOrkestratorTest(
             AvklarYrkesskadeLøsning(
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "Veldig relevante",
-                    relevanteSaker = person.yrkesskade.map { it.saksreferanse },
                     relevanteYrkesskadeSaker = person.yrkesskade.map {
                         YrkesskadeSakDto(
                             it.saksreferanse,
@@ -1569,5 +1565,4 @@ open class AbstraktFlytOrkestratorTest(
             .map { it.status() })
             .containsExactly(forventetStatus)
     }
-
 }

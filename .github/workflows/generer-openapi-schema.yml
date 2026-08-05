@@ -11,6 +11,8 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
+        env:
+            TZ: Europe/Oslo
         permissions:
             contents: write
             id-token: write
@@ -20,7 +22,7 @@ jobs:
             deployments: write
         steps:
             -   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-            -   uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+            -   uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
                 with:
                     java-version: 25
                     distribution: 'temurin'
@@ -60,5 +62,26 @@ jobs:
                             inputs: {
                                 'artifactId': '${{steps.artifact-upload-step.outputs.artifact-id}}',
                                 'appNavn': 'behandlingsflyt'
+                            }
+                        })
+            # Varsler aap-saksbehandling om at openapi.json er oppdatert, slik at
+            # frontend-typene kan bli regenerert automatisk (yarn gentypes).
+            - uses: navikt/github-app-token-generator@b96ff604b2300989cd1105e3fad09199fca56681 # v1.2.1
+              id: get-saksbehandling-token
+              with:
+                  app-id: "${{ secrets.TEAM_AAP_GITHUB_APP_ID }}"
+                  private-key: "${{ secrets.TEAM_AAP_GITHUB_APP_PRIVATE_KEY }}"
+                  repo: navikt/aap-saksbehandling
+            -   uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+                with:
+                    github-token: ${{ steps.get-saksbehandling-token.outputs.token }}
+                    script: |
+                        await github.rest.actions.createWorkflowDispatch({
+                            owner: 'navikt',
+                            repo: 'aap-saksbehandling',
+                            workflow_id: 'oppdater-openapi-typer.yml',
+                            ref: 'main',
+                            inputs: {
+                                'run-id': '${{ github.run_id }}'
                             }
                         })

@@ -34,15 +34,13 @@ class AvklarYrkesskadeLøsning(
 
 data class YrkesskadevurderingDto(
     val begrunnelse: String,
-    @Deprecated("Bruk relevanteYrkesskadeSaker")
-    val relevanteSaker: List<String>,
     val relevanteYrkesskadeSaker: List<YrkesskadeSakDto>,
     val andelAvNedsettelsen: Int?,
     val erÅrsakssammenheng: Boolean
 ) {
     fun relevanteSaker(): List<YrkesskadeSakDto> {
         // Fjern denne når relevanteSaker er fjernet
-        return relevanteYrkesskadeSaker + relevanteSaker.map { YrkesskadeSakDto(it, null) }
+        return relevanteYrkesskadeSaker
             .filter { it.referanse !in relevanteYrkesskadeSaker.map { sak -> sak.referanse } }
     }
 }
