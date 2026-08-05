@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.gosys.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdfgen.PdfgenGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.pdfgen.PdfGeneratorGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -79,5 +80,6 @@ fun defaultGatewayProvider(utvidelser: GatewayRegistry.() -> Unit = {}) = create
     register<BehandlingHendelseServiceFactory>()
     register<DokarkivGatewayImpl>()
     register<PdfgenGatewayImpl>()
+    register<PdfGeneratorGatewayImpl>()
     utvidelser()
 }
