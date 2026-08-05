@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.util.*
 
@@ -15,7 +17,7 @@ import java.util.*
  */
 class BehandlingFlyt private constructor(
     private val flyt: List<Behandlingsflytsteg>,
-    private val vurderingsbehov: Map<Vurderingsbehov, List<StegType>>,
+    private val stegForVurderingsbehov: Map<Vurderingsbehov, List<StegType>>,
     private val parent: BehandlingFlyt?
 ) {
     private var aktivtSteg: Behandlingsflytsteg? = flyt.firstOrNull()
@@ -35,13 +37,13 @@ class BehandlingFlyt private constructor(
 
     constructor(flyt: List<Behandlingsflytsteg>, vurderingsbehov: Map<Vurderingsbehov, List<StegType>>) : this(
         flyt = flyt,
-        vurderingsbehov = vurderingsbehov,
+        stegForVurderingsbehov = vurderingsbehov,
         parent = null
     )
 
     constructor(flyt: List<Behandlingsflytsteg>) : this(
         flyt = flyt,
-        vurderingsbehov = emptyMap(),
+        stegForVurderingsbehov = emptyMap(),
         parent = null
     )
 
@@ -196,24 +198,47 @@ class BehandlingFlyt private constructor(
      *
      */
     fun tilbakeflytEtterEndringer(
-        oppdaterteGrunnlagstype: List<Informasjonskravkonstruktør>,
-        nyeVurderingsbehov: List<Vurderingsbehov> = emptyList()
+        oppdaterteInformasjonskrav: List<Informasjonskravkonstruktør>,
+        vurderingsbehovPåBehandlingen: List<VurderingsbehovMedPeriode>,
+        nyesteStegEndring: List<StegTilstand>,
     ): BehandlingFlyt {
-        val tidligsteStegForVurderingsbehov =
-            nyeVurderingsbehov.flatMap { vurderingsbehov[it].orEmpty() }
-                // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
-                .minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
-                .minWithOrNull(stegComparator)
-
-        val skalTilSteg =
-            flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }
-                .map { it.steg.type() }
-                .minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
-                .minWithOrNull(stegComparator)
-
-        val tidligsteSteg = listOfNotNull(tidligsteStegForVurderingsbehov, skalTilSteg).minWithOrNull(stegComparator)
+        val tidligsteSteg = listOfNotNull(
+            tidligsteStegForNyeVurderingsbehov(vurderingsbehovPåBehandlingen, nyesteStegEndring),
+            tidligsteStegForEndretInformasjonskrav(oppdaterteInformasjonskrav),
+        ).minWithOrNull(stegComparator)
 
         return utledTilbakeflytTilSteg(tidligsteSteg)
+    }
+
+    fun tilbakeflytEtterEndretInformasjonskrav(
+        oppdaterteInformasjonskrav: List<Informasjonskravkonstruktør>
+    ): BehandlingFlyt {
+        return utledTilbakeflytTilSteg(tidligsteStegForEndretInformasjonskrav(oppdaterteInformasjonskrav))
+    }
+
+    private fun tidligsteStegForEndretInformasjonskrav(oppdaterteInformasjonskrav: List<Informasjonskravkonstruktør>): StegType? {
+        return flyt.filter { it.kravliste.any { at -> oppdaterteInformasjonskrav.contains(at) } }
+            .map { it.steg.type() }
+            .minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
+            .minWithOrNull(stegComparator)
+    }
+
+    private fun tidligsteStegForNyeVurderingsbehov(
+        vurderingsbehovPåBehandlingen: List<VurderingsbehovMedPeriode>,
+        nyesteStegEndring: List<StegTilstand>
+    ): StegType? {
+        val stegSomKjøresPåNytt = vurderingsbehovPåBehandlingen.flatMap { vurderingsbehov ->
+            stegForVurderingsbehov[vurderingsbehov.type].orEmpty()
+                .filter { steg ->
+                    val sistKjørt = nyesteStegEndring.firstOrNull { endring -> endring.steg() == steg }?.tidspunkt()
+                    sistKjørt != null && vurderingsbehov.oppdatertTid.isAfter(sistKjørt)
+                }
+        }
+
+        return stegSomKjøresPåNytt
+            // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
+            .minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
+            .minWithOrNull(stegComparator)
     }
 
     private fun utledTilbakeflytTilSteg(skalTilSteg: StegType?): BehandlingFlyt {
@@ -221,7 +246,8 @@ class BehandlingFlyt private constructor(
             return BehandlingFlyt(emptyList())
         }
 
-        val returflyt = flyt.slice(flyt.indexOfFirst { it.steg.type() == skalTilSteg }..flyt.indexOf(this.aktivtSteg))
+        val returflyt =
+            flyt.slice(flyt.indexOfFirst { it.steg.type() == skalTilSteg }..flyt.indexOf(this.aktivtSteg))
 
         if (returflyt.size <= 1) {
             return BehandlingFlyt(emptyList())
@@ -229,7 +255,7 @@ class BehandlingFlyt private constructor(
 
         return BehandlingFlyt(
             flyt = returflyt.reversed(),
-            vurderingsbehov = emptyMap(),
+            stegForVurderingsbehov = emptyMap(),
             parent = this
         )
     }
@@ -257,7 +283,7 @@ class BehandlingFlyt private constructor(
 
     fun vurderingsbehovRelevantForSteg(stegType: StegType): Set<Vurderingsbehov> {
         return if (steg(stegType).oppdaterFaktagrunnlag) {
-            vurderingsbehov.filter { entry -> entry.value.contains(stegType) }.keys
+            stegForVurderingsbehov.filter { entry -> entry.value.contains(stegType) }.keys
         } else {
             Vurderingsbehov.entries.toSet()
         }
@@ -268,7 +294,7 @@ class BehandlingFlyt private constructor(
     }
 
     override fun toString(): String {
-        return "BehandlingFlyt(aktivtSteg=$aktivtSteg, flyt=$flyt, vurderingsbehov=$vurderingsbehov, parent=$parent)"
+        return "BehandlingFlyt(aktivtSteg=$aktivtSteg, flyt=$flyt, vurderingsbehov=$stegForVurderingsbehov, parent=$parent)"
     }
 
     fun alleInformasjonskravForÅpneSteg(): List<Informasjonskravkonstruktør> {

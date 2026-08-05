@@ -9,6 +9,7 @@ import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
@@ -27,6 +28,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SamIdOgTpnr
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.StansEllerOpphørEnumDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisperiodeDatadelingDTO
@@ -38,6 +40,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerRequest
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -117,7 +121,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
         sak: Sak,
         behandling: Behandling,
         vedtakId: Long,
-        samId: String?,
+        samId: List<SamIdOgTpNr>,
         tilkjent: List<TilkjentYtelsePeriode>,
         beregningsgrunnlag: BigDecimal?,
         vedtaksDato: LocalDate,
@@ -170,7 +174,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     muligMaksdato = muligMaksdato,
                     vedtakId = vedtakId,
-                    samId = samId,
+                    samIdOgTpr = samId.map { SamIdOgTpnr(it.samId.toString(), it.tpNr?.toString()) },
                     stansOpphørVurdering = stansOpphørGrunnlag.orEmpty().map {
                         GjeldendeStansEllerOpphørDTO(
                             fom = it.fom,
@@ -280,6 +284,16 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
         requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
         return ArenaStatusResponse(remoteResponse.eksisterer)
+    }
+
+    override fun hentSakerForPerson(personidentifikator: String): ArenaSakerResponse {
+        val response: ArenaSakerResponse? = restClient.post(
+            uri.resolve("/arena/person/saker"),
+            PostRequest(body = ArenaSakerRequest(personidentifikator)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /arena/person/saker" }
+        return response
     }
 
     override fun oppdaterIdenter(

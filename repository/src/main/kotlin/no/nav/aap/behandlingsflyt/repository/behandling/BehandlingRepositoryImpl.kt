@@ -22,7 +22,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Query
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDateTime
@@ -340,6 +339,17 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return connection.queryList(query, setStegtilstand(behandlingId))
     }
 
+    override fun hentNyesteEndringForSteg(behandlingId: BehandlingId): List<StegTilstand> {
+        val query = """
+            SELECT DISTINCT ON (steg) *
+            FROM STEG_HISTORIKK
+            WHERE behandling_id = ?
+            ORDER BY steg, opprettet_tid DESC;
+            """.trimIndent()
+
+        return connection.queryList(query, setStegtilstand(behandlingId))
+    }
+
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         val query = """
             SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
@@ -579,31 +589,5 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Trengs ikke implementeres
-    }
-
-    fun hentKandidatForStansOpphørBackfill(behandlingId: Long): Behandling? {
-        return connection.queryFirstOrNull("""
-            select b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,
-                   vb_agg.vb_json
-            from behandling b
-            left join steg_historikk sh on sh.behandling_id = b.id and sh.aktiv
-            left join lateral (
-                select json_agg(json_build_object('aarsak', aarsak, 'tid', COALESCE(oppdatert_tid, opprettet_tid)) ORDER BY opprettet_tid DESC) AS vb_json
-                from vurderingsbehov
-                where behandling_id = b.id
-            ) vb_agg on true
-            where
-            b.id = ?
-            and b.type IN ('ae0034', 'ae0028')
-            and (b.type <> 'ae0034' or b.status <> 'OPPRETTET')
-            ${if (Miljø.erDev()) "and b.opprettet_tid >= '2025-04-01'::date" else ""}
-            """.trimIndent()) {
-            setParams {
-                setLong(1, behandlingId)
-            }
-            setRowMapper {
-                mapBehandling(it)
-            }
-        }
     }
 }

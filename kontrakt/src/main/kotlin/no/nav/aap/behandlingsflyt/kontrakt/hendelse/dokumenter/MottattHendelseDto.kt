@@ -140,6 +140,12 @@ public class Innsending(
                 requireNotNull(melding) {"Melding fra uførevedtakhendelse kan ikke være null"}
                 require(melding is UførevedtakV0)
             }
+
+            InnsendingType.MIGRERING_FRA_ARENA -> {
+                require(referanse.type == InnsendingReferanse.Type.MIGRERING_FRA_ARENA)
+                requireNotNull(melding) { "Melding for migrering fra Arena kan ikke være null" }
+                require(melding is MigreringFraArenaV0)
+            }
         }
     }
 }

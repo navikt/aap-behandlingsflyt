@@ -16,8 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -82,7 +80,6 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         alleRelevanteÅr = relevanteÅr.map { it.value },
                         manglerInntektForÅr = manglerInntekterFor.map { it.value }.toList(),
                         manglendeMånedsInntekter = utledManglendeMånedsperioderForSplittÅr(
-                            unleashGateway = gatewayProvider.provide(),
                             ytterligereNedsattDato = beregningVurderingRepository.hentHvisEksisterer(behandling.id)?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato,
                             uføregrader = uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty(),
                             inntektGrunnlag = inntektGrunnlag,
@@ -103,12 +100,10 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
  * saksbehandler må legge inn beregnet PGI per delperiode.
  */
 private fun utledManglendeMånedsperioderForSplittÅr(
-    unleashGateway: UnleashGateway,
     ytterligereNedsattDato: LocalDate?,
     uføregrader: Set<Uføre>,
     inntektGrunnlag: InntektGrunnlag?,
 ): List<MånedsperiodeData> {
-    if (!unleashGateway.isEnabled(BehandlingsflytFeature.ManuellInntektDelvisUfore)) return emptyList()
     if (ytterligereNedsattDato == null || uføregrader.isEmpty() || inntektGrunnlag == null) return emptyList()
 
     return UføreInntektUtleder.finnÅrSomKreverManuellPeriodeinntekt(

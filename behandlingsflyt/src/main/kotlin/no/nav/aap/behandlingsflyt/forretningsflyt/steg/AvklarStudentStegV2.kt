@@ -62,7 +62,7 @@ class AvklarStudentStegV2 private constructor(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MIGERING_FRA_ARENA -> {
                 vurderStudentvilkår(kontekst)
             }
 

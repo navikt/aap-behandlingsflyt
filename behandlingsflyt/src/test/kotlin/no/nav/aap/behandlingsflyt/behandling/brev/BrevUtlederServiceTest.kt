@@ -1500,7 +1500,6 @@ class BrevUtlederServiceTest {
 
 object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
-        BehandlingsflytFeature.SamordningFaktagrunnlagBrev,
-        BehandlingsflytFeature.AutomatiskStans1118,
+        BehandlingsflytFeature.SamordningFaktagrunnlagBrev
     )
 )

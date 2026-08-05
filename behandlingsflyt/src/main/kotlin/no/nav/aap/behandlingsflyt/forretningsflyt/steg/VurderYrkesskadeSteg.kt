@@ -42,7 +42,7 @@ class VurderYrkesskadeSteg private constructor(
                     kontekst, tidligereVurderinger, yrkesskader
                 )
             },
-            erTilstrekkeligVurdert = { sykdomsgrunnlag != null && sykdomsgrunnlag.yrkesskadevurdering != null },
+            erTilstrekkeligVurdert = { sykdomsgrunnlag?.yrkesskadevurdering != null },
             tilbakestillGrunnlag = {
                 val forrigeGrunnlag =
                     kontekst.forrigeBehandlingId?.let { sykdomRepository.hentHvisEksisterer(it) }?.yrkesskadevurdering
@@ -60,7 +60,7 @@ class VurderYrkesskadeSteg private constructor(
         yrkesskadeGrunnlag: YrkesskadeGrunnlag?
     ): Boolean {
         return when (flytKontekstMedPerioder.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGERING_FRA_ARENA -> {
 
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
                     flytKontekstMedPerioder, type()

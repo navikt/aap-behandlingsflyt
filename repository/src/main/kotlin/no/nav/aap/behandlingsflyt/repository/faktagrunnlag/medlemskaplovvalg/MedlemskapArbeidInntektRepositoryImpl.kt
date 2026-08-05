@@ -343,8 +343,9 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val query = """
             SELECT *
             FROM OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG grunnlag
-            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
+            JOIN BEHANDLING ON grunnlag.BEHANDLING_ID = behandling.ID
+            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON AR.BEHANDLING_ID = BEHANDLING.ID
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ? AND AR.BEHANDLING_ID IS NULL
             ORDER BY behandling.OPPRETTET_TID DESC
             LIMIT 1
         """.trimIndent()

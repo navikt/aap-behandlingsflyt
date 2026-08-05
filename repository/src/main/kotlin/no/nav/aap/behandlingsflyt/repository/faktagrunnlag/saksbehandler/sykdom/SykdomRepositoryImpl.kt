@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -452,39 +451,16 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return requireNotNull(hentHvisEksisterer(behandlingId)) { "Fant ikke sykdomsgrunnlag for behandling med ID $behandlingId." }
     }
 
-    override fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering> {
-        val query = """
-            SELECT DISTINCT on(vurdering.opprettet_tid) vurdering.*
-            FROM SYKDOM_GRUNNLAG grunnlag
-            INNER JOIN SYKDOM_VURDERINGER vurderinger ON grunnlag.SYKDOM_VURDERINGER_ID = vurderinger.ID
-            INNER JOIN SYKDOM_VURDERING vurdering ON vurdering.SYKDOM_VURDERINGER_ID = vurderinger.ID
-            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON behandling.ID = AR.BEHANDLING_ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?            
-                AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where a.id = ?)
-                AND AR.BEHANDLING_ID IS NULL
-            """.trimIndent()
-
-        val rader = connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper(::mapSykdomsvurderingRad)
-        }
-        return mapSykdomsvurderingRader(rader)
-    }
-
     override fun hentSykdomsvurderingerPåTidspunkt(
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime
     ): List<Sykdomsvurdering>? {
         val query = """
-            SELECT sg.sykdom_vurderinger_id
-            FROM sykdom_grunnlag sg
-            WHERE sg.behandling_id = ?
-                AND sg.opprettet_tid <= ?
-            ORDER BY sg.opprettet_tid DESC
+            SELECT sv.sykdom_vurderinger_id
+            FROM sykdom_vurdering sv
+            WHERE sv.vurdert_i_behandling = ?
+                AND sv.opprettet_tid <= ?
+            ORDER BY sv.opprettet_tid DESC
             LIMIT 1
         """.trimIndent()
 

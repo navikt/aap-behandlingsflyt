@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.behandling
+package no.nav.aap.behandlingsflyt.behandling.stansopphør
 
+import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -9,7 +10,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 
 class StansOpphørService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,

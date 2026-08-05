@@ -25,7 +25,8 @@ public data class InnsendingReferanse(
         FORELDREPENGEVEDTAK_HENDELSE_ID,
         UFØREVEDTAK_HENDELSE_ID,
         FAGSYSTEMINFO_BEHOV_HENDELSE_ID,
-        PDL_HENDELSE_ID
+        PDL_HENDELSE_ID,
+        MIGRERING_FRA_ARENA
     }
 
     @get:JsonIgnore

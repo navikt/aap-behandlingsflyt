@@ -232,8 +232,6 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                 AvklarSamordningGraderingLøsning(
                     VurderingerForSamordning(
                         begrunnelse = "Sykepengervurdering",
-                        maksDatoEndelig = true,
-                        fristNyRevurdering = null,
                         vurderteSamordningerData = listOf(
                             SamordningVurderingData(
                                 ytelseType = Ytelse.SYKEPENGER,

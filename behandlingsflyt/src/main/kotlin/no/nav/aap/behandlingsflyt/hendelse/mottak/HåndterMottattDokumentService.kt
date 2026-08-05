@@ -84,10 +84,7 @@ class HåndterMottattDokumentService(
             knyttDokumentTilRiktigBehandling(opprettetBehandling, sakId, referanse)
         }
 
-        prosesserBehandling.triggProsesserBehandling(
-            opprettetBehandling,
-            vurderingsbehov = vurderingsbehov.map { it.type }
-        )
+        prosesserBehandling.triggProsesserBehandling(opprettetBehandling)
 
         if (behandlingSkrivelås != null) {
             låsRepository.verifiserSkrivelås(behandlingSkrivelås)
@@ -114,8 +111,7 @@ class HåndterMottattDokumentService(
             mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
             prosesserBehandling.triggProsesserBehandling(
                 sakId,
-                behandling.id,
-                vurderingsbehov = vurderingsbehov.map { it.type }
+                behandling.id
             )
         }
     }

@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -93,30 +94,27 @@ class FlytOrkestrator(
         tilbakefør(
             kontekst = kontekst,
             behandling = behandling,
-            behandlingFlyt = behandlingFlyt.tilbakeflytEtterEndringer(endredeInformasjonskrav),
+            behandlingFlyt = behandlingFlyt.tilbakeflytEtterEndretInformasjonskrav(endredeInformasjonskrav),
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         )
     }
 
     fun forberedOgProsesserBehandling(
         behandlingId: BehandlingId,
-        triggere: List<Vurderingsbehov> = emptyList()
     ) {
         forberedOgProsesserBehandling(
             behandlingRepository.hent(behandlingId),
-            triggere,
         )
     }
 
     fun forberedOgProsesserBehandling(
         behandling: Behandling,
-        triggere: List<Vurderingsbehov> = emptyList()
     ) {
-        this.forberedBehandling(behandling.flytKontekst(), triggere)
+        this.forberedBehandling(behandling.flytKontekst())
         this.prosesserBehandling(behandling.flytKontekst())
     }
 
-    private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<Vurderingsbehov>) {
+    private fun forberedBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -163,16 +161,16 @@ class FlytOrkestrator(
                 kontekst = flytKontekstMedPeriodeService.utled(kontekst, behandling.aktivtSteg()),
             )
 
-        log.info("Sjekker om noe skal tilbakeføres etter oppdatering av informasjonskrav")
-        val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste, triggere)
+        log.info("Sjekker om noe skal tilbakeføres etter oppdatering av informasjonskrav eller nytt vurderingsbehov")
+        val nyesteEndringForSteg = behandlingRepository.hentNyesteEndringForSteg(behandling.id)
+        val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste, behandling.vurderingsbehov(), nyesteEndringForSteg)
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(
                 "Tilbakeført etter oppdatering av registeropplysninger fra '${behandling.aktivtSteg()}' til '${
                     tilbakeføringsflyt.stegene().last()
                 }'. " +
-                        "Oppdatert faktagrunnlag for kravliste: ${oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() }} " +
-                        "Med triggere: ${triggere.joinToString { it.toString() }}",
+                        "Oppdatert faktagrunnlag for kravliste: ${oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() }} "
             )
         }
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
@@ -224,9 +222,13 @@ class FlytOrkestrator(
         while (true) {
             if (gjeldendeSteg.type().status in stoppNårStatus) {
                 loggStopp(behandling, avklaringsbehovene)
-                val oppdatertBehandling = behandlingRepository.hent(behandling.id)
-                behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
-                return
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling)) {
+                    return
+                } else {
+                    val oppdatertBehandling = behandlingRepository.hent(behandling.id)
+                    behandlingHendelseService.stoppet(oppdatertBehandling, avklaringsbehovene)
+                    return
+                }
             }
 
             val kontekstMedPerioder = flytKontekstMedPeriodeService.utled(kontekst, gjeldendeSteg.type())

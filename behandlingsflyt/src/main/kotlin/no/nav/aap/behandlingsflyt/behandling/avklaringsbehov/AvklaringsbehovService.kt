@@ -293,7 +293,8 @@ class AvklaringsbehovService(
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
-                    VurderingType.REVURDERING -> {
+                    VurderingType.REVURDERING,
+                    VurderingType.MIGERING_FRA_ARENA -> {
                         when {
                             /* Felles guard: Har ikke avklaringsbehov for vilkår som ikke er relevante */
                             perioderVilkåretErRelevant.segmenter().none { it.verdi } -> false

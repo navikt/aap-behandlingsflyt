@@ -124,6 +124,7 @@ class HåndterTilbakekrevingHendelseService(
 
             ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
             ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE,
+            ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA,
             null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
         }
 
