@@ -175,7 +175,7 @@ class VedtakslengdeService(
             val nyAutomatiskVurdering = VedtakslengdeVurdering(
                 sluttdato = sluttdato,
                 utvidetMed = vedtattUtvidelse ?: ÅrMedHverdager.FØRSTE_ÅR,
-                årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR), // Bør vi ikke her bruke samme logikk som ved utvidelse?
+                årsaker = listOf(VedtakslengdeÅrsak.AUTOMATISK),
                 vurdertAv = SYSTEMBRUKER,
                 vurdertIBehandling = behandlingId,
                 opprettet = Instant.now(clock),

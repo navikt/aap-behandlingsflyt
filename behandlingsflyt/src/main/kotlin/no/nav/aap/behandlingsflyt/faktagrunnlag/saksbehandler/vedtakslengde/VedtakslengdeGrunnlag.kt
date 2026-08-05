@@ -59,6 +59,7 @@ data class VedtakslengdeVurdering(
 }
 
 enum class VedtakslengdeÅrsak {
+    AUTOMATISK, // TODO: Endre til faktisk årsak. Vanskelig å utlede denne slik steget er skrevet nå
     MAKS_ETT_ÅR,
     BRUKER_OVER_67,
     IKKE_MEDLEM,
