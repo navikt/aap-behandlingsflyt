@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_MIGRERINGSDATO
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STUDENT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FASTSETT_MELDEPERIODER
@@ -266,6 +267,7 @@ class EnklereFlytOrkestratorTest {
             .distinct()).containsExactlyElementsOf(
             listOf(
                 START_BEHANDLING,
+                AVKLAR_MIGRERINGSDATO,
                 KRAV,
                 SEND_FORVALTNINGSMELDING,
                 AVKLAR_STØNADSPERIODE,
@@ -291,6 +293,7 @@ class EnklereFlytOrkestratorTest {
             .distinct()).containsExactlyElementsOf(
             listOf(
                 START_BEHANDLING,
+                AVKLAR_MIGRERINGSDATO,
                 KRAV,
                 SEND_FORVALTNINGSMELDING,
                 AVKLAR_STØNADSPERIODE,
@@ -364,6 +367,11 @@ class EnklereFlytOrkestratorTest {
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
                 ),
                 StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.START),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.AVKLARINGSPUNKT),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(
                     stegType = KRAV,
                     stegStatus = StegStatus.START,
@@ -561,6 +569,11 @@ class EnklereFlytOrkestratorTest {
                     stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
                 StegTilstand(stegType = START_BEHANDLING, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.START),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.AVKLARINGSPUNKT),
+                StegTilstand(stegType = AVKLAR_MIGRERINGSDATO, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(
                     stegType = KRAV,
                     stegStatus = StegStatus.START
