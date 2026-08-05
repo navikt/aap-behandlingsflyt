@@ -92,7 +92,6 @@ class HåndterUførevedtakService(
                 )
                 prosesserBehandlingService.triggProsesserBehandling(
                     opprettetBehandling = opprettetBehandling,
-                    vurderingsbehov = listOf(vurderingsbehov),
                 )
                 val behandlingSomSkalOppdateres = when (opprettetBehandling) {
                     is BehandlingService.MåBehandlesAtomært -> opprettetBehandling.nyBehandling.id
@@ -115,7 +114,6 @@ class HåndterUførevedtakService(
                     prosesserBehandlingService.triggProsesserBehandling(
                         sakId,
                         behandling.id,
-                        vurderingsbehov = listOf(vurderingsbehov),
                     )
                     behandlingSomHarHåndtertDokument = behandling.id
                 } else {
