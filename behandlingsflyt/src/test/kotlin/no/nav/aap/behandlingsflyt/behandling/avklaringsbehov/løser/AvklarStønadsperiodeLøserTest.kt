@@ -193,7 +193,7 @@ class AvklarStønadsperiodeLøserTest {
                     referanse = kravreferanse,
                     begrunnelse = "test",
                     harHattOrdinærSiste52Uker = true,
-                    harGjenværendeKvote = false,
+                    harGjenværendeKvote = true,
                     stansOpphør = StansEllerOpphørDto(
                         type = StansOpphørVurderingTypeDto.STANS,
                         årsaker = listOf(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS)
@@ -226,7 +226,7 @@ class AvklarStønadsperiodeLøserTest {
                     referanse = kravreferanse,
                     begrunnelse = "test",
                     harHattOrdinærSiste52Uker = true,
-                    harGjenværendeKvote = false,
+                    harGjenværendeKvote = true,
                     stansOpphør = StansEllerOpphørDto(
                         type = StansOpphørVurderingTypeDto.STANS,
                         årsaker = listOf(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS)
@@ -257,7 +257,7 @@ class AvklarStønadsperiodeLøserTest {
                 StønadsperiodeLøsningDto(
                     referanse = kravreferanse,
                     begrunnelse = "test",
-                    harHattOrdinærSiste52Uker = false,
+                    harHattOrdinærSiste52Uker = true,
                     harGjenværendeKvote = true,
                     stansOpphør = StansEllerOpphørDto(
                         type = StansOpphørVurderingTypeDto.OPPHØR,
