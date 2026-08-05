@@ -106,9 +106,9 @@ class VurderingEndretService(
         behandlingId: BehandlingId,
         avklaringsbehov: Avklaringsbehov,
         tidspunkt: LocalDateTime
-    ): Boolean {
+    ): Boolean? {
         val sjekk = sjekker[avklaringsbehov.definisjon]
-            ?: return true // Kan ikke være sikker på at det ikke er noen endring når sjekk ikke finnes.
+            ?: return null
         return sjekk.harEndring(behandlingId, tidspunkt)
     }
 }
