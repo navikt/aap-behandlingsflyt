@@ -5,8 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentVilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.skalVurdereStudent
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -26,14 +25,14 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderStudentSteg private constructor(
     private val studentRepository: StudentRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårService: VilkårService,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider.provide()),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
@@ -98,15 +97,11 @@ class VurderStudentSteg private constructor(
     }
 
     private fun vurderStudentvilkår(kontekst: FlytKontekstMedPerioder) {
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.STUDENT)
-
         val grunnlag = StudentFaktagrunnlag(
             rettighetsperiode = kontekst.rettighetsperiode,
             studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         )
-        StudentVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        vilkårService.vurderVilkår(kontekst.behandlingId, grunnlag, StudentVilkår)
     }
 
     companion object : FlytSteg {
