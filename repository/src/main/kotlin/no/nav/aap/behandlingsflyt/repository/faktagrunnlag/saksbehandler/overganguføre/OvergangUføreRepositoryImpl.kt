@@ -96,8 +96,8 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
     override fun hentOvergangUføreVurderingPåTidspunkt(
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime
-    ): List<OvergangUføreVurdering> {
-        return connection.queryFirst(
+    ): List<OvergangUføreVurdering>? {
+        return connection.queryFirstOrNull(
             """
             SELECT VURDERINGER_ID
             FROM OVERGANG_UFORE_GRUNNLAG
