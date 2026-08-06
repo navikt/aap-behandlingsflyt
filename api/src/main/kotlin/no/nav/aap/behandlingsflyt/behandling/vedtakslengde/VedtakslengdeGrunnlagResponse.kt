@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
@@ -26,6 +27,7 @@ data class VedtakslengdeVurderingResponse(
     val sluttdato: LocalDate,
     val utvidetMed: ÅrMedHverdager,
     val begrunnelse: String,
+    val årsaker: List<VedtakslengdeÅrsak>,
     val manuellVurdering: Boolean
 ) : VurderingDto
 
@@ -43,5 +45,6 @@ fun VedtakslengdeVurdering.toResponse(
     sluttdato = sluttdato,
     utvidetMed = utvidetMed,
     begrunnelse = begrunnelse,
+    årsaker = årsaker,
     manuellVurdering = vurdertManuelt
 )

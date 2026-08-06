@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 import java.time.LocalDateTime
 

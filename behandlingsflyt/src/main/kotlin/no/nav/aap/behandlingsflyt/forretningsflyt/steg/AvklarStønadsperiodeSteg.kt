@@ -49,7 +49,13 @@ class AvklarStønadsperiodeSteg(
         }.orEmpty()
 
         val kravSomManglerVurdering =
-            gjeldendeRelevanteKrav.filter { krav -> vedtatteStønadsperiodeVurderinger.none { it.referanse == krav.referanse } }
+            gjeldendeRelevanteKrav.filter { krav ->
+                val vedtatteStønadsperiodeForVurdering = vedtatteStønadsperiodeVurderinger.firstOrNull { it.referanse == krav.referanse }
+                vedtatteStønadsperiodeForVurdering == null || (
+                        vedtatteStønadsperiodeForVurdering.vurdertAv == SYSTEMBRUKER &&
+                                vedtatteStønadsperiodeForVurdering.startDato != krav.muligRettFra
+                        )
+            }
         val nyeVurderinger = kravSomManglerVurdering.map { vurderStønadsperiode(it, kontekst) }
 
         stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtatteStønadsperiodeVurderinger + nyeVurderinger)

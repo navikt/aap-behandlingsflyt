@@ -11,7 +11,8 @@ enum class Vilkårtype(
     val spesielleInnvilgelsesÅrsaker: List<Innvilgelsesårsak>,
     val avslagsårsaker: List<Avslagsårsak>,
     val hjemmel: String,
-    val obligatorisk: Boolean = true
+    val obligatorisk: Boolean = true,
+    val kontraktversjon: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype,
 ) {
     ALDERSVILKÅRET(
         kode = "AAP-4",
@@ -21,7 +22,8 @@ enum class Vilkårtype(
             Avslagsårsak.BRUKER_UNDER_18,
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
-        hjemmel = "§ 11-4"
+        hjemmel = "§ 11-4",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.ALDERSVILKÅRET,
     ),
     LOVVALG(
         kode = "AAP-3",
@@ -31,7 +33,8 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_MEDLEM,
             Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT
         ),
-        hjemmel = "§ 2"
+        hjemmel = "§ 2",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.LOVVALG,
     ),
     SYKDOMSVILKÅRET(
         kode = "AAP-5",
@@ -47,7 +50,8 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
         ),
-        hjemmel = "§ 11-5"
+        hjemmel = "§ 11-5",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.SYKDOMSVILKÅRET,
     ),
     BISTANDSVILKÅRET(
         kode = "AAP-6",
@@ -58,7 +62,8 @@ enum class Vilkårtype(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
             Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
         ),
-        hjemmel = "§ 11-6"
+        hjemmel = "§ 11-6",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.BISTANDSVILKÅRET,
     ),
     OVERGANGARBEIDVILKÅRET(
         kode = "AAP-17",
@@ -68,7 +73,8 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER,
             Avslagsårsak.VARIGHET_OVERSKREDET_ARBEIDSSØKER,
         ),
-        hjemmel = "§ 11-17"
+        hjemmel = "§ 11-17",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.OVERGANGARBEIDVILKÅRET,
     ),
     OVERGANGUFØREVILKÅRET(
         kode = "AAP-18",
@@ -80,7 +86,8 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE,
             Avslagsårsak.VARIGHET_OVERSKREDET_OVERGANG_UFORE,
         ),
-        hjemmel = "§ 11-18"
+        hjemmel = "§ 11-18",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.OVERGANGUFØREVILKÅRET,
     ),
     MEDLEMSKAP(
         kode = "AAP-2",
@@ -90,7 +97,8 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_MEDLEM,
             Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE,
         ),
-        hjemmel = "§ 11-2"
+        hjemmel = "§ 11-2",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.MEDLEMSKAP,
     ),
     GRUNNLAGET(
         kode = "AAP-19",
@@ -98,7 +106,8 @@ enum class Vilkårtype(
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON
         ),
-        hjemmel = "§ 11-19"
+        hjemmel = "§ 11-19",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.GRUNNLAGET,
     ),
     SAMORDNING(
         kode = "AAP-27",
@@ -108,9 +117,9 @@ enum class Vilkårtype(
             Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG
         ),
         hjemmel = "§ 11-27",
-        obligatorisk = false
+        obligatorisk = false,
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.SAMORDNING,
     ),
-
     SAMORDNING_ANNEN_LOVGIVNING(
         kode = "AAP-29",
         spesielleInnvilgelsesÅrsaker = emptyList(),
@@ -118,9 +127,9 @@ enum class Vilkårtype(
             Avslagsårsak.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING
         ),
         hjemmel = "§ 11-29",
-        obligatorisk = false
+        obligatorisk = false,
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING,
     ),
-
     SYKEPENGEERSTATNING(
         kode = "AAP-13",
         spesielleInnvilgelsesÅrsaker = emptyList(),
@@ -129,7 +138,8 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING
         ),
         hjemmel = "§ 11-13",
-        obligatorisk = false
+        obligatorisk = false,
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.SYKEPENGEERSTATNING,
     ),
     STUDENT(
         kode = "AAP-14",
@@ -140,7 +150,8 @@ enum class Vilkårtype(
             Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT
         ),
         hjemmel = "§ 11-14",
-        obligatorisk = false
+        obligatorisk = false,
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.STUDENT,
     ),
     STRAFFEGJENNOMFØRING(
         kode = "AAP-26",
@@ -150,6 +161,7 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-26",
         obligatorisk = false,
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.STRAFFEGJENNOMFØRING,
     ),
     AKTIVITETSPLIKT(
         kode = "AAP-7",
@@ -160,6 +172,7 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-7",
         obligatorisk = false,
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.AKTIVITETSPLIKT,
     ),
     OPPHOLDSKRAV(
         kode = "AAP-3",
@@ -170,6 +183,7 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-3",
         obligatorisk = false,
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.OPPHOLDSKRAV,
     ),
     INNTEKTSBORTFALL(
         kode = "AAP-4-2",
@@ -177,7 +191,8 @@ enum class Vilkårtype(
         avslagsårsaker = listOf(
             Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
         ),
-        hjemmel = "§ 11-4 2. ledd"
+        hjemmel = "§ 11-4 2. ledd",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.INNTEKTSBORTFALL,
     ),
     ORDINÆR_KVOTE(
         kode = "AAP-12",
@@ -186,6 +201,7 @@ enum class Vilkårtype(
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
         ),
         hjemmel = "§ 11-12 1. ledd",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.ORDINÆR_KVOTE,
     ),
     SYKEPENGEERSTATNING_KVOTE(
         kode = "AAP-13-1",
@@ -194,5 +210,6 @@ enum class Vilkårtype(
             Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
         ),
         hjemmel = "§ 11-13 1. ledd",
-    )
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.SYKEPENGEERSTATNING_KVOTE,
+    );
 }
