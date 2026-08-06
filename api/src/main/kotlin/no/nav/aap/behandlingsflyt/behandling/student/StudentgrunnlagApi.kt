@@ -67,6 +67,9 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
 
                     StudentGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        // TODO: Slett
+                        studentvurdering = studentGrunnlag?.vurderinger?.maxByOrNull { it.vurdertTidspunkt }
+                            ?.let { StudentVurderingResponse.fraDomene(it, vurdertAvService) },
                         oppgittStudent = studentGrunnlag?.oppgittStudent,
                         nyeVurderinger = nyeVurderinger,
                         sisteVedtatteVurderinger = sisteVedtatte,

@@ -19,6 +19,8 @@ open class StudentGrunnlagResponse(
     override val kanVurderes: List<Periode>,
     override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
+    @Deprecated("Bruk nyeVurderinger")
+    val studentvurdering: StudentVurderingResponse?,
 ) : PeriodiserteVurderingerDto<StudentVurderingResponse>
 
 data class StudentVurderingResponse(
