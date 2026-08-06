@@ -18,9 +18,12 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
 
     override fun vurder(faktagrunnlag: SamordningAnnenFullYtelseFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
         val uføreTidslinje = faktagrunnlag.uføreVurderingGrunnlag?.vurdering?.tilTidslinje().orEmpty()
-        val avslag11_27Tidslinje = faktagrunnlag.avslag1127grunnlag
-            ?.tilTidslinje(faktagrunnlag.kravGrunnlag)
-            .orEmpty()
+        val avslag11_27Tidslinje = if (faktagrunnlag.kravGrunnlag == null)
+            Tidslinje.empty()
+        else
+            faktagrunnlag.avslag1127grunnlag
+                ?.tilTidslinje(faktagrunnlag.kravGrunnlag)
+                .orEmpty()
 
         val samordningTidslinje = faktagrunnlag.samordningGrunnlag?.vurder().orEmpty()
 
@@ -99,12 +102,12 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
 
             val erRentHelgehull =
                 sisteDagFør.dayOfWeek == DayOfWeek.FRIDAY &&
-                    førsteDagEtter.dayOfWeek == DayOfWeek.MONDAY &&
-                    førsteDagEtter == sisteDagFør.plusDays(3)
+                        førsteDagEtter.dayOfWeek == DayOfWeek.MONDAY &&
+                        førsteDagEtter == sisteDagFør.plusDays(3)
 
             val beggeErAvslag =
                 før.verdi.utfall == Utfall.IKKE_OPPFYLT &&
-                    etter.verdi.utfall == Utfall.IKKE_OPPFYLT
+                        etter.verdi.utfall == Utfall.IKKE_OPPFYLT
 
             if (erRentHelgehull && beggeErAvslag)
                 Segment(Periode(sisteDagFør.plusDays(1), førsteDagEtter.minusDays(1)), før.verdi)
