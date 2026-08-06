@@ -7,12 +7,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitets
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
-import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
 import no.nav.aap.behandlingsflyt.dokumentasjon.VedtakDokumentGenerator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -51,7 +51,7 @@ class FatteVedtakStegTest {
     val vedtakService = mockk<VedtakService>(relaxed = true)
     val virkningstidspunktUtleder = mockk<VirkningstidspunktUtleder>(relaxed = true)
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
-    val pdfgenGateway = mockk<PdfgenGateway>(relaxed = true)
+    val pdfGeneratorGateway = mockk<PdfGeneratorGateway>(relaxed = true)
     val vedtakDokumentGenerator = mockk<VedtakDokumentGenerator>(relaxed = true)
     val gatewayProvider = createGatewayProvider {
         register<AlleAvskruddUnleash>()
@@ -87,7 +87,7 @@ class FatteVedtakStegTest {
         virkningstidspunktUtleder = virkningstidspunktUtleder,
         unleashGateway = gatewayProvider.provide(),
         avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService,
-        pdfgenGateway = pdfgenGateway,
+        pdfGeneratorGateway = pdfGeneratorGateway,
         vedtakDokumentGenerator = vedtakDokumentGenerator,
     )
 

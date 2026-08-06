@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.dokumentasjon
 
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.behandling.meldekort.DOM
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.DOM
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19

@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisRegel
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
 import no.nav.aap.behandlingsflyt.dokumentasjon.VedtakDokumentGenerator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -46,7 +46,7 @@ class FatteVedtakSteg(
     private val vedtakService: VedtakService,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
     private val unleashGateway: UnleashGateway,
-    private val pdfgenGateway: PdfgenGateway,
+    private val pdfGeneratorGateway: PdfGeneratorGateway,
     private val vedtakDokumentGenerator: VedtakDokumentGenerator,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -86,7 +86,7 @@ class FatteVedtakSteg(
                         vedtakstidspunkt = vedtakstidspunkt,
                         forrigeBehandlingId = kontekst.forrigeBehandlingId,
                     )
-                    val pdf = pdfgenGateway.genererGeneriskDokument(dokument)
+                    val pdf = pdfGeneratorGateway.genererVurderingerOppsummeringDokument(dokument)
                     skrivPdfLokalt(utskriftsmappe, kontekst, pdf)
                 }
             }
@@ -180,7 +180,7 @@ class FatteVedtakSteg(
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
                 virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),
                 unleashGateway = gatewayProvider.provide(),
-                pdfgenGateway = gatewayProvider.provide(),
+                pdfGeneratorGateway = gatewayProvider.provide(),
                 vedtakDokumentGenerator = VedtakDokumentGenerator(repositoryProvider),
             )
         }

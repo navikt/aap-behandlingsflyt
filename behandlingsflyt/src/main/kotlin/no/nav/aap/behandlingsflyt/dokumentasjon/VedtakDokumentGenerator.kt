@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.dokumentasjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.meldekort.Dokument
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.Dokument
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
@@ -59,6 +59,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -430,7 +431,22 @@ data class BehandlingFaktagrunnlag(
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
                         "Vurdert av" to ReferanseBruker(v.vurdertAv),
-                        "Relevant kravtype" to PrettyEnum(v.relevantKravType),
+                        "Relevant kravtype" to when (val kravtype = v.relevantKravType) {
+                            RelevantKravType.NY_STØNADSPERIODE -> Tekst("Ny stønadsperiode")
+                            RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> Tekst("Gjeninntreden etter opphør")
+                            RelevantKravType.AVSLAG -> Tekst("Avslag")
+                            is RelevantKravType.GJENOPPTAK_ETTER_STANS -> Span(
+                                Tekst("Gjenopptak etter stans"),
+                                kravtype.gjennopptakEtter
+                                    .takeIf { it.isNotEmpty() }
+                                    ?.let { årsaker ->
+                                        Span(
+                                            Tekst(": "),
+                                            årsaker.join { PrettyEnum(it) },
+                                        )
+                                    },
+                            )
+                        },
                         "Startdato" to Dato(v.startDato),
                         "Hatt ordinær siste 52 uker" to JaNeiValg(v.harHattOrdinærSiste52Uker),
                         "Gjenværende kvote" to JaNeiValg(v.harGjenværendeKvote),

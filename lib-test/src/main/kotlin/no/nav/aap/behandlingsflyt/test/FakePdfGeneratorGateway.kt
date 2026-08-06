@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.gateway.Factory
 
 class FakePdfGeneratorGateway : PdfGeneratorGateway {
     override fun genererVurderingerOppsummeringDokument(request: Dokument): ByteArray {
-        TODO("Not yet implemented")
+        return ByteArray(0)
     }
 
     companion object : Factory<PdfGeneratorGateway> {

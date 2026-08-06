@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
-import no.nav.aap.behandlingsflyt.behandling.meldekort.DOM
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.DOM
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.komponenter.tidslinje.Tidslinje
