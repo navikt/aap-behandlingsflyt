@@ -373,6 +373,16 @@ public enum class AvklaringsbehovKode {
     `5060`,
 
     /**
+     * [AVKLAR_MIGRERINGSDATO_KODE]
+     */
+    `5061`,
+
+    /**
+     * [AVKLAR_RESTKVOTE_MIGRERING_KODE]
+     */
+    `5062`,
+
+    /**
      * [KVALITETSSIKRING_KODE]
      */
     `5097`,
