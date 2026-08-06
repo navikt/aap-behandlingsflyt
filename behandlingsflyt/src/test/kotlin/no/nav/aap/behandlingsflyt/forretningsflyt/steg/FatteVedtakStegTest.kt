@@ -8,16 +8,18 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
 import no.nav.aap.behandlingsflyt.dokumentasjon.VedtakDokumentGenerator
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -26,8 +28,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -38,6 +40,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.random.Random
 
 class FatteVedtakStegTest {
@@ -50,12 +53,11 @@ class FatteVedtakStegTest {
     val trukketSøknadService = mockk<TrukketSøknadService>()
     val vedtakService = mockk<VedtakService>(relaxed = true)
     val virkningstidspunktUtleder = mockk<VirkningstidspunktUtleder>(relaxed = true)
+    val stansOpphørService = mockk<StansOpphørService>(relaxed = true)
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
     val pdfGeneratorGateway = mockk<PdfGeneratorGateway>(relaxed = true)
     val vedtakDokumentGenerator = mockk<VedtakDokumentGenerator>(relaxed = true)
-    val gatewayProvider = createGatewayProvider {
-        register<AlleAvskruddUnleash>()
-    }
+    val unleashGateway = mockk<UnleashGateway>(relaxed = true)
 
     @BeforeEach
     fun setup() {
@@ -65,12 +67,13 @@ class FatteVedtakStegTest {
 
     private fun kontekst(
         behandlingType: TypeBehandling,
-        vurderingsbehov: Vurderingsbehov
+        vurderingsbehov: Vurderingsbehov,
+        vurderingType: VurderingType = VurderingType.IKKE_RELEVANT,
     ) = flytKontekstMedPerioder {
         sakId = SakId(Random.nextLong())
         behandlingId = BehandlingId(Random.nextLong())
         this.behandlingType = behandlingType
-        vurderingType = VurderingType.IKKE_RELEVANT
+        this.vurderingType = vurderingType
         rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
         vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov)
     }
@@ -85,7 +88,8 @@ class FatteVedtakStegTest {
         trukketSøknadService = trukketSøknadService,
         vedtakService = vedtakService,
         virkningstidspunktUtleder = virkningstidspunktUtleder,
-        unleashGateway = gatewayProvider.provide(),
+        stansOpphørService = stansOpphørService,
+        unleashGateway = unleashGateway,
         avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService,
         pdfGeneratorGateway = pdfGeneratorGateway,
         vedtakDokumentGenerator = vedtakDokumentGenerator,
@@ -142,18 +146,47 @@ class FatteVedtakStegTest {
         assertThat(resultat).isEqualTo(Fullført)
     }
 
-    @Test
-    fun `genererer ikke vilkårsvurderingsoppsummering når feature toggle er av`() {
+    @ParameterizedTest
+    @EnumSource(
+        Vurderingsbehov::class,
+        mode = Mode.INCLUDE,
+        names = ["VEDTAKSLENGDE_MANUELT", "VURDER_RETTIGHETSPERIODE", "VURDER_KRAV", "BARNETILLEGG"],
+    )
+    fun `dekker valgte revurderinger`(vurderingsbehov: Vurderingsbehov) {
         val kontekst = kontekst(
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD,
+            TypeBehandling.Revurdering,
+            vurderingsbehov,
+            vurderingType = VurderingType.REVURDERING,
         )
-        every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
-        every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns false
 
-        steg().utfør(kontekst)
+        assertThat(steg().skalGenerereVilkårsvurderingOppsummering(kontekst)).isTrue()
+    }
 
-        verify(exactly = 0) { vedtakDokumentGenerator.genererDokument(any(), any(), any(), any()) }
+    @Test
+    fun `dekker førstegangsbehandling og nye stansvedtak men ikke tekniske kjøringer`() {
+        val førstegangsbehandling = kontekst(
+            TypeBehandling.Førstegangsbehandling,
+            Vurderingsbehov.MOTTATT_SØKNAD,
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+        )
+        val stansvedtak = kontekst(
+            TypeBehandling.Revurdering,
+            Vurderingsbehov.OPPHOLDSKRAV,
+            vurderingType = VurderingType.REVURDERING,
+        )
+        val tekniskKjøring = stansvedtak.copy(vurderingType = VurderingType.G_REGULERING)
+        every { stansOpphørService.vedtattStansOpphør(stansvedtak.behandlingId) } returns listOf(
+            GjeldendeStansEllerOpphør(
+                fom = LocalDate.now(),
+                opprettet = Instant.now(),
+                vurdertIBehandling = stansvedtak.behandlingId,
+                vurdering = Stans(emptySet()),
+            )
+        )
+
+        assertThat(steg().skalGenerereVilkårsvurderingOppsummering(førstegangsbehandling)).isTrue()
+        assertThat(steg().skalGenerereVilkårsvurderingOppsummering(stansvedtak)).isTrue()
+        assertThat(steg().skalGenerereVilkårsvurderingOppsummering(tekniskKjøring)).isFalse()
     }
 
     @ParameterizedTest

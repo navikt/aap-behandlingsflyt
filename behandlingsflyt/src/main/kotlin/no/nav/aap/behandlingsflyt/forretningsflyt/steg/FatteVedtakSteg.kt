@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisRegel
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.dokumentasjon.VedtakDokumentGenerator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -25,6 +27,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -45,6 +49,7 @@ class FatteVedtakSteg(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val stansOpphørService: StansOpphørService,
     private val unleashGateway: UnleashGateway,
     private val pdfGeneratorGateway: PdfGeneratorGateway,
     private val vedtakDokumentGenerator: VedtakDokumentGenerator,
@@ -78,7 +83,9 @@ class FatteVedtakSteg(
                 vedtakstidspunkt = vedtakstidspunkt,
                 virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId),
             )
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF)) {
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF) &&
+                skalGenerereVilkårsvurderingOppsummering(kontekst)
+            ) {
                 lokalUtskriftsmappe()?.let { utskriftsmappe ->
                     val dokument = vedtakDokumentGenerator.genererDokument(
                         behandlingId = kontekst.behandlingId,
@@ -104,6 +111,30 @@ class FatteVedtakSteg(
 
     private fun skrivPdfLokalt(utskriftsmappe: File, kontekst: FlytKontekstMedPerioder, pdf: ByteArray) {
         FileOutputStream(File(utskriftsmappe, "${kontekst.behandlingId.id}.pdf")).use { it.write(pdf) }
+    }
+
+    internal fun skalGenerereVilkårsvurderingOppsummering(kontekst: FlytKontekstMedPerioder): Boolean {
+        val vurderingstyperSomKanGiStans = setOf(
+            VurderingType.REVURDERING,
+            VurderingType.OVERGANG_UFORE_STANS,
+        )
+        val dekkedeRevurderingsbehov = setOf(
+            Vurderingsbehov.VEDTAKSLENGDE_MANUELT,
+            Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+            Vurderingsbehov.VURDER_KRAV,
+            Vurderingsbehov.BARNETILLEGG,
+        )
+
+        return when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING -> true
+            in vurderingstyperSomKanGiStans if stansOpphørService.vedtattStansOpphør(kontekst.behandlingId)
+                .any { it.vurdertIBehandling == kontekst.behandlingId && it.vurdering is Stans } -> true
+
+            VurderingType.REVURDERING ->
+                kontekst.vurderingsbehovRelevanteForSteg.any { it in dekkedeRevurderingsbehov }
+
+            else -> false
+        }
     }
 
     private fun skalLagreYtelsesvedtak(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -179,6 +210,7 @@ class FatteVedtakSteg(
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
                 virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),
+                stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider),
                 unleashGateway = gatewayProvider.provide(),
                 pdfGeneratorGateway = gatewayProvider.provide(),
                 vedtakDokumentGenerator = VedtakDokumentGenerator(repositoryProvider),
@@ -189,4 +221,5 @@ class FatteVedtakSteg(
             return StegType.FATTE_VEDTAK
         }
     }
+
 }
