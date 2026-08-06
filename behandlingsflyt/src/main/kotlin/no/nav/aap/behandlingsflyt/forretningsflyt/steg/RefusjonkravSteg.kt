@@ -45,7 +45,7 @@ class RefusjonkravSteg private constructor(
                        when {
                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
-                           else -> true
+                           else -> false
                        }
                     }
 
