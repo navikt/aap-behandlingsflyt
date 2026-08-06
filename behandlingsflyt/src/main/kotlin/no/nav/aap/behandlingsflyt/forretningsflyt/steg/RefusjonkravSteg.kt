@@ -45,7 +45,11 @@ class RefusjonkravSteg private constructor(
                        when {
                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
-                           else -> false
+                           else -> {
+                               kontekst.forrigeBehandlingId?.let {
+                                   refusjonkravRepository.hentHvisEksisterer(it).isNullOrEmpty()
+                               } ?: true
+                           }
                        }
                     }
 
