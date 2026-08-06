@@ -262,7 +262,9 @@ object FakeServers : AutoCloseable {
         System.setProperty("INTEGRASJON_PDFGEN_SCOPE", "scope")
 
         // aap-pdfgenerator
-        System.setProperty("INTEGRASJON_PDFGENERATOR_URL", "http://localhost:${pdfGenerator.port()}")
+        if (System.getenv("INTEGRASJON_PDFGENERATOR_URL").isNullOrEmpty()) {
+            System.setProperty("INTEGRASJON_PDFGENERATOR_URL", "http://localhost:${pdfGenerator.port()}")
+        }
         System.setProperty("INTEGRASJON_PDFGENERATOR_SCOPE", "scope")
     }
 
