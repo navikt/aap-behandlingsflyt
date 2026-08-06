@@ -75,7 +75,7 @@ class AvklarStønadsperiodeStegTest {
         val behandling = opprettRevurdering(sak.id, forrigeBehandling.id)
 
         val kravFraForrige = lagRelevantKrav(forrigeBehandling.id, LocalDate.of(2023, 6, 1))
-        val stønadsperiodeFraForrige = lagStønadsperiodeVurdering(kravFraForrige.referanse, forrigeBehandling.id)
+        val stønadsperiodeFraForrige = lagStønadsperiodeVurdering(kravFraForrige.referanse, forrigeBehandling.id, kravFraForrige.muligRettFra)
         InMemoryStønadsperiodeRepository.lagre(forrigeBehandling.id, setOf(stønadsperiodeFraForrige))
 
         val nyttKrav = lagRelevantKrav(behandling.id, LocalDate.of(2024, 6, 1))
@@ -149,7 +149,7 @@ class AvklarStønadsperiodeStegTest {
     private fun lagStønadsperiodeVurdering(
         referanse: Kravreferanse,
         behandlingId: BehandlingId,
-        startDato: LocalDate = LocalDate.now(),
+        startDato: LocalDate,
     ) = StønadsperiodeVurdering(
         referanse = referanse,
         opprettet = Instant.now(),

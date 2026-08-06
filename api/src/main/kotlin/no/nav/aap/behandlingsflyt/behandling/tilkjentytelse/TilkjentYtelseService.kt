@@ -129,7 +129,8 @@ class TilkjentYtelseService(
                                 it.verdi.graderingGrunnlag.arbeidGradering.prosentverdi()
                             ),
                             samordningGradering = it.verdi.graderingGrunnlag.samordningGradering.prosentverdi()
-                                .plus(it.verdi.graderingGrunnlag.samordningUføregradering.prosentverdi()),
+                                .plus(it.verdi.graderingGrunnlag.samordningUføregradering.prosentverdi())
+                                .coerceAtMost(100),
                             institusjonGradering = it.verdi.graderingGrunnlag.institusjonGradering.prosentverdi(),
                             arbeidsgiverGradering = it.verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi(),
                             totalReduksjon = 100.minus(it.verdi.gradering.prosentverdi()),

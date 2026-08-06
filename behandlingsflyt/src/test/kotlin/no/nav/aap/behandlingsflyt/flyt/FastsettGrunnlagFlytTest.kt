@@ -61,7 +61,6 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 AvklarManuellInntektVurderingLøsning(
                     manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                         begrunnelse = "Mangler ligning",
-                        belop = BigDecimal(300000),
                         vurderinger = listOf(
                             ÅrsVurdering(
                                 år = Year.now().minusYears(1).value,

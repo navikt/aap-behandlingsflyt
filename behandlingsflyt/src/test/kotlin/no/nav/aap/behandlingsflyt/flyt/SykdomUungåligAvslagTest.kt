@@ -224,7 +224,6 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "Veldig relevante",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
                         relevanteYrkesskadeSaker = person.yrkesskade.map {
                             YrkesskadeSakDto(
                                 it.saksreferanse,

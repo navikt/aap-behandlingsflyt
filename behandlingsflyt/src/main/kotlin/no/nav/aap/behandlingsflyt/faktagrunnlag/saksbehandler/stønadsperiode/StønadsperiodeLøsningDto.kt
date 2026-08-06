@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -22,7 +23,7 @@ data class StønadsperiodeLøsningDto(
     val relevantKravType: RelevantKravType
         get() = when {
             !harHattOrdinærSiste52Uker && !harGjenværendeKvote -> RelevantKravType.NY_STØNADSPERIODE
-            stansOpphør?.type == StansOpphørVurderingTypeDto.STANS -> RelevantKravType.GJENOPPTAK_ETTER_STANS
+            stansOpphør?.type == StansOpphørVurderingTypeDto.STANS -> RelevantKravType.GJENOPPTAK_ETTER_STANS(stansOpphør.årsaker)
             stansOpphør?.type == StansOpphørVurderingTypeDto.OPPHØR -> RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR
             else -> throw IllegalStateException("Klarte ikke utlede kravtype")
         }
@@ -36,7 +37,6 @@ data class StønadsperiodeLøsningDto(
             throw UgyldigForespørselException("Stans/opphør-årsak er påkrevd ved gjenopptak/gjeninntreden")
         }
 
-        // TODO: Lagre ned stansopphør
         return StønadsperiodeVurdering(
             referanse = referanse,
             begrunnelse = begrunnelse,
@@ -54,7 +54,30 @@ data class StønadsperiodeLøsningDto(
 data class StansEllerOpphørDto(
     val type: StansOpphørVurderingTypeDto, // TODO: Ønsker vi heller å utlede stans/opphør utifra årsak?
     val årsaker: List<Avslagsårsak>,
-)
+) {
+    init {
+        when (type) {
+            StansOpphørVurderingTypeDto.STANS -> {
+                if (årsaker.isEmpty()) {
+                    throw UgyldigForespørselException("Må oppgi hva stans gjennopptas etter")
+                }
+                val feilTyper = årsaker.filter { it.avslagstype != Avslagstype.STANS }
+                if (feilTyper.isNotEmpty()) {
+                    throw UgyldigForespørselException("Avslagsårsaker ${feilTyper.joinToString()} er ikke stans-årsaker")
+                }
+            }
+            StansOpphørVurderingTypeDto.OPPHØR -> {
+                /* Det gir egentlig god mening å snakke om hva som var årsaken til opphøret.
+                 * Men vi har ikke bruk for den informasjonen, så vi krasjer hvis noen prøver
+                 * å gi oss den. Men kan vurderes å godta det.
+                 */
+                if (årsaker.isNotEmpty()) {
+                    throw UgyldigForespørselException("Skal ikke oppgi årsak for opphør")
+                }
+            }
+        }
+    }
+}
 
 enum class StansOpphørVurderingTypeDto {
     STANS, OPPHØR

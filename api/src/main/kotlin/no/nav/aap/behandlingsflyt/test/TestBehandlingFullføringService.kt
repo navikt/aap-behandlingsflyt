@@ -310,7 +310,6 @@ class TestBehandlingFullføringService(
             AvklarYrkesskadeLøsning(
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "Er yrkesskade",
-                    relevanteSaker = emptyList(),
                     relevanteYrkesskadeSaker = listOf(YrkesskadeSakDto(yrkesskade.ref, null)),
                     andelAvNedsettelsen = 50,
                     erÅrsakssammenheng = true,
@@ -368,7 +367,6 @@ class TestBehandlingFullføringService(
         Definisjon.FASTSETT_MANUELL_INNTEKT -> AvklarManuellInntektVurderingLøsning(
             manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                 begrunnelse = "Manuell inntekt vurdering ok",
-                belop = null,
                 vurderinger = listOf(
                     ÅrsVurdering(
                         beløp = BigDecimal("500000.00"),

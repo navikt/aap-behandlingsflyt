@@ -4,6 +4,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
 
     // Førstegangsbehandling/revurdering
     START_BEHANDLING(false, true),
+    MIGRERING(true, false),
     KRAV(true, true),
     SEND_FORVALTNINGSMELDING(false, true),
     RETTIGHETSPERIODE(true, false),

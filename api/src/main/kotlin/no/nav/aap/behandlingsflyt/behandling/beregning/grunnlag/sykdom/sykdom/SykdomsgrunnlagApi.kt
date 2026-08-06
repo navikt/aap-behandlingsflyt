@@ -145,7 +145,6 @@ private fun Yrkesskadevurdering.toResponse(ansattInfoService: AnsattInfoService)
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return YrkesskadevurderingResponse(
         begrunnelse = begrunnelse,
-        relevanteSaker = relevanteSaker.map { it.referanse },
         relevanteYrkesskadeSaker = relevanteSaker.map { YrkesskadeSakResponse(it.referanse, it.manuellYrkesskadeDato) },
         andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
         erÅrsakssammenheng = erÅrsakssammenheng,

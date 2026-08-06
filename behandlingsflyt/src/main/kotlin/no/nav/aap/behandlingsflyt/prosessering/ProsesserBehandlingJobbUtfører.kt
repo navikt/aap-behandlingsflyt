@@ -25,11 +25,8 @@ class ProsesserBehandlingJobbUtfører(
         val sakId = SakId(input.sakId())
         val behandlingId = BehandlingId(input.behandlingId())
         val skrivelås = låsRepository.lås(sakId, behandlingId)
-        val triggere =
-            input.optionalParameter("trigger")?.let { DefaultJsonMapper.fromJson<List<Vurderingsbehov>>(it) }
-                .orEmpty()
 
-        flytOrkestrator.forberedOgProsesserBehandling(behandlingId, triggere)
+        flytOrkestrator.forberedOgProsesserBehandling(behandlingId)
 
         log.info("Prosesserer behandling for jobb ${input.type()} med behandlingId $behandlingId")
 

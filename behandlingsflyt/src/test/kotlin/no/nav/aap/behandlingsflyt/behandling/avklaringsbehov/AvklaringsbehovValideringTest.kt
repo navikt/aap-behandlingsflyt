@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
@@ -22,9 +23,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -39,7 +43,7 @@ import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStansOpphørRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
@@ -67,7 +71,7 @@ import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.*
 
 class AvklaringsbehovValideringTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
@@ -330,9 +334,21 @@ class AvklaringsbehovValideringTest {
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         // Krav er vurdert i forrigeBehandlingId, ikke i inneværende behandlingId
         val nyttKrav = nyttKrav(forrigeBehandlingId, LocalDate.now())
-        InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav))
         settOppForrigeBehandling(forrigeBehandlingId, muligRettFra = nyttKrav.muligRettFra, StansOpphørGrunnlag())
-        
+        InMemoryKravRepository.lagre(forrigeBehandlingId, setOf(nyttKrav))
+        InMemoryStønadsperiodeRepository.lagre(
+            forrigeBehandlingId, setOf(
+                stønadsperiodevurering(
+                    nyttKrav,
+                    forrigeBehandlingId,
+                    RelevantKravType.NY_STØNADSPERIODE,
+                    nyttKrav.muligRettFra
+                )
+            )
+        )
+
+        InMemoryKravRepository.kopier(forrigeBehandlingId, behandlingId)
+        InMemoryStønadsperiodeRepository.kopier(forrigeBehandlingId, behandlingId)
 
         val gjeldendeVurderinger =
             tomLøsning().somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
@@ -345,13 +361,46 @@ class AvklaringsbehovValideringTest {
         )
     }
 
+    private fun stønadsperiodevurering(
+        nyttKrav: RelevantKrav,
+        vurdertIBehandling: BehandlingId? = null,
+        relevantKravType: RelevantKravType,
+        startDato: LocalDate = nyttKrav.muligRettFra,
+    ): StønadsperiodeVurdering = StønadsperiodeVurdering(
+        referanse = nyttKrav.referanse,
+        opprettet = Instant.now(),
+        vurdertIBehandling = vurdertIBehandling ?: nyttKrav.vurdertIBehandling,
+        vurdertAv = SYSTEMBRUKER,
+        begrunnelse = "",
+        harHattOrdinærSiste52Uker = true,
+        harGjenværendeKvote = when (relevantKravType) {
+            RelevantKravType.AVSLAG -> TODO()
+            RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> true
+            is RelevantKravType.GJENOPPTAK_ETTER_STANS -> true
+            RelevantKravType.NY_STØNADSPERIODE -> false
+        },
+        relevantKravType = relevantKravType,
+        startDato = startDato,
+    )
+
     @Test
     fun `NyttKrav er dekket når løsning fom er lik muligRettFra`() {
         val behandlingId = nesteBehandlingId()
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2024, 1, 1)
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
-        InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
+        val krav = nyttKrav(behandlingId, muligRettFra)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    behandlingId,
+                    RelevantKravType.NY_STØNADSPERIODE,
+                    krav.muligRettFra
+                )
+            )
+        )
         settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
 
         val løsning = løsning(fom = muligRettFra)
@@ -372,7 +421,17 @@ class AvklaringsbehovValideringTest {
         val forrigeBehandlingId = nesteBehandlingId()
         val muligRettFra = LocalDate.of(2024, 1, 1)
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
-        InMemoryKravRepository.lagre(behandlingId, setOf(nyttKrav(behandlingId, muligRettFra)))
+        val krav = nyttKrav(behandlingId, muligRettFra)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+                    startDato = krav.muligRettFra
+                )
+            )
+        )
         settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
 
         val løsning = løsning(fom = muligRettFra.plusDays(2))
@@ -395,6 +454,15 @@ class AvklaringsbehovValideringTest {
         val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
         val krav = nyttKrav(behandlingId, muligRettFra)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+                    startDato = krav.muligRettFra
+                )
+            )
+        )
         settOppForrigeBehandling(forrigeBehandlingId, muligRettFra, StansOpphørGrunnlag())
 
         val løsningFom = muligRettFra.minusDays(1)
@@ -436,119 +504,137 @@ class AvklaringsbehovValideringTest {
 //        )
 //}
 
-    // TODO: Må ha § 12 før vi kan teste dette
-//    @Test
-//    fun `Skal ikke tvinge ny vurdering hvis gjenopptak etter stans`() {
-//        // TODO: Denne skal bli smartere ved å sjekke årsak til stans
-//        val behandlingId = nesteBehandlingId()
-//        val forrigeBehandlingId = nesteBehandlingId()
-//        val rettFørsteKrav = LocalDate.of(2024, 1, 1)
-//        val muligRettFra = LocalDate.of(2027, 1, 1)
-//        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
-//        InMemoryKravRepository.lagre(behandlingId, setOf(gjenopptak(behandlingId, muligRettFra)))
-//        settOppForrigeBehandling(
-//            forrigeBehandlingId,
-//            rettFørsteKrav,
-//            StansOpphørGrunnlag(
-//                setOf(
-//                    stansEntry(
-//                        forrigeBehandlingId,
-//                        muligRettFra,
-//                        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
-//                    )
-//                )
-//            ),
-//        )
-//
-//        val løsningFom = muligRettFra.minusDays(30)
-//        val løsning = løsning(fom = løsningFom)
-//        val gjeldendeVurderinger =
-//            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
-//
-//        // Løsning dekker ikke muligRettFra, men Stans betyr at kravet likevel er dekket
-//        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
-//
-//        assertTidslinje(
-//            resultat,
-//            Periode(muligRettFra, Tid.MAKS) to { assertTrue(it) }
-//        )
-//    }
+    //     TODO: Må ha § 12 før vi kan teste dette
+    @Test
+    fun `Skal ikke løfte avklaringsbehov for bistand ved gjenopptak etter stans på sykdom`() {
+        val behandlingId = nesteBehandlingId()
+        val forrigeBehandlingId = nesteBehandlingId()
+        val rettFørsteKrav = LocalDate.of(2024, 1, 1)
+        val muligRettFra = LocalDate.of(2027, 1, 1)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
+        val krav = nyttKrav(behandlingId, muligRettFra)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(behandlingId, setOf(stønadsperiodevurering(
+            krav,
+            relevantKravType = RelevantKravType.GJENOPPTAK_ETTER_STANS(listOf(Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE))
+        )))
+
+        val løsningFom = muligRettFra.minusDays(30)
+        val løsning = løsning(fom = løsningFom)
+        val gjeldendeVurderinger =
+            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
+
+        // Løsning dekker ikke muligRettFra, men Stans betyr at kravet likevel er dekket
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(
+            Definisjon.AVKLAR_BISTANDSBEHOV,
+            gjeldendeVurderinger,
+            kontekst
+        )
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to { assertTrue(it) }
+        )
+    }
+
+    @Test
+    fun `Skal løfte avklaringsbehov for sykdom ved gjenopptak etter stans på sykdom`() {
+        val behandlingId = nesteBehandlingId()
+        val forrigeBehandlingId = nesteBehandlingId()
+        val rettFørsteKrav = LocalDate.of(2024, 1, 1)
+        val muligRettFra = LocalDate.of(2027, 1, 1)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
+        val krav = nyttKrav(behandlingId, muligRettFra)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(behandlingId, setOf(stønadsperiodevurering(
+            krav,
+            relevantKravType = RelevantKravType.GJENOPPTAK_ETTER_STANS(listOf(Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE))
+        )))
+
+        val løsningFom = muligRettFra.minusDays(30)
+        val løsning = løsning(fom = løsningFom)
+        val gjeldendeVurderinger =
+            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
+
+        // Løsning dekker ikke muligRettFra, men Stans betyr at kravet likevel er dekket
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(
+            Definisjon.AVKLAR_SYKDOM,
+            gjeldendeVurderinger,
+            kontekst
+        )
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to { assertFalse(it) }
+        )
+    }
 
     // TODO: Må ha § 12 før vi kan teste dette
-//    @Test
-//    fun `Gjenopptak er dekket etter opphør når løsning dekker muligRettFra`() {
-//        val behandlingId = nesteBehandlingId()
-//        val forrigeBehandlingId = nesteBehandlingId()
-//        val rettFørsteKrav = LocalDate.of(2024, 1, 1)
-//        val muligRettFra = LocalDate.of(2027, 1, 1)
-//        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
-//        InMemoryKravRepository.lagre(behandlingId, setOf(gjenopptak(behandlingId, muligRettFra)))
-//        settOppForrigeBehandling(
-//            forrigeBehandlingId,
-//            rettFørsteKrav,
-//            StansOpphørGrunnlag(
-//                setOf(
-//                    opphørEntry(
-//                        forrigeBehandlingId,
-//                        muligRettFra,
-//                        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
-//                    )
-//                )
-//            ),
-//        )
-//
-//        val løsning = løsning(fom = muligRettFra)
-//        val gjeldendeVurderinger =
-//            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
-//
-//        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
-//
-//        assertTidslinje(
-//            resultat,
-//            Periode(muligRettFra, Tid.MAKS) to {
-//                assertTrue(it)
-//            }
-//        )
-//    }
+    @Test
+    fun `Gjenopptak etter opphør er dekket når løsning dekker muligRettFra`() {
+        val behandlingId = nesteBehandlingId()
+        val forrigeBehandlingId = nesteBehandlingId()
+        val muligRettFra = LocalDate.of(2027, 1, 1)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
+        val krav = nyttKrav(behandlingId, muligRettFra)
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    relevantKravType = RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR,
+                    startDato = krav.muligRettFra,
+                )
+            )
+        )
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+
+        val løsning = løsning(fom = muligRettFra)
+        val gjeldendeVurderinger =
+            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
+
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to {
+                assertTrue(it)
+            }
+        )
+    }
 
     // TODO: Må ha § 12 før vi kan teste dette
-//    @Test
-//    fun `Gjenopptak er ikke dekket etter Opphør når løsning ikke dekker muligRettFra`() {
-//        val behandlingId = nesteBehandlingId()
-//        val forrigeBehandlingId = nesteBehandlingId()
-//        val muligRettFra = LocalDate.of(2027, 1, 1)
-//        val rettFørsteKrav = LocalDate.of(2024, 1, 1)
-//        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
-//        val krav = gjenopptak(behandlingId, muligRettFra)
-//        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
-//        settOppForrigeBehandling(
-//            forrigeBehandlingId,
-//            rettFørsteKrav,
-//            StansOpphørGrunnlag(
-//                setOf(
-//                    opphørEntry(
-//                        forrigeBehandlingId,
-//                        muligRettFra.minusMonths(1),
-//                        Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
-//                    )
-//                )
-//            ),
-//        )
-//        val løsningFom = muligRettFra.minusDays(1)
-//        val løsning = løsning(løsningFom)
-//        val gjeldendeVurderinger =
-//            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
-//
-//        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
-//
-//
-//        assertTidslinje(
-//            resultat,
-//            Periode(muligRettFra, Tid.MAKS) to {
-//                assertFalse(it)
-//            }
-//        )
-//    }
+    @Test
+    fun `Gjeninntreden etter Opphør er ikke dekket når løsning ikke dekker muligRettFra`() {
+        val behandlingId = nesteBehandlingId()
+        val forrigeBehandlingId = nesteBehandlingId()
+        val muligRettFra = LocalDate.of(2027, 1, 1)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
+        val krav = nyttKrav(behandlingId, muligRettFra)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    relevantKravType = RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR,
+                    startDato = krav.muligRettFra,
+                )
+            )
+        )
+        val løsningFom = muligRettFra.minusDays(1)
+        val løsning = løsning(løsningFom)
+        val gjeldendeVurderinger =
+            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
+
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to {
+                assertFalse(it)
+            }
+        )
+    }
 
     private fun løsning(fom: LocalDate) = AvklarSykdomLøsning(
         løsningerForPerioder = listOf(
@@ -586,9 +672,9 @@ class AvklaringsbehovValideringTest {
         muligRettFra: LocalDate,
         grunnlag: StansOpphørGrunnlag,
     ) {
-        lagreUnderveis(forrigeBehandlingId, muligRettFra, muligRettFra.plusYears(2))
-        lagreVedtakslengde(forrigeBehandlingId, LocalDate.of(2099, 12, 31))
-        InMemoryStansOpphørRepository.lagre(forrigeBehandlingId, grunnlag)
+//        lagreUnderveis(forrigeBehandlingId, muligRettFra, muligRettFra.plusYears(2))
+//        lagreVedtakslengde(forrigeBehandlingId, LocalDate.of(2099, 12, 31))
+//        InMemoryStansOpphørRepository.lagre(forrigeBehandlingId, grunnlag)
     }
 
     private fun lagreUnderveis(
@@ -629,6 +715,7 @@ class AvklaringsbehovValideringTest {
                 VedtakslengdeVurdering(
                     sluttdato = sluttdato,
                     utvidetMed = ÅrMedHverdager.TREDJE_ÅR,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     vurdertAv = Bruker("saksbehandler"),
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),

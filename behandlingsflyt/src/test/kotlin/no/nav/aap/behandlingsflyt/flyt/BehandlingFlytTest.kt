@@ -6,9 +6,13 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsb
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class BehandlingFlytTest {
 
@@ -133,33 +137,53 @@ class BehandlingFlytTest {
 
 
     @Test
-    fun `utlede nytt tidlig steg for førstegangsbehandling`() {
+    fun `Skal tilbakeføre til tidligste steg for nytt vurderingsbehov i førstegangsbehandling`() {
         val flyt = Førstegangsbehandling.flyt()
         flyt.forberedFlyt(StegType.BARNETILLEGG)
 
         assertThat(flyt.aktivtSteg().type()).isEqualTo(StegType.BARNETILLEGG)
+        
+        val vurderingsbehovOpprettet = LocalDateTime.now()
+        val stegSistKjørt = vurderingsbehovOpprettet.minusHours(1)
 
         val resultat = flyt.tilbakeflytEtterEndringer(
-            oppdaterteGrunnlagstype = listOf(),
-            nyeVurderingsbehov = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+            oppdaterteInformasjonskrav = listOf(),
+            vurderingsbehovPåBehandlingen = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, vurderingsbehovOpprettet)),
+            nyesteStegEndring = listOf(StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVSLUTTER, tidspunkt = stegSistKjørt))
         )
 
         val sisteStegITilbakeføringsflyt = resultat.stegene().last()
 
         assertThat(flyt.erStegFørEllerLik(sisteStegITilbakeføringsflyt, StegType.AVKLAR_SYKDOM)).isTrue()
+
+
+        val tilbakeFøringsflyt2 = flyt.tilbakeflytEtterEndringer(
+            oppdaterteInformasjonskrav = listOf(),
+            vurderingsbehovPåBehandlingen = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, vurderingsbehovOpprettet)),
+            nyesteStegEndring = listOf(StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVSLUTTER, tidspunkt = vurderingsbehovOpprettet))
+        )
+
+        assertThat(tilbakeFøringsflyt2.stegene())
+            .describedAs { "Skal ikke tilbakeføre hvis vurderingsbehovet allerede har ført til tilbakeføring" }
+            .isEmpty()
     }
 
     @Test
-    fun `utlede nytt tidlig steg for revurdering`() {
+    fun `Skal tilbakeføre til tidligste steg for nytt vurderingsbehov i revurdering`() {
         val flyt = Revurdering.flyt()
         flyt.forberedFlyt(StegType.BARNETILLEGG)
 
         assertThat(flyt.aktivtSteg().type()).isEqualTo(StegType.BARNETILLEGG)
+        
+        val vurderingsbehovOpprettet = LocalDateTime.now()
+        val stegSistKjørt = vurderingsbehovOpprettet.minusHours(1)
 
         val resultat = flyt.tilbakeflytEtterEndringer(
-            oppdaterteGrunnlagstype = listOf(),
-            nyeVurderingsbehov = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+            oppdaterteInformasjonskrav = listOf(),
+            vurderingsbehovPåBehandlingen = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, vurderingsbehovOpprettet)),
+            nyesteStegEndring = listOf(StegTilstand(stegType = StegType.AVKLAR_SYKDOM, stegStatus = StegStatus.AVSLUTTER, tidspunkt = stegSistKjørt))
         )
+
 
         val sisteStegITilbakeføringsflyt = resultat.stegene().last()
 

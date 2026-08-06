@@ -82,6 +82,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.migrering.AvklarMigreringsdatoSteg
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 
 object Revurdering : BehandlingType {
@@ -93,6 +94,11 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
             .medSteg(
+                steg = AvklarMigreringsdatoSteg,
+                informasjonskrav = emptyList(),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MIGRERING_FRA_ARENA)
+            )
+            .medSteg(
                 steg = KravSteg,
                 informasjonskrav = emptyList(),
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.MIGRERING_FRA_ARENA, Vurderingsbehov.VURDER_KRAV)
@@ -101,6 +107,13 @@ object Revurdering : BehandlingType {
                 steg = SendForvaltningsmeldingSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.MIGRERING_FRA_ARENA),
                 informasjonskrav = emptyList()
+            )
+            .medSteg(
+                steg = RettighetsperiodeSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
             )
             .medSteg(
                 steg = AvklarStønadsperiodeSteg,
@@ -114,13 +127,6 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SøknadSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SØKNAD_TRUKKET),
-            )
-            .medSteg(
-                steg = RettighetsperiodeSteg,
-                vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                    Vurderingsbehov.HELHETLIG_VURDERING,
-                )
             )
             .medSteg(
                 steg = VurderLovvalgSteg,
@@ -369,6 +375,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.OPPHOLDSKRAV,
+                    Vurderingsbehov.AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
@@ -402,6 +409,7 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                     Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+                    Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 ),

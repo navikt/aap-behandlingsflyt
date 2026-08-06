@@ -88,6 +88,12 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    override fun hentNyesteEndringForSteg(behandlingId: BehandlingId): List<StegTilstand> {
+        synchronized(lock) {
+            return memoryStegHistorikk[behandlingId].orEmpty().groupBy { it.steg() }.mapNotNull { it.value.last() }
+        }
+    }
+
     override fun hent(referanse: BehandlingReferanse): Behandling {
         synchronized(lock) {
             log.info("Henter behandling med referanse $referanse.")
@@ -172,7 +178,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     ) {
         synchronized(lock) {
             val stegHistorikk = memoryStegHistorikk[behandlingId].orEmpty()
-            check(stegHistorikk.all { it <= tilstand  })
+            check(stegHistorikk.all { it <= tilstand })
             memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
             memory[behandlingId]!!.oppdaterSteg(tilstand)
         }
