@@ -24,7 +24,7 @@ class AvklarOvergangArbeidLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val nyeVurderinger = løsning.løsningerForPerioder
-            .map { it.tilOvergangArbeidVurdering(kontekst) }
+            .map { it.tilOvergangArbeidVurdering(kontekst.bruker, kontekst.behandlingId()) }
 
         val gamleVurderinger = behandling.forrigeBehandlingId
             ?.let { overgangArbeidRepository.hentHvisEksisterer(it) }
