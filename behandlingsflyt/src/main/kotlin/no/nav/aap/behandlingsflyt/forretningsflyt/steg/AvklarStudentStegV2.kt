@@ -57,7 +57,7 @@ class AvklarStudentStegV2 private constructor(
                     ?.vurderinger
                 studentRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
             },
-            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert(kontekst) },
+            perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
         )
 
         when (kontekst.vurderingType) {
