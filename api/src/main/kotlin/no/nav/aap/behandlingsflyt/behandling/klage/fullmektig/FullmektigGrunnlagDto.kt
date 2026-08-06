@@ -16,8 +16,6 @@ data class FullmektigGrunnlagDto(
 data class FullmektigVurderingDto(
     val harFullmektig: Boolean,
     val fullmektigIdentMedType: IdentMedType? = null,
-    @Deprecated("Bruk fullmektigIdentMedType")
-    val fullmektigIdent: String? = null,
     val fullmektigNavnOgAdresse: NavnOgAdresse? = null,
     val vurderingerMeta: VurderingerMetaResponse,
 )
