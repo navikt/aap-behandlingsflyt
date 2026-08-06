@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
@@ -195,11 +196,18 @@ class StønadsperiodeRepositoryImplTest {
         assertThat(grunnlag).isNotNull
     }
 
+    val eksempelKravTyper = listOf(
+        RelevantKravType.NY_STØNADSPERIODE,
+        RelevantKravType.AVSLAG,
+        RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR,
+        RelevantKravType.GJENOPPTAK_ETTER_STANS(listOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
+    )
+
     @Test
     fun `vurdering med alle relevantKravType-verdier lagres og hentes korrekt`() {
-        RelevantKravType.entries.forEach { kravType ->
+        eksempelKravTyper.forEach { kravType ->
             val behandlingId = opprettBehandlingId()
-            val harGjenværende = kravType == RelevantKravType.GJENOPPTAK_ETTER_STANS ||
+            val harGjenværende = kravType is RelevantKravType.GJENOPPTAK_ETTER_STANS ||
                     kravType == RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR
             val vurdering = StønadsperiodeVurdering(
                 referanse = Kravreferanse(UUID.randomUUID()),

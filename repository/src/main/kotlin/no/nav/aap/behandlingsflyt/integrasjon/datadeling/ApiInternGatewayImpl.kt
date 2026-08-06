@@ -40,6 +40,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerRequest
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -282,6 +284,16 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
         requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
         return ArenaStatusResponse(remoteResponse.eksisterer)
+    }
+
+    override fun hentSakerForPerson(personidentifikator: String): ArenaSakerResponse {
+        val response: ArenaSakerResponse? = restClient.post(
+            uri.resolve("/arena/person/saker"),
+            PostRequest(body = ArenaSakerRequest(personidentifikator)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /arena/person/saker" }
+        return response
     }
 
     override fun oppdaterIdenter(

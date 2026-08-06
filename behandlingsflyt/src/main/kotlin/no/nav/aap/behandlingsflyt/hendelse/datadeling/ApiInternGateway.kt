@@ -56,4 +56,6 @@ interface ApiInternGateway : Gateway {
     fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse>
 
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
+
+    fun hentSakerForPerson(personidentifikator: String): ArenaSakerResponse
 }

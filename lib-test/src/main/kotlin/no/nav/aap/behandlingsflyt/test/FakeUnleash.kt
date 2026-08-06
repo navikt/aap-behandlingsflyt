@@ -76,6 +76,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.MotorV2 to true,
         BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling to true,
+        BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,

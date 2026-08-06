@@ -124,7 +124,7 @@ class MigrerFraArenaApiTest {
             URI.create("http://localhost:$port/api/sak/migrerFraArena"),
             PostRequest(
                 body = MigrerArenasakDTO(
-                    saksnummerArena = "123456",
+                    saksnummerArena = "2016-123456",
                     ident = ident,
                 ),
                 currentToken = getToken(),
@@ -150,7 +150,7 @@ class MigrerFraArenaApiTest {
             )
         )
 
-        val dto = MigrerArenasakDTO(saksnummerArena = "654321", ident = ident)
+        val dto = MigrerArenasakDTO(saksnummerArena = "2016-123456", ident = ident)
         val url = URI.create("http://localhost:$port/api/sak/migrerFraArena")
         val token = getToken()
 

@@ -1,11 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningMedPeriodiserteVurderinger
-import no.nav.aap.behandlingsflyt.behandling.krav.KravService
-import no.nav.aap.behandlingsflyt.behandling.krav.RelevantKravType
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.vilkårstyper
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -23,7 +26,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
-import kotlin.collections.orEmpty
 
 class AvklaringsbehovValidering(
     private val repositoryProvider: RepositoryProvider,
@@ -31,7 +33,8 @@ class AvklaringsbehovValidering(
 ) {
     private val unleashGateway: UnleashGateway = gatewayProvider.provide()
     private val sakRepository: SakRepository = repositoryProvider.provide()
-    private val kravService: KravService = KravService(repositoryProvider, gatewayProvider)
+    private val kravRepository: KravRepository = repositoryProvider.provide()
+    private val stønadsperiodeRepository: StønadsperiodeRepository = repositoryProvider.provide()
 
     fun validerPerioder(
         bruker: Bruker,
@@ -132,11 +135,13 @@ class AvklaringsbehovValidering(
         ) {
             return Tidslinje.empty()
         }
-        return kravService.kravtypeTidslinje(kontekst)
-            .map { kravPeriode, kravType ->
+
+        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return Tidslinje.empty()
+        return stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)?.tilTidslinje(kravGrunnlag).orEmpty()
+            .map { segmentPeriode, stønadsperiodeVurdering ->
                 erKravDekketAvLøsning(
-                    kravPeriode,
-                    kravType,
+                    segmentPeriode,
+                    stønadsperiodeVurdering,
                     definisjon,
                     gjeldendeVurderinger
                 )
@@ -145,17 +150,25 @@ class AvklaringsbehovValidering(
 
     private fun erKravDekketAvLøsning(
         kravPeriode: Periode,
-        kravType: RelevantKravType,
-        definisjon: Definisjon, gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
+        stønadsperiodeVurdering: StønadsperiodeVurdering,
+        definisjon: Definisjon, gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>
     ): Boolean {
-        return when (kravType) {
-            RelevantKravType.NYTT_KRAV -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
+        return when (stønadsperiodeVurdering.relevantKravType) {
+            RelevantKravType.NY_STØNADSPERIODE -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
 
-            RelevantKravType.GJENOPPTAK_ETTER_STANS -> true
+            is RelevantKravType.GJENOPPTAK_ETTER_STANS -> {
+                val stansensVilkår = stønadsperiodeVurdering.relevantKravType.gjennopptakEtter.flatMap { it.vilkårstyper } .toSet()
+                    .map { it.kontraktversjon }.toSet()
+                val definisjonensVilkår = setOfNotNull(definisjon.vurdererVilkår)
+                stansensVilkår.disjoint(definisjonensVilkår)
+            }
+
             RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> !definisjon.måRevurderesEtterOpphør || harVurderingForKrav(
                 gjeldendeVurderinger,
                 kravPeriode
             )
+
+            RelevantKravType.AVSLAG -> throw NotImplementedError()
         }
     }
 
@@ -165,4 +178,8 @@ class AvklaringsbehovValidering(
     ): Boolean = gjeldendeVurderinger.segmenter().any { (vurderingPeriode, _) ->
         kravPeriode.inneholder(vurderingPeriode.fom)
     }
+}
+
+fun <A> Set<A>.disjoint(other: Set<A>): Boolean {
+    return this.intersect(other).isEmpty()
 }

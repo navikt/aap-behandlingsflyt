@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdfgen.PdfgenGatewayImpl
+import no.nav.aap.behandlingsflyt.integrasjon.pdfgenerator.PdfGeneratorGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
@@ -85,6 +86,7 @@ fun testGatewayProvider(
         register<TiltakspengerGatewayImpl>()
         register<DokarkivGatewayImpl>()
         register<PdfgenGatewayImpl>()
+        register<PdfGeneratorGatewayImpl>()
         register<DummyBehandlingHendelseServiceFactory>()
         extensions()
     }

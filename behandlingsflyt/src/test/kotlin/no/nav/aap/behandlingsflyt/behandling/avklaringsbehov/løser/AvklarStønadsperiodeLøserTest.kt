@@ -193,7 +193,7 @@ class AvklarStønadsperiodeLøserTest {
                     referanse = kravreferanse,
                     begrunnelse = "test",
                     harHattOrdinærSiste52Uker = true,
-                    harGjenværendeKvote = false,
+                    harGjenværendeKvote = true,
                     stansOpphør = StansEllerOpphørDto(
                         type = StansOpphørVurderingTypeDto.STANS,
                         årsaker = listOf(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS)
@@ -205,7 +205,7 @@ class AvklarStønadsperiodeLøserTest {
         løser.løs(kontekst(sakId, behandlingId), løsning)
         val grunnlag = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandlingId)
         assertEquals(1, grunnlag?.vurderinger?.size)
-        assertEquals(RelevantKravType.GJENOPPTAK_ETTER_STANS, grunnlag?.vurderinger?.first()?.relevantKravType)
+        assertEquals(RelevantKravType.GJENOPPTAK_ETTER_STANS(listOf(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS)), grunnlag?.vurderinger?.first()?.relevantKravType)
 
     }
 
@@ -226,7 +226,7 @@ class AvklarStønadsperiodeLøserTest {
                     referanse = kravreferanse,
                     begrunnelse = "test",
                     harHattOrdinærSiste52Uker = true,
-                    harGjenværendeKvote = false,
+                    harGjenværendeKvote = true,
                     stansOpphør = StansEllerOpphørDto(
                         type = StansOpphørVurderingTypeDto.STANS,
                         årsaker = listOf(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS)
@@ -238,7 +238,7 @@ class AvklarStønadsperiodeLøserTest {
         løser.løs(kontekst(sakId, behandlingId), løsning)
         val grunnlag = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandlingId)
         assertEquals(1, grunnlag?.vurderinger?.size)
-        assertEquals(RelevantKravType.GJENOPPTAK_ETTER_STANS, grunnlag?.vurderinger?.first()?.relevantKravType)
+        assertEquals(RelevantKravType.GJENOPPTAK_ETTER_STANS(listOf(Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS)), grunnlag?.vurderinger?.first()?.relevantKravType)
     }
 
     @Test
@@ -257,11 +257,11 @@ class AvklarStønadsperiodeLøserTest {
                 StønadsperiodeLøsningDto(
                     referanse = kravreferanse,
                     begrunnelse = "test",
-                    harHattOrdinærSiste52Uker = false,
+                    harHattOrdinærSiste52Uker = true,
                     harGjenværendeKvote = true,
                     stansOpphør = StansEllerOpphørDto(
                         type = StansOpphørVurderingTypeDto.OPPHØR,
-                        årsaker = listOf(Avslagsårsak.ANNEN_FULL_YTELSE)
+                        årsaker = listOf()
                     ),
                     startDato = 15 januar 2020,
                 )

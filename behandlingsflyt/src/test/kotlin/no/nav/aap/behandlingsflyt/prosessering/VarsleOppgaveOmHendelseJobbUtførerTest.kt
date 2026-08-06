@@ -257,7 +257,6 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
         avbruddMerEnn6Måneder = true,
         vurdertAv = Bruker("Z00000"),
         vurdertIBehandling = behandlingId,
-        diagnose = null,
     )
 }
 

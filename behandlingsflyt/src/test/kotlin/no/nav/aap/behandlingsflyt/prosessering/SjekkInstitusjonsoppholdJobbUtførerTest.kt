@@ -207,7 +207,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             prosesserBehandlingServiceMock.triggProsesserBehandling(
                 fakeOpprettetBehandling,
                 any(),
-                any()
             )
         } just Runs
 
