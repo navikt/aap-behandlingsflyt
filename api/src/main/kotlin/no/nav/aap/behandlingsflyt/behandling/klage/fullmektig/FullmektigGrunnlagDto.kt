@@ -33,7 +33,6 @@ internal fun FullmektigGrunnlag.tilDto(
 internal fun FullmektigVurdering.tilDto(ansattInfoService: AnsattInfoService): FullmektigVurderingDto {
     return FullmektigVurderingDto(
         harFullmektig = this.harFullmektig,
-        fullmektigIdent = fullmektigIdent?.ident,
         fullmektigIdentMedType = this.fullmektigIdent,
         fullmektigNavnOgAdresse = this.fullmektigNavnOgAdresse,
         vurderingerMeta = VurderingerMetaResponse(
