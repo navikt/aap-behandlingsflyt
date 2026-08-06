@@ -53,7 +53,7 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
             }
 
         val avslag11_27Vurderinger = avslag11_27Tidslinje.map { vurdering ->
-            if (vurdering.skalAvslås1127)
+            if (vurdering.skalAvslås1127 == true)
                 Vilkårsvurdering(
                     utfall = Utfall.IKKE_OPPFYLT,
                     manuellVurdering = true,
@@ -76,6 +76,7 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
             when {
                 avslag1127?.utfall == Utfall.IKKE_OPPFYLT -> avslag1127
                 samordning?.utfall == Utfall.IKKE_OPPFYLT -> samordning
+                avslag1127?.utfall == Utfall.OPPFYLT -> avslag1127
                 else -> samordning
             }
         }
