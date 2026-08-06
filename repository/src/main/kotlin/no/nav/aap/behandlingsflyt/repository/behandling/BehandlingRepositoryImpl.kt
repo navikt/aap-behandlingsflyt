@@ -557,9 +557,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, it.type)
                 setLong(3, behandlingÅrsakId)
-                val nå = LocalDateTime.now()
-                setLocalDateTime(4, nå)
-                setLocalDateTime(5, nå)
+                setLocalDateTime(4, vurderingsbehovOgÅrsak.opprettet)
+                setLocalDateTime(5, LocalDateTime.now())
             }
         }
     }
