@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -55,19 +56,20 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
         connection.executeBatch(
             """
             insert into vedtakslengde_vurdering (
-                sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, vurderinger_id, begrunnelse
-            ) values (?, ?, ?, ?, ?, ?, ?)
+                sluttdato, utvidet_med, aarsaker, vurdert_i_behandling, vurdert_av, opprettet, vurderinger_id, begrunnelse
+            ) values (?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             vurderinger
         ) {
             setParams { vurdering ->
                 setLocalDate(1, vurdering.sluttdato)
                 setEnumName(2, vurdering.utvidetMed)
-                setLong(3, vurdering.vurdertIBehandling.toLong())
-                setString(4, vurdering.vurdertAv.ident)
-                setInstant(5, vurdering.opprettet)
-                setLong(6, vurderingerId)
-                setString(7, vurdering.begrunnelse)
+                setArray(3, vurdering.årsaker.map { it.name })
+                setLong(4, vurdering.vurdertIBehandling.toLong())
+                setString(5, vurdering.vurdertAv.ident)
+                setInstant(6, vurdering.opprettet)
+                setLong(7, vurderingerId)
+                setString(8, vurdering.begrunnelse)
             }
         }
 
@@ -94,7 +96,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
     private fun hentVurderinger(vurderingerId: Long): List<VedtakslengdeVurdering> {
         return connection.queryList(
             """
-            select sluttdato, utvidet_med, vurdert_i_behandling, vurdert_av, opprettet, begrunnelse
+            select sluttdato, utvidet_med, aarsaker, vurdert_i_behandling, vurdert_av, opprettet, begrunnelse
             from vedtakslengde_vurdering
             where vurderinger_id = ?
             order by opprettet
@@ -107,6 +109,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
                 VedtakslengdeVurdering(
                     sluttdato = row.getLocalDate("sluttdato"),
                     utvidetMed = row.getEnum("utvidet_med"),
+                    årsaker = row.getArray("aarsaker", String::class).map { VedtakslengdeÅrsak.valueOf(it) },
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                     vurdertAv = Bruker(row.getString("vurdert_av")),
                     opprettet = row.getInstant("opprettet"),

@@ -23,6 +23,7 @@ class VedtakslengdeGrunnlagTest {
     ) = VedtakslengdeVurdering(
         sluttdato = sluttdato,
         utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+        årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
         vurdertAv = SYSTEMBRUKER,
         vurdertIBehandling = behandlingId,
         opprettet = opprettet,
@@ -36,6 +37,7 @@ class VedtakslengdeGrunnlagTest {
     ) = VedtakslengdeVurdering(
         sluttdato = sluttdato,
         utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+        årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
         vurdertAv = saksbehandler,
         vurdertIBehandling = behandlingId,
         opprettet = opprettet,
