@@ -58,9 +58,9 @@ class TrukketSøknadRepositoryImpl(
         connection.executeBatch(
             """
             insert into trukket_soknad_vurdering
-                (vurderinger_id, journalpost_id, begrunnelse, skal_trekkes, vurdert_av, vurdert)
+                (vurderinger_id, journalpost_id, begrunnelse, skal_trekkes, vurdert_av, vurdert, trekk_aarsak)
             values
-                (?, ?, ?, ?, ?, ?)
+                (?, ?, ?, ?, ?, ?, ?)
         """.trimIndent(), grunnlag.vurderinger
         ) {
             setParams { vurdering ->
@@ -70,6 +70,7 @@ class TrukketSøknadRepositoryImpl(
                 setBoolean(4, vurdering.skalTrekkes)
                 setString(5, vurdering.vurdertAv.ident)
                 setInstant(6, vurdering.vurdert)
+                setString(7, vurdering.aarsak.toString())
             }
         }
     }
@@ -117,8 +118,10 @@ class TrukketSøknadRepositoryImpl(
                     vurdertAv = Bruker(it.getString("vurdert_av")),
                     skalTrekkes = it.getBoolean("skal_trekkes"),
                     vurdert = it.getInstant("vurdert"),
+                    aarsak = it.getEnumOrNull("trekk_aarsak"),
                 )
             }
+
         })
     }
 

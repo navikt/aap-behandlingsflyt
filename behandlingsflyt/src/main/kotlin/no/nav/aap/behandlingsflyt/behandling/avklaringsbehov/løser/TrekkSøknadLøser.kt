@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
+import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
+import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -16,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
@@ -118,6 +121,12 @@ class TrekkSøknadLøser(
                 vurdertAv = kontekst.bruker,
                 skalTrekkes = løsning.skalTrekkes,
                 vurdert = Instant.now(),
+                aarsak = when(løsning.aarsak) {
+                    AarsakTilTrekkSoknadDto.FOR_TIDLIG -> AarsakTilTrekkSoknad.FOR_TIDLIG
+                    AarsakTilTrekkSoknadDto.FEIL_YTELSE -> AarsakTilTrekkSoknad.FEIL_YTELSE
+                    AarsakTilTrekkSoknadDto.BRUKER_ONSKER_IKKE -> AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE
+                    AarsakTilTrekkSoknadDto.ANNET -> AarsakTilTrekkSoknad.ANNET
+                }
             )
         )
     }
