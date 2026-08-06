@@ -310,7 +310,6 @@ class TestBehandlingFullføringService(
             AvklarYrkesskadeLøsning(
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "Er yrkesskade",
-                    relevanteSaker = emptyList(),
                     relevanteYrkesskadeSaker = listOf(YrkesskadeSakDto(yrkesskade.ref, null)),
                     andelAvNedsettelsen = 50,
                     erÅrsakssammenheng = true,

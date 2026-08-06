@@ -90,7 +90,7 @@ class KvalitetssikringsSteg(
                 avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
                     ?: return !avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent()
 
-            val harEndring = avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring().any { avklaringsbehov ->
+            val harEndringPerAvklaringsbehov =  avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring().map { avklaringsbehov ->
                 vurderingEndretService.endretSidenTidspunkt(
                     behandlingId,
                     avklaringsbehov,
@@ -98,11 +98,15 @@ class KvalitetssikringsSteg(
                 )
             }
 
+            if (harEndringPerAvklaringsbehov.any { it == null }) {
+                return !avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent()
+            }
+
             val harAvklaringsbehovSomIkkeErGodkjentFraFør =
                 avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring()
                     .any { !it.harBlittKvalitetssikretTidligere() }
 
-            return !harEndring && !harAvklaringsbehovSomIkkeErGodkjentFraFør
+            return harEndringPerAvklaringsbehov.all { it == false } && !harAvklaringsbehovSomIkkeErGodkjentFraFør
         }
         return !avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent()
     }

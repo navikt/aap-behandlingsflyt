@@ -329,7 +329,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             AvklarSykdomLøsning(
                 løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er syk nok",
+                        begrunnelse = "Er syk nok 1",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
@@ -352,7 +352,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
                         SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
+                            begrunnelse = "Er syk nok 2",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,

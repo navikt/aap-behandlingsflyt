@@ -51,7 +51,7 @@ class SamordningAvslagSteg(
             return Fullført
         }
 
-        val grunnlag = utledFaktagrunnlag(kontekst)
+        val grunnlag = utledFaktagrunnlag(kontekst) ?: return Fullført
         vilkårService.vurderVilkår(kontekst.behandlingId, grunnlag, SamordningAnnenFullYtelseVilkår)
 
         return Fullført
