@@ -643,6 +643,20 @@ public enum class Definisjon(
         defaultFrist = Period.ofWeeks(3),
     ),
 
+    /** Steg for migrering fra arena */
+    AVKLAR_MIGRERINGSDATO(
+        kode = AvklaringsbehovKode.`5061`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.AVKLAR_MIGRERINGSDATO,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
+    AVKLAR_RESTKVOTE(
+        kode = AvklaringsbehovKode.`5062`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.AVKLAR_RESTKVOTE_MIGRERING,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
+
     AVBRYT_AKTIVITETSPLIKTBEHANDING(
         kode = AvklaringsbehovKode.`4301`,
         type = BehovType.MANUELT_PÅKREVD,
