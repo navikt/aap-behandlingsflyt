@@ -9,15 +9,11 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.dokumentasjon.VedtakDokumentGenerator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -26,11 +22,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
@@ -58,13 +52,7 @@ class FatteVedtakStegTest {
     val virkningstidspunktUtleder = mockk<VirkningstidspunktUtleder>(relaxed = true)
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
     val pdfgenGateway = mockk<PdfgenGateway>(relaxed = true)
-    val behandlingRepository = mockk<BehandlingRepository>(relaxed = true)
-    val sakRepository = mockk<SakRepository>(relaxed = true)
-    val vilkårsresultatRepository = mockk<VilkårsresultatRepository>(relaxed = true)
-    val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>(relaxed = true)
-    val underveisRepository = mockk<UnderveisRepository>(relaxed = true)
-    val mottattDokumentRepository = mockk<MottattDokumentRepository>(relaxed = true)
-    val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>(relaxed = true)
+    val vedtakDokumentGenerator = mockk<VedtakDokumentGenerator>(relaxed = true)
     val gatewayProvider = createGatewayProvider {
         register<AlleAvskruddUnleash>()
     }
@@ -100,13 +88,7 @@ class FatteVedtakStegTest {
         unleashGateway = gatewayProvider.provide(),
         avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService,
         pdfgenGateway = pdfgenGateway,
-        behandlingRepository = behandlingRepository,
-        sakRepository = sakRepository,
-        vilkårsresultatRepository = vilkårsresultatRepository,
-        tilkjentYtelseRepository = tilkjentYtelseRepository,
-        underveisRepository = underveisRepository,
-        mottattDokumentRepository = mottattDokumentRepository,
-        beregningsgrunnlagRepository = beregningsgrunnlagRepository,
+        vedtakDokumentGenerator = vedtakDokumentGenerator,
     )
 
     @Test
@@ -158,6 +140,20 @@ class FatteVedtakStegTest {
 
         verify(exactly = 1) { vedtakService.lagreVedtak(kontekst.behandlingId, any(), any()) }
         assertThat(resultat).isEqualTo(Fullført)
+    }
+
+    @Test
+    fun `genererer ikke vilkårsvurderingsoppsummering når feature toggle er av`() {
+        val kontekst = kontekst(
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD,
+        )
+        every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
+        every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns false
+
+        steg().utfør(kontekst)
+
+        verify(exactly = 0) { vedtakDokumentGenerator.genererDokument(any(), any(), any(), any()) }
     }
 
     @ParameterizedTest

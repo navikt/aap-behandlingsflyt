@@ -2,6 +2,7 @@
 
 #show terms.item: it => block(width: 100%)[
   #text(style: "italic")[#it.term]
+  #text(":")
   #h(0.5em)
   #it.description
 ]
@@ -26,10 +27,15 @@
         #elem.at("avsnitt")
         #parbreak()
     ] else if elem.at("type") == "overskrift" [
-        #heading(
-            level: elem.at("nivå"),
-            numbering: "1.1 ",
-            elem.at("overskrift"))
+        #if elem.at("nivå") == none [
+            #strong(elem.at("overskrift"))
+            #parbreak()
+        ] else [
+            #heading(
+                level: elem.at("nivå"),
+                numbering: "1.1 ",
+                elem.at("overskrift"))
+        ]
     ] else if elem.at("type") == "liste" [
         #for (key, value) in elem.at("liste") [
             / #key: #value
@@ -40,7 +46,6 @@
             align: right,
             table.header(..elem.at("kolonner")),
             ..elem.at("rader").flatten(),
-            table.footer(..elem.at("kolonner")),
          )
     ]
 ]

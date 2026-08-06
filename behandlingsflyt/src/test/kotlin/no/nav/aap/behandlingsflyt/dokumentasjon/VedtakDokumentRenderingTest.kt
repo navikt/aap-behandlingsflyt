@@ -1,0 +1,189 @@
+package no.nav.aap.behandlingsflyt.dokumentasjon
+
+import io.mockk.every
+import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.meldekort.DOM
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.Year
+
+class VedtakDokumentRenderingTest {
+    private val behandlingId = BehandlingId(42)
+    private val behandling = mockk<Behandling>(relaxed = true) {
+        every { id } returns behandlingId
+        every { referanse } returns BehandlingReferanse()
+        every { opprettetTidspunkt } returns LocalDateTime.of(2024, 1, 1, 12, 0)
+        every { vurderingsbehov() } returns emptyList()
+        every { årsakTilOpprettelse } returns ÅrsakTilOpprettelse.SØKNAD
+    }
+    private val behandlingMedVedtak = BehandlingMedVedtak(
+        saksnummer = Saksnummer("1234567890"),
+        id = behandlingId,
+        forrigeBehandlingId = null,
+        referanse = BehandlingReferanse(),
+        typeBehandling = TypeBehandling.Førstegangsbehandling,
+        status = Status.AVSLUTTET,
+        opprettetTidspunkt = LocalDateTime.of(2024, 1, 1, 12, 0),
+        vedtakId = VedtakId(1),
+        vedtakstidspunkt = LocalDateTime.of(2024, 1, 2, 12, 0),
+        virkningstidspunkt = null,
+        vurderingsbehov = emptySet(),
+        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+    )
+
+    private fun grunnlag11_19() = Grunnlag11_19(
+        grunnlaget = GUnit(BigDecimal("3.5")),
+        erGjennomsnitt = true,
+        gjennomsnittligInntektIG = GUnit(BigDecimal("3.5")),
+        inntekter = listOf(
+            GrunnlagInntekt(
+                år = Year.of(2023),
+                inntektIKroner = Beløp(450000),
+                grunnbeløp = Beløp(118620),
+                inntektIG = GUnit(BigDecimal("3.79")),
+                inntekt6GBegrenset = GUnit(BigDecimal("3.79")),
+                er6GBegrenset = false,
+            )
+        ),
+    )
+
+    private fun grunnlag(
+        beregningsgrunnlag: Beregningsgrunnlag? = grunnlag11_19(),
+        sykdomGrunnlag: SykdomGrunnlag? = null,
+        refusjonkrav: List<RefusjonkravVurdering>? = null,
+    ) = BehandlingFaktagrunnlag(
+        behandling = behandling,
+        behandlinger = listOf(behandlingMedVedtak),
+        vilkårsresultat = Vilkårsresultat(),
+        tilkjentYtelse = Tidslinje.empty(),
+        underveis = Tidslinje.empty(),
+        avklaringsbehovene = emptyList(),
+        mottatteDokumenter = emptyList(),
+        beregningsgrunnlag = beregningsgrunnlag,
+        forrigeTilkjentYtelse = Tidslinje.empty(),
+        forrigeUnderveis = Tidslinje.empty(),
+        forrigeVilkårsresultat = Vilkårsresultat(),
+        sykdomGrunnlag = sykdomGrunnlag,
+        bistandGrunnlag = null,
+        studentGrunnlag = null,
+        overgangUføreGrunnlag = null,
+        etableringEgenVirksomhetGrunnlag = null,
+        arbeidsevneGrunnlag = null,
+        arbeidsopptrappingGrunnlag = null,
+        overgangArbeidGrunnlag = null,
+        vedtakslengdeGrunnlag = null,
+        meldepliktGrunnlag = null,
+        stønadsperiodeGrunnlag = null,
+        barnetilleggGrunnlag = null,
+        samordningGrunnlag = null,
+        rettighetstypeGrunnlag = null,
+        institusjonsoppholdGrunnlag = null,
+        sykepengerErstatningGrunnlag = null,
+        refusjonkravVurderinger = refusjonkrav,
+        overstyringMeldepliktGrunnlag = null,
+        manuellInntektGrunnlag = null,
+        beregningVurderingGrunnlag = null,
+        forutgåendeMedlemskapGrunnlag = null,
+        oppholdskravGrunnlag = null,
+    )
+
+    private fun BehandlingFaktagrunnlag.render() =
+        tilSeksjon().render(RenderKontekst(behandlinger))
+
+    @Test
+    fun `genererer dokument uten valgfrie grunnlag`() {
+        val dokument = grunnlag(beregningsgrunnlag = null).genererDokument()
+
+        assertThat(dokument.body).isNotEmpty()
+        assertThat(dokument.body.filterIsInstance<DOM.Avsnitt>().map { it.avsnitt })
+            .anyMatch { "ikke tilgjengelig" in it }
+    }
+
+    @Test
+    fun `viser beregningsgrunnlaget`() {
+        val lister = grunnlag().render().filterIsInstance<DOM.List>().flatMap { it.liste }
+
+        assertThat(lister.map { it.first() })
+            .anyMatch { "2023" in it }
+            .anyMatch { "Endelig grunnlag" in it }
+    }
+
+    @Test
+    fun `viser sykdomsvurderingen`() {
+        val vurdering = Sykdomsvurdering(
+            begrunnelse = "Klar sykdom",
+            vurderingenGjelderFra = LocalDate.of(2024, 1, 1),
+            vurderingenGjelderTil = null,
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+            yrkesskadeBegrunnelse = null,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+            diagnose = null,
+            vurdertAv = Bruker("Z999999"),
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+        )
+        val dom = grunnlag(
+            sykdomGrunnlag = SykdomGrunnlag(null, listOf(vurdering))
+        ).render()
+
+        assertThat(dom.filterIsInstance<DOM.Header>().map { it.overskrift })
+            .contains("Vurderinger av § 11-5")
+        assertThat(dom.filterIsInstance<DOM.List>().flatMap { it.liste })
+            .contains(listOf("Begrunnelse", "Klar sykdom"))
+    }
+
+    @Test
+    fun `viser yrkesskade og refusjonskrav`() {
+        val yrkesskade = Yrkesskadevurdering(
+            begrunnelse = "Klar yrkesskade",
+            relevanteSaker = listOf(YrkesskadeSak("YS-123", null)),
+            erÅrsakssammenheng = true,
+            andelAvNedsettelsen = Prosent(80),
+            vurdertAv = Bruker("Z111111"),
+        )
+        val dom = grunnlag(
+            sykdomGrunnlag = SykdomGrunnlag(yrkesskade, emptyList()),
+            refusjonkrav = listOf(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    navKontor = "Oslo",
+                    vurdertAv = Bruker("Z333333"),
+                )
+            ),
+        ).render()
+        val overskrifter = dom.filterIsInstance<DOM.Header>().map { it.overskrift }
+
+        assertThat(overskrifter).contains("Yrkesskadevurdering", "Refusjonskrav")
+    }
+}

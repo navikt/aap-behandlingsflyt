@@ -6,22 +6,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisRegel
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.dokumentasjon.BehandlingFaktagrunnlag
+import no.nav.aap.behandlingsflyt.dokumentasjon.VedtakDokumentGenerator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -32,14 +24,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -57,13 +47,7 @@ class FatteVedtakSteg(
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
     private val unleashGateway: UnleashGateway,
     private val pdfgenGateway: PdfgenGateway,
-    private val behandlingRepository: BehandlingRepository,
-    private val sakRepository: SakRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val tilkjentYtelseRepository: TilkjentYtelseRepository,
-    private val underveisRepository: UnderveisRepository,
-    private val mottattDokumentRepository: MottattDokumentRepository,
-    private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
+    private val vedtakDokumentGenerator: VedtakDokumentGenerator,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -94,41 +78,32 @@ class FatteVedtakSteg(
                 vedtakstidspunkt = vedtakstidspunkt,
                 virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId),
             )
-            val behandling = behandlingRepository.hent(kontekst.behandlingId)
-            val sak = sakRepository.hent(behandling.sakId)
-            val behandlinger = behandlingRepository.hentAlleMedVedtakFor(sak.person.id, TypeBehandling.ytelseBehandlingstyper())
-            val pdf = pdfgenGateway.genererGeneriskDokument(
-                BehandlingFaktagrunnlag(
-                    behandling = behandling,
-                    behandlinger = behandlinger.filter { it.vedtakstidspunkt <= vedtakstidspunkt.plusSeconds(1) },
-                    vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId),
-                    tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(kontekst.behandlingId)
-                        ?.tilTidslinje().orEmpty(),
-                    underveis = underveisRepository.hentHvisEksisterer(kontekst.behandlingId)?.somTidslinje().orEmpty(),
-                    faktagrunnlag = mapOf(),
-                    avklaringsbehovene = avklaringsbehovene.alleEkskludertAvbruttOgVentebehov(),
-                    mottatteDokumenter = mottattDokumentRepository.hentDokumenterForSak(kontekst.sakId).toList(),
-                    beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId),
-                    forrigeTilkjentYtelse = kontekst.forrigeBehandlingId
-                        ?.let { tilkjentYtelseRepository.hentHvisEksisterer(it) }
-                        ?.tilTidslinje()
-                        .orEmpty(),
-                    forrigeUnderveis = kontekst.forrigeBehandlingId
-                        ?.let { underveisRepository.hentHvisEksisterer(it) }
-                        ?.somTidslinje()
-                        .orEmpty(),
-                    forrigeVilkårsresultat = kontekst.forrigeBehandlingId
-                        ?.let { vilkårsresultatRepository.hent(it) }
-                        ?: Vilkårsresultat(),
-                )
-                    .genererDokument()
-            )
-            FileOutputStream("/Users/peterbb/vedtak/${kontekst.behandlingId.id}.pdf").use { outputStream ->
-                outputStream.write(pdf)
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF)) {
+                lokalUtskriftsmappe()?.let { utskriftsmappe ->
+                    val dokument = vedtakDokumentGenerator.genererDokument(
+                        behandlingId = kontekst.behandlingId,
+                        sakId = kontekst.sakId,
+                        vedtakstidspunkt = vedtakstidspunkt,
+                        forrigeBehandlingId = kontekst.forrigeBehandlingId,
+                    )
+                    val pdf = pdfgenGateway.genererGeneriskDokument(dokument)
+                    skrivPdfLokalt(utskriftsmappe, kontekst, pdf)
+                }
             }
         }
 
         return Fullført
+    }
+
+    private fun lokalUtskriftsmappe(): File? {
+        val utskriftssti = System.getenv("AAP_VEDTAK_LOKAL_UTSKRIFT_STI")
+            ?: System.getProperty("aap.vedtak.lokal.utskrift.sti")
+            ?: return null
+        return File(utskriftssti).also { it.mkdirs() }
+    }
+
+    private fun skrivPdfLokalt(utskriftsmappe: File, kontekst: FlytKontekstMedPerioder, pdf: ByteArray) {
+        FileOutputStream(File(utskriftsmappe, "${kontekst.behandlingId.id}.pdf")).use { it.write(pdf) }
     }
 
     private fun skalLagreYtelsesvedtak(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -206,13 +181,7 @@ class FatteVedtakSteg(
                 virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),
                 unleashGateway = gatewayProvider.provide(),
                 pdfgenGateway = gatewayProvider.provide(),
-                behandlingRepository = repositoryProvider.provide(),
-                sakRepository = repositoryProvider.provide(),
-                vilkårsresultatRepository = repositoryProvider.provide(),
-                tilkjentYtelseRepository = repositoryProvider.provide(),
-                underveisRepository = repositoryProvider.provide(),
-                mottattDokumentRepository = repositoryProvider.provide(),
-                beregningsgrunnlagRepository = repositoryProvider.provide(),
+                vedtakDokumentGenerator = VedtakDokumentGenerator(repositoryProvider),
             )
         }
 

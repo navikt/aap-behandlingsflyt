@@ -110,9 +110,14 @@ data class Avsnitt(
 }
 
 data class Fritekstfelt(val tittel: String?, val fritekst: String) : Blokk {
-    override fun render(kontekst: RenderKontekst): List<DOM> = listOfNotNull(
-        tittel?.let { DOM.Header(nivå = null, it) },
-    ) + normaliserAvsnitt(fritekst)
+    override fun render(kontekst: RenderKontekst): List<DOM> {
+        val avsnitt = normaliserAvsnitt(fritekst)
+        return if (tittel == null) {
+            avsnitt
+        } else {
+            listOf(DOM.List(listOf(tittel to avsnitt.joinToString("\n\n") { it.avsnitt })))
+        }
+    }
 
     companion object {
         fun normaliserAvsnitt(fritekst: String): List<DOM.Avsnitt> {
@@ -281,13 +286,9 @@ data class G(val gUnit: GUnit) : LøpendeTekst {
 fun vurderingsoverskrift(
     behandling: BehandlingId,
     bruktForPeriode: DomenePeriode,
-    hvem: Bruker,
 ): LøpendeTekst = Span(
     Tekst("Vurdering brukt for "),
     Periode(bruktForPeriode),
-    Tekst(", vurdert av  "),
-    ReferanseBruker(hvem),
     Tekst(" i "),
     ReferanseBehandling(behandling),
 )
-

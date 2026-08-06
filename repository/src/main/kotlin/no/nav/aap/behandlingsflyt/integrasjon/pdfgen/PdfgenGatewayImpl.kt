@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdfgen
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.aap.behandlingsflyt.behandling.meldekort.Dokument
 import no.nav.aap.behandlingsflyt.behandling.meldekort.MeldekortPdfRequest
 import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
@@ -42,7 +41,6 @@ class PdfgenGatewayImpl : PdfgenGateway {
 
     override fun genererGeneriskDokument(dokument: Dokument): ByteArray {
         val uri = URI("http://localhost:7777/api/v1/genpdf/tmp/misc")
-        println(jacksonObjectMapper().writeValueAsString(dokument))
         val httpRequest = PostRequest(
             body = dokument,
             additionalHeaders = listOf(
