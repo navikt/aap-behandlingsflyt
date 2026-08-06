@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.komponenter.gateway.Gateway
 
 interface PdfGeneratorGateway : Gateway {
@@ -19,9 +18,7 @@ data class Dokument(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = "type",
-    visible = true,
-    // For å håndtere at nåværende instanser av Søknad-objektet ikke har meldingType-feltet
-    defaultImpl = SøknadV0::class,
+    visible = true
 )
 sealed interface DOM {
     @JsonTypeName("overskrift")
