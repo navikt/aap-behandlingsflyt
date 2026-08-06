@@ -80,6 +80,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                         ÅrMedHverdager.FØRSTE_ÅR
                     )
                 )
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.årsaker).containsExactly(VedtakslengdeÅrsak.AUTOMATISK)
             }
     }
 
