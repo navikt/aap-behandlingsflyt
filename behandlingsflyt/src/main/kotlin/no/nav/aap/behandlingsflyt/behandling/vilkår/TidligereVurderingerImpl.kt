@@ -87,13 +87,14 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.VURDER_AVSLAG_11_27) { _, kontekst, tidligereVurderinger ->
                 val avslag11_27Grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId)
                 val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?: return@Sjekk Tidslinje.empty()
                 val avslag11_27Tidslinje = avslag11_27Grunnlag?.tilTidslinje(kravGrunnlag).orEmpty()
 
-                tidligereVurderinger.leftJoin(avslag11_27Tidslinje) { _, vurdering ->
-                    if (vurdering?.skalAvslås1127 == true)
+                avslag11_27Tidslinje.mapNotNull { vurdering ->
+                    if (vurdering.skalAvslås1127 == true)
                         TidligereVurderinger.UunngåeligAvslag
                     else
-                        TidligereVurderinger.PotensieltOppfylt(null)
+                        null
                 }
             },
 

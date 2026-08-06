@@ -270,10 +270,10 @@ class EnklereFlytOrkestratorTest {
                 AVKLAR_MIGRERINGSDATO,
                 KRAV,
                 SEND_FORVALTNINGSMELDING,
+                VURDER_RETTIGHETSPERIODE,
                 AVKLAR_STØNADSPERIODE,
                 AVBRYT_REVURDERING,
                 SØKNAD,
-                VURDER_RETTIGHETSPERIODE,
                 VURDER_LOVVALG,
                 FASTSETT_MELDEPERIODER,
                 VURDER_ALDER,
@@ -296,10 +296,10 @@ class EnklereFlytOrkestratorTest {
                 AVKLAR_MIGRERINGSDATO,
                 KRAV,
                 SEND_FORVALTNINGSMELDING,
+                VURDER_RETTIGHETSPERIODE,
                 AVKLAR_STØNADSPERIODE,
                 AVBRYT_REVURDERING,
                 SØKNAD,
-                VURDER_RETTIGHETSPERIODE,
                 VURDER_LOVVALG,
                 FASTSETT_MELDEPERIODER,
                 VURDER_ALDER,
@@ -413,6 +413,26 @@ class EnklereFlytOrkestratorTest {
                     stegStatus = StegStatus.AVSLUTTER,
                 ),
                 StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.START,
+                ),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                ),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.UTFØRER,
+                ),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                ),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.AVSLUTTER,
+                ),
+                StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.START,
                 ),
@@ -457,26 +477,6 @@ class EnklereFlytOrkestratorTest {
                 StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVKLARINGSPUNKT),
                 StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVSLUTTER),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.START,
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.UTFØRER,
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.AVSLUTTER,
-                ),
                 StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = VURDER_LOVVALG,
@@ -615,6 +615,26 @@ class EnklereFlytOrkestratorTest {
                     stegStatus = StegStatus.AVSLUTTER,
                 ),
                 StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.START
+                ),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
+                ),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.UTFØRER
+                ),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT
+                ),
+                StegTilstand(
+                    stegType = VURDER_RETTIGHETSPERIODE,
+                    stegStatus = StegStatus.AVSLUTTER
+                ),
+                StegTilstand(
                     stegType = AVKLAR_STØNADSPERIODE,
                     stegStatus = StegStatus.START,
                 ),
@@ -659,26 +679,6 @@ class EnklereFlytOrkestratorTest {
                 StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVKLARINGSPUNKT),
                 StegTilstand(stegType = SØKNAD, stegStatus = StegStatus.AVSLUTTER),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.START
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.UTFØRER
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT
-                ),
-                StegTilstand(
-                    stegType = VURDER_RETTIGHETSPERIODE,
-                    stegStatus = StegStatus.AVSLUTTER
-                ),
                 StegTilstand(stegType = VURDER_LOVVALG, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = VURDER_LOVVALG,

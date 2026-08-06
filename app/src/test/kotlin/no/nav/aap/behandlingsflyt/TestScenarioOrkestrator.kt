@@ -141,7 +141,6 @@ class TestScenarioOrkestrator(
             AvklarYrkesskadeLøsning(
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "Er yrkesskade",
-                    relevanteSaker = emptyList(),
                     relevanteYrkesskadeSaker = listOf(
                         YrkesskadeSakDto(yrkesskadeMedDato.ref, null),
                     ),

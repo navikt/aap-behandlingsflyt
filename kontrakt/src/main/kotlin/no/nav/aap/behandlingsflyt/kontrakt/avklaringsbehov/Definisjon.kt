@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.tilgang.Rolle
 import java.time.LocalDate
@@ -25,7 +26,8 @@ public enum class Definisjon(
     public val kreverToTrinn: Boolean = false,
     public val kvalitetssikres: Boolean = false,
     public val løsesAv: List<Rolle>,
-    public val måRevurderesEtterOpphør: Boolean = true
+    public val måRevurderesEtterOpphør: Boolean = true,
+    public val vurdererVilkår: Vilkårtype? = null
 ) {
     MANUELT_SATT_PÅ_VENT(
         kode = AvklaringsbehovKode.`9001`,
@@ -34,7 +36,8 @@ public enum class Definisjon(
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
             Rolle.SAKSBEHANDLER_NASJONAL
-        )
+        ),
+        vurdererVilkår = null
     ),
 
     @Deprecated("Brukt i tidligere behandlinger")
@@ -144,7 +147,8 @@ public enum class Definisjon(
         løsesISteg = StegType.AVKLAR_SYKDOM,
         kreverToTrinn = true,
         kvalitetssikres = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        vurdererVilkår = Vilkårtype.SYKDOMSVILKÅRET
     ),
     BEKREFT_VURDERINGER_OPPFØLGING(
         kode = AvklaringsbehovKode.`5054`,

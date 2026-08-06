@@ -9,5 +9,5 @@ data class Avslag11_27VurderingDto(
     val brukersYtelse: Ytelse? = null,
     /*  Kun for sykepenger */
     val harSykepengegrunnlagOver2G: Boolean? = null,
-    val skalAvslås1127: Boolean,
+    val skalAvslås1127: Boolean? = null,
 )
