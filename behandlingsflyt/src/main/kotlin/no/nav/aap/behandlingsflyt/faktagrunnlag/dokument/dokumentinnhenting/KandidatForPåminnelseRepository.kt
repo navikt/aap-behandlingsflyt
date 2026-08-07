@@ -10,21 +10,21 @@ import no.nav.aap.komponenter.repository.RepositoryFactory
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-interface KandidatForPurringRepository : Repository {
-    fun finnKandidaterForPurring(dato: LocalDate = LocalDate.now()): List<BehandlingReferanse>
+interface KandidatForPåminnelseRepository : Repository {
+    fun finnKandidaterForPåminnelse(dato: LocalDate = LocalDate.now()): List<BehandlingReferanse>
 }
 
-class KandidatForPurringRepositoryImpl(
+class KandidatForPåminnelseRepositoryImpl(
     private val connection: DBConnection
-) : KandidatForPurringRepository {
+) : KandidatForPåminnelseRepository {
     /**
-     * En kandidat for purring er en behandling som:
+     * En kandidat for påminnelse er en behandling som:
      * - er åpen
      * - har en OPPRETTET-endring på BESTILL_LEGEERKLÆRING-avklaringsbehovet som er nøyaktig tre uker og en dag gammel
      * - ikke har vurderingsbehov [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_DIALOGMELDING]
      *   eller [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_LEGEERKLÆRING] som er nyere enn tre uker og en dag gammelt.
      */
-    override fun finnKandidaterForPurring(dato: LocalDate): List<BehandlingReferanse> {
+    override fun finnKandidaterForPåminnelse(dato: LocalDate): List<BehandlingReferanse> {
         val treUkerOgEnDagSiden = dato.minusWeeks(3).minusDays(1)
         val query = """
             SELECT b.referanse
@@ -60,7 +60,7 @@ class KandidatForPurringRepositoryImpl(
         }
     }
 
-    companion object : RepositoryFactory<KandidatForPurringRepository> {
-        override fun konstruer(connection: DBConnection) = KandidatForPurringRepositoryImpl(connection)
+    companion object : RepositoryFactory<KandidatForPåminnelseRepository> {
+        override fun konstruer(connection: DBConnection) = KandidatForPåminnelseRepositoryImpl(connection)
     }
 }

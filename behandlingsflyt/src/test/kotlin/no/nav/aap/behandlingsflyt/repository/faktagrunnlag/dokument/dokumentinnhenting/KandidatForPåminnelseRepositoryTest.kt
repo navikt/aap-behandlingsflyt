@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.dokumentinnhenting
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.KandidatForPurringRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.KandidatForPåminnelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-internal class KandidatForPurringRepositoryTest {
+internal class KandidatForPåminnelseRepositoryTest {
     private val clockTreUkerOgEnDagFremITid = fixedClock(LocalDate.now().plusWeeks(3).plusDays(1))
 
     companion object {
@@ -50,7 +50,7 @@ internal class KandidatForPurringRepositoryTest {
                 status = Status.UTREDES
             )
 
-            // avklaringsbehov opprettes i dag og behandling skal bli kandidat for purring om tre uker og en dag
+            // avklaringsbehov opprettes i dag og behandling skal bli kandidat for påminnelse om tre uker og en dag
             val avklaringsbehov1 = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling1.id)
             avklaringsbehov1.leggTil(
                 Definisjon.BESTILL_LEGEERKLÆRING,
@@ -60,7 +60,7 @@ internal class KandidatForPurringRepositoryTest {
                 frist = LocalDate.now(clockTreUkerOgEnDagFremITid).plusDays(14)
             )
 
-            val kandidaterTreUkerFraIDag = KandidatForPurringRepositoryImpl(connection).finnKandidaterForPurring(
+            val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
                 LocalDate.now(clockTreUkerOgEnDagFremITid)
             )
             assertThat(kandidaterTreUkerFraIDag).contains(behandling1.referanse)
@@ -68,11 +68,11 @@ internal class KandidatForPurringRepositoryTest {
 
             val clockToUkerFremITid = fixedClock(LocalDate.now().plusWeeks(2))
             val kandidaterToUkerFraIDag =
-                KandidatForPurringRepositoryImpl(connection).finnKandidaterForPurring(LocalDate.now(clockToUkerFremITid))
+                KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(LocalDate.now(clockToUkerFremITid))
             assertThat(kandidaterToUkerFraIDag).doesNotContain(behandling1.referanse)
 
             val clockFireUkerFremITid = fixedClock(LocalDate.now().plusWeeks(4))
-            val kandidaterFireUkerFraIDag = KandidatForPurringRepositoryImpl(connection).finnKandidaterForPurring(
+            val kandidaterFireUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
                 LocalDate.now(clockFireUkerFremITid)
             )
             assertThat(kandidaterFireUkerFraIDag).doesNotContain(behandling1.referanse)
@@ -105,7 +105,7 @@ internal class KandidatForPurringRepositoryTest {
             )
 
 
-            val kandidaterTreUkerFraIDag = KandidatForPurringRepositoryImpl(connection).finnKandidaterForPurring(
+            val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
                 LocalDate.now(clockTreUkerOgEnDagFremITid)
             )
             assertThat(kandidaterTreUkerFraIDag).contains(behandling1.referanse)
@@ -148,7 +148,7 @@ internal class KandidatForPurringRepositoryTest {
 
 
             // forespørsel er besvart, behandling skal ikke plukkes som kandidat
-            val kandidaterTreUkerFraIDag = KandidatForPurringRepositoryImpl(connection).finnKandidaterForPurring(
+            val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
                 LocalDate.now(clockTreUkerOgEnDagFremITid)
             )
             assertThat(kandidaterTreUkerFraIDag).doesNotContain(behandling1.referanse)
@@ -191,7 +191,7 @@ internal class KandidatForPurringRepositoryTest {
 
 
             // forespørsel er ikke besvart, skal plukkes som kandidat
-            val kandidaterTreUkerFraIDag = KandidatForPurringRepositoryImpl(connection).finnKandidaterForPurring(
+            val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
                 LocalDate.now(clockTreUkerOgEnDagFremITid)
             )
             assertThat(kandidaterTreUkerFraIDag).contains(behandling1.referanse)
