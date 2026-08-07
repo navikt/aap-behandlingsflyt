@@ -12,11 +12,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -207,7 +205,7 @@ class FinnSaksinfoTest {
 
         // Gjeldende vedtatt behandling er revurderingen - uten søknadsvurderingsbehov gir den null-resultat
         assertThat(result).hasSize(1)
-        assertThat(result.single().resultat).isNull()
+        assertThat(result.single().resultat).isEqualTo(ResultatKode.AVSLAG)
     }
 
     companion object {
