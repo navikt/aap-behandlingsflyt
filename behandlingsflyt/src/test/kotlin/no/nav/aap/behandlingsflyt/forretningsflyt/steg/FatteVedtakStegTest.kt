@@ -11,6 +11,8 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
@@ -63,6 +65,7 @@ class FatteVedtakStegTest {
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
         every { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(any()) } returns false
+        every { vedtakService.hentVedtak(any()) } returns null
     }
 
     private fun kontekst(
@@ -143,6 +146,29 @@ class FatteVedtakStegTest {
             )
 
         verify(exactly = 1) { vedtakService.lagreVedtak(kontekst.behandlingId, any(), any()) }
+        assertThat(resultat).isEqualTo(Fullført)
+    }
+
+    @Test
+    fun `lagrer ikke vedtak på nytt når det allerede finnes`() {
+        val kontekst = kontekst(
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD,
+        )
+        val eksisterendeVedtak = Vedtak(
+            id = VedtakId(1),
+            behandlingId = kontekst.behandlingId,
+            vedtakstidspunkt = LocalDateTime.now().minusMinutes(1),
+            virkningstidspunkt = LocalDate.now(),
+        )
+
+        every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns false
+        every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
+        every { vedtakService.hentVedtak(kontekst.behandlingId) } returns eksisterendeVedtak
+
+        val resultat = steg().utfør(kontekst)
+
+        verify(exactly = 0) { vedtakService.lagreVedtak(any(), any(), any()) }
         assertThat(resultat).isEqualTo(Fullført)
     }
 

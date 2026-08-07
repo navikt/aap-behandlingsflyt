@@ -92,7 +92,6 @@ class VedtakDokumentRenderingTest {
         vilkårsresultat = vilkårsresultat,
         tilkjentYtelse = Tidslinje.empty(),
         underveis = Tidslinje.empty(),
-        avklaringsbehovene = emptyList(),
         mottatteDokumenter = emptyList(),
         beregningsgrunnlag = beregningsgrunnlag,
         forrigeTilkjentYtelse = Tidslinje.empty(),
@@ -168,6 +167,8 @@ class VedtakDokumentRenderingTest {
             .contains("Vurderinger av § 11-5")
         assertThat(dom.filterIsInstance<DOM.List>().flatMap { it.liste })
             .contains(listOf("Begrunnelse", "Klar sykdom"))
+        assertThat(dom.filterIsInstance<DOM.List>().flatMap { it.liste }.flatten())
+            .doesNotContain("Vurdert av", "Z999999")
     }
 
     @Test
@@ -259,11 +260,11 @@ class VedtakDokumentRenderingTest {
 
         assertThat(vurderinger[Periode(oppfyltPeriode).render(kontekst)])
             .contains("Utfall: OPPFYLT")
-            .contains("Manuell vurdering: true")
+            .contains("Vurderingsmåte: Manuell")
             .contains("Begrunnelse: Aldersvilkåret er oppfylt")
         assertThat(vurderinger[Periode(avslåttPeriode).render(kontekst)])
             .contains("Utfall: IKKE_OPPFYLT")
-            .contains("Manuell vurdering: false")
+            .contains("Vurderingsmåte: Maskinell")
             .contains("Avslagsårsak: BRUKER_OVER_67, § 11-4 1. ledd")
             .contains("Begrunnelse: Brukeren har fylt 67 år")
     }

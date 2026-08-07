@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.Dokument
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
@@ -69,7 +67,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -96,7 +93,6 @@ data class BehandlingFaktagrunnlag(
     val vilkårsresultat: Vilkårsresultat,
     val tilkjentYtelse: Tidslinje<Tilkjent>,
     val underveis: Tidslinje<Underveisperiode>,
-    val avklaringsbehovene: List<Avklaringsbehov>,
     val mottatteDokumenter: List<MottattDokument>,
     val beregningsgrunnlag: Beregningsgrunnlag?,
 
@@ -254,7 +250,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Behov for aktiv behandling" to JaNeiValg(v.erBehovForAktivBehandling),
                         "Behov for arbeidsrettet tiltak" to JaNeiValg(v.erBehovForArbeidsrettetTiltak),
                         "Behov for annen oppfølging" to JaNeiValg(v.erBehovForAnnenOppfølging),
@@ -275,7 +270,6 @@ data class BehandlingFaktagrunnlag(
                 Seksjon(
                     tittel = Tekst("Vurdering"),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Avbrutt studie" to JaNeiValg(v.harAvbruttStudie),
                         "Godkjent av Lånekassen" to JaNeiValg(v.godkjentStudieAvLånekassen),
                         "Avbrutt pga sykdom/skade" to JaNeiValg(v.avbruttPgaSykdomEllerSkade),
@@ -299,7 +293,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Har søkt om uføretrygd" to JaNeiValg(v.brukerHarSøktOmUføretrygd),
                         "Fått vedtak om uføretrygd" to PrettyEnum(v.brukerHarFåttVedtakOmUføretrygd),
                         "Har rett på AAP" to JaNeiValg(v.brukerRettPåAAP),
@@ -320,7 +313,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Virksomhetsnavn" to Tekst(v.virksomhetNavn),
                         "Org.nr." to Tekst(v.orgNr ?: "—"),
                         "Foreligger faglig vurdering" to JaNeiValg(v.foreliggerFagligVurdering),
@@ -343,7 +335,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Restarbeidsevne" to Prosent(v.arbeidsevne),
                     )
                 )
@@ -362,7 +353,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Rett på AAP i opptrapping" to JaNeiValg(v.rettPaaAAPIOpptrapping),
                         "Reell mulighet til opptrapping" to JaNeiValg(v.reellMulighetTilOpptrapping),
                     )
@@ -382,7 +372,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Rett på AAP" to JaNeiValg(v.brukerRettPåAAP),
                     )
                 )
@@ -398,7 +387,6 @@ data class BehandlingFaktagrunnlag(
                 "Sluttdato" to Dato(vurdering.sluttdato),
                 "Utvidet med" to PrettyEnum(vurdering.utvidetMed),
                 "Vurdert manuelt" to JaNeiValg(vurdering.vurdertManuelt),
-                "Vurdert av" to ReferanseBruker(vurdering.vurdertAv),
             ),
             Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
         )
@@ -411,9 +399,9 @@ data class BehandlingFaktagrunnlag(
         return Seksjon(
             tittel = Tekst("Fritak fra meldeplikt"),
             Tabell.ofTidslinje(
-                kolonner = listOf(Tekst("Har fritak"), Tekst("Begrunnelse"), Tekst("Vurdert av")),
+                kolonner = listOf(Tekst("Har fritak"), Tekst("Begrunnelse")),
                 tidslinje = tidslinje.map {
-                    listOf(JaNeiValg(it.harFritak), Tekst(it.begrunnelse), ReferanseBruker(it.vurdertAv))
+                    listOf(JaNeiValg(it.harFritak), Tekst(it.begrunnelse))
                 }
             )
         )
@@ -430,7 +418,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = Tekst("Vurdering"),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Relevant kravtype" to when (val kravtype = v.relevantKravType) {
                             RelevantKravType.NY_STØNADSPERIODE -> Tekst("Ny stønadsperiode")
                             RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> Tekst("Gjeninntreden etter opphør")
@@ -490,7 +477,6 @@ data class BehandlingFaktagrunnlag(
             Dict(
                 "Årsakssammenheng" to JaNeiValg(vurdering.erÅrsakssammenheng),
                 "Andel av nedsettelsen" to (vurdering.andelAvNedsettelsen?.let { Prosent(it) } ?: Tekst("Ikke angitt")),
-                "Vurdert av" to ReferanseBruker(vurdering.vurdertAv),
                 "Relevante yrkesskadesaksnumre" to Tekst(
                     vurdering.relevanteSaker.joinToString(", ") { it.referanse }.ifEmpty { "—" }
                 ),
@@ -509,7 +495,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Har rett på sykepengererstatning" to JaNeiValg(v.harRettPå),
                         "Grunn" to PrettyEnum(v.grunn),
                         "Gjelder fra" to Dato(v.fom),
@@ -528,7 +513,6 @@ data class BehandlingFaktagrunnlag(
                 Seksjon(
                     tittel = Tekst("Vurdering"),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Har krav" to JaNeiValg(v.harKrav),
                         "NAV-kontor" to Tekst(v.navKontor ?: "—"),
                         "Fra og med" to (v.fom?.let { Dato(it) } ?: Tekst("Ikke satt")),
@@ -546,12 +530,11 @@ data class BehandlingFaktagrunnlag(
         return Seksjon(
             tittel = Tekst("Overstyring av meldeplikt"),
             Tabell.ofTidslinje(
-                kolonner = listOf(Tekst("Status"), Tekst("Begrunnelse"), Tekst("Vurdert av")),
+                kolonner = listOf(Tekst("Status"), Tekst("Begrunnelse")),
                 tidslinje = tidslinje.map { data ->
                     listOf(
                         PrettyEnum(data.meldepliktOverstyringStatus),
                         Tekst(data.begrunnelse),
-                        ReferanseBruker(data.vurdertAv),
                     )
                 }
             )
@@ -620,7 +603,6 @@ data class BehandlingFaktagrunnlag(
                                     "Får fri kost og losji" to JaNeiValg(v.faarFriKostOgLosji),
                                     "Forsørger ektefelle" to JaNeiValg(v.forsoergerEktefelle),
                                     "Har faste utgifter" to JaNeiValg(v.harFasteUtgifter),
-                                    "Vurdert av" to (v.vurdertAv?.let(::ReferanseBruker) ?: Tekst("—")),
                                 )
                             )
                         }
@@ -641,7 +623,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Har forutgående medlemskap" to JaNeiValg(v.harForutgåendeMedlemskap),
                         "Var medlem med nedsatt arbeidsevne" to JaNeiValg(v.varMedlemMedNedsattArbeidsevne),
                         "Unntak fra maks 5 år" to JaNeiValg(v.medlemMedUnntakAvMaksFemAar),
@@ -658,13 +639,12 @@ data class BehandlingFaktagrunnlag(
         return Seksjon(
             tittel = Tekst("Oppholdskrav"),
             Tabell.ofTidslinje(
-                kolonner = listOf(Tekst("Land"), Tekst("Oppfylt"), Tekst("Begrunnelse"), Tekst("Vurdert av")),
+                kolonner = listOf(Tekst("Land"), Tekst("Oppfylt"), Tekst("Begrunnelse")),
                 tidslinje = tidslinje.map { data ->
                     listOf(
                         Tekst(data.land ?: "—"),
                         JaNeiValg(data.oppfylt),
                         Tekst(data.begrunnelse),
-                        ReferanseBruker(data.vurdertAv),
                     )
                 }
             )
@@ -681,7 +661,6 @@ data class BehandlingFaktagrunnlag(
                     tittel = Tekst("År ${v.år}"),
                     Fritekstfelt("Begrunnelse", v.begrunnelse),
                     Dict(
-                        "Vurdert av" to ReferanseBruker(v.vurdertAv),
                         "Beløp (kr)" to (v.belop?.let { Kroner(it) } ?: Tekst("Ikke angitt")),
                         "EØS-beløp (kr)" to (v.eøsBeløp?.let { Kroner(it) } ?: Tekst("Ikke angitt")),
                         "Ferdiglignet PGI (kr)" to (v.ferdigLignetPGI?.let { Kroner(it) } ?: Tekst("Ikke angitt")),
@@ -708,7 +687,6 @@ data class BehandlingFaktagrunnlag(
                             "Årsak" to PrettyEnum(t.årsak),
                             "Ytterligere nedsatt begrunnelse" to Tekst(t.ytterligereNedsattBegrunnelse ?: "—"),
                             "Ytterligere nedsatt dato" to (t.ytterligereNedsattArbeidsevneDato?.let { Dato(it) } ?: Tekst("Ikke satt")),
-                            "Vurdert av" to ReferanseBruker(t.vurdertAv),
                         )
                     )
                 },
@@ -720,7 +698,6 @@ data class BehandlingFaktagrunnlag(
                                 tittel = Tekst("Sak ${v.referanse}"),
                                 Fritekstfelt("Begrunnelse", v.begrunnelse),
                                 Dict(
-                                    "Vurdert av" to ReferanseBruker(v.vurdertAv),
                                     "Antatt årlig inntekt (kr)" to Kroner(v.antattÅrligInntekt),
                                 )
                             )
@@ -765,7 +742,12 @@ data class BehandlingFaktagrunnlag(
                         is LagtTil<*>,
                         is Uendret<*> ->
                             Span(
-                                Tekst(" Utfall: ${gjeldende?.utfall}. Manuell vurdering: ${gjeldende?.manuellVurdering}. "),
+                                Tekst(" Utfall: ${gjeldende?.utfall}. Vurderingsmåte: "),
+                                when (gjeldende?.manuellVurdering) {
+                                    true -> Tekst("Manuell. ")
+                                    false -> Tekst("Maskinell. ")
+                                    null -> Tekst("Ikke tilgjengelig. ")
+                                },
                                 gjeldende?.innvilgelsesårsak?.let { Tekst("Innvilgelsesvariant: $it. ") },
                                 gjeldende?.avslagsårsak?.let { Tekst("Avslagsårsak: $it, ${it.hjemmel}.") },
                                 Tekst(" Begrunnelse: "), Tekst(gjeldende?.begrunnelse ?: "—"), Tekst("."),
@@ -968,32 +950,6 @@ data class BehandlingFaktagrunnlag(
                             )
                         },
                 "Vedtakstidspunkt" to Tidspunkt(behandlinger.single { it.id == behandling.id }.vedtakstidspunkt),
-                "Beslutter" to (
-                        avklaringsbehovene.firstOrNull { it.definisjon == Definisjon.FATTE_VEDTAK }
-                            ?.løstAv()
-                            ?.let { ReferanseBruker(it) }
-                            ?: Tekst("—")
-                        ),
-                "Kvalitetssikrer" to (
-                        avklaringsbehovene.firstOrNull { it.definisjon == Definisjon.KVALITETSSIKRING }
-                            ?.løstAv()
-                            ?.let { ReferanseBruker(it) }
-                            ?: Tekst("—")
-                        ),
-                "Saksbehandlere" to Span(
-                    avklaringsbehovene
-                        .filter {
-                            it.erIkkeAvbrutt() && !it.erVentepunkt() && it.definisjon !in listOf(
-                                Definisjon.KVALITETSSIKRING,
-                                Definisjon.FATTE_VEDTAK,
-                            )
-                        }
-                        .mapNotNull { it.løstAv() }
-                        .toSet()
-                        .takeIf { it.isNotEmpty() }
-                        ?.join(separator = " ") { Span(ReferanseBruker(it), Tekst(".")) }
-                        ?: Tekst("—"),
-                ),
             )
         ),
     )
@@ -1111,7 +1067,6 @@ fun Tidslinje<Sykdomsvurdering>.tilSeksjon() = Seksjon(
 fun Sykdomsvurdering.tilSeksjon(bruktForPeriode: DomenePeriode): Seksjon = Seksjon(
     vurderingsoverskrift(this.vurdertIBehandling, bruktForPeriode),
     Dict(
-        "Vurdert av" to ReferanseBruker(this.vurdertAv),
         "Vurderingen gjelder fra og med" to Dato(vurderingenGjelderFra),
         "Vurderingen gjelder til og med" to (vurderingenGjelderTil?.let { Dato(it) } ?: Tekst("Ikke satt")),
     ),
@@ -1137,7 +1092,6 @@ fun Sykdomsvurdering.tilSeksjon(bruktForPeriode: DomenePeriode): Seksjon = Seksj
 class VedtakDokumentGenerator(
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
@@ -1169,7 +1123,6 @@ class VedtakDokumentGenerator(
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
@@ -1231,8 +1184,6 @@ class VedtakDokumentGenerator(
             tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
                 ?.tilTidslinje().orEmpty(),
             underveis = underveisRepository.hentHvisEksisterer(behandlingId)?.somTidslinje().orEmpty(),
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                .alleEkskludertAvbruttOgVentebehov(),
             mottatteDokumenter = mottattDokumentRepository.hentDokumenterForSak(sakId).toList(),
             beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId),
 

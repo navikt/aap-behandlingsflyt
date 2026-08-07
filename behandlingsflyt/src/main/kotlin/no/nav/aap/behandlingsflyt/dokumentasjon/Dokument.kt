@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.text.NumberFormat
@@ -181,12 +180,6 @@ private val lineRegex = Regex("""[\n\r]""")
 data class Tekst(val tekst: String) : LøpendeTekst {
     override fun render(kontekst: RenderKontekst) =
         tekst.replace(lineRegex, " ")
-}
-
-data class ReferanseBruker(val bruker: Bruker) : LøpendeTekst {
-    override fun render(kontekst: RenderKontekst) =
-        /** TODO: legg på navn / enhet fra kontekst */
-        bruker.ident
 }
 
 data class ReferanseJournalpost(val journalpostId: JournalpostId) : LøpendeTekst {

@@ -78,11 +78,17 @@ class FatteVedtakSteg(
             LocalDateTime.now(ZoneId.of("Europe/Oslo"))
 
         if (erTilstrekkeligVurdert && vedtakstidspunkt != null && skalLagreYtelsesvedtak(kontekst)) {
-            vedtakService.lagreVedtak(
-                behandlingId = kontekst.behandlingId,
-                vedtakstidspunkt = vedtakstidspunkt,
-                virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId),
-            )
+            /*
+            * Guard i tilfelle arkivering feiler, slik at vi ikke får duplicates og denne forblir idempotent. Bør arkivering flyttes ut i egen jobb/steg?
+            * */
+            val eksisterendeVedtak = vedtakService.hentVedtak(kontekst.behandlingId)
+            if (eksisterendeVedtak == null) {
+                vedtakService.lagreVedtak(
+                    behandlingId = kontekst.behandlingId,
+                    vedtakstidspunkt = vedtakstidspunkt,
+                    virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId),
+                )
+            }
             if (unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF) &&
                 skalGenerereVilkårsvurderingOppsummering(kontekst)
             ) {
@@ -90,7 +96,7 @@ class FatteVedtakSteg(
                     val dokument = vedtakDokumentGenerator.genererDokument(
                         behandlingId = kontekst.behandlingId,
                         sakId = kontekst.sakId,
-                        vedtakstidspunkt = vedtakstidspunkt,
+                        vedtakstidspunkt = eksisterendeVedtak?.vedtakstidspunkt ?: vedtakstidspunkt,
                         forrigeBehandlingId = kontekst.forrigeBehandlingId,
                     )
                     val pdf = pdfGeneratorGateway.genererVurderingerOppsummeringDokument(dokument)
