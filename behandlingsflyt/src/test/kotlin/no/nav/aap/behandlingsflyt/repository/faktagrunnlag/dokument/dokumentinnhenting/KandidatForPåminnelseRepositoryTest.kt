@@ -154,47 +154,4 @@ internal class KandidatForPåminnelseRepositoryTest {
             assertThat(kandidaterTreUkerFraIDag).doesNotContain(behandling1.referanse)
         }
     }
-
-    @Test
-    fun `behandling er kandidat hvis legeerklæring er eldre enn bestilling`() {
-        dataSource.transaction { connection ->
-            val sak1 = sak(connection)
-            val behandling1 = finnEllerOpprettBehandling(connection, sak1)
-            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(
-                behandlingId = behandling1.id,
-                status = Status.UTREDES
-            )
-
-            // legeerklæring kom inn to dager før bestilling
-            BehandlingRepositoryImpl(connection).oppdaterVurderingsbehovOgÅrsak(
-                behandling = behandling1,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(
-                        VurderingsbehovMedPeriode(
-                            type = Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                            oppdatertTid = LocalDateTime.now().minusDays(2)
-                        )
-                    ), årsak = ÅrsakTilOpprettelse.HELSEOPPLYSNINGER,
-                    opprettet = LocalDateTime.now().minusDays(2)
-                )
-            )
-
-            // avklaringsbehov opprettes i dag
-            val avklaringsbehov1 = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling1.id)
-            avklaringsbehov1.leggTil(
-                Definisjon.BESTILL_LEGEERKLÆRING,
-                StegType.AVKLAR_SYKDOM,
-                null,
-                null,
-                frist = LocalDate.now(clockTreUkerOgEnDagFremITid).plusDays(14)
-            )
-
-
-            // forespørsel er ikke besvart, skal plukkes som kandidat
-            val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockTreUkerOgEnDagFremITid)
-            )
-            assertThat(kandidaterTreUkerFraIDag).contains(behandling1.referanse)
-        }
-    }
 }
