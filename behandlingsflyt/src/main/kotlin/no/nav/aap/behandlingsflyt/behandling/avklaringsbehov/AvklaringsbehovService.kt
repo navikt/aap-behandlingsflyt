@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
@@ -273,7 +274,7 @@ class AvklaringsbehovService(
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
+        perioderSomIkkeErTilstrekkeligVurdert: (kontekst: FlytKontekstMedPerioder) -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Gjør required når alle steg er oppdatert
@@ -284,7 +285,8 @@ class AvklaringsbehovService(
             perioderSomBehøverVurdering(
                 kontekst,
                 perioderVilkåretErRelevant,
-                nårVurderingErRelevant
+                nårVurderingErRelevant,
+                perioderSomIkkeErTilstrekkeligVurdert
             )
         }
 
@@ -334,7 +336,7 @@ class AvklaringsbehovService(
             perioderVedtaketBehøverVurdering = { perioderSomBehøverVurdering },
             perioderSomIkkeErTilstrekkeligVurdert =
                 {
-                    val perioderSomIkkeErTilstrekkeligVurdertEvaluert = perioderSomIkkeErTilstrekkeligVurdert()
+                    val perioderSomIkkeErTilstrekkeligVurdertEvaluert = perioderSomIkkeErTilstrekkeligVurdert(kontekst)
                     if (perioderSomIkkeErTilstrekkeligVurdertEvaluert != null) {
                         perioderSomIkkeErTilstrekkeligVurdertEvaluert.toSet()
                     } else {
@@ -377,7 +379,7 @@ class AvklaringsbehovService(
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
+        perioderSomIkkeErTilstrekkeligVurdert: (kontekst: FlytKontekstMedPerioder) -> Set<Periode>?,
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
@@ -436,10 +438,11 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         perioderVilkåretErRelevant: Tidslinje<Boolean>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        perioderSomIkkeErTilstrekkeligVurdert: (kontekst: FlytKontekstMedPerioder) -> Set<Periode>?,
     ): Set<Periode> {
         return Tidslinje.map3(
             perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
-            perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant),
+            perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant, perioderSomIkkeErTilstrekkeligVurdert),
             nårEndringIKrav(kontekst)
         ) { erRelevant, erVurdert, erKravEndret ->
             erRelevant == true && (erVurdert != true || erKravEndret == true)
@@ -477,7 +480,8 @@ class AvklaringsbehovService(
 
     private fun perioderVilkåretErVurdert(
         kontekst: FlytKontekstMedPerioder,
-        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        perioderSomIkkeErTilstrekkeligVurdert: (kontekst: FlytKontekstMedPerioder) -> Set<Periode>?
     ): Tidslinje<Boolean> {
         return kontekst.forrigeBehandlingId
             ?.let { forrigeBehandlingId ->
@@ -489,15 +493,31 @@ class AvklaringsbehovService(
                         .tidslinje()
                         .helePerioden()
 
-                nårVurderingErRelevant(
-                    kontekst.copy(
-                        /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                        behandlingId = forrigeBehandlingId,
-                        forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                        rettighetsperiode = forrigeRettighetsperiode,
-                        behandlingType = forrigeBehandling.typeBehandling(),
-                    )
+                /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
+                val kontekstForrigeBehandling = kontekst.copy(
+                    behandlingId = forrigeBehandlingId,
+                    forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
+                    rettighetsperiode = forrigeRettighetsperiode,
+                    behandlingType = forrigeBehandling.typeBehandling(),
                 )
+                val perioderVurderingVarRelevantIForrigeBehandling = nårVurderingErRelevant(
+                    kontekstForrigeBehandling
+                )
+
+                val ikkeTilstrekkeligVurdertPerioder =
+                    perioderSomIkkeErTilstrekkeligVurdert(kontekstForrigeBehandling)?.somTidslinje { it }
+                        ?.mapValue { true } ?: return perioderVurderingVarRelevantIForrigeBehandling
+
+                /**
+                 * Dersom det finnes perioder som ikke er tilstrekkelig vurdert, skal disse tas med i vurderingen.
+                 * Kan ikke alltid anta at selv om det var behov for vurdering i forrige behandling så er vurderingen tilstrekkelig.
+                 */
+                Tidslinje.map2(
+                    perioderVurderingVarRelevantIForrigeBehandling,
+                    ikkeTilstrekkeligVurdertPerioder
+                ) { erRelevant, erIkkeTilstrekkeligVurdert ->
+                    erRelevant == true && erIkkeTilstrekkeligVurdert != true
+                }
             }
             .orEmpty()
     }
