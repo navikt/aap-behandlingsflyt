@@ -15,6 +15,8 @@ data class Felter(
     val barnetillegg: Double,
     val barnepensjonDagsats: Double,
     val arbeidGradering: Int?,
+    val andelArbeid: Int?,
+    val grenseverdi: Int?,
     val samordningGradering: Int?,
     val institusjonGradering: Int?,
     val arbeidsgiverGradering: Int?,
