@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.TrekkSøknadLøser
+import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_TREKK_AV_SØKNAD_KODE
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -16,6 +17,7 @@ class TrekkSøknadLøsning(
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5028`,
     @param:JsonProperty("begrunnelse", required = true) val begrunnelse: String,
     @param:JsonProperty("skalTrekkes", required = false) val skalTrekkes: Boolean = true,
+    @param:JsonProperty("aarsak", required = false) val aarsak: AarsakTilTrekkSoknadDto,
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return TrekkSøknadLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
