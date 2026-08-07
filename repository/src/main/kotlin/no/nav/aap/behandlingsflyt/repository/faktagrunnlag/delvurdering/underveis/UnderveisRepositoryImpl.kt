@@ -106,10 +106,14 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         val antallTimer = it.getBigDecimal("timer_arbeid")
         val graderingProsent = it.getInt("gradering")
         val andelArbeidsevne = it.getInt("andel_arbeidsevne")
+        val andelArbeid = it.getIntOrNull("andel_arbeid")
 
         val arbeidsGradering = ArbeidsGradering(
             totaltAntallTimer = TimerArbeid(antallTimer),
-            andelArbeid = Prosent.`100_PROSENT`.minus(Prosent(graderingProsent)),
+            // Bruk lagret andelArbeid når tilgjengelig. Eldre rader mangler feltet (NULL),
+            // og faller tilbake på tidligere utledning for bakoverkompatibilitet.
+            andelArbeid = andelArbeid?.let { verdi -> Prosent(verdi) }
+                ?: Prosent.`100_PROSENT`.minus(Prosent(graderingProsent)),
             fastsattArbeidsevne = Prosent(andelArbeidsevne),
             gradering = Prosent(graderingProsent),
             opplysningerMottatt = it.getLocalDateOrNull("meldekort_mottatt"),
@@ -311,8 +315,9 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, rettighetstype, avslagsarsak,
                                            grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser,
                                            andel_arbeidsevne, bruker_av_kvoter, institusjonsoppholdreduksjon,
-                                           meldeplikt_status, meldekort_mottatt, meldeplikt_gradering)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?, ?)
+                                           meldeplikt_status, meldekort_mottatt, meldeplikt_gradering,
+                                           andel_arbeid)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -332,6 +337,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setEnumName(14, periode.meldepliktStatus)
                 setLocalDate(15, periode.arbeidsgradering.opplysningerMottatt)
                 setInt(16, periode.meldepliktGradering?.prosentverdi())
+                setInt(17, periode.arbeidsgradering.andelArbeid.prosentverdi())
             }
         }
 
