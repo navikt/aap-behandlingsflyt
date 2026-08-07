@@ -7,7 +7,12 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -23,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode as DomenePeriode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -79,10 +85,11 @@ class VedtakDokumentRenderingTest {
         beregningsgrunnlag: Beregningsgrunnlag? = grunnlag11_19(),
         sykdomGrunnlag: SykdomGrunnlag? = null,
         refusjonkrav: List<RefusjonkravVurdering>? = null,
+        vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
     ) = BehandlingFaktagrunnlag(
         behandling = behandling,
         behandlinger = listOf(behandlingMedVedtak),
-        vilkårsresultat = Vilkårsresultat(),
+        vilkårsresultat = vilkårsresultat,
         tilkjentYtelse = Tidslinje.empty(),
         underveis = Tidslinje.empty(),
         avklaringsbehovene = emptyList(),
@@ -185,5 +192,79 @@ class VedtakDokumentRenderingTest {
         val overskrifter = dom.filterIsInstance<DOM.Header>().map { it.overskrift }
 
         assertThat(overskrifter).contains("Yrkesskadevurdering", "Refusjonskrav")
+    }
+
+    @Test
+    fun `viser alle vurderte vilkårstyper`() {
+        val periode = DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
+        val vilkårsresultat = Vilkårsresultat(
+            vilkår = Vilkårtype.entries.map { type ->
+                Vilkår(
+                    type = type,
+                    vilkårsperioder = setOf(
+                        Vilkårsperiode(
+                            periode = periode,
+                            utfall = Utfall.OPPFYLT,
+                            begrunnelse = "Vilkåret er oppfylt",
+                        )
+                    ),
+                )
+            }
+        )
+        val kontekst = RenderKontekst(listOf(behandlingMedVedtak))
+        val overskrifter = grunnlag(vilkårsresultat = vilkårsresultat)
+            .tilSeksjon()
+            .render(kontekst)
+            .filterIsInstance<DOM.Header>()
+            .map { it.overskrift }
+
+        val forventedeVilkårsoverskrifter = Vilkårtype.entries.map { type ->
+            "${PrettyEnum(type).render(kontekst)} (${type.hjemmel})"
+        }
+        assertThat(overskrifter).containsAll(forventedeVilkårsoverskrifter)
+    }
+
+    @Test
+    fun `viser alle perioder og vurderingsdetaljer for vilkår`() {
+        val oppfyltPeriode = DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31))
+        val avslåttPeriode = DomenePeriode(LocalDate.of(2024, 2, 1), LocalDate.of(2024, 2, 29))
+        val vilkårsresultat = Vilkårsresultat(
+            vilkår = listOf(
+                Vilkår(
+                    type = Vilkårtype.ALDERSVILKÅRET,
+                    vilkårsperioder = setOf(
+                        Vilkårsperiode(
+                            periode = oppfyltPeriode,
+                            utfall = Utfall.OPPFYLT,
+                            manuellVurdering = true,
+                            begrunnelse = "Aldersvilkåret er oppfylt",
+                        ),
+                        Vilkårsperiode(
+                            periode = avslåttPeriode,
+                            utfall = Utfall.IKKE_OPPFYLT,
+                            begrunnelse = "Brukeren har fylt 67 år",
+                            avslagsårsak = Avslagsårsak.BRUKER_OVER_67,
+                        ),
+                    ),
+                )
+            )
+        )
+        val kontekst = RenderKontekst(listOf(behandlingMedVedtak))
+        val vurderinger = grunnlag(vilkårsresultat = vilkårsresultat)
+            .tilSeksjon()
+            .render(kontekst)
+            .filterIsInstance<DOM.List>()
+            .flatMap { it.liste }
+            .associate { it[0] to it[1] }
+
+        assertThat(vurderinger[Periode(oppfyltPeriode).render(kontekst)])
+            .contains("Utfall: OPPFYLT")
+            .contains("Manuell vurdering: true")
+            .contains("Begrunnelse: Aldersvilkåret er oppfylt")
+        assertThat(vurderinger[Periode(avslåttPeriode).render(kontekst)])
+            .contains("Utfall: IKKE_OPPFYLT")
+            .contains("Manuell vurdering: false")
+            .contains("Avslagsårsak: BRUKER_OVER_67, § 11-4 1. ledd")
+            .contains("Begrunnelse: Brukeren har fylt 67 år")
     }
 }
