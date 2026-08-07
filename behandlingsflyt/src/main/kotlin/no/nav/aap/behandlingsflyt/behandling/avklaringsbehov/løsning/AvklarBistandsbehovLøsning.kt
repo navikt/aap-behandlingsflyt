@@ -6,14 +6,18 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BISTANDSBEHOV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
+import kotlin.collections.orEmpty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_BISTANDSBEHOV_KODE)
@@ -25,7 +29,7 @@ class AvklarBistandsbehovLøsning(
         required = true,
         defaultValue = AVKLAR_BISTANDSBEHOV_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5006`
-) : PeriodisertAvklaringsbehovLøsning<BistandLøsningDto> {
+) : PeriodisertAvklaringsbehovLøsning<BistandLøsningDto>, LøsningMedPeriodiserteVurderinger {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarBistandLøser(repositoryProvider).løs(kontekst, this)
     }
@@ -36,6 +40,18 @@ class AvklarBistandsbehovLøsning(
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<BistandRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.somBistandsvurderingstidslinje() ?: Tidslinje<Unit>()
+    }
+
+    override fun hentVurderinger(
+        behandlingId: BehandlingId,
+        repositoryProvider: RepositoryProvider
+    ): List<PeriodisertVurdering> {
+        val repository = repositoryProvider.provide<BistandRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+    }
+
+    override fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<Bistandsvurdering> {
+        return løsningerForPerioder.map { it.tilBistandVurdering(bruker, behandlingId) }
     }
 }
 
