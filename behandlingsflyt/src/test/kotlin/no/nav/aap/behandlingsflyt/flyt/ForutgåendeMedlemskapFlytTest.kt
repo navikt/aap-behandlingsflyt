@@ -11,9 +11,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertMan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -402,5 +405,81 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         assertThat(medlemskapFase2.maxOf { it.periode.tom }).isEqualTo(Tid.MAKS)
     }
 
+    @Test
+    fun `forutgående medlemskap oppfylt manuelt i førstegangsbehandling skal fortsatt være gjeldende i revurdering selv om nye opplysninger i prinsippet kunne gitt automatisk vurdering`() {
+        // Person uten inntekt og uten MEDL-vedtak -> forutgående medlemskap krever manuell vurdering
+        val person = TestPersoner.STANDARD_PERSON().medInntekter(emptyList())
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
+
+        val førstegangsbehandling = behandling
+            .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+            }
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAndreStatligeYtelser()
+            .løsForeslåVedtak()
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val medlemskapFørstegangsbehandling = hentVilkårsresultat(førstegangsbehandling.id)
+            .finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+        assertThat(medlemskapFørstegangsbehandling).allMatch { it.erOppfylt() && it.manuellVurdering }
+
+        // Nye opplysninger: et MEDL-vedtak om sammenhengende medlemskap i Norge siste 5 år kommer inn,
+        // og ville i prinsippet kunnet gitt automatisk oppfylt forutgående medlemskap dersom det ikke
+        // fantes en manuell vurdering fra før
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = person.identer,
+                fødselsdato = person.fødselsdato,
+                inntekter = emptyList(),
+                medlStatus = listOf(
+                    MedlemskapDataIntern(
+                        unntakId = 100087727,
+                        ident = person.aktivIdent().identifikator,
+                        fraOgMed = sak.rettighetsperiode.fom.minusYears(6).toString(),
+                        tilOgMed = sak.rettighetsperiode.fom.plusYears(2).toString(),
+                        status = "GYLD",
+                        statusaarsak = null,
+                        medlem = true,
+                        grunnlag = "grunnlag",
+                        lovvalg = "lovvalg",
+                        helsedel = true,
+                        lovvalgsland = "NOR",
+                        kilde = null
+                    )
+                )
+            )
+        )
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP, sak.id)
+
+        val revurdering = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
+            // Avklaringsbehovet tvinges pga MOTTATT_SØKNAD - løser på nytt
+            .løsLovvalg(sak.rettighetsperiode.fom, true)
+
+        revurdering.medKontekst {
+            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        }
+
+        // Den manuelle vurderingen fra førstegangsbehandlingen skal fortsatt gjelde
+        val medlemskapRevurdering = hentVilkårsresultat(revurdering.id)
+            .finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+        assertThat(medlemskapRevurdering).allMatch { it.erOppfylt() && it.manuellVurdering }
+
+        val manuelleVurderingerFørstegangsbehandling = dataSource.transaction {
+            MedlemskapArbeidInntektForutgåendeRepositoryImpl(it)
+                .hentHvisEksisterer(førstegangsbehandling.id)?.vurderinger
+        }
+        val manuelleVurderingerRevurdering = dataSource.transaction {
+            MedlemskapArbeidInntektForutgåendeRepositoryImpl(it)
+                .hentHvisEksisterer(revurdering.id)?.vurderinger
+        }
+        assertThat(manuelleVurderingerRevurdering).isEqualTo(manuelleVurderingerFørstegangsbehandling)
+    }
 
 }
