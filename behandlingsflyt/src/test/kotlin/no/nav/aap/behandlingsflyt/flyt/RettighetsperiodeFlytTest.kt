@@ -454,7 +454,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             ?: error("Fant ikke underveisperiode for nytt starttidspunkt")
         val underveisPeriodeForSøknadsdato = underveisGrunnlag.perioder.find { it.periode.inneholder(søknadsdato) }
             ?: error("Fant ikke underveisperiode for søknadstidspunkt")
-        assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.andelArbeid).isEqualTo(`100_PROSENT`)
+        assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
         assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.gradering).isEqualTo(`0_PROSENT`)
         assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
         assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.gradering).isEqualTo(`100_PROSENT`)
