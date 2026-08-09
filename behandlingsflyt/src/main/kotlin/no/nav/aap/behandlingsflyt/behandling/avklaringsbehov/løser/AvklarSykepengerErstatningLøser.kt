@@ -3,15 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDateTime
 
 class AvklarSykepengerErstatningLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -28,9 +23,11 @@ class AvklarSykepengerErstatningLøser(
         løsning: PeriodisertAvklarSykepengerErstatningLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-        val tidligereVurderinger = behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it)?.vurderinger }.orEmpty()
+        val tidligereVurderinger =
+            behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it)?.vurderinger }
+                .orEmpty()
 
-        val nyeVurderinger = løsning.løsningerForPerioder.map { tilVurdering(it, behandling.id, kontekst.bruker) }
+        val nyeVurderinger = løsning.løsningerForPerioder.map { it.tilVurdering(kontekst.bruker, behandling.id) }
 
         sykepengerErstatningRepository.lagre(
             behandlingId = behandling.id,
@@ -41,21 +38,6 @@ class AvklarSykepengerErstatningLøser(
             begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
         )
     }
-
-    private fun tilVurdering(
-        dto: PeriodisertSykepengerVurderingDto,
-        behandlingId: BehandlingId,
-        vurdertAv: Bruker
-    ): SykepengerVurdering = SykepengerVurdering(
-        begrunnelse = dto.begrunnelse,
-        harRettPå = dto.harRettPå,
-        grunn = dto.grunn,
-        vurdertIBehandling = behandlingId,
-        vurdertAv = vurdertAv,
-        vurdertTidspunkt = LocalDateTime.now(),
-        fom = dto.fom,
-        tom = dto.tom,
-    )
 
     override fun forBehov(): Definisjon {
         return Definisjon.AVKLAR_SYKEPENGEERSTATNING

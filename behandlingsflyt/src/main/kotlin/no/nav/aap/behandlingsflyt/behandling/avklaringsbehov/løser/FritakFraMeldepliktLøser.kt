@@ -42,19 +42,6 @@ class FritakFraMeldepliktLøser(
         )
     }
 
-    private fun toFritaksvurdering(
-        dto: PeriodisertFritaksvurderingDto,
-        kontekst: AvklaringsbehovKontekst
-    ): Fritaksvurdering = Fritaksvurdering(
-        harFritak = dto.harFritak,
-        fom = dto.fom,
-        tom = dto.tom,
-        begrunnelse = dto.begrunnelse,
-        vurdertAv = kontekst.bruker,
-        vurdertIBehandling = kontekst.behandlingId(),
-        opprettetTid = LocalDateTime.now()
-    )
-
     override fun forBehov(): Definisjon {
         return Definisjon.FRITAK_MELDEPLIKT
     }

@@ -23,7 +23,7 @@ class AvklarOppholdskravLøsning(
         required = true,
         defaultValue = AVKLAR_OPPHOLDSKRAV
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5035`,
-    override val løsningerForPerioder: List<AvklarOppholdkravLøsningForPeriodeDto>
+    override val løsningerForPerioder: List<AvklarOppholdkravLøsningForPeriodeDto> // TODO: Implementer LøsningMedPeriodiserteVurderinger
 ) : PeriodisertAvklaringsbehovLøsning<AvklarOppholdkravLøsningForPeriodeDto> {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarOppholdskravLøser(repositoryProvider).løs(kontekst, this)
