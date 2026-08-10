@@ -4,7 +4,6 @@
       <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
       <env name="INTEGRASJON_PDFGENERATOR_URL" value="http://localhost:8082" />
       <env name="INTEGRASJON_PDFGENERATOR_SCOPE" value="scope" />
-      <env name="AAP_VEDTAK_LOKAL_UTSKRIFT_STI" value="/tmp/aap-vedtak" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.TestAppKt" />
     <module name="behandlingsflyt.app.test" />
