@@ -78,9 +78,6 @@ class OvergangUføreSteg private constructor(
                 virkningsdato = uførevedtak.virkningsdato,
             )
         } else {
-            val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
-                { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
-
             avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
                 kontekst = kontekst,
                 definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
@@ -89,7 +86,7 @@ class OvergangUføreSteg private constructor(
                     Vurderingsbehov.OVERGANG_UFORE,
                 ),
                 nårVurderingErRelevant = ::nårVurderingErRelevant,
-                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
                 tilbakestillGrunnlag = {
                     val vedtatteVurderinger =
                         kontekst.forrigeBehandlingId?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
