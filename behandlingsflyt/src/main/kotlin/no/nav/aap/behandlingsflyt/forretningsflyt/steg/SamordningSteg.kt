@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -36,9 +37,7 @@ class SamordningSteg(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val samordningYtelseVurderingGrunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
-        val perioderSomIkkeHarBlittVurdert =
-            samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert()
+
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
@@ -48,11 +47,15 @@ class SamordningSteg(
             ),
             nårVurderingErRelevant = ::perioderMedVurderingsbehov,
             kontekst = kontekst,
-            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeHarBlittVurdert.perioder().toSet() },
+            perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = {
                 samordningService.tilbakestillVurderinger(kontekst.behandlingId, kontekst.forrigeBehandlingId)
             }
         )
+
+        val samordningYtelseVurderingGrunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
+        val perioderSomIkkeHarBlittVurdert =
+            samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert()
 
         if (perioderSomIkkeHarBlittVurdert.isEmpty()) {
             val samordningTidslinje = samordningYtelseVurderingGrunnlag.vurder()
@@ -73,6 +76,13 @@ class SamordningSteg(
         }
 
         return Fullført
+    }
+
+    private fun perioderSomIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
+        val samordningYtelseVurderingGrunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
+        val perioderSomIkkeHarBlittVurdert =
+            samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert()
+        return perioderSomIkkeHarBlittVurdert.perioder().toSet()
     }
 
     private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {

@@ -42,7 +42,7 @@ class InstitusjonsoppholdSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            perioderSomIkkeErTilstrekkeligVurdert = { perioderHelseoppholdIkkeErTilstrekkeligVurdert(kontekst) },
+            perioderSomIkkeErTilstrekkeligVurdert = ::perioderHelseoppholdIkkeErTilstrekkeligVurdert ,
             kontekst = kontekst,
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId
@@ -67,7 +67,7 @@ class InstitusjonsoppholdSteg(
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             nårVurderingErRelevant = ::perioderMedVurderingsbehovSoning,
-            perioderSomIkkeErTilstrekkeligVurdert = { perioderSoningOppholdIkkeErTilstrekkeligVurdert(kontekst = kontekst) },
+            perioderSomIkkeErTilstrekkeligVurdert = { k -> perioderSoningOppholdIkkeErTilstrekkeligVurdert(kontekst = k) },
             kontekst = kontekst,
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId
