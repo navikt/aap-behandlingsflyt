@@ -7,8 +7,13 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -16,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.behandlingsflyt.utils.diff.Endret
 import no.nav.aap.behandlingsflyt.utils.diff.Fjernet
@@ -23,6 +29,7 @@ import no.nav.aap.behandlingsflyt.utils.diff.LagtTil
 import no.nav.aap.behandlingsflyt.utils.diff.Uendret
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
@@ -32,7 +39,6 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 
 @Fakes
 class TilkjentYtelseApiTest : BaseApiTest() {
@@ -156,6 +162,53 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             )
         }
 
+    }
+
+    @Test
+    fun `felter hentes fra underveis og merges inn i tilkjent ytelse`() {
+        val ds = MockDataSource()
+        val sak = opprettInMemorySak(LocalDate.parse("2025-08-06"))
+        val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
+
+        testApplication {
+            installApplication {
+                tilkjentYtelseApi(ds, inMemoryRepositoryRegistry)
+            }
+            val rettighetsperiode = sak.rettighetsperiode
+
+            val perioder = MeldeperiodeUtleder.utledMeldeperiode(null, rettighetsperiode).take(3)
+
+            InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandling.id, perioder.first())
+
+            val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiode.fom)
+            val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->
+                lagTilkjentYtelsePeriode(periode, tilkjentYtelseVerdi, index)
+            }
+
+            InMemoryTilkjentYtelseRepository.lagre(
+                behandling.id,
+                tilkjent = tilkjentYtelsePerioder,
+                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
+                versjon = ""
+            )
+
+            InMemoryUnderveisRepository.lagre(
+                behandling.id,
+                underveisperioder = perioder.map { periode -> underveisperiode(periode, Prosent(30), Prosent(60)) },
+                input = tomtTilkjentYtelseGrunnlag
+            )
+
+            val respons = sendGetRequest("/api/behandling/tilkjentV2/${behandling.referanse.referanse}")
+            assertThat(respons.status).isEqualTo(HttpStatusCode.OK)
+
+            val actual = respons.body<TilkjentYtelse2Dto>()
+            val vurdertePerioder = actual.perioder
+                .flatMap { it.vurdertePerioder }
+
+            assertThat(perioder).isNotEmpty()
+            assertThat(vurdertePerioder).allMatch { it.felter.andelArbeid == 30 }
+            assertThat(vurdertePerioder).allMatch { it.felter.grenseverdi == 60 }
+        }
     }
 
     @Test
@@ -359,6 +412,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
         barneTilleggsats = 36.00,
         barnetillegg = 72.00,
         arbeidGradering = 50,
+        andelArbeid = null,
+        grenseverdi = null,
         samordningGradering = 80,
         institusjonGradering = 50,
         totalReduksjon = 50,
@@ -367,6 +422,28 @@ class TilkjentYtelseApiTest : BaseApiTest() {
         barnepensjonDagsats = 0.0
 
     )
+
+    private fun underveisperiode(periode: Periode, andelArbeid: Prosent, grenseverdi: Prosent): Underveisperiode =
+        Underveisperiode(
+            periode = periode,
+            meldePeriode = periode,
+            utfall = Utfall.OPPFYLT,
+            rettighetsType = RettighetsType.BISTANDSBEHOV,
+            avslagsårsak = null,
+            grenseverdi = grenseverdi,
+            institusjonsoppholdReduksjon = Prosent(0),
+            arbeidsgradering = ArbeidsGradering(
+                totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
+                andelArbeid = andelArbeid,
+                fastsattArbeidsevne = Prosent(0),
+                gradering = Prosent(0),
+                opplysningerMottatt = null,
+            ),
+            trekk = Dagsatser(0),
+            brukerAvKvoter = emptySet(),
+            meldepliktStatus = null,
+            meldepliktGradering = null,
+        )
 
     private fun lagTilkjentYtelsePeriode(
         periode: Periode,
