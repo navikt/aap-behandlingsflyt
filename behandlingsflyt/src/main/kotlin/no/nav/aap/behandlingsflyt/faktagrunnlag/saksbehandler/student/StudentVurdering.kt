@@ -1,15 +1,18 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 data class StudentVurdering(
-    val fom: LocalDate,
-    val tom: LocalDate? = null,
+    override val fom: LocalDate,
+    override val tom: LocalDate? = null,
     val begrunnelse: String,
     val harAvbruttStudie: Boolean,
     val godkjentStudieAvLånekassen: Boolean?,
@@ -19,9 +22,11 @@ data class StudentVurdering(
     val avbruddMerEnn6Måneder: Boolean?,
     val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
-    val vurdertIBehandling: BehandlingId,
+    override val vurdertIBehandling: BehandlingId,
     val diagnose: Diagnose? = null,
-) {
+): PeriodisertVurdering {
+    override val opprettet: Instant = vurdertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toInstant()
+    
     fun erOppfylt(): Boolean {
         return harAvbruttStudie &&
                 godkjentStudieAvLånekassen == true &&

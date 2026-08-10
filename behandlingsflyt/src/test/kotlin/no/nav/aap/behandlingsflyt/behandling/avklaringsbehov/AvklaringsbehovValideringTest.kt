@@ -75,7 +75,7 @@ import java.util.concurrent.atomic.*
 
 class AvklaringsbehovValideringTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val løsningMock = mockk<PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto>>()
+    private val løsningMock = mockk<PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto>>(relaxed = true)
 
     val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
         register<LokalUnleash>()
