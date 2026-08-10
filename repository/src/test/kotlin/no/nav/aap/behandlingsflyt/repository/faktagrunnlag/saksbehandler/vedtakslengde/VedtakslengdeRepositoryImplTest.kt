@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtak
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -41,6 +42,7 @@ class VedtakslengdeRepositoryImplTest {
     private fun vurdering(behandlingId: BehandlingId) = VedtakslengdeVurdering(
         sluttdato = LocalDate.of(2023, 12, 31),
         utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+        årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
         vurdertAv = Bruker("Z654321"),
         vurdertIBehandling = behandlingId,
         opprettet = Instant.parse("2023-01-01T12:00:00Z"),
@@ -112,6 +114,7 @@ class VedtakslengdeRepositoryImplTest {
         val vurdering1 = VedtakslengdeVurdering(
             sluttdato = LocalDate.of(2023, 6, 30),
             utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
             vurdertAv = Bruker("Z654321"),
             vurdertIBehandling = behandling1.id,
             opprettet = Instant.parse("2023-01-01T12:00:00Z"),
@@ -128,12 +131,13 @@ class VedtakslengdeRepositoryImplTest {
         val vurdering2 = VedtakslengdeVurdering(
             sluttdato = LocalDate.of(2024, 6, 30),
             utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
+            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
             vurdertAv = Bruker("Z654321"),
             vurdertIBehandling = behandling2.id,
             opprettet = Instant.parse("2024-01-01T12:00:00Z"),
             begrunnelse = "Automatisk vurdert"
         )
-
+        
         dataSource.transaction {
             val vedtakslengdeRepository = VedtakslengdeRepositoryImpl(it)
             val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandling1.id)
@@ -156,5 +160,6 @@ class VedtakslengdeRepositoryImplTest {
             behandling2.id,
         )
         assertThat(hentet.gjeldendeVurdering()?.sluttdato).isEqualTo(LocalDate.of(2024, 6, 30))
+        assertThat(hentet).isEqualTo(VedtakslengdeGrunnlag(listOf(vurdering1, vurdering2)))
     }
 }

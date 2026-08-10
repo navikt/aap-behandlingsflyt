@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -47,6 +48,7 @@ data class VedtakslengdeGrunnlag(
 data class VedtakslengdeVurdering(
     val sluttdato: LocalDate,
     val utvidetMed: ÅrMedHverdager,
+    val årsaker: List<VedtakslengdeÅrsak>,
     val vurdertAv: Bruker,
     val vurdertIBehandling: BehandlingId,
     val opprettet: Instant,
@@ -54,4 +56,29 @@ data class VedtakslengdeVurdering(
 ) {
     val vurdertManuelt: Boolean get() = !vurdertAutomatisk
     val vurdertAutomatisk: Boolean get() = vurdertAv == SYSTEMBRUKER
+}
+
+enum class VedtakslengdeÅrsak {
+    AUTOMATISK, // TODO: Endre til faktisk årsak. Vanskelig å utlede denne slik steget er skrevet nå
+    MAKS_ETT_ÅR,
+    BRUKER_OVER_67,
+    IKKE_MEDLEM,
+    ORDINÆRKVOTE_BRUKT_OPP,
+    BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+    IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
+    ANNEN_FULL_YTELSE;
+
+    companion object {
+        fun fraAvslagsårsak(avslagsårsak: Avslagsårsak): VedtakslengdeÅrsak? {
+            return when (avslagsårsak) {
+                Avslagsårsak.BRUKER_OVER_67 -> BRUKER_OVER_67
+                Avslagsårsak.IKKE_MEDLEM -> IKKE_MEDLEM
+                Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP -> ORDINÆRKVOTE_BRUKT_OPP
+                Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS -> BRUDD_PÅ_OPPHOLDSKRAV_STANS
+                Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING -> IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING
+                Avslagsårsak.ANNEN_FULL_YTELSE -> ANNEN_FULL_YTELSE
+                else -> null
+            }
+        }
+    }
 }

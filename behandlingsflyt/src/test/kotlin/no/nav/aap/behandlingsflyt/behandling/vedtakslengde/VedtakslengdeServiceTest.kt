@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
@@ -369,6 +370,7 @@ class VedtakslengdeServiceTest {
     ) = VedtakslengdeVurdering(
         sluttdato = sluttdato,
         utvidetMed = utvidetMed,
+        årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
         vurdertAv = SYSTEMBRUKER,
         vurdertIBehandling = forrigeBehandlingId,
         opprettet = Instant.now(clock),

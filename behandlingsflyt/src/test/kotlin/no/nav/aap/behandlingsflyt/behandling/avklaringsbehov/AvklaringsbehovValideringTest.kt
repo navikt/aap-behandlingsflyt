@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.St
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -74,7 +75,7 @@ import java.util.concurrent.atomic.*
 
 class AvklaringsbehovValideringTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val løsningMock = mockk<PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto>>()
+    private val løsningMock = mockk<PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto>>(relaxed = true)
 
     val avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, createGatewayProvider {
         register<LokalUnleash>()
@@ -714,6 +715,7 @@ class AvklaringsbehovValideringTest {
                 VedtakslengdeVurdering(
                     sluttdato = sluttdato,
                     utvidetMed = ÅrMedHverdager.TREDJE_ÅR,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     vurdertAv = Bruker("saksbehandler"),
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),

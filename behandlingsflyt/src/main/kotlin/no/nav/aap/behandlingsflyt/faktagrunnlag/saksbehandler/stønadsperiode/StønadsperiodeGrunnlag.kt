@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.VurderingForKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.VurderingForKravGrunnlag
@@ -63,13 +65,42 @@ data class StønadsperiodeVurdering(
     }
 }
 
+enum class RelevantKravTypeNavn {
+    GJENOPPTAK_ETTER_STANS,
+    GJENINNTREDEN_ETTER_OPPHØR,
+    NY_STØNADSPERIODE,
+    AVSLAG,
+}
+
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type",
+    visible = true,
+)
 sealed interface RelevantKravType {
+    val type: RelevantKravTypeNavn
+
+    @JsonTypeName("GJENOPPTAK_ETTER_STANS")
     data class GJENOPPTAK_ETTER_STANS(
         val gjennopptakEtter: List<Avslagsårsak>,
-    ): RelevantKravType
+    ) : RelevantKravType {
+        override val type = RelevantKravTypeNavn.GJENOPPTAK_ETTER_STANS
+    }
 
-    data object GJENINNTREDEN_ETTER_OPPHØR: RelevantKravType
-    data object NY_STØNADSPERIODE: RelevantKravType
-    data object AVSLAG: RelevantKravType
+    @JsonTypeName("GJENINNTREDEN_ETTER_OPPHØR")
+    data object GJENINNTREDEN_ETTER_OPPHØR : RelevantKravType {
+        override val type = RelevantKravTypeNavn.GJENINNTREDEN_ETTER_OPPHØR
+    }
+
+    @JsonTypeName("NY_STØNADSPERIODE")
+    data object NY_STØNADSPERIODE : RelevantKravType {
+        override val type = RelevantKravTypeNavn.NY_STØNADSPERIODE
+    }
+
+    @JsonTypeName("AVSLAG")
+    data object AVSLAG : RelevantKravType {
+        override val type = RelevantKravTypeNavn.AVSLAG
+    }
 }
 

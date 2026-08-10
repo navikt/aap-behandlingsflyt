@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -68,6 +69,7 @@ class VedtakslengdeGrunnlagApiTest : BaseApiTest() {
                 VedtakslengdeVurdering(
                     sluttdato = sluttdato,
                     utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = behandling.id,
                     opprettet = Instant.parse("2024-01-01T12:00:00Z"),
@@ -113,6 +115,7 @@ class VedtakslengdeGrunnlagApiTest : BaseApiTest() {
                 VedtakslengdeVurdering(
                     sluttdato = sluttdatoFørstegangsbehandling,
                     utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = førstegangsbehandling.id,
                     opprettet = Instant.parse("2024-01-01T12:00:00Z"),
@@ -121,6 +124,7 @@ class VedtakslengdeGrunnlagApiTest : BaseApiTest() {
                 VedtakslengdeVurdering(
                     sluttdato = sluttdatoFørstegangsbehandlingManuell,
                     utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     vurdertAv = Bruker("Saksbehandler"),
                     vurdertIBehandling = førstegangsbehandling.id,
                     opprettet = Instant.parse("2024-01-01T12:30:00Z"),
@@ -149,6 +153,7 @@ class VedtakslengdeGrunnlagApiTest : BaseApiTest() {
                 VedtakslengdeVurdering(
                     sluttdato = sluttdatoRevurdering,
                     utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     vurdertAv = SYSTEMBRUKER,
                     vurdertIBehandling = revurdering.id,
                     opprettet = Instant.parse("2025-01-01T12:00:00Z"),
@@ -156,6 +161,7 @@ class VedtakslengdeGrunnlagApiTest : BaseApiTest() {
                 ),
                 VedtakslengdeVurdering(
                     sluttdato = sluttdatoRevurderingManuell,
+                    årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
                     utvidetMed = ÅrMedHverdager.ANDRE_ÅR,
                     vurdertAv = Bruker("Saksbehandler"),
                     vurdertIBehandling = revurdering.id,

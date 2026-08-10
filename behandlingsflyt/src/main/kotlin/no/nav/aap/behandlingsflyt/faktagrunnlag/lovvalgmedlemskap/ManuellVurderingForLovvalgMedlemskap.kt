@@ -3,10 +3,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlin.enums.enumEntries
 
 data class ManuellVurderingForLovvalgMedlemskap(
@@ -15,10 +18,12 @@ data class ManuellVurderingForLovvalgMedlemskap(
     val vurdertAv: Bruker,
     val vurdertDato: LocalDateTime,
     val overstyrt: Boolean = false,
-    val fom: LocalDate,
-    val tom: LocalDate? = null,
-    val vurdertIBehandling: BehandlingId,
-) {
+    override val fom: LocalDate,
+    override val tom: LocalDate? = null,
+    override val vurdertIBehandling: BehandlingId,
+) : PeriodisertVurdering {
+    override val opprettet: Instant = vurdertDato.atZone(ZoneId.of("Europe/Oslo")).toInstant()
+    
     fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
         val lovvalgsLand = lovvalg.lovvalgsEØSLandEllerLandMedAvtale
         return lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumEntries<EØSLandEllerLandMedAvtale>().map { it }
@@ -38,14 +43,21 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
 ) : LøsningForPeriode {
     fun toManuellVurderingForLovvalgMedlemskap(
         kontekst: AvklaringsbehovKontekst,
-        overstyrt : Boolean,
+        overstyrt: Boolean,
+    ): ManuellVurderingForLovvalgMedlemskap =
+        toManuellVurderingForLovvalgMedlemskap(overstyrt, kontekst.bruker, kontekst.behandlingId())
+
+    fun toManuellVurderingForLovvalgMedlemskap(
+        overstyrt: Boolean,
+        bruker: Bruker,
+        vurdertIBehandling: BehandlingId,
     ): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
         fom = fom,
         tom = tom,
-        vurdertIBehandling = kontekst.behandlingId(),
+        vurdertIBehandling = vurdertIBehandling,
         lovvalg = lovvalg,
         medlemskap = medlemskap,
-        vurdertAv = kontekst.bruker,
+        vurdertAv = bruker,
         vurdertDato = LocalDateTime.now(),
         overstyrt = overstyrt
     )
