@@ -231,6 +231,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5042`,
         løsesISteg = StegType.VURDER_AVSLAG_11_27,
         type = BehovType.MANUELT_PÅKREVD,
+        kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
     ),
     
