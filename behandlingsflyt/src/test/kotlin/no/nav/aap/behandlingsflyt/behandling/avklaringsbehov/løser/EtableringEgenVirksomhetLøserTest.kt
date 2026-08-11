@@ -5,10 +5,12 @@ import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.Etablering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
@@ -19,6 +21,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.time.Instant
 import java.time.LocalDate
@@ -114,6 +117,64 @@ class EtableringEgenVirksomhetLøserTest {
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
         assertThat(feil.message).contains("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
+    }
+
+    @Test
+    fun `Ny vurdering erstatter tidligere perioder med samme fom`() {
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
+        val vurderingFom = sak.rettighetsperiode.fom.plusDays(1)
+        val nyeUtviklingsperioder = listOf(
+            Periode(vurderingFom, vurderingFom.plusDays(6))
+        )
+        val nyeOppstartsperioder = listOf(
+            Periode(vurderingFom.plusDays(7), vurderingFom.plusDays(20))
+        )
+
+        InMemoryEtableringEgenVirksomRepository.lagre(
+            førstegangsbehandling.id,
+            listOf(
+                EtableringEgenVirksomhetVurdering(
+                    begrunnelse = "Opprinnelig vurdering",
+                    fom = vurderingFom,
+                    tom = null,
+                    vurdertAv = Bruker("saks"),
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = førstegangsbehandling.id,
+                    virksomhetNavn = "peppas peppers",
+                    foreliggerFagligVurdering = true,
+                    virksomhetErNy = true,
+                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                    kanFøreTilSelvforsørget = true,
+                    utviklingsPerioder = listOf(
+                        Periode(vurderingFom, vurderingFom.plusMonths(2))
+                    ),
+                    oppstartsPerioder = listOf(
+                        Periode(vurderingFom.plusMonths(2).plusDays(1), vurderingFom.plusMonths(3))
+                    ),
+                )
+            )
+        )
+
+        val løsning = EtableringEgenVirksomhetLøsning(
+            listOf(
+                oppfyltVurdering(
+                    fom = vurderingFom,
+                    utviklingsPerioder = nyeUtviklingsperioder,
+                    oppstartsPerioder = nyeOppstartsperioder,
+                )
+            )
+        )
+        val kontekst = avklaringsbehovKontekst { behandling = revurdering }
+
+        assertDoesNotThrow { løser.løs(kontekst, løsning) }
+
+        val lagretVurdering = InMemoryEtableringEgenVirksomRepository
+            .hentHvisEksisterer(revurdering.id)
+            ?.vurderinger
+            ?.single()
+        assertThat(lagretVurdering?.utviklingsPerioder).isEqualTo(nyeUtviklingsperioder)
+        assertThat(lagretVurdering?.oppstartsPerioder).isEqualTo(nyeOppstartsperioder)
     }
 
     @Test

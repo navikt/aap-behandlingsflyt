@@ -24,7 +24,7 @@ data class EtableringEgenVirksomhetVurdering(
     override val tom: LocalDate?
 ) : PeriodisertVurdering
 
-enum class EierVirksomhet{
+enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,
     EIER_MINST_50_PROSENT_MED_FLER,
     NEI
@@ -46,4 +46,11 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.fom == b.fom &&
                 a.tom == b.tom
     }
+}
+
+fun List<EtableringEgenVirksomhetVurdering>.erstattVurderingerMedSammeFom(
+    nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
+): List<EtableringEgenVirksomhetVurdering> {
+    val nyeVurderingerFom = nyeVurderinger.map { it.fom }.toSet()
+    return filterNot { it.fom in nyeVurderingerFom } + nyeVurderinger
 }
