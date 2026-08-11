@@ -38,10 +38,7 @@ class KvalitetssikringsSteg(
     private val behandlingService: BehandlingService,
     private val vurderingEndretService: VurderingEndretService,
     private val unleashGateway: UnleashGateway
-) : BehandlingSteg, TilstrekkeligVurdert<KvalitetssikringsSteg.Input> {
-
-    data class Input(val avklaringsbehovene: Avklaringsbehovene, val behandlingId: BehandlingId)
-
+) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
@@ -60,7 +57,7 @@ class KvalitetssikringsSteg(
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.KVALITETSSIKRING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(Input(avklaringsbehovene, kontekst.behandlingId)).erTilstrekkelig() },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(Input(avklaringsbehovene, kontekst.behandlingId, vurderingEndretService, unleashGateway)).erTilstrekkelig() },
             tilbakestillGrunnlag = {},
             kontekst
         )
@@ -91,47 +88,50 @@ class KvalitetssikringsSteg(
         }
     }
 
-    override fun erTilstrekkeligVurdert(input: Input): TilstrekkeligVurdertResultat {
-        val (avklaringsbehovene, behandlingId) = input
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring)) {
-            val forrigeKvalitetssikringTidspunkt =
-                avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
-                    ?: return if (avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent())
-                        IkkeTilstrekkelig("Det finnes avklaringsbehov som krever kvalitetssikring, men som ikke er godkjent.")
+    companion object : FlytSteg, TilstrekkeligVurdert<Input> {
+        override fun erTilstrekkeligVurdert(input: Input): TilstrekkeligVurdertResultat {
+            val avklaringsbehovene = input.avklaringsbehovene
+            val behandlingId = input.behandlingId
+            val vurderingEndretService = input.vurderingEndretService
+            val unleashGateway = input.unleashGateway
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring)) {
+                val forrigeKvalitetssikringTidspunkt =
+                    avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)?.sistAvsluttetOrNull()
+                        ?: return if (avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent())
+                            IkkeTilstrekkelig("Det finnes avklaringsbehov som krever kvalitetssikring, men som ikke er godkjent.")
+                        else Godkjent
+
+                val harEndringPerAvklaringsbehov = avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring().map { avklaringsbehov ->
+                    vurderingEndretService.endretSidenTidspunkt(
+                        behandlingId,
+                        avklaringsbehov,
+                        forrigeKvalitetssikringTidspunkt
+                    )
+                }
+
+                if (harEndringPerAvklaringsbehov.any { it == null }) {
+                    return if (avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent())
+                        IkkeTilstrekkelig("Det finnes avklaringsbehov som ikke er godkjent.")
                     else Godkjent
+                }
 
-            val harEndringPerAvklaringsbehov = avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring().map { avklaringsbehov ->
-                vurderingEndretService.endretSidenTidspunkt(
-                    behandlingId,
-                    avklaringsbehov,
-                    forrigeKvalitetssikringTidspunkt
-                )
+                val harAvklaringsbehovSomIkkeErGodkjentFraFør =
+                    avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring()
+                        .any { !it.harBlittKvalitetssikretTidligere() }
+
+                return when {
+                    harEndringPerAvklaringsbehov.any { it == true } ->
+                        IkkeTilstrekkelig("En eller flere vurderinger er endret siden forrige kvalitetssikring og må kvalitetssikres på nytt.")
+                    harAvklaringsbehovSomIkkeErGodkjentFraFør ->
+                        IkkeTilstrekkelig("Det finnes avklaringsbehov som ikke har blitt kvalitetssikret tidligere.")
+                    else -> Godkjent
+                }
             }
-
-            if (harEndringPerAvklaringsbehov.any { it == null }) {
-                return if (avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent())
-                    IkkeTilstrekkelig("Det finnes avklaringsbehov som ikke er godkjent.")
-                else Godkjent
-            }
-
-            val harAvklaringsbehovSomIkkeErGodkjentFraFør =
-                avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring()
-                    .any { !it.harBlittKvalitetssikretTidligere() }
-
-            return when {
-                harEndringPerAvklaringsbehov.any { it == true } ->
-                    IkkeTilstrekkelig("En eller flere vurderinger er endret siden forrige kvalitetssikring og må kvalitetssikres på nytt.")
-                harAvklaringsbehovSomIkkeErGodkjentFraFør ->
-                    IkkeTilstrekkelig("Det finnes avklaringsbehov som ikke har blitt kvalitetssikret tidligere.")
-                else -> Godkjent
-            }
+            return if (avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent())
+                IkkeTilstrekkelig("Det finnes avklaringsbehov som krever kvalitetssikring, men som ikke er godkjent.")
+            else Godkjent
         }
-        return if (avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent())
-            IkkeTilstrekkelig("Det finnes avklaringsbehov som krever kvalitetssikring, men som ikke er godkjent.")
-        else Godkjent
-    }
 
-    companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): BehandlingSteg {
@@ -141,6 +141,15 @@ class KvalitetssikringsSteg(
         override fun type(): StegType {
             return StegType.KVALITETSSIKRING
         }
+
+
     }
+    
+    data class Input(
+        val avklaringsbehovene: Avklaringsbehovene,
+        val behandlingId: BehandlingId,
+        val vurderingEndretService: VurderingEndretService,
+        val unleashGateway: UnleashGateway
+    )
 }
 
