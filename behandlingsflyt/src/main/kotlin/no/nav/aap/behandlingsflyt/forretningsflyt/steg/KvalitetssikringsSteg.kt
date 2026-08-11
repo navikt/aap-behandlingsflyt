@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class KvalitetssikringsSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -39,6 +40,8 @@ class KvalitetssikringsSteg(
     private val vurderingEndretService: VurderingEndretService,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
@@ -57,7 +60,17 @@ class KvalitetssikringsSteg(
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.KVALITETSSIKRING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(Input(avklaringsbehovene, kontekst.behandlingId, vurderingEndretService, unleashGateway)).erTilstrekkelig() },
+            erTilstrekkeligVurdert = {
+                val resultat = erTilstrekkeligVurdert(
+                    Input(
+                        avklaringsbehovene,
+                        kontekst.behandlingId,
+                        vurderingEndretService,
+                        unleashGateway
+                    )
+                ).also { if (it is IkkeTilstrekkelig) log.info("Ikke tilstrekkelig vurdert: ${it.melding}") }
+                resultat.erTilstrekkelig()
+            },
             tilbakestillGrunnlag = {},
             kontekst
         )
@@ -101,13 +114,14 @@ class KvalitetssikringsSteg(
                             IkkeTilstrekkelig("Det finnes avklaringsbehov som krever kvalitetssikring, men som ikke er godkjent.")
                         else Godkjent
 
-                val harEndringPerAvklaringsbehov = avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring().map { avklaringsbehov ->
-                    vurderingEndretService.endretSidenTidspunkt(
-                        behandlingId,
-                        avklaringsbehov,
-                        forrigeKvalitetssikringTidspunkt
-                    )
-                }
+                val harEndringPerAvklaringsbehov =
+                    avklaringsbehovene.avklaringsbehovSomKreverKvalitetssikring().map { avklaringsbehov ->
+                        vurderingEndretService.endretSidenTidspunkt(
+                            behandlingId,
+                            avklaringsbehov,
+                            forrigeKvalitetssikringTidspunkt
+                        )
+                    }
 
                 if (harEndringPerAvklaringsbehov.any { it == null }) {
                     return if (avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent())
@@ -122,8 +136,10 @@ class KvalitetssikringsSteg(
                 return when {
                     harEndringPerAvklaringsbehov.any { it == true } ->
                         IkkeTilstrekkelig("En eller flere vurderinger er endret siden forrige kvalitetssikring og må kvalitetssikres på nytt.")
+
                     harAvklaringsbehovSomIkkeErGodkjentFraFør ->
                         IkkeTilstrekkelig("Det finnes avklaringsbehov som ikke har blitt kvalitetssikret tidligere.")
+
                     else -> Godkjent
                 }
             }
@@ -144,7 +160,7 @@ class KvalitetssikringsSteg(
 
 
     }
-    
+
     data class Input(
         val avklaringsbehovene: Avklaringsbehovene,
         val behandlingId: BehandlingId,

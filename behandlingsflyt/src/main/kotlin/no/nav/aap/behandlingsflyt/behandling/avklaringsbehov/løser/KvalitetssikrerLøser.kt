@@ -48,14 +48,14 @@ class KvalitetssikrerLøser(
             relevanteVurderinger
                 .filter { it.godkjent != null }
                 .forEach { vurdering ->
-                avklaringsbehovene.vurderKvalitet(
-                    definisjon = Definisjon.forKode(vurdering.definisjon),
-                    godkjent = vurdering.godkjent!!,
-                    begrunnelse = vurdering.begrunnelse(),
-                    vurdertAv = kontekst.bruker,
-                    årsakTilRetur = vurdering.grunner.orEmpty(),
-                )
-            }
+                    avklaringsbehovene.vurderKvalitet(
+                        definisjon = Definisjon.forKode(vurdering.definisjon),
+                        godkjent = vurdering.godkjent!!,
+                        begrunnelse = vurdering.begrunnelse(),
+                        vurdertAv = kontekst.bruker,
+                        årsakTilRetur = vurdering.grunner.orEmpty(),
+                    )
+                }
         } else {
             relevanteVurderinger.forEach { vurdering ->
                 avklaringsbehovene.vurderKvalitet(
@@ -67,9 +67,10 @@ class KvalitetssikrerLøser(
             }
         }
 
-        KvalitetssikringsSteg.erTilstrekkeligVurdert(
-            KvalitetssikringsSteg.Input(avklaringsbehovene, behandlingId, vurderingEndretService, unleashGateway)
-        ).valider()
+        // TODO: Denne støtter ikke delvis løsning av behovet, så vent med å skru på
+        //        KvalitetssikringsSteg.erTilstrekkeligVurdert(
+        //            KvalitetssikringsSteg.Input(avklaringsbehovene, behandlingId, vurderingEndretService, unleashGateway)
+        //        ).valider()
 
         val sammenstiltBegrunnelse = sammenstillBegrunnelse(løsning)
 
