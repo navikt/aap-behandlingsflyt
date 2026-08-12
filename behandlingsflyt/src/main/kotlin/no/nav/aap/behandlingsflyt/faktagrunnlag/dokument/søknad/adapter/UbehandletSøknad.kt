@@ -7,11 +7,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieSøknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadFerieDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.type.Periode
@@ -26,7 +28,8 @@ data class UbehandletSøknad(
     val harYrkesskade: Boolean,
     val oppgitteBarn: OppgitteBarn?,
     val utenlandsOppholdData: UtenlandsOppholdData?,
-    val andreUtbetalinger: AndreUtbetalingerDto?
+    val andreUtbetalinger: AndreUtbetalingerDto?,
+    val sykepengerOgFerie: SykepengerOgFerieSøknad?
 ) {
     companion object {
         fun fraKontrakt(søknad: Søknad, mottattDato: LocalDate, journalPostId: JournalpostId): UbehandletSøknad {
@@ -61,9 +64,21 @@ data class UbehandletSøknad(
                             iTilleggArbeidUtenforNorge = it.iTilleggArbeidUtenforNorge?.uppercase() == "JA",
                             utenlandsOpphold = utenlandsOpphold
                         )
-                    })
+                    },
+                    sykepengerOgFerie = søknad.sykepenger?.let { mapSykepengerOgFerie(it, søknad.ferie) }
+                )
             }
         }
+
+        private fun mapSykepengerOgFerie(sykepenger: String, ferie: SøknadFerieDto?): SykepengerOgFerieSøknad {
+            val erPeriode = ferie?.ferieType?.uppercase() == "PERIODE" && ferie.fraDato != null && ferie.tilDato != null
+            return SykepengerOgFerieSøknad(
+                mottarSykepenger = sykepenger.uppercase() == "JA",
+                feriePerioder = if (erPeriode) listOf(Periode(ferie!!.fraDato!!, ferie.tilDato!!)) else emptyList(),
+                ferieDager = if (!erPeriode) ferie?.antallDager?.toIntOrNull() else null
+            )
+        }
+
 
         private fun erStudent(stringVerdi: StudentStatus): ErStudentStatus {
             return when (stringVerdi) {
