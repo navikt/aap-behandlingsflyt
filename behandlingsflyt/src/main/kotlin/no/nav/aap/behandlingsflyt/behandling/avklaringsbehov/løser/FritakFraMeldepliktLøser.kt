@@ -27,9 +27,10 @@ class FritakFraMeldepliktLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val nyeVurderinger =
-            løsning.løsningerForPerioder.map { toFritaksvurdering(it, kontekst) }
+            løsning.løsningerForPerioder.map { it.tilFritaksvurdering(kontekst.bruker, kontekst.behandlingId()) }
 
-        val vedtatteVurderinger = behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+        val vedtatteVurderinger =
+            behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         meldepliktRepository.lagre(
             behandlingId = behandling.id,
