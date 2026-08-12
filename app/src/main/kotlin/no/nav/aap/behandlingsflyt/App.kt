@@ -78,6 +78,7 @@ import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreins
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
+import no.nav.aap.behandlingsflyt.behandling.migrering.migreringsdatoGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
@@ -285,6 +286,7 @@ internal fun Application.server(
                 meldepliktsgrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 vedtakslengdeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                migreringsdatoGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 arbeidsopptrappingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 etableringEgenVirksomhetApi(fellesDataSource, repositoryRegistry, gatewayProvider)
