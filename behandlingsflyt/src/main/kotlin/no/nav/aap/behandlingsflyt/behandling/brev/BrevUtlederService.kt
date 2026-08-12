@@ -727,7 +727,7 @@ class BrevUtlederService(
 
         val harForholdTilAndreYtelser =
             samordningAndreYtelser.isNotEmpty() ||
-                    samordningUføre != null ||
+                    samordningUføre.isNotEmpty() ||
                     reduksjonArbeidsgiver.isNotEmpty() ||
                     refusjonskravTjenestepensjon != null ||
                     sykestipend.isNotEmpty() ||
@@ -738,7 +738,7 @@ class BrevUtlederService(
 
         return ForholdTilAndreYtelser(
             samordningAndreYtelser = samordningAndreYtelser,
-            samordningUføre = listOfNotNull(samordningUføre),
+            samordningUføre = samordningUføre,
             reduksjonArbeidsgiver = reduksjonArbeidsgiver,
             refusjonskravTjenestepensjon = refusjonskravTjenestepensjon,
             sykestipend = sykestipend,
@@ -773,17 +773,19 @@ class BrevUtlederService(
         } ?: emptyList()
     }
 
-    private fun hentSisteSamordningUføre(behandlingId: BehandlingId): SamordningUføre? {
+    private fun hentSisteSamordningUføre(behandlingId: BehandlingId):List<SamordningUføre> {
         return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
-            grunnlag.vurdering.vurderingPerioder
-                .maxByOrNull { it.virkningstidspunkt }
-                ?.let { periode ->
-                    SamordningUføre(
-                        virkningstidspunkt = periode.virkningstidspunkt,
-                        uføregradProsent = periode.uføregradTilSamordning.prosentverdi(),
-                    )
-                }
-        }
+            listOfNotNull(
+                grunnlag.vurdering.vurderingPerioder
+                    .maxByOrNull { it.virkningstidspunkt }
+                    ?.let { periode ->
+                        SamordningUføre(
+                            virkningstidspunkt = periode.virkningstidspunkt,
+                            uføregradProsent = periode.uføregradTilSamordning.prosentverdi(),
+                        )
+                    }
+            )
+        } ?: emptyList()
     }
 
     private fun hentReduksjonArbeidsgiver(behandlingId: BehandlingId): List<ReduksjonArbeidsgiver> {
