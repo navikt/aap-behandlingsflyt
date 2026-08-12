@@ -738,7 +738,7 @@ class BrevUtlederService(
 
         return ForholdTilAndreYtelser(
             samordningAndreYtelser = samordningAndreYtelser,
-            samordningUføre = samordningUføre?.let {listOf(it)} as List<SamordningUføre>,
+            samordningUføre = listOfNotNull(samordningUføre),
             reduksjonArbeidsgiver = reduksjonArbeidsgiver,
             refusjonskravTjenestepensjon = refusjonskravTjenestepensjon,
             sykestipend = sykestipend,
