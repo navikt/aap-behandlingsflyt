@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Etablering
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringIkkeGyldig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.erstattVurderingerMedSammeFom
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -36,11 +35,10 @@ class EtableringEgenVirksomhetLøser(
 
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-        val alleVurderinger = gamleVurderinger.erstattVurderingerMedSammeFom(nyeVurderinger)
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = alleVurderinger
+            etableringEgenvirksomhetVurderinger = gamleVurderinger + nyeVurderinger
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }

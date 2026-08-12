@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
@@ -169,12 +170,15 @@ class EtableringEgenVirksomhetLøserTest {
 
         assertDoesNotThrow { løser.løs(kontekst, løsning) }
 
-        val lagretVurdering = InMemoryEtableringEgenVirksomRepository
+        val lagredeVurderinger = InMemoryEtableringEgenVirksomRepository
             .hentHvisEksisterer(revurdering.id)
             ?.vurderinger
-            ?.single()
-        assertThat(lagretVurdering?.utviklingsPerioder).isEqualTo(nyeUtviklingsperioder)
-        assertThat(lagretVurdering?.oppstartsPerioder).isEqualTo(nyeOppstartsperioder)
+            .orEmpty()
+        val gjeldendeVurdering = lagredeVurderinger.gjeldendeVurderinger().segmenter().single().verdi
+
+        assertThat(lagredeVurderinger).hasSize(2)
+        assertThat(gjeldendeVurdering.utviklingsPerioder).isEqualTo(nyeUtviklingsperioder)
+        assertThat(gjeldendeVurdering.oppstartsPerioder).isEqualTo(nyeOppstartsperioder)
     }
 
     @Test

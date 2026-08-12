@@ -47,10 +47,3 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.tom == b.tom
     }
 }
-
-fun List<EtableringEgenVirksomhetVurdering>.erstattVurderingerMedSammeFom(
-    nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
-): List<EtableringEgenVirksomhetVurdering> {
-    val nyeVurderingerFom = nyeVurderinger.map { it.fom }.toSet()
-    return filterNot { it.fom in nyeVurderingerFom } + nyeVurderinger
-}
