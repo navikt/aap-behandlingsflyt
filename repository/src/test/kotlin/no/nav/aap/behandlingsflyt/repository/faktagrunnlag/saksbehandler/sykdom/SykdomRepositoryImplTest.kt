@@ -7,6 +7,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -178,6 +181,68 @@ internal class SykdomRepositoryImplTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `Skal hente nyeste vurderinger før tidspunkt`() {
+        val (sak, behandling) = dataSource.transaction { connection ->
+            val sykdomRepo = SykdomRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val sykdomsvurdering1Grunnlag1 = sykdomsvurdering1(behandling.id)
+            val sykdomsvurdering2Grunnlag1 = sykdomsvurdering2(
+                behandling.id,
+                vurderingenGjelderFra = sykdomsvurdering1Grunnlag1.vurderingenGjelderFra.plusMonths(1)
+            )
+
+            sykdomRepo.lagre(behandling.id, listOf(sykdomsvurdering1Grunnlag1, sykdomsvurdering2Grunnlag1))
+            val grunnlag = sykdomRepo.hent(behandling.id)
+            assertThat(grunnlag.sykdomsvurderinger).hasSize(2)
+            Pair(sak, behandling)
+        }
+
+        // Kopier grunnlag
+        val (revurdering, kopiertGrunnlag) = dataSource.transaction { connection ->
+            val sykdomRepo = SykdomRepositoryImpl(connection)
+
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+
+            val revurdering = finnEllerOpprettBehandling(connection, sak)
+            val kopiertGrunnlag = sykdomRepo.hent(revurdering.id)
+            assertThat(kopiertGrunnlag.sykdomsvurderinger).hasSize(2)
+
+            Pair(revurdering, kopiertGrunnlag)
+
+        }
+        
+        // Legg til ny vurdering
+        dataSource.transaction { connection ->
+            val sykdomRepo = SykdomRepositoryImpl(connection)
+
+            val vurderingSomSkalLeggesTilOgFjernes =
+                sykdomsvurdering2(revurdering.id).copy(begrunnelse = "Denne skal fjernes")
+
+            sykdomRepo.lagre(revurdering.id, kopiertGrunnlag.sykdomsvurderinger + vurderingSomSkalLeggesTilOgFjernes)
+            val grunnlagMedNyVurdering = sykdomRepo.hent(revurdering.id)
+            assertThat(grunnlagMedNyVurdering.sykdomsvurderinger).hasSize(3)
+
+            val sykdomsVurderingerNå = sykdomRepo.hentSykdomsvurderingerPåTidspunkt(revurdering.id, LocalDateTime.now())
+            assertThat(sykdomsVurderingerNå).usingRecursiveComparison().ignoringFields("id", "opprettet").isEqualTo(grunnlagMedNyVurdering.sykdomsvurderinger)
+            
+            grunnlagMedNyVurdering
+        }
+        
+        // Fjern vurdering igjen
+        dataSource.transaction { connection ->
+            val sykdomRepo = SykdomRepositoryImpl(connection)
+            sykdomRepo.lagre(revurdering.id, kopiertGrunnlag.sykdomsvurderinger)
+            val sykdomsVurderingerNå = sykdomRepo.hentSykdomsvurderingerPåTidspunkt(revurdering.id, LocalDateTime.now())
+            assertThat(sykdomsVurderingerNå)
+                .describedAs { "Skal finnne nyeste grunnlag selv om det finnes et grunnlag med nyere vurdering" }
+                .usingRecursiveComparison().ignoringFields("id", "opprettet").isEqualTo(kopiertGrunnlag.sykdomsvurderinger)
+        }
+        
     }
 
 }
