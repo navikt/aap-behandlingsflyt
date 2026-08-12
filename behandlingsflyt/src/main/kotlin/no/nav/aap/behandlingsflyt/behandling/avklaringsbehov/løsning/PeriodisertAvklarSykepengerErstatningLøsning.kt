@@ -53,8 +53,8 @@ class PeriodisertAvklarSykepengerErstatningLøsning(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): List<PeriodisertVurdering> {
-        val repository = repositoryProvider.provide<SykdomRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.sykdomsvurderinger.orEmpty()
+        val repository = repositoryProvider.provide<SykepengerErstatningRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
     }
 
     override fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<SykepengerVurdering> {
