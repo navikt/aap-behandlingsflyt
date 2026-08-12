@@ -456,11 +456,11 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         tidspunkt: LocalDateTime
     ): List<Sykdomsvurdering>? {
         val query = """
-            SELECT sv.sykdom_vurderinger_id
-            FROM sykdom_vurdering sv
-            WHERE sv.vurdert_i_behandling = ?
-                AND sv.opprettet_tid <= ?
-            ORDER BY sv.opprettet_tid DESC
+            SELECT sg.sykdom_vurderinger_id
+            FROM sykdom_grunnlag sg
+            WHERE sg.behandling_id = ?
+                AND sg.opprettet_tid <= ?
+            ORDER BY sg.opprettet_tid DESC
             LIMIT 1
         """.trimIndent()
 
