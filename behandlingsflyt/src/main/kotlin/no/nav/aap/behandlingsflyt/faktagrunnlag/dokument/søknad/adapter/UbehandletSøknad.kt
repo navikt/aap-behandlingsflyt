@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenop
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieSøknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FerieType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNei
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
@@ -70,10 +72,10 @@ data class UbehandletSøknad(
             }
         }
 
-        private fun mapSykepengerOgFerie(sykepenger: String, ferie: SøknadFerieDto?): SykepengerOgFerieSøknad {
-            val erPeriode = ferie?.ferieType?.uppercase() == "PERIODE" && ferie.fraDato != null && ferie.tilDato != null
+        private fun mapSykepengerOgFerie(sykepenger: JaNei, ferie: SøknadFerieDto?): SykepengerOgFerieSøknad {
+            val erPeriode = ferie?.ferieType == FerieType.PERIODE && ferie.fraDato != null && ferie.tilDato != null
             return SykepengerOgFerieSøknad(
-                mottarSykepenger = sykepenger.uppercase() == "JA",
+                mottarSykepenger = sykepenger == JaNei.Ja,
                 feriePerioder = if (erPeriode) listOf(Periode(ferie!!.fraDato!!, ferie.tilDato!!)) else emptyList(),
                 ferieDager = if (!erPeriode) ferie?.antallDager?.toIntOrNull() else null
             )
