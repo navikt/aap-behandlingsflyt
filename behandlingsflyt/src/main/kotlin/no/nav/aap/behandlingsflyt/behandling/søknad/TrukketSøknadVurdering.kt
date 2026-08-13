@@ -15,17 +15,17 @@ data class TrukketSøknadVurdering(
 )
 
 enum class AarsakTilTrekkSoknad {
-    FOR_TIDLIG,
-    FEIL_YTELSE,
-    BRUKER_ONSKER_IKKE,
+    BRUKER_SOKTE_FOR_TIDLIG,
+    BRUKER_SOKTE_FEIL_YTELSE,
+    BRUKER_ONSKER_IKKE_SOKE_LENGER,
     ANNET,
 }
 
 fun AarsakTilTrekkSoknad.tilDto(): AarsakTilTrekkSoknadDto =
     when (this) {
-        AarsakTilTrekkSoknad.FOR_TIDLIG -> AarsakTilTrekkSoknadDto.FOR_TIDLIG
-        AarsakTilTrekkSoknad.FEIL_YTELSE -> AarsakTilTrekkSoknadDto.FEIL_YTELSE
-        AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE -> AarsakTilTrekkSoknadDto.BRUKER_ONSKER_IKKE
+        AarsakTilTrekkSoknad.BRUKER_SOKTE_FOR_TIDLIG -> AarsakTilTrekkSoknadDto.BRUKER_SOKTE_FOR_TIDLIG
+        AarsakTilTrekkSoknad.BRUKER_SOKTE_FEIL_YTELSE -> AarsakTilTrekkSoknadDto.BRUKER_SOKTE_FEIL_YTELSE
+        AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE_SOKE_LENGER -> AarsakTilTrekkSoknadDto.BRUKER_ONSKER_IKKE_SOKE_LENGER
         AarsakTilTrekkSoknad.ANNET -> AarsakTilTrekkSoknadDto.ANNET
     }
 
