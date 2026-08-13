@@ -43,3 +43,15 @@ fun PrometheusMeterRegistry.lovvalgÅrsakTilManuellVurdering(årsak: String): Co
 
 fun PrometheusMeterRegistry.lovvalgAutomatiskVurderingOverstyrt(): Counter =
     this.counter("behandlingsflyt_lovvalg_overstyrt_total")
+
+fun PrometheusMeterRegistry.lovvalgBosattOgPotensielleAndreDel1(result: Boolean): Counter =
+    this.counter("behandlingsflyt_lovvalg_bosatt_total", listOf(Tag.of("bosatt", result.toString())))
+
+fun PrometheusMeterRegistry.lovvalgBosattOgIngenAndreDel1(result: Boolean): Counter =
+    this.counter("behandlingsflyt_lovvalg_bosatt_ingen_andre_total", listOf(Tag.of("bosattingenandre", result.toString())))
+
+fun PrometheusMeterRegistry.lovvalgBosattOgPotensielleAndreDel1IngenDel2(result: Boolean): Counter =
+    this.counter("behandlingsflyt_lovvalg_bosatt_ingen_del2_total", listOf(Tag.of("bosattpotensielleingendel2", result.toString())))
+
+fun PrometheusMeterRegistry.lovvalgBosattOgIngenAndreDel1IngenDel2(result: Boolean): Counter =
+    this.counter("behandlingsflyt_lovvalg_bosatt_ingen_andre_ingen_del2_total", listOf(Tag.of("bosattingenandreingendel2", result.toString())))
