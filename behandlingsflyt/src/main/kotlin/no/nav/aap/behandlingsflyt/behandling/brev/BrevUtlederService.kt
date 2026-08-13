@@ -718,7 +718,7 @@ class BrevUtlederService(
 
     fun hentForholdTilAndreYtelserForBrev(behandlingId: BehandlingId): ForholdTilAndreYtelser? {
         val samordningAndreYtelser = hentSamordningAndreYtelser(behandlingId)
-        val samordningUføre = hentSamordningUføre(behandlingId)
+        val samordningUføre = hentSisteSamordningUføre(behandlingId)
         val reduksjonArbeidsgiver = hentReduksjonArbeidsgiver(behandlingId)
         val refusjonskravTjenestepensjon = hentRefusjonskravTjenestepensjon(behandlingId)
         val sykestipend = hentSykestipend(behandlingId)
@@ -727,7 +727,7 @@ class BrevUtlederService(
 
         val harForholdTilAndreYtelser =
             samordningAndreYtelser.isNotEmpty() ||
-                    samordningUføre.isNotEmpty() ||
+                    samordningUføre != null ||
                     reduksjonArbeidsgiver.isNotEmpty() ||
                     refusjonskravTjenestepensjon != null ||
                     sykestipend.isNotEmpty() ||
@@ -738,7 +738,7 @@ class BrevUtlederService(
 
         return ForholdTilAndreYtelser(
             samordningAndreYtelser = samordningAndreYtelser,
-            samordningUføre = samordningUføre,
+            samordningUføre = listOfNotNull(samordningUføre),
             reduksjonArbeidsgiver = reduksjonArbeidsgiver,
             refusjonskravTjenestepensjon = refusjonskravTjenestepensjon,
             sykestipend = sykestipend,
@@ -773,15 +773,17 @@ class BrevUtlederService(
         } ?: emptyList()
     }
 
-    private fun hentSamordningUføre(behandlingId: BehandlingId): List<SamordningUføre> {
+    private fun hentSisteSamordningUføre(behandlingId: BehandlingId): SamordningUføre? {
         return samordningUføreRepository.hentHvisEksisterer(behandlingId)?.let { grunnlag ->
-            grunnlag.vurdering.vurderingPerioder.map { periode ->
-                SamordningUføre(
-                    virkningstidspunkt = periode.virkningstidspunkt,
-                    uføregradProsent = periode.uføregradTilSamordning.prosentverdi(),
-                )
-            }
-        } ?: emptyList()
+            grunnlag.vurdering.vurderingPerioder
+                .maxByOrNull { it.virkningstidspunkt }
+                ?.let { periode ->
+                    SamordningUføre(
+                        virkningstidspunkt = periode.virkningstidspunkt,
+                        uføregradProsent = periode.uføregradTilSamordning.prosentverdi(),
+                    )
+                }
+        }
     }
 
     private fun hentReduksjonArbeidsgiver(behandlingId: BehandlingId): List<ReduksjonArbeidsgiver> {
