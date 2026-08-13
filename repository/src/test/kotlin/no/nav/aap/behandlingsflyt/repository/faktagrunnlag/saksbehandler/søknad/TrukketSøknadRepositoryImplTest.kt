@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -45,6 +46,7 @@ class TrukketSøknadRepositoryImplTest {
             begrunnelse = "en grunn",
             vurdertAv = Bruker("Z00000"),
             skalTrekkes = false,
+            aarsak = AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE_SOKE_LENGER,
             vurdert = Instant.parse("2020-01-01T12:12:12Z"),
         )
 
@@ -54,6 +56,7 @@ class TrukketSøknadRepositoryImplTest {
             begrunnelse = "en annen grunn",
             vurdertAv = Bruker("Z00001"),
             skalTrekkes = true,
+            aarsak = AarsakTilTrekkSoknad.BRUKER_SOKTE_FEIL_YTELSE,
             vurdert = Instant.parse("2020-01-01T12:12:19Z"),
         )
 

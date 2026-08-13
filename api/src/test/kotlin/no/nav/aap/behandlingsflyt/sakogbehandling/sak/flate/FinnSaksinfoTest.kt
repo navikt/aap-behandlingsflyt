@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
@@ -94,6 +95,7 @@ class FinnSaksinfoTest {
                     skalTrekkes = true,
                     vurdertAv = Bruker("Z999999"),
                     vurdert = Instant.now(),
+                    aarsak = AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE_SOKE_LENGER
                 )
             )
         }
@@ -124,6 +126,7 @@ class FinnSaksinfoTest {
                     skalTrekkes = false,
                     vurdertAv = Bruker("Z999999"),
                     vurdert = Instant.now(),
+                    aarsak = AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE_SOKE_LENGER
                 )
             )
         }
