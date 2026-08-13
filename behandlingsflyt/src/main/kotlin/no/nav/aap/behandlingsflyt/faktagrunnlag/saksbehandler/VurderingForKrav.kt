@@ -16,7 +16,7 @@ interface VurderingForKravGrunnlag<T : VurderingForKrav> {
         return this.vurderinger.gjeldendeVurderinger()
     }
 
-    fun tilTidslinje(kravGrunnlag: KravGrunnlag?): Tidslinje<T> {
+    fun tilTidslinje(kravGrunnlag: KravGrunnlag): Tidslinje<T> {
         return this.vurderinger.tilTidslinje(kravGrunnlag)
     }
 }

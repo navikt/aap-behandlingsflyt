@@ -174,6 +174,112 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
     }
 
     @Test
+    fun `revurdering skal kreve ny lovvalgsvurdering hvis vurderingen fra forrige behandling ikke lenger er gyldig`() {
+        // Person uten automatiske I_NORGE-kriterier - lovvalg krever manuell avklaring i førstegangsbehandlingen.
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+        val fom = sak.rettighetsperiode.fom
+
+        val fullførtFørstegangsbehandling = førstegangsbehandling
+            .løsLovvalg(fom, true)
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap(fom)
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        assertThat(fullførtFørstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        // Simulerer at den manuelle vurderingen som gjorde forrige behandling gyldig for lovvalg
+        // ikke lenger finnes/regnes som gyldig (f.eks. på grunn av en kodeendring i hva som gir
+        // automatisk oppfylt, eller fordi grunnlaget den bygde på har blitt fjernet). Behandlingen
+        // var fortsatt relevant for lovvalg, men mangler nå en reell/gyldig vurdering.
+        dataSource.transaction {
+            MedlemskapArbeidInntektRepositoryImpl(it).slett(fullførtFørstegangsbehandling.id)
+        }
+
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
+        )
+
+        val åpentLovvalgsbehov = hentÅpneAvklaringsbehov(revurdering.id)
+            .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+
+        // For å verifisere periodene den forrige behandlingen var vurdert brukes både
+        // nårVurderingenErRelevant og perioderSomIkkeErTilstrekkeligVurdert
+        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotNull
+        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotEmpty()
+        assertThat(åpentLovvalgsbehov.perioderSomIkkeErTilstrekkeligVurdert()).isNotEmpty()
+
+        val oppdatertRevurdering = revurdering
+            .løsLovvalg(fom, true)
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(oppdatertRevurdering.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `revurdering skal kreve ny lovvalgsvurdering hvis ny søknad har utenlandsopphold`() {
+        // Person uten automatiske I_NORGE-kriterier - lovvalg krever manuell avklaring i førstegangsbehandlingen.
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
+        val fom = sak.rettighetsperiode.fom
+
+        val fullførtFørstegangsbehandling = førstegangsbehandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        assertThat(fullførtFørstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+
+        val revurdering = sak.sendInnSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+
+        val åpentLovvalgsbehov = hentÅpneAvklaringsbehov(revurdering.id)
+            .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+
+        // For å verifisere periodene den forrige behandlingen var vurdert brukes både
+        // nårVurderingenErRelevant og perioderSomIkkeErTilstrekkeligVurdert
+        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotNull
+        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotEmpty()
+        assertThat(åpentLovvalgsbehov.perioderSomIkkeErTilstrekkeligVurdert()).isNotEmpty()
+
+        val oppdatertRevurdering = revurdering
+            .løsLovvalg(fom, true)
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap(fom, true)
+            .løsUtenSamordning()
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(oppdatertRevurdering.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
     fun `skal kunne gjennomføre førstegangsbehandling med periodisert lovvalg og medlemskap`() {
         var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
 
@@ -628,6 +734,65 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
         assertThat(lovvalgFase2).allMatch { it.erOppfylt() }
         assertThat(lovvalgFase2.maxOf { it.periode.tom }).isEqualTo(Tid.MAKS)
+    }
+
+    @Test
+    fun `lovvalg oppfylt manuelt i førstegangsbehandling skal fortsatt være gjeldende i revurdering selv om nye opplysninger i prinsippet kunne gitt automatisk vurdering`() {
+        val (sak, behandling) = sendInnFørsteSøknad(
+            mottattTidspunkt = LocalDate.now().atStartOfDay(),
+            søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
+        )
+
+        // Lovvalg krever manuell avklaring pga. oppgitt utenlandsopphold i søknaden
+        behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+        }
+
+        val førstegangsbehandling = behandling
+            .løsLovvalg(sak.rettighetsperiode.fom, true)
+            .løsSykdom(sak.rettighetsperiode.fom)
+            .løsBistand(sak.rettighetsperiode.fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val lovvalgFørstegangsbehandling = hentVilkårsresultat(førstegangsbehandling.id)
+            .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+        assertThat(lovvalgFørstegangsbehandling).allMatch { it.erOppfylt() && it.manuellVurdering }
+
+        // Ny søknad uten indikasjon på tilknytning til utlandet - ville i prinsippet
+        // kunnet vurderes automatisk dersom det ikke fantes en manuell vurdering fra før
+        val revurdering = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
+
+        revurdering.medKontekst {
+            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+        }
+
+        val lovvalgRevurdering = hentVilkårsresultat(revurdering.id)
+            .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+
+        // Den manuelle vurderingen fra førstegangsbehandlingen skal fortsatt gjelde,
+        // selv om den nye søknaden i prinsippet kunne gitt automatisk oppfylt lovvalg
+        assertThat(lovvalgRevurdering).allMatch { it.erOppfylt() && it.manuellVurdering }
+
+        val manuelleVurderingerFørstegangsbehandling = dataSource.transaction {
+            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(førstegangsbehandling.id)?.vurderinger
+        }
+        val manuelleVurderingerRevurdering = dataSource.transaction {
+            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(revurdering.id)?.vurderinger
+        }
+        assertThat(manuelleVurderingerRevurdering).isEqualTo(manuelleVurderingerFørstegangsbehandling)
     }
 
 }

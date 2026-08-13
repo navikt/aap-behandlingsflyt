@@ -19,6 +19,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     VentStatusForTilbakekrevingIBehandlingsflyt,
     MotorV2,
     IngenStoppHendelseVedAtomaerBehandling,
+    IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
 
     // --- Krav ---
     KravSteg, // Visning
@@ -32,7 +33,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SkalViseAlleSykdomssteg,
     StrekkAvslagOverHelg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
-    HandterDialogmeldingSomLegeerklaering,
     HoppOverKvalitetssikringVedIngenEndring
     ;
 

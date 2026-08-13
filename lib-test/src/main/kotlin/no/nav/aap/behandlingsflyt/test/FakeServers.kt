@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.fakes.NomFake
 import no.nav.aap.behandlingsflyt.test.fakes.NorgFake
 import no.nav.aap.behandlingsflyt.test.fakes.OppgavestyringFake
 import no.nav.aap.behandlingsflyt.test.fakes.PdfgenFake
+import no.nav.aap.behandlingsflyt.test.fakes.PdfGeneratorFake
 import no.nav.aap.behandlingsflyt.test.fakes.PdlFake
 import no.nav.aap.behandlingsflyt.test.fakes.PesysFake
 import no.nav.aap.behandlingsflyt.test.fakes.PoppFake
@@ -67,6 +68,7 @@ object FakeServers : AutoCloseable {
     private val norg = NorgFake()
     private val leaderElector = LeaderElectorFake()
     private val pdfGen = PdfgenFake()
+    private val pdfGenerator = PdfGeneratorFake()
 
     // Fakes needing fakePersoner - lazy lambda
     private val pdl = PdlFake { fakePersoner }
@@ -86,7 +88,7 @@ object FakeServers : AutoCloseable {
     private val allFakes: List<FakeServer> = listOf(
         texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
-        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen
+        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen, pdfGenerator
     )
 
     private lateinit var fakePersoner: TestPersonService
@@ -258,6 +260,10 @@ object FakeServers : AutoCloseable {
         // aap-saksbehandling-pdf
         System.setProperty("INTEGRASJON_PDFGEN_URL", "http://localhost:${pdfGen.port()}")
         System.setProperty("INTEGRASJON_PDFGEN_SCOPE", "scope")
+
+        // aap-pdfgenerator
+        System.setProperty("INTEGRASJON_PDFGENERATOR_URL", "http://localhost:${pdfGenerator.port()}")
+        System.setProperty("INTEGRASJON_PDFGENERATOR_SCOPE", "scope")
     }
 
     override fun close() {

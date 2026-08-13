@@ -88,6 +88,7 @@ spec:
             roles:
               - "bestill-varselbrev"
               - "finn-siste-behandlinger"
+              - "finn-kandidater-for-paaminnelse"
         - application: paw-patrol
         - application: api-intern
         - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
@@ -143,6 +144,7 @@ spec:
         - application: tiltakspenger-datadeling
           namespace: tpts
         - application: saksbehandling-pdfgen
+        - application: pdfgenerator
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -277,5 +279,9 @@ spec:
       value: http://saksbehandling-pdfgen
     - name: INTEGRASJON_PDFGEN_SCOPE
       value: api://dev-gcp.aap.saksbehandling-pdfgen/.default
+    - name: INTEGRASJON_PDFGENERATOR_URL
+      value: http://pdfgenerator
+    - name: INTEGRASJON_PDFGENERATOR_SCOPE
+      value: api://dev-gcp.aap.pdfgenerator/.default
     - name: NAIS_TEAM_AAP
       value: ee2a0374-97a6-462e-9a05-3cb7be3d8fc5

@@ -1,19 +1,21 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
 import no.nav.aap.behandlingsflyt.utils.diff.somDto
+import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Prosent
 import javax.sql.DataSource
 
 class TilkjentYtelseService(
@@ -46,6 +48,7 @@ class TilkjentYtelseService(
                 repositoryFactory.provide<TilkjentYtelseRepository>()
             val meldekortRepository = repositoryFactory.provide<MeldekortRepository>()
             val meldeperiodeRepository = repositoryFactory.provide<MeldeperiodeRepository>()
+            val underveisRepository = repositoryFactory.provide<UnderveisRepository>()
 
             val meldekortene =
                 meldekortRepository.hentHvisEksisterer(behandlingId)
@@ -57,6 +60,17 @@ class TilkjentYtelseService(
                     ?.tilTidslinje()
                     .orEmpty()
 
+            val underveisTidslinje: Tidslinje<UnderveisFelter> =
+                underveisRepository.hentHvisEksisterer(behandlingId)
+                    ?.somTidslinje()
+                    ?.mapValue {
+                        UnderveisFelter(
+                            andelArbeid = it.arbeidsgradering.andelArbeid,
+                            grenseverdi = it.grenseverdi,
+                        )
+                    }
+                    ?: Tidslinje()
+
             val meldeperioder = if (tilkjentYtelseTidslinje.isNotEmpty()) {
                 meldeperiodeRepository.hentMeldeperioder(behandlingId, tilkjentYtelseTidslinje.helePerioden())
             } else {
@@ -67,7 +81,8 @@ class TilkjentYtelseService(
                 perioder = mapTilkjentYtelsePerioder(
                     meldeperioder,
                     tilkjentYtelseTidslinje,
-                    meldekortene
+                    underveisTidslinje,
+                    meldekortene,
                 )
             )
         }
@@ -86,9 +101,14 @@ class TilkjentYtelseService(
     private fun mapTilkjentYtelsePerioder(
         meldeperioder: List<Periode>,
         tilkjentYtelseTidslinje: Tidslinje<Tilkjent>,
-        meldekortene: List<Meldekort>
+        underveisTidslinje: Tidslinje<UnderveisFelter>,
+        meldekortene: List<Meldekort>,
     ): List<TilkjentYtelsePeriode2Dto> = meldeperioder.map { meldeperiode ->
-        val begrensetTil = tilkjentYtelseTidslinje.begrensetTil(meldeperiode)
+        val begrensetTil = tilkjentYtelseTidslinje
+            .begrensetTil(meldeperiode)
+            .leftJoin(underveisTidslinje, { tilkjent, underveisFelter ->
+                TilkjentMedUnderveisFelter(tilkjent, underveisFelter)
+            })
 
         val førsteAktuelleMeldekort =
             meldekortene.firstOrNull { arbeidIPeriode ->
@@ -118,22 +138,27 @@ class TilkjentYtelseService(
             vurdertePerioder = begrensetTil
                 .segmenter()
                 .map {
+                    val tilkjent = it.verdi.tilkjent
+                    val underveis = it.verdi.underveis
                     VurdertPeriode(
                         periode = it.periode,
                         felter = Felter(
-                            dagsats = it.verdi.dagsats.verdi.toDouble(),
-                            barneTilleggsats = it.verdi.barnetilleggsats.verdi.toDouble(),
-                            barnetillegg = it.verdi.barnetillegg.verdi().toDouble(),
-                            barnepensjonDagsats = it.verdi.barnepensjonDagsats.verdi().toDouble(),
+                            dagsats = tilkjent.dagsats.verdi.toDouble(),
+                            barneTilleggsats = tilkjent.barnetilleggsats.verdi.toDouble(),
+                            barnetillegg = tilkjent.barnetillegg.verdi().toDouble(),
+                            barnepensjonDagsats = tilkjent.barnepensjonDagsats.verdi().toDouble(),
                             arbeidGradering = 100.minus(
-                                it.verdi.graderingGrunnlag.arbeidGradering.prosentverdi()
+                                tilkjent.graderingGrunnlag.arbeidGradering.prosentverdi()
                             ),
-                            samordningGradering = it.verdi.graderingGrunnlag.samordningGradering.prosentverdi()
-                                .plus(it.verdi.graderingGrunnlag.samordningUføregradering.prosentverdi()),
-                            institusjonGradering = it.verdi.graderingGrunnlag.institusjonGradering.prosentverdi(),
-                            arbeidsgiverGradering = it.verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi(),
-                            totalReduksjon = 100.minus(it.verdi.gradering.prosentverdi()),
-                            effektivDagsats = it.verdi.redusertDagsats().verdi().toDouble()
+                            andelArbeid = underveis?.andelArbeid?.prosentverdi(),
+                            grenseverdi = underveis?.grenseverdi?.prosentverdi(),
+                            samordningGradering = tilkjent.graderingGrunnlag.samordningGradering.prosentverdi()
+                                .plus(tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi())
+                                .coerceAtMost(100),
+                            institusjonGradering = tilkjent.graderingGrunnlag.institusjonGradering.prosentverdi(),
+                            arbeidsgiverGradering = tilkjent.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi(),
+                            totalReduksjon = 100.minus(tilkjent.gradering.prosentverdi()),
+                            effektivDagsats = tilkjent.redusertDagsats().verdi().toDouble()
                         )
                     )
                 }
@@ -141,3 +166,13 @@ class TilkjentYtelseService(
     }
 
 }
+
+internal data class UnderveisFelter(
+    val andelArbeid: Prosent,
+    val grenseverdi: Prosent,
+)
+
+internal data class TilkjentMedUnderveisFelter(
+    val tilkjent: Tilkjent,
+    val underveis: UnderveisFelter?,
+)
