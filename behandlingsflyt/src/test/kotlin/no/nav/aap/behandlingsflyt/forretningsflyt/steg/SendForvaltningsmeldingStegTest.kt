@@ -60,8 +60,6 @@ class SendForvaltningsmeldingStegTest {
             Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
             Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON,
             Definisjon.VURDER_KRAV,
-            Definisjon.AVKLAR_MIGRERINGSDATO,
-            Definisjon.AVKLAR_RESTKVOTE
         )
 
         assertThat(
