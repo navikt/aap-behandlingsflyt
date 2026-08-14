@@ -59,18 +59,6 @@ data class Sykdomsvurdering(
             return false
         }
 
-        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
-            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
-        ) {
-            return false
-        }
-
-        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
-            && (erSkadeSykdomEllerLyteVesentligdel == true)
-        ) {
-            return false
-        }
-
         if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
             && !erNedsettelseIArbeidsevneMerEnnHalvparten
             && harYrkesskadeRegistrert
