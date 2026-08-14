@@ -15,10 +15,6 @@ public enum class StegType(
         gruppe = StegGruppe.MIGRERING,
         status = Status.UTREDES,
     ),
-    AVKLAR_RESTKVOTE_MIGRERING(
-        gruppe = StegGruppe.MIGRERING,
-        status = Status.UTREDES,
-    ),
     KRAV(
         gruppe = StegGruppe.KRAV,
         status = Status.UTREDES
