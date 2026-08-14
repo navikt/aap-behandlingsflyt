@@ -37,7 +37,6 @@ import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
@@ -51,136 +50,188 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
     val dokumentinnhentingGateway = gatewayProvider.provide<DokumentinnhentingGateway>()
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
 
-    route("/api/dokumentinnhenting/syfo") {
-
-        route("/fastlege/{saksnummer}") {
-            authorizedGet<SaksnummerParameter, FastlegeResponse>(
-                AuthorizationParamPathConfig(
-                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                    sakPathParam = SakPathParam("saksnummer"),
-                    påkrevdRolle = Definisjon.BESTILL_LEGEERKLÆRING.løsesAv,
-                )
-            ) { saksnummer ->
-                val fastlegeResponse = dataSource.transaction { connection ->
-                    FastlegeService(repositoryRegistry.provider(connection), gatewayProvider)
-                        .utledFastlege(Saksnummer(saksnummer.saksnummer), token())
+    route("/api/dokumentinnhenting") {
+        route("/syfo") {
+            route("/fastlege/{saksnummer}") {
+                authorizedGet<SaksnummerParameter, FastlegeResponse>(
+                    AuthorizationParamPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        operasjon = Operasjon.SAKSBEHANDLE,
+                        sakPathParam = SakPathParam("saksnummer"),
+                        påkrevdRolle = Definisjon.BESTILL_LEGEERKLÆRING.løsesAv,
+                    )
+                ) { saksnummer ->
+                    val fastlegeResponse = dataSource.transaction { connection ->
+                        FastlegeService(repositoryRegistry.provider(connection), gatewayProvider)
+                            .utledFastlege(Saksnummer(saksnummer.saksnummer), token())
+                    }
+                    respond(fastlegeResponse)
                 }
-                respond(fastlegeResponse)
             }
-        }
 
-        route("/bestill") {
-            authorizedPost<Unit, String, BestillLegeerklæringDto>(
-                AuthorizationBodyPathConfig(
-                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                    applicationsOnly = false
+            route("/bestill") {
+                authorizedPost<Unit, String, BestillLegeerklæringDto>(
+                    AuthorizationBodyPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ),
+                        operasjon = Operasjon.SAKSBEHANDLE,
+                        applicationsOnly = false
+                    )
                 )
-            )
-            { _, req ->
-                val bestillingUuid = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
+                { _, req ->
+                    val bestillingUuid = dataSource.transaction { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
 
-                    LoggingKontekst(
-                        repositoryProvider.provide(),
-                        LogKontekst(referanse = BehandlingReferanse(req.behandlingsReferanse))
-                    ).use {
-                        val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
-                        val lås = låsRepository.lås(req.behandlingsReferanse)
+                        LoggingKontekst(
+                            repositoryProvider.provide(),
+                            LogKontekst(referanse = BehandlingReferanse(req.behandlingsReferanse))
+                        ).use {
+                            val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+                            val lås = låsRepository.lås(req.behandlingsReferanse)
 
-                        val behandling = repositoryProvider.provide<BehandlingRepository>()
-                            .hent(BehandlingReferanse(req.behandlingsReferanse))
-                        val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
+                            val behandling = repositoryProvider.provide<BehandlingRepository>()
+                                .hent(BehandlingReferanse(req.behandlingsReferanse))
+                            val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
-                        if (req.dokumentasjonType != DokumentasjonType.MELDING_FRA_NAV) {
-                            AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
-                                .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
+                            if (req.dokumentasjonType != DokumentasjonType.MELDING_FRA_NAV) {
+                                AvklaringsbehovOrkestrator(repositoryProvider, gatewayProvider)
+                                    .settPåVentMensVentePåMedisinskeOpplysninger(behandling.id, bruker())
+                            }
+
+                            val personIdent = sak.person.aktivIdent()
+                            val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
+
+                            val bestillingUUID: String = dokumentinnhentingGateway.bestillLegeerklæring(
+                                BehandlingsflytToDokumentInnhentingBestillingDto(
+                                    bestillerNavIdent = bruker().ident,
+                                    behandlerRef = req.behandlerRef,
+                                    behandlerNavn = req.behandlerNavn,
+                                    behandlerHprNr = req.behandlerHprNr,
+                                    personIdent = personIdent.identifikator,
+                                    personNavn = personinfo.fulltNavn(),
+                                    dialogmeldingTekst = req.fritekst,
+                                    saksnummer = sak.saksnummer.toString(),
+                                    dokumentasjonType = req.dokumentasjonType,
+                                    behandlingsReferanse = req.behandlingsReferanse
+                                )
+                            )
+
+                            låsRepository.verifiserSkrivelås(lås)
+
+                            bestillingUUID
                         }
+                    }
+
+                    respond(bestillingUuid)
+                }
+            }
+            route("/status/{saksnummer}") {
+                authorizedGet<HentStatusLegeerklæring, List<DialogmeldingStatusTilBehandslingsflytDto>>(
+                    AuthorizationParamPathConfig(
+                        applicationsOnly = false,
+                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        sakPathParam = SakPathParam("saksnummer")
+                    )
+                ) { par ->
+                    val status = dokumentinnhentingGateway.legeerklæringStatus(par.saksnummer)
+                    respond(status)
+                }
+            }
+            route("/brevpreview") {
+                authorizedPost<Unit, DialogmeldingForhåndsvisningDto, ForhåndsvisBrevRequest>(
+                    AuthorizationBodyPathConfig(
+                        operasjon = Operasjon.SE,
+                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        applicationsOnly = false
+                    )
+                ) { _, req ->
+                    val brevPreview = dataSource.transaction(readOnly = true) { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection).provide<SakRepository>()
+                        val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
 
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 
-                        val bestillingUUID: String = dokumentinnhentingGateway.bestillLegeerklæring(
-                            BehandlingsflytToDokumentInnhentingBestillingDto(
-                                bestillerNavIdent = bruker().ident,
-                                behandlerRef = req.behandlerRef,
-                                behandlerNavn = req.behandlerNavn,
-                                behandlerHprNr = req.behandlerHprNr,
-                                personIdent = personIdent.identifikator,
-                                personNavn = personinfo.fulltNavn(),
-                                dialogmeldingTekst = req.fritekst,
-                                saksnummer = sak.saksnummer.toString(),
-                                dokumentasjonType = req.dokumentasjonType,
-                                behandlingsReferanse = req.behandlingsReferanse
-                            )
+                        val request = ForhåndsvisDialogmeldingDto(
+                            bestillerNavIdent = bruker().ident,
+                            personNavn = personinfo.fulltNavn(),
+                            personIdent = personIdent.identifikator,
+                            dialogmeldingTekst = req.fritekst,
+                            dokumentasjonType = req.dokumentasjonType,
                         )
-
-                        låsRepository.verifiserSkrivelås(lås)
-
-                        bestillingUUID
+                        dokumentinnhentingGateway.forhåndsvisDialogmelding(request)
                     }
+                    respond(brevPreview)
                 }
-
-                respond(bestillingUuid)
             }
-        }
-        route("/status/{saksnummer}") {
-            authorizedGet<HentStatusLegeerklæring, List<DialogmeldingStatusTilBehandslingsflytDto>>(
-                AuthorizationParamPathConfig(
-                    applicationsOnly = false,
-                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
-                    sakPathParam = SakPathParam("saksnummer")
-                )
-            ) { par ->
-                val status = dokumentinnhentingGateway.legeerklæringStatus(par.saksnummer)
-                respond(status)
-            }
-        }
-        route("/brevpreview") {
-            authorizedPost<Unit, DialogmeldingForhåndsvisningDto, ForhåndsvisBrevRequest>(
-                AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.SE,
-                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
-                    applicationsOnly = false
-                )
-            ) { _, req ->
-                val brevPreview = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection).provide<SakRepository>()
-                    val sak = repositoryProvider.hent((Saksnummer(req.saksnummer)))
 
-                    val personIdent = sak.person.aktivIdent()
-                    val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
-
-                    val request = ForhåndsvisDialogmeldingDto(
-                        bestillerNavIdent = bruker().ident,
-                        personNavn = personinfo.fulltNavn(),
-                        personIdent = personIdent.identifikator,
-                        dialogmeldingTekst = req.fritekst,
-                        dokumentasjonType = req.dokumentasjonType,
+            // TODO: Slett når frontend er over på /paaminnelse/send
+            route("/purring") {
+                authorizedPost<Unit, String, PurringLegeerklæringRequest>(
+                    AuthorizationBodyPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ),
+                        operasjon = Operasjon.SAKSBEHANDLE,
                     )
-                    dokumentinnhentingGateway.forhåndsvisDialogmelding(request)
+                ) { _, req ->
+                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
+                    val bestillingUUID = dokumentinnhentingGateway.sendPåminnelseForBestilling(request)
+                    respond(bestillingUUID)
                 }
-                respond(brevPreview)
             }
         }
 
-        route("/purring") {
-            authorizedPost<Unit, String, PurringLegeerklæringRequest>(
-                AuthorizationBodyPathConfig(
-                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                    operasjon = Operasjon.SAKSBEHANDLE,
-                    påkrevdRolle = listOf(
-                        Rolle.SAKSBEHANDLER_OPPFOLGING,
-                        Rolle.KVALITETSSIKRER
-                    ),
-                    applicationsOnly = false
-                )
-            ) { _, req ->
-                val request = PåminnelseDto(req.dialogmeldingPurringUUID)
-                val bestillingUUID = dokumentinnhentingGateway.sendPåminnelseForBestilling(request)
-                respond(bestillingUUID)
+        route("/paaminnelse") {
+            route("/send") {
+                authorizedPost<Unit, String, PurringLegeerklæringRequest>(
+                    AuthorizationBodyPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ),
+                        operasjon = Operasjon.SAKSBEHANDLE,
+                    )
+                ) { _, req ->
+                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
+                    val bestillingUUID = dokumentinnhentingGateway.sendPåminnelseForBestilling(request)
+                    respond(bestillingUUID)
+                }
             }
+
+            route("/avbryt-automatisk-paaminnelse") {
+                authorizedPost<Unit, String, PurringLegeerklæringRequest>(
+                    AuthorizationBodyPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ),
+                        operasjon = Operasjon.SAKSBEHANDLE
+                    )
+                ) { _, req ->
+                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
+                    dokumentinnhentingGateway.avbrytAutomatiskPåminnelseForBestilling(request)
+                }
+            }
+
+            route("/avbryt-automatisk-paaminnelse") {
+                authorizedPost<Unit, String, PurringLegeerklæringRequest>(
+                    AuthorizationBodyPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ),
+                        operasjon = Operasjon.SAKSBEHANDLE,
+                    )
+                ) { _, req ->
+                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
+                    dokumentinnhentingGateway.gjenopptaAutomatiskPåminnelseForBestilling(request)
+                }
+            }
+
         }
 
     }
