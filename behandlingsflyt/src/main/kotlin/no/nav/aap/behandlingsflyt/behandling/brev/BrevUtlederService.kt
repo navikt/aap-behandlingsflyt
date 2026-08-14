@@ -537,13 +537,14 @@ class BrevUtlederService(
 
         val matchedeSkader = yrkesSkaderFraEksterntRegister.map { ys ->
             val internsak = yrkesSkaderMedManuelledatoer.firstOrNull { it.referanse == ys.ref }
+            val relevant = sykdomGrunnlag.yrkesskadevurdering.relevanteSaker.any { it.referanse == ys.ref }
             val skadedato = ys.skadedato
                 ?: internsak?.manuellYrkesskadeDato
             val inntekt = beregning?.vurderinger?.firstOrNull { it.referanse == ys.ref }?.antattÅrligInntekt
             YrkesskadeBeregningBrev.Yrkesskade(
                 yrkesskadedato = skadedato,
                 arbeidsinntektPaaSkadetidspunktet = inntekt?.verdi,
-                relevantForArbeidsevne = true, // TODO må utledes. Hvordan?
+                relevantForArbeidsevne = relevant,
                 diagnose = ys.diagnose,
             )
         }
