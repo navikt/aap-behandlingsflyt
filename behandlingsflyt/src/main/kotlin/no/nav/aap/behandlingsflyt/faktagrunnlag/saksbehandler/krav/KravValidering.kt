@@ -2,11 +2,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.verdityper.dokument.JournalpostId
 
 object KravValidering {
     fun erKravVurderingTilstrekkeligVurdert(søknaderIBehandling: Set<MottattDokument>, kravVurderinger: Set<KravVurdering>): Boolean {
         val erAlleSøknaderIBehandlingVurdert =
-            søknaderIBehandling.all { søknad -> kravVurderinger.any { it.journalpostId == søknad.referanse.asJournalpostId } }
+            søknaderIBehandling.all { søknad -> kravVurderinger.any { it is KravVurderingForJournalpost && it.journalpostId == søknad.referanse.asJournalpostId } }
 
         return erAlleSøknaderIBehandlingVurdert
     }

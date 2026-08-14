@@ -17,7 +17,6 @@ value class Kravreferanse(val verdi: UUID) {
 
 sealed interface KravVurdering {
     val referanse: Kravreferanse
-    val journalpostId: JournalpostId
     val vurdertAv: Bruker
     val begrunnelse: String
     val vurdertIBehandling: BehandlingId
@@ -27,6 +26,10 @@ sealed interface KravVurdering {
         return vurdertAv == SYSTEMBRUKER
 
     }
+}
+
+interface KravVurderingForJournalpost: KravVurdering {
+    val journalpostId: JournalpostId
 }
 
 data class RelevantKrav(
@@ -40,7 +43,7 @@ data class RelevantKrav(
     val søknadsdato: Søknadsdato,
     val overstyrMuligRettFra: OverstyrMuligRettFra?,
     val muligRettFra: LocalDate,
-) : KravVurdering
+) : KravVurderingForJournalpost
 
 data class TrukketSøknad(
     override val referanse: Kravreferanse,
@@ -49,7 +52,7 @@ data class TrukketSøknad(
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
-) : KravVurdering
+) : KravVurderingForJournalpost
 
 data class Klage(
     override val referanse: Kravreferanse,
@@ -58,7 +61,7 @@ data class Klage(
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
-) : KravVurdering
+) : KravVurderingForJournalpost
 
 data class Tilleggsopplysning(
     override val referanse: Kravreferanse,
@@ -67,6 +70,18 @@ data class Tilleggsopplysning(
     override val begrunnelse: String,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
+) : KravVurderingForJournalpost
+
+data class MigrertKrav(
+    override val referanse: Kravreferanse,
+    override val vurdertAv: Bruker,
+    override val begrunnelse: String,
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+
+    val saksnummerArena: String,
+    val migreringsdato: LocalDate,
+    val resterendeKvote: Int,
 ) : KravVurdering
 
 enum class KravType {
@@ -74,6 +89,7 @@ enum class KravType {
     TRUKKET_SØKNAD,
     KLAGE,
     TILLEGGSOPPLYSNING,
+    MIGRERT_KRAV
 }
 
 data class OverstyrMuligRettFra(val dato: LocalDate, val årsak: OverstyrMuligRettFraÅrsak)
