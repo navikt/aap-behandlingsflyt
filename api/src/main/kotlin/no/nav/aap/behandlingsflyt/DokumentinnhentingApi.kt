@@ -217,7 +217,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 }
             }
 
-            route("/avbryt-automatisk-paaminnelse") {
+            route("/gjenoppta-automatisk-paaminnelse") {
                 authorizedPost<Unit, Unit, PurringLegeerklæringRequest>(
                     AuthorizationBodyPathConfig(
                         relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
