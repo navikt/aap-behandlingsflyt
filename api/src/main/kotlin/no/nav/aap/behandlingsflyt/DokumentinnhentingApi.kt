@@ -28,7 +28,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
-import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
+import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -37,6 +37,7 @@ import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
@@ -169,11 +170,15 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 AuthorizationBodyPathConfig(
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
+                    påkrevdRolle = listOf(
+                        Rolle.SAKSBEHANDLER_OPPFOLGING,
+                        Rolle.KVALITETSSIKRER
+                    ),
                     applicationsOnly = false
                 )
             ) { _, req ->
-                val request = LegeerklæringPurringDto(req.dialogmeldingPurringUUID)
-                val bestillingUUID = dokumentinnhentingGateway.purrPåLegeerklæring(request)
+                val request = PåminnelseDto(req.dialogmeldingPurringUUID)
+                val bestillingUUID = dokumentinnhentingGateway.sendPåminnelseForBestilling(request)
                 respond(bestillingUUID)
             }
         }
