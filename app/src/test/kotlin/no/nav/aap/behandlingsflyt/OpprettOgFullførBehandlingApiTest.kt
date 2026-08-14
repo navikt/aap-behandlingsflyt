@@ -18,8 +18,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.AndreUtbetalingerApiDto
 import no.nav.aap.behandlingsflyt.test.AndreUtbetalingerYtelserApiDto
@@ -402,7 +404,7 @@ class OpprettOgFullførBehandlingApiTest {
                     harYrkesskade = false,
                     harMedlemskap = true,
                     andreUtbetalinger = null,
-                    soeknadsdato = LocalDate.now().minusMonths(3),
+                    soeknadsdato = LocalDate.now().minusWeeks(3),
                     automatiskMeldekort = true,
                 )
             )
@@ -421,13 +423,17 @@ class OpprettOgFullførBehandlingApiTest {
         val dataSource = initDatasource(dbConfig)
         repeat(60) {
             try {
-                val dokumenter = dataSource.transaction(readOnly = true) { connection ->
+                val (dokumenter, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
                     val provider = postgresRepositoryRegistry.provider(connection)
                     val sak = provider.provide<SakRepository>().hent(Saksnummer(saksnummer))
-                    provider.provide<MottattDokumentRepository>()
+                    val dokumenter = provider.provide<MottattDokumentRepository>()
                         .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
+                    val behandlinger = provider.provide<BehandlingRepository>().hentAlleIkkeAvbrutteYtelsesbehandlinger(sak.id)
+                    Pair(dokumenter, behandlinger)
                 }
-                if (dokumenter.isNotEmpty()) return@runBlocking dokumenter
+                val harDokumenter = dokumenter.isNotEmpty()
+                val harMeldekortBehandlingerSomErAvsluttet = behandlinger.filter { it.årsakTilOpprettelse == ÅrsakTilOpprettelse.MELDEKORT }.any { it.status().erAvsluttet() }
+                if (harDokumenter && harMeldekortBehandlingerSomErAvsluttet) return@runBlocking dokumenter
             } catch (e: Exception) {
                 log.info("pollMeldekortDokumenter exception: $e")
             }
