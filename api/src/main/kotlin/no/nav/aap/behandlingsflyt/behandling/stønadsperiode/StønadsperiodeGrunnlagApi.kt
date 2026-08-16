@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.stønadsperiodeGrunnlagApi(
         getGrunnlag<BehandlingReferanse, StønadsperiodeGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
-            påkrevdRolle = Definisjon.VURDER_KRAV.løsesAv // TODO: Oppdater denne når vi har avklaringsbehov
+            påkrevdRolle = Definisjon.AVKLAR_STØNADSPERIODE.løsesAv
         ) { req ->
             val response = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
