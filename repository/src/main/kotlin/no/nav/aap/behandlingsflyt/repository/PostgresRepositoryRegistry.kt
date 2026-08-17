@@ -79,6 +79,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønad
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieOppgittISøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.svarfraanadreinstans.SvarFraAndreinstansRepositoryImpl
@@ -117,6 +118,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SykdomRepositoryImpl>()
     .register<YrkesskadeRepositoryImpl>()
     .register<AndreYtelserOppgittISøknadRepositoryImpl>()
+    .register<SykepengerOgFerieOppgittISøknadRepositoryImpl>()
     .register<UføreRepositoryImpl>()
     .register<UføreSøknadRepositoryImpl>()
     .register<MedlemskapArbeidInntektRepositoryImpl>()

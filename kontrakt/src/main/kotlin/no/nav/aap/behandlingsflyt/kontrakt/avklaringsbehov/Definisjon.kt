@@ -231,6 +231,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5042`,
         løsesISteg = StegType.VURDER_AVSLAG_11_27,
         type = BehovType.MANUELT_PÅKREVD,
+        kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
     ),
     
@@ -641,20 +642,6 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         defaultFrist = Period.ofWeeks(3),
-    ),
-
-    /** Steg for migrering fra arena */
-    AVKLAR_MIGRERINGSDATO(
-        kode = AvklaringsbehovKode.`5061`,
-        type = BehovType.MANUELT_FRIVILLIG,
-        løsesISteg = StegType.AVKLAR_MIGRERINGSDATO,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
-    ),
-    AVKLAR_RESTKVOTE(
-        kode = AvklaringsbehovKode.`5062`,
-        type = BehovType.MANUELT_FRIVILLIG,
-        løsesISteg = StegType.AVKLAR_RESTKVOTE_MIGRERING,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
     ),
 
     AVBRYT_AKTIVITETSPLIKTBEHANDING(

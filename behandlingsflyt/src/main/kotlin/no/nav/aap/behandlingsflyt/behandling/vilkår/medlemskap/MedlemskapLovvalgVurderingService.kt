@@ -9,6 +9,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
 import no.nav.aap.behandlingsflyt.lovvalgAutomatiskGjennomslipp
+import no.nav.aap.behandlingsflyt.lovvalgBosattOgIngenAndreDel1
+import no.nav.aap.behandlingsflyt.lovvalgBosattOgIngenAndreDel1IngenDel2
+import no.nav.aap.behandlingsflyt.lovvalgBosattOgPotensielleAndreDel1
+import no.nav.aap.behandlingsflyt.lovvalgBosattOgPotensielleAndreDel1IngenDel2
 import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurdering
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -30,6 +34,21 @@ class MedlemskapLovvalgVurderingService {
 
         // No-op: Metrikker for videre utviklingsplan
         if (type == VurderingType.FØRSTEGANGSBEHANDLING) {
+            // Målinger fra 12.08.26
+            val bosatt = grunnlag.personopplysning?.status == PersonStatus.bosatt
+
+            // Har bosatt-status
+            prometheus.lovvalgBosattOgPotensielleAndreDel1(bosatt).increment()
+
+            // Har bosatt-status og ingen oppfyllende del 1 kriterier
+            prometheus.lovvalgBosattOgIngenAndreDel1(bosatt && !oppfyltMinstEttKrav).increment()
+
+            // Har bosatt-status + potensielle andre del 1 + ingenInntruffet del 2 -> kanBehandlesAutomatisk
+            prometheus.lovvalgBosattOgPotensielleAndreDel1IngenDel2(bosatt && ingenInntruffet).increment()
+
+            // Har bosatt-status og ingen oppfyllende del 1 kriterier + ingenInntruffet del 2 -> kanBehandlesAutomatisk
+            prometheus.lovvalgBosattOgIngenAndreDel1IngenDel2(bosatt && !oppfyltMinstEttKrav && ingenInntruffet).increment()
+
             prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
 
             if (!oppfyltMinstEttKrav) {

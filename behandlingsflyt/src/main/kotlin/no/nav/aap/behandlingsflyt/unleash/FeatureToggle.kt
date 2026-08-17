@@ -20,6 +20,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MotorV2,
     IngenStoppHendelseVedAtomaerBehandling,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
+    GenererVilkarsvurderingOppsummeringPDF,
 
     // --- Krav ---
     KravSteg, // Visning
@@ -33,9 +34,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SkalViseAlleSykdomssteg,
     StrekkAvslagOverHelg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
-    HandterDialogmeldingSomLegeerklaering,
-    HoppOverKvalitetssikringVedIngenEndring,
-    GenererVilkarsvurderingOppsummeringPDF
+    HoppOverKvalitetssikringVedIngenEndring
     ;
 
     override fun key(): String = name

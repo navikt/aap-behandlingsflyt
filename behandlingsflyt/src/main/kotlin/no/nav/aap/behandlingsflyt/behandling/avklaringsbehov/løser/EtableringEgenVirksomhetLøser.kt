@@ -35,11 +35,10 @@ class EtableringEgenVirksomhetLøser(
 
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-        val alleVurderinger = gamleVurderinger + nyeVurderinger
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = alleVurderinger
+            etableringEgenvirksomhetVurderinger = gamleVurderinger + nyeVurderinger
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }

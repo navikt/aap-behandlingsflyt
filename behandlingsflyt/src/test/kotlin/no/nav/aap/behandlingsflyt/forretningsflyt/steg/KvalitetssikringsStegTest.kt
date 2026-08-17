@@ -161,7 +161,7 @@ class KvalitetssikringsStegTest {
         }
 
         fun kvalitetssikre(godkjente: List<Definisjon>, underkjente: List<Definisjon> = emptyList()) {
-            val løser = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash)
+            val løser = KvalitetssikrerLøser(inMemoryRepositoryProvider, createGatewayProvider { register<LokalUnleash>() })
             val resultat = løser.løs(
                 avklaringsbehovKontekst {
                     bruker = Bruker(KVALITETSSIKRER)

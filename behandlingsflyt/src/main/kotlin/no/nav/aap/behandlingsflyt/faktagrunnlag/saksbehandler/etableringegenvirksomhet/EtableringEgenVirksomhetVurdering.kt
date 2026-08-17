@@ -24,7 +24,7 @@ data class EtableringEgenVirksomhetVurdering(
     override val tom: LocalDate?
 ) : PeriodisertVurdering
 
-enum class EierVirksomhet{
+enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,
     EIER_MINST_50_PROSENT_MED_FLER,
     NEI

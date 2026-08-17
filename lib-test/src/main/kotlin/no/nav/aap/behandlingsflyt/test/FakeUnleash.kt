@@ -77,6 +77,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MotorV2 to true,
         BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
+        BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
@@ -87,7 +88,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
         BehandlingsflytFeature.StrekkAvslagOverHelg to true,
         BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true,
-        BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
