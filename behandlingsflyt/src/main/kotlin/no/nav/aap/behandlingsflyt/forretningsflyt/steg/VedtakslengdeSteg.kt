@@ -58,6 +58,23 @@ class VedtakslengdeSteg(
                 )
             }
 
+            VurderingType.MIGERING_FRA_ARENA -> {
+                avklaringsbehovService.oppdaterAvklaringsbehov(
+                    definisjon = Definisjon.AVKLAR_VEDTAKSLENGDE,
+                    vedtakBehøverVurdering = {
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            else -> true
+                        }
+                    },
+                    erTilstrekkeligVurdert = {
+                        vedtakslengdeService.hentVedtakslengdeGrunnlag(kontekst.behandlingId)?.gjeldendeVurdering() != null
+                    },
+                    tilbakestillGrunnlag = { },
+                    kontekst = kontekst
+                )
+            }
+
             VurderingType.MIGRER_RETTIGHETSPERIODE -> {
                 vedtakslengdeService.lagreGjeldendeSluttdatoHvisIkkeEksisterer(
                     behandlingId = kontekst.behandlingId,
