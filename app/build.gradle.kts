@@ -45,12 +45,14 @@ tasks {
 }
 
 tasks.register<JavaExec>("runTestApp") {
+    group = "application"
     description = "Kjør TestApp,."
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
 }
 
 tasks.register<JavaExec>("runTestAppMotOppgave") {
+    group = "application"
     description = "Kjør TestApp mot Oppgave. Forventer at db kjører på port 5438, og oppgave-app på port 8084."
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
@@ -62,12 +64,15 @@ tasks.register<JavaExec>("runTestAppMotOppgave") {
 }
 
 tasks.register<JavaExec>("genererOpenApiJson") {
+    group = "documentation"
     description = "Kjør generering av OpenAPI JSON-fil. Filen blir skrevet til openapi.json"
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.GenererOpenApiJsonKt")
 }
 
 tasks.register<JavaExec>("beregnCSV") {
+    group = "application"
+    description = "Kjør beregning basert på CSV-input fra standard input."
     classpath = sourceSets.test.get().runtimeClasspath
     standardInput = System.`in`
     mainClass.set("no.nav.aap.behandlingsflyt.BeregnMedCSVKt")
