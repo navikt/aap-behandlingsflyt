@@ -102,6 +102,13 @@ object Revurdering : BehandlingType {
                 informasjonskrav = emptyList()
             )
             .medSteg(
+                steg = RettighetsperiodeSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
+            .medSteg(
                 steg = AvklarStønadsperiodeSteg,
                 informasjonskrav = emptyList(),
                 vurderingsbehovRelevanteForSteg = emptyList()
@@ -113,13 +120,6 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SøknadSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.SØKNAD_TRUKKET),
-            )
-            .medSteg(
-                steg = RettighetsperiodeSteg,
-                vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                    Vurderingsbehov.HELHETLIG_VURDERING,
-                )
             )
             .medSteg(
                 steg = VurderLovvalgSteg,

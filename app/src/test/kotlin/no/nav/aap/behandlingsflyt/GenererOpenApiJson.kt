@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
+import com.papsign.ktor.openapigen.route.apiRouting
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
@@ -59,12 +60,20 @@ fun main() {
 
     // Starter server
     val server = embeddedServer(Netty, port = 0) {
+        val repositoryRegistry = postgresRepositoryRegistry
+        val gatewayProvider = defaultGatewayProvider()
+
         server(
             dbConfig = dbConfig,
-            repositoryRegistry = postgresRepositoryRegistry,
-            gatewayProvider = defaultGatewayProvider(),
+            repositoryRegistry = repositoryRegistry,
+            gatewayProvider = gatewayProvider,
             prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
         )
+
+        // Tar med /test-rutene (kun brukt lokalt/i tester) slik at de også blir med i det genererte openapi.json-skjemaet.
+        apiRouting {
+            testRoutes(gatewayProvider, repositoryRegistry)
+        }
     }.start()
 
     port = runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }

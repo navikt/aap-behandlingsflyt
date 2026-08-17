@@ -176,6 +176,17 @@ class SamordningAnnenFullYtelseVilkårTest {
         assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
     }
 
+    @Test
+    fun `avslag11_27 skalAvslås false og ingen samordning - gir OPPFYLT`() {
+        val resultat = vurder(
+            grunnlag(avslag1127 = avslag1127(false), kravGrunnlag = kravGrunnlag())
+        )
+        val segmenter = resultat.segmenter()
+        assertThat(segmenter).hasSize(1)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(segmenter.first().verdi.avslagsårsak).isNull()
+    }
+
     // ── prioritering: avslag11_27 vs samordning ───────────────────────────────
 
     @Test
@@ -297,6 +308,52 @@ class SamordningAnnenFullYtelseVilkårTest {
         val helgVurdering = resultat.segment(3 januar 2026)!!.verdi
         assertThat(helgVurdering).usingRecursiveComparison().isEqualTo(fredagVurdering)
     }
+
+    @Test
+    fun `fyller inn helg med avslag hvis virkningstidspunkt skulle vært helgedag`() {
+        // samordning fra starten av rettighetsperioden, virkningstidspunkt skulle vært søndag
+        val torsdagfredaglørdag = Periode(1 januar 2026, 3 januar 2026)
+        val søndagMandag = Periode(4 januar 2026, 5 januar 2026)
+        val resultat = vurder(
+            grunnlag(
+                samordningGrunnlag = samordningToPerioder(
+                    torsdagfredaglørdag to Prosent.`100_PROSENT`,
+                    søndagMandag to Prosent.`50_PROSENT`,
+                )
+            )
+        )
+
+        val torsdagfredaglørdagvurdering = resultat.segment(2 januar 2026)!!.verdi
+        val søndagVurdering = resultat.segment(4 januar 2026)!!.verdi
+        assertThat(søndagVurdering).usingRecursiveComparison().isEqualTo(torsdagfredaglørdagvurdering)
+
+        val mandagVurdering = resultat.segment(5 januar 2026)!!.verdi
+        assertThat(mandagVurdering.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+    }
+
+    @Test
+    fun `ikke fyll inn helg med avslag hvis samordning i en løpende sak`() {
+        // samordning fra noen dager inn i rettighetsperioden stopper på lørdag, men helg skal ikke fylles inn
+        val fredaglørdag = Periode(2 januar 2026, 3 januar 2026)
+        val søndagMandag = Periode(4 januar 2026, 5 januar 2026)
+        val resultat = vurder(
+            grunnlag(
+                samordningGrunnlag = samordningToPerioder(
+                    fredaglørdag to Prosent.`100_PROSENT`,
+                    søndagMandag to Prosent.`50_PROSENT`,
+                )
+            )
+        )
+
+        val fredaglørdagVurdering = resultat.segment(2 januar 2026)!!.verdi
+        val søndagVurdering = resultat.segment(4 januar 2026)!!.verdi
+        assertThat(søndagVurdering).usingRecursiveComparison().isNotEqualTo(fredaglørdagVurdering)
+
+        val mandagVurdering = resultat.segment(5 januar 2026)!!.verdi
+        assertThat(mandagVurdering).usingRecursiveComparison().isEqualTo(søndagVurdering)
+        assertThat(mandagVurdering.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+    }
+
 
     private fun vurder(grunnlag: SamordningAnnenFullYtelseFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
         return SamordningAnnenFullYtelseVilkår.vurder(grunnlag)

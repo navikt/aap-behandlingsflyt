@@ -109,6 +109,8 @@ import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.ytelseoppslag.foreldrepengeperioderApi
+import no.nav.aap.behandlingsflyt.ytelseoppslag.sykepengeperioderApi
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -271,6 +273,8 @@ internal fun Application.server(
 
             apiRouting {
                 personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykepengeperioderApi(gatewayProvider)
+                foreldrepengeperioderApi(gatewayProvider)
                 saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 flytApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -340,6 +344,7 @@ internal fun Application.server(
                 // Flytt
                 brevApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                påminnelseApi(fellesDataSource, repositoryRegistry)
                 mottattHendelseApi(fellesDataSource, repositoryRegistry)
                 underveisVurderingerApi(fellesDataSource, repositoryRegistry)
                 lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry)

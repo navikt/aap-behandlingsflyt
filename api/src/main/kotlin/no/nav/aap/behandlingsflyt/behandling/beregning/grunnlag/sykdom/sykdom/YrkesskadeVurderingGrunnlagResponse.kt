@@ -12,8 +12,6 @@ data class YrkesskadeVurderingGrunnlagResponse(
 
 data class YrkesskadevurderingResponse(
     val begrunnelse: String,
-    @Deprecated("Bruk relevanteYrkesskadeSaker")
-    val relevanteSaker: List<String>,
     val relevanteYrkesskadeSaker: List<YrkesskadeSakResponse>,
     val andelAvNedsettelsen: Int?,
     val erÅrsakssammenheng: Boolean,

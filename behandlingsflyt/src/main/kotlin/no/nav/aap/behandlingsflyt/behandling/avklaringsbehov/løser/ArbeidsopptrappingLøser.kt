@@ -23,7 +23,12 @@ class ArbeidsopptrappingLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val nyeVurderinger = løsning.løsningerForPerioder.map { it.toArbeidsopptrappingVurdering(kontekst) }
+        val nyeVurderinger = løsning.løsningerForPerioder.map {
+            it.toArbeidsopptrappingVurdering(
+                kontekst.bruker,
+                kontekst.behandlingId()
+            )
+        }
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { arbeidsopptrappingRepositiory.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 

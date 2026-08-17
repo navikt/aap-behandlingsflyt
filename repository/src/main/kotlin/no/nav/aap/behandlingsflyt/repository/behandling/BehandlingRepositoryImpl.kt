@@ -339,6 +339,17 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return connection.queryList(query, setStegtilstand(behandlingId))
     }
 
+    override fun hentNyesteEndringForSteg(behandlingId: BehandlingId): List<StegTilstand> {
+        val query = """
+            SELECT DISTINCT ON (steg) *
+            FROM STEG_HISTORIKK
+            WHERE behandling_id = ?
+            ORDER BY steg, opprettet_tid DESC;
+            """.trimIndent()
+
+        return connection.queryList(query, setStegtilstand(behandlingId))
+    }
+
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         val query = """
             SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,

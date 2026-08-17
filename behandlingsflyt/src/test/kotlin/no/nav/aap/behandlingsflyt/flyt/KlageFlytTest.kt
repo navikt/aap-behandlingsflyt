@@ -52,13 +52,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KRAV
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STØNADSPERIODE
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -275,10 +272,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                     START_BEHANDLING,
                     KRAV,
                     SEND_FORVALTNINGSMELDING,
-                    AVKLAR_STØNADSPERIODE,
-                    AVBRYT_REVURDERING,
-                    SØKNAD,
-                    VURDER_RETTIGHETSPERIODE
+                    VURDER_RETTIGHETSPERIODE,
                 )
             )
         }

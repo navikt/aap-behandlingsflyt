@@ -310,7 +310,6 @@ class TestBehandlingFullføringService(
             AvklarYrkesskadeLøsning(
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "Er yrkesskade",
-                    relevanteSaker = emptyList(),
                     relevanteYrkesskadeSaker = listOf(YrkesskadeSakDto(yrkesskade.ref, null)),
                     andelAvNedsettelsen = 50,
                     erÅrsakssammenheng = true,
@@ -365,31 +364,34 @@ class TestBehandlingFullføringService(
             )
         )
 
-        Definisjon.FASTSETT_MANUELL_INNTEKT -> AvklarManuellInntektVurderingLøsning(
-            manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
-                begrunnelse = "Manuell inntekt vurdering ok",
-                vurderinger = listOf(
-                    ÅrsVurdering(
-                        beløp = BigDecimal("500000.00"),
-                        eøsBeløp = null,
-                        år = LocalDate.now().year - 1,
-                        ferdigLignetPGI = null,
-                    ),
-                    ÅrsVurdering(
-                        beløp = BigDecimal("500000.00"),
-                        eøsBeløp = null,
-                        år = LocalDate.now().year - 2,
-                        ferdigLignetPGI = null,
-                    ),
-                    ÅrsVurdering(
-                        beløp = BigDecimal("500000.00"),
-                        eøsBeløp = null,
-                        år = LocalDate.now().year - 3,
-                        ferdigLignetPGI = null,
+        Definisjon.FASTSETT_MANUELL_INNTEKT -> {
+            val rettighetsStartÅr = sak.rettighetsperiode.fom.year
+            AvklarManuellInntektVurderingLøsning(
+                manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
+                    begrunnelse = "Manuell inntekt vurdering ok",
+                    vurderinger = listOf(
+                        ÅrsVurdering(
+                            beløp = BigDecimal("500000.00"),
+                            eøsBeløp = null,
+                            år = rettighetsStartÅr - 1,
+                            ferdigLignetPGI = null,
+                        ),
+                        ÅrsVurdering(
+                            beløp = BigDecimal("500000.00"),
+                            eøsBeløp = null,
+                            år = rettighetsStartÅr - 2,
+                            ferdigLignetPGI = null,
+                        ),
+                        ÅrsVurdering(
+                            beløp = BigDecimal("500000.00"),
+                            eøsBeløp = null,
+                            år = rettighetsStartÅr - 3,
+                            ferdigLignetPGI = null,
+                        )
                     )
                 )
             )
-        )
+        }
 
         Definisjon.FASTSETT_YRKESSKADEINNTEKT -> {
             val yrkesskade = hentFørsteYrkesskade(behandlingId)

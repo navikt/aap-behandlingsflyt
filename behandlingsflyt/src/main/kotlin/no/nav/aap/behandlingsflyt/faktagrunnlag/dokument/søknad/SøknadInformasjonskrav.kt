@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapAr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -26,7 +27,8 @@ class SøknadInformasjonskrav private constructor(
     private val studentRepository: StudentRepository,
     private val barnRepository: BarnRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val andreYtelserRepository: AndreYtelserOppgittISøknadRepository
+    private val andreYtelserRepository: AndreYtelserOppgittISøknadRepository,
+    private val sykepengerOgFerieRepository: SykepengerOgFerieOppgittISøknadRepository
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
 
     companion object : Informasjonskravkonstruktør {
@@ -42,7 +44,8 @@ class SøknadInformasjonskrav private constructor(
                 repositoryProvider.provide<StudentRepository>(),
                 repositoryProvider.provide(),
                 medlemskapArbeidInntektRepository,
-                repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
+                repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>(),
+                repositoryProvider.provide<SykepengerOgFerieOppgittISøknadRepository>()
             )
         }
     }
@@ -88,6 +91,10 @@ class SøknadInformasjonskrav private constructor(
 
             if (ubehandletSøknad.oppgitteBarn != null) {
                 barnRepository.lagreOppgitteBarn(kontekst.behandlingId, ubehandletSøknad.oppgitteBarn)
+            }
+
+            if (ubehandletSøknad.sykepengerOgFerie != null) {
+                sykepengerOgFerieRepository.lagre(behandlingId, ubehandletSøknad.sykepengerOgFerie)
             }
 
             if (ubehandletSøknad.utenlandsOppholdData != null) {
