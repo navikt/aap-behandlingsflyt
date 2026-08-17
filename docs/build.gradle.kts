@@ -1,3 +1,5 @@
+import org.gradle.process.CommandLineArgumentProvider
+
 plugins {
     id("aap.conventions")
 }
@@ -11,11 +13,14 @@ dependencies {
 }
 
 val generateAvklaringsbehovHtml =  tasks.register<JavaExec>("generateAvklaringsbehovHtml") {
+    group = "documentation"
     description = "Generer HTML-fil med tabell over avklaringsbehov."
     val outputDirectory = layout.buildDirectory.dir("dokka/html")
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("no.nav.aap.docs.DefinisjonHtmlGeneratorKt")
-    args(outputDirectory.get().asFile.absolutePath)
+    argumentProviders.add(CommandLineArgumentProvider {
+        listOf(outputDirectory.get().asFile.absolutePath)
+    })
     outputs.file(outputDirectory.map { it.file("avklaringsbehov.html") })
 }
 
