@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.Dokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -41,40 +40,40 @@ internal object VedtakDokumentRenderer {
         return Seksjon(
             tittel = Tekst("Vedtak"),
             subseksjoner = listOfNotNull(
-                opplysningerOmBehandlingen(),
-                grunnlaget(),
-                rettighetstype(),
-                sykdomsvurderinger(),
-                yrkesskadevurdering(),
-                sykepengererstatning(),
-                bistandsvurderinger(),
-                studentvurderinger(),
-                overgangUføre(),
-                etableringEgenVirksomhet(),
-                arbeidsevnevurderinger(),
-                arbeidsopptrapping(),
-                overgangArbeid(),
-                vedtakslengde(),
-                fritak(),
-                overstyringMeldeplikt(),
-                stønadsperiode(),
-                barnetillegg(),
-                refusjonkrav(),
-                samordning(),
-                institusjonsopphold(),
-                forutgåendeMedlemskap(),
-                oppholdskrav(),
-                manuellInntekt(),
-                beregningVurdering(),
-                vilkår(),
-                tilkjentYtelse(),
-                vedleggTidligereBehandlinger(),
-                vedleggDokumentoversikt(),
+                opplysningerOmBehandlingenSub(),
+                grunnlagetSub(),
+                rettighetstypeSub(),
+                sykdomsvurderingerSub(),
+                yrkesskadevurderingSub(),
+                sykepengererstatningSub(),
+                bistandsvurderingerSub(),
+                studentvurderingerSub(),
+                overgangUføreSub(),
+                etableringEgenVirksomhetSub(),
+                arbeidsevnevurderingerSub(),
+                arbeidsopptrappingSub(),
+                overgangArbeidSub(),
+                vedtakslengdeSub(),
+                fritakSub(),
+                overstyringMeldepliktSub(),
+                stønadsperiodeSub(),
+                barnetilleggSub(),
+                refusjonkravSub(),
+                samordningSub(),
+                institusjonsoppholdSub(),
+                forutgåendeMedlemskapSub(),
+                oppholdskravSub(),
+                manuellInntektSub(),
+                beregningVurderingSub(),
+                vilkårSub(),
+                tilkjentYtelseSub(),
+                vedleggTidligereBehandlingerSub(),
+                vedleggDokumentoversiktSub(),
             )
         )
     }
 
-    private fun VedtakDokumentGrunnlag.grunnlaget(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.grunnlagetSub(): Seksjon {
         if (beregningsgrunnlag == null) return Seksjon(
             tittel = Tekst("Grunnlaget for størrelsen på AAP"),
             Avsnitt(Tekst("Beregningsgrunnlag er ikke tilgjengelig for denne behandlingen."))
@@ -142,13 +141,13 @@ internal object VedtakDokumentRenderer {
             Kroner(i.inntektIKroner), Tekst(" / justert: "), Kroner(i.inntektJustertForUføregrad),
         )
 
-    private fun VedtakDokumentGrunnlag.sykdomsvurderinger(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.sykdomsvurderingerSub(): Seksjon? {
         val tidslinje = sykdomGrunnlag?.somSykdomsvurderingstidslinje() ?: return null
         if (tidslinje.isEmpty()) return null
         return tidslinje.tilSeksjon()
     }
 
-    private fun VedtakDokumentGrunnlag.bistandsvurderinger(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.bistandsvurderingerSub(): Seksjon? {
         val grunnlag = bistandGrunnlag ?: return null
         val tidslinje = grunnlag.somBistandsvurderingstidslinje()
         if (tidslinje.isEmpty()) return Seksjon(
@@ -172,7 +171,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.studentvurderinger(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.studentvurderingerSub(): Seksjon? {
         val grunnlag = studentGrunnlag ?: return null
         val vurderinger = grunnlag.gjeldendeStudentvurderinger()
         if (vurderinger.isEmpty()) return null
@@ -194,7 +193,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.overgangUføre(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.overgangUføreSub(): Seksjon? {
         val grunnlag = overgangUføreGrunnlag ?: return null
         val tidslinje = grunnlag.somOvergangUforevurderingstidslinje()
         if (tidslinje.isEmpty()) return null
@@ -214,7 +213,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.etableringEgenVirksomhet(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.etableringEgenVirksomhetSub(): Seksjon? {
         val grunnlag = etableringEgenVirksomhetGrunnlag ?: return null
         val tidslinje = grunnlag.gjeldendeVurderingerSomTidslinje()
         if (tidslinje.isEmpty()) return null
@@ -236,7 +235,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.arbeidsevnevurderinger(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.arbeidsevnevurderingerSub(): Seksjon? {
         val grunnlag = arbeidsevneGrunnlag ?: return null
         val tidslinje = grunnlag.gjeldendeVurderinger()
         if (tidslinje.isEmpty()) return null
@@ -254,7 +253,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.arbeidsopptrapping(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.arbeidsopptrappingSub(): Seksjon? {
         val grunnlag = arbeidsopptrappingGrunnlag ?: return null
         val tidslinje = grunnlag.gjeldendeVurderinger()
         if (tidslinje.isEmpty()) return null
@@ -273,7 +272,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.overgangArbeid(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.overgangArbeidSub(): Seksjon? {
         val grunnlag = overgangArbeidGrunnlag ?: return null
         val tidslinje = grunnlag.gjeldendeVurderinger()
         if (tidslinje.isEmpty()) return null
@@ -291,7 +290,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.vedtakslengde(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.vedtakslengdeSub(): Seksjon? {
         val vurdering = vedtakslengdeGrunnlag?.gjeldendeVurdering() ?: return null
         return Seksjon(
             tittel = Tekst("Vedtakslengde"),
@@ -304,7 +303,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.fritak(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.fritakSub(): Seksjon? {
         val grunnlag = meldepliktGrunnlag ?: return null
         val tidslinje = grunnlag.tilTidslinje()
         if (tidslinje.isEmpty()) return null
@@ -319,7 +318,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.stønadsperiode(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.stønadsperiodeSub(): Seksjon? {
         val grunnlag = stønadsperiodeGrunnlag ?: return null
         val vurderinger = grunnlag.gjeldendeVurderinger()
         if (vurderinger.isEmpty()) return null
@@ -355,7 +354,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.barnetillegg(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.barnetilleggSub(): Seksjon? {
         val perioder = barnetilleggGrunnlag?.perioder?.tilTidslinje() ?: return null
         if (perioder.isEmpty()) return null
         return Seksjon(
@@ -367,7 +366,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.rettighetstype(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.rettighetstypeSub(): Seksjon? {
         val grunnlag = rettighetstypeGrunnlag ?: return null
         if (grunnlag.rettighetstypeTidslinje.isEmpty()) return null
         return Seksjon(
@@ -381,7 +380,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.yrkesskadevurdering(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.yrkesskadevurderingSub(): Seksjon? {
         val vurdering = sykdomGrunnlag?.yrkesskadevurdering ?: return null
         return Seksjon(
             tittel = Tekst("Yrkesskadevurdering"),
@@ -396,7 +395,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.sykepengererstatning(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.sykepengererstatningSub(): Seksjon? {
         val grunnlag = sykepengerErstatningGrunnlag ?: return null
         val tidslinje = grunnlag.vurderinger.gjeldendeVurderinger()
         if (tidslinje.isEmpty()) return null
@@ -417,7 +416,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.refusjonkrav(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.refusjonkravSub(): Seksjon? {
         val vurderinger = refusjonkravVurderinger?.takeIf { it.isNotEmpty() } ?: return null
         return Seksjon(
             tittel = Tekst("Refusjonskrav"),
@@ -435,7 +434,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.overstyringMeldeplikt(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.overstyringMeldepliktSub(): Seksjon? {
         val grunnlag = overstyringMeldepliktGrunnlag ?: return null
         val tidslinje = grunnlag.tilTidslinje()
         if (tidslinje.isEmpty()) return null
@@ -453,7 +452,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.samordning(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.samordningSub(): Seksjon? {
         val grunnlag = samordningGrunnlag ?: return null
         if (grunnlag.samordningPerioder.isEmpty()) return null
         return Seksjon(
@@ -469,7 +468,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.institusjonsopphold(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.institusjonsoppholdSub(): Seksjon? {
         val grunnlag = institusjonsoppholdGrunnlag ?: return null
         val harData =
             grunnlag.oppholdene != null || grunnlag.soningsVurderinger != null || grunnlag.helseoppholdvurderinger != null
@@ -525,7 +524,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.forutgåendeMedlemskap(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.forutgåendeMedlemskapSub(): Seksjon? {
         val grunnlag = forutgåendeMedlemskapGrunnlag ?: return null
         val tidslinje = grunnlag.gjeldendeVurderinger()
         if (tidslinje.isEmpty()) return null
@@ -545,7 +544,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.oppholdskrav(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.oppholdskravSub(): Seksjon? {
         val grunnlag = oppholdskravGrunnlag ?: return null
         val tidslinje = grunnlag.tidslinje()
         if (tidslinje.isEmpty()) return null
@@ -564,7 +563,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.manuellInntekt(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.manuellInntektSub(): Seksjon? {
         val grunnlag = manuellInntektGrunnlag ?: return null
         if (grunnlag.manuelleInntekter.isEmpty()) return null
         return Seksjon(
@@ -583,7 +582,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.beregningVurdering(): Seksjon? {
+    private fun VedtakDokumentGrunnlag.beregningVurderingSub(): Seksjon? {
         val grunnlag = beregningVurderingGrunnlag ?: return null
         val tidspunkt = grunnlag.tidspunktVurdering
         val yrkesskade = grunnlag.yrkesskadeBeløpVurdering
@@ -622,7 +621,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.vilkår(): Seksjon = Seksjon(
+    private fun VedtakDokumentGrunnlag.vilkårSub(): Seksjon = Seksjon(
         tittel = Tekst("Vilkårsvurderinger"),
         subseksjoner = vilkårsresultat.alle().mapNotNull { vilkår(it, forrigeVilkårsresultat.optionalVilkår(it.type)) }
     )
@@ -685,7 +684,7 @@ internal object VedtakDokumentRenderer {
     }
 
 
-    private fun VedtakDokumentGrunnlag.tilkjentYtelse(): Seksjon {
+    private fun VedtakDokumentGrunnlag.tilkjentYtelseSub(): Seksjon {
         val dagsatsDenneBehandling = tilkjentYtelse.map {
             listOf(
                 G(it.grunnlagsfaktor),
@@ -829,7 +828,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.opplysningerOmBehandlingen(): Seksjon = Seksjon(
+    private fun VedtakDokumentGrunnlag.opplysningerOmBehandlingenSub(): Seksjon = Seksjon(
         tittel = Tekst("Opplysninger om behandlingen"),
         blokker = listOf(
             Dict(
@@ -850,7 +849,7 @@ internal object VedtakDokumentRenderer {
         ),
     )
 
-    private fun VedtakDokumentGrunnlag.vedleggTidligereBehandlinger(): Seksjon {
+    private fun VedtakDokumentGrunnlag.vedleggTidligereBehandlingerSub(): Seksjon {
         return Seksjon(
             "Tidligere behandlinger av retten til og størrelsen på AAP",
             Dict(
@@ -871,7 +870,7 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.vedleggDokumentoversikt(): Seksjon {
+    private fun VedtakDokumentGrunnlag.vedleggDokumentoversiktSub(): Seksjon {
         fun referanse(mottattDokument: MottattDokument): LøpendeTekst? {
             return when (mottattDokument.type) {
                 InnsendingType.SØKNAD,
