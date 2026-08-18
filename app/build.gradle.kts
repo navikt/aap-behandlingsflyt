@@ -1,10 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-repositories {
-    mavenCentral()
-    maven { url = uri("https://packages.confluent.io/maven/") }
-}
-
 plugins {
     id("aap.conventions")
     alias(libs.plugins.ktor)

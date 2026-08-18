@@ -4,11 +4,6 @@ plugins {
     id("io.github.androa.gradle.plugin.avro") version "0.0.12"
 }
 
-repositories {
-    mavenCentral()
-    maven { url = uri("https://packages.confluent.io/maven/") }
-}
-
 dependencies {
     api(project(":behandlingsflyt"))
     implementation(libs.dbconnect)
