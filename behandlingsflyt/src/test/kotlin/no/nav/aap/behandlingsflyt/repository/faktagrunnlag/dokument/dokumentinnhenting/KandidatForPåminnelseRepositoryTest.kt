@@ -41,7 +41,7 @@ internal class KandidatForPåminnelseRepositoryTest {
     }
 
     @Test
-    fun `skal plukke ut behandlinger som har ventet i akkurat tre uker`() {
+    fun `skal ikke plukke behandlinger der opprettetDato ikke er lik definert dato for påminnelse`() {
         dataSource.transaction { connection ->
             val sak1 = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak1)
@@ -61,19 +61,26 @@ internal class KandidatForPåminnelseRepositoryTest {
             )
 
             val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockTreUkerOgEnDagFremITid)
+                LocalDate.now(clockTreUkerOgEnDagFremITid),
+                LocalDate.now()
+
             )
             assertThat(kandidaterTreUkerFraIDag).contains(behandling1.referanse)
 
 
             val clockToUkerFremITid = fixedClock(LocalDate.now().plusWeeks(2))
             val kandidaterToUkerFraIDag =
-                KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(LocalDate.now(clockToUkerFremITid))
+                KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
+                    LocalDate.now(
+                        clockToUkerFremITid
+                    ), LocalDate.now().minusDays(1)
+                )
             assertThat(kandidaterToUkerFraIDag).doesNotContain(behandling1.referanse)
 
             val clockFireUkerFremITid = fixedClock(LocalDate.now().plusWeeks(4))
             val kandidaterFireUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockFireUkerFremITid)
+                LocalDate.now(clockFireUkerFremITid),
+                LocalDate.now().plusWeeks(1)
             )
             assertThat(kandidaterFireUkerFraIDag).doesNotContain(behandling1.referanse)
         }
@@ -106,7 +113,8 @@ internal class KandidatForPåminnelseRepositoryTest {
 
 
             val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockTreUkerOgEnDagFremITid)
+                LocalDate.now(clockTreUkerOgEnDagFremITid),
+                LocalDate.now()
             )
             assertThat(kandidaterTreUkerFraIDag).contains(behandling1.referanse)
         }
@@ -149,7 +157,8 @@ internal class KandidatForPåminnelseRepositoryTest {
 
             // forespørsel er besvart, behandling skal ikke plukkes som kandidat
             val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockTreUkerOgEnDagFremITid)
+                LocalDate.now(clockTreUkerOgEnDagFremITid),
+                LocalDate.now()
             )
             assertThat(kandidaterTreUkerFraIDag).doesNotContain(behandling1.referanse)
         }
