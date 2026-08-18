@@ -627,7 +627,7 @@ internal object VedtakDokumentRenderer {
         subseksjoner = vilkårsresultat.alle().mapNotNull { vilkår(it, forrigeVilkårsresultat.optionalVilkår(it.type)) }
     )
 
-    private fun VedtakDokumentGrunnlag.vilkår(vilkår: Vilkår, forrigeVilkår: Vilkår?): Seksjon? {
+    private fun vilkår(vilkår: Vilkår, forrigeVilkår: Vilkår?): Seksjon? {
         val tittel = Span(PrettyEnum(vilkår.type), Tekst(" (${vilkår.type.hjemmel})"))
         if (vilkår.tidslinje().isEmpty()) {
             return Seksjon(tittel, Avsnitt(Tekst("Ingen vurderinger.")))
@@ -686,28 +686,7 @@ internal object VedtakDokumentRenderer {
 
 
     private fun VedtakDokumentGrunnlag.tilkjentYtelse(): Seksjon {
-        fun tilkjent(tilkjent: Tilkjent) = listOf(
-            Kroner(tilkjent.dagsats),
-            Prosent(tilkjent.gradering),
-            G(tilkjent.grunnlagsfaktor),
-            Kroner(tilkjent.grunnbeløp),
-            Tekst(tilkjent.antallBarn.toString()),
-            Kroner(tilkjent.barnetilleggsats),
-            Kroner(tilkjent.barnetillegg),
-            PrettyEnum(tilkjent.minsteSats),
-            Kroner(tilkjent.redusertDagsats()),
-            Dato(tilkjent.utbetalingsdato),
-            Kroner(tilkjent.barnepensjonDagsats),
-            Prosent(tilkjent.graderingGrunnlag.samordningGradering),
-            Prosent(tilkjent.graderingGrunnlag.institusjonGradering),
-            Prosent(tilkjent.graderingGrunnlag.arbeidGradering),
-            Prosent(tilkjent.graderingGrunnlag.samordningUføregradering),
-            Prosent(tilkjent.graderingGrunnlag.samordningArbeidsgiverGradering),
-            Prosent(tilkjent.graderingGrunnlag.meldepliktGradering),
-        )
-
-        val diff = diffTidslinjer(forrigeTilkjentYtelse.komprimer(), tilkjentYtelse.komprimer())
-        val dagsatsDenneBehandling = tilkjentYtelse.map<List<LøpendeTekst>> {
+        val dagsatsDenneBehandling = tilkjentYtelse.map {
             listOf(
                 G(it.grunnlagsfaktor),
                 Kroner(it.grunnbeløp),
@@ -715,7 +694,7 @@ internal object VedtakDokumentRenderer {
             )
         }
             .komprimer()
-        val dagsatsForrigeBehandling = forrigeTilkjentYtelse.map<List<LøpendeTekst>> {
+        val dagsatsForrigeBehandling = forrigeTilkjentYtelse.map {
             listOf(
                 G(it.grunnlagsfaktor),
                 Kroner(it.grunnbeløp),
@@ -742,7 +721,7 @@ internal object VedtakDokumentRenderer {
                                 Tekst("Grunnbeløp benyttet"),
                                 Tekst("Dagsats (kroner)")
                             ),
-                            tidslinje = diffDagsats.mapNotNull<List<LøpendeTekst>> {
+                            tidslinje = diffDagsats.mapNotNull {
                                 when (it) {
                                     is Endret<List<LøpendeTekst>> -> it.fra.zip(it.til).map { (fra, til) ->
                                         if (fra == til) til else Span(fra, Tekst(" → "), til)
@@ -805,7 +784,7 @@ internal object VedtakDokumentRenderer {
                     ),
                     tidslinje =
                         tilkjentYtelse
-                            .map<List<LøpendeTekst>> { tilkjent ->
+                            .map { tilkjent ->
                                 listOf(
                                     Span(Tekst("-"), Prosent(tilkjent.graderingGrunnlag.samordningGradering)),
                                     Span(
@@ -837,7 +816,7 @@ internal object VedtakDokumentRenderer {
                         Tekst("Gradering"),
                         Tekst("Endelig dagsats"),
                     ),
-                    tidslinje = tilkjentYtelse.map<List<LøpendeTekst>> {
+                    tidslinje = tilkjentYtelse.map {
                         listOf(
                             Kroner(it.dagsats),
                             Kroner(it.barnetillegg),

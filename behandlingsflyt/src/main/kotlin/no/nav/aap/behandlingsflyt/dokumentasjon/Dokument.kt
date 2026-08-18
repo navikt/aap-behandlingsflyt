@@ -227,8 +227,6 @@ data class PrettyEnum(val valg: Enum<*>?, val default: String = "—") : Løpend
 }
 
 data class Dato(val dato: LocalDate) : LøpendeTekst {
-    constructor(tidspunkt: LocalDateTime) : this(tidspunkt.toLocalDate())
-
     override fun render(kontekst: RenderKontekst) =
         dato.format(formatter)
 
