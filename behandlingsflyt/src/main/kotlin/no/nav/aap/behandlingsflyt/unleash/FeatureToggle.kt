@@ -20,6 +20,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MotorV2,
     IngenStoppHendelseVedAtomaerBehandling,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
+    GenererVilkarsvurderingOppsummeringPDF,
 
     // --- Krav ---
     KravSteg, // Visning

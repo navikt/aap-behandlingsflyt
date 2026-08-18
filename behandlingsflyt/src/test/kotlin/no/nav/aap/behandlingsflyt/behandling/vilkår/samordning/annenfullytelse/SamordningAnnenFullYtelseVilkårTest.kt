@@ -29,12 +29,15 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -381,7 +384,9 @@ class SamordningAnnenFullYtelseVilkårTest {
             begrunnelse = "begrunnelse avslag 11-27",
             harAnnenFullYtelse = skalAvslås,
             brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
-            harSykepengegrunnlagOver2G = null,
+            brukersYtelseTom = if (skalAvslås) LocalDate.of(2026, 6, 30) else null,
+            sykepengegrunnlag = if (skalAvslås) Beløp(BigDecimal("500000")) else null,
+            harArbeidsgiverSykepengerUtbetaling = if (skalAvslås) false else null,
             skalAvslås1127 = skalAvslås,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
