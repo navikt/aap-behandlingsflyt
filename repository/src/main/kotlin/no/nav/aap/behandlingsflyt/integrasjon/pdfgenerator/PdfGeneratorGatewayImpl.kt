@@ -22,7 +22,7 @@ class PdfGeneratorGatewayImpl : PdfGeneratorGateway {
         prometheus = prometheus,
     )
 
-    override fun genererVurderingerOppsummeringDokument(request: Dokument): ByteArray {
+    override fun genererVurderingerOppsummeringPdfDokument(request: Dokument): ByteArray {
         val uri = baseUri.resolve("/api/v1/genpdf/innsikt/vurderinger")
         val httpRequest = PostRequest(
             body = request,

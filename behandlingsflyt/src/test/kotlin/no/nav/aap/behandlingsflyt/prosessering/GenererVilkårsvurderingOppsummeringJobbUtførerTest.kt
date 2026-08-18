@@ -57,7 +57,7 @@ class GenererVilkårsvurderingOppsummeringJobbUtførerTest {
                 forrigeBehandlingId = forrigeBehandlingId,
             )
         } returns dokument
-        every { pdfGeneratorGateway.genererVurderingerOppsummeringDokument(dokument) } returns pdf
+        every { pdfGeneratorGateway.genererVurderingerOppsummeringPdfDokument(dokument) } returns pdf
 
         GenererVilkårsvurderingOppsummeringJobbUtfører(
             behandlingRepository = behandlingRepository,
@@ -68,7 +68,7 @@ class GenererVilkårsvurderingOppsummeringJobbUtførerTest {
             journalføringService = journalføringService,
         ).utfør(GenererVilkårsvurderingOppsummeringJobbUtfører.nyJobb(behandlingId, sakId))
 
-        verify(exactly = 1) { pdfGeneratorGateway.genererVurderingerOppsummeringDokument(dokument) }
+        verify(exactly = 1) { pdfGeneratorGateway.genererVurderingerOppsummeringPdfDokument(dokument) }
         verify(exactly = 1) {
             journalføringService.journalførVilkårsvurderingOppsummering(
                 sak = sak,

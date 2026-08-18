@@ -36,7 +36,7 @@ class GenererVilkårsvurderingOppsummeringJobbUtfører(
             vedtakstidspunkt = vedtak.vedtakstidspunkt,
             forrigeBehandlingId = behandling.forrigeBehandlingId,
         )
-        val pdf = pdfGeneratorGateway.genererVurderingerOppsummeringDokument(dokument)
+        val pdf = pdfGeneratorGateway.genererVurderingerOppsummeringPdfDokument(dokument)
 
         journalføringService.journalførVilkårsvurderingOppsummering(
             sak = sak,

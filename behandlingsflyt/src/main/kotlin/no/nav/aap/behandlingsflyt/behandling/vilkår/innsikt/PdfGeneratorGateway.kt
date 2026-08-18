@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.komponenter.gateway.Gateway
 
 interface PdfGeneratorGateway : Gateway {
-    fun genererVurderingerOppsummeringDokument(request: Dokument): ByteArray
+    fun genererVurderingerOppsummeringPdfDokument(request: Dokument): ByteArray
 }
 
 data class Dokument(

@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
 import no.nav.aap.komponenter.gateway.Factory
 
 class FakePdfGeneratorGateway : PdfGeneratorGateway {
-    override fun genererVurderingerOppsummeringDokument(request: Dokument): ByteArray {
+    override fun genererVurderingerOppsummeringPdfDokument(request: Dokument): ByteArray {
         return ByteArray(0)
     }
 
