@@ -9,12 +9,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 
 class Avslag11_27RepositoryImplTest {
@@ -38,21 +41,21 @@ class Avslag11_27RepositoryImplTest {
         finnEllerOpprettBehandling(connection, sak).id
     }
 
-    private fun vurdering(
-        behandlingId: BehandlingId,
-        referanse: Kravreferanse = Kravreferanse(UUID.randomUUID()),
-        skalAvslås: Boolean = true,
-    ) = Avslag11_27Vurdering(
-        referanse = referanse,
-        begrunnelse = "begrunnelse",
-        harAnnenFullYtelse = skalAvslås,
-        brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
-        harSykepengegrunnlagOver2G = null,
-        skalAvslås1127 = skalAvslås,
-        vurdertIBehandling = behandlingId,
-        opprettet = Instant.now(),
-        vurdertAv = Bruker("test"),
-    )
+    private fun vurdering(behandlingId: BehandlingId, skalAvslås: Boolean = true): Avslag11_27Vurdering {
+        return Avslag11_27Vurdering(
+            referanse = Kravreferanse(UUID.randomUUID()),
+            begrunnelse = "begrunnelse",
+            harAnnenFullYtelse = skalAvslås,
+            brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
+            brukersYtelseTom = if (skalAvslås) LocalDate.of(2026, 6, 30) else null,
+            sykepengegrunnlag = if (skalAvslås) Beløp(BigDecimal("500000")) else null,
+            harArbeidsgiverSykepengerUtbetaling = if (skalAvslås) false else null,
+            skalAvslås1127 = skalAvslås,
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            vurdertAv = Bruker("testBruker"),
+        )
+    }
 
     @Test
     fun `hentHvisEksisterer returnerer null når ingen grunnlag er lagret`() {
@@ -68,11 +71,10 @@ class Avslag11_27RepositoryImplTest {
     @Test
     fun `lagre og hent én vurdering`() {
         val behandlingId = opprettBehandlingId()
-        val ref = Kravreferanse(UUID.randomUUID())
 
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                behandlingId, setOf(vurdering(behandlingId, ref, skalAvslås = true))
+                behandlingId, setOf(vurdering(behandlingId, skalAvslås = true))
             )
         }
 
@@ -82,10 +84,12 @@ class Avslag11_27RepositoryImplTest {
 
         assertThat(grunnlag).isNotNull
         assertThat(grunnlag!!.vurderinger).hasSize(1)
-        assertThat(grunnlag.vurderinger.first().referanse).isEqualTo(ref)
         assertThat(grunnlag.vurderinger.first().skalAvslås1127).isTrue()
         assertThat(grunnlag.vurderinger.first().harAnnenFullYtelse).isTrue()
         assertThat(grunnlag.vurderinger.first().brukersYtelse).isEqualTo(Ytelse.SYKEPENGER)
+        assertThat(grunnlag.vurderinger.first().harArbeidsgiverSykepengerUtbetaling).isFalse()
+        assertThat(grunnlag.vurderinger.first().brukersYtelseTom).isEqualTo(LocalDate.of(2026, 6, 30))
+        assertThat(grunnlag.vurderinger.first().sykepengegrunnlag).isEqualTo(Beløp(BigDecimal("500000")))
     }
 
     @Test
@@ -111,16 +115,15 @@ class Avslag11_27RepositoryImplTest {
     @Test
     fun `lagre deaktiverer gammelt grunnlag og lagrer nytt`() {
         val behandlingId = opprettBehandlingId()
-        val ref = Kravreferanse(UUID.randomUUID())
 
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                behandlingId, setOf(vurdering(behandlingId, ref, skalAvslås = true))
+                behandlingId, setOf(vurdering(behandlingId, skalAvslås = true))
             )
         }
         dataSource.transaction { connection ->
             Avslag11_27RepositoryImpl(connection).lagre(
-                behandlingId, setOf(vurdering(behandlingId, ref, skalAvslås = false))
+                behandlingId, setOf(vurdering(behandlingId, skalAvslås = false))
             )
         }
 
@@ -196,14 +199,16 @@ class Avslag11_27RepositoryImplTest {
     }
 
     @Test
-    fun `vurdering med harSykepengegrunnlagOver2G lagres og hentes`() {
+    fun `vurdering med sykepengefelter lagres og hentes`() {
         val behandlingId = opprettBehandlingId()
         val vurdering = Avslag11_27Vurdering(
             referanse = Kravreferanse(UUID.randomUUID()),
-            begrunnelse = "sykepenger over 2G",
+            begrunnelse = "sykepenger",
             harAnnenFullYtelse = true,
             brukersYtelse = Ytelse.SYKEPENGER,
-            harSykepengegrunnlagOver2G = true,
+            brukersYtelseTom = LocalDate.of(2026, 6, 30),
+            sykepengegrunnlag = Beløp(BigDecimal("500000")),
+            harArbeidsgiverSykepengerUtbetaling = true,
             skalAvslås1127 = true,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
@@ -218,8 +223,41 @@ class Avslag11_27RepositoryImplTest {
             Avslag11_27RepositoryImpl(connection).hentHvisEksisterer(behandlingId)
         }!!.vurderinger.first()
 
-        assertThat(lagret.harSykepengegrunnlagOver2G).isTrue()
         assertThat(lagret.brukersYtelse).isEqualTo(Ytelse.SYKEPENGER)
+        assertThat(lagret.brukersYtelseTom).isEqualTo(LocalDate.of(2026, 6, 30))
+        assertThat(lagret.sykepengegrunnlag).isEqualTo(Beløp(BigDecimal("500000")))
+        assertThat(lagret.harArbeidsgiverSykepengerUtbetaling).isTrue()
+    }
+
+    @Test
+    fun `vurdering uten sykepengefelter lagres og hentes med null`() {
+        val behandlingId = opprettBehandlingId()
+        val vurdering = Avslag11_27Vurdering(
+            referanse = Kravreferanse(UUID.randomUUID()),
+            begrunnelse = "trukket",
+            harAnnenFullYtelse = false,
+            brukersYtelse = null,
+            brukersYtelseTom = null,
+            sykepengegrunnlag = null,
+            harArbeidsgiverSykepengerUtbetaling = null,
+            skalAvslås1127 = false,
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            vurdertAv = Bruker("test"),
+        )
+
+        dataSource.transaction { connection ->
+            Avslag11_27RepositoryImpl(connection).lagre(behandlingId, setOf(vurdering))
+        }
+
+        val lagret = dataSource.transaction(readOnly = true) { connection ->
+            Avslag11_27RepositoryImpl(connection).hentHvisEksisterer(behandlingId)
+        }!!.vurderinger.first()
+
+        assertThat(lagret.brukersYtelse).isNull()
+        assertThat(lagret.brukersYtelseTom).isNull()
+        assertThat(lagret.sykepengegrunnlag).isNull()
+        assertThat(lagret.harArbeidsgiverSykepengerUtbetaling).isNull()
     }
 
     @Test
