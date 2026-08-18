@@ -36,4 +36,5 @@ dependencies {
     testImplementation(project(":lib-test"))
     testImplementation(project(":repository"))
     testImplementation(libs.mockk)
+    testImplementation(libs.archunit)
 }
