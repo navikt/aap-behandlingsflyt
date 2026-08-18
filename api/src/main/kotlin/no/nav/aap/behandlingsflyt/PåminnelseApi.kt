@@ -10,14 +10,14 @@ import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.authorizedGet
-import java.time.LocalDateTime
+import java.time.LocalDate
 import javax.sql.DataSource
 
 // Det skal sendes påminnelse i dag for bestillinger opprettet for tre uker og én dag siden
 private val bestillingOpprettetDatoForPurringIDag = if (Miljø.erProd()) {
-    LocalDateTime.now().minusWeeks(3).minusDays(1).toLocalDate()
+    LocalDate.now().minusWeeks(3).minusDays(1)
 } else {
-    LocalDateTime.now().minusDays(1).toLocalDate()
+    LocalDate.now().minusDays(1)
 }
 
 fun NormalOpenAPIRoute.påminnelseApi(
@@ -32,7 +32,7 @@ fun NormalOpenAPIRoute.påminnelseApi(
                 val kandidatForPåminnelseRepository = repositoryProvider.provide<KandidatForPåminnelseRepository>()
 
                 kandidatForPåminnelseRepository.finnKandidaterForPåminnelse(
-                    LocalDateTime.now().toLocalDate(),
+                    LocalDate.now(),
                     bestillingOpprettetDato = bestillingOpprettetDatoForPurringIDag
                 )
             }
