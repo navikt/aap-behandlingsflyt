@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.utils.Diff
 import no.nav.aap.behandlingsflyt.utils.Endret
 import no.nav.aap.behandlingsflyt.utils.Fjernet
@@ -24,14 +25,16 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode as DomenePeriode
 
+internal fun vilkårsvurderingOppsummeringTittel(saksnummer: Saksnummer) =
+    "Oppsummering av vilkårsvurderinger for sak $saksnummer"
+
 internal object VedtakDokumentRenderer {
     fun render(grunnlag: VedtakDokumentGrunnlag): Dokument = grunnlag.tilDokument()
 
     private fun VedtakDokumentGrunnlag.tilDokument(): Dokument {
         val kontekst = RenderKontekst(behandlinger)
         return Dokument(
-            tittel = "Et vedtak ",
-            header = "En header",
+            tittel = vilkårsvurderingOppsummeringTittel(saksnummer),
             body = tilSeksjon().render(kontekst),
         )
     }

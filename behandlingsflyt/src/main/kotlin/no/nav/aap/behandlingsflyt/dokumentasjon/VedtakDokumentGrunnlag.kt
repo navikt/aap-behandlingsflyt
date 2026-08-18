@@ -27,11 +27,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 data class VedtakDokumentGrunnlag(
+    val saksnummer: Saksnummer,
     val behandling: Behandling,
     val behandlinger: List<BehandlingMedVedtak>,
     val vilkårsresultat: Vilkårsresultat,

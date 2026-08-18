@@ -87,6 +87,7 @@ class VedtakDokumentRenderingTest {
         refusjonkrav: List<RefusjonkravVurdering>? = null,
         vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
     ) = VedtakDokumentGrunnlag(
+        saksnummer = behandlingMedVedtak.saksnummer,
         behandling = behandling,
         behandlinger = listOf(behandlingMedVedtak),
         vilkårsresultat = vilkårsresultat,
@@ -127,7 +128,8 @@ class VedtakDokumentRenderingTest {
     @Test
     fun `genererer dokument uten valgfrie grunnlag`() {
         val dokument = VedtakDokumentRenderer.render(grunnlag(beregningsgrunnlag = null))
-
+        assertThat(dokument.tittel)
+            .isEqualTo("Oppsummering av vilkårsvurderinger for sak ${behandlingMedVedtak.saksnummer}")
         assertThat(dokument.body).isNotEmpty()
         assertThat(dokument.body.filterIsInstance<DOM.Avsnitt>().map { it.avsnitt })
             .anyMatch { "ikke tilgjengelig" in it }

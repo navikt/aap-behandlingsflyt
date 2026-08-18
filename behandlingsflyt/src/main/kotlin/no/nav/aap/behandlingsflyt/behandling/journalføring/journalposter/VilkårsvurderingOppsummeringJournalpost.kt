@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalposttyp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Sakstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Tema
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Variantformat
+import no.nav.aap.behandlingsflyt.dokumentasjon.vilkårsvurderingOppsummeringTittel
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import java.util.UUID
 
@@ -19,7 +20,7 @@ internal fun vilkårsvurderingOppsummeringJournalpost(
     sak: Sak,
     pdf: ByteArray
 ): Journalpost {
-    val tittel = "Oppsummering av vilkårsvurderinger for sak ${sak.saksnummer}"
+    val tittel = vilkårsvurderingOppsummeringTittel(sak.saksnummer)
 
     return Journalpost(
         journalposttype = Journalposttype.NOTAT,

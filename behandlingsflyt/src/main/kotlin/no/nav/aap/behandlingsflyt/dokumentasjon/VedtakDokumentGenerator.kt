@@ -129,6 +129,7 @@ class VedtakDokumentGenerator(
         ).filter { it.vedtakstidspunkt <= vedtakstidspunkt.plusSeconds(1) }
 
         return VedtakDokumentGrunnlag(
+            saksnummer = sak.saksnummer,
             behandling = behandling,
             behandlinger = behandlinger,
             vilkårsresultat = vilkårsresultatRepository.hent(behandlingId),
