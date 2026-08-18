@@ -86,7 +86,7 @@ class VedtakDokumentRenderingTest {
         sykdomGrunnlag: SykdomGrunnlag? = null,
         refusjonkrav: List<RefusjonkravVurdering>? = null,
         vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
-    ) = BehandlingFaktagrunnlag(
+    ) = VedtakDokumentGrunnlag(
         behandling = behandling,
         behandlinger = listOf(behandlingMedVedtak),
         vilkårsresultat = vilkårsresultat,
@@ -121,12 +121,12 @@ class VedtakDokumentRenderingTest {
         oppholdskravGrunnlag = null,
     )
 
-    private fun BehandlingFaktagrunnlag.render() =
-        tilSeksjon().render(RenderKontekst(behandlinger))
+    private fun VedtakDokumentGrunnlag.render() =
+        VedtakDokumentRenderer.render(this).body
 
     @Test
     fun `genererer dokument uten valgfrie grunnlag`() {
-        val dokument = grunnlag(beregningsgrunnlag = null).genererDokument()
+        val dokument = VedtakDokumentRenderer.render(grunnlag(beregningsgrunnlag = null))
 
         assertThat(dokument.body).isNotEmpty()
         assertThat(dokument.body.filterIsInstance<DOM.Avsnitt>().map { it.avsnitt })
@@ -212,13 +212,13 @@ class VedtakDokumentRenderingTest {
                 )
             }
         )
-        val kontekst = RenderKontekst(listOf(behandlingMedVedtak))
-        val overskrifter = grunnlag(vilkårsresultat = vilkårsresultat)
-            .tilSeksjon()
-            .render(kontekst)
+        val overskrifter = VedtakDokumentRenderer
+            .render(grunnlag(vilkårsresultat = vilkårsresultat))
+            .body
             .filterIsInstance<DOM.Header>()
             .map { it.overskrift }
 
+        val kontekst = RenderKontekst(listOf(behandlingMedVedtak))
         val forventedeVilkårsoverskrifter = Vilkårtype.entries.map { type ->
             "${PrettyEnum(type).render(kontekst)} (${type.hjemmel})"
         }
@@ -250,14 +250,14 @@ class VedtakDokumentRenderingTest {
                 )
             )
         )
-        val kontekst = RenderKontekst(listOf(behandlingMedVedtak))
-        val vurderinger = grunnlag(vilkårsresultat = vilkårsresultat)
-            .tilSeksjon()
-            .render(kontekst)
+        val vurderinger = VedtakDokumentRenderer
+            .render(grunnlag(vilkårsresultat = vilkårsresultat))
+            .body
             .filterIsInstance<DOM.List>()
             .flatMap { it.liste }
             .associate { it[0] to it[1] }
 
+        val kontekst = RenderKontekst(listOf(behandlingMedVedtak))
         assertThat(vurderinger[Periode(oppfyltPeriode).render(kontekst)])
             .contains("Utfall: OPPFYLT")
             .contains("Vurderingsmåte: Manuell")
