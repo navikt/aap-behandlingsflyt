@@ -125,7 +125,7 @@ class VurderAvslag11_27LøserTest {
 
         val vurdering = InMemoryAvslag11_27Repository.hentHvisEksisterer(behandling.id)!!.vurderinger.first()
         assertThat(vurdering.skalAvslås1127).isFalse()
-        assertThat(vurdering.harAnnenFullYtelse).isFalse() //FIXME Thao
+        assertThat(vurdering.harAnnenFullYtelse).isFalse()
         assertThat(vurdering.brukersYtelse).isNull()
     }
 
