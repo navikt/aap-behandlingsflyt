@@ -53,7 +53,7 @@ class VedtakslengdeSteg(
                         }
                     },
                     erTilstrekkeligVurdert = { true },
-                    tilbakestillGrunnlag = { },
+                    tilbakestillGrunnlag = { }, // Har ingen effekt da avklaringsbehovet er MANUELT_FRIVILLIG
                     kontekst = kontekst
                 )
             }
@@ -62,15 +62,12 @@ class VedtakslengdeSteg(
                 avklaringsbehovService.oppdaterAvklaringsbehov(
                     definisjon = Definisjon.AVKLAR_VEDTAKSLENGDE,
                     vedtakBehøverVurdering = {
-                        when {
-                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                            else -> true
-                        }
+                        !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())
                     },
                     erTilstrekkeligVurdert = {
                         vedtakslengdeService.hentVedtakslengdeGrunnlag(kontekst.behandlingId)?.gjeldendeVurdering() != null
                     },
-                    tilbakestillGrunnlag = { },
+                    tilbakestillGrunnlag = { }, // Har ingen effekt da avklaringsbehovet er MANUELT_FRIVILLIG
                     kontekst = kontekst
                 )
             }
