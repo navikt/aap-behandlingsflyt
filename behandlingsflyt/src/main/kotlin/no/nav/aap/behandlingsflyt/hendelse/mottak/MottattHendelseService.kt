@@ -15,7 +15,21 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.*
+
+// Meldekort kommer inn i store, samtidige bunker (typisk mandag morgen). Uten struping
+// legges tusenvis av jobber i køen med neste_kjoring=nå, som blokkerer annen saksbehandling
+// (head-of-line blocking) siden jobbmotoren plukker jobber rent FIFO uten prioritering.
+// Vi sprer derfor neste_kjoring for MELDEKORT-hendelser deterministisk utover et vindu,
+// basert på en hash av dokumentreferansen (samme referanse gir alltid samme forsinkelse,
+// slik at reprosessering av samme hendelse ikke gir ulik oppførsel).
+internal const val MELDEKORT_STRUP_VINDU_SEKUNDER = 300L // 5 minutter
+
+internal fun beregnNesteKjøringForMeldekort(referanse: InnsendingReferanse): LocalDateTime {
+    val jitterSekunder = (referanse.verdi.hashCode().toLong() and 0x7FFFFFFFL) % MELDEKORT_STRUP_VINDU_SEKUNDER
+    return LocalDateTime.now().plusSeconds(jitterSekunder)
+}
 
 class MottattHendelseService(
     private val sakRepository: SakRepository,
@@ -61,17 +75,19 @@ class MottattHendelseService(
             log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
         } else {
             prometheus.dokumentHendelse(dto.type).increment()
-            flytJobbRepository.leggTil(
-                HendelseMottattHåndteringJobbUtfører.nyJobb(
-                    sakId = sak.id,
-                    dokumentReferanse = dto.referanse,
-                    brevkategori = dto.type,
-                    kanal = dto.kanal,
-                    melding = dto.melding,
-                    mottattTidspunkt = dto.mottattTidspunkt,
-                    digitalisertAvPostmottak = dto.digitalisertAvPostmottak
-                ),
+            val jobbInput = HendelseMottattHåndteringJobbUtfører.nyJobb(
+                sakId = sak.id,
+                dokumentReferanse = dto.referanse,
+                brevkategori = dto.type,
+                kanal = dto.kanal,
+                melding = dto.melding,
+                mottattTidspunkt = dto.mottattTidspunkt,
+                digitalisertAvPostmottak = dto.digitalisertAvPostmottak
             )
+            if (dto.type == InnsendingType.MELDEKORT) {
+                jobbInput.medNesteKjøring(beregnNesteKjøringForMeldekort(dto.referanse))
+            }
+            flytJobbRepository.leggTil(jobbInput)
         }
     }
 }
