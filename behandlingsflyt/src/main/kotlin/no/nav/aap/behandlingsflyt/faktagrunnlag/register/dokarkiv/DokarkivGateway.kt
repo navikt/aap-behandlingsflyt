@@ -7,7 +7,7 @@ interface DokarkivGateway : Gateway {
 
     fun oppdater(
         journalpost: Journalpost,
-        oppdatertAv: Bruker,
+        oppdatertAv: Bruker?,
         forsøkFerdigstill: Boolean,
     ): JournalpostResponse
 }
