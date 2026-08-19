@@ -76,7 +76,6 @@ class SamordningAnnenFullYtelseVilkårTest {
                 uføreVurderingGrunnlag = null,
                 avslag1127grunnlag = null,
                 kravGrunnlag = null,
-                strekkAvslagOverHelger = true
             )
         )
 
@@ -110,7 +109,6 @@ class SamordningAnnenFullYtelseVilkårTest {
                 ),
                 avslag1127grunnlag = null,
                 kravGrunnlag = null,
-                strekkAvslagOverHelger = true
             )
         )
 
@@ -145,7 +143,6 @@ class SamordningAnnenFullYtelseVilkårTest {
                 ),
                 avslag1127grunnlag = null,
                 kravGrunnlag = null,
-                strekkAvslagOverHelger = true
             )
         )
 
@@ -482,7 +479,6 @@ class SamordningAnnenFullYtelseVilkårTest {
         uføreVurderingGrunnlag = uføreGrunnlag,
         avslag1127grunnlag = avslag1127,
         kravGrunnlag = kravGrunnlag,
-        strekkAvslagOverHelger = true
     )
 
     fun tomtSamordningYtelseVurderingGrunnlag() = SamordningYtelseVurderingGrunnlag(

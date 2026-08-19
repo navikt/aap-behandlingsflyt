@@ -85,13 +85,11 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
             }
         }
 
-        if (faktagrunnlag.strekkAvslagOverHelger) {
-            return strekkAvslagOverHelg(
-                vurderinger,
-                faktagrunnlag.rettighetsperiode
-            ).begrensetTil(faktagrunnlag.rettighetsperiode)
-        }
-        return vurderinger.begrensetTil(faktagrunnlag.rettighetsperiode)
+
+        return strekkAvslagOverHelg(
+            vurderinger,
+            faktagrunnlag.rettighetsperiode
+        ).begrensetTil(faktagrunnlag.rettighetsperiode)
     }
 
     /**
