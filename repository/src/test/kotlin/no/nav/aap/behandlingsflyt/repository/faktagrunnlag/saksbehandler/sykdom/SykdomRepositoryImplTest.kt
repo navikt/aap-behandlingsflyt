@@ -226,8 +226,7 @@ internal class SykdomRepositoryImplTest {
             sykdomRepo.lagre(revurdering.id, kopiertGrunnlag.sykdomsvurderinger + vurderingSomSkalLeggesTilOgFjernes)
             val grunnlagMedNyVurdering = sykdomRepo.hent(revurdering.id)
             assertThat(grunnlagMedNyVurdering.sykdomsvurderinger).hasSize(3)
-
-            val sykdomsVurderingerNå = sykdomRepo.hentSykdomsvurderingerPåTidspunkt(revurdering.id, LocalDateTime.now())
+            val sykdomsVurderingerNå = sykdomRepo.hentSykdomsvurderingerPåTidspunkt(revurdering.id, LocalDateTime.now().plusSeconds(1))
             assertThat(sykdomsVurderingerNå).usingRecursiveComparison().ignoringFields("id", "opprettet").isEqualTo(grunnlagMedNyVurdering.sykdomsvurderinger)
             
             grunnlagMedNyVurdering
@@ -237,7 +236,7 @@ internal class SykdomRepositoryImplTest {
         dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             sykdomRepo.lagre(revurdering.id, kopiertGrunnlag.sykdomsvurderinger)
-            val sykdomsVurderingerNå = sykdomRepo.hentSykdomsvurderingerPåTidspunkt(revurdering.id, LocalDateTime.now())
+            val sykdomsVurderingerNå = sykdomRepo.hentSykdomsvurderingerPåTidspunkt(revurdering.id, LocalDateTime.now().plusSeconds(1))
             assertThat(sykdomsVurderingerNå)
                 .describedAs { "Skal finnne nyeste grunnlag selv om det finnes et grunnlag med nyere vurdering" }
                 .usingRecursiveComparison().ignoringFields("id", "opprettet").isEqualTo(kopiertGrunnlag.sykdomsvurderinger)
