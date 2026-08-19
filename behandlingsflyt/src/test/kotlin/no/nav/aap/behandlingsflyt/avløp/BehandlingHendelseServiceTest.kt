@@ -4,16 +4,24 @@ import io.mockk.checkUnnecessaryStub
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.pip.PipService
+import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldePerioderOgSakStatusJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -55,6 +63,68 @@ class BehandlingHendelseServiceTest {
     fun `verifiser at FlytJobbRepository blir kalt med riktige argumenter`() {
         // SETUP
 
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+
+        val avklaringsbehovene = mockk<Avklaringsbehovene>()
+
+        every { avklaringsbehovene.alle() } returns listOf(Avklaringsbehov(1L, Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, emptyList(), StegType.VURDER_LOVVALG, true))
+        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+
+        // ACT
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+
+        // VERIFY
+
+        val calls = mutableListOf<JobbInput>()
+        verify {
+            flytJobbRepository.leggTil(capture(calls))
+        }
+
+        assertThat(calls.size).isEqualTo(5)
+        val jobbTyperOpprettet = calls.map {it.type()}
+        assertThat(jobbTyperOpprettet).contains(VarsleOppgaveOmHendelseJobbUtFører.type)
+        assertThat(jobbTyperOpprettet).contains(StatistikkJobbUtfører.type)
+        assertThat(jobbTyperOpprettet).contains(DatadelingMeldePerioderOgSakStatusJobbUtfører.type)
+        assertThat(jobbTyperOpprettet).contains(DatadelingMeldekortJobbUtfører.type)
+        assertThat(jobbTyperOpprettet).contains(MeldeperiodeTilMeldekortBackendJobbUtfører.type)
+
+        val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(calls.first().payload())
+        assertThat(hendelse.referanse.referanse).isEqualTo(behandling.referanse.referanse)
+    }
+
+    @Test
+    fun `skal ikke opprette oppgaveHendelse dersom avklaringsbehovene er tomme`() {
+        // SETUP
+
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+
+        val avklaringsbehovene = mockk<Avklaringsbehovene>()
+
+        every { avklaringsbehovene.alle() } returns emptyList()
+        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+
+        // ACT
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
+
+        // VERIFY
+
+        val calls = mutableListOf<JobbInput>()
+        verify {
+            flytJobbRepository.leggTil(capture(calls))
+        }
+
+        assertThat(calls.size).isEqualTo(4)
+        val jobbTyperOpprettet = calls.map {it.type()}
+        assertThat(jobbTyperOpprettet).doesNotContain(VarsleOppgaveOmHendelseJobbUtFører.type)
+        assertThat(jobbTyperOpprettet).contains(StatistikkJobbUtfører.type)
+        assertThat(jobbTyperOpprettet).contains(DatadelingMeldePerioderOgSakStatusJobbUtfører.type)
+        assertThat(jobbTyperOpprettet).contains(DatadelingMeldekortJobbUtfører.type)
+        assertThat(jobbTyperOpprettet).contains(MeldeperiodeTilMeldekortBackendJobbUtfører.type)
+    }
+
+    private fun settOppFlyt(): Pair<BehandlingHendelseServiceImpl, Behandling> {
         every { flytJobbRepository.leggTil(any()) } returns Unit
 
         every {
@@ -102,31 +172,13 @@ class BehandlingHendelseServiceTest {
         )
 
         every { behandlingService.utledFaktiskBehandlingstype(behandling) }.returns(behandling.typeBehandling())
-        
+
         every { sakService.hent(SakId(1)) } returns Sak(
             id = SakId(1),
             saksnummer = Saksnummer("1"),
             person = person(),
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
-
-        val avklaringsbehovene = mockk<Avklaringsbehovene>()
-
-        every { avklaringsbehovene.alle() } returns emptyList()
-        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
-
-        // ACT
-
-        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
-
-        // VERIFY
-
-        val calls = mutableListOf<JobbInput>()
-        verify {
-            flytJobbRepository.leggTil(capture(calls))
-        }
-
-        val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(calls.first().payload())
-        assertThat(hendelse.referanse.referanse).isEqualTo(behandling.referanse.referanse)
+        return Pair(behandlingHendelseService, behandling)
     }
 }
