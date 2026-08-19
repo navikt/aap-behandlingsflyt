@@ -84,10 +84,17 @@ class BehandlingHendelseServiceImpl(
         ).copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
-                .forBehandling(sak.id.id, behandling.id.id)
-        )
+        /**
+         * Trenger ikke å trigge hendelse til oppgave dersom det ikke eksisterer noen avklaringsbehov
+         * Da er hele behandlingen i praksis løst helautomatisk
+         */
+        if (avklaringsbehovene.alle().isNotEmpty()) {
+                flytJobbRepository.leggTil(
+                    JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
+                        .forBehandling(sak.id.id, behandling.id.id)
+                )
+        }
+
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(
                 BehandlingFlytStoppetHendelseTilStatistikk(
