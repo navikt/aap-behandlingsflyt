@@ -447,7 +447,7 @@ class BehandlingService(
     }
 
     /** Antagelse som kaller må ivareta: ingen avbrutte behandlinger finnes i [ytelsesbehandlinger]. */
-    private fun comparator(ytelsesbehandlinger: List<Behandling>): Comparator<Behandling> {
+    fun comparator(ytelsesbehandlinger: List<Behandling>): Comparator<Behandling> {
         /* Finn siste ytelsesbehandling basert på `forrigeBehandlingId`-kjeden.
          * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
          * så vi regner ut bakover-pekerne.
