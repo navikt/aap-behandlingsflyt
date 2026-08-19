@@ -11,7 +11,6 @@ import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import java.time.DayOfWeek
-import java.time.LocalDate
 
 object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYtelseFaktagrunnlag> {
 
@@ -87,35 +86,24 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
 
         if (faktagrunnlag.strekkAvslagOverHelger) {
             return strekkAvslagOverHelg(
-                vurderinger,
-                faktagrunnlag.rettighetsperiode
+                vurderinger
             ).begrensetTil(faktagrunnlag.rettighetsperiode)
         }
         return vurderinger.begrensetTil(faktagrunnlag.rettighetsperiode)
     }
 
     /**
-     * Strekker et avslag gjennom helga hvis:
-     * - Det er avslag (IKKE_OPPFYLT) på et segment
+     * Strekker et avslag gjennom helga hvis det er avslag (IKKE_OPPFYLT) på et segment
      * som slutter på fredag og på et segment som starter påfølgende mandag, med kun
      * lørdag og søndag som hull imellom. Dette unngår merkelige hull i
      * rettighetstype-tidslinja over helga.
-     *
-     * - Virkningstidspunktet ser ut til å bli på en lørdag eller søndag på grunn av 100% samordning
      */
     private fun strekkAvslagOverHelg(
         tidslinje: Tidslinje<Vilkårsvurdering>,
-        rettighetsperiode: Periode
     ): Tidslinje<Vilkårsvurdering> {
         // før og etter er segmenter (ikke ukedager); vi sjekker ukedag på kant-datoene.
         val helgeSegmenterOmringetAvAvslag = finnHelgesegmenterOmringetAvAvslag(tidslinje)
-        val tidslinjeMedFylteHelger = tidslinje.mergePrioriterVenstre(Tidslinje(helgeSegmenterOmringetAvAvslag))
-
-
-        val avslagSegmenterSomAvsluttesIHelg =
-            finnAvslagSegmenterSomAvsluttesIHelg(tidslinjeMedFylteHelger, rettighetsperiode.fom)
-
-        return tidslinjeMedFylteHelger.mergePrioriterHøyre(Tidslinje(avslagSegmenterSomAvsluttesIHelg))
+        return tidslinje.mergePrioriterVenstre(Tidslinje(helgeSegmenterOmringetAvAvslag))
     }
 
     private fun finnHelgesegmenterOmringetAvAvslag(tidslinje: Tidslinje<Vilkårsvurdering>): List<Segment<Vilkårsvurdering>> {
@@ -136,28 +124,6 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
                 Segment(Periode(sisteDagFør.plusDays(1), førsteDagEtter.minusDays(1)), før.verdi)
             else
                 null
-        }
-    }
-
-    private fun finnAvslagSegmenterSomAvsluttesIHelg(
-        tidslinje: Tidslinje<Vilkårsvurdering>,
-        startPåRettighetsperioden: LocalDate
-    ): List<Segment<Vilkårsvurdering>> {
-        return tidslinje.segmenter().filter { it.verdi.erIkkeOppfylt() }.mapNotNull { segment ->
-            // Skal strekke avslag over helg hvis samordning er ferdig på en lørdag eller søndag og dagen etter samordning er virkningstidspunkt
-            val segmentStarterFørEllerPåRettighetsperioden = segment.periode.fom <= startPåRettighetsperioden
-            val skalStrekkeAvslagOverHelg =
-                (segment.periode.tom.dayOfWeek == DayOfWeek.FRIDAY || segment.periode.tom.dayOfWeek == DayOfWeek.SATURDAY) && segmentStarterFørEllerPåRettighetsperioden
-
-            if (skalStrekkeAvslagOverHelg) {
-                val datoForSøndag =
-                    if (segment.periode.tom.dayOfWeek == DayOfWeek.FRIDAY) segment.periode.tom.plusDays(2) else segment.periode.tom.plusDays(
-                        1
-                    )
-                Segment(Periode(segment.periode.tom.plusDays(1), datoForSøndag), segment.verdi)
-            } else {
-                null
-            }
         }
     }
 }
