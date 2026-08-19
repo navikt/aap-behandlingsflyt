@@ -19,6 +19,8 @@ public sealed interface Søknad : Melding
  * @param medlemskap Søkers opphold i utland
  * @param fastlege fastlege fra register og svar fra søker på om det er riktig.
  * @param andreBehandlere behandlere som søker har lagt til manuelt.
+ * @param sykepenger Svar på "Mottar du sykepenger?".
+ * @param ferie Svar på "Skal du ta ferie?".
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class SøknadV0(
@@ -29,7 +31,25 @@ public data class SøknadV0(
     public val andreUtbetalinger: AndreUtbetalingerDto? = null,
     public val fastlege: List<FastlegeDto>? = null,
     public val andreBehandlere: List<BehandlerDto>? = null,
+    public val sykepenger: JaNei? = null,
+    public val ferie: SøknadFerieDto? = null,
 ) : Søknad
+
+/**
+ * @param skalHaFerie Svar på "Skal du ta ferie?".
+ */
+public data class SøknadFerieDto(
+    public val skalHaFerie: JaNei?,
+    public val ferieType: FerieType?,
+    public val antallDager: String?,
+    public val fraDato: LocalDate?,
+    public val tilDato: LocalDate?,
+)
+
+public enum class FerieType {
+    DAGER, PERIODE
+}
+
 
 
 /**

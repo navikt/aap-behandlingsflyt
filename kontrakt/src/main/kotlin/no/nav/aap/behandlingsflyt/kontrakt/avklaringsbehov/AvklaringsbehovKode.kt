@@ -56,7 +56,6 @@ public const val ARBEIDSOPPTRAPPING_KODE: String = "5057"
 public const val ETABLERING_EGEN_VIRKSOMHET_KODE: String = "5058"
 public const val AVKLAR_VEDTAKSLENGDE_KODE: String = "5059"
 public const val FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE: String = "5060"
-public const val AVKLAR_MIGRERINGSDATO_KODE: String = "5061"
 public const val FORESLÅ_UTTAK_KODE: String = "5096"
 public const val KVALITETSSIKRING_KODE: String = "5097"
 public const val FORESLÅ_VEDTAK_KODE: String = "5098"
@@ -372,16 +371,6 @@ public enum class AvklaringsbehovKode {
      * [FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE]
      */
     `5060`,
-
-    /**
-     * [AVKLAR_MIGRERINGSDATO_KODE]
-     */
-    `5061`,
-
-    /**
-     * [AVKLAR_RESTKVOTE_MIGRERING_KODE]
-     */
-    `5062`,
 
     /**
      * [KVALITETSSIKRING_KODE]

@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeSam
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -130,6 +131,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
                     val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val sykepengerOgFerieRepository = repositoryProvider.provide<SykepengerOgFerieOppgittISøknadRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -150,6 +152,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         )
 
                     val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
+                    val sykepengerOgFerie = sykepengerOgFerieRepository.hentHvisEksisterer(behandling.id)
 
                     SamordningYtelseVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
@@ -171,6 +174,9 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             mapSamordningVurdering(vurdering, behandlingId, vurdertAvService)
                         },
                         tpYtelser = tp,
+                        mottarSykepenger = sykepengerOgFerie?.mottarSykepenger,
+                        feriePerioder = sykepengerOgFerie?.feriePerioder.orEmpty(),
+                        ferieDager = sykepengerOgFerie?.ferieDager,
                     )
                 }
 
