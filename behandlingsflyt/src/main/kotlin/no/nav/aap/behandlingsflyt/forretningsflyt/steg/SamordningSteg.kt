@@ -97,11 +97,6 @@ class SamordningSteg(
         val mottarSykepengerOppgittISøknad = sykepengerOgFerieOppgittISøknadRepository
             .hentHvisEksisterer(kontekst.behandlingId)
             ?.mottarSykepenger == true
-        if (mottarSykepengerOppgittISøknad) {
-            // Bruker har oppgitt i søknaden at hen mottar sykepenger. Krev vurdering av samordning
-            // selv om vi ennå ikke har mottatt vedtak om sykepenger fra registeret.
-            return Tidslinje(kontekst.rettighetsperiode, true)
-        }
 
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val grunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
@@ -120,7 +115,9 @@ class SamordningSteg(
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
+                    // Bruker kan ha oppgitt i søknaden at hen mottar sykepenger. Krev da vurdering
+                    // av samordning selv om vi ennå ikke har mottatt vedtak om sykepenger fra registeret.
+                    mottarSykepengerOppgittISøknad || !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
                 }
 
                 null -> false

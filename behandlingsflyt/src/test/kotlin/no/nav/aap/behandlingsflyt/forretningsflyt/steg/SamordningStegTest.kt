@@ -420,6 +420,32 @@ class SamordningStegTest {
         assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
     }
 
+    @Test
+    fun `skal ikke opprette avklaringsbehov om bruker har oppgitt at hen mottar sykepenger men behandlingen uansett ender i uunngåelig avslag`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
+
+        InMemorySykepengerOgFerieOppgittISøknadRepository.lagre(
+            behandling.id,
+            SykepengerOgFerieSøknad(
+                mottarSykepenger = true,
+                feriePerioder = emptyList(),
+                ferieDager = null,
+            )
+        )
+
+        steg(
+            FakeTidligereVurderinger(
+                Tidslinje(
+                    sak.rettighetsperiode,
+                    TidligereVurderinger.UunngåeligAvslag
+                )
+            )
+        ).utfør(flytKontekstMedPerioder(behandling))
+
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+    }
+
     private fun løsBehovet(behandling: Behandling) {
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).løsAvklaringsbehov(
             Definisjon.AVKLAR_SAMORDNING_GRADERING,
