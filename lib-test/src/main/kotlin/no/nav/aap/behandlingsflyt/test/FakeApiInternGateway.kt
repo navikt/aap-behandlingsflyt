@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakOppsummering
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakMedVedtakResponse
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakPerson
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
@@ -23,6 +25,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class FakeApiInternGateway : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
@@ -92,6 +95,26 @@ class FakeApiInternGateway : ApiInternGateway {
                     avsluttetDato = null,
                 )
             )
+        )
+    }
+
+    override fun hentArenaSakMedVedtak(saksnummerArena: String): ArenaSakMedVedtakResponse {
+        val (år, løpenummer) = saksnummerArena.split("-")
+        return ArenaSakMedVedtakResponse(
+            sakId = saksnummerArena,
+            opprettetAar = år.toInt(),
+            lopenr = løpenummer.toInt(),
+            person = ArenaSakPerson(
+                personId = 1,
+                fodselsnummer = "12345678910",
+                fornavn = "Test",
+                etternavn = "Testesen",
+            ),
+            statuskode = "AKTIV",
+            statusnavn = "Aktiv",
+            registrertDato = LocalDateTime.of(år.toInt(), 1, 1, 0, 0),
+            avsluttetDato = null,
+            vedtak = listOf(),
         )
     }
 

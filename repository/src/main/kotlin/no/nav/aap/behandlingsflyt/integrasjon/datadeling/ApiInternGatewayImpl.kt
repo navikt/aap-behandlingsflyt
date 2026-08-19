@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakMedVedtakResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
@@ -46,6 +47,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -293,6 +295,16 @@ class ApiInternGatewayImpl : ApiInternGateway {
             mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /arena/person/saker" }
+        return response
+    }
+
+    override fun hentArenaSakMedVedtak(saksnummerArena: String): ArenaSakMedVedtakResponse {
+        val response: ArenaSakMedVedtakResponse? = restClient.get(
+            uri.resolve("/arena/sak/$saksnummerArena"),
+            GetRequest(),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra arena/sak/$saksnummerArena" }
         return response
     }
 
