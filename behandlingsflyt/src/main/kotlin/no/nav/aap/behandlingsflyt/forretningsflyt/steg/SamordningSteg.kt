@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -25,13 +26,15 @@ class SamordningSteg(
     private val samordningService: SamordningService,
     private val samordningRepository: SamordningRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val sykepengerOgFerieOppgittISøknadRepository: SykepengerOgFerieOppgittISøknadRepository
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         samordningService = SamordningService(repositoryProvider),
         samordningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        sykepengerOgFerieOppgittISøknadRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -91,6 +94,10 @@ class SamordningSteg(
             return Tidslinje(kontekst.rettighetsperiode, true)
         }
 
+        val mottarSykepengerOppgittISøknad = sykepengerOgFerieOppgittISøknadRepository
+            .hentHvisEksisterer(kontekst.behandlingId)
+            ?.mottarSykepenger == true
+
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val grunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
         val ytelser = grunnlag.ytelseGrunnlag?.tidslinjeMedSamordningYtelser().orEmpty()
@@ -108,7 +115,9 @@ class SamordningSteg(
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
+                    // Bruker kan ha oppgitt i søknaden at hen mottar sykepenger. Krev da vurdering
+                    // av samordning selv om vi ennå ikke har mottatt vedtak om sykepenger fra registeret.
+                    mottarSykepengerOppgittISøknad || !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
                 }
 
                 null -> false
