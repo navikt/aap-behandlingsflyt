@@ -86,7 +86,7 @@ class BehandlingHendelseServiceImpl(
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         /**
          * Trenger ikke å trigge hendelse til oppgave dersom det ikke eksisterer noen avklaringsbehov
-         * Da er hele behandlingen i praksis løst helmanuelt
+         * Da er hele behandlingen i praksis løst helautomatisk
          */
         if (avklaringsbehovene.alle().isNotEmpty()) {
                 flytJobbRepository.leggTil(
