@@ -53,7 +53,21 @@ class VedtakslengdeSteg(
                         }
                     },
                     erTilstrekkeligVurdert = { true },
-                    tilbakestillGrunnlag = { },
+                    tilbakestillGrunnlag = { }, // Har ingen effekt da avklaringsbehovet er MANUELT_FRIVILLIG
+                    kontekst = kontekst
+                )
+            }
+
+            VurderingType.MIGERING_FRA_ARENA -> {
+                avklaringsbehovService.oppdaterAvklaringsbehov(
+                    definisjon = Definisjon.AVKLAR_VEDTAKSLENGDE,
+                    vedtakBehøverVurdering = {
+                        !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())
+                    },
+                    erTilstrekkeligVurdert = {
+                        vedtakslengdeService.hentVedtakslengdeGrunnlag(kontekst.behandlingId)?.gjeldendeVurdering() != null
+                    },
+                    tilbakestillGrunnlag = { }, // Har ingen effekt da avklaringsbehovet er MANUELT_FRIVILLIG
                     kontekst = kontekst
                 )
             }

@@ -13,7 +13,8 @@ import no.nav.aap.behandlingsflyt.lovvalgBosattOgIngenAndreDel1
 import no.nav.aap.behandlingsflyt.lovvalgBosattOgIngenAndreDel1IngenDel2
 import no.nav.aap.behandlingsflyt.lovvalgBosattOgPotensielleAndreDel1
 import no.nav.aap.behandlingsflyt.lovvalgBosattOgPotensielleAndreDel1IngenDel2
-import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurdering
+import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1
+import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurderingOppfyltDel1
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
@@ -47,14 +48,21 @@ class MedlemskapLovvalgVurderingService {
             prometheus.lovvalgBosattOgPotensielleAndreDel1IngenDel2(bosatt && ingenInntruffet).increment()
 
             // Har bosatt-status og ingen oppfyllende del 1 kriterier + ingenInntruffet del 2 -> kanBehandlesAutomatisk
-            prometheus.lovvalgBosattOgIngenAndreDel1IngenDel2(bosatt && !oppfyltMinstEttKrav && ingenInntruffet).increment()
+            prometheus.lovvalgBosattOgIngenAndreDel1IngenDel2(bosatt && !oppfyltMinstEttKrav && ingenInntruffet)
+                .increment()
 
             prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
 
             if (!oppfyltMinstEttKrav) {
-                prometheus.lovvalgÅrsakTilManuellVurdering("ingen_i_norge_kriterier_oppfylt").increment()
+                prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1("del1_ikke_oppfylt").increment()
                 andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
-                    prometheus.lovvalgÅrsakTilManuellVurdering(lovvalgÅrsakNavn(vurdering.opplysning)).increment()
+                    prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
+                        .increment()
+                }
+            } else {
+                andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
+                    prometheus.lovvalgÅrsakTilManuellVurderingOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
+                        .increment()
                 }
             }
         }
