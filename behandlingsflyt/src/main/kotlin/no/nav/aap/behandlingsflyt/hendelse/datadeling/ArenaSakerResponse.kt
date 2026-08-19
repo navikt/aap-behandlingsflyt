@@ -65,6 +65,7 @@ data class ArenaVedtakDetaljer(
     val beslutter: String?,
     val relatertVedtak: Int?,
     val fakta: List<ArenaVedtakfakta>,
+    // TODO mangler noe rundt vilkårsvurderinger her?
 )
 
 data class ArenaVedtakfakta(
