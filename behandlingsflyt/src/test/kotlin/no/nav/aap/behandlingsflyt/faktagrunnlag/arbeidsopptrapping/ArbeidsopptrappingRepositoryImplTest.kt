@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -39,12 +40,12 @@ internal class ArbeidsopptrappingRepositoryImplTest {
 
             val vurdering = ArbeidsopptrappingVurdering(
                 begrunnelse = "test",
-                vurderingenGjelderFra = LocalDate.of(2025, 1, 1),
-                vurderingenGjelderTil = LocalDate.of(2025, 1, 31),
+                fom = LocalDate.of(2025, 1, 1),
+                tom = LocalDate.of(2025, 1, 31),
                 reellMulighetTilOpptrapping = true,
                 rettPaaAAPIOpptrapping = true,
-                vurdertAv = "Saksbehandler",
-                opprettetTid = Instant.now(),
+                vurdertAv = Bruker("Saksbehandler"),
+                opprettet = Instant.now(),
                 vurdertIBehandling = behandling.id
             )
 
@@ -53,7 +54,7 @@ internal class ArbeidsopptrappingRepositoryImplTest {
             val actual = repository.hentHvisEksisterer(behandling.id)
             assertThat(actual?.vurderinger)
                 .usingRecursiveComparison()
-                .ignoringFields("opprettetTid")
+                .ignoringFields("opprettet")
                 .isEqualTo(listOf(vurdering))
         }
     }
@@ -70,12 +71,12 @@ internal class ArbeidsopptrappingRepositoryImplTest {
                 listOf(
                     ArbeidsopptrappingVurdering(
                         begrunnelse = "test",
-                        vurderingenGjelderFra = LocalDate.now(),
-                        vurderingenGjelderTil = null,
+                        fom = LocalDate.now(),
+                        tom = null,
                         reellMulighetTilOpptrapping = true,
                         rettPaaAAPIOpptrapping = true,
-                        vurdertAv = "aa",
-                        opprettetTid = Instant.now(),
+                        vurdertAv = Bruker("aa"),
+                        opprettet = Instant.now(),
                         vurdertIBehandling = behandling.id
                     )
                 )

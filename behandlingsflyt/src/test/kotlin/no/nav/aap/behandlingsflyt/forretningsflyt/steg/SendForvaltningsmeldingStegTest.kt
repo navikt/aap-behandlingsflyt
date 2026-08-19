@@ -59,7 +59,7 @@ class SendForvaltningsmeldingStegTest {
         val unntak = listOf(
             Definisjon.SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
             Definisjon.VENTE_PÅ_KLAGE_IMPLEMENTASJON,
-            Definisjon.VURDER_KRAV
+            Definisjon.VURDER_KRAV,
         )
 
         assertThat(

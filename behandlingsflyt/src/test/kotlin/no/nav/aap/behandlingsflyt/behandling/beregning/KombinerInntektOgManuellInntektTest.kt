@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -19,7 +20,7 @@ class KombinerInntektOgManuellInntektTest {
                 år = Year.of(2021),
                 begrunnelse = "manglet i register",
                 belop = Beløp(100_000),
-                vurdertAv = "saksbehandler",
+                vurdertAv = Bruker("saksbehandler"),
             )
         )
 
@@ -40,7 +41,7 @@ class KombinerInntektOgManuellInntektTest {
                 begrunnelse = "eøs-inntekt",
                 belop = Beløp(999),
                 eøsBeløp = Beløp(50_000),
-                vurdertAv = "saksbehandler",
+                vurdertAv = Bruker("saksbehandler"),
             )
         )
 
@@ -58,7 +59,7 @@ class KombinerInntektOgManuellInntektTest {
                 år = Year.of(2022),
                 begrunnelse = "endring i uføregrad",
                 belop = Beløp(100_000),
-                vurdertAv = "saksbehandler",
+                vurdertAv = Bruker("saksbehandler"),
                 månedsPeriode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 2, 28)),
             ),
             ManuellInntektVurdering(
@@ -66,7 +67,7 @@ class KombinerInntektOgManuellInntektTest {
                 begrunnelse = "endring i uføregrad",
                 belop = Beløp(540_500),
                 eøsBeløp = Beløp(35_000),
-                vurdertAv = "saksbehandler",
+                vurdertAv = Bruker("saksbehandler"),
                 månedsPeriode = Periode(LocalDate.of(2022, 3, 1), LocalDate.of(2022, 12, 31)),
             ),
         )

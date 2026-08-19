@@ -73,6 +73,7 @@ import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnl
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.stønadsperiode.stønadsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
@@ -81,6 +82,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -105,6 +107,10 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.ytelseoppslag.foreldrepengeperioderApi
+import no.nav.aap.behandlingsflyt.ytelseoppslag.sykepengeperioderApi
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -117,11 +123,11 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
-import no.nav.aap.tilgang.RollerConfig
 import no.nav.aap.tilgang.TeamAap
 import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger as Slf4jLogger
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.*
 import java.util.logging.Level
@@ -252,15 +258,14 @@ internal fun Application.server(
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
-        try {
-            // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
-            fellesDataSource.close()
-            motorDataSource.close()
-            pipDataSource.close()
-        } catch (_: Exception) {
-            // Ignorert
-        }
+        // Helt til slutt, nå som vi har stanset Motor, etc. Lukk executor og database-koblinger.
+        lukkRessurser(
+            environment.log,
+            listOf(informasjonskravExecutor, fellesDataSource, motorDataSource, pipDataSource)
+        )
     }
+    loggTidssoneForDatabase(fellesDataSource)
+    val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
 
     routing {
         authenticate(IdentityProvider.ENTRA_ID.value) {
@@ -268,6 +273,8 @@ internal fun Application.server(
 
             apiRouting {
                 personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                sykepengeperioderApi(gatewayProvider)
+                foreldrepengeperioderApi(gatewayProvider)
                 saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 behandlingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 flytApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -302,7 +309,7 @@ internal fun Application.server(
                 aldersGrunnlagApi(fellesDataSource, repositoryRegistry)
                 avslag11_27GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                motorApi(fellesDataSource, listOf(TeamAap.id))
+                motorApi(fellesDataSource, påkrevdeRollerMotor)
                 behandlingsflytPipApi(pipDataSource, repositoryRegistry)
                 auditlogApi(fellesDataSource, repositoryRegistry)
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -313,6 +320,7 @@ internal fun Application.server(
                 barnepensjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 bekreftVurderingerOppfølgingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 kravGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                stønadsperiodeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -336,6 +344,7 @@ internal fun Application.server(
                 // Flytt
                 brevApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                påminnelseApi(fellesDataSource, repositoryRegistry)
                 mottattHendelseApi(fellesDataSource, repositoryRegistry)
                 underveisVurderingerApi(fellesDataSource, repositoryRegistry)
                 lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry)
@@ -355,6 +364,15 @@ internal fun Application.server(
         actuator(prometheus, motor)
     }
 
+}
+
+private fun Application.loggTidssoneForDatabase(dataSource: HikariDataSource) {
+    val tidssoneForDatabase = dataSource.transaction { connection ->
+        connection.queryFirst("show timezone") {
+            setRowMapper { it.getString("timezone") }
+        }
+    }
+    log.info("Tidssone for databasen: $tidssoneForDatabase")
 }
 
 private fun Application.startKafkakonsumenter(
@@ -432,6 +450,17 @@ private fun Application.startKafkakonsumenter(
     }
 }
 
+@Suppress("TooGenericExceptionCaught")
+private fun lukkRessurser(log: Slf4jLogger, resources: List<AutoCloseable>) {
+    resources.forEach { resource ->
+        try {
+            resource.close()
+        } catch (exception: Exception) {
+            log.error("Feil ved lukking av ressurs under nedstopping.", exception)
+        }
+    }
+}
+
 private fun <K, V> Application.startKonsument(konsument: KafkaKonsument<K, V>) {
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -456,6 +485,8 @@ fun Application.startMotor(
     gatewayProvider: GatewayProvider,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
     val motor = Motor(
         dataSource = dataSource,
         antallKammer = AppConfig.ANTALL_WORKERS_FOR_MOTOR,
@@ -464,6 +495,7 @@ fun Application.startMotor(
         prometheus = prometheus,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider,
+        enableV2 = { unleashGateway.isEnabled(BehandlingsflytFeature.MotorV2) },
     )
 
     dataSource.transaction { dbConnection ->

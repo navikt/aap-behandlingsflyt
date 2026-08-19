@@ -94,12 +94,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                                 ytelseType = Ytelse.SYKEPENGER,
                                 periode = sykePengerPeriode,
                                 gradering = 100,
-                                kronesum = null,
                             )
                         ),
                         begrunnelse = "",
-                        maksDatoEndelig = true,
-                        fristNyRevurdering = null,
                     ),
                 ),
             )
@@ -120,18 +117,14 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                                 ytelseType = Ytelse.SYKEPENGER,
                                 periode = sykePengerPeriode,
                                 gradering = 50,
-                                kronesum = null,
                             ),
                             SamordningVurderingData(
                                 ytelseType = Ytelse.PLEIEPENGER,
                                 periode = sykePengerPeriode,
                                 gradering = 50,
-                                kronesum = null,
                             )
                         ),
                         begrunnelse = "",
-                        maksDatoEndelig = true,
-                        fristNyRevurdering = null,
                     ),
                 ),
             )
@@ -151,12 +144,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                                 ytelseType = Ytelse.SYKEPENGER,
                                 periode = sykePengerPeriode,
                                 gradering = 100,
-                                kronesum = null,
                             )
                         ),
                         begrunnelse = "En god begrunnelse",
-                        maksDatoEndelig = false,
-                        fristNyRevurdering = LocalDate.now().plusMonths(1),
                     ),
                 ),
             )
@@ -205,12 +195,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                                     ytelseType = Ytelse.SYKEPENGER,
                                     periode = sykePengerPeriode,
                                     gradering = 100,
-                                    kronesum = null,
                                 )
                             ),
                             begrunnelse = "En god begrunnelse",
-                            maksDatoEndelig = true,
-                            fristNyRevurdering = null,
                         ),
                     ),
                 )
@@ -295,14 +282,16 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
 
 
         // Nytt institusjonsopphold
-        person.institusjonsopphold = listOf(
-            InstitusjonsoppholdJSON(
-                startdato = LocalDate.now().minusMonths(5),
-                forventetSluttdato = LocalDate.now().plusMonths(4),
-                institusjonstype = "FO",
-                institusjonsnavn = "institusjon",
-                organisasjonsnummer = "2334",
-                kategori = "S",
+        person.medInstitusjonsopphold(
+            listOf(
+                InstitusjonsoppholdJSON(
+                    startdato = LocalDate.now().minusMonths(5),
+                    forventetSluttdato = LocalDate.now().plusMonths(4),
+                    institusjonstype = "FO",
+                    institusjonsnavn = "institusjon",
+                    organisasjonsnummer = "2334",
+                    kategori = "S",
+                )
             )
         )
 
@@ -376,12 +365,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                                 ytelseType = Ytelse.SYKEPENGER,
                                 periode = sykePengerPeriode,
                                 gradering = 100,
-                                kronesum = null,
                             )
                         ),
                         begrunnelse = "En god begrunnelse",
-                        maksDatoEndelig = false,
-                        fristNyRevurdering = null,
                     ),
                 ),
             )
@@ -469,12 +455,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                             ytelseType = Ytelse.SYKEPENGER,
                             periode = sykePengerPeriode,
                             gradering = 100,
-                            kronesum = null,
                         )
                     ),
                     begrunnelse = "",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
                 ),
             ),
         )

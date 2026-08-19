@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvir
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.String
@@ -21,6 +23,12 @@ data class EtableringEgenVirksomhetLøsningDto(
     val oppstartsPerioder: List<Periode>
 ) : LøsningForPeriode {
     fun toEtableringEgenVirksomhetVurdering(avklaringsbehovKontekst: AvklaringsbehovKontekst) =
+        toEtableringEgenVirksomhetVurdering(
+            bruker = avklaringsbehovKontekst.bruker,
+            vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
+        )
+
+    fun toEtableringEgenVirksomhetVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId) =
         EtableringEgenVirksomhetVurdering(
             begrunnelse = begrunnelse,
             foreliggerFagligVurdering = foreliggerFagligVurdering,
@@ -29,11 +37,11 @@ data class EtableringEgenVirksomhetLøsningDto(
             kanFøreTilSelvforsørget = kanFøreTilSelvforsørget,
             utviklingsPerioder = utviklingsPerioder,
             oppstartsPerioder = oppstartsPerioder,
-            vurdertAv = avklaringsbehovKontekst.bruker,
-            opprettetTid = Instant.now(),
-            vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
-            vurderingenGjelderFra = fom,
-            vurderingenGjelderTil = tom,
+            vurdertAv = bruker,
+            opprettet = Instant.now(),
+            vurdertIBehandling = vurdertIBehandling,
+            fom = fom,
+            tom = tom,
             virksomhetNavn = virksomhetNavn,
             orgNr = orgNr
         )

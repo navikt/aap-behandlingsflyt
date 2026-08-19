@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 const val KABAL_EVENT_TOPIC = "klage.behandling-events.v1"
 
 class KabalKafkaKonsument(
-    config: KafkaConsumerConfig<String, String>,
+    config: KafkaConsumerConfig,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     topic: String = KABAL_EVENT_TOPIC,

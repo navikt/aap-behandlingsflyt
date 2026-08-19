@@ -20,11 +20,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
@@ -75,31 +73,30 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
     fun `ved avslag på 11-5 hoppes det rett til beslutter-steget`() {
         val fom = LocalDate.now().minusMonths(3)
 
-        var (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
 
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        assertThat(alleAvklaringsbehov).isNotEmpty()
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSykdomLøsning(
-                løsningerForPerioder = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er ikke syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
-                        harSkadeSykdomEllerLyte = false,
-                        harNedsattArbeidsevne = null,
-                        erSkadeSykdomEllerLyteVesentligdel = null,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        yrkesskadeBegrunnelse = null,
-                        fom = fom,
-                        tom = null,
+        behandling.medKontekst {
+            assertThat(this.åpneAvklaringsbehov).isNotEmpty()
+            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+        }
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er ikke syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
+                            harSkadeSykdomEllerLyte = false,
+                            harNedsattArbeidsevne = null,
+                            erSkadeSykdomEllerLyteVesentligdel = null,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            yrkesskadeBegrunnelse = null,
+                            fom = fom,
+                            tom = null,
+                        )
                     )
-                )
-            ),
-        )
+                ),
+            )
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
@@ -111,41 +108,39 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+                val vedtak = hentVedtak()
+                assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+
+                val resultat = ResultatUtleder(
+                    repositoryProvider,
+                    minimalGatewayProvider()
+                ).utledResultatFørstegangsBehandling(behandling.id)
+
+                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        val vedtak = hentVedtak(behandling.id)
-        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+                // Verifiserer at sykdomsvilkåret ikke er oppfylt
+                val vilkårsresultat = hentVilkårsresultat()
+                val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        val resultat = dataSource.transaction {
-            ResultatUtleder(
-                postgresRepositoryRegistry.provider(it),
-                minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
-        }
-        assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_AVSLAG)
+                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
+                    .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
 
-        behandling =
-            løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        // Verifiserer at sykdomsvilkåret ikke er oppfylt
-        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
-            .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
-
-        // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
-        behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).isEmpty()
-        }
+                // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
+                assertThat(åpneAvklaringsbehov).isEmpty()
+            }
     }
 
     @Test
     fun `ved førstegangsbehandling i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav er løst og før kvalitetsvurdering`() {
-        var (sak, førstegangsbehandling) = sendInnFørsteSøknad()
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad()
 
-        førstegangsbehandling = førstegangsbehandling
+        førstegangsbehandling
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
@@ -166,8 +161,9 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev()
-
-        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
     }
 
     @Test

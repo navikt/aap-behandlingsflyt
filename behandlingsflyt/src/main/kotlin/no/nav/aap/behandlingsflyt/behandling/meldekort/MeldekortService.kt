@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.meldekort
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.journalføring.JournalføringService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -118,12 +119,12 @@ class MeldekortService(
         val meldekort = oppdaterMeldekort.tilMeldekort()
 
         try {
-            val journalpostId = journalføringService.journalfør(
+            val journalpostId = journalføringService.journalførMeldekort(
                 sak = sak,
                 meldeperiode = oppdaterMeldekort.meldeperiode,
                 meldekort = meldekort,
                 oppdatertAv = oppdaterMeldekort.bruker,
-                enhet = ansattInfoService.hentAnsattEnhet(oppdaterMeldekort.bruker.ident),
+                enhet = ansattInfoService.hentAnsattEnhet(oppdaterMeldekort.bruker),
                 tidspunkt = Instant.now(clock),
                 meldeDato = oppdaterMeldekort.meldedato,
                 korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(oppdaterMeldekort.meldeperiode) != null

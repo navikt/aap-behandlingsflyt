@@ -51,3 +51,12 @@ enum class Avslagstype {
     KUN_INNGANGSVILKÅR,
     UKJENT,
 }
+
+private val vilkårtypeForAvslagsårsak: Map<Avslagsårsak, Set<Vilkårtype>> = Vilkårtype.entries
+    .flatMap { vilkårtype -> vilkårtype.avslagsårsaker.map { it to vilkårtype } }
+    .groupBy { it.first }
+    .toMap()
+    .mapValues { it.value.map { it.second }.toSet() }
+
+val Avslagsårsak.vilkårstyper: Set<Vilkårtype>
+    get() = vilkårtypeForAvslagsårsak[this].orEmpty()

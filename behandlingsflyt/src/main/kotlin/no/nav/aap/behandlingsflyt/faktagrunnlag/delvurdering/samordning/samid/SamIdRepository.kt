@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.repository.Repository
 
 interface SamIdRepository : Repository {
-    fun hentHvisEksisterer(behandlingId: BehandlingId): String?
-    fun lagre(behandlingId: BehandlingId, samId: String)
+    fun hentHvisEksisterer(behandlingId: BehandlingId): List<SamIdOgTpNr>
+    fun lagre(behandlingId: BehandlingId, samIdOgTpNr: List<SamIdOgTpNr>)
 }
+
+data class SamIdOgTpNr(val samId: Long, val tpNr: Long?)

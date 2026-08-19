@@ -10,7 +10,7 @@ data class BehandlendeEnhetLøsningDto(
     fun tilVurdering(bruker: Bruker) = BehandlendeEnhetVurdering(
         skalBehandlesAvNay = skalBehandlesAvNay,
         skalBehandlesAvKontor = skalBehandlesAvKontor,
-        vurdertAv = bruker.ident,
+        vurdertAv = bruker,
         opprettet = Instant.now(),
     )
 }

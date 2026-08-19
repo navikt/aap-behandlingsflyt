@@ -44,7 +44,8 @@ class VurderAvslag11_27Steg(
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING ->
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA ->
                 (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && Vurderingsbehov.VURDER_AVSLAG_11_27 in kontekst.vurderingsbehovRelevanteForSteg)
 

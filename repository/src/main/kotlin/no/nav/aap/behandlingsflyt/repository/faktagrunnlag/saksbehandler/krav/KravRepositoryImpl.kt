@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
@@ -8,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
@@ -76,17 +75,8 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 setLong(6, v.vurdertIBehandling.id)
                 setUUID(13, v.referanse.verdi)
                 when (v) {
-                    is NyttKrav -> {
-                        setEnumName(7, KravType.NYTT_KRAV_AAP)
-                        setLocalDate(8, v.søknadsdato.dato)
-                        setEnumName(9, v.søknadsdato.årsak)
-                        setLocalDate(10, v.overstyrMuligRettFra?.dato)
-                        setEnumName(11, v.overstyrMuligRettFra?.årsak)
-                        setLocalDate(12, v.muligRettFra)
-                    }
-
-                    is Gjenopptak -> {
-                        setEnumName(7, KravType.GJENOPPTAK)
+                    is RelevantKrav -> {
+                        setEnumName(7, KravType.RELEVANT_KRAV)
                         setLocalDate(8, v.søknadsdato.dato)
                         setEnumName(9, v.søknadsdato.årsak)
                         setLocalDate(10, v.overstyrMuligRettFra?.dato)
@@ -177,7 +167,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         val vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling"))
 
         return when (val kravType = row.getEnum<KravType>("krav_type")) {
-            KravType.NYTT_KRAV_AAP -> NyttKrav(
+            KravType.RELEVANT_KRAV -> RelevantKrav(
                 referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
@@ -186,17 +176,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 overstyrMuligRettFra = mapOverstyrMuligRettFra(row),
                 muligRettFra = row.getLocalDate("mulig_rett_fra"),
             )
-
-            KravType.GJENOPPTAK -> Gjenopptak(
-                referanse = referanse,
-                journalpostId = journalpostId, vurdertAv = vurdertAv,
-                begrunnelse = begrunnelse,
-                vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
-                søknadsdato = mapSøknadsdato(row),
-                overstyrMuligRettFra = mapOverstyrMuligRettFra(row),
-                muligRettFra = row.getLocalDate("mulig_rett_fra"),
-            )
-
+            
             KravType.TRUKKET_SØKNAD -> TrukketSøknad(
                 referanse = referanse,
                 journalpostId = journalpostId, vurdertAv = vurdertAv,

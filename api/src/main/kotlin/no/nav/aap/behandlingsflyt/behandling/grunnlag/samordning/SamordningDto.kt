@@ -14,6 +14,9 @@ import java.time.LocalDate
 /**
  * @param ytelser Hvilke ytelser det er funnet på denne personen.
  * @param vurdering Manuelle vurderinger gjort av saksbehandler for gitte ytelser.
+ * @param mottarSykepenger Oppgitt i søknaden, svar på "Mottar du sykepenger?".
+ * @param feriePerioder Oppgitt i søknaden, svar på "Skal du ta ferie?" når søker har oppgitt konkrete fra-/tildatoer.
+ * @param ferieDager Oppgitt i søknaden, svar på "Skal du ta ferie?" når søker har oppgitt antall dager i stedet for perioder.
  */
 data class SamordningYtelseVurderingGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
@@ -21,6 +24,9 @@ data class SamordningYtelseVurderingGrunnlagDTO(
     val vurdering: SamordningYtelseVurderingDTO?,
     val historiskeVurderinger: List<SamordningYtelseVurderingDTO>,
     val tpYtelser: List<TjenestePensjonForhold>?,
+    val mottarSykepenger: Boolean? = null,
+    val feriePerioder: List<Periode> = emptyList(),
+    val ferieDager: Int? = null,
 )
 
 data class SamordningYtelseVurderingDTO(
@@ -33,7 +39,6 @@ data class SamordningYtelseDTO(
     val ytelseType: Ytelse,
     val periode: Periode,
     val gradering: Int?,
-    val kronesum: Int?,
     val kilde: String,
     val saksRef: String?,
     val endringStatus: EndringStatus
@@ -43,7 +48,6 @@ data class SamordningVurderingDTO(
     val ytelseType: Ytelse,
     val periode: Periode,
     val gradering: Int?,
-    val kronesum: Int?,
     val manuell: Boolean?
 )
 

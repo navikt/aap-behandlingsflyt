@@ -64,17 +64,19 @@ class VurderAvslag11_27Løser(
         nyeVurderinger: List<Avslag11_27VurderingDto>,
         vurdertAv: String,
         behandlingId: BehandlingId
-    ): List<Avslag11_27Vurdering> = nyeVurderinger.map { vurdering ->
+    ): Set<Avslag11_27Vurdering> = nyeVurderinger.map { vurdering ->
         Avslag11_27Vurdering(
             referanse = Kravreferanse(UUID.fromString(vurdering.referanse)),
             skalAvslås1127 = vurdering.skalAvslås1127,
             brukersYtelse = vurdering.brukersYtelse,
-            harSykepengegrunnlagOver2G = vurdering.harSykepengegrunnlagOver2G,
+            brukersYtelseTom = vurdering.brukersYtelseTom,
+            sykepengegrunnlag = vurdering.sykepengegrunnlag,
+            harArbeidsgiverSykepengerUtbetaling = vurdering.harArbeidsgiverSykepengerUtbetaling,
             harAnnenFullYtelse = vurdering.harAnnenFullYtelse,
             begrunnelse = vurdering.begrunnelse,
             vurdertIBehandling = behandlingId,
             vurdertAv = Bruker(vurdertAv),
-            vurdertTidspunkt = Instant.now(),
+            opprettet = Instant.now(),
         )
-    }
+    }.toSet()
 }

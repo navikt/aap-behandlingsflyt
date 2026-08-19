@@ -5,8 +5,9 @@ plugins {
 tasks {
     val projectProps = register<WriteProperties>("projectProps") {
         destinationFile = layout.buildDirectory.file("behandlingsflyt-version.properties")
-        // Define property.
-        property("project.version", getCheckedOutGitCommitHash())
+        // Define property. Provider utsetter kjøring av git-kommandoen til tasken faktisk kjøres,
+        // i stedet for å kjøre den ved hver konfigurasjon av bygget.
+        property("project.version", providers.provider { getCheckedOutGitCommitHash() })
     }
 
     processResources {
@@ -56,7 +57,6 @@ dependencies {
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
     api(libs.brevKontrakt)
-    api(libs.oppgaveKontrakt)
     api(libs.meldekortKontrakt)
     api(libs.motor)
     api(libs.gateway)

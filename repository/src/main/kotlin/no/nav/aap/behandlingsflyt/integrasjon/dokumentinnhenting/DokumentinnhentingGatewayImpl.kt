@@ -8,8 +8,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslings
 import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
-import no.nav.aap.dokumentinnhenting.kontrakt.LegeerklæringPurringDto
-import no.nav.aap.dokumentinnhenting.kontrakt.MarkerBestillingSomMottattDto
+import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -30,6 +29,8 @@ import java.net.URI
 class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
     private val syfoUri = requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_URL") + "/syfo"
     private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_SCOPE"))
+    private val påminnelseUri =
+        requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_URL") + "/dialogmelding/paaminnelse"
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -61,33 +62,37 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         return requireNotNull(client.post(uri = URI.create("$syfoUri/dialogmeldingbestilling"), request))
     }
 
-    override fun purrPåLegeerklæring(purringRequest: LegeerklæringPurringDto): String {
+    override fun sendPåminnelseForBestilling(påminnelseRequest: PåminnelseDto): String {
         val request = PostRequest(
-            body = purringRequest,
+            body = påminnelseRequest,
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = URI.create("$syfoUri/purring"), request))
+        return requireNotNull(client.post(uri = URI.create("$påminnelseUri/send"), request))
     }
 
-    override fun markerDialogmeldingStatusSomMottatt(markerSomMottattRequest: MarkerBestillingSomMottattDto): DialogmeldingStatusTilBehandslingsflytDto {
+    override fun avbrytAutomatiskPåminnelseForBestilling(påminnelseRequest: PåminnelseDto) {
         val request = PostRequest(
-            body = markerSomMottattRequest,
+            body = påminnelseRequest,
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Accept", "application/json")
             )
         )
+        client.post(uri = URI.create("$påminnelseUri/avbryt-automatisk-paaminnelse"), request, mapper = { _, _ -> })
+    }
 
-        return requireNotNull(
-            client.post(
-                uri = URI.create("$syfoUri/status/markerbestillingmottatt"),
-                request = request,
-                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+    override fun gjenopptaAutomatiskPåminnelseForBestilling(påminnelseRequest: PåminnelseDto) {
+        val request = PostRequest(
+            body = påminnelseRequest,
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
             )
         )
+        client.post(uri = URI.create("$påminnelseUri/gjenoppta-automatisk-paaminnelse"), request, mapper = { _, _ -> })
     }
 
     override fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto> {

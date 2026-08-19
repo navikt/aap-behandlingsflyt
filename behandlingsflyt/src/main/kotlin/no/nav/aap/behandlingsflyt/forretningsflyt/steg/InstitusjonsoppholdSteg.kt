@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
@@ -41,7 +42,7 @@ class InstitusjonsoppholdSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            perioderSomIkkeErTilstrekkeligVurdert = { perioderHelseoppholdIkkeErTilstrekkeligVurdert(kontekst) },
+            perioderSomIkkeErTilstrekkeligVurdert = ::perioderHelseoppholdIkkeErTilstrekkeligVurdert ,
             kontekst = kontekst,
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId
@@ -58,7 +59,7 @@ class InstitusjonsoppholdSteg(
                 }
             },
             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON),
             nårVurderingErRelevant = ::perioderMedVurderingsbehovHelse
         )
 
@@ -66,7 +67,7 @@ class InstitusjonsoppholdSteg(
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             nårVurderingErRelevant = ::perioderMedVurderingsbehovSoning,
-            perioderSomIkkeErTilstrekkeligVurdert = { perioderSoningOppholdIkkeErTilstrekkeligVurdert(kontekst = kontekst) },
+            perioderSomIkkeErTilstrekkeligVurdert = { k -> perioderSoningOppholdIkkeErTilstrekkeligVurdert(kontekst = k) },
             kontekst = kontekst,
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId
@@ -74,7 +75,7 @@ class InstitusjonsoppholdSteg(
                 val aktiveVurderinger =
                     institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.soningsVurderinger?.vurderinger.orEmpty()
                 if (vedtatteVurderinger == null && aktiveVurderinger.isNotEmpty()) {
-                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, "Kelvin", listOf())
+                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, SYSTEMBRUKER, listOf())
                 } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreSoningsVurdering(
                         kontekst.behandlingId,
@@ -84,12 +85,13 @@ class InstitusjonsoppholdSteg(
                 }
             },
             definisjon = Definisjon.AVKLAR_SONINGSFORRHOLD,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD, Vurderingsbehov.INSTITUSJONSOPPHOLD_SONING),
         )
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING,
                 -> {
                 val utlederResultat = institusjonsoppholdUtlederService.utled(

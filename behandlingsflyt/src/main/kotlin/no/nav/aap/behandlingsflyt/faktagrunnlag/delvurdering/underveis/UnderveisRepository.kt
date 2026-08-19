@@ -11,6 +11,7 @@ import java.time.LocalDate
 interface UnderveisRepository : Repository {
     fun hent(behandlingId: BehandlingId): UnderveisGrunnlag
     fun hentHvisEksisterer(behandlingId: BehandlingId): UnderveisGrunnlag?
+    fun hentBulk(behandlingIds: List<BehandlingId>): Map<BehandlingId, UnderveisGrunnlag>
     fun lagre(
         behandlingId: BehandlingId,
         underveisperioder: List<Underveisperiode>,

@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -24,9 +23,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,9 +47,6 @@ class FatteVedtakStegTest {
     val vedtakService = mockk<VedtakService>(relaxed = true)
     val virkningstidspunktUtleder = mockk<VirkningstidspunktUtleder>(relaxed = true)
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
-    val gatewayProvider = createGatewayProvider {
-        register<AlleAvskruddUnleash>()
-    }
 
     @BeforeEach
     fun setup() {
@@ -60,12 +56,13 @@ class FatteVedtakStegTest {
 
     private fun kontekst(
         behandlingType: TypeBehandling,
-        vurderingsbehov: Vurderingsbehov
+        vurderingsbehov: Vurderingsbehov,
+        vurderingType: VurderingType = VurderingType.IKKE_RELEVANT,
     ) = flytKontekstMedPerioder {
         sakId = SakId(Random.nextLong())
         behandlingId = BehandlingId(Random.nextLong())
         this.behandlingType = behandlingType
-        vurderingType = VurderingType.IKKE_RELEVANT
+        this.vurderingType = vurderingType
         rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
         vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov)
     }
@@ -80,8 +77,7 @@ class FatteVedtakStegTest {
         trukketSøknadService = trukketSøknadService,
         vedtakService = vedtakService,
         virkningstidspunktUtleder = virkningstidspunktUtleder,
-        unleashGateway = gatewayProvider.provide(),
-        avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
+        avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService,
     )
 
     @Test
@@ -171,25 +167,25 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.SENDT_TILBAKE_FRA_BESLUTTER,
                     tidsstempel = nå.plusMinutes(5),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.TOTRINNS_VURDERT,
                     tidsstempel = nå.plusMinutes(7),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 )
             )
         )
@@ -202,25 +198,25 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(3),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(4),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(6),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(8),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -255,13 +251,13 @@ class FatteVedtakStegTest {
                     status = Status.SENDT_TILBAKE_FRA_BESLUTTER,
                     tidsstempel = nå.plusMinutes(3),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(4),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -274,13 +270,13 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -309,13 +305,13 @@ class FatteVedtakStegTest {
                     status = Status.OPPRETTET,
                     tidsstempel = nå.plusMinutes(1),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
                 Endring(
                     status = Status.AVSLUTTET,
                     tidsstempel = nå.plusMinutes(2),
                     begrunnelse = "Begrunnelse",
-                    endretAv = "Ident",
+                    endretAv = Bruker("Ident"),
                 ),
             )
         )
@@ -368,7 +364,7 @@ class FatteVedtakStegTest {
             definisjon = definisjon,
             funnetISteg = definisjon.løsesISteg,
             begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
+            endretAv = Bruker("Ident"),
         )
 
         val avklaringsbehov =
@@ -383,7 +379,9 @@ class FatteVedtakStegTest {
     }
 
     private fun sistAvsluttet(behandlingId: BehandlingId, definisjon: Definisjon): LocalDateTime {
-        return requireNotNull(InMemoryAvklaringsbehovRepository.hent(behandlingId).find { it.definisjon == definisjon })
+        return requireNotNull(
+            InMemoryAvklaringsbehovRepository.hent(behandlingId)
+                .find { it.definisjon == definisjon })
             .historikk
             .filter { it.status == Status.AVSLUTTET }
             .maxOf { it.tidsstempel }

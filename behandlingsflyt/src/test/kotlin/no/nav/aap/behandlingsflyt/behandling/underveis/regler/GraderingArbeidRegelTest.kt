@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`50_PROSENT`
@@ -233,11 +234,11 @@ class GraderingArbeidRegelTest {
                     ArbeidsevneVurdering(
                         begrunnelse = "",
                         arbeidsevne = `50_PROSENT`,
-                        fraDato = fom.minusDays(1), /* viktig at vi tester vurderinger fra før rettighetsperioden */
-                        tilDato = null,
+                        fom = fom.minusDays(1), /* viktig at vi tester vurderinger fra før rettighetsperioden */
+                        tom = null,
                         vurdertIBehandling = BehandlingId(1),
                         opprettetTid = LocalDateTime.now(),
-                        "vurdertAv"
+                        Bruker("vurdertAv")
                     )
                 )
             )
@@ -318,9 +319,9 @@ class GraderingArbeidRegelTest {
                 listOf(
                     Fritaksvurdering(
                         harFritak = true,
-                        fraDato = rettighetsperiode.fom,
+                        fom = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
-                        vurdertAv = "saksbehandler",
+                        vurdertAv = Bruker("saksbehandler"),
                         vurdertIBehandling = BehandlingId(1),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     )
@@ -409,11 +410,11 @@ class GraderingArbeidRegelTest {
                 ArbeidsevneVurdering(
                     begrunnelse = "",
                     arbeidsevne = it,
-                    fraDato = rettighetsperiode.fom,
-                    tilDato = null,
+                    fom = rettighetsperiode.fom,
+                    tom = null,
                     vurdertIBehandling = BehandlingId(1),
                     opprettetTid = LocalDateTime.now(),
-                    "vurdertAv"
+                    Bruker("vurdertAv")
                 )
             })
         )

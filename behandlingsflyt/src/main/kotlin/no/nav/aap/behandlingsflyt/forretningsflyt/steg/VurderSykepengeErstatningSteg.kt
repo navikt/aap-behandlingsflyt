@@ -6,11 +6,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengeerstatningVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somTidslinje
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -26,18 +25,16 @@ import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderSykepengeErstatningSteg private constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårService: VilkårService,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val sykdomRepository: SykdomRepository,
-    private val bistandRepository: BistandRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
         sykepengerErstatningRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        bistandRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
     )
@@ -56,7 +53,7 @@ class VurderSykepengeErstatningSteg private constructor(
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             kontekst = kontekst,
-            nårVurderingErGyldig = { aktiveVurderinger.somTidslinje().mapValue { true } },
+            nårVurderingErGyldig = { aktiveVurderinger.gjeldendeVurderinger().mapValue { true } },
             tilbakestillGrunnlag = {
                 if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
                     sykepengerErstatningRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
@@ -65,16 +62,13 @@ class VurderSykepengeErstatningSteg private constructor(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> {
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MIGERING_FRA_ARENA -> {
                 val grunnlag = SykepengerErstatningFaktagrunnlag(
                     rettighetsperiode = kontekst.rettighetsperiode,
                     sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId),
                     sykepengeerstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
                 )
-                SykepengeerstatningVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
-
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                vilkårService.vurderVilkår(kontekst.behandlingId, grunnlag, SykepengeerstatningVilkår)
             }
 
             VurderingType.MELDEKORT,

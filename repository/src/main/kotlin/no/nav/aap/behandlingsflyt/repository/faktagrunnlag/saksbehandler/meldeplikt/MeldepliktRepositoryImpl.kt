@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -42,7 +43,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         fraDato = row.getLocalDate("FRA_DATO"),
         tilDato = row.getLocalDateOrNull("TIL_DATO"),
         begrunnelse = row.getString("BEGRUNNELSE"),
-        vurdertAv = row.getString("VURDERT_AV"),
+        vurdertAv = row.getBruker("VURDERT_AV"),
         vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
         vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING"))
     )
@@ -54,15 +55,15 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         val fraDato: LocalDate,
         val tilDato: LocalDate?,
         val begrunnelse: String,
-        val vurdertAv: String,
+        val vurdertAv: Bruker,
         val vurderingOpprettet: LocalDateTime,
         val vurdertIBehandling: BehandlingId,
     ) {
         fun toFritaksvurdering(): Fritaksvurdering {
             return Fritaksvurdering(
                 harFritak = harFritak,
-                fraDato = fraDato,
-                tilDato = tilDato,
+                fom = fraDato,
+                tom = tilDato,
                 begrunnelse = begrunnelse,
                 vurdertAv = vurdertAv,
                 opprettetTid = vurderingOpprettet,
@@ -100,9 +101,9 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setLong(1, meldepliktId)
                 setString(2, it.begrunnelse)
                 setBoolean(3, it.harFritak)
-                setLocalDate(4, it.fraDato)
-                setLocalDate(5, it.tilDato)
-                setString(6, it.vurdertAv)
+                setLocalDate(4, it.fom)
+                setLocalDate(5, it.tom)
+                setBruker(6, it.vurdertAv)
                 setLocalDateTime(7, it.opprettetTid)
                 setLong(8, it.vurdertIBehandling.id)
             }

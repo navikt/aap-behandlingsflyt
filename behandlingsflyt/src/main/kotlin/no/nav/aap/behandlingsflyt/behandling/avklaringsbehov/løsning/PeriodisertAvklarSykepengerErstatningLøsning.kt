@@ -6,15 +6,22 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSykepengerErstatningLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_SYKEPENGEERSTATNING_KODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
+import kotlin.collections.orEmpty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = VURDER_SYKEPENGEERSTATNING_KODE)
@@ -25,7 +32,7 @@ class PeriodisertAvklarSykepengerErstatningLøsning(
         defaultValue = VURDER_SYKEPENGEERSTATNING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5007`,
     override val løsningerForPerioder: List<PeriodisertSykepengerVurderingDto>,
-): PeriodisertAvklaringsbehovLøsning<PeriodisertSykepengerVurderingDto> {
+): PeriodisertAvklaringsbehovLøsning<PeriodisertSykepengerVurderingDto>, LøsningMedPeriodiserteVurderinger {
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,
@@ -39,6 +46,18 @@ class PeriodisertAvklarSykepengerErstatningLøsning(
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<SykepengerErstatningRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.vurderinger?.somTidslinje() ?: Tidslinje<Unit>()
+        return repository.hentHvisEksisterer(behandlingId)?.vurderinger?.gjeldendeVurderinger().orEmpty()
+    }
+
+    override fun hentVurderinger(
+        behandlingId: BehandlingId,
+        repositoryProvider: RepositoryProvider
+    ): List<PeriodisertVurdering> {
+        val repository = repositoryProvider.provide<SykepengerErstatningRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+    }
+
+    override fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<SykepengerVurdering> {
+        return løsningerForPerioder.map { it.tilVurdering(bruker, behandlingId) }
     }
 }

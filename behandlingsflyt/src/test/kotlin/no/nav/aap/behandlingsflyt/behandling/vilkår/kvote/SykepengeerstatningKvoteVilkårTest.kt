@@ -120,17 +120,15 @@ class SykepengeerstatningKvoteVilkårTest {
         )
 
         // Kjør vilkåret
-        SykepengeerstatningKvoteVilkår(vilkårsresultat).vurder(
+        val resultat = SykepengeerstatningKvoteVilkår.vurder(
             SykepengeerstatningKvoteFaktagrunnlag(
                 kvotevurdering,
                 kvoter
             )
         )
 
-        val vilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING_KVOTE)
-
         assertTidslinje(
-            vilkåret.tidslinje(),
+            resultat,
             studentOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_RELEVANT) },
             speOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
             periodeBistandOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_RELEVANT) },
@@ -287,17 +285,15 @@ class SykepengeerstatningKvoteVilkårTest {
         )
 
         // Kjør vilkåret
-        SykepengeerstatningKvoteVilkår(vilkårsresultat).vurder(
+        val resultat = SykepengeerstatningKvoteVilkår.vurder(
             SykepengeerstatningKvoteFaktagrunnlag(
                 kvotevurdering,
                 kvoter
             )
         )
 
-        val vilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING_KVOTE)
-
         assertTidslinje(
-            vilkåret.tidslinje(),
+            resultat,
             speIkkeOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_RELEVANT) },
             oppfyltSpeMedKvotePeriode to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
             splittPeriodeKvoteBruktOpp to {
@@ -454,17 +450,15 @@ class SykepengeerstatningKvoteVilkårTest {
         )
 
         // Kjør vilkåret
-        SykepengeerstatningKvoteVilkår(vilkårsresultat).vurder(
+        val resultat = SykepengeerstatningKvoteVilkår.vurder(
             SykepengeerstatningKvoteFaktagrunnlag(
                 kvotevurdering,
                 kvoter
             )
         )
 
-        val vilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING_KVOTE)
-
         assertTidslinje(
-            vilkåret.tidslinje(),
+            resultat,
             speIkkeOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_RELEVANT) },
             oppfyltSpeMedKvotePeriode to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
             splittPeriodeKvoteBruktOpp to {

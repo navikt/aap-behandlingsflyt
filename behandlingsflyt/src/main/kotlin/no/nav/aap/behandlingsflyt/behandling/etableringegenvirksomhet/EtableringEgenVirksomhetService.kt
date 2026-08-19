@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -40,7 +41,9 @@ class EtableringEgenVirksomhetService(
 
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-        val alleVurderinger = gamleVurderinger + nyeVurderinger
+        val gjeldendeVurderinger = (gamleVurderinger + nyeVurderinger)
+            .gjeldendeVurderinger()
+            .verdier().toSet()
 
         val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
         if (gyldighetPeriode.isEmpty()) {
@@ -50,7 +53,7 @@ class EtableringEgenVirksomhetService(
         }
 
         if (nyeVurderinger.any { vurdering ->
-                gyldighetPeriode.none { gyldighetPeriode -> gyldighetPeriode.inneholder(vurdering.vurderingenGjelderFra) }
+                gyldighetPeriode.none { gyldighetPeriode -> gyldighetPeriode.inneholder(vurdering.fom) }
             }
         ) {
             return VirksomhetEtableringIkkeGyldig(
@@ -66,14 +69,14 @@ class EtableringEgenVirksomhetService(
             )
         }
 
-        if (alleVurderinger.isNotEmpty() && alleVurderinger.none { it.vurderingenGjelderFra.isAfter(førsteMuligeDato) }) {
+        if (gjeldendeVurderinger.isNotEmpty() && gjeldendeVurderinger.none { it.fom.isAfter(førsteMuligeDato) }) {
             return VirksomhetEtableringIkkeGyldig(
                 "Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP"
             )
         }
 
-        val alleUtviklingsPerioder = alleVurderinger.flatMap { it.utviklingsPerioder }
-        val alleOppstartsPerioder = alleVurderinger.flatMap { it.oppstartsPerioder }
+        val alleUtviklingsPerioder = gjeldendeVurderinger.flatMap { it.utviklingsPerioder }
+        val alleOppstartsPerioder = gjeldendeVurderinger.flatMap { it.oppstartsPerioder }
 
         val sisteUtviklingsPeriodeTom = alleUtviklingsPerioder.maxOfOrNull { it.tom }
         if (sisteUtviklingsPeriodeTom != null && alleOppstartsPerioder.any { it.fom.isBefore(sisteUtviklingsPeriodeTom) }) {
@@ -81,10 +84,10 @@ class EtableringEgenVirksomhetService(
         }
 
         val bruktUtviklingsDager =
-            (alleVurderinger).flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
+            gjeldendeVurderinger.flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
                 .sumOf { it.periode.antallHverdager().asInt }
         val bruktOppstartsdager =
-            (alleVurderinger).flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
+            gjeldendeVurderinger.flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
                 .sumOf { it.periode.antallHverdager().asInt }
 
         if (bruktUtviklingsDager > maksUtviklingsdager) {

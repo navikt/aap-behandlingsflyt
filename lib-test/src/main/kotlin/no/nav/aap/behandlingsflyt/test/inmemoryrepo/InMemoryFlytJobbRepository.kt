@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import io.ktor.util.collections.ConcurrentSet
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbInputMedHistorikk
 
 object InMemoryFlytJobbRepository: FlytJobbRepository {
     private val jobber = ConcurrentSet<JobbInput>()
@@ -17,4 +18,7 @@ object InMemoryFlytJobbRepository: FlytJobbRepository {
     override fun hentJobberForSak(id: Long) = jobber.filter { it.sakId() == id }
 
     override fun hentFeilmeldingForOppgave(id: Long) = ""
+
+    override fun hentJobberMedHistorikkForSak(sakid: Long): List<JobbInputMedHistorikk> =
+        jobber.filter { it.sakId() == sakid }.map { JobbInputMedHistorikk(it, emptyList()) }
 }

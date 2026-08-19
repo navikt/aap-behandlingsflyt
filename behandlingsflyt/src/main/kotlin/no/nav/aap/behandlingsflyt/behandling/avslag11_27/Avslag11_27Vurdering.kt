@@ -1,20 +1,27 @@
 package no.nav.aap.behandlingsflyt.behandling.avslag11_27
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.VurderingForKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
+import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
 
-class Avslag11_27Vurdering (
-    val referanse: Kravreferanse,
+data class Avslag11_27Vurdering (
+    override val referanse: Kravreferanse,
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+    override val vurdertAv: Bruker,
+
     val begrunnelse: String,
     val harAnnenFullYtelse: Boolean,
     val brukersYtelse: Ytelse? = null,
+    val brukersYtelseTom: LocalDate? = null,
     /*  Kun for sykepenger */
-    val harSykepengegrunnlagOver2G: Boolean? = null,
-    val skalAvslås1127: Boolean,
-    val vurdertIBehandling: BehandlingId,
-    val vurdertTidspunkt: Instant,
-    val vurdertAv: Bruker,
-)
+    val sykepengegrunnlag: Beløp? = null,
+    val harArbeidsgiverSykepengerUtbetaling: Boolean? = null,
+    val skalAvslås1127: Boolean? = null,
+): VurderingForKrav

@@ -40,13 +40,12 @@ class ProsesserBehandlingService(
 
     fun triggProsesserBehandling(
         opprettetBehandling: BehandlingService.OpprettetBehandling,
-        vurderingsbehov: List<Vurderingsbehov> = emptyList(),
         parameters: List<Pair<String, String>> = emptyList()
     ) {
 
         when (opprettetBehandling) {
             is BehandlingService.Ordinær -> triggProsesserBehandling(
-                opprettetBehandling.åpenBehandling, vurderingsbehov, parameters
+                opprettetBehandling.åpenBehandling, parameters
             )
 
             is BehandlingService.MåBehandlesAtomært -> kjørAtomærBehandling(opprettetBehandling)
@@ -55,18 +54,16 @@ class ProsesserBehandlingService(
 
     fun triggProsesserBehandling(
         behandling: Behandling,
-        vurderingsbehov: List<Vurderingsbehov> = emptyList(),
         parameters: List<Pair<String, String>> = emptyList()
     ) {
         LoggingKontekst(contextRepository, LogKontekst(referanse = behandling.referanse)).use {
-            triggProsesserBehandling(behandling.sakId, behandling.id, vurderingsbehov, parameters)
+            triggProsesserBehandling(behandling.sakId, behandling.id, parameters)
         }
     }
 
     fun triggProsesserBehandling(
         sakId: SakId,
         behandlingId: BehandlingId,
-        vurderingsbehov: List<Vurderingsbehov> = emptyList(),
         parameters: List<Pair<String, String>> = emptyList()
     ) {
         val eksisterendeJobber = flytJobbRepository.hentJobberForBehandling(behandlingId.toLong())
@@ -75,7 +72,7 @@ class ProsesserBehandlingService(
         if (eksisterendeJobber.isNotEmpty()) {
             log.info(
                 "Har planlagt eksisterende kjøring, planlegger ikke en ny. $eksisterendeJobber",
-            )/* Når vi returnerer her mister vi triggerne. Er det problematisk? */
+            )
             return
         }
 
@@ -83,7 +80,6 @@ class ProsesserBehandlingService(
             sakId.toLong(), behandlingId.toLong()
         )
             .medCallId()
-            .medParameter("trigger", DefaultJsonMapper.toJson(vurderingsbehov))
 
         parameters.forEach {
             jobbInput.medParameter(it.first, it.second)

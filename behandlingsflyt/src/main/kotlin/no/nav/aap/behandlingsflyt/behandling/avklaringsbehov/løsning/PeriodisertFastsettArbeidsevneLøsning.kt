@@ -1,0 +1,60 @@
+package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.FastsettArbeidsevneLøser
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.flate.PeriodisertFastsettArbeidsevneDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_ARBEIDSEVNE_KODE
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.lookup.repository.RepositoryProvider
+import kotlin.collections.orEmpty
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(value = FASTSETT_ARBEIDSEVNE_KODE)
+class PeriodisertFastsettArbeidsevneLøsning(
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = FASTSETT_ARBEIDSEVNE_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5004`,
+    override val løsningerForPerioder: List<PeriodisertFastsettArbeidsevneDto>
+) : PeriodisertAvklaringsbehovLøsning<PeriodisertFastsettArbeidsevneDto>, LøsningMedPeriodiserteVurderinger {
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
+        return FastsettArbeidsevneLøser(repositoryProvider).løs(kontekst, this)
+    }
+
+    override fun hentLagredeLøstePerioder(
+        behandlingId: BehandlingId,
+        repositoryProvider: RepositoryProvider
+    ): Tidslinje<*> {
+        val repository = repositoryProvider.provide<ArbeidsevneRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger().orEmpty()
+    }
+
+    override fun hentVurderinger(
+        behandlingId: BehandlingId,
+        repositoryProvider: RepositoryProvider
+    ): List<PeriodisertVurdering> {
+        val repository = repositoryProvider.provide<ArbeidsevneRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+    }
+
+    override fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<ArbeidsevneVurdering> {
+        return løsningerForPerioder.map { it.toArbeidsevnevurdering(bruker, behandlingId) }
+    }
+}

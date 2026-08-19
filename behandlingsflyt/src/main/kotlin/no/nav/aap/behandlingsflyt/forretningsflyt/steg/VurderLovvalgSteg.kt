@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.lazy
 
@@ -50,20 +51,20 @@ class VurderLovvalgSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
-        val tvingerAvklaringsbehov =
-            vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        val tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = ::nårVurderingErRelevant,
-            nårVurderingErGyldig = { perioderVurderingErGyldig(kontekst, grunnlag.value) },
+            perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
         )
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING -> {
                 // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
                 val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
@@ -89,19 +90,19 @@ class VurderLovvalgSteg private constructor(
         return Fullført
     }
 
-    private fun perioderVurderingErGyldig(
+
+    private fun perioderSomIkkeErTilstrekkeligVurdert (
         kontekst: FlytKontekstMedPerioder,
-        grunnlag: MedlemskapLovvalgGrunnlag
-    ): Tidslinje<Boolean> {
+    ): Set<Periode> {
+        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
+        val relevantTidslinje = nårVurderingErRelevant(kontekst)
         val automatiskVilkårsvurderingLovvalg =
             vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
-        val automatiskVurderingOppfylt = automatiskVilkårsvurderingLovvalg.filter { it.verdi }.isNotEmpty()
-        if (automatiskVurderingOppfylt) {
-            return automatiskVilkårsvurderingLovvalg
-        }
+        val manuelleVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger()
 
-        // Automatisk vurdering er ikke oppfylt - trenger manuell vurdering
-        return grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger().orEmpty().mapValue { true }
+        return Tidslinje.map3(relevantTidslinje, manuelleVurderinger.orEmpty(), automatiskVilkårsvurderingLovvalg) { relevant, manuellVurdering, automatiskVurdering ->
+            relevant == true && manuellVurdering == null && automatiskVurdering != true
+        }.filter { it.verdi }.perioder().toSet()
     }
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {

@@ -19,7 +19,7 @@ val INSTITUSJONSOPPHOLD_EVENT_TOPIC: String =
     requiredConfigForKey("INTEGRASJON_INSTITUSJONSOPPHOLD_EVENT_TOPIC")
 
 class InstitusjonsOppholdKafkaKonsument(
-    config: KafkaConsumerConfig<String, InstitusjonsOppholdHendelseKafkaMelding>,
+    config: KafkaConsumerConfig,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,

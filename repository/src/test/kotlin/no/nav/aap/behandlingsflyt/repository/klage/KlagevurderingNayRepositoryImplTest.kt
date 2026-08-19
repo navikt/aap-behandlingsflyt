@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.Klagebehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -49,7 +50,7 @@ class KlagevurderingNayRepositoryImplTest {
                 innstilling = KlageInnstilling.OPPRETTHOLD,
                 vilkårSomOmgjøres = emptyList(),
                 vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-                vurdertAv = "ident",
+                vurdertAv = Bruker("ident"),
             opprettet = Instant.now()
             )
 
@@ -60,7 +61,7 @@ class KlagevurderingNayRepositoryImplTest {
             assertThat(grunnlag.vurdering.innstilling).isEqualTo(KlageInnstilling.OPPRETTHOLD)
             assertThat(grunnlag.vurdering.vilkårSomOmgjøres).isEmpty()
             assertThat(grunnlag.vurdering.vilkårSomOpprettholdes).containsExactly(Hjemmel.FOLKETRYGDLOVEN_11_5)
-            assertThat(grunnlag.vurdering.vurdertAv).isEqualTo("ident")
+            assertThat(grunnlag.vurdering.vurdertAv).isEqualTo(Bruker("ident"))
             assertNotNull(grunnlag.vurdering.opprettet)
         }
     }

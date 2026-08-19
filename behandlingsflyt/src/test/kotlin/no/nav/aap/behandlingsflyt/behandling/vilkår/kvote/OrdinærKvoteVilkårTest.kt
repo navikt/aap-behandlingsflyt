@@ -113,12 +113,10 @@ class OrdinærKvoteVilkårTest {
         )
 
         // Kjør vilkåret
-        OrdinærKvoteVilkår(vilkårsresultat).vurder(OrdinærKvoteFaktagrunnlag(kvotevurdering, kvoter))
-
-        val vilkåret = vilkårsresultat.finnVilkår(Vilkårtype.ORDINÆR_KVOTE)
+        val resultat = OrdinærKvoteVilkår.vurder(OrdinærKvoteFaktagrunnlag(kvotevurdering, kvoter))
 
         assertTidslinje(
-            vilkåret.tidslinje(),
+            resultat,
             studentOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },
             speOppfylt to { assertThat(it.utfall).isEqualTo(Utfall.IKKE_RELEVANT) },
             forventetPeriodeOppfyltOrdinær to { assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT) },

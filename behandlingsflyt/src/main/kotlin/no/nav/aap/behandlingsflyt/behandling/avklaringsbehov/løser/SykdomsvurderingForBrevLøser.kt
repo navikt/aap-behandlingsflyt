@@ -23,7 +23,7 @@ class SykdomsvurderingForBrevLøser(
         løsning: SykdomsvurderingForBrevLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
-        val sykdomsvurderingForBrev = SykdomsvurderingForBrev(kontekst.behandlingId(), løsning.vurdering, kontekst.bruker.ident)
+        val sykdomsvurderingForBrev = SykdomsvurderingForBrev(kontekst.behandlingId(), løsning.vurdering, kontekst.bruker)
         sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrev)
 
         return LøsningsResultat("Skrevet sykdomsvurdering for brev")

@@ -30,7 +30,7 @@ class FastsettMeldeperiodeSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MIGERING_FRA_ARENA -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     return Fullført
                 }

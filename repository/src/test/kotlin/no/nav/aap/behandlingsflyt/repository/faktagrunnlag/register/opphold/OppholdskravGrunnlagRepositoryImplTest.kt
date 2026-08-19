@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -39,7 +40,7 @@ class OppholdskravGrunnlagRepositoryImplTest {
     fun `lagre og hent oppholdskravene i db`() {
         val behandlingId = opprettBehandling(dataSource)
         val oppholdskravVurdering = OppholdskravVurdering(
-            vurdertAv = "Meg",
+            vurdertAv = Bruker("Meg"),
             vurdertIBehandling = behandlingId,
             perioder = listOf(
                 OppholdskravPeriode(
@@ -63,7 +64,7 @@ class OppholdskravGrunnlagRepositoryImplTest {
         assertThat(grunnlag!!.vurderinger).hasSize(1)
         val vurdering = grunnlag.vurderinger.first()
         assertThat(vurdering.perioder).hasSize(1)
-        assertThat(vurdering.vurdertAv).isEqualTo("Meg")
+        assertThat(vurdering.vurdertAv).isEqualTo(Bruker("Meg"))
 
         val førstePeriode = vurdering.perioder.first()
 
@@ -79,7 +80,7 @@ class OppholdskravGrunnlagRepositoryImplTest {
     fun `slett grunnlag`() {
         val behandlingId = opprettBehandling(dataSource)
         val oppholdskravVurdering = OppholdskravVurdering(
-            vurdertAv = "Meg",
+            vurdertAv = Bruker("Meg"),
             vurdertIBehandling = behandlingId,
             perioder = listOf(
                 OppholdskravPeriode(
@@ -113,7 +114,7 @@ class OppholdskravGrunnlagRepositoryImplTest {
     fun `kopier grunnlag`() {
         val behandlingId = opprettBehandling(dataSource)
         val oppholdskravVurdering = OppholdskravVurdering(
-            vurdertAv = "Meg",
+            vurdertAv = Bruker("Meg"),
             vurdertIBehandling = behandlingId,
             perioder = listOf(
                 OppholdskravPeriode(

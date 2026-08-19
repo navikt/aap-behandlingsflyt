@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.verdityper.Bruker
 
 open class FakeUnleashBase(
     private val flags: Map<BehandlingsflytFeature, Boolean>,
@@ -13,9 +14,9 @@ open class FakeUnleashBase(
         "feature toggle $featureToggle ikke definert for fake"
     }
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker) = isEnabled(featureToggle)
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev) = isEnabled(featureToggle)
 
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
@@ -38,9 +39,9 @@ open class FakeUnleashBaseWithDefaultDisabled(
     override fun isEnabled(featureToggle: FeatureToggle) =
         enabledFlags.contains(featureToggle)
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker) = isEnabled(featureToggle)
 
-    override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
+    override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev) = isEnabled(featureToggle)
 
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
@@ -69,21 +70,23 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
-        BehandlingsflytFeature.MeldekortEndretAvSaksbehandler to true,
-        BehandlingsflytFeature.AutomatiskStans1118 to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
+        BehandlingsflytFeature.MotorV2 to true,
+        BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling to true,
+        BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
+        BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
         BehandlingsflytFeature.KravAutomatiskVurdering to true,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
         // ------
-        BehandlingsflytFeature.OppfoelgingsoppgaveSynligMedEnGang to true,
-        BehandlingsflytFeature.ManuellInntektDelvisUfore to true,
         BehandlingsflytFeature.Avslag11_27 to true,
+        BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
+        BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

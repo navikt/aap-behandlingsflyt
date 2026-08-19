@@ -27,9 +27,10 @@ class FritakFraMeldepliktLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
         val nyeVurderinger =
-            løsning.løsningerForPerioder.map { toFritaksvurdering(it, kontekst) }
+            løsning.løsningerForPerioder.map { it.tilFritaksvurdering(kontekst.bruker, kontekst.behandlingId()) }
 
-        val vedtatteVurderinger = behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+        val vedtatteVurderinger =
+            behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         meldepliktRepository.lagre(
             behandlingId = behandling.id,
@@ -41,19 +42,6 @@ class FritakFraMeldepliktLøser(
             kreverToTrinn = nyeVurderinger.minstEttFritak()
         )
     }
-
-    private fun toFritaksvurdering(
-        dto: PeriodisertFritaksvurderingDto,
-        kontekst: AvklaringsbehovKontekst
-    ): Fritaksvurdering = Fritaksvurdering(
-        harFritak = dto.harFritak,
-        fraDato = dto.fom,
-        tilDato = dto.tom,
-        begrunnelse = dto.begrunnelse,
-        vurdertAv = kontekst.bruker.ident,
-        vurdertIBehandling = kontekst.behandlingId(),
-        opprettetTid = LocalDateTime.now()
-    )
 
     override fun forBehov(): Definisjon {
         return Definisjon.FRITAK_MELDEPLIKT

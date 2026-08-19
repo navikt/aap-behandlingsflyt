@@ -32,7 +32,7 @@ fun mapSamordningAndreStatligeYtelserVurderingDTO(
             behandlingId = behandlingId,
             vurdertAv = vurdertAvService.medNavnOgEnhet(
                 ident = vurdering.vurdertAv,
-                dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
+                dato = requireNotNull(vurdering.vurdertTidspunkt.toLocalDate()) {
                     "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
                 },
             ),
@@ -72,7 +72,6 @@ fun mapSamordningVurdering(
                     ytelseType = vurdering.ytelseType,
                     gradering = it.gradering?.prosentverdi(),
                     periode = it.periode,
-                    kronesum = it.kronesum?.toInt(),
                     manuell = it.manuell
                 )
             }
@@ -82,7 +81,7 @@ fun mapSamordningVurdering(
             behandlingId = behandlingId,
             vurdertAv = vurdertAvService.medNavnOgEnhet(
                 ident = samordning.vurdertAv,
-                dato = requireNotNull(samordning.vurdertTidspunkt?.toLocalDate()) {
+                dato = requireNotNull(samordning.vurdertTidspunkt.toLocalDate()) {
                     "Fant ikke vurderingstidspunkt for yrkesskadevurdering"
                 },
             ),

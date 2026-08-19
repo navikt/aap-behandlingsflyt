@@ -64,7 +64,7 @@ fun sortererteAvklaringsbehov(
                 EndringDTO(
                     status = endring.status,
                     tidsstempel = endring.tidsstempel,
-                    endretAv = endring.endretAv,
+                    endretAv = endring.endretAv.ident,
                     frist = endring.frist,
                     årsakTilSattPåVent = endring.grunn?.oversettTilKontrakt(),
                     begrunnelse = endring.begrunnelse,

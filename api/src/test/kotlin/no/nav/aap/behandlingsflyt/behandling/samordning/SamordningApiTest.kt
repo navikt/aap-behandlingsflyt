@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtels
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieSøknad
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -17,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykepengerOgFerieOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -43,12 +45,20 @@ class SamordningApiKtTest : BaseApiTest() {
                         SamordningYtelsePeriode(
                             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1).minusDays(1)),
                             gradering = Prosent(50),
-                            kronesum = null,
                         )
                     ),
                     kilde = "kilde",
                     saksRef = "saksref",
                 ),
+            ),
+        )
+
+        InMemorySykepengerOgFerieOppgittISøknadRepository.lagre(
+            behandling.id,
+            SykepengerOgFerieSøknad(
+                mottarSykepenger = true,
+                feriePerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(6))),
+                ferieDager = null,
             ),
         )
 
@@ -79,13 +89,15 @@ class SamordningApiKtTest : BaseApiTest() {
                                     tom = LocalDate.now().plusYears(1).minusDays(1),
                                 ),
                             gradering = 50,
-                            kronesum = null,
                             endringStatus = EndringStatus.NY
                         )
                     ),
                     vurdering = null,
                     tpYtelser = null,
                     historiskeVurderinger = emptyList(),
+                    mottarSykepenger = true,
+                    feriePerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(6))),
+                    ferieDager = null,
                 )
             )
         }

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførev
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
@@ -19,7 +20,7 @@ data class SamordningUføreGrunnlag(
 data class SamordningUføreVurdering(
     val begrunnelse: String,
     val vurderingPerioder: List<SamordningUføreVurderingPeriode>,
-    val vurdertAv: String,
+    val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime? = null
 ) {
     fun tilTidslinje(): Tidslinje<Prosent> {

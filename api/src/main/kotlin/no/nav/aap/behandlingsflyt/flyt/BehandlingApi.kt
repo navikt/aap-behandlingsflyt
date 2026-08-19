@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
@@ -34,6 +35,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -107,7 +109,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         val navnPerIdent = if (identer.isEmpty()) emptyMap()
                         else AnsattInfoService(gatewayProvider).hentAnsatteVisningsnavn(identer)
                             .filterNotNull()
-                            .associateBy({ it.navident }, { it.visningsnavn })
+                            .associateBy({ it.navident }, { Bruker(it.visningsnavn) /* hacky. burde ha DTO */})
                         vurderingsbehovOgÅrsaker.map { it.copy(opprettetAv = it.opprettetAv?.let { ident -> navnPerIdent[ident] ?: ident }) }
                     }
 
@@ -170,12 +172,16 @@ fun NormalOpenAPIRoute.behandlingApi(
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandling = behandling(repositoryProvider.provide(), req)
-                    if (behandling.status().erAvsluttet()) {
+                    
+                    // Optimistisk sjekk, uten lås, på om behandling er avsluttet
+                    if (behandling.status() == Status.AVSLUTTET) {
                         return@transaction
                     }
                     val taSkriveLåsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
                     val lås = taSkriveLåsRepository.lås(req.referanse)
-                    if (!behandling.status().erAvsluttet()
+
+                    // Sjekk på nytt at behandlingen ikke er avsluttet nå som vi har lås den
+                    if (behandling.status() != Status.AVSLUTTET
                         && behandling.harIkkeVærtAktivitetIDetSiste()
                     ) {
                         ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(

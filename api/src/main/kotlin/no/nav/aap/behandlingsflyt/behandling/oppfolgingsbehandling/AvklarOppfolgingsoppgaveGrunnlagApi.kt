@@ -80,7 +80,7 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
                 val opprettetAv =
                     dokument.opprettetAv?.let { navIdent ->
                         AnsattInfoService(gatewayProvider).hentAnsatteVisningsnavn(listOf(navIdent))
-                            .firstOrNull()?.visningsnavn ?: navIdent
+                            .firstOrNull()?.visningsnavn ?: navIdent.ident
                     }
 
                 AvklarOppfolgingsoppgaveGrunnlagResponse(

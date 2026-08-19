@@ -145,13 +145,12 @@ private fun Yrkesskadevurdering.toResponse(ansattInfoService: AnsattInfoService)
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return YrkesskadevurderingResponse(
         begrunnelse = begrunnelse,
-        relevanteSaker = relevanteSaker.map { it.referanse },
         relevanteYrkesskadeSaker = relevanteSaker.map { YrkesskadeSakResponse(it.referanse, it.manuellYrkesskadeDato) },
         andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
         erÅrsakssammenheng = erÅrsakssammenheng,
         vurderingerMeta = VurderingerMetaResponse(
             vurdertAv = VurdertAvResponse(
-                ident = vurdertAv,
+                ident = vurdertAv.ident,
                 dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
                 ansattnavn = navnOgEnhet?.navn,
                 enhetsnavn = navnOgEnhet?.enhet,

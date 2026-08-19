@@ -92,7 +92,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         override fun hentVedtakYtelseForPerson(request: ForeldrepengerRequest) = response
     }
 
-    object FakeSykepegerGateway : SykepengerGateway {
+    object FakeSykepengerGateway : SykepengerGateway {
         var sykepengerRespons = SykepengerResponse(emptyList())
         override fun hentYtelseSykepenger(
             personidentifikatorer: Set<String>,
@@ -104,7 +104,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeTjenestePensjonGateway : TjenestePensjonGateway {
-        override fun hentTjenestePensjon(ident: String, periode: Periode): List<TjenestePensjonForhold> = emptyList()
+        override fun hentTjenestePensjon(ident: String): List<TjenestePensjonForhold> = emptyList()
     }
 
     object FakeUføreRegisterGateway : UføreRegisterGateway {
@@ -137,7 +137,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeBarnGateway>()
         register<FakePdlGateway>()
         register<FakeForeldrepengerGateway>()
-        register<FakeSykepegerGateway>()
+        register<FakeSykepengerGateway>()
         register<FakeTjenestePensjonGateway>()
         register<FakeUføreRegisterGateway>()
         register<FakeInstitusjonsoppholdGateway>()
@@ -168,7 +168,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
-            FakeSykepegerGateway.sykepengerRespons = SykepengerResponse(
+            FakeSykepengerGateway.sykepengerRespons = SykepengerResponse(
                 listOf(
                     UtbetaltePerioder(
                         fom = 10 januar 2020,

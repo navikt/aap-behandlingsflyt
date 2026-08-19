@@ -149,7 +149,7 @@ class TestBehandlingFullføringService(
         repeat(maksForsøk) {
             val behandling = dataSource.transaction(readOnly = true) { connection ->
                 BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                    .finnSisteYtelsesbehandlingFor(sak.id)
+                    .finnÅpenYtelsesbehandling(sak.id)
             }
             if (behandling != null && behandling.status() != Status.AVSLUTTET) {
                 return behandling.id
@@ -163,7 +163,7 @@ class TestBehandlingFullføringService(
     private fun erBehandlingAvsluttet(sak: Sak): Boolean {
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(sak.id)
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
         } ?: return false
         return behandling.status() == Status.AVSLUTTET
     }
@@ -200,7 +200,7 @@ class TestBehandlingFullføringService(
 
         val behandling = dataSource.transaction(readOnly = true) { connection ->
             BehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(sak.id)
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
         }
 
         if (behandling == null || behandling.id != forventetBehandlingId || behandling.status() == Status.AVSLUTTET) {
@@ -310,7 +310,6 @@ class TestBehandlingFullføringService(
             AvklarYrkesskadeLøsning(
                 yrkesskadesvurdering = YrkesskadevurderingDto(
                     begrunnelse = "Er yrkesskade",
-                    relevanteSaker = emptyList(),
                     relevanteYrkesskadeSaker = listOf(YrkesskadeSakDto(yrkesskade.ref, null)),
                     andelAvNedsettelsen = 50,
                     erÅrsakssammenheng = true,
@@ -365,32 +364,34 @@ class TestBehandlingFullføringService(
             )
         )
 
-        Definisjon.FASTSETT_MANUELL_INNTEKT -> AvklarManuellInntektVurderingLøsning(
-            manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
-                begrunnelse = "Manuell inntekt vurdering ok",
-                belop = null,
-                vurderinger = listOf(
-                    ÅrsVurdering(
-                        beløp = BigDecimal("500000.00"),
-                        eøsBeløp = null,
-                        år = LocalDate.now().year - 1,
-                        ferdigLignetPGI = null,
-                    ),
-                    ÅrsVurdering(
-                        beløp = BigDecimal("500000.00"),
-                        eøsBeløp = null,
-                        år = LocalDate.now().year - 2,
-                        ferdigLignetPGI = null,
-                    ),
-                    ÅrsVurdering(
-                        beløp = BigDecimal("500000.00"),
-                        eøsBeløp = null,
-                        år = LocalDate.now().year - 3,
-                        ferdigLignetPGI = null,
+        Definisjon.FASTSETT_MANUELL_INNTEKT -> {
+            val rettighetsStartÅr = sak.rettighetsperiode.fom.year
+            AvklarManuellInntektVurderingLøsning(
+                manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
+                    begrunnelse = "Manuell inntekt vurdering ok",
+                    vurderinger = listOf(
+                        ÅrsVurdering(
+                            beløp = BigDecimal("500000.00"),
+                            eøsBeløp = null,
+                            år = rettighetsStartÅr - 1,
+                            ferdigLignetPGI = null,
+                        ),
+                        ÅrsVurdering(
+                            beløp = BigDecimal("500000.00"),
+                            eøsBeløp = null,
+                            år = rettighetsStartÅr - 2,
+                            ferdigLignetPGI = null,
+                        ),
+                        ÅrsVurdering(
+                            beløp = BigDecimal("500000.00"),
+                            eøsBeløp = null,
+                            år = rettighetsStartÅr - 3,
+                            ferdigLignetPGI = null,
+                        )
                     )
                 )
             )
-        )
+        }
 
         Definisjon.FASTSETT_YRKESSKADEINNTEKT -> {
             val yrkesskade = hentFørsteYrkesskade(behandlingId)
@@ -452,7 +453,7 @@ class TestBehandlingFullføringService(
         )
 
         Definisjon.AVKLAR_SAMORDNING_GRADERING -> AvklarSamordningGraderingLøsning(
-            vurderingerForSamordning = VurderingerForSamordning("", true, null, emptyList())
+            vurderingerForSamordning = VurderingerForSamordning("", emptyList())
         )
 
         Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND -> AvklarSamordningSykestipendLøsning(

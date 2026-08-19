@@ -16,8 +16,6 @@ data class FullmektigGrunnlagDto(
 data class FullmektigVurderingDto(
     val harFullmektig: Boolean,
     val fullmektigIdentMedType: IdentMedType? = null,
-    @Deprecated("Bruk fullmektigIdentMedType")
-    val fullmektigIdent: String? = null,
     val fullmektigNavnOgAdresse: NavnOgAdresse? = null,
     val vurderingerMeta: VurderingerMetaResponse,
 )
@@ -35,7 +33,6 @@ internal fun FullmektigGrunnlag.tilDto(
 internal fun FullmektigVurdering.tilDto(ansattInfoService: AnsattInfoService): FullmektigVurderingDto {
     return FullmektigVurderingDto(
         harFullmektig = this.harFullmektig,
-        fullmektigIdent = fullmektigIdent?.ident,
         fullmektigIdentMedType = this.fullmektigIdent,
         fullmektigNavnOgAdresse = this.fullmektigNavnOgAdresse,
         vurderingerMeta = VurderingerMetaResponse(

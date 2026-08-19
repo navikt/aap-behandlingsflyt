@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import kotlin.collections.all
 
 object InMemoryBehandlingRepository : BehandlingRepository {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -62,19 +63,6 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
-    @Deprecated("Mest sannsynlig ønsker du å bruke BehandlingService.finnSisteYtelsesbehandlingFor eller BehandlingService.finnBehandlingMedSisteFattedeVedtak")
-    override fun finnSisteOpprettedeBehandlingFor(
-        sakId: SakId,
-        behandlingstypeFilter: List<TypeBehandling>
-    ): Behandling? {
-        synchronized(lock) {
-            return memory.values
-                .filter { behandling -> behandling.sakId == sakId }
-                .filter { behandling -> behandling.typeBehandling() in behandlingstypeFilter }
-                .maxOrNull()
-        }
-    }
-
     override fun hentAlleFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): List<Behandling> {
         synchronized(lock) {
             return memory.values
@@ -100,16 +88,16 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    override fun hentNyesteEndringForSteg(behandlingId: BehandlingId): List<StegTilstand> {
+        synchronized(lock) {
+            return memoryStegHistorikk[behandlingId].orEmpty().groupBy { it.steg() }.mapNotNull { it.value.last() }
+        }
+    }
+
     override fun hent(referanse: BehandlingReferanse): Behandling {
         synchronized(lock) {
             log.info("Henter behandling med referanse $referanse.")
             return memory.values.single { behandling -> behandling.referanse == referanse }
-        }
-    }
-
-    override fun hentBehandlingType(behandlingId: BehandlingId): TypeBehandling {
-        synchronized(lock) {
-            return memory.getValue(behandlingId).typeBehandling()
         }
     }
 
@@ -160,7 +148,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
                 return@mapNotNull null
             }
 
-            val sak = InMemorySakRepository.hent(behandling.sakId)
+            val sak = InMemorySakRepository.hentHvisFinnes(behandling.sakId) ?: return@mapNotNull null
             if (sak.person.id != personId) {
                 return@mapNotNull null
             }
@@ -189,15 +177,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         tilstand: StegTilstand
     ) {
         synchronized(lock) {
-            val stegHistorikk = memoryStegHistorikk[behandlingId]?.map {
-                StegTilstand(
-                    tidspunkt = it.tidspunkt(),
-                    stegStatus = it.status(),
-                    stegType = it.steg(),
-                    aktiv = false
-                )
-            }.orEmpty()
+            val stegHistorikk = memoryStegHistorikk[behandlingId].orEmpty()
+            check(stegHistorikk.all { it <= tilstand })
             memoryStegHistorikk[behandlingId] = stegHistorikk.plus(tilstand).sorted()
+            memory[behandlingId]!!.oppdaterSteg(tilstand)
         }
     }
 

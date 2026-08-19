@@ -176,7 +176,7 @@ class PersonopplysningRepositoryImpl(
         }
 
         var utenlandsAdresserId: Long? = null
-        if (!personopplysning.utenlandsAddresser.isNullOrEmpty()) {
+        if (personopplysning.utenlandsAddresser.isNotEmpty()) {
             utenlandsAdresserId =
                 connection.executeReturnKey("INSERT INTO BRUKER_UTENLANDSADRESSER_AGGREGAT DEFAULT VALUES")
             connection.executeBatch(
@@ -184,7 +184,7 @@ class PersonopplysningRepositoryImpl(
                     INSERT INTO BRUKER_UTENLANDSADRESSE (UTENLANDSADRESSER_ID, ADRESSENAVN, POSTKODE, BYSTED, LANDKODE, GYLDIGFRAOGMED, GYLDIGTILOGMED, ADRESSE_TYPE) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """.trimIndent(),
-                personopplysning.utenlandsAddresser!!
+                personopplysning.utenlandsAddresser
             ) {
                 setParams {
                     setLong(1, utenlandsAdresserId)

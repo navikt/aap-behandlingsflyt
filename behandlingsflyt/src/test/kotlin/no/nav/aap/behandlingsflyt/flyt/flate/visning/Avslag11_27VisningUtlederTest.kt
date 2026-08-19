@@ -11,10 +11,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvslag11_27Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 
 class Avslag11_27VisningUtlederTest {
@@ -38,16 +41,18 @@ class Avslag11_27VisningUtlederTest {
         val ref = Kravreferanse(UUID.randomUUID())
 
         InMemoryAvslag11_27Repository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 Avslag11_27Vurdering(
                     referanse = ref,
                     begrunnelse = "b",
                     harAnnenFullYtelse = true,
                     brukersYtelse = Ytelse.SYKEPENGER,
-                    harSykepengegrunnlagOver2G = null,
+                    brukersYtelseTom = LocalDate.of(2026, 6, 30),
+                    sykepengegrunnlag = Beløp(BigDecimal("500000")),
+                    harArbeidsgiverSykepengerUtbetaling = false,
                     skalAvslås1127 = true,
                     vurdertIBehandling = behandling.id,
-                    vurdertTidspunkt = Instant.now(),
+                    opprettet = Instant.now(),
                     vurdertAv = Bruker("test"),
                 )
             )

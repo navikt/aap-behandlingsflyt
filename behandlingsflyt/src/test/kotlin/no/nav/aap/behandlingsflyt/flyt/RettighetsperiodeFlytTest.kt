@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -261,7 +261,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         .ignoringFields("opprettet")
                         .ignoringFields("referanse")
                         .isEqualTo(
-                            NyttKrav(
+                            RelevantKrav(
                                 muligRettFra = nå.toLocalDate(),
                                 søknadsdato = Søknadsdato(
                                     årsak = SøknadsdatoÅrsak.SøknadMottatt,
@@ -311,13 +311,13 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
                     val kravGrunnlag = repositoryProvider.provide<KravRepository>().hentHvisEksisterer(behandling.id)
-                    assertThat(kravGrunnlag?.vurderinger).hasSize(2)
-                    assertThat(kravGrunnlag?.vurderinger?.first { it.vurdertAv != SYSTEMBRUKER })
+                    assertThat(kravGrunnlag?.vurderinger).hasSize(1)
+                    assertThat(kravGrunnlag?.vurderinger?.first())
                         .usingRecursiveComparison()
                         .ignoringFields("opprettet")
                         .ignoringFields("referanse")
                         .isEqualTo(
-                            NyttKrav(
+                            RelevantKrav(
                                 muligRettFra = rettighetsperiodeVurdering.first,
                                 søknadsdato = Søknadsdato(
                                     årsak = SøknadsdatoÅrsak.SøknadMottatt,
@@ -454,7 +454,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             ?: error("Fant ikke underveisperiode for nytt starttidspunkt")
         val underveisPeriodeForSøknadsdato = underveisGrunnlag.perioder.find { it.periode.inneholder(søknadsdato) }
             ?: error("Fant ikke underveisperiode for søknadstidspunkt")
-        assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.andelArbeid).isEqualTo(`100_PROSENT`)
+        assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
         assertThat(underveisPeriodeForUkjentDato.arbeidsgradering.gradering).isEqualTo(`0_PROSENT`)
         assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
         assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.gradering).isEqualTo(`100_PROSENT`)

@@ -76,10 +76,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 )
                 log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
                 secureLogger.info("" + vurderingsbehov)
-                prosesserBehandlingService.triggProsesserBehandling(
-                    revurdering,
-                    vurderingsbehov = vurderingsbehov.map { it.type },
-                )
+                prosesserBehandlingService.triggProsesserBehandling(revurdering)
             } else {
                 log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
             }

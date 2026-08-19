@@ -78,9 +78,6 @@ class OvergangUføreSteg private constructor(
                 virkningsdato = uførevedtak.virkningsdato,
             )
         } else {
-            val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
-                { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
-
             avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
                 kontekst = kontekst,
                 definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
@@ -89,7 +86,7 @@ class OvergangUføreSteg private constructor(
                     Vurderingsbehov.OVERGANG_UFORE,
                 ),
                 nårVurderingErRelevant = ::nårVurderingErRelevant,
-                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
                 tilbakestillGrunnlag = {
                     val vedtatteVurderinger =
                         kontekst.forrigeBehandlingId?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
@@ -121,10 +118,6 @@ class OvergangUføreSteg private constructor(
     }
 
     private fun erAutomatiskOpphør11_18(kontekst: FlytKontekstMedPerioder): Boolean {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.AutomatiskStans1118)) {
-            return false
-        }
-
         val uførevedtak = hentUførevedtak(kontekst.sakId) ?: return false
         return uførevedtak.resultat == UførevedtakResultat.INNV &&
                 uførevedtak.virkningsdato.isAfter(LocalDate.now())
@@ -149,7 +142,7 @@ class OvergangUføreSteg private constructor(
             .orEmpty()
         val eksisterendeVurderinger = overgangUføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
         val harAutomatiskVurderingAllerede = eksisterendeVurderinger.any {
-            it.vurdertAv == SYSTEMBRUKER.ident && it.fom == uførevedtak.virkningsdato
+            it.vurdertAv == SYSTEMBRUKER && it.fom == uførevedtak.virkningsdato
         }
         if (harAutomatiskVurderingAllerede) return
 
@@ -160,7 +153,7 @@ class OvergangUføreSteg private constructor(
             brukerRettPåAAP = false,
             fom = virkningsdato,
             tom = null,
-            vurdertAv = SYSTEMBRUKER.ident,
+            vurdertAv = SYSTEMBRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
         )

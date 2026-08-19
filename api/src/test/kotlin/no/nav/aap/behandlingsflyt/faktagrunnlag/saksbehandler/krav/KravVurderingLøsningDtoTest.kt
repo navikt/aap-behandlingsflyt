@@ -18,7 +18,7 @@ class KravVurderingLøsningDtoTest {
 
     @Test
     fun `Deserialiser nytt krav`() {
-        val forventet = NyttKravLøsningDto(
+        val forventet = RelevantKravLøsningDto(
             referanse = null,
             journalpostId = JournalpostId("123456789"),
             begrunnelse = "Begrunnelse",
@@ -31,7 +31,7 @@ class KravVurderingLøsningDtoTest {
 
         val løsning = """
             {
-              "kravType" : "NYTT_KRAV_AAP",
+              "kravType" : "RELEVANT_KRAV",
               "journalpostId" : {
                 "identifikator" : "123456789"
               },
@@ -51,38 +51,7 @@ class KravVurderingLøsningDtoTest {
         assertThat(faktisk).isEqualTo(forventet)
 
         val vurdering = faktisk.tilVurdering(BehandlingId(1), Bruker("En ident"), Instant.now())
-        assertThat(vurdering).isInstanceOf(NyttKrav::class.java)
-    }
-
-    @Test
-    fun `Deserialiser gjenopptak`() {
-        val forventet = GjenopptakKravLøsningDto(
-            referanse = null,
-            journalpostId = JournalpostId("123456789"),
-            begrunnelse = "Begrunnelse",
-            søknadsdato = Søknadsdato(dato = 31 desember 2025, SøknadsdatoÅrsak.BrukerHarSøktTidligere),
-            overstyrMuligRettFra = null
-        )
-
-        val løsning = """
-            {
-              "kravType" : "GJENOPPTAK",
-              "journalpostId" : {
-                "identifikator" : "123456789"
-              },
-              "begrunnelse" : "Begrunnelse",
-              "søknadsdato" : {
-                "dato" : "2025-12-31",
-                "årsak" : "BrukerHarSøktTidligere"
-              }
-            }
-        """.trimIndent()
-
-        val faktisk = DefaultJsonMapper.fromJson(løsning, KravVurderingLøsningDto::class.java)
-        assertThat(faktisk).isEqualTo(forventet)
-
-        val vurdering = { faktisk.tilVurdering(BehandlingId(1), Bruker("En ident"), Instant.now()) }
-        assertThrows<UgyldigForespørselException> { vurdering() }
+        assertThat(vurdering).isInstanceOf(RelevantKrav::class.java)
     }
 
     @Test

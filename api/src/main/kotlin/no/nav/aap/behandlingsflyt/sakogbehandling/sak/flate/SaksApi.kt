@@ -5,12 +5,20 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArenaV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.medAzureTokenGen
@@ -21,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
@@ -33,14 +42,19 @@ import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("api.sak")
@@ -198,6 +212,81 @@ fun NormalOpenAPIRoute.saksApi(
             }
         }
 
+        route("/migrerFraArena") {
+            authorizedPost<Unit, SaksinfoDTO, MigrerArenasakDTO>(
+                modules = arrayOf(TagModule(listOf(Tags.Sak))), routeConfig = AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = false,
+                    påkrevdRolle = listOf(
+                        Rolle.SAKSBEHANDLER_NASJONAL
+                    )
+                )
+            ) { _, dto ->
+                val eksisterendeSaker: List<Sak> = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val personOgSakService = PersonOgSakService(gatewayProvider, repositoryProvider)
+                    val ident = Ident(dto.ident)
+
+                    personOgSakService.finnSakerFor(ident)
+                }
+
+                if (eksisterendeSaker.isNotEmpty()) {
+                    return@authorizedPost respondWithStatus(HttpStatusCode.BadRequest)
+                }
+
+                val arenaSak = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val personOgSakService = PersonOgSakService(gatewayProvider, repositoryProvider)
+                    personOgSakService.finnArenasakForBruker(Ident(dto.ident), dto.saksnummerArena)
+                }
+
+                if (arenaSak == null || arenaSak.statuskode != "AKTIV") {
+                    return@authorizedPost respondWithStatus(HttpStatusCode.BadRequest)
+                }
+
+                val nySak: SaksinfoDTO = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val personOgSakService = PersonOgSakService(gatewayProvider, repositoryProvider)
+                    val mottattHendelseService = MottattHendelseService(repositoryProvider)
+
+                    val ident = Ident(dto.ident)
+
+                    // TODO: Perioden må beregnes. Dette burde nok være kuttet til å matche med vedtakslengden i Arena ikke hardkodes til 1 år.
+                    val periode = Periode(
+                        LocalDate.now(), LocalDate.now().plusYears(1).minusDays(1)
+                    )
+
+                    val sak = personOgSakService.opprettSakMedArenaMigrering(
+                        ident = ident,
+                        søknadsdato = LocalDate.now(),
+                        saksnummerArena = dto.saksnummerArena,
+                    )
+
+                    mottattHendelseService.registrerMottattHendelse(
+                        Innsending(
+                            saksnummer = sak.saksnummer,
+                            referanse = InnsendingReferanse(
+                                type = InnsendingReferanse.Type.MIGRERING_FRA_ARENA,
+                                verdi = UUID.randomUUID().toString()
+                            ),
+                            type = InnsendingType.MIGRERING_FRA_ARENA,
+                            mottattTidspunkt = LocalDateTime.now(),
+                            melding = MigreringFraArenaV0("Migrering av Arenasak ${dto.saksnummerArena}"),
+                        )
+                    )
+
+                    SaksinfoDTO(
+                        saksnummer = sak.saksnummer.toString(),
+                        opprettetTidspunkt = sak.opprettetTidspunkt,
+                        periode = periode,
+                        ident = sak.person.aktivIdent().identifikator
+                    )
+                }
+
+                respond(nySak)
+            }
+        }
+
         route("/siste/{antall}").get<HentAntallSakerDTO, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) { req ->
             if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
                 val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
@@ -258,26 +347,26 @@ fun NormalOpenAPIRoute.saksApi(
                 SøkPåSakService(repositoryProvider).søkEtterSaker(søkDto.søketekst.trim())
             }
 
-            if (saker.isNotEmpty()) {
-                respond(
-                    saker.map { sak ->
-                        SøkPåSakDTO(
-                            ident = sak.person.aktivIdent().identifikator,
-                            navn = pdlGateway.hentPersoninfoForIdent(sak.person.aktivIdent(), token()).fulltNavn(),
+
+            respond(
+                saker.map { sak ->
+                    SøkPåSakDTO(
+                        ident = sak.person.aktivIdent().identifikator,
+                        navn = pdlGateway.hentPersoninfoForIdent(sak.person.aktivIdent(), token()).fulltNavn(),
+                        saksnummer = sak.saksnummer,
+                        opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
+                        harTilgang = tilgangGateway.sjekkTilgangTilSak(
                             saksnummer = sak.saksnummer,
-                            opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
-                            harTilgang = tilgangGateway.sjekkTilgangTilSak(
-                                saksnummer = sak.saksnummer,
-                                token(),
-                                Operasjon.SE,
-                                relevanteIdenter = relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer.toString())
+                            token(),
+                            Operasjon.SE,
+                            relevanteIdenter = relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(
+                                sak.saksnummer.toString()
                             )
                         )
-                    }
-                )
-            } else {
-                throw VerdiIkkeFunnetException("Fant ingen saker knyttet til søketeksten.")
-            }
+                    )
+                }
+            )
+
         }
 
         route("/{saksnummer}/finnBehandlingerAvType") {
@@ -349,11 +438,11 @@ fun NormalOpenAPIRoute.saksApi(
                 saksHistorikkService.utledSaksHistorikk(sak)
             }
             val navidenterIHistorikk = historikk.flatMap { it.hendelser.mapNotNull { it.utførtAv } }
-            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk).mapNotNull { it }
+            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk.map(::Bruker)).mapNotNull { it }
             val visningsnavnMap = visningsnavn.associateBy({ it.navident }, { it.visningsnavn })
             val historikkMedVisningsnavn = historikk.map {
                 val nyeHendelser = it.hendelser.map {
-                    val navn = visningsnavnMap[it.utførtAv] ?: it.utførtAv
+                    val navn = visningsnavnMap[it.utførtAv?.let(::Bruker)] ?: it.utførtAv
                     it.copy(utførtAv = navn)
                 }
                 it.copy(hendelser = nyeHendelser)

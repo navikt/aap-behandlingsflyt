@@ -441,7 +441,7 @@ private fun utledVisning(
     unleashGateway: UnleashGateway,
     resultatKode: ResultatKode?
 ): Visning {
-    val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
+    val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)
 
     val brukerHarKvalitetssikret = avklaringsbehovene.erLøstAv(bruker, Definisjon.KVALITETSSIKRING)
     val brukerHarBesluttet = avklaringsbehovene.erLøstAv(bruker, Definisjon.FATTE_VEDTAK)

@@ -19,6 +19,7 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -39,7 +40,7 @@ class AvklarHelseinstitusjonLøser(
         løsning: AvklarHelseinstitusjonLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
-        val vurdertAv = kontekst.bruker.ident
+        val vurdertAv = kontekst.bruker
 
         validerReduksjonsdatoForInstitusjonsopphold(
             behandling,
@@ -66,7 +67,7 @@ class AvklarHelseinstitusjonLøser(
     private fun slåSammenMedNyeVurderinger(
         nyeVurderinger: List<HelseinstitusjonVurderingDto>,
         behandling: Behandling,
-        vurdertAv: String,
+        vurdertAv: Bruker,
     ): List<HelseinstitusjonVurdering> {
         val forrigeGrunnlag =
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
@@ -226,7 +227,7 @@ class AvklarHelseinstitusjonLøser(
         val forsoergerEktefelle: Boolean? = null,
         val harFasteUtgifter: Boolean? = null,
         val vurdertIBehandling: BehandlingId,
-        val vurdertAv: String? = null,
+        val vurdertAv: Bruker? = null,
         val vurdertTidspunkt: LocalDateTime? = null
     )
 }

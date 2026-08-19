@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSa
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -75,6 +76,7 @@ class MeldingOmVedtakBrevSteg(
                     vedtakBehøverVurdering(
                         kontekst.behandlingId,
                         avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
+                        kontekst.vurderingType,
                         behandlingErAvbrutt,
                         definisjon,
                         brevBehov
@@ -87,9 +89,8 @@ class MeldingOmVedtakBrevSteg(
             )
         }
 
-        log.info("Skal bestille brev? $brevBehov avbrutt? $behandlingErAvbrutt bestilling om vedtak? $harBestillingOmVedtakBrev")
-        if (brevBehov != null && !behandlingErAvbrutt && !harBestillingOmVedtakBrev) {
-
+        log.info("Skal bestille brev? $brevBehov avbrutt? $behandlingErAvbrutt bestilling om vedtak? $harBestillingOmVedtakBrev er migering? ${kontekst.erMigreringFraArena()}")
+        if (brevBehov != null && !behandlingErAvbrutt && !harBestillingOmVedtakBrev && !kontekst.erMigreringFraArena()) {
             bestillBrev(kontekst, brevBehov)
         }
         return Fullført
@@ -106,14 +107,21 @@ class MeldingOmVedtakBrevSteg(
     private fun vedtakBehøverVurdering(
         behandlingId: BehandlingId,
         avklaringsbehovene: Avklaringsbehovene,
+        vurderingsType: VurderingType,
         behandlingErAvbrutt: Boolean,
         forDefinisjon: Definisjon,
         brevBehov: BrevBehov?
     ): Boolean {
+        // Saker som gjelder migrering fra Arena skal aldri sende brev
+        if (vurderingsType == VurderingType.MIGERING_FRA_ARENA) {
+            return false
+        }
+
         val harManueltBrevbehov = (!behandlingErAvbrutt && brevBehov != null && !brevBehov.typeBrev.erAutomatiskBrev())
 
         val behovForBeslutterbrev = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
-        val harBeslutterSkrevetBrev = behovForBeslutterbrev?.historikk?.any { it.status == Status.AVSLUTTET } ?: false
+        val harBeslutterSkrevetBrev =
+            behovForBeslutterbrev?.historikk?.any { it.status == Status.AVSLUTTET } ?: false
 
         val erBeslutterbehovAvbrutt = behovForBeslutterbrev?.status() == Status.AVBRUTT
         val harÅpentSaksbehandlerbehov =

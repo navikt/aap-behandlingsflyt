@@ -41,10 +41,17 @@ class RefusjonkravSteg private constructor(
             definisjon = Definisjon.REFUSJON_KRAV,
             vedtakBehøverVurdering = {
                 when (behandlingstype) {
-                    TypeBehandling.Førstegangsbehandling -> !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                        kontekst,
-                        type()
-                    )
+                    TypeBehandling.Førstegangsbehandling -> {
+                       when {
+                           tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                           kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
+                           else -> {
+                               kontekst.forrigeBehandlingId?.let {
+                                   refusjonkravRepository.hentHvisEksisterer(it).isNullOrEmpty()
+                               } ?: true
+                           }
+                       }
+                    }
 
                     else -> false
                 }

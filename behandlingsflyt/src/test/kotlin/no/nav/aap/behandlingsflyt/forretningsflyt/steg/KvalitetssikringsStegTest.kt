@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.VurderingEndretService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.KvalitetssikrerLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
@@ -131,7 +132,9 @@ class KvalitetssikringsStegTest {
             trekkKlageService = TrekkKlageService(inMemoryRepositoryProvider),
             avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider.provide()),
             behandlingRepository = inMemoryRepositoryProvider.provide(),
-            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider())
+            vurderingEndretService = VurderingEndretService(inMemoryRepositoryProvider),
+            behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider()),
+            unleashGateway = AlleAvskruddUnleash
         )
 
         fun kjørSteg() {
@@ -150,7 +153,7 @@ class KvalitetssikringsStegTest {
                 perioderSomIkkeErTilstrekkeligVurdert = setOf(periode),
                 perioderVedtaketBehøverVurdering = setOf(periode)
             )
-            avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", VEILEDER)
+            avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", Bruker(VEILEDER))
 
             assertThat(avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.erÅpent())
                 .`as`("Avklaringsbehov $definisjon skal være lukket etter løsning")
@@ -158,7 +161,7 @@ class KvalitetssikringsStegTest {
         }
 
         fun kvalitetssikre(godkjente: List<Definisjon>, underkjente: List<Definisjon> = emptyList()) {
-            val løser = KvalitetssikrerLøser(InMemoryAvklaringsbehovRepository, LokalUnleash)
+            val løser = KvalitetssikrerLøser(inMemoryRepositoryProvider, createGatewayProvider { register<LokalUnleash>() })
             val resultat = løser.løs(
                 avklaringsbehovKontekst {
                     bruker = Bruker(KVALITETSSIKRER)
@@ -179,7 +182,7 @@ class KvalitetssikringsStegTest {
             avklaringsbehovene.løsAvklaringsbehov(
                 Definisjon.KVALITETSSIKRING,
                 resultat.begrunnelse,
-                KVALITETSSIKRER,
+                Bruker(KVALITETSSIKRER),
                 resultat.kreverToTrinn
             )
         }

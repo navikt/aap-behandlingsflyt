@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppfølgingNAYLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingNyLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
@@ -16,17 +16,26 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+
+    lateinit var sak: Sak
+
+    @BeforeAll
+    fun settOppFGB() = snapshotEtterSetup {
+        sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
+    }
+
     @Test
     fun `opprette oppfølgingsbehandling`() {
-        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         val oppfølgingsbehandling = sak.sendInnOppfølgingsoppgave(
@@ -40,15 +49,18 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
             mottattTidspunkt = LocalDateTime.now().minusMonths(3),
         )
             .medKontekst {
+                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_OPPFØLGING)
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.OppfølgingsBehandling)
                 assertThat(behandling.referanse).isNotEqualTo(førstegangsbehandling.referanse)
-                assertThat(ventebehov.map { it.definisjon }).containsOnly(Definisjon.VENT_PÅ_OPPFØLGING)
+                assertThat(ventebehov.map { it.definisjon }).containsOnly(Definisjon.VENT_PÅ_OPPFØLGING_NY)
             }
-            .løsAvklaringsBehov(VentPåOppfølgingLøsning())
+            .løsAvklaringsBehov(VentPåOppfølgingNyLøsning())
             .medKontekst {
-                assertThat(behandling.aktivtSteg())
-                    .describedAs { "Forventer at steget har endret seg" }
-                    .isNotEqualTo(StegType.START_OPPFØLGINGSBEHANDLING)
+                assertThat(ventebehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)
+                    .describedAs {
+                        "Oppfølgingsbehandling skal ha avklaringsbehov for NAY etter at ventebehov er løst"
+                    }
             }
             .løsAvklaringsBehov(
                 AvklarOppfølgingNAYLøsning(
@@ -64,10 +76,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
             }
 
         val opprettetBehandling =
-            hentSisteOpprettedeBehandlingForSak(
-                oppfølgingsbehandling.sakId,
-                listOf(TypeBehandling.Revurdering)
-            )
+            hentSisteOpprettedeBehandlingForSak(oppfølgingsbehandling.sakId)
 
         motor.kjørJobber()
 
@@ -79,8 +88,6 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
 
     @Test
     fun `Opprett oppfølgningsoppgave med opprinnelse`() {
-
-        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         sak.sendInnOppfølgingsoppgave(

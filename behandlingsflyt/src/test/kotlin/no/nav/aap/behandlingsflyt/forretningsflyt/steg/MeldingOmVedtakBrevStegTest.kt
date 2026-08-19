@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -131,7 +132,7 @@ class MeldingOmVedtakBrevStegTest {
             avklaringsbehovId = avklaringsbehov.id,
             endring = Endring(
                 status = Status.AVSLUTTET,
-                endretAv = "SAKSBEHANDLER",
+                endretAv = Bruker("SAKSBEHANDLER"),
                 begrunnelse = "Brev ferdig"
             )
         )

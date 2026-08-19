@@ -17,7 +17,7 @@ class FrivilligeAvklaringsbehovTest {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandling.id)
 
-        behandling.oppdaterSteg(StegTilstand(stegStatus = StegStatus.START, stegType = StegType.VURDER_SYKEPENGEERSTATNING, aktiv = true))
+        behandling.oppdaterSteg(StegTilstand(stegStatus = StegStatus.START, stegType = StegType.VURDER_SYKEPENGEERSTATNING))
 
         assertThat(avklaringsbehovene.allePlussFrivillige(behandling)).isNotEmpty
     }

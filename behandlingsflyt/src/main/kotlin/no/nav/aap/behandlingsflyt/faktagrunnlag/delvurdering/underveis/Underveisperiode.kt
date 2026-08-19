@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -29,23 +27,25 @@ class Underveisperiode(
     val brukerAvKvoter: Set<Kvote>,
     val meldepliktStatus: MeldepliktStatus?,
     val meldepliktGradering: Prosent?,
-    val unleashGateway: UnleashGateway? = null,
+    private val backFillStansOpphorEnabled: Boolean = false,
 ) : Comparable<Underveisperiode> {
     init {
         if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak) { "Må ha avslagsårsak om utfall ikke oppfylt." }
         if (utfall == Utfall.OPPFYLT) requireNotNull(rettighetsType) { "Må ha rettighetsType om utfall oppfylt." }
     }
 
+    private val rettighetsTypeRå: RettighetsType? = rettighetsType
+
     /** Tidligere lagret [UnderveisService][no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService] ned [rettighetsType] også for perioder uten rett til AAP.
      * Nå lagrer den kun ned hvis medlemmet faktisk har rett på AAP. Denne getteren gjør at vi ikke trenger å ta hensyn til den forskjellen. */
-    val rettighetsType: RettighetsType? = when (unleashGateway?.isEnabled(BehandlingsflytFeature.BackfillStansOpphor)) {
+    val rettighetsType: RettighetsType? = when (backFillStansOpphorEnabled) {
         true ->
             if (utfall == Utfall.OPPFYLT || avslagsårsak?.konsekvens == Konsekvens.REDUKSJON)
                 rettighetsType
             else
                 null
 
-        null, false ->
+        false ->
             if (utfall == Utfall.OPPFYLT) rettighetsType else null
     }
 
@@ -60,7 +60,7 @@ class Underveisperiode(
         periode = periode,
         meldePeriode = meldePeriode,
         utfall = utfall,
-        rettighetsType = rettighetsType,
+        rettighetsType = rettighetsTypeRå,
         avslagsårsak = avslagsårsak,
         grenseverdi = grenseverdi,
         institusjonsoppholdReduksjon = institusjonsoppholdReduksjon,
@@ -69,6 +69,7 @@ class Underveisperiode(
         brukerAvKvoter = brukerAvKvoter,
         meldepliktStatus = meldepliktStatus,
         meldepliktGradering = meldepliktGradering,
+        backFillStansOpphorEnabled = backFillStansOpphorEnabled,
     )
 
     override fun equals(other: Any?) =

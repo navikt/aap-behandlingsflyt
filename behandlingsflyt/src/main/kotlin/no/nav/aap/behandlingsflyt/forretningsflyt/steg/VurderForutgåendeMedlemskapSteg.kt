@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderForutgåendeMedlemskapSteg private constructor(
@@ -54,11 +55,11 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
-            nårVurderingErGyldig = { nårVurderingErGyldig(kontekst, grunnlag.value) },
+            perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
             kontekst = kontekst,
             tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.value.medlemskapArbeidInntektGrunnlag) },
         )
@@ -66,6 +67,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING -> {
                 // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
                 val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
@@ -101,6 +103,20 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                 forrigeVurderinger,
             )
         }
+    }
+
+    private fun perioderSomIkkeErTilstrekkeligVurdert (
+        kontekst: FlytKontekstMedPerioder,
+    ): Set<Periode> {
+        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
+        val relevantTidslinje = nårVurderingErRelevant(kontekst)
+        val automatiskVilkårsvurderingLovvalg =
+            vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
+        val manuelleVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger()
+
+        return Tidslinje.map3(relevantTidslinje, manuelleVurderinger.orEmpty(), automatiskVilkårsvurderingLovvalg) { relevant, manuellVurdering, automatiskVurdering ->
+            relevant == true && manuellVurdering == null && automatiskVurdering != true
+        }.filter { it.verdi }.perioder().toSet()
     }
 
     private fun harYrkesskadeSammenheng(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -156,21 +172,6 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                     }
                 }
             }
-    }
-
-    private fun nårVurderingErGyldig(
-        kontekst: FlytKontekstMedPerioder,
-        grunnlag: ForutgåendeMedlemskapGrunnlag
-    ): Tidslinje<Boolean> {
-        val automatiskVilkårsvurderingLovvalg =
-            vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
-        val automatiskVurderingOppfylt = automatiskVilkårsvurderingLovvalg.filter { it.verdi }.isNotEmpty()
-        if (automatiskVurderingOppfylt) {
-            return automatiskVilkårsvurderingLovvalg
-        }
-
-        // Automatisk vurdering er ikke oppfylt - trenger manuell vurdering
-        return grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger().orEmpty().mapValue { true }
     }
 
     private fun vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(

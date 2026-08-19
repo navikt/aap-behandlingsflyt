@@ -1,10 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.krav
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Gjenopptak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.NyttKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -34,13 +33,7 @@ sealed interface KravVurderingDto {
     val opprettet: Instant
 }
 
-interface KravMedDatoDto {
-    val søknadsdato: Søknadsdato
-    val overstyrMuligRettFra: OverstyrMuligRettFra?
-    val muligRettFra: LocalDate
-}
-
-data class NyttKravDto(
+data class RelevantKravDto(
     override val referanse: UUID,
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
@@ -48,11 +41,11 @@ data class NyttKravDto(
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 
-    override val søknadsdato: Søknadsdato,
-    override val overstyrMuligRettFra: OverstyrMuligRettFra?,
-    override val muligRettFra: LocalDate,
-) : KravMedDatoDto, KravVurderingDto {
-    override val type: KravType = KravType.NYTT_KRAV_AAP
+    val søknadsdato: Søknadsdato,
+    val overstyrMuligRettFra: OverstyrMuligRettFra?,
+    val muligRettFra: LocalDate,
+) : KravVurderingDto {
+    override val type: KravType = KravType.RELEVANT_KRAV
 }
 
 data class TrukketSøknadDto(
@@ -64,21 +57,6 @@ data class TrukketSøknadDto(
     override val opprettet: Instant,
 ) : KravVurderingDto {
     override val type: KravType = KravType.TRUKKET_SØKNAD
-}
-
-data class GjenopptakDto(
-    override val referanse: UUID,
-    override val journalpostId: JournalpostId,
-    override val vurdertAv: Bruker,
-    override val begrunnelse: String,
-    override val vurdertIBehandling: BehandlingId,
-    override val opprettet: Instant,
-
-    override val søknadsdato: Søknadsdato,
-    override val overstyrMuligRettFra: OverstyrMuligRettFra?,
-    override val muligRettFra: LocalDate,
-) : KravMedDatoDto, KravVurderingDto {
-    override val type: KravType = KravType.GJENOPPTAK
 }
 
 data class KlageDto(
@@ -105,7 +83,7 @@ data class TilleggsopplysningDto(
 }
 
 fun KravVurdering.somDto(): KravVurderingDto = when (this) {
-    is NyttKrav -> NyttKravDto(
+    is RelevantKrav -> RelevantKravDto(
         referanse = this.referanse.verdi,
         journalpostId = this.journalpostId,
         vurdertAv = this.vurdertAv,
@@ -125,19 +103,7 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
         vurdertIBehandling = this.vurdertIBehandling,
         opprettet = this.opprettet,
     )
-
-    is Gjenopptak -> GjenopptakDto(
-        referanse = this.referanse.verdi,
-        journalpostId = this.journalpostId,
-        vurdertAv = this.vurdertAv,
-        begrunnelse = this.begrunnelse,
-        vurdertIBehandling = this.vurdertIBehandling,
-        opprettet = this.opprettet,
-        søknadsdato = this.søknadsdato,
-        overstyrMuligRettFra = this.overstyrMuligRettFra,
-        muligRettFra = this.muligRettFra,
-    )
-
+    
     is Klage -> KlageDto(
         referanse = this.referanse.verdi,
         journalpostId = this.journalpostId,

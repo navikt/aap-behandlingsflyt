@@ -69,63 +69,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
                                     navn = it.navn,
                                     kontor = it.enhet,
                                     tidspunkt = historikkInnlslag.tidspunkt,
-                                    ident = historikkInnlslag.avIdent
-                                )
-                            }
-                        }
-
-                    FatteVedtakGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = utledHarTilgangTilÅSaksbehandle(
-                            kanSaksbehandle(),
-                            avklaringsbehovene,
-                            bruker(),
-                            gatewayProvider,
-                        ),
-                        vurderinger = vurderinger,
-                        historikk = historikk,
-                        besluttetAv = beslutter,
-                        harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
-                            avklaringsbehovene,
-                            bruker()
-                        )
-                    )
-                }
-                respond(dto)
-            }
-        }
-
-
-        // TODO: fjern v2-endepunkt når frontend er tilbake på v1
-        route("/{referanse}/grunnlag/fatte-vedtak/v2") {
-            getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagResponse>(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                påkrevdRolle = Definisjon.FATTE_VEDTAK.løsesAv
-            ) { req ->
-
-                val dto = dataSource.transaction(readOnly = true) { connection ->
-
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-
-                    val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val flyt = behandling.flyt()
-
-                    val vurderinger = beslutterVurdering(avklaringsbehovene, flyt)
-                    val historikk = utledHistorikk(avklaringsbehovene)
-
-                    val beslutter = historikk
-                        .filter { it.aksjon == Aksjon.FATTET_VEDTAK }
-                        .maxByOrNull { it.tidspunkt }
-                        ?.let { historikkInnlslag ->
-                            ansattInfoService.hentAnsattNavnOgEnhet(historikkInnlslag.avIdent)?.let {
-                                BeslutterDto(
-                                    navn = it.navn,
-                                    kontor = it.enhet,
-                                    tidspunkt = historikkInnlslag.tidspunkt,
-                                    ident = historikkInnlslag.avIdent
+                                    ident = historikkInnlslag.avIdent.ident
                                 )
                             }
                         }
@@ -159,7 +103,7 @@ private fun utledHarTilgangTilÅSaksbehandle(
     gatewayProvider: GatewayProvider
 ): Boolean {
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)) {
+    return if (!unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker)) {
         kanSaksbehandle && !brukerHarGjortVilkårsvurderingerPåBehandling(avklaringsbehovene, bruker)
     } else {
         kanSaksbehandle
@@ -171,7 +115,7 @@ private fun brukerHarGjortVilkårsvurderingerPåBehandling(
     bruker: Bruker
 ): Boolean {
     return avklaringsbehovene.alle().filter { it.erTotrinn() }
-        .any { it.brukere().contains(bruker.ident) }
+        .any { bruker in it.brukere() }
 }
 
 
@@ -213,14 +157,14 @@ private fun utledEndringerSidenSist(
     tidsstempelForrigeBehov: LocalDateTime,
     tidsstempel: LocalDateTime
 ): List<DefinisjonEndring> {
-    return alleBehov.map { behov ->
+    return alleBehov.flatMap { behov ->
         behov.historikk.filter {
             Interval(
                 tidsstempelForrigeBehov,
                 tidsstempel
             ).inneholder(it.tidsstempel)
         }.map { endring -> DefinisjonEndring(behov.definisjon, endring) }
-    }.flatten()
+    }
 }
 
 private fun beslutterVurdering(
