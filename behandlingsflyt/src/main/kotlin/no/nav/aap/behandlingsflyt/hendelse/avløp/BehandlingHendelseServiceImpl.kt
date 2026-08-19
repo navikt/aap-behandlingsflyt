@@ -8,11 +8,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakV0Dto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.tilUføreVedtakDto
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortJobbUtfører
@@ -182,16 +183,10 @@ class BehandlingHendelseServiceImpl(
             ?.let(::Bruker)
     }
 
-    private fun hentUføreVedtak(behandling: Behandling): UførevedtakV0Dto? {
+    private fun hentUføreVedtak(behandling: Behandling): UførevedtakDto? {
         val uføreDokument = dokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.UFØRE_VEDTAK_HENDELSE).toList().maxByOrNull { it.opprettetTid };
-        return uføreDokument?.strukturerteData<UførevedtakV0>()?.data?.tilUføreVedtakV0Dto();
+        return uføreDokument?.strukturerteData<UførevedtakV0>()?.data?.tilUføreVedtakDto();
     }
-
-    private fun UførevedtakV0.tilUføreVedtakV0Dto(): UførevedtakV0Dto =
-        UførevedtakV0Dto(
-            resultat = this.resultat,
-            virkningsdato = this.virkningsdato
-        )
 
     private fun hentMottattDokumenter(
         vurderingsbehov: List<VurderingsbehovMedPeriode>,
