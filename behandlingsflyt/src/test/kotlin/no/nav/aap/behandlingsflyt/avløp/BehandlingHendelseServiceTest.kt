@@ -78,6 +78,14 @@ class BehandlingHendelseServiceTest {
             )
         } returns emptySet()
 
+        every {
+            mottattDokumentRepository.hentDokumenterAvType(
+                any<BehandlingId>(),
+                InnsendingType.UFØRE_VEDTAK_HENDELSE
+            )
+        } returns emptySet()
+
+
 
         every { pipRepository.finnIdenterPåBehandling(any<BehandlingReferanse>()) } returns emptyList()
 
