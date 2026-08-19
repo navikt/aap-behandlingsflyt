@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieSøknad
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder as byggFlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -441,6 +442,21 @@ class SamordningStegTest {
                 )
             )
         ).utfør(flytKontekstMedPerioder(behandling))
+
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+    }
+
+    @Test
+    fun `revurdering av noe annet enn samordning skal ikke gjøre at steget krever ny vurdering`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+
+        val kontekstUtenRelevantVurderingsbehov = byggFlytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.REVURDER_STUDENT)
+        }
+
+        steg().utfør(kontekstUtenRelevantVurderingsbehov)
 
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
