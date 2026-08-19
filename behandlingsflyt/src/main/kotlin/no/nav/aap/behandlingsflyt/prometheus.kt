@@ -38,8 +38,11 @@ fun PrometheusMeterRegistry.forutgåendeMedlemskapNorskOgAvslag(resultat: Boolea
 fun PrometheusMeterRegistry.lovvalgAutomatiskGjennomslipp(resultat: Boolean): Counter =
     this.counter("behandlingsflyt_lovvalg_automatisk_vurdert_total", listOf(Tag.of("lovvalggjennomslipp", resultat.toString())))
 
-fun PrometheusMeterRegistry.lovvalgÅrsakTilManuellVurdering(årsak: String): Counter =
-    this.counter("behandlingsflyt_lovvalg_aarsak_manuell_vurdering_total", listOf(Tag.of("aarsak", årsak)))
+fun PrometheusMeterRegistry.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1(årsak: String): Counter =
+    this.counter("behandlingsflyt_lovvalg_aarsak_manuell_vurdering_ikke_oppfylt_del1_total", listOf(Tag.of("aarsakikkeoppfyltdel1", årsak)))
+
+fun PrometheusMeterRegistry.lovvalgÅrsakTilManuellVurderingOppfyltDel1(årsak: String): Counter =
+    this.counter("behandlingsflyt_lovvalg_aarsak_manuell_vurdering_oppfylt_del1_total", listOf(Tag.of("aarsakoppfyltdel1", årsak)))
 
 fun PrometheusMeterRegistry.lovvalgAutomatiskVurderingOverstyrt(): Counter =
     this.counter("behandlingsflyt_lovvalg_overstyrt_total")
