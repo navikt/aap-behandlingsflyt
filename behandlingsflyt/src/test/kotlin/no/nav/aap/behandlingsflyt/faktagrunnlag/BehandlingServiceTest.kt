@@ -118,7 +118,7 @@ class BehandlingServiceTest {
             )
             val b3 = Behandling(
                 id = BehandlingId(3L),
-                forrigeBehandlingId = b1.id,
+                forrigeBehandlingId = b2.id,
                 typeBehandling = TypeBehandling.Revurdering,
                 sakId = SakId(1L),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
