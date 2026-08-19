@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.journalføring.JournalføringServic
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
-import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.Dokument
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfDokument
 import no.nav.aap.behandlingsflyt.dokumentasjon.VedtakDokumentGenerator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -42,7 +42,7 @@ class GenererVilkårsvurderingOppsummeringJobbUtførerTest {
             vedtakstidspunkt = vedtakstidspunkt,
             virkningstidspunkt = LocalDate.of(2026, 8, 1),
         )
-        val dokument = mockk<Dokument>()
+        val dokument = mockk<PdfDokument>()
         val pdf = "%PDF-1.4 test".encodeToByteArray()
         every { behandling.sakId } returns sakId
         every { behandling.forrigeBehandlingId } returns forrigeBehandlingId

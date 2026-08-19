@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdfgenerator
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.Dokument
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfDokument
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
@@ -22,7 +22,7 @@ class PdfGeneratorGatewayImpl : PdfGeneratorGateway {
         prometheus = prometheus,
     )
 
-    override fun genererVurderingerOppsummeringPdfDokument(request: Dokument): ByteArray {
+    override fun genererVurderingerOppsummeringPdfDokument(request: PdfDokument): ByteArray {
         val uri = baseUri.resolve("/api/v1/genpdf/innsikt/vurderinger")
         val httpRequest = PostRequest(
             body = request,

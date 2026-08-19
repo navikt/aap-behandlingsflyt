@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.Dokument
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
@@ -29,11 +29,11 @@ internal fun vilkårsvurderingOppsummeringTittel(saksnummer: Saksnummer) =
     "Oppsummering av vilkårsvurderinger for sak $saksnummer"
 
 internal object VedtakDokumentRenderer {
-    fun render(grunnlag: VedtakDokumentGrunnlag): Dokument = grunnlag.tilDokument()
+    fun render(grunnlag: VedtakDokumentGrunnlag): PdfDokument = grunnlag.tilDokument()
 
-    private fun VedtakDokumentGrunnlag.tilDokument(): Dokument {
+    private fun VedtakDokumentGrunnlag.tilDokument(): PdfDokument {
         val kontekst = RenderKontekst(behandlinger)
-        return Dokument(
+        return PdfDokument(
             tittel = vilkårsvurderingOppsummeringTittel(saksnummer),
             body = tilSeksjon().render(kontekst),
         )
