@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.journalføring
 
+import no.nav.aap.behandlingsflyt.behandling.journalføring.journalposter.meldekortJournalpost
+import no.nav.aap.behandlingsflyt.behandling.journalføring.journalposter.vilkårsvurderingOppsummeringJournalpost
 import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
 import no.nav.aap.behandlingsflyt.behandling.meldekort.tilPdfRequest
-import no.nav.aap.behandlingsflyt.behandling.journalføring.journalposter.meldekortJournalpost
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalpost
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
@@ -57,9 +58,24 @@ class JournalføringService(
         )
     }
 
+    fun journalførVilkårsvurderingOppsummering(
+        sak: Sak,
+        pdf: ByteArray
+    ): JournalpostId {
+        val journalpost = vilkårsvurderingOppsummeringJournalpost(
+            sak = sak,
+            pdf = pdf
+        )
+
+        return journalfør(
+            journalpost = journalpost,
+            oppdatertAv = null
+        )
+    }
+
     private fun journalfør(
         journalpost: Journalpost,
-        oppdatertAv: Bruker,
+        oppdatertAv: Bruker?,
         forsøkFerdigstill: Boolean = true
     ): JournalpostId {
         val response = dokarkivGateway.oppdater(

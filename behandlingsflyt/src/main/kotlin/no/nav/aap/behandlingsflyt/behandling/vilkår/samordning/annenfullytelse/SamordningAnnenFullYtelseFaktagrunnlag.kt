@@ -15,5 +15,4 @@ data class SamordningAnnenFullYtelseFaktagrunnlag(
     val uføreVurderingGrunnlag: SamordningUføreGrunnlag?,
     val avslag1127grunnlag: Avslag11_27Grunnlag?,
     val kravGrunnlag: KravGrunnlag?,
-    val strekkAvslagOverHelger: Boolean
 ) : Faktagrunnlag
