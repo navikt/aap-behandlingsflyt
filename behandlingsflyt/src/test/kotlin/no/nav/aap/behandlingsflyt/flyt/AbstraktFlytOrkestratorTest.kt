@@ -179,9 +179,6 @@ open class AbstraktFlytOrkestratorTest(
         @JvmStatic
         fun setup() {
             dataSource = TestDataSource()
-            dataSource.connection.use {
-                it.prepareStatement("SET TIMEZONE TO 'EUROPE/OSLO'").execute()
-            }
         }
 
         @AfterAll
