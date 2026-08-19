@@ -54,13 +54,12 @@ class MedlemskapLovvalgVurderingService {
             prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
 
             if (!oppfyltMinstEttKrav) {
-                prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1("ingen_i_norge_kriterier_oppfylt").increment()
+                prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1("del1_ikke_oppfylt").increment()
                 andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
                     prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
                         .increment()
                 }
             } else {
-                prometheus.lovvalgÅrsakTilManuellVurderingOppfyltDel1("ingen_i_norge_kriterier_oppfylt").increment()
                 andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
                     prometheus.lovvalgÅrsakTilManuellVurderingOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
                         .increment()
