@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.text.NumberFormat
 import java.time.Instant
@@ -238,11 +239,11 @@ data class Dato(val dato: LocalDate) : LøpendeTekst {
 }
 
 data class Periode(val periode: DomenePeriode, val kompakt: Boolean = false) : LøpendeTekst {
-    override fun render(kontekst: RenderKontekst) =
-        if (kompakt)
-            "${periode.fom.format(Dato.kompaktFormatter)} – ${periode.tom.format(Dato.kompaktFormatter)}"
-        else
-            "${periode.fom.format(Dato.formatter)} – ${periode.tom.format(Dato.formatter)}"
+    override fun render(kontekst: RenderKontekst): String {
+        val formatter = if (kompakt) Dato.kompaktFormatter else Dato.formatter
+        val tom = if (periode.tom == Tid.MAKS) "∞" else periode.tom.format(formatter)
+        return "${periode.fom.format(formatter)} – $tom"
+    }
 }
 
 data class Tidspunkt(val tidspunkt: LocalDateTime) : LøpendeTekst {
