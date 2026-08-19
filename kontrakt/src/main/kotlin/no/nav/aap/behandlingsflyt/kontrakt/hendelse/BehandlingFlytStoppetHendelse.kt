@@ -28,7 +28,7 @@ public data class BehandlingFlytStoppetHendelse(
     val aktivtSteg: StegType? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val erPåVent: Boolean,
-    val harUføreVedtak: UførevedtakV0?,
+    val uføreVedtak: UførevedtakV0Dto?,
     val relevanteIdenterPåBehandling: List<String>?,
     val mottattDokumenter: List<MottattDokumentDto>,
     val reserverTil: String? = null,

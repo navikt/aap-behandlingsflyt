@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakV0Dto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
@@ -63,7 +64,7 @@ class BehandlingHendelseServiceImpl(
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
         val vurderingsbehov = behandling.vurderingsbehov()
         val mottattDokumenter = hentMottattDokumenter(vurderingsbehov, behandling)
-        val harUføreVedtak = hentUføreVedtak(behandling);
+        val uføreVedtak = hentUføreVedtak(behandling);
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -78,7 +79,7 @@ class BehandlingHendelseServiceImpl(
             avklaringsbehov = sortererteAvklaringsbehov(behandling, avklaringsbehovene.alle()),
             relevanteIdenterPåBehandling = pipService.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
-            harUføreVedtak = harUføreVedtak,
+            uføreVedtak = uføreVedtak,
             mottattDokumenter = mottattDokumenter,
             reserverTil = hentReservertTil(behandling.id)?.ident,
             opprettetTidspunkt = behandling.opprettetTidspunkt,
@@ -181,10 +182,16 @@ class BehandlingHendelseServiceImpl(
             ?.let(::Bruker)
     }
 
-    private fun hentUføreVedtak(behandling: Behandling): UførevedtakV0? {
+    private fun hentUføreVedtak(behandling: Behandling): UførevedtakV0Dto? {
         val uføreDokument = dokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.UFØRE_VEDTAK_HENDELSE).toList().maxByOrNull { it.opprettetTid };
-        return uføreDokument?.strukturerteData<UførevedtakV0>()?.data;
+        return uføreDokument?.strukturerteData<UførevedtakV0>()?.data?.tilUføreVedtakV0Dto();
     }
+
+    private fun UførevedtakV0.tilUføreVedtakV0Dto(): UførevedtakV0Dto =
+        UførevedtakV0Dto(
+            resultat = this.resultat,
+            virkningsdato = this.virkningsdato
+        )
 
     private fun hentMottattDokumenter(
         vurderingsbehov: List<VurderingsbehovMedPeriode>,
