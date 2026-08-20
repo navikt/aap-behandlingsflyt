@@ -237,9 +237,8 @@ class VedtakDokumentRenderingTest {
             )
     }
 
-    @Test
-    fun `viser sykdomsvurderingen`() {
-        val vurdering = Sykdomsvurdering(
+    private fun sykdomsvurdering(vurdertIBehandling: BehandlingId) =
+        Sykdomsvurdering(
             begrunnelse = "Klar sykdom",
             vurderingenGjelderFra = LocalDate.of(2024, 1, 1),
             vurderingenGjelderTil = null,
@@ -251,15 +250,19 @@ class VedtakDokumentRenderingTest {
             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             diagnose = null,
             vurdertAv = Bruker("Z999999"),
-            vurdertIBehandling = behandlingId,
+            vurdertIBehandling = vurdertIBehandling,
             opprettet = Instant.now(),
         )
+
+    @Test
+    fun `viser sykdomsvurderingen`() {
         val dom = grunnlag(
-            sykdomGrunnlag = SykdomGrunnlag(null, listOf(vurdering))
+            sykdomGrunnlag = SykdomGrunnlag(null, listOf(sykdomsvurdering(behandlingId)))
         ).render()
 
         assertThat(dom.filterIsInstance<DOM.Header>().map { it.overskrift })
             .contains("Vurderinger av § 11-5")
+            .anyMatch { it.endsWith("(nåværende behandling)") }
         assertThat(dom.filterIsInstance<DOM.List>().flatMap { it.liste })
             .contains(listOf("Begrunnelse", "Klar sykdom"))
         assertThat(dom.filterIsInstance<DOM.List>().flatMap { it.liste }.flatten())
@@ -313,7 +316,7 @@ class VedtakDokumentRenderingTest {
             .filterIsInstance<DOM.Header>()
             .map { it.overskrift }
 
-        val kontekst = RenderKontekst(listOf(behandlingMedVedtak))
+        val kontekst = RenderKontekst(behandlingId, listOf(behandlingMedVedtak))
         val forventedeVilkårsoverskrifter = Vilkårtype.entries.map { type ->
             "${PrettyEnum(type).render(kontekst)} (${type.hjemmel})"
         }
@@ -352,7 +355,7 @@ class VedtakDokumentRenderingTest {
             .flatMap { it.liste }
             .associate { it[0] to it[1] }
 
-        val kontekst = RenderKontekst(listOf(behandlingMedVedtak))
+        val kontekst = RenderKontekst(behandlingId, listOf(behandlingMedVedtak))
         assertThat(vurderinger[Periode(oppfyltPeriode).render(kontekst)])
             .contains("Utfall: OPPFYLT")
             .contains("Vurderingsmåte: Manuell")

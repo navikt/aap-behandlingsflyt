@@ -32,7 +32,10 @@ internal object VedtakDokumentRenderer {
     fun render(grunnlag: VedtakDokumentGrunnlag): PdfDokument = grunnlag.tilDokument()
 
     private fun VedtakDokumentGrunnlag.tilDokument(): PdfDokument {
-        val kontekst = RenderKontekst(behandlinger)
+        val kontekst = RenderKontekst(
+            gjeldendeBehandlingId = behandling.id,
+            vedtak = behandlinger,
+        )
         return PdfDokument(
             tittel = vilkårsvurderingOppsummeringTittel(saksnummer),
             body = tilSeksjon().render(kontekst),
@@ -952,7 +955,12 @@ internal object VedtakDokumentRenderer {
                         add(Tidspunkt(mottattDokument.opprettetTid))
                         if (inkludererBehandling) {
                             add(
-                                mottattDokument.behandlingId?.let(::ReferanseBehandling)
+                                mottattDokument.behandlingId?.let {
+                                    ReferanseBehandling(
+                                        behandlingId = it,
+                                        inkluderBehandlingsopprinnelse = false,
+                                    )
+                                }
                                     ?: Tekst("—")
                             )
                         }

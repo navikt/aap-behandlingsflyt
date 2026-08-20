@@ -18,6 +18,7 @@ import no.nav.aap.komponenter.verdityper.Prosent as DomeneProsent
 
 
 data class RenderKontekst(
+    val gjeldendeBehandlingId: BehandlingId,
     val vedtak: List<BehandlingMedVedtak>,
     val overskriftsnivå: Int = 1,
 ) {
@@ -185,12 +186,22 @@ data class ReferanseJournalpost(val journalpostId: JournalpostId) : LøpendeTeks
     override fun render(kontekst: RenderKontekst) = "Journalpost ${journalpostId.identifikator}"
 }
 
-data class ReferanseBehandling(val behandlingId: BehandlingId) : LøpendeTekst {
+data class ReferanseBehandling(
+    val behandlingId: BehandlingId,
+    val inkluderBehandlingsopprinnelse: Boolean = true,
+) : LøpendeTekst {
     override fun render(kontekst: RenderKontekst): String {
         val vedtakstidspunkt = kontekst.vedtak.singleOrNull { it.id == behandlingId }?.vedtakstidspunkt
+        val behandlingsopprinnelse = if (!inkluderBehandlingsopprinnelse) {
+            ""
+        } else if (behandlingId == kontekst.gjeldendeBehandlingId) {
+            " (nåværende behandling)"
+        } else {
+            " (tidligere behandling)"
+        }
 
         if (vedtakstidspunkt == null) {
-            return behandlingId.toString()
+            return behandlingId.toString() + behandlingsopprinnelse
         }
 
         /* Finn nødvendig oppløsning for å skille vedtak på samme dato. */
@@ -208,8 +219,7 @@ data class ReferanseBehandling(val behandlingId: BehandlingId) : LøpendeTekst {
                 append(" ")
                 append(vedtakstidspunkt.toLocalTime().toString())
             }
-
-            if (behandlingId != kontek) {}
+            append(behandlingsopprinnelse)
         }
     }
 }
