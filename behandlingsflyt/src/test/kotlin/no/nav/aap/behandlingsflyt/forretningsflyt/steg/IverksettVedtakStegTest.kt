@@ -117,7 +117,6 @@ class IverksettVedtakStegTest {
             flytJobbRepository = flytJobbRepository,
             mellomlagretVurderingRepository = mellomlagretVurderingRepository,
             resultatUtleder = resultatUtleder,
-            stansOpphørService = stansOpphørService,
             unleashGateway = unleashGateway,
         ).utfør(kontekst)
 
