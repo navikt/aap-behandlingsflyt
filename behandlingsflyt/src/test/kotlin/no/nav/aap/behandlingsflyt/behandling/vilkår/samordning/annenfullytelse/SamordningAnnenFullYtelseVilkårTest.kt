@@ -336,7 +336,7 @@ class SamordningAnnenFullYtelseVilkårTest {
             harAnnenFullYtelse = skalAvslås,
             brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
             brukersYtelseTom = if (skalAvslås) LocalDate.of(2026, 6, 30) else null,
-            sykepengegrunnlag = if (skalAvslås) Beløp(BigDecimal("500000")) else null,
+            harSykepengegrunnlagOver2G = if (skalAvslås) true else null,
             harArbeidsgiverSykepengerUtbetaling = if (skalAvslås) false else null,
             skalAvslås1127 = skalAvslås,
             vurdertIBehandling = behandlingId,
