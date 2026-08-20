@@ -9,10 +9,8 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.text.NumberFormat
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import no.nav.aap.komponenter.type.Periode as DomenePeriode
@@ -210,6 +208,8 @@ data class ReferanseBehandling(val behandlingId: BehandlingId) : LøpendeTekst {
                 append(" ")
                 append(vedtakstidspunkt.toLocalTime().toString())
             }
+
+            if (behandlingId != kontek) {}
         }
     }
 }
@@ -247,10 +247,6 @@ data class Periode(val periode: DomenePeriode, val kompakt: Boolean = false) : L
 }
 
 data class Tidspunkt(val tidspunkt: LocalDateTime) : LøpendeTekst {
-    constructor(instant: Instant) : this(
-        instant.atZone(ZoneId.of("europe/oslo")).toLocalDateTime()
-    )
-
     override fun render(kontekst: RenderKontekst) =
         tidspunkt.toLocalDate().format(Dato.formatter) + " " + tidspunkt.toLocalTime().toString()
 }

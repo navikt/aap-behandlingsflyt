@@ -86,14 +86,7 @@ internal object VedtakDokumentRenderer {
             Dict(
                 when (beregningsgrunnlag) {
                     is Grunnlag11_19 -> grunnlag11_19Rader(beregningsgrunnlag)
-                    is GrunnlagUføre -> grunnlag11_19Rader(beregningsgrunnlag.underliggende()) + listOf(
-                        Tekst("Grunnlag §11-19 (standard)") to G(beregningsgrunnlag.underliggende().grunnlaget()),
-                        Tekst("Grunnlag §11-19 (ytterligere nedsatt)") to G(
-                            beregningsgrunnlag.underliggendeYtterligereNedsatt().grunnlaget()
-                        ),
-                        Tekst("Type beregning") to PrettyEnum(beregningsgrunnlag.type()),
-                        Tekst("Endelig grunnlag (etter §11-28)") to G(beregningsgrunnlag.grunnlaget()),
-                    ) + beregningsgrunnlag.uføreInntekterFraForegåendeÅr().map { uføreInntektRad(it) }
+                    is GrunnlagUføre -> grunnlagUføreRader(beregningsgrunnlag)
 
                     is GrunnlagYrkesskade -> grunnlag11_19RaderForYrkesskade(beregningsgrunnlag) + listOf(
                         Tekst("Yrkesskadeprosent") to Prosent(beregningsgrunnlag.andelYrkesskade()),
@@ -102,6 +95,9 @@ internal object VedtakDokumentRenderer {
                         Tekst("Inntekt på yrkesskadetidspunktet (kr)") to Kroner(beregningsgrunnlag.antattÅrligInntektYrkesskadeTidspunktet()),
                         Tekst("Yrkesskadeinntekt (G)") to G(beregningsgrunnlag.yrkesskadeinntektIG()),
                         Tekst("Grunnbeløp på yrkesskadetidspunktet") to Kroner(beregningsgrunnlag.grunnbeløp()),
+                        Tekst("Grunnlag med yrkesskadefordel (§§ 11-19 / 11-22)") to G(
+                            beregningsgrunnlag.grunnlagEtterYrkesskadeFordel()
+                        ),
                         Tekst("Andel som skyldes yrkesskade (G)") to G(beregningsgrunnlag.andelSomSkyldesYrkesskade()),
                         Tekst("Andel som ikke skyldes yrkesskade (G)") to G(beregningsgrunnlag.andelSomIkkeSkyldesYrkesskade()),
                         Tekst("Endelig grunnlag (G)") to G(beregningsgrunnlag.grunnlaget()),
@@ -127,17 +123,48 @@ internal object VedtakDokumentRenderer {
             Tekst("Endelig grunnlag") to G(g.grunnlaget()),
         )
 
+    private fun grunnlagUføreRader(
+        grunnlag: GrunnlagUføre
+    ): List<Pair<LøpendeTekst, LøpendeTekst>> {
+        return grunnlag11_19Rader(grunnlag.underliggende()) +
+                uføreBeregningsalternativRader(grunnlag) +
+                listOf(
+                    Tekst("Grunnlag §11-19 (standard)") to G(grunnlag.underliggende().grunnlaget()),
+                    Tekst("Grunnlag §11-19 (ytterligere nedsatt)") to G(
+                        grunnlag.underliggendeYtterligereNedsatt().grunnlaget()
+                    ),
+                    Tekst("Type beregning") to PrettyEnum(grunnlag.type()),
+                    Tekst("Endelig grunnlag (etter §11-28)") to G(grunnlag.grunnlaget()),
+                ) +
+                grunnlag.uføreInntekterFraForegåendeÅr().map { uføreInntektRad(it) }
+    }
+
     private fun grunnlag11_19RaderForYrkesskade(
         g: GrunnlagYrkesskade
     ): List<Pair<LøpendeTekst, LøpendeTekst>> =
         when (val under = g.underliggende()) {
             is Grunnlag11_19 -> grunnlag11_19Rader(under)
-            is GrunnlagUføre -> grunnlag11_19Rader(under.underliggende()) + listOf(
-                Tekst("Grunnlag §11-28 (uføre)") to G(under.grunnlaget()),
-            )
+            is GrunnlagUføre -> grunnlagUføreRader(under)
 
             is GrunnlagYrkesskade -> emptyList() // Ikke rekursjon i praksis
         }
+
+    private fun uføreBeregningsalternativRader(
+        grunnlag: GrunnlagUføre
+    ): List<Pair<LøpendeTekst, LøpendeTekst>> {
+        val uføreGrunnlag = grunnlag.underliggendeYtterligereNedsatt()
+        val inntekter = uføreGrunnlag.inntekter()
+        if (inntekter.isEmpty()) return emptyList()
+
+        val førsteÅr = inntekter.minOf { it.år }
+        val inntektSisteÅr = inntekter.maxBy { it.år }
+        return listOf(
+            Tekst("Gjennomsnitt inntekt siste 3 år etter §§ 11-19 / 11-28 ($førsteÅr - ${inntektSisteÅr.år})") to
+                    G(uføreGrunnlag.gjennomsnittligInntektIG()),
+            Tekst("Inntekt siste år etter §§ 11-19 / 11-28 (${inntektSisteÅr.år})") to
+                    G(inntektSisteÅr.inntekt6GBegrenset),
+        )
+    }
 
     private fun uføreInntektRad(i: UføreInntekt): Pair<LøpendeTekst, LøpendeTekst> =
         Tekst("Uføreinntekt ${i.år}") to Span(

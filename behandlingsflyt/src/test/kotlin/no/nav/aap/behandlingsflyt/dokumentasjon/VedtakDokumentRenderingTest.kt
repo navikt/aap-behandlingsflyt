@@ -2,17 +2,20 @@ package no.nav.aap.behandlingsflyt.dokumentasjon
 
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.beregning.beregnGrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.DOM
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -81,6 +84,46 @@ class VedtakDokumentRenderingTest {
         ),
     )
 
+    private fun grunnlagUføre() = GrunnlagUføre(
+        grunnlaget = GUnit(BigDecimal("4.2")),
+        type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
+        grunnlag = grunnlag11_19(),
+        grunnlagYtterligereNedsatt = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal("4.2")),
+            erGjennomsnitt = true,
+            gjennomsnittligInntektIG = GUnit(BigDecimal("4.2")),
+            inntekter = listOf(
+                GrunnlagInntekt(
+                    år = Year.of(2020),
+                    inntektIKroner = Beløp(420000),
+                    grunnbeløp = Beløp(101351),
+                    inntektIG = GUnit(BigDecimal("4.14")),
+                    inntekt6GBegrenset = GUnit(BigDecimal("4.14")),
+                    er6GBegrenset = false,
+                ),
+                GrunnlagInntekt(
+                    år = Year.of(2021),
+                    inntektIKroner = Beløp(450000),
+                    grunnbeløp = Beløp(106399),
+                    inntektIG = GUnit(BigDecimal("4.23")),
+                    inntekt6GBegrenset = GUnit(BigDecimal("4.23")),
+                    er6GBegrenset = false,
+                ),
+                GrunnlagInntekt(
+                    år = Year.of(2022),
+                    inntektIKroner = Beløp(480000),
+                    grunnbeløp = Beløp(111477),
+                    inntektIG = GUnit(BigDecimal("4.31")),
+                    inntekt6GBegrenset = GUnit(BigDecimal("4.31")),
+                    er6GBegrenset = false,
+                ),
+            ),
+        ),
+        uføreInntekterFraForegåendeÅr = emptyList(),
+        uføreYtterligereNedsattArbeidsevneÅr = Year.of(2023),
+        uføregrader = emptySet(),
+    )
+
     private fun grunnlag(
         beregningsgrunnlag: Beregningsgrunnlag? = grunnlag11_19(),
         sykdomGrunnlag: SykdomGrunnlag? = null,
@@ -142,6 +185,56 @@ class VedtakDokumentRenderingTest {
         assertThat(lister.map { it.first() })
             .anyMatch { "2023" in it }
             .anyMatch { "Endelig grunnlag" in it }
+    }
+
+    @Test
+    fun `viser beregningsalternativer for uføregrunnlag`() {
+        val rader = grunnlag(beregningsgrunnlag = grunnlagUføre())
+            .render()
+            .filterIsInstance<DOM.List>()
+            .flatMap { it.liste }
+
+        assertThat(rader.map { it.first() })
+            .contains(
+                "Gjennomsnitt inntekt siste 3 år etter §§ 11-19 / 11-28 (2020 - 2022)",
+                "Inntekt siste år etter §§ 11-19 / 11-28 (2022)",
+            )
+    }
+
+    @Test
+    fun `viser grunnlag med yrkesskadefordel`() {
+        val yrkesskadeGrunnlag = beregnGrunnlagYrkesskade(
+            grunnlag11_19 = grunnlag11_19(),
+            antattÅrligInntekt = InntektPerÅr(Year.of(2023), Beløp(600000)),
+            andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(70),
+        )
+        val rader = grunnlag(beregningsgrunnlag = yrkesskadeGrunnlag)
+            .render()
+            .filterIsInstance<DOM.List>()
+            .flatMap { it.liste }
+
+        assertThat(rader.map { it.first() })
+            .contains("Grunnlag med yrkesskadefordel (§§ 11-19 / 11-22)")
+    }
+
+    @Test
+    fun `viser uføreberegning og yrkesskadefordel sammen`() {
+        val yrkesskadeUføreGrunnlag = beregnGrunnlagYrkesskade(
+            grunnlag11_19 = grunnlagUføre(),
+            antattÅrligInntekt = InntektPerÅr(Year.of(2023), Beløp(600000)),
+            andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(70),
+        )
+        val rader = grunnlag(beregningsgrunnlag = yrkesskadeUføreGrunnlag)
+            .render()
+            .filterIsInstance<DOM.List>()
+            .flatMap { it.liste }
+
+        assertThat(rader.map { it.first() })
+            .contains(
+                "Gjennomsnitt inntekt siste 3 år etter §§ 11-19 / 11-28 (2020 - 2022)",
+                "Inntekt siste år etter §§ 11-19 / 11-28 (2022)",
+                "Grunnlag med yrkesskadefordel (§§ 11-19 / 11-22)",
+            )
     }
 
     @Test
