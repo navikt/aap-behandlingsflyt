@@ -135,7 +135,6 @@ internal object VedtakDokumentRenderer {
         return grunnlag11_19Rader(grunnlag.underliggende()) +
                 uføreBeregningsalternativRader(grunnlag) +
                 listOf(
-                    Tekst("Grunnlag §11-19 (standard)") to G(grunnlag.underliggende().grunnlaget()),
                     Tekst("Grunnlag §11-19 (ytterligere nedsatt)") to G(
                         grunnlag.underliggendeYtterligereNedsatt().grunnlaget()
                     ),
