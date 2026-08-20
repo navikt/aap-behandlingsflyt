@@ -123,6 +123,7 @@ class TrekkSøknadLøser(
                     AarsakTilTrekkSoknadDto.BRUKER_SOKTE_FEIL_YTELSE -> AarsakTilTrekkSoknad.BRUKER_SOKTE_FEIL_YTELSE
                     AarsakTilTrekkSoknadDto.BRUKER_ONSKER_IKKE_SOKE_LENGER -> AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE_SOKE_LENGER
                     AarsakTilTrekkSoknadDto.ANNET -> AarsakTilTrekkSoknad.ANNET
+                    null -> null
                 }
             )
         )

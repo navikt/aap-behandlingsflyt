@@ -17,7 +17,7 @@ class TrekkSøknadLøsning(
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5028`,
     @param:JsonProperty("begrunnelse", required = true) val begrunnelse: String,
     @param:JsonProperty("skalTrekkes", required = false) val skalTrekkes: Boolean = true,
-    @param:JsonProperty("aarsak", required = false) val aarsak: AarsakTilTrekkSoknadDto,
+    @param:JsonProperty("aarsak", required = false) val aarsak: AarsakTilTrekkSoknadDto? = null,
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return TrekkSøknadLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)

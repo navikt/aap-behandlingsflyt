@@ -21,12 +21,13 @@ enum class AarsakTilTrekkSoknad {
     ANNET,
 }
 
-fun AarsakTilTrekkSoknad.tilDto(): AarsakTilTrekkSoknadDto =
+fun AarsakTilTrekkSoknad?.tilDto(): AarsakTilTrekkSoknadDto? =
     when (this) {
         AarsakTilTrekkSoknad.BRUKER_SOKTE_FOR_TIDLIG -> AarsakTilTrekkSoknadDto.BRUKER_SOKTE_FOR_TIDLIG
         AarsakTilTrekkSoknad.BRUKER_SOKTE_FEIL_YTELSE -> AarsakTilTrekkSoknadDto.BRUKER_SOKTE_FEIL_YTELSE
         AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE_SOKE_LENGER -> AarsakTilTrekkSoknadDto.BRUKER_ONSKER_IKKE_SOKE_LENGER
         AarsakTilTrekkSoknad.ANNET -> AarsakTilTrekkSoknadDto.ANNET
+        null -> null
     }
 
 

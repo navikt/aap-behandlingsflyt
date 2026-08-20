@@ -70,7 +70,7 @@ class TrukketSøknadRepositoryImpl(
                 setBoolean(4, vurdering.skalTrekkes)
                 setString(5, vurdering.vurdertAv.ident)
                 setInstant(6, vurdering.vurdert)
-                setString(7, vurdering.aarsak.toString())
+                setString(7, vurdering.aarsak?.name)
             }
         }
     }
