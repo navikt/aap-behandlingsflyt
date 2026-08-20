@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
@@ -107,7 +108,8 @@ class BrevUtlederService(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val avslag11_27Repository: Avslag11_27Repository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -136,7 +138,8 @@ class BrevUtlederService(
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
+        avslag11_27Repository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -435,6 +438,11 @@ class BrevUtlederService(
         val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id)
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
 
+        val avslag1127 = avslag11_27Repository.hentHvisEksisterer(behandling.id)
+            ?.gjeldendeVurderinger()
+            ?.firstOrNull { it.vurdertIBehandling == behandling.id && it.skalAvslås1127 == true }
+            ?: error("Mangler avslag 11-27-vurdering for behandling ${behandling.id}")
+
         if (Miljø.erDev() && avslagsårsak != null) {
             /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
                 return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
@@ -447,7 +455,7 @@ class BrevUtlederService(
             }
             if (avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
             {
-                return AvslagBrev.Avslag1127(sykdomsvurdering = sykdomsvurdering)
+                return AvslagBrev.Avslag1127(sykdomsvurdering = sykdomsvurdering, avslag1127.brukersYtelse)
             }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)

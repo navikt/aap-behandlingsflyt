@@ -38,7 +38,6 @@ data class Arbeidssøker(
 data class AvslagAnnenYtelse(
     val ytelsetype: String,
     val sisteDagMedYtelse: LocalDate,
-    val sykepengeGrunnlag: Beløp?,
     val sykepengeGrunnlagOver2G: Boolean,
 ) : BrevBehov(TypeBrev.VEDTAK_AVSLAG_11_27)
 
@@ -61,7 +60,7 @@ sealed class AvslagBrev(typeBrev: TypeBrev) : BrevBehov(typeBrev) {
     abstract val sykdomsvurdering: String?
     data class AvslagUnder17År9Måneder(override val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER)
     data class AvslagSykdomsvilkåret(override val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_5)
-    data class Avslag1127(override val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak? = null) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_27)
+    data class Avslag1127(override val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak? = null, val sykepengeGrunnlagOver2G: Boolean) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_27)
     data class Avslag(override val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak? = null) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG)
 }
 
