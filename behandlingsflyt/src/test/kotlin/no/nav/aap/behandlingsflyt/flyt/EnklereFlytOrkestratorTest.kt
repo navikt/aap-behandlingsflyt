@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STUDENT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
@@ -20,7 +21,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FATTE_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.IVERKSETT_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KRAV
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STØNADSPERIODE
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.OPPRETT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
@@ -127,7 +127,7 @@ class EnklereFlytOrkestratorTest {
         assertThat(
             behandlingRepository.hentStegHistorikk(behandling.id)
                 .filter {
-                    it.steg() in listOf(START_BEHANDLING, FATTE_VEDTAK, IVERKSETT_VEDTAK, OPPRETT_REVURDERING)
+                    it.steg() in listOf(START_BEHANDLING, FATTE_VEDTAK, IVERKSETT_VEDTAK)
                 }
                 .filter { it.status() in listOf(StegStatus.START, StegStatus.AVSLUTTER) }
         ).containsExactlyElementsOf(
@@ -142,17 +142,17 @@ class EnklereFlytOrkestratorTest {
 
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
-        assertThat(behandling.aktivtSteg()).isEqualTo(OPPRETT_REVURDERING)
+        assertThat(behandling.aktivtSteg()).isEqualTo(StegType.BREV)
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
         behandlingRepository.hent(behandling.id).also {
-            assertThat(it.aktivtSteg()).isEqualTo(OPPRETT_REVURDERING)
+            assertThat(it.aktivtSteg()).isEqualTo(StegType.BREV)
             assertThat(it.status()).isEqualTo(Status.AVSLUTTET)
         }
 
         assertThat(
             behandlingRepository.hentStegHistorikk(behandling.id)
                 .filter {
-                    it.steg() in listOf(START_BEHANDLING, FATTE_VEDTAK, IVERKSETT_VEDTAK, OPPRETT_REVURDERING)
+                    it.steg() in listOf(START_BEHANDLING, FATTE_VEDTAK, IVERKSETT_VEDTAK)
                 }
                 .filter { it.status() in listOf(StegStatus.START, StegStatus.AVSLUTTER) }
         ).containsExactlyElementsOf(
@@ -163,8 +163,6 @@ class EnklereFlytOrkestratorTest {
                 StegTilstand(stegType = FATTE_VEDTAK, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(stegType = IVERKSETT_VEDTAK, stegStatus = StegStatus.START),
                 StegTilstand(stegType = IVERKSETT_VEDTAK, stegStatus = StegStatus.AVSLUTTER),
-                StegTilstand(stegType = OPPRETT_REVURDERING, stegStatus = StegStatus.START),
-                StegTilstand(stegType = OPPRETT_REVURDERING, stegStatus = StegStatus.AVSLUTTER),
             )
         )
     }
