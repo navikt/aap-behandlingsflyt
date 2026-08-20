@@ -2,26 +2,22 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
 
 class AvklarSamordningGraderingLøser(
     private val samordningYtelseVurderingRepository: SamordningVurderingRepository,
-    private val samordningService: SamordningService,
 ) : AvklaringsbehovsLøser<AvklarSamordningGraderingLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         samordningYtelseVurderingRepository = repositoryProvider.provide(),
-        samordningService = SamordningService(repositoryProvider)
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSamordningGraderingLøsning): LøsningsResultat {
@@ -46,15 +42,8 @@ class AvklarSamordningGraderingLøser(
             vurdertTidspunkt = LocalDateTime.now()
         )
 
-        val perioderSomIkkeHarBlittVurdert =
-            samordningService.samordningGrunnlag(kontekst.behandlingId())
-                .copy(vurderingGrunnlag = samordningsvurderinger)
-                .perioderSomIkkeHarBlittVurdert()
-
-        if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
-            throw UgyldigForespørselException(message = "Har ikke vurdert alle perioder for samordning med andre folketrygdytelser")
-        }
-
+        // Vi krever ikke lenger at saksbehandler har vurdert alle perioder som er funnet i register.
+        // Saksbehandler kan bekrefte kortet uten å legge inn noen perioder i det hele tatt, jf. AAP-2277.
         samordningYtelseVurderingRepository.lagreVurderinger(
             kontekst.kontekst.behandlingId, samordningsvurderinger
         )
