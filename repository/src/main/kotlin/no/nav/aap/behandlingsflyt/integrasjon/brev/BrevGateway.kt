@@ -450,7 +450,6 @@ class BrevGateway : BrevbestillingGateway {
                     add(
                         Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
                     )
-                    add(Faktagrunnlag.SykepengeGrunnlag(brevBehov.sykepengeGrunnlag))
                     add(
                         Faktagrunnlag.SykepengeGrunnlagOver2G(brevBehov.sykepengeGrunnlagOver2G)
                     )
