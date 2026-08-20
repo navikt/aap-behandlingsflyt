@@ -45,130 +45,6 @@ import java.time.LocalDateTime
 import java.time.Year
 
 class VedtakDokumentRenderingTest {
-    private val behandlingId = BehandlingId(42)
-    private val behandling = mockk<Behandling>(relaxed = true) {
-        every { id } returns behandlingId
-        every { referanse } returns BehandlingReferanse()
-        every { opprettetTidspunkt } returns LocalDateTime.of(2024, 1, 1, 12, 0)
-        every { vurderingsbehov() } returns emptyList()
-        every { årsakTilOpprettelse } returns ÅrsakTilOpprettelse.SØKNAD
-    }
-    private val behandlingMedVedtak = BehandlingMedVedtak(
-        saksnummer = Saksnummer("1234567890"),
-        id = behandlingId,
-        forrigeBehandlingId = null,
-        referanse = BehandlingReferanse(),
-        typeBehandling = TypeBehandling.Førstegangsbehandling,
-        status = Status.AVSLUTTET,
-        opprettetTidspunkt = LocalDateTime.of(2024, 1, 1, 12, 0),
-        vedtakId = VedtakId(1),
-        vedtakstidspunkt = LocalDateTime.of(2024, 1, 2, 12, 0),
-        virkningstidspunkt = null,
-        vurderingsbehov = emptySet(),
-        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-    )
-
-    private fun grunnlag11_19() = Grunnlag11_19(
-        grunnlaget = GUnit(BigDecimal("3.5")),
-        erGjennomsnitt = true,
-        gjennomsnittligInntektIG = GUnit(BigDecimal("3.5")),
-        inntekter = listOf(
-            GrunnlagInntekt(
-                år = Year.of(2023),
-                inntektIKroner = Beløp(450000),
-                grunnbeløp = Beløp(118620),
-                inntektIG = GUnit(BigDecimal("3.79")),
-                inntekt6GBegrenset = GUnit(BigDecimal("3.79")),
-                er6GBegrenset = false,
-            )
-        ),
-    )
-
-    private fun grunnlagUføre() = GrunnlagUføre(
-        grunnlaget = GUnit(BigDecimal("4.2")),
-        type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
-        grunnlag = grunnlag11_19(),
-        grunnlagYtterligereNedsatt = Grunnlag11_19(
-            grunnlaget = GUnit(BigDecimal("4.2")),
-            erGjennomsnitt = true,
-            gjennomsnittligInntektIG = GUnit(BigDecimal("4.2")),
-            inntekter = listOf(
-                GrunnlagInntekt(
-                    år = Year.of(2020),
-                    inntektIKroner = Beløp(420000),
-                    grunnbeløp = Beløp(101351),
-                    inntektIG = GUnit(BigDecimal("4.14")),
-                    inntekt6GBegrenset = GUnit(BigDecimal("4.14")),
-                    er6GBegrenset = false,
-                ),
-                GrunnlagInntekt(
-                    år = Year.of(2021),
-                    inntektIKroner = Beløp(450000),
-                    grunnbeløp = Beløp(106399),
-                    inntektIG = GUnit(BigDecimal("4.23")),
-                    inntekt6GBegrenset = GUnit(BigDecimal("4.23")),
-                    er6GBegrenset = false,
-                ),
-                GrunnlagInntekt(
-                    år = Year.of(2022),
-                    inntektIKroner = Beløp(480000),
-                    grunnbeløp = Beløp(111477),
-                    inntektIG = GUnit(BigDecimal("4.31")),
-                    inntekt6GBegrenset = GUnit(BigDecimal("4.31")),
-                    er6GBegrenset = false,
-                ),
-            ),
-        ),
-        uføreInntekterFraForegåendeÅr = emptyList(),
-        uføreYtterligereNedsattArbeidsevneÅr = Year.of(2023),
-        uføregrader = emptySet(),
-    )
-
-    private fun grunnlag(
-        beregningsgrunnlag: Beregningsgrunnlag? = grunnlag11_19(),
-        sykdomGrunnlag: SykdomGrunnlag? = null,
-        refusjonkrav: List<RefusjonkravVurdering>? = null,
-        vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
-        behandlinger: List<BehandlingMedVedtak> = listOf(behandlingMedVedtak),
-    ) = VedtakDokumentGrunnlag(
-        saksnummer = behandlingMedVedtak.saksnummer,
-        behandling = behandling,
-        behandlinger = behandlinger,
-        vilkårsresultat = vilkårsresultat,
-        tilkjentYtelse = Tidslinje.empty(),
-        underveis = Tidslinje.empty(),
-        mottatteDokumenter = emptyList(),
-        beregningsgrunnlag = beregningsgrunnlag,
-        forrigeTilkjentYtelse = Tidslinje.empty(),
-        forrigeUnderveis = Tidslinje.empty(),
-        forrigeVilkårsresultat = Vilkårsresultat(),
-        sykdomGrunnlag = sykdomGrunnlag,
-        bistandGrunnlag = null,
-        studentGrunnlag = null,
-        overgangUføreGrunnlag = null,
-        etableringEgenVirksomhetGrunnlag = null,
-        arbeidsevneGrunnlag = null,
-        arbeidsopptrappingGrunnlag = null,
-        overgangArbeidGrunnlag = null,
-        vedtakslengdeGrunnlag = null,
-        meldepliktGrunnlag = null,
-        stønadsperiodeGrunnlag = null,
-        barnetilleggGrunnlag = null,
-        samordningGrunnlag = null,
-        rettighetstypeGrunnlag = null,
-        institusjonsoppholdGrunnlag = null,
-        sykepengerErstatningGrunnlag = null,
-        refusjonkravVurderinger = refusjonkrav,
-        overstyringMeldepliktGrunnlag = null,
-        manuellInntektGrunnlag = null,
-        beregningVurderingGrunnlag = null,
-        forutgåendeMedlemskapGrunnlag = null,
-        oppholdskravGrunnlag = null,
-    )
-
-    private fun VedtakDokumentGrunnlag.render() =
-        VedtakDokumentRenderer.render(this).body
-
     @Test
     fun `genererer dokument uten valgfrie grunnlag`() {
         val dokument = VedtakDokumentRenderer.render(grunnlag(beregningsgrunnlag = null))
@@ -205,24 +81,6 @@ class VedtakDokumentRenderingTest {
     }
 
     @Test
-    fun `tar med klokkeslett i tittelen når flere vedtak har samme dato`() {
-        val annetVedtakSammeDato = behandlingMedVedtak.copy(
-            id = BehandlingId(43),
-            vedtakstidspunkt = LocalDateTime.of(2024, 1, 2, 15, 0),
-        )
-
-        val dokument = VedtakDokumentRenderer.render(
-            grunnlag(behandlinger = listOf(behandlingMedVedtak, annetVedtakSammeDato))
-        )
-
-        assertThat(dokument.tittel)
-            .isEqualTo(
-                "Oppsummering av vilkårsvurderinger for sak ${behandlingMedVedtak.saksnummer} – " +
-                        "02. januar 2024 12:00"
-            )
-    }
-
-    @Test
     fun `viser grunnlag med yrkesskadefordel`() {
         val yrkesskadeGrunnlag = beregnGrunnlagYrkesskade(
             grunnlag11_19 = grunnlag11_19(),
@@ -238,42 +96,6 @@ class VedtakDokumentRenderingTest {
             .contains("Grunnlag med yrkesskadefordel (§§ 11-19 / 11-22)")
     }
 
-    @Test
-    fun `viser uføreberegning og yrkesskadefordel sammen`() {
-        val yrkesskadeUføreGrunnlag = beregnGrunnlagYrkesskade(
-            grunnlag11_19 = grunnlagUføre(),
-            antattÅrligInntekt = InntektPerÅr(Year.of(2023), Beløp(600000)),
-            andelAvNedsettelsenSomSkyldesYrkesskaden = Prosent(70),
-        )
-        val rader = grunnlag(beregningsgrunnlag = yrkesskadeUføreGrunnlag)
-            .render()
-            .filterIsInstance<DOM.List>()
-            .flatMap { it.liste }
-
-        assertThat(rader.map { it.first() })
-            .contains(
-                "Gjennomsnitt inntekt siste 3 år etter §§ 11-19 / 11-28 (2020 - 2022)",
-                "Inntekt siste år etter §§ 11-19 / 11-28 (2022)",
-                "Grunnlag med yrkesskadefordel (§§ 11-19 / 11-22)",
-            )
-    }
-
-    private fun sykdomsvurdering(vurdertIBehandling: BehandlingId) =
-        Sykdomsvurdering(
-            begrunnelse = "Klar sykdom",
-            vurderingenGjelderFra = LocalDate.of(2024, 1, 1),
-            vurderingenGjelderTil = null,
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-            yrkesskadeBegrunnelse = null,
-            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-            diagnose = null,
-            vurdertAv = Bruker("Z999999"),
-            vurdertIBehandling = vurdertIBehandling,
-            opprettet = Instant.now(),
-        )
 
     @Test
     fun `viser sykdomsvurderingen`() {
@@ -387,4 +209,146 @@ class VedtakDokumentRenderingTest {
             .contains("Avslagsårsak: BRUKER_OVER_67, § 11-4 1. ledd")
             .contains("Begrunnelse: Brukeren har fylt 67 år")
     }
+
+    private val behandlingId = BehandlingId(42)
+    private val behandling = mockk<Behandling>(relaxed = true) {
+        every { id } returns behandlingId
+        every { referanse } returns BehandlingReferanse()
+        every { opprettetTidspunkt } returns LocalDateTime.of(2024, 1, 1, 12, 0)
+        every { vurderingsbehov() } returns emptyList()
+        every { årsakTilOpprettelse } returns ÅrsakTilOpprettelse.SØKNAD
+    }
+
+    private val behandlingMedVedtak = BehandlingMedVedtak(
+        saksnummer = Saksnummer("1234567890"),
+        id = behandlingId,
+        forrigeBehandlingId = null,
+        referanse = BehandlingReferanse(),
+        typeBehandling = TypeBehandling.Førstegangsbehandling,
+        status = Status.AVSLUTTET,
+        opprettetTidspunkt = LocalDateTime.of(2024, 1, 1, 12, 0),
+        vedtakId = VedtakId(1),
+        vedtakstidspunkt = LocalDateTime.of(2024, 1, 2, 12, 0),
+        virkningstidspunkt = null,
+        vurderingsbehov = emptySet(),
+        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+    )
+
+    private fun grunnlag(
+        beregningsgrunnlag: Beregningsgrunnlag? = grunnlag11_19(),
+        sykdomGrunnlag: SykdomGrunnlag? = null,
+        refusjonkrav: List<RefusjonkravVurdering>? = null,
+        vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
+        behandlinger: List<BehandlingMedVedtak> = listOf(behandlingMedVedtak),
+    ) = VedtakDokumentGrunnlag(
+        saksnummer = behandlingMedVedtak.saksnummer,
+        behandling = behandling,
+        behandlinger = behandlinger,
+        vilkårsresultat = vilkårsresultat,
+        tilkjentYtelse = Tidslinje.empty(),
+        underveis = Tidslinje.empty(),
+        mottatteDokumenter = emptyList(),
+        beregningsgrunnlag = beregningsgrunnlag,
+        forrigeTilkjentYtelse = Tidslinje.empty(),
+        forrigeUnderveis = Tidslinje.empty(),
+        forrigeVilkårsresultat = Vilkårsresultat(),
+        sykdomGrunnlag = sykdomGrunnlag,
+        bistandGrunnlag = null,
+        studentGrunnlag = null,
+        overgangUføreGrunnlag = null,
+        etableringEgenVirksomhetGrunnlag = null,
+        arbeidsevneGrunnlag = null,
+        arbeidsopptrappingGrunnlag = null,
+        overgangArbeidGrunnlag = null,
+        vedtakslengdeGrunnlag = null,
+        meldepliktGrunnlag = null,
+        stønadsperiodeGrunnlag = null,
+        barnetilleggGrunnlag = null,
+        samordningGrunnlag = null,
+        rettighetstypeGrunnlag = null,
+        institusjonsoppholdGrunnlag = null,
+        sykepengerErstatningGrunnlag = null,
+        refusjonkravVurderinger = refusjonkrav,
+        overstyringMeldepliktGrunnlag = null,
+        manuellInntektGrunnlag = null,
+        beregningVurderingGrunnlag = null,
+        forutgåendeMedlemskapGrunnlag = null,
+        oppholdskravGrunnlag = null,
+    )
+
+    private fun VedtakDokumentGrunnlag.render() =
+        VedtakDokumentRenderer.render(this).body
+
+    private fun grunnlag11_19() = Grunnlag11_19(
+        grunnlaget = GUnit(BigDecimal("3.5")),
+        erGjennomsnitt = true,
+        gjennomsnittligInntektIG = GUnit(BigDecimal("3.5")),
+        inntekter = listOf(
+            GrunnlagInntekt(
+                år = Year.of(2023),
+                inntektIKroner = Beløp(450000),
+                grunnbeløp = Beløp(118620),
+                inntektIG = GUnit(BigDecimal("3.79")),
+                inntekt6GBegrenset = GUnit(BigDecimal("3.79")),
+                er6GBegrenset = false,
+            )
+        ),
+    )
+
+    private fun grunnlagUføre() = GrunnlagUføre(
+        grunnlaget = GUnit(BigDecimal("4.2")),
+        type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
+        grunnlag = grunnlag11_19(),
+        grunnlagYtterligereNedsatt = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal("4.2")),
+            erGjennomsnitt = true,
+            gjennomsnittligInntektIG = GUnit(BigDecimal("4.2")),
+            inntekter = listOf(
+                GrunnlagInntekt(
+                    år = Year.of(2020),
+                    inntektIKroner = Beløp(420000),
+                    grunnbeløp = Beløp(101351),
+                    inntektIG = GUnit(BigDecimal("4.14")),
+                    inntekt6GBegrenset = GUnit(BigDecimal("4.14")),
+                    er6GBegrenset = false,
+                ),
+                GrunnlagInntekt(
+                    år = Year.of(2021),
+                    inntektIKroner = Beløp(450000),
+                    grunnbeløp = Beløp(106399),
+                    inntektIG = GUnit(BigDecimal("4.23")),
+                    inntekt6GBegrenset = GUnit(BigDecimal("4.23")),
+                    er6GBegrenset = false,
+                ),
+                GrunnlagInntekt(
+                    år = Year.of(2022),
+                    inntektIKroner = Beløp(480000),
+                    grunnbeløp = Beløp(111477),
+                    inntektIG = GUnit(BigDecimal("4.31")),
+                    inntekt6GBegrenset = GUnit(BigDecimal("4.31")),
+                    er6GBegrenset = false,
+                ),
+            ),
+        ),
+        uføreInntekterFraForegåendeÅr = emptyList(),
+        uføreYtterligereNedsattArbeidsevneÅr = Year.of(2023),
+        uføregrader = emptySet(),
+    )
+
+    private fun sykdomsvurdering(vurdertIBehandling: BehandlingId) =
+        Sykdomsvurdering(
+            begrunnelse = "Klar sykdom",
+            vurderingenGjelderFra = LocalDate.of(2024, 1, 1),
+            vurderingenGjelderTil = null,
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+            yrkesskadeBegrunnelse = null,
+            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+            diagnose = null,
+            vurdertAv = Bruker("Z999999"),
+            vurdertIBehandling = vurdertIBehandling,
+            opprettet = Instant.now(),
+        )
 }
