@@ -42,8 +42,6 @@ class AvklarSamordningGraderingLøser(
             vurdertTidspunkt = LocalDateTime.now()
         )
 
-        // Vi krever ikke lenger at saksbehandler har vurdert alle perioder som er funnet i register.
-        // Saksbehandler kan bekrefte kortet uten å legge inn noen perioder i det hele tatt, jf. AAP-2277.
         samordningYtelseVurderingRepository.lagreVurderinger(
             kontekst.kontekst.behandlingId, samordningsvurderinger
         )
