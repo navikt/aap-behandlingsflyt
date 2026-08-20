@@ -60,11 +60,13 @@ class JournalføringService(
 
     fun journalførVilkårsvurderingOppsummering(
         sak: Sak,
-        pdf: ByteArray
+        tittel: String,
+        pdf: ByteArray,
     ): JournalpostId {
         val journalpost = vilkårsvurderingOppsummeringJournalpost(
             sak = sak,
-            pdf = pdf
+            tittel = tittel,
+            pdf = pdf,
         )
 
         return journalfør(

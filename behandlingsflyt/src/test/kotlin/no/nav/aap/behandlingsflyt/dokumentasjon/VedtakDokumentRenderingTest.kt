@@ -129,10 +129,11 @@ class VedtakDokumentRenderingTest {
         sykdomGrunnlag: SykdomGrunnlag? = null,
         refusjonkrav: List<RefusjonkravVurdering>? = null,
         vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
+        behandlinger: List<BehandlingMedVedtak> = listOf(behandlingMedVedtak),
     ) = VedtakDokumentGrunnlag(
         saksnummer = behandlingMedVedtak.saksnummer,
         behandling = behandling,
-        behandlinger = listOf(behandlingMedVedtak),
+        behandlinger = behandlinger,
         vilkårsresultat = vilkårsresultat,
         tilkjentYtelse = Tidslinje.empty(),
         underveis = Tidslinje.empty(),
@@ -172,7 +173,9 @@ class VedtakDokumentRenderingTest {
     fun `genererer dokument uten valgfrie grunnlag`() {
         val dokument = VedtakDokumentRenderer.render(grunnlag(beregningsgrunnlag = null))
         assertThat(dokument.tittel)
-            .isEqualTo("Oppsummering av vilkårsvurderinger for sak ${behandlingMedVedtak.saksnummer}")
+            .isEqualTo(
+                "Oppsummering av vilkårsvurderinger for sak ${behandlingMedVedtak.saksnummer} – 02. januar 2024"
+            )
         assertThat(dokument.body).isNotEmpty()
         assertThat(dokument.body.filterIsInstance<DOM.Avsnitt>().map { it.avsnitt })
             .anyMatch { "ikke tilgjengelig" in it }
@@ -198,6 +201,24 @@ class VedtakDokumentRenderingTest {
             .contains(
                 "Gjennomsnitt inntekt siste 3 år etter §§ 11-19 / 11-28 (2020 - 2022)",
                 "Inntekt siste år etter §§ 11-19 / 11-28 (2022)",
+            )
+    }
+
+    @Test
+    fun `tar med klokkeslett i tittelen når flere vedtak har samme dato`() {
+        val annetVedtakSammeDato = behandlingMedVedtak.copy(
+            id = BehandlingId(43),
+            vedtakstidspunkt = LocalDateTime.of(2024, 1, 2, 15, 0),
+        )
+
+        val dokument = VedtakDokumentRenderer.render(
+            grunnlag(behandlinger = listOf(behandlingMedVedtak, annetVedtakSammeDato))
+        )
+
+        assertThat(dokument.tittel)
+            .isEqualTo(
+                "Oppsummering av vilkårsvurderinger for sak ${behandlingMedVedtak.saksnummer} – " +
+                        "02. januar 2024 12:00"
             )
     }
 

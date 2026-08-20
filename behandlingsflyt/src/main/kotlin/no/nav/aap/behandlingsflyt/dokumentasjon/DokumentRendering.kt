@@ -186,12 +186,30 @@ data class ReferanseJournalpost(val journalpostId: JournalpostId) : LøpendeTeks
     override fun render(kontekst: RenderKontekst) = "Journalpost ${journalpostId.identifikator}"
 }
 
+internal fun formaterVedtaksdato(
+    behandlingId: BehandlingId,
+    kontekst: RenderKontekst,
+): String {
+    val vedtakstidspunkt = kontekst.vedtak.single { it.id == behandlingId }.vedtakstidspunkt
+
+    val harFlereVedtakSammeDato = kontekst.vedtak
+        .filter { it.id != behandlingId }
+        .any { it.vedtakstidspunkt.toLocalDate() == vedtakstidspunkt.toLocalDate() }
+
+    return buildString {
+        append(Dato(vedtakstidspunkt.toLocalDate()).render(kontekst))
+        if (harFlereVedtakSammeDato) {
+            append(" ")
+            append(vedtakstidspunkt.toLocalTime())
+        }
+    }
+}
+
 data class ReferanseBehandling(
     val behandlingId: BehandlingId,
     val inkluderBehandlingsopprinnelse: Boolean = true,
 ) : LøpendeTekst {
     override fun render(kontekst: RenderKontekst): String {
-        val vedtakstidspunkt = kontekst.vedtak.singleOrNull { it.id == behandlingId }?.vedtakstidspunkt
         val behandlingsopprinnelse = if (!inkluderBehandlingsopprinnelse) {
             ""
         } else if (behandlingId == kontekst.gjeldendeBehandlingId) {
@@ -200,27 +218,8 @@ data class ReferanseBehandling(
             " (tidligere behandling)"
         }
 
-        if (vedtakstidspunkt == null) {
-            return behandlingId.toString() + behandlingsopprinnelse
-        }
-
-        /* Finn nødvendig oppløsning for å skille vedtak på samme dato. */
-        val andreRelevanteVedtak = kontekst.vedtak
-            .filter { it.id != behandlingId }
-            .map { it.vedtakstidspunkt }
-            .filter { it.toLocalDate() == vedtakstidspunkt.toLocalDate() }
-
-        return buildString {
-            append("vedtak fattet ")
-            append(Dato(vedtakstidspunkt.toLocalDate()).render(kontekst))
-
-            /* Mer enn ett vedtak på denne datoen, så legger med klokkeslett. */
-            if (andreRelevanteVedtak.isNotEmpty()) {
-                append(" ")
-                append(vedtakstidspunkt.toLocalTime().toString())
-            }
-            append(behandlingsopprinnelse)
-        }
+        val behandlingsreferanse = formaterVedtaksdato(behandlingId, kontekst).let { "vedtak fattet $it" }
+        return behandlingsreferanse + behandlingsopprinnelse
     }
 }
 

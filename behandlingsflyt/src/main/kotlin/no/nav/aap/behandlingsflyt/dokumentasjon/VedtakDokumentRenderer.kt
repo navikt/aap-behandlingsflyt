@@ -25,8 +25,10 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode as DomenePeriode
 
-internal fun vilkårsvurderingOppsummeringTittel(saksnummer: Saksnummer) =
-    "Oppsummering av vilkårsvurderinger for sak $saksnummer"
+internal fun vilkårsvurderingOppsummeringTittel(
+    saksnummer: Saksnummer,
+    vedtaksdato: String,
+) = "Oppsummering av vilkårsvurderinger for sak $saksnummer – $vedtaksdato"
 
 internal object VedtakDokumentRenderer {
     fun render(grunnlag: VedtakDokumentGrunnlag): PdfDokument = grunnlag.tilDokument()
@@ -36,8 +38,9 @@ internal object VedtakDokumentRenderer {
             gjeldendeBehandlingId = behandling.id,
             vedtak = behandlinger,
         )
+        val vedtaksdato = formaterVedtaksdato(behandling.id, kontekst)
         return PdfDokument(
-            tittel = vilkårsvurderingOppsummeringTittel(saksnummer),
+            tittel = vilkårsvurderingOppsummeringTittel(saksnummer, vedtaksdato),
             body = tilSeksjon().render(kontekst),
         )
     }
