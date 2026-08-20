@@ -1,7 +1,7 @@
 [versions]
 ktor = "3.4.0"
 komponenter = "2.0.141"
-tilgang = "1.0.234"
+tilgang = "1.0.235"
 utbetaling = "0.0.135"
 brev = "0.0.279"
 meldekort = "0.0.237"
