@@ -58,49 +58,51 @@ class ArenaMigreringRepositoryImplTest {
         assertThat(hentet.saksnummerArena).isEqualTo("2018-123456")
         assertThat(hentet.ident).isEqualTo(sak.person.aktivIdent().identifikator)
         assertThat(hentet.migrertTidspunkt).isEqualTo(migrertTidspunkt)
-        assertThat(hentet.arenaSakData).isNull()
     }
 
     @Test
-    fun `lagreArenaSakData lagrer arenasak med vedtak som json`() {
+    fun `lagre og hent for sak (inkluder arenaSakData) — sjekk alle felter`() {
         val sak = dataSource.transaction { connection ->
             opprettSak(connection, LocalDate.now())
         }
 
-        dataSource.transaction { connection ->
-            ArenaMigreringRepositoryImpl(connection).lagre(
-                ArenaMigrering(
-                    sakId = sak.id,
-                    saksnummerArena = "2018-123456",
-                    ident = sak.person.aktivIdent().identifikator,
-                    migrertTidspunkt = LocalDateTime.of(2024, 6, 15, 12, 30, 0),
-                )
-            )
-        }
-
         val arenaSakData = arenaSakMedVedtak()
+        val migrertTidspunkt = LocalDateTime.of(2024, 6, 15, 12, 30, 0)
+        val migrering = ArenaMigrering(
+            sakId = sak.id,
+            saksnummerArena = "2018-123456",
+            ident = sak.person.aktivIdent().identifikator,
+            migrertTidspunkt = migrertTidspunkt,
+            arenaSakData = arenaSakData
+        )
+
         dataSource.transaction { connection ->
-            ArenaMigreringRepositoryImpl(connection).lagreArenaSakData(sak.id, arenaSakData)
+            ArenaMigreringRepositoryImpl(connection).lagre(migrering)
         }
 
         val hentet = dataSource.transaction { connection ->
             ArenaMigreringRepositoryImpl(connection).hentForSakHvisEksisterer(sak.id)
         }
 
-        assertThat(hentet?.arenaSakData).isEqualTo(arenaSakData)
+        assertThat(hentet).isNotNull
+        assertThat(hentet!!.sakId).isEqualTo(sak.id)
+        assertThat(hentet.saksnummerArena).isEqualTo("2018-123456")
+        assertThat(hentet.ident).isEqualTo(sak.person.aktivIdent().identifikator)
+        assertThat(hentet.migrertTidspunkt).isEqualTo(migrertTidspunkt)
+        assertThat(hentet.arenaSakData).isEqualTo(arenaSakData)
     }
 
     @Test
-    fun `lagreArenaSakData feiler når det ikke finnes en migrering for saken`() {
+    fun `hentForSakHvisEksisterer returnerer null når ingen migrering er lagret`() {
         val sak = dataSource.transaction { connection ->
             opprettSak(connection, LocalDate.now())
         }
 
-        assertThrows<IllegalArgumentException> {
-            dataSource.transaction { connection ->
-                ArenaMigreringRepositoryImpl(connection).lagreArenaSakData(sak.id, arenaSakMedVedtak())
-            }
+        val hentet = dataSource.transaction { connection ->
+            ArenaMigreringRepositoryImpl(connection).hentForSakHvisEksisterer(sak.id)
         }
+
+        assertThat(hentet).isNull()
     }
 
     private fun arenaSakMedVedtak() = ArenaSakMedVedtakResponse(
@@ -147,17 +149,4 @@ class ArenaMigreringRepositoryImplTest {
             )
         ),
     )
-
-    @Test
-    fun `hentForSakHvisEksisterer returnerer null når ingen migrering er lagret`() {
-        val sak = dataSource.transaction { connection ->
-            opprettSak(connection, LocalDate.now())
-        }
-
-        val hentet = dataSource.transaction { connection ->
-            ArenaMigreringRepositoryImpl(connection).hentForSakHvisEksisterer(sak.id)
-        }
-
-        assertThat(hentet).isNull()
-    }
 }

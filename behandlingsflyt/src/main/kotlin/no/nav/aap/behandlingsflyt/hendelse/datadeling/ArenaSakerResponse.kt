@@ -23,10 +23,6 @@ data class ArenaSakerResponse(
     val saker: List<ArenaSakOppsummering>,
 )
 
-data class ArenaSakMedVedtakRequest(
-    val sakId: String,
-)
-
 data class ArenaSakMedVedtakResponse(
     val sakId: String,
     val opprettetAar: Int,

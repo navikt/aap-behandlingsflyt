@@ -221,7 +221,7 @@ fun NormalOpenAPIRoute.saksApi(
                 }
 
                 when (resultat) {
-                    is MigrerFraArenaResultat.Migrert -> respond(
+                    is MigrerFraArenaResultat.MigreringStartet -> respond(
                         SaksinfoDTO(
                             saksnummer = resultat.sak.saksnummer.toString(),
                             opprettetTidspunkt = resultat.sak.opprettetTidspunkt,

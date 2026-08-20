@@ -1,13 +1,14 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakMedVedtakResponse
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArenaV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -16,7 +17,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 sealed interface MigrerFraArenaResultat {
-    data class Migrert(val sak: Sak) : MigrerFraArenaResultat
+    data class MigreringStartet(val sak: Sak) : MigrerFraArenaResultat
     data object SakFinnesAllerede : MigrerFraArenaResultat
     data class ArenasakIkkeMigrerbar(val årsak: String) : MigrerFraArenaResultat
 }
@@ -26,6 +27,7 @@ class ArenaMigreringService(
     private val arenaMigreringRepository: ArenaMigreringRepository,
     private val personOgSakService: PersonOgSakService,
     private val mottattHendelseService: MottattHendelseService,
+    private val unleashGateway: UnleashGateway,
 ) {
     constructor(
         gatewayProvider: GatewayProvider,
@@ -34,7 +36,8 @@ class ArenaMigreringService(
         gatewayProvider.provide<ApiInternGateway>(),
         repositoryProvider.provide<ArenaMigreringRepository>(),
         PersonOgSakService(gatewayProvider, repositoryProvider),
-        MottattHendelseService(repositoryProvider)
+        MottattHendelseService(repositoryProvider),
+        gatewayProvider.provide<UnleashGateway>()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -57,14 +60,21 @@ class ArenaMigreringService(
             )
         }
 
-        val sak = personOgSakService.opprettSakMedArenaMigrering(
-            ident = ident,
-            søknadsdato = LocalDate.now(), // TODO må hentes fra arenasaken?
+        val sak = personOgSakService.finnEllerOpprett(ident = ident, søknadsdato = LocalDate.now()) // TODO må hentes fra arenasaken?
+        val arenaMigrering = ArenaMigrering(
+            sakId = sak.id,
             saksnummerArena = saksnummerArena,
+            ident = ident.identifikator,
+            migrertTidspunkt = LocalDateTime.now(),
         )
 
-        // TODO vurdere hvor det er hensiktsmessig at lagring av migreringsdata ligger
-        hentOgLagreArenaSakMedVedtak(sak.id, saksnummerArena)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.MigreringHentArenaGrunnlag)) {
+            val arenaSakMedVedtak = apiInternGateway.hentArenaSakMedVedtak(saksnummerArena)
+            // TODO se litt mer på hvordan denne dataen representeres i datamodellen
+            arenaMigreringRepository.lagre(arenaMigrering.copy(arenaSakData = arenaSakMedVedtak))
+        } else {
+            arenaMigreringRepository.lagre(arenaMigrering)
+        }
 
         val referanse = UUID.randomUUID().toString()
         mottattHendelseService.registrerMottattHendelse(
@@ -81,19 +91,6 @@ class ArenaMigreringService(
         )
 
         log.info("Startet migrering av $saksnummerArena til Kelvin-sak ${sak.saksnummer} med referanse $referanse")
-        return MigrerFraArenaResultat.Migrert(sak)
-    }
-
-    /**
-     * Henter Arena-saken med tilhørende vedtak fra api-intern og lagrer den som JSON på migreringen.
-     * Krever at det allerede finnes en arenamigrering for saken.
-     */
-    fun hentOgLagreArenaSakMedVedtak(sakId: SakId, saksnummerArena: String): ArenaSakMedVedtakResponse {
-        val arenaSakMedVedtak = apiInternGateway.hentArenaSakMedVedtak(saksnummerArena)
-
-        arenaMigreringRepository.lagreArenaSakData(sakId, arenaSakMedVedtak)
-        log.info("Lagret arenasak med ${arenaSakMedVedtak.vedtak.size} vedtak for sak $sakId")
-
-        return arenaSakMedVedtak
+        return MigrerFraArenaResultat.MigreringStartet(sak)
     }
 }

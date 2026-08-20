@@ -33,24 +33,6 @@ class ArenaMigreringRepositoryImpl(private val connection: DBConnection) : Arena
         }
     }
 
-    override fun lagreArenaSakData(sakId: SakId, data: ArenaSakMedVedtakResponse) {
-        connection.execute(
-            """
-            UPDATE ARENA_MIGRERING SET arena_sak_data = ?::jsonb WHERE sak_id = ?
-            """.trimIndent()
-        ) {
-            setParams {
-                setString(1, DefaultJsonMapper.toJson(data))
-                setLong(2, sakId.toLong())
-            }
-            setResultValidator { rowsUpdated ->
-                require(rowsUpdated == 1) {
-                    "Fant ingen arenamigrering å lagre arenasak-data på for sak $sakId"
-                }
-            }
-        }
-    }
-
     override fun hentForSakHvisEksisterer(sakId: SakId): ArenaMigrering? {
         return connection.queryFirstOrNull(
             """

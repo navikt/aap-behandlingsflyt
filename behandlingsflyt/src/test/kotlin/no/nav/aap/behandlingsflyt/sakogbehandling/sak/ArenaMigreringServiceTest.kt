@@ -15,6 +15,8 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMigreringRepository
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -24,7 +26,6 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -52,51 +53,6 @@ class ArenaMigreringServiceTest {
     }
 
     @Test
-    fun `henter arenasak med vedtak og lagrer den på migreringen`() {
-        val sakId = SakId(1)
-        val saksnummerArena = "2018-123456"
-        InMemoryArenaMigreringRepository.lagre(
-            ArenaMigrering(
-                sakId = sakId,
-                saksnummerArena = saksnummerArena,
-                ident = "12345678910",
-                migrertTidspunkt = LocalDateTime.now(),
-            )
-        )
-        val respons = arenaSakMedVedtak(saksnummerArena)
-        every { apiInternGateway.hentArenaSakMedVedtak(saksnummerArena) } returns respons
-
-        val resultat = ArenaMigreringService(
-            apiInternGateway = apiInternGateway,
-            arenaMigreringRepository = InMemoryArenaMigreringRepository,
-            personOgSakService = mockk(),
-            mottattHendelseService = mockk(),
-        ).hentOgLagreArenaSakMedVedtak(sakId, saksnummerArena)
-
-        assertThat(resultat).isEqualTo(respons)
-        assertThat(InMemoryArenaMigreringRepository.hentForSakHvisEksisterer(sakId)?.arenaSakData)
-            .isEqualTo(respons)
-        verify(exactly = 1) { apiInternGateway.hentArenaSakMedVedtak(saksnummerArena) }
-    }
-
-    @Test
-    fun `feiler når saken ikke er migrert fra arena`() {
-        val sakId = SakId(2)
-        val saksnummerArena = "2018-123456"
-        every { apiInternGateway.hentArenaSakMedVedtak(saksnummerArena) } returns
-                arenaSakMedVedtak(saksnummerArena)
-
-        assertThrows<IllegalArgumentException> {
-            ArenaMigreringService(
-                apiInternGateway = apiInternGateway,
-                arenaMigreringRepository = InMemoryArenaMigreringRepository,
-                personOgSakService = mockk(),
-                mottattHendelseService = mockk(),
-            ).hentOgLagreArenaSakMedVedtak(sakId, saksnummerArena)
-        }
-    }
-
-    @Test
     fun `migrerFraArena oppretter sak, lagrer arenasak-data og registrerer hendelse`() {
         val ident = ident()
         val saksnummerArena = "2016-123456"
@@ -106,19 +62,40 @@ class ArenaMigreringServiceTest {
             initService(connection).migrerFraArena(ident, saksnummerArena)
         }
 
-        assertThat(resultat).isInstanceOf(MigrerFraArenaResultat.Migrert::class.java)
-        val migrert = resultat as MigrerFraArenaResultat.Migrert
-        assertThat(migrert.sak.person.er(ident)).isTrue()
-        assertThat(migrert.sak.rettighetsperiode.fom).isEqualTo(LocalDate.now())
-        assertThat(migrert.sak.rettighetsperiode.tom).isEqualTo(Tid.MAKS)
+        assertThat(resultat).isInstanceOf(MigrerFraArenaResultat.MigreringStartet::class.java)
+        val migreringStartet = resultat as MigrerFraArenaResultat.MigreringStartet
+        assertThat(migreringStartet.sak.person.er(ident)).isTrue()
+        assertThat(migreringStartet.sak.rettighetsperiode.fom).isEqualTo(LocalDate.now())
+        assertThat(migreringStartet.sak.rettighetsperiode.tom).isEqualTo(Tid.MAKS)
 
         val migrering = dataSource.transaction { connection ->
             postgresRepositoryRegistry.provider(connection)
                 .provide<ArenaMigreringRepository>()
-                .hentForSakHvisEksisterer(migrert.sak.id)
+                .hentForSakHvisEksisterer(migreringStartet.sak.id)
         }
         assertThat(migrering?.saksnummerArena).isEqualTo(saksnummerArena)
         assertThat(migrering?.arenaSakData).isEqualTo(arenaSakMedVedtak(saksnummerArena))
+    }
+
+    @Test
+    fun `migrerFraArena henter ikke arenagrunnlag når MigreringHentArenaGrunnlag er avskrudd`() {
+        val ident = ident()
+        val saksnummerArena = "2016-123456"
+        stubGatewayerFor(ident, saksnummerArena, statuskode = "AKTIV")
+
+        val resultat = dataSource.transaction { connection ->
+            initService(connection, hentArenaGrunnlag = false).migrerFraArena(ident, saksnummerArena)
+        }
+
+        val migreringStartet = resultat as MigrerFraArenaResultat.MigreringStartet
+        val migrering = dataSource.transaction { connection ->
+            postgresRepositoryRegistry.provider(connection)
+                .provide<ArenaMigreringRepository>()
+                .hentForSakHvisEksisterer(migreringStartet.sak.id)
+        }
+        assertThat(migrering?.saksnummerArena).isEqualTo(saksnummerArena)
+        assertThat(migrering?.arenaSakData).isNull()
+        verify(exactly = 0) { apiInternGateway.hentArenaSakMedVedtak(any()) }
     }
 
     @Test
@@ -186,7 +163,7 @@ class ArenaMigreringServiceTest {
                 arenaSakMedVedtak(saksnummerArena)
     }
 
-    private fun initService(connection: DBConnection): ArenaMigreringService {
+    private fun initService(connection: DBConnection, hentArenaGrunnlag: Boolean = true): ArenaMigreringService {
         val repositoryProvider = postgresRepositoryRegistry.provider(connection)
         return ArenaMigreringService(
             apiInternGateway = apiInternGateway,
@@ -199,8 +176,13 @@ class ArenaMigreringServiceTest {
                 repositoryProvider.provide<ArenaMigreringRepository>()
             ),
             mottattHendelseService = MottattHendelseService(repositoryProvider),
+            unleashGateway = unleash(hentArenaGrunnlag),
         )
     }
+
+    private fun unleash(hentArenaGrunnlag: Boolean) = object : FakeUnleashBaseWithDefaultDisabled(
+        if (hentArenaGrunnlag) listOf(BehandlingsflytFeature.MigreringHentArenaGrunnlag) else emptyList()
+    ) {}
 
     private fun arenaSakMedVedtak(saksnummerArena: String) = ArenaSakMedVedtakResponse(
         sakId = saksnummerArena,
