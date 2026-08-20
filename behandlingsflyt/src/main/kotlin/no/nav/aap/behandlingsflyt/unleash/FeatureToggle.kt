@@ -9,7 +9,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenValidering,
     NyBrevbyggerV3,
     Under18,
-    TrekkSoeknadOpprettetFraLegeerklaering,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
     SamordningFaktagrunnlagBrev,

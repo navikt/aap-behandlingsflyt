@@ -65,7 +65,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
