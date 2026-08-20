@@ -120,6 +120,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
@@ -129,6 +130,7 @@ import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger as Slf4jLogger
 import org.slf4j.bridge.SLF4JBridgeHandler
+import java.time.ZoneId
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -264,7 +266,7 @@ internal fun Application.server(
             listOf(informasjonskravExecutor, fellesDataSource, motorDataSource, pipDataSource)
         )
     }
-    loggTidssoneForDatabase(fellesDataSource)
+    verifiserTidssone(fellesDataSource)
     val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
 
     routing {
@@ -366,13 +368,32 @@ internal fun Application.server(
 
 }
 
-private fun Application.loggTidssoneForDatabase(dataSource: HikariDataSource) {
+private fun Application.verifiserTidssone(dataSource: HikariDataSource) {
+    val tidssoneForJvm = ZoneId.systemDefault()
     val tidssoneForDatabase = dataSource.transaction { connection ->
         connection.queryFirst("show timezone") {
             setRowMapper { it.getString("timezone") }
         }
     }
-    log.info("Tidssone for databasen: $tidssoneForDatabase")
+
+    log.info("Tidssone for jvm: ${tidssoneForJvm} database: $tidssoneForDatabase")
+
+    check(tidssoneForJvm == Tid.norskTidssone) {
+        "Tidssone for JVM er satt til ${tidssoneForJvm}. Forventer verdi ${Tid.norskTidssone}."
+    }
+
+    check(tidssoneForDatabase.lowercase() == "europe/oslo") {
+        """
+            Tidssone for database-connection er $tidssoneForDatabase. Forventet Europe/oslo.
+            
+            Selve databasen er satt opp med tidssone UTC. JDBC setter tidssone for connection
+            basert på default timezone i JVMen. Vi kjører og har kjørt med Europe/Oslo som tidssone.
+            
+            For at lesing og skriving av tidspunkter mellom applikasjon og database skal bli
+            riktig (slik koden vår er satt opp nå), så må tidssone på connection ikke endre
+            seg fra Europe/Oslo.
+        """
+    }
 }
 
 private fun Application.startKafkakonsumenter(
