@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
+import no.nav.aap.behandlingsflyt.behandling.brev.AvslagAnnenYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.AvslagBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
@@ -432,6 +433,18 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     add(
                         Faktagrunnlag.InnvilgetUføretrygd(brevBehov.virkningstidspunkt)
+                    )
+                }
+            }
+
+            is AvslagAnnenYtelse -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
+                    )
+                    add(Faktagrunnlag.SykepengeGrunnlag(brevBehov.sykepengeGrunnlag))
+                    add(
+                        Faktagrunnlag.SykepengeGrunnlagOver2G(brevBehov.sykepengeGrunnlagOver2G)
                     )
                 }
             }

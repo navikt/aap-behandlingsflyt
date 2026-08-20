@@ -445,6 +445,10 @@ class BrevUtlederService(
             ) {
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
+            if (avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
+            {
+                return AvslagBrev.Avslag1127(sykdomsvurdering = sykdomsvurdering)
+            }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
     }

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.komponenter.verdityper.Beløp
 import java.time.LocalDate
 
 sealed class BrevBehov(val typeBrev: TypeBrev)
@@ -34,6 +35,13 @@ data class Arbeidssøker(
     val tilkjentYtelse: TilkjentYtelse?,
 ) : BrevBehov(TypeBrev.VEDTAK_11_17)
 
+data class AvslagAnnenYtelse(
+    val ytelsetype: String,
+    val sisteDagMedYtelse: LocalDate,
+    val sykepengeGrunnlag: Beløp?,
+    val sykepengeGrunnlagOver2G: Boolean,
+) : BrevBehov(TypeBrev.VEDTAK_AVSLAG_11_27)
+
 data class UtvidVedtakslengde(
     val utvidetAapFomDato: LocalDate,
     val sisteDagMedYtelse: LocalDate,
@@ -53,6 +61,7 @@ sealed class AvslagBrev(typeBrev: TypeBrev) : BrevBehov(typeBrev) {
     abstract val sykdomsvurdering: String?
     data class AvslagUnder17År9Måneder(override val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER)
     data class AvslagSykdomsvilkåret(override val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_5)
+    data class Avslag1127(override val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak? = null) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_27)
     data class Avslag(override val sykdomsvurdering: String?, val avslagsårsak: Avslagsårsak? = null) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG)
 }
 
