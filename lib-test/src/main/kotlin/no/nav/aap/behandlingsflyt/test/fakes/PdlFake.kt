@@ -247,7 +247,20 @@ class PdlFake(private val fakePersoner: () -> TestPersonService) : FakeServer() 
                             mellomnavn = null,
                             etternavn = testPerson.navn.etternavn
                         )
-                    )
+                    ),
+                    foedselsdato = listOf(
+                        PdlFoedsel(
+                            testPerson.fødselsdato.toLocalDate().toString(),
+                            testPerson.fødselsdato.dato.year.toString()
+                        )
+                    ),
+                    doedsfall = testPerson.dødsdato?.let {
+                        setOf(
+                            PDLDødsfall(
+                                testPerson.dødsdato.toFormatedString()
+                            )
+                        )
+                    }
                 )
             ),
         )

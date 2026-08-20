@@ -15,7 +15,16 @@ enum class ÅrsakBeregningstidspunkt {
     ANNET,
 }
 
+/**
+ * NB: [YTTERLIGERE_NEDSATT], [ØKT_UFØREGRAD] og [IKKE_BETYDNING_IKKE_RELEVANT] er beholdt kun for
+ * bakoverkompatibilitet med tidligere lagrede vurderinger (AAP-2385), og skal ikke lenger tilbys
+ * som valg for saksbehandler.
+ */
 enum class ÅrsakYtterligereNedsatt {
+    SYKEMELDINGSDATO,
+    KRAVDATO,
+    DATO_PAA_LEGEERKLÆRING,
+    HENVIST_TIL_BEHANDLING,
     UFØRETIDSPUNKT,
     YTTERLIGERE_NEDSATT,
     ØKT_UFØREGRAD,

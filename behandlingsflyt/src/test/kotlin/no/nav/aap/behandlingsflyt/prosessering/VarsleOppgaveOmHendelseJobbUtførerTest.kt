@@ -174,6 +174,7 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
         aktivtSteg = aktivtSteg,
         avklaringsbehov = emptyList(),
         erPåVent = false,
+        uføreVedtak = null,
         relevanteIdenterPåBehandling = emptyList(),
         mottattDokumenter = emptyList(),
         opprettetTidspunkt = LocalDateTime.now(),

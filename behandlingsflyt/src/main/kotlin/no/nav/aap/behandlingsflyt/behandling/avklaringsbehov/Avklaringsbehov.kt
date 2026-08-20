@@ -282,6 +282,9 @@ class Avklaringsbehov(
         return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
     }
 
+    fun løstAv(): Bruker? =
+        aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET }
+            ?.endretAv
 
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"

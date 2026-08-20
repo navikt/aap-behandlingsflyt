@@ -27,7 +27,7 @@ object DokarkivGatewayImpl : DokarkivGateway {
 
     override fun oppdater(
         journalpost: Journalpost,
-        oppdatertAv: Bruker,
+        oppdatertAv: Bruker?,
         forsøkFerdigstill: Boolean,
     ): JournalpostResponse {
         return try {
@@ -35,10 +35,10 @@ object DokarkivGatewayImpl : DokarkivGateway {
                 uri = URI("$baseUrl/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=$forsøkFerdigstill"),
                 request = PostRequest(
                     body = journalpost,
-                    additionalHeaders = listOf(
-                        Header("accept", "application/json"),
-                        Header("Nav-User-Id", oppdatertAv.ident),
-                    ),
+                    additionalHeaders = buildList {
+                        add(Header("accept", "application/json"))
+                        oppdatertAv?.let { add(Header("Nav-User-Id", it.ident)) }
+                    },
                 ),
             ) ?: error("Dokarkiv returnerte tom respons ved opprettelse av journalpost")
         } catch (e: ConflictHttpResponseException) {
