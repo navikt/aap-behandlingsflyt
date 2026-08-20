@@ -14,7 +14,7 @@ import java.time.LocalDate
 import javax.sql.DataSource
 
 // Det skal sendes påminnelse i dag for bestillinger opprettet for tre uker og én dag siden
-private val bestillingOpprettetDatoForPurringIDag = if (Miljø.erProd()) {
+private fun bestillingOpprettetDatoForPurringIDag(): LocalDate = if (Miljø.erProd()) {
     LocalDate.now().minusWeeks(3).minusDays(1)
 } else {
     LocalDate.now().minusDays(1)
@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.påminnelseApi(
 
                 kandidatForPåminnelseRepository.finnKandidaterForPåminnelse(
                     LocalDate.now(),
-                    bestillingOpprettetDato = bestillingOpprettetDatoForPurringIDag
+                    bestillingOpprettetDato = bestillingOpprettetDatoForPurringIDag()
                 )
             }
             respond(behandlingsreferanser)

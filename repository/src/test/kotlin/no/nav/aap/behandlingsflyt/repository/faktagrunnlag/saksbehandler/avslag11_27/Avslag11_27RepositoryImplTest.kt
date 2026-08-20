@@ -9,13 +9,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
@@ -48,7 +46,7 @@ class Avslag11_27RepositoryImplTest {
             harAnnenFullYtelse = skalAvslås,
             brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
             brukersYtelseTom = if (skalAvslås) LocalDate.of(2026, 6, 30) else null,
-            sykepengegrunnlag = if (skalAvslås) Beløp(BigDecimal("500000")) else null,
+            harSykepengegrunnlagOver2G = if (skalAvslås) true else null,
             harArbeidsgiverSykepengerUtbetaling = if (skalAvslås) false else null,
             skalAvslås1127 = skalAvslås,
             vurdertIBehandling = behandlingId,
@@ -89,7 +87,7 @@ class Avslag11_27RepositoryImplTest {
         assertThat(grunnlag.vurderinger.first().brukersYtelse).isEqualTo(Ytelse.SYKEPENGER)
         assertThat(grunnlag.vurderinger.first().harArbeidsgiverSykepengerUtbetaling).isFalse()
         assertThat(grunnlag.vurderinger.first().brukersYtelseTom).isEqualTo(LocalDate.of(2026, 6, 30))
-        assertThat(grunnlag.vurderinger.first().sykepengegrunnlag).isEqualTo(Beløp(BigDecimal("500000")))
+        assertThat(grunnlag.vurderinger.first().harSykepengegrunnlagOver2G).isTrue()
     }
 
     @Test
@@ -207,7 +205,7 @@ class Avslag11_27RepositoryImplTest {
             harAnnenFullYtelse = true,
             brukersYtelse = Ytelse.SYKEPENGER,
             brukersYtelseTom = LocalDate.of(2026, 6, 30),
-            sykepengegrunnlag = Beløp(BigDecimal("500000")),
+            harSykepengegrunnlagOver2G = true,
             harArbeidsgiverSykepengerUtbetaling = true,
             skalAvslås1127 = true,
             vurdertIBehandling = behandlingId,
@@ -225,7 +223,7 @@ class Avslag11_27RepositoryImplTest {
 
         assertThat(lagret.brukersYtelse).isEqualTo(Ytelse.SYKEPENGER)
         assertThat(lagret.brukersYtelseTom).isEqualTo(LocalDate.of(2026, 6, 30))
-        assertThat(lagret.sykepengegrunnlag).isEqualTo(Beløp(BigDecimal("500000")))
+        assertThat(lagret.harSykepengegrunnlagOver2G).isTrue()
         assertThat(lagret.harArbeidsgiverSykepengerUtbetaling).isTrue()
     }
 
@@ -238,7 +236,7 @@ class Avslag11_27RepositoryImplTest {
             harAnnenFullYtelse = false,
             brukersYtelse = null,
             brukersYtelseTom = null,
-            sykepengegrunnlag = null,
+            harSykepengegrunnlagOver2G = null,
             harArbeidsgiverSykepengerUtbetaling = null,
             skalAvslås1127 = false,
             vurdertIBehandling = behandlingId,
@@ -256,7 +254,7 @@ class Avslag11_27RepositoryImplTest {
 
         assertThat(lagret.brukersYtelse).isNull()
         assertThat(lagret.brukersYtelseTom).isNull()
-        assertThat(lagret.sykepengegrunnlag).isNull()
+        assertThat(lagret.harSykepengegrunnlagOver2G).isNull()
         assertThat(lagret.harArbeidsgiverSykepengerUtbetaling).isNull()
     }
 

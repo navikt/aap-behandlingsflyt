@@ -35,7 +35,7 @@ class Avslag11_27GrunnlagTest {
         harAnnenFullYtelse = skalAvslås,
         brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
         brukersYtelseTom = LocalDate.now().minusMonths(1),
-        sykepengegrunnlag = Beløp(320000),
+        harSykepengegrunnlagOver2G = null,
         harArbeidsgiverSykepengerUtbetaling = true,
         skalAvslås1127 = skalAvslås,
         vurdertIBehandling = behandlingId,

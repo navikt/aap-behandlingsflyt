@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
+import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
+import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -13,8 +15,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -118,6 +118,13 @@ class TrekkSøknadLøser(
                 vurdertAv = kontekst.bruker,
                 skalTrekkes = løsning.skalTrekkes,
                 vurdert = Instant.now(),
+                aarsak = when(løsning.aarsak) {
+                    AarsakTilTrekkSoknadDto.BRUKER_SOKTE_FOR_TIDLIG -> AarsakTilTrekkSoknad.BRUKER_SOKTE_FOR_TIDLIG
+                    AarsakTilTrekkSoknadDto.BRUKER_SOKTE_FEIL_YTELSE -> AarsakTilTrekkSoknad.BRUKER_SOKTE_FEIL_YTELSE
+                    AarsakTilTrekkSoknadDto.BRUKER_ONSKER_IKKE_SOKE_LENGER -> AarsakTilTrekkSoknad.BRUKER_ONSKER_IKKE_SOKE_LENGER
+                    AarsakTilTrekkSoknadDto.ANNET -> AarsakTilTrekkSoknad.ANNET
+                    null -> null
+                }
             )
         )
     }

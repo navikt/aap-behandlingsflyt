@@ -7,11 +7,9 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
-import java.math.BigDecimal
 import java.time.Instant
 
 class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11_27Repository {
@@ -55,7 +53,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                 v.har_annen_full_ytelse                     AS v_har_annen_full_ytelse,
                 v.brukers_ytelse                            AS v_brukers_ytelse,
                 v.brukers_ytelse_tom                        AS v_brukers_ytelse_tom,
-                v.sykepengegrunnlag                         AS v_sykepengegrunnlag,
+                v.har_sykepengegrunnlag_over_2g             AS v_har_sykepengegrunnlag_over_2g,
                 v.har_arbeidsgiver_sykepenger_utbetaling    AS v_har_arbeidsgiver_sykepenger_utbetaling,
                 v.skal_avslaas_1127                         AS v_skal_avslaas_1127,
                 v.vurdert_i_behandling                      AS v_vurdert_i_behandling,
@@ -76,7 +74,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                     harAnnenFullYtelse = it.getBoolean("v_har_annen_full_ytelse"),
                     brukersYtelse = it.getStringOrNull("v_brukers_ytelse")?.let { Ytelse.valueOf(it) },
                     brukersYtelseTom = it.getLocalDateOrNull("v_brukers_ytelse_tom"),
-                    sykepengegrunnlag = it.getBigDecimalOrNull("v_sykepengegrunnlag")?.let { Beløp(it) },
+                    harSykepengegrunnlagOver2G = it.getBooleanOrNull("v_har_sykepengegrunnlag_over_2g"),
                     harArbeidsgiverSykepengerUtbetaling = it.getBooleanOrNull("v_har_arbeidsgiver_sykepenger_utbetaling"),
                     skalAvslås1127 = it.getBooleanOrNull("v_skal_avslaas_1127"),
                     vurdertIBehandling = BehandlingId(it.getLong("v_vurdert_i_behandling")),
@@ -196,7 +194,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
 
         val query = """
                 INSERT INTO avslag_11_27_vurdering 
-                (referanse, begrunnelse, har_annen_full_ytelse, brukers_ytelse, brukers_ytelse_tom, sykepengegrunnlag, har_arbeidsgiver_sykepenger_utbetaling, skal_avslaas_1127, vurdert_i_behandling, vurdert_tidspunkt, vurdert_av, avslag_11_27_vurderinger_id) 
+                (referanse, begrunnelse, har_annen_full_ytelse, brukers_ytelse, brukers_ytelse_tom, har_sykepengegrunnlag_over_2g, har_arbeidsgiver_sykepenger_utbetaling, skal_avslaas_1127, vurdert_i_behandling, vurdert_tidspunkt, vurdert_av, avslag_11_27_vurderinger_id) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
@@ -207,7 +205,7 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                 setBoolean(3, vurdering.harAnnenFullYtelse)
                 setString(4, vurdering.brukersYtelse?.name)
                 setLocalDate(5, vurdering.brukersYtelseTom)
-                setBigDecimal(6, vurdering.sykepengegrunnlag?.verdi)
+                setBoolean(6, vurdering.harSykepengegrunnlagOver2G)
                 setBoolean(7, vurdering.harArbeidsgiverSykepengerUtbetaling)
                 setBoolean(8, vurdering.skalAvslås1127)
                 setLong(9, vurdering.vurdertIBehandling.toLong())

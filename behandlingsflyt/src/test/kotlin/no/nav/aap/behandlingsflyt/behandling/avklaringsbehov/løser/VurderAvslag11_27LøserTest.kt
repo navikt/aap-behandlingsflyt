@@ -19,11 +19,9 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvslag11_27Repositor
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 
@@ -60,7 +58,7 @@ class VurderAvslag11_27LøserTest {
         harAnnenFullYtelse = skalAvslås,
         brukersYtelse = if (skalAvslås) brukersYtelse else null,
         brukersYtelseTom = if (skalAvslås) LocalDate.of(2026, 6, 30) else null,
-        sykepengegrunnlag = if (skalAvslås) Beløp(BigDecimal("500000")) else null,
+        harSykepengegrunnlagOver2G = if (skalAvslås) true else null,
         harArbeidsgiverSykepengerUtbetaling = if (skalAvslås) false else null,
         skalAvslås1127 = skalAvslås,
     )
@@ -94,7 +92,7 @@ class VurderAvslag11_27LøserTest {
         val vurdering = lagret.vurderinger.first()
         assertThat(vurdering.skalAvslås1127).isTrue()
         assertThat(vurdering.brukersYtelseTom).isEqualTo(LocalDate.of(2026, 6, 30))
-        assertThat(vurdering.sykepengegrunnlag).isEqualTo(Beløp(BigDecimal("500000")))
+        assertThat(vurdering.harSykepengegrunnlagOver2G).isTrue()
         assertThat(vurdering.harArbeidsgiverSykepengerUtbetaling).isFalse()
         assertThat(vurdering.vurdertIBehandling).isEqualTo(behandling.id)
     }
