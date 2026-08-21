@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_7Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_9Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiodesyklusInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
@@ -131,7 +132,11 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                 )
             )
-            .medSteg(steg = FastsettMeldeperiodeSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
+            .medSteg(
+                steg = FastsettMeldeperiodeSteg,
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle(),
+                informasjonskrav = listOf(ArenaMeldeperiodesyklusInformasjonskrav),
+            )
             .medSteg(steg = VurderAlderSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(steg = VurderAvslag11_27Steg, vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.VURDER_AVSLAG_11_27))
             .medSteg(
