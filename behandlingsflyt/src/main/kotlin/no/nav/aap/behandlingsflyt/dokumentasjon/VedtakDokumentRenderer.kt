@@ -106,7 +106,7 @@ internal object VedtakDokumentRenderer {
                         ),
                         Tekst("Andel som skyldes yrkesskade (G)") to G(beregningsgrunnlag.andelSomSkyldesYrkesskade()),
                         Tekst("Andel som ikke skyldes yrkesskade (G)") to G(beregningsgrunnlag.andelSomIkkeSkyldesYrkesskade()),
-                        Tekst("Endelig grunnlag (G)") to G(beregningsgrunnlag.grunnlaget()),
+                        Tekst("Grunnlag (G)") to G(beregningsgrunnlag.grunnlaget()),
                     )
                 }
             )
@@ -126,7 +126,7 @@ internal object VedtakDokumentRenderer {
         } + listOf(
             Tekst("Gjennomsnitt 3 år") to G(g.gjennomsnittligInntektIG()),
             Tekst("Gjennomsnitt valgt") to JaNeiValg(g.erGjennomsnitt()),
-            Tekst("Endelig grunnlag") to G(g.grunnlaget()),
+            Tekst("Grunnlag § 11-19") to G(g.grunnlaget()),
         )
 
     private fun grunnlagUføreRader(
@@ -139,7 +139,7 @@ internal object VedtakDokumentRenderer {
                         grunnlag.underliggendeYtterligereNedsatt().grunnlaget()
                     ),
                     Tekst("Type beregning") to PrettyEnum(grunnlag.type()),
-                    Tekst("Endelig grunnlag (etter §11-28)") to G(grunnlag.grunnlaget()),
+                    Tekst("Grunnlag § 11-28") to G(grunnlag.grunnlaget()),
                 ) +
                 grunnlag.uføreInntekterFraForegåendeÅr().map { uføreInntektRad(it) }
     }

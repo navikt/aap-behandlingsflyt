@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
-import io.mockk.every
-import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregnGrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.DOM
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
@@ -30,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode as DomenePeriode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -63,7 +62,7 @@ class VedtakDokumentRenderingTest {
 
         assertThat(lister.map { it.first() })
             .anyMatch { "2023" in it }
-            .anyMatch { "Endelig grunnlag" in it }
+            .contains("Grunnlag § 11-19")
     }
 
     @Test
@@ -77,6 +76,8 @@ class VedtakDokumentRenderingTest {
             .contains(
                 "Gjennomsnitt inntekt siste 3 år etter §§ 11-19 / 11-28 (2020 - 2022)",
                 "Inntekt siste år etter §§ 11-19 / 11-28 (2022)",
+                "Grunnlag § 11-19",
+                "Grunnlag § 11-28",
             )
     }
 
@@ -211,19 +212,25 @@ class VedtakDokumentRenderingTest {
     }
 
     private val behandlingId = BehandlingId(42)
-    private val behandling = mockk<Behandling>(relaxed = true) {
-        every { id } returns behandlingId
-        every { referanse } returns BehandlingReferanse()
-        every { opprettetTidspunkt } returns LocalDateTime.of(2024, 1, 1, 12, 0)
-        every { vurderingsbehov() } returns emptyList()
-        every { årsakTilOpprettelse } returns ÅrsakTilOpprettelse.SØKNAD
-    }
+    private val behandlingReferanse = BehandlingReferanse()
+    private val behandling = Behandling(
+        id = behandlingId,
+        forrigeBehandlingId = null,
+        referanse = behandlingReferanse,
+        sakId = SakId(1),
+        typeBehandling = TypeBehandling.Førstegangsbehandling,
+        status = Status.AVSLUTTET,
+        vurderingsbehov = emptyList(),
+        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+        opprettetTidspunkt = LocalDateTime.of(2024, 1, 1, 12, 0),
+        versjon = 1,
+    )
 
     private val behandlingMedVedtak = BehandlingMedVedtak(
         saksnummer = Saksnummer("1234567890"),
         id = behandlingId,
         forrigeBehandlingId = null,
-        referanse = BehandlingReferanse(),
+        referanse = behandlingReferanse,
         typeBehandling = TypeBehandling.Førstegangsbehandling,
         status = Status.AVSLUTTET,
         opprettetTidspunkt = LocalDateTime.of(2024, 1, 1, 12, 0),
