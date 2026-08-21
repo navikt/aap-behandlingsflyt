@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -8,9 +9,10 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-
+import java.time.ZoneId
 
 data class OppholdskravGrunnlag(
     val vurderinger: List<OppholdskravVurdering>,
@@ -18,6 +20,23 @@ data class OppholdskravGrunnlag(
 ) {
     fun tidslinje(): Tidslinje<OppholdskravTidslinjeData> {
         return vurderinger.tilTidslinje()
+    }
+
+    fun somPeriodiserteVurderinger(): List<OppholdskravPeriodisertVurdering> {
+        return vurderinger.flatMap { vurdering ->
+            vurdering.perioder.map { periode ->
+                OppholdskravPeriodisertVurdering(
+                    fom = periode.fom,
+                    tom = periode.tom,
+                    land = periode.land,
+                    oppfylt = periode.oppfylt,
+                    begrunnelse = periode.begrunnelse,
+                    vurdertAv = vurdering.vurdertAv,
+                    vurdertIBehandling = vurdering.vurdertIBehandling,
+                    opprettetTid = vurdering.opprettet,
+                )
+            }
+        }
     }
 }
 
@@ -93,3 +112,16 @@ data class OppholdskravTidslinjeData(
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val vurdertAv: Bruker,
 )
+
+data class OppholdskravPeriodisertVurdering(
+    override val fom: LocalDate,
+    override val tom: LocalDate?,
+    val land: String?,
+    val oppfylt: Boolean,
+    val begrunnelse: String,
+    val vurdertAv: Bruker,
+    override val vurdertIBehandling: BehandlingId,
+    val opprettetTid: LocalDateTime,
+) : PeriodisertVurdering {
+    override val opprettet: Instant = opprettetTid.atZone(ZoneId.of("Europe/Oslo")).toInstant()
+}
