@@ -23,6 +23,11 @@ testing {
     suites {
         @Suppress("UnstableApiUsage")
         named<JvmTestSuite>("test") {
+            targets.all {
+                testTask {
+                    environment("TZ", "Europe/Oslo")
+                }
+            }
             useJUnitJupiter()
         }
     }
