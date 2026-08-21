@@ -11,7 +11,7 @@ class PipService private constructor(private val repository: PipRepository) {
 
     fun finnIdenterPåSak(saksnummer: Saksnummer): List<IdentPåSak> {
         if (!repository.sakEksisterer(saksnummer)) {
-            throw VerdiIkkeFunnetException("Sak med saksnummer $saksnummer finnes ikke")
+            return emptyList()
         }
 
         return repository.finnIdenterPåSak(saksnummer)
@@ -19,7 +19,7 @@ class PipService private constructor(private val repository: PipRepository) {
 
     fun finnIdenterPåBehandling(referanse: BehandlingReferanse): List<IdentPåSak> {
         if (!repository.behandlingEksisterer(referanse)) {
-            throw VerdiIkkeFunnetException("Behandling med $referanse finnes ikke")
+            return emptyList()
         }
 
         return repository.finnIdenterPåBehandling(referanse)
