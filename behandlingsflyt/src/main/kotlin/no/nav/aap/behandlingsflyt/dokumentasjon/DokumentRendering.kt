@@ -218,8 +218,8 @@ data class ReferanseBehandling(
             " (tidligere behandling)"
         }
 
-        val behandlingsreferanse = formaterVedtaksdato(behandlingId, kontekst).let { "vedtak fattet $it" }
-        return behandlingsreferanse + behandlingsopprinnelse
+        val behandlingsreferanse = kontekst.vedtak.single { it.id == behandlingId }.referanse
+        return behandlingsreferanse.toString() + behandlingsopprinnelse
     }
 }
 

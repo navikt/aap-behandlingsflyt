@@ -939,14 +939,17 @@ internal object VedtakDokumentRenderer {
 
         fun dokumentTabell(
             dokumenter: List<MottattDokument>,
-            inkludererBehandling: Boolean,
+            inkludererBehandlingsdetaljer: Boolean,
         ): Tabell? {
             val kolonner = buildList<LøpendeTekst> {
                 add(Tekst("Journalpost"))
                 add(Tekst("Type"))
                 add(Tekst("Mottatt"))
                 add(Tekst("Registrert"))
-                if (inkludererBehandling) add(Tekst("Behandlet i"))
+                if (inkludererBehandlingsdetaljer) {
+                    add(Tekst("Behandlet i"))
+                    add(Tekst("Vedtakstidspunkt"))
+                }
             }
             val rader = dokumenter.mapNotNull { mottattDokument ->
                 referanse(mottattDokument)?.let { referanse ->
@@ -955,16 +958,20 @@ internal object VedtakDokumentRenderer {
                         add(PrettyEnum(mottattDokument.type))
                         add(Tidspunkt(mottattDokument.mottattTidspunkt))
                         add(Tidspunkt(mottattDokument.opprettetTid))
-                        if (inkludererBehandling) {
+                        if (inkludererBehandlingsdetaljer) {
+                            val dokumentetsBehandling = mottattDokument.behandlingId?.let { behandlingId ->
+                                behandlinger.singleOrNull { it.id == behandlingId }
+                            }
                             add(
-                                mottattDokument.behandlingId?.let {
+                                dokumentetsBehandling?.let {
                                     ReferanseBehandling(
-                                        behandlingId = it,
+                                        behandlingId = it.id,
                                         inkluderBehandlingsopprinnelse = false,
                                     )
                                 }
                                     ?: Tekst("—")
                             )
+                            add(dokumentetsBehandling?.let { Tidspunkt(it.vedtakstidspunkt) } ?: Tekst("—"))
                         }
                     }
                 }
@@ -978,7 +985,7 @@ internal object VedtakDokumentRenderer {
                 "Nye dokumenter for behandlingen",
                 dokumentTabell(
                     dokumenter = mottatteDokumenter.filter { it.behandlingId == behandling.id },
-                    inkludererBehandling = false,
+                    inkludererBehandlingsdetaljer = false,
                 )
             ),
             Seksjon(
@@ -987,7 +994,7 @@ internal object VedtakDokumentRenderer {
                     dokumenter = mottatteDokumenter
                         .filter { it.behandlingId != behandling.id }
                         .filter { it.opprettetTid <= behandling.opprettetTidspunkt },
-                    inkludererBehandling = true,
+                    inkludererBehandlingsdetaljer = true,
                 )
             ),
         )
