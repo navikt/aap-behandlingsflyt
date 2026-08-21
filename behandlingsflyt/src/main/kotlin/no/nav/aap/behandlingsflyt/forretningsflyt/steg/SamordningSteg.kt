@@ -58,7 +58,7 @@ class SamordningSteg(
 
         val samordningYtelseVurderingGrunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
         val perioderSomIkkeHarBlittVurdert =
-            samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert()
+            samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert(kontekst.rettighetsperiode)
 
         if (perioderSomIkkeHarBlittVurdert.isEmpty()) {
             val samordningTidslinje = samordningYtelseVurderingGrunnlag.vurder()
@@ -84,7 +84,7 @@ class SamordningSteg(
     private fun perioderSomIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
         val samordningYtelseVurderingGrunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
         val perioderSomIkkeHarBlittVurdert =
-            samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert()
+            samordningYtelseVurderingGrunnlag.perioderSomIkkeHarBlittVurdert(kontekst.rettighetsperiode)
         return perioderSomIkkeHarBlittVurdert.perioder().toSet()
     }
 

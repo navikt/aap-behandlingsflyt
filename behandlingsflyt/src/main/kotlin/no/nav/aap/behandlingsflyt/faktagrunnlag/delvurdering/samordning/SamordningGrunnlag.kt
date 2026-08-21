@@ -23,7 +23,14 @@ data class SamordningYtelseVurderingGrunnlag(
     val vurderingGrunnlag: SamordningVurderingGrunnlag?
 ) : Faktagrunnlag {
 
+    /**
+     * Perioder med ytelser fra register som saksbehandler ikke har vurdert.
+     *
+     * Vi krever kun vurdering fra og med søknadstidspunktet, altså innenfor [rettighetsperiode].
+     * Treff i registeret som ligger før dette tidspunktet er ikke relevante for vedtaket.
+     */
     fun perioderSomIkkeHarBlittVurdert(
+        rettighetsperiode: Periode,
     ): Tidslinje<List<Ytelse>> {
         val hentedeYtelserByManuelleYtelser = ytelseGrunnlag?.tidslinjeMedSamordningYtelser().orEmpty()
 
@@ -31,7 +38,7 @@ data class SamordningYtelseVurderingGrunnlag(
             hentedeYtelserByManuelleYtelser.kombiner(
                 vurderingGrunnlag?.vurderingTidslinje().orEmpty(),
                 StandardSammenslåere.minus()
-            )
+            ).begrensetTil(rettighetsperiode)
 
         return perioderSomIkkeHarBlittVurdert.komprimer()
     }
