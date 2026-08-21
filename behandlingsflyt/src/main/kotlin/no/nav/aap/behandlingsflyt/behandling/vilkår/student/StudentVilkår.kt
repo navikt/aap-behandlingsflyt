@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
+
 object StudentVilkår : Vilkårsvurderer<StudentFaktagrunnlag> {
     fun utledVarighetSluttdato(fraDato: LocalDate): LocalDate = fraDato.plusMonths(6).minusDays(1)
 
