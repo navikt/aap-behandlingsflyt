@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 
 class ProsesserBehandlingService(
@@ -107,9 +108,12 @@ class ProsesserBehandlingService(
             triggProsesserBehandling(åpenBehandling, emptyList())
         } else if (skalInnhenteInformasjon(opprettetBehandling.nyBehandling.vurderingsbehov().map { it.type })) {
             flytJobbRepository.leggTil(
-                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(
-                    sakId = behandling.sakId.toLong(),
-                ).medCallId()
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører)
+                    .forSak(
+                        sakId = behandling.sakId.toLong()
+                    )
+                    .medCallId()
+                    .medPrioritet(Prioritet.LAV)
             )
         }
     }

@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.Prioritet
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
@@ -56,7 +57,9 @@ class HentSamIdJobbUtfører(
                 Pair(
                     behandlingId, vedtaksTidspunkt
                 )
-            ).forSak(sak.id.id)
+            )
+                .forSak(sak.id.id)
+                .medPrioritet(Prioritet.LAV)
         )
     }
 
