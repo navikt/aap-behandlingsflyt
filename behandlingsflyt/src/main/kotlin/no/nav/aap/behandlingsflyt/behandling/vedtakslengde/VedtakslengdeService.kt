@@ -49,6 +49,10 @@ class VedtakslengdeService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    fun hentVedtakslengdeGrunnlag(behandlingId: BehandlingId): VedtakslengdeGrunnlag? {
+        return vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
+    }
+
     fun hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
         return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(datoForUtvidelse)
     }

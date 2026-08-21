@@ -9,7 +9,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenValidering,
     NyBrevbyggerV3,
     Under18,
-    TrekkSoeknadOpprettetFraLegeerklaering,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
     SamordningFaktagrunnlagBrev,
@@ -20,6 +19,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MotorV2,
     IngenStoppHendelseVedAtomaerBehandling,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
+    GenererVilkarsvurderingOppsummeringPDF,
 
     // --- Krav ---
     KravSteg, // Visning
@@ -31,7 +31,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     // ------
     Avslag11_27,
     SkalViseAlleSykdomssteg,
-    StrekkAvslagOverHelg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     HoppOverKvalitetssikringVedIngenEndring
     ;

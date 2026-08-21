@@ -16,9 +16,6 @@ dependencies {
     testImplementation(libs.bundles.junit)
 }
 
-apply(plugin = "maven-publish")
-apply(plugin = "java-library")
-
 kotlin {
     explicitApi = ExplicitApiMode.Warning
 }

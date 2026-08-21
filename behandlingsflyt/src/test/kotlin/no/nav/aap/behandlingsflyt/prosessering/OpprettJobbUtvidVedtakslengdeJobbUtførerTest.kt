@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -49,7 +50,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
     @Test
     fun `skal opprette jobber for behandlinger hvor vedtakslengde skal forlenges`() {
-        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id).medPrioritet(Prioritet.BAKGRUNN)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
@@ -94,7 +95,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
     @Test
     fun `skal opprette jobb hvis hentNesteVedtakslengdeUtvidelse gir Manuell`() {
-        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id).medPrioritet(Prioritet.BAKGRUNN)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
         every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
@@ -148,7 +149,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
     @Test
     fun `skal inkludere kandidat som har avsluttet behandling med årsak UTVID_VEDTAKSLENGDE`() {
-        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+        val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id).medPrioritet(Prioritet.BAKGRUNN)
         val avsluttetBehandling = Behandling(
             id = BehandlingId(2L),
             forrigeBehandlingId = behandlingId,
@@ -200,6 +201,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     @Test
     fun `skal opprette jobb for sak som har andre ventende jobber men ikke utvidVedtakslengde-jobb`() {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
+            .medPrioritet(Prioritet.BAKGRUNN)
         val annenJobb = JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)

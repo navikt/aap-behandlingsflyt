@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.flate.AvbrytRevur
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvbrytRevurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
+import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -49,7 +50,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
             }
-            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden"))
+            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden", aarsak = AarsakTilTrekkSoknadDto.ANNET))
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -90,7 +91,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
                     .extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
             }
-            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden"))
+            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden", aarsak = AarsakTilTrekkSoknadDto.ANNET))
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -109,7 +110,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
                     .extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
             }
-            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden"))
+            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden", aarsak = AarsakTilTrekkSoknadDto.ANNET))
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)

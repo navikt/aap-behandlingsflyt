@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 
 class Avslag11_27VisningUtlederTest {
@@ -44,7 +45,9 @@ class Avslag11_27VisningUtlederTest {
                     begrunnelse = "b",
                     harAnnenFullYtelse = true,
                     brukersYtelse = Ytelse.SYKEPENGER,
-                    harSykepengegrunnlagOver2G = null,
+                    brukersYtelseTom = LocalDate.of(2026, 6, 30),
+                    harSykepengegrunnlagOver2G = false,
+                    harArbeidsgiverSykepengerUtbetaling = false,
                     skalAvslås1127 = true,
                     vurdertIBehandling = behandling.id,
                     opprettet = Instant.now(),

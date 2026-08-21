@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import io.github.nchaugen.tabletest.junit.TableTest
+import org.tabletest.junit.TableTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade

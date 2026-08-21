@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -68,7 +69,7 @@ class HåndterUførevedtakService(
         } else if (uførevedtak.resultat.erOpphørEllerEndring()) {
             log.info("Uførevedtak for sak $sakId er opphør eller endring, sjekker om informasjonskrav har endret seg")
             flytJobbRepository.leggTil(
-                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId()
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId().medPrioritet(Prioritet.LAV)
             )
         } else {
             val aktuellPeriode = Periode(uførevedtak.virkningsdato, Tid.MAKS)

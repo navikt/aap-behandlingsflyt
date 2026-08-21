@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
@@ -12,7 +13,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieSøknad
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder as byggFlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -25,6 +28,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykepengerOgFerieOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
@@ -180,6 +184,7 @@ class SamordningStegTest {
                 vurdertAv = Bruker("Z00000"),
                 skalTrekkes = true,
                 vurdert = Instant.parse("2020-01-01T12:12:12Z"),
+                aarsak = AarsakTilTrekkSoknad.ANNET
             )
         )
 
@@ -381,6 +386,84 @@ class SamordningStegTest {
         assertThat(samordninger.first().periode).isEqualTo(sykepengePeriode)
     }
 
+    @Test
+    fun `skal opprette avklaringsbehov om bruker har oppgitt at hen mottar sykepenger i søknaden, selv uten funn i register`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+
+        InMemorySykepengerOgFerieOppgittISøknadRepository.lagre(
+            behandling.id,
+            SykepengerOgFerieSøknad(
+                mottarSykepenger = true,
+                feriePerioder = emptyList(),
+                ferieDager = null,
+            )
+        )
+
+        steg().utfør(flytKontekstMedPerioder(behandling))
+
+        verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
+    }
+
+    @Test
+    fun `skal ikke opprette avklaringsbehov om bruker har svart nei på mottar sykepenger og ingen funn i register`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+
+        InMemorySykepengerOgFerieOppgittISøknadRepository.lagre(
+            behandling.id,
+            SykepengerOgFerieSøknad(
+                mottarSykepenger = false,
+                feriePerioder = emptyList(),
+                ferieDager = null,
+            )
+        )
+
+        steg().utfør(flytKontekstMedPerioder(behandling))
+
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+    }
+
+    @Test
+    fun `skal ikke opprette avklaringsbehov om bruker har oppgitt at hen mottar sykepenger men behandlingen uansett ender i uunngåelig avslag`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
+
+        InMemorySykepengerOgFerieOppgittISøknadRepository.lagre(
+            behandling.id,
+            SykepengerOgFerieSøknad(
+                mottarSykepenger = true,
+                feriePerioder = emptyList(),
+                ferieDager = null,
+            )
+        )
+
+        steg(
+            FakeTidligereVurderinger(
+                Tidslinje(
+                    sak.rettighetsperiode,
+                    TidligereVurderinger.UunngåeligAvslag
+                )
+            )
+        ).utfør(flytKontekstMedPerioder(behandling))
+
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+    }
+
+    @Test
+    fun `revurdering av noe annet enn samordning skal ikke gjøre at steget krever ny vurdering`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+
+        val kontekstUtenRelevantVurderingsbehov = byggFlytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.REVURDER_STUDENT)
+        }
+
+        steg().utfør(kontekstUtenRelevantVurderingsbehov)
+
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+    }
+
     private fun løsBehovet(behandling: Behandling) {
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).løsAvklaringsbehov(
             Definisjon.AVKLAR_SAMORDNING_GRADERING,
@@ -409,7 +492,8 @@ class SamordningStegTest {
             samordningService = SamordningService(inMemoryRepositoryProvider),
             samordningRepository = inMemoryRepositoryProvider.provide(),
             tidligereVurderinger = tidligereVurderinger,
-            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider())
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
+            sykepengerOgFerieOppgittISøknadRepository = inMemoryRepositoryProvider.provide()
         )
     }
 

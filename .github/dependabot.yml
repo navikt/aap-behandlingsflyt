@@ -1,51 +1,52 @@
 version: 2
 
 registries:
-    maven-github:
-        type: maven-repository
-        url: https://github-package-registry-mirror.gc.nav.no/cached/maven-release
-        username: POSTMAN
-        password: PAT
+  maven-github:
+    type: maven-repository
+    url: https://github-package-registry-mirror.gc.nav.no/cached/maven-release
+    username: POSTMAN
+    password: PAT
 
 updates:
-    - package-ecosystem: github-actions
-      directory: /
-      commit-message:
-        prefix: "AAP-2194"
-      groups:
-        codeql:
-          patterns:
-            - "github/codeql-action*"
-      schedule:
-          interval: daily
+  - package-ecosystem: github-actions
+    directory: /
+    commit-message:
+      prefix: "AAP-2194"
+    schedule:
+      interval: daily
 
-    - package-ecosystem: gradle
-      directory: /
-      commit-message:
-        prefix: "AAP-2194"
-      schedule:
-          interval: daily
-      cooldown:
-        default-days: 3
-        exclude:
+  - package-ecosystem: gradle
+    directory: /
+    commit-message:
+      prefix: "AAP-2194"
+    schedule:
+      interval: "cron"
+      cronjob: "0 6 1-7,15-21 * 1" # første og tredje mandag i måneden kl 06:00
+      timezone: "Europe/Oslo"
+    cooldown:
+      default-days: 7
+      exclude:
+        - "no.nav.aap*"
+    open-pull-requests-limit: 10
+    groups:
+      minor:
+        applies-to: version-updates
+        exclude-patterns:
           - "no.nav.aap*"
-      groups:
-        minor:
-          applies-to: version-updates
-          exclude-patterns:
-            - "no.nav.aap*"
-          update-types:
-            - "minor"
-            - "patch"
-        aap:
-          patterns:
-            - "no.nav.aap*"
+        update-types:
+          - "minor"
+          - "patch"
+      aap:
+        patterns:
+          - "no.nav.aap*"
+    registries:
+      - maven-github
 
-      registries:
-          - maven-github
-    - package-ecosystem: docker
-      commit-message:
-        prefix: "AAP-2194"
-      directory: /
-      schedule:
-          interval: daily
+  - package-ecosystem: docker
+    directory: /
+    commit-message:
+      prefix: "AAP-2194"
+    schedule:
+      interval: "cron"
+      cronjob: "0 6 1-7,15-21 * 1" # første og tredje mandag i måneden kl 06:00
+      timezone: "Europe/Oslo"

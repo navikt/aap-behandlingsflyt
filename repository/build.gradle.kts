@@ -18,9 +18,9 @@ dependencies {
     implementation(libs.apiInternKontrakt)
 
     implementation(libs.caffeine)
-    implementation("io.getunleash:unleash-client-java:11.1.1")
+    implementation("io.getunleash:unleash-client-java:12.2.3")
     runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
-    implementation("no.bekk.bekkopen:nocommons:0.16.0")
+    implementation("no.bekk.bekkopen:nocommons:0.17.0")
 
     testImplementation(project(":lib-test"))
     testImplementation(libs.dbtest)

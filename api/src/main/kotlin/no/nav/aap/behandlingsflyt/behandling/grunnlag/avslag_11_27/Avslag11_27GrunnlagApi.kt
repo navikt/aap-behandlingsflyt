@@ -76,7 +76,9 @@ private fun mapVurderingerTilDto(
             begrunnelse = vurdering.begrunnelse,
             harAnnenFullYtelse = vurdering.harAnnenFullYtelse,
             brukersYtelse = vurdering.brukersYtelse,
+            brukersYtelseTom = vurdering.brukersYtelseTom,
             harSykepengegrunnlagOver2G = vurdering.harSykepengegrunnlagOver2G,
+            harArbeidsgiverSykepengerUtbetaling = vurdering.harArbeidsgiverSykepengerUtbetaling,
             skalAvslås1127 = vurdering.skalAvslås1127,
             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.VURDER_AVSLAG_11_27,

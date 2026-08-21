@@ -29,12 +29,15 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -73,7 +76,6 @@ class SamordningAnnenFullYtelseVilkårTest {
                 uføreVurderingGrunnlag = null,
                 avslag1127grunnlag = null,
                 kravGrunnlag = null,
-                strekkAvslagOverHelger = true
             )
         )
 
@@ -107,7 +109,6 @@ class SamordningAnnenFullYtelseVilkårTest {
                 ),
                 avslag1127grunnlag = null,
                 kravGrunnlag = null,
-                strekkAvslagOverHelger = true
             )
         )
 
@@ -142,7 +143,6 @@ class SamordningAnnenFullYtelseVilkårTest {
                 ),
                 avslag1127grunnlag = null,
                 kravGrunnlag = null,
-                strekkAvslagOverHelger = true
             )
         )
 
@@ -309,52 +309,6 @@ class SamordningAnnenFullYtelseVilkårTest {
         assertThat(helgVurdering).usingRecursiveComparison().isEqualTo(fredagVurdering)
     }
 
-    @Test
-    fun `fyller inn helg med avslag hvis virkningstidspunkt skulle vært helgedag`() {
-        // samordning fra starten av rettighetsperioden, virkningstidspunkt skulle vært søndag
-        val torsdagfredaglørdag = Periode(1 januar 2026, 3 januar 2026)
-        val søndagMandag = Periode(4 januar 2026, 5 januar 2026)
-        val resultat = vurder(
-            grunnlag(
-                samordningGrunnlag = samordningToPerioder(
-                    torsdagfredaglørdag to Prosent.`100_PROSENT`,
-                    søndagMandag to Prosent.`50_PROSENT`,
-                )
-            )
-        )
-
-        val torsdagfredaglørdagvurdering = resultat.segment(2 januar 2026)!!.verdi
-        val søndagVurdering = resultat.segment(4 januar 2026)!!.verdi
-        assertThat(søndagVurdering).usingRecursiveComparison().isEqualTo(torsdagfredaglørdagvurdering)
-
-        val mandagVurdering = resultat.segment(5 januar 2026)!!.verdi
-        assertThat(mandagVurdering.utfall).isEqualTo(Utfall.IKKE_VURDERT)
-    }
-
-    @Test
-    fun `ikke fyll inn helg med avslag hvis samordning i en løpende sak`() {
-        // samordning fra noen dager inn i rettighetsperioden stopper på lørdag, men helg skal ikke fylles inn
-        val fredaglørdag = Periode(2 januar 2026, 3 januar 2026)
-        val søndagMandag = Periode(4 januar 2026, 5 januar 2026)
-        val resultat = vurder(
-            grunnlag(
-                samordningGrunnlag = samordningToPerioder(
-                    fredaglørdag to Prosent.`100_PROSENT`,
-                    søndagMandag to Prosent.`50_PROSENT`,
-                )
-            )
-        )
-
-        val fredaglørdagVurdering = resultat.segment(2 januar 2026)!!.verdi
-        val søndagVurdering = resultat.segment(4 januar 2026)!!.verdi
-        assertThat(søndagVurdering).usingRecursiveComparison().isNotEqualTo(fredaglørdagVurdering)
-
-        val mandagVurdering = resultat.segment(5 januar 2026)!!.verdi
-        assertThat(mandagVurdering).usingRecursiveComparison().isEqualTo(søndagVurdering)
-        assertThat(mandagVurdering.utfall).isEqualTo(Utfall.IKKE_VURDERT)
-    }
-
-
     private fun vurder(grunnlag: SamordningAnnenFullYtelseFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
         return SamordningAnnenFullYtelseVilkår.vurder(grunnlag)
     }
@@ -381,7 +335,9 @@ class SamordningAnnenFullYtelseVilkårTest {
             begrunnelse = "begrunnelse avslag 11-27",
             harAnnenFullYtelse = skalAvslås,
             brukersYtelse = if (skalAvslås) Ytelse.SYKEPENGER else null,
-            harSykepengegrunnlagOver2G = null,
+            brukersYtelseTom = if (skalAvslås) LocalDate.of(2026, 6, 30) else null,
+            harSykepengegrunnlagOver2G = if (skalAvslås) true else null,
+            harArbeidsgiverSykepengerUtbetaling = if (skalAvslås) false else null,
             skalAvslås1127 = skalAvslås,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
@@ -477,7 +433,6 @@ class SamordningAnnenFullYtelseVilkårTest {
         uføreVurderingGrunnlag = uføreGrunnlag,
         avslag1127grunnlag = avslag1127,
         kravGrunnlag = kravGrunnlag,
-        strekkAvslagOverHelger = true
     )
 
     fun tomtSamordningYtelseVurderingGrunnlag() = SamordningYtelseVurderingGrunnlag(

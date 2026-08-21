@@ -11,7 +11,7 @@ import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 interface KandidatForPåminnelseRepository : Repository {
-    fun finnKandidaterForPåminnelse(dato: LocalDate = LocalDate.now()): List<BehandlingReferanse>
+    fun finnKandidaterForPåminnelse(dagensDato: LocalDate = LocalDate.now(), bestillingOpprettetDato: LocalDate): List<BehandlingReferanse>
 }
 
 class KandidatForPåminnelseRepositoryImpl(
@@ -24,8 +24,7 @@ class KandidatForPåminnelseRepositoryImpl(
      * - ikke har vurderingsbehov [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_DIALOGMELDING]
      *   eller [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_LEGEERKLÆRING] som er nyere enn tre uker og en dag gammelt.
      */
-    override fun finnKandidaterForPåminnelse(dato: LocalDate): List<BehandlingReferanse> {
-        val treUkerOgEnDagSiden = dato.minusWeeks(3).minusDays(1)
+    override fun finnKandidaterForPåminnelse(dagensDato: LocalDate, bestillingOpprettetDato: LocalDate): List<BehandlingReferanse> {
         val query = """
             SELECT b.referanse
             FROM BEHANDLING b
@@ -50,8 +49,8 @@ class KandidatForPåminnelseRepositoryImpl(
 
         return connection.queryList(query) {
             setParams {
-                setLocalDate(1, treUkerOgEnDagSiden)
-                setLocalDate(2, treUkerOgEnDagSiden)
+                setLocalDate(1, bestillingOpprettetDato)
+                setLocalDate(2, bestillingOpprettetDato)
             }
             setRowMapper { row ->
                 val behandlingReferanse = row.getUUID("referanse")

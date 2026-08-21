@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
+import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -194,7 +195,8 @@ class TrekkSøknadLøserTest {
     private fun enLøsning(
         begrunnelse: String = "Testbegrunnelse",
         skalTrekkes: Boolean = true,
-    ) = TrekkSøknadLøsning(begrunnelse = begrunnelse, skalTrekkes = skalTrekkes)
+        aarsak: AarsakTilTrekkSoknadDto = AarsakTilTrekkSoknadDto.BRUKER_ONSKER_IKKE_SOKE_LENGER
+    ) = TrekkSøknadLøsning(begrunnelse = begrunnelse, skalTrekkes = skalTrekkes, aarsak = aarsak)
 
     private fun mottattDokument(
         type: InnsendingType,

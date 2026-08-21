@@ -34,6 +34,7 @@ object ProsesseringsJobber {
             OppdagEndretInformasjonskravJobbUtfører,
             HentSamIdJobbUtfører,
             VarsleVedtakJobbUtfører,
+            GenererVilkårsvurderingOppsummeringJobbUtfører,
             IverksettUtbetalingJobbUtfører,
             KafkaFeilJobbUtfører,
             TriggBarnetilleggSatsJobbUtfører,

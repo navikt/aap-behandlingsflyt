@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.Prioritet
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
@@ -71,6 +72,7 @@ class KabalKafkaKonsument(
                         )
                         flytjobbRepository.leggTil(
                             KafkaFeilJobbUtfører.nyJobb(Meldingkilde.KABAL, meldingVerdi)
+                                .medPrioritet(Prioritet.LAV)
                         )
                         return@transaction
                     }

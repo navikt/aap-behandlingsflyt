@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
+import java.time.LocalDate
 
 data class Avslag11_27Vurdering (
     override val referanse: Kravreferanse,
@@ -16,7 +17,9 @@ data class Avslag11_27Vurdering (
     val begrunnelse: String,
     val harAnnenFullYtelse: Boolean,
     val brukersYtelse: Ytelse? = null,
+    val brukersYtelseTom: LocalDate? = null,
     /*  Kun for sykepenger */
     val harSykepengegrunnlagOver2G: Boolean? = null,
+    val harArbeidsgiverSykepengerUtbetaling: Boolean? = null,
     val skalAvslås1127: Boolean? = null,
 ): VurderingForKrav
