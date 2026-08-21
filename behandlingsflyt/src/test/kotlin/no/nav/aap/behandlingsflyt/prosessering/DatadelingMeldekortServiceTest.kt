@@ -32,6 +32,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.help.ident
+import java.time.DayOfWeek
+import java.time.temporal.TemporalAdjusters
 
 
 class DatadelingMeldekortServiceTest {
@@ -84,6 +86,7 @@ class DatadelingMeldekortServiceTest {
             )
 
             val periodeStart = testSak.opprettetTidspunkt.plusDays(1).toLocalDate()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
             val meldeperioder = lagreMeldeperioder(periodeStart, meldeperiodeRepository, testBehandling)
 
