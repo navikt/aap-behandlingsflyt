@@ -10,6 +10,36 @@ import java.time.LocalDate
 
 class VurderingerForSamordningTest {
     @Test
+    fun `skal kaste exception når begrunnelse mangler`() {
+        assertThrows<UgyldigForespørselException> {
+            VurderingerForSamordning(
+                begrunnelse = null,
+                vurderteSamordningerData = emptyList()
+            ).valider()
+        }
+    }
+
+    @Test
+    fun `skal kaste exception når begrunnelse er blank`() {
+        assertThrows<UgyldigForespørselException> {
+            VurderingerForSamordning(
+                begrunnelse = "   ",
+                vurderteSamordningerData = emptyList()
+            ).valider()
+        }
+    }
+
+    @Test
+    fun `skal ikke kaste exception når begrunnelse er satt uten vurderte perioder`() {
+        assertDoesNotThrow {
+            VurderingerForSamordning(
+                begrunnelse = "Bruker mottar ingen andre ytelser",
+                vurderteSamordningerData = emptyList()
+            ).valider()
+        }
+    }
+
+    @Test
     fun `skal kaste exception når perioder for samme ytelsetype overlapper`() {
         assertThrows<UgyldigForespørselException> {
             VurderingerForSamordning(

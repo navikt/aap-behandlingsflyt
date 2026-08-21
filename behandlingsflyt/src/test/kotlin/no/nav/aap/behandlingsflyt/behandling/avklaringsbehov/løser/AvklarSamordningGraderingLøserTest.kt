@@ -11,9 +11,11 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingR
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 class AvklarSamordningGraderingLøserTest {
@@ -52,5 +54,24 @@ class AvklarSamordningGraderingLøserTest {
 
         val lagredeVurderinger = InMemorySamordningVurderingRepository.hentHvisEksisterer(behandling.id)
         assertThat(lagredeVurderinger?.vurderinger).isEmpty()
+    }
+
+    @Test
+    fun `skal ikke kunne bekrefte kortet uten begrunnelse`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+
+        val løser = AvklarSamordningGraderingLøser(inMemoryRepositoryProvider)
+
+        assertThrows<UgyldigForespørselException> {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                løsning = AvklarSamordningGraderingLøsning(
+                    vurderingerForSamordning = VurderingerForSamordning(
+                        vurderteSamordningerData = emptyList(),
+                        begrunnelse = "",
+                    ),
+                )
+            )
+        }
     }
 }
