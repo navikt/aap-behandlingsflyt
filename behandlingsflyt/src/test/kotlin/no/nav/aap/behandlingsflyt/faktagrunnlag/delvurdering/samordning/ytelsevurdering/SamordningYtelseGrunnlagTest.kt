@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 class SamordningYtelseGrunnlagTest {
     @Test
-    fun `ytelser fra register med overlappende segmenter slås sammen ved sjekk av manglende vurderinger`() {
+    fun `ytelser fra register med overlappende segmenter slås sammen`() {
         val grunnlag = SamordningYtelseGrunnlag(
             1L,
             setOf(
@@ -31,10 +31,11 @@ class SamordningYtelseGrunnlagTest {
             ),
         )
 
-        val ikkeVurdertePerioder =
-            SamordningYtelseVurderingGrunnlag(grunnlag, null).perioderSomIkkeHarBlittVurdert(Periode(1 januar 2024, 31 januar 2024))
+        val ytelserFraRegister =
+            SamordningYtelseVurderingGrunnlag(grunnlag, null).ytelseGrunnlag!!.tidslinjeMedSamordningYtelser()
+                .komprimer()
 
-        assertThat(ikkeVurdertePerioder.segmenter().first().periode).isEqualTo(
+        assertThat(ytelserFraRegister.segmenter().first().periode).isEqualTo(
             Periode(1 januar 2024, 13 januar 2024)
         )
     }
