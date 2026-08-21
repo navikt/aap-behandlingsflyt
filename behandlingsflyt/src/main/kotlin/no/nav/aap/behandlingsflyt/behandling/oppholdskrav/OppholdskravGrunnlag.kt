@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -71,30 +70,6 @@ data class OppholdskravVurdering(
                 }
         )
     }
-}
-
-/**
- * Dette er domenespefisikke valideringer. Datamodellen er mer fleksibel enn det disse valideringene legger opp til, så om
- * man endrer funskjonaliteten i frontend så kan det være man også trenger å oppdatere valideringen her. Datamodellen kan f.eks.
- * godta at tidslinjen har hull eller at man ikke vurderer hele rettighetsperioden. Hva som er default oppførsel om en periode
- * mangler vurdering bestemmes av OppholdskravRegel.
- */
-fun Tidslinje<OppholdskravTidslinjeData>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<OppholdskravTidslinjeData>> {
-    val periodeForVurdering = helePerioden()
-
-    if (!erSammenhengende()) {
-        return Validation.Invalid(this, "Periodene for oppholdskrav er ikke sammenhengende")
-    }
-
-    if(periodeForVurdering.fom > rettighetsperiode.fom) {
-        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettisgetsperioden for saken starter ${rettighetsperiode.fom} mens vurderingens første periode starter ${periodeForVurdering.fom}. ")
-    }
-
-    if(periodeForVurdering.tom < rettighetsperiode.tom) {
-        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettisgetsperioden for saken slutter ${rettighetsperiode.tom} mens vurderingens siste periode slutter ${periodeForVurdering.tom}. ")
-    }
-
-    return Validation.Valid(this)
 }
 
 data class OppholdskravPeriode(
