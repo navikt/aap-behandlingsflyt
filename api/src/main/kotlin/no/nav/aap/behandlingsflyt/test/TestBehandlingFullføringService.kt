@@ -453,7 +453,7 @@ class TestBehandlingFullføringService(
         )
 
         Definisjon.AVKLAR_SAMORDNING_GRADERING -> AvklarSamordningGraderingLøsning(
-            vurderingerForSamordning = VurderingerForSamordning("", emptyList())
+            vurderingerForSamordning = VurderingerForSamordning("Ingen samordning", emptyList())
         )
 
         Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND -> AvklarSamordningSykestipendLøsning(

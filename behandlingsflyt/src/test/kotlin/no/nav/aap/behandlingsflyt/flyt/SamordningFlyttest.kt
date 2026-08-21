@@ -96,7 +96,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                                 gradering = 100,
                             )
                         ),
-                        begrunnelse = "",
+                        begrunnelse = "Samordning vurdert",
                     ),
                 ),
             )
@@ -124,7 +124,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                                 gradering = 50,
                             )
                         ),
-                        begrunnelse = "",
+                        begrunnelse = "Samordning vurdert",
                     ),
                 ),
             )
@@ -457,7 +457,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                             gradering = 100,
                         )
                     ),
-                    begrunnelse = "",
+                    begrunnelse = "Samordning vurdert",
                 ),
             ),
         )
