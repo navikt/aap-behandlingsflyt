@@ -20,6 +20,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenStoppHendelseVedAtomaerBehandling,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     GenererVilkarsvurderingOppsummeringPDF,
+    MigreringHentArenaGrunnlag,
 
     // --- Krav ---
     KravSteg, // Visning
