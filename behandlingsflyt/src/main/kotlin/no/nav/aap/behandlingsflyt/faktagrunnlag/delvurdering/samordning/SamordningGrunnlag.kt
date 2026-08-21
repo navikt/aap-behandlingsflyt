@@ -23,12 +23,6 @@ data class SamordningYtelseVurderingGrunnlag(
     val vurderingGrunnlag: SamordningVurderingGrunnlag?
 ) : Faktagrunnlag {
 
-    /**
-     * Perioder med ytelser fra register som saksbehandler ikke har vurdert.
-     *
-     * Vi krever kun vurdering fra og med søknadstidspunktet, altså innenfor [rettighetsperiode].
-     * Treff i registeret som ligger før dette tidspunktet er ikke relevante for vedtaket.
-     */
     fun perioderSomIkkeHarBlittVurdert(
         rettighetsperiode: Periode,
     ): Tidslinje<List<Ytelse>> {
