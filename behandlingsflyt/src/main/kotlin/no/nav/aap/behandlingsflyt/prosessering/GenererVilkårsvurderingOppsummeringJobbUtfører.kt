@@ -40,7 +40,8 @@ class GenererVilkårsvurderingOppsummeringJobbUtfører(
 
         journalføringService.journalførVilkårsvurderingOppsummering(
             sak = sak,
-            pdf = pdf
+            tittel = dokument.tittel,
+            pdf = pdf,
         )
     }
 

@@ -9,10 +9,8 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.text.NumberFormat
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import no.nav.aap.komponenter.type.Periode as DomenePeriode
@@ -20,6 +18,7 @@ import no.nav.aap.komponenter.verdityper.Prosent as DomeneProsent
 
 
 data class RenderKontekst(
+    val gjeldendeBehandlingId: BehandlingId,
     val vedtak: List<BehandlingMedVedtak>,
     val overskriftsnivå: Int = 1,
 ) {
@@ -187,30 +186,40 @@ data class ReferanseJournalpost(val journalpostId: JournalpostId) : LøpendeTeks
     override fun render(kontekst: RenderKontekst) = "Journalpost ${journalpostId.identifikator}"
 }
 
-data class ReferanseBehandling(val behandlingId: BehandlingId) : LøpendeTekst {
+internal fun formaterVedtaksdato(
+    behandlingId: BehandlingId,
+    kontekst: RenderKontekst,
+): String {
+    val vedtakstidspunkt = kontekst.vedtak.single { it.id == behandlingId }.vedtakstidspunkt
+
+    val harFlereVedtakSammeDato = kontekst.vedtak
+        .filter { it.id != behandlingId }
+        .any { it.vedtakstidspunkt.toLocalDate() == vedtakstidspunkt.toLocalDate() }
+
+    return buildString {
+        append(Dato(vedtakstidspunkt.toLocalDate()).render(kontekst))
+        if (harFlereVedtakSammeDato) {
+            append(" ")
+            append(vedtakstidspunkt.toLocalTime())
+        }
+    }
+}
+
+data class ReferanseBehandling(
+    val behandlingId: BehandlingId,
+    val inkluderBehandlingsopprinnelse: Boolean = true,
+) : LøpendeTekst {
     override fun render(kontekst: RenderKontekst): String {
-        val vedtakstidspunkt = kontekst.vedtak.singleOrNull { it.id == behandlingId }?.vedtakstidspunkt
-
-        if (vedtakstidspunkt == null) {
-            return behandlingId.toString()
+        val behandlingsopprinnelse = if (!inkluderBehandlingsopprinnelse) {
+            ""
+        } else if (behandlingId == kontekst.gjeldendeBehandlingId) {
+            " (nåværende behandling)"
+        } else {
+            " (tidligere behandling)"
         }
 
-        /* Finn nødvendig oppløsning for å skille vedtak på samme dato. */
-        val andreRelevanteVedtak = kontekst.vedtak
-            .filter { it.id != behandlingId }
-            .map { it.vedtakstidspunkt }
-            .filter { it.toLocalDate() == vedtakstidspunkt.toLocalDate() }
-
-        return buildString {
-            append("vedtak fattet ")
-            append(Dato(vedtakstidspunkt.toLocalDate()).render(kontekst))
-
-            /* Mer enn ett vedtak på denne datoen, så legger med klokkeslett. */
-            if (andreRelevanteVedtak.isNotEmpty()) {
-                append(" ")
-                append(vedtakstidspunkt.toLocalTime().toString())
-            }
-        }
+        val behandlingsreferanse = kontekst.vedtak.single { it.id == behandlingId }.referanse
+        return behandlingsreferanse.toString() + behandlingsopprinnelse
     }
 }
 
@@ -247,10 +256,6 @@ data class Periode(val periode: DomenePeriode, val kompakt: Boolean = false) : L
 }
 
 data class Tidspunkt(val tidspunkt: LocalDateTime) : LøpendeTekst {
-    constructor(instant: Instant) : this(
-        instant.atZone(ZoneId.of("europe/oslo")).toLocalDateTime()
-    )
-
     override fun render(kontekst: RenderKontekst) =
         tidspunkt.toLocalDate().format(Dato.formatter) + " " + tidspunkt.toLocalTime().toString()
 }
