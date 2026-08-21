@@ -114,7 +114,7 @@ internal class SamordningServiceTest {
             ).samordningGrunnlag(behandlingId)
         }
         val ikkeVurdertePerioder =
-            SamordningYtelseVurderingGrunnlag(ytelser, vurderinger).perioderSomIkkeHarBlittVurdert()
+            SamordningYtelseVurderingGrunnlag(ytelser, vurderinger).perioderSomIkkeHarBlittVurdert(Periode(1 januar 2024, 31 januar 2024))
 
         // Forvent at ikke-vurderte perioder er fra 1 jan til 4 jan
         assertThat(ikkeVurdertePerioder.segmenter()).hasSize(1)

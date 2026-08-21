@@ -285,7 +285,7 @@ class SamordningStegTest {
         lagreYtelseGrunnlag(
             behandling.id,
             Ytelse.SYKEPENGER,
-            Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(1))
+            Periode(LocalDate.now(), LocalDate.now().plusYears(2))
         )
         løsBehovet(behandling)
 
@@ -460,6 +460,26 @@ class SamordningStegTest {
 
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+    }
+
+    @Test
+    fun `ytelser i register fra før søknadstidspunktet krever ikke vurdering`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        settOppRessurser(
+            Ytelse.SYKEPENGER,
+            behandling.id,
+            Periode(LocalDate.now().minusYears(2), LocalDate.now().minusDays(1))
+        )
+
+        val resultat = steg().utfør(flytKontekstMedPerioder(behandling))
+
+        assertThat(resultat).isEqualTo(Fullført)
+
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+
+        // Grunnlaget skal lagres selv om saksbehandler ikke har vurdert treffet fra registeret
+        assertThat(InMemorySamordningRepository.hentHvisEksisterer(behandling.id)).isNotNull()
     }
 
     private fun løsBehovet(behandling: Behandling) {
