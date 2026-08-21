@@ -77,6 +77,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
+        BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
+
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
