@@ -37,6 +37,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
@@ -84,6 +85,7 @@ class IverksettVedtakSteg internal constructor(
         flytJobbRepository.leggTil(
             jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
                 .forSak(kontekst.sakId.id)
+                .medPrioritet(Prioritet.LAV)
         )
         if (unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF) &&
             skalGenerereVilkårsvurderingOppsummering(kontekst)
@@ -93,13 +95,14 @@ class IverksettVedtakSteg internal constructor(
                     behandlingId = kontekst.behandlingId,
                     sakId = kontekst.sakId,
                 )
+                    .medPrioritet(Prioritet.LAV)
             )
         }
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             flytJobbRepository.leggTil(
-                HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(kontekst.sakId)
+                HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(kontekst.sakId).medPrioritet(Prioritet.LAV)
             )
         }
 
@@ -116,6 +119,7 @@ class IverksettVedtakSteg internal constructor(
             jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
                 .medPayload(kontekst.behandlingId)
                 .forSak(sakId = kontekst.sakId.toLong())
+                .medPrioritet(Prioritet.LAV)
         )
     }
 
