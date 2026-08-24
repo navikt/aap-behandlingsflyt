@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendGrunnlag
@@ -269,6 +270,28 @@ class VedtakDokumentRenderingTest {
     }
 
     @Test
+    fun `viser manuell vurdering av inntektsbortfall`() {
+        val vurdering = InntektsbortfallVurdering(
+            begrunnelse = "Brukeren har rett til fullt uttak av alderspensjon",
+            rettTilUttak = true,
+            vurdertAv = Bruker("Z111111"),
+            vurdertIBehandling = behandlingId,
+            opprettetTid = LocalDateTime.of(2024, 1, 1, 12, 0),
+        )
+
+        val dom = grunnlag(inntektsbortfallVurdering = vurdering).render()
+        val overskrifter = dom.filterIsInstance<DOM.Header>().map { it.overskrift }
+        val felter = dom.filterIsInstance<DOM.List>().flatMap { it.liste }
+
+        assertThat(overskrifter).contains("Inntektsbortfall (§ 11-4 andre ledd)", "Vurdering")
+        assertThat(felter).contains(
+            listOf("Begrunnelse", "Brukeren har rett til fullt uttak av alderspensjon"),
+            listOf("Rett til fullt uttak av alderspensjon", "ja"),
+        )
+        assertThat(felter.flatten()).doesNotContain("Z111111")
+    }
+
+    @Test
     fun `viser alle vurderte vilkårstyper`() {
         val periode = DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
         val vilkårsresultat = Vilkårsresultat(
@@ -381,6 +404,7 @@ class VedtakDokumentRenderingTest {
         lovvalgMedlemskapGrunnlag: MedlemskapArbeidInntektGrunnlag? = null,
         avslag11_27Grunnlag: Avslag11_27Grunnlag? = null,
         sykestipendGrunnlag: SykestipendGrunnlag? = null,
+        inntektsbortfallVurdering: InntektsbortfallVurdering? = null,
     ) = VedtakDokumentGrunnlag(
         saksnummer = behandlingMedVedtak.saksnummer,
         behandling = behandling,
@@ -412,6 +436,7 @@ class VedtakDokumentRenderingTest {
         refusjonkravVurderinger = refusjonkrav,
         avslag11_27Grunnlag = avslag11_27Grunnlag,
         sykestipendGrunnlag = sykestipendGrunnlag,
+        inntektsbortfallVurdering = inntektsbortfallVurdering,
         overstyringMeldepliktGrunnlag = null,
         manuellInntektGrunnlag = null,
         beregningVurderingGrunnlag = null,

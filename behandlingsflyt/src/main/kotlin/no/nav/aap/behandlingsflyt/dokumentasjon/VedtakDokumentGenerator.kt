@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
+import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
@@ -68,6 +69,7 @@ class VedtakDokumentGenerator(
     private val refusjonkravRepository: RefusjonkravRepository,
     private val avslag11_27Repository: Avslag11_27Repository,
     private val sykestipendRepository: SykestipendRepository,
+    private val inntektsbortfallRepository: InntektsbortfallRepository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
@@ -102,6 +104,7 @@ class VedtakDokumentGenerator(
         refusjonkravRepository = repositoryProvider.provide(),
         avslag11_27Repository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
+        inntektsbortfallRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
@@ -177,6 +180,7 @@ class VedtakDokumentGenerator(
             refusjonkravVurderinger = refusjonkravRepository.hentHvisEksisterer(behandlingId),
             avslag11_27Grunnlag = avslag11_27Repository.hentHvisEksisterer(behandlingId),
             sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(behandlingId),
+            inntektsbortfallVurdering = inntektsbortfallRepository.hentHvisEksisterer(behandlingId),
             overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId),
             manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId),
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),

@@ -71,6 +71,7 @@ internal object VedtakDokumentRenderer {
                 avslag11_27Sub(),
                 samordningSub(),
                 sykestipendSub(),
+                inntektsbortfallSub(),
                 institusjonsoppholdSub(),
                 lovvalgMedlemskapSub(),
                 forutgåendeMedlemskapSub(),
@@ -553,6 +554,20 @@ internal object VedtakDokumentRenderer {
                         },
                     )
                 },
+            )
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.inntektsbortfallSub(): Seksjon? {
+        val vurdering = inntektsbortfallVurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Inntektsbortfall (§ 11-4 andre ledd)"),
+            Seksjon(
+                tittel = Tekst("Vurdering"),
+                Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+                Dict(
+                    "Rett til fullt uttak av alderspensjon" to JaNeiValg(vurdering.rettTilUttak),
+                ),
             )
         )
     }
