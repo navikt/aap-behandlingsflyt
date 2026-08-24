@@ -65,6 +65,7 @@ class UnderveisService(
     private val unleashGateway: UnleashGateway,
     private val rettighetstypeRepository: RettighetstypeRepository,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val kvoteService: KvoteService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider, gatewayProvider),
@@ -83,11 +84,11 @@ class UnderveisService(
         unleashGateway = gatewayProvider.provide(),
         rettighetstypeRepository = repositoryProvider.provide(),
         virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
+        kvoteService = KvoteService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val kvoteService = KvoteService()
 
     companion object {
         private val regelset = listOf(

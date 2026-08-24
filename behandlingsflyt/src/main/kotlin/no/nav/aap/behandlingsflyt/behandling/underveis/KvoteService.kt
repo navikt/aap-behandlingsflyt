@@ -1,6 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-class KvoteService {
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+class KvoteService private constructor() {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this()
+
     fun beregn(): Kvoter {
         return standardKvoter
     }

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -39,6 +41,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val kvoteService: KvoteService,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -91,8 +94,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     ) {
         val vilkårFør = vilkårsresultatRepository.hent(behandlingFørMigrering.id)
         val vilkårEtter = vilkårsresultatRepository.hent(behandlingEtterMigrering.id)
-        val rettighetstypeFør = vilkårFør.rettighetstypeTidslinje()
-        val rettighetstypeEtter = vilkårEtter.rettighetstypeTidslinje()
+        val rettighetstypeFør = vurderRettighetsType(vilkårFør, kvoteService.beregn())
+        val rettighetstypeEtter = vurderRettighetsType(vilkårEtter, kvoteService.beregn())
         if (rettighetstypeFør.isEmpty() && rettighetstypeEtter.isEmpty()) {
             log.info("Rettighetstypen er tom før og etter migrering - totalt avslag")
             return
@@ -297,6 +300,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 vilkårsresultatRepository = repositoryProvider.provide(),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 sakService = SakService(repositoryProvider, gatewayProvider),
+                kvoteService = KvoteService(repositoryProvider, gatewayProvider),
             )
         }
 

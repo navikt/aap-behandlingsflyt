@@ -28,7 +28,7 @@ class RettighetstypeStegTest {
     private val rettighetstypeRepository = InMemoryRettighetstypeRepository
     private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
 
-    private val kvoteService = KvoteService()
+    private val kvoteService = KvoteService(inMemoryRepositoryProvider, minimalGatewayProvider {  })
     private val steg = RettighetstypeSteg(inMemoryRepositoryProvider, minimalGatewayProvider {  })
 
     @Test

@@ -5,7 +5,9 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
@@ -71,15 +73,16 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 vedtakslengdeRepository = vedtakslengdeRepository,
                 underveisRepository = underveisRepository,
                 rettighetstypeService = RettighetstypeService(
-                    rettighetestypeRepository,
-                    vilkårsresultatRepository,
-                    underveisRepository,
-                    mockk(),
-                    mockk<BehandlingRepository>()
+                    rettighetstypeRepository = rettighetestypeRepository,
+                    vilkårsresultatRepository = vilkårsresultatRepository,
+                    underveisRepository = underveisRepository,
+                    sakRepository = mockk(),
+                    behandlingRepository = mockk<BehandlingRepository>(),
+                    kvoteService = mockk(),
                 ),
                 stansOpphørRepository = stansOpphørRepository,
                 clock = clock,
-                virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository),
+                virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository, mockk()),
             ),
         )
 
@@ -291,7 +294,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
     private fun rettighetstypeGrunnlag(vilkårsresultat: Vilkårsresultat) =
         RettighetstypeGrunnlag(
-            rettighetstypeTidslinje = vilkårsresultat.rettighetstypeTidslinje()
+            rettighetstypeTidslinje = vurderRettighetsType(vilkårsresultat, KvoteService.standardKvoter)
         )
 
 
