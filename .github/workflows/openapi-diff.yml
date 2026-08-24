@@ -13,6 +13,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+    env:
+      TZ: Europe/Oslo
     steps:
       # Sjekker ut PR-branchen og genererer openapi.json for den nye koden.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
