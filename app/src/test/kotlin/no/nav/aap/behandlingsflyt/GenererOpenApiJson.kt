@@ -7,9 +7,11 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
-import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.fakes.TestToken
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -20,6 +22,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
+import no.nav.aap.motor.Motor
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.InputStream
@@ -43,14 +46,7 @@ fun getToken(): OidcToken {
 
 fun main() {
     FakeServers.start()
-    val postgres = postgreSQLContainer()
     lateinit var port: Number
-
-    val dbConfig = DbConfig(
-        url = postgres.jdbcUrl,
-        username = postgres.username,
-        password = postgres.password
-    )
 
     val client: RestClient<InputStream> = RestClient(
         config = ClientConfig(scope = "behandlingsflyt"),
@@ -58,17 +54,23 @@ fun main() {
         responseHandler = DefaultResponseHandler()
     )
 
+    val repositoryRegistry = inMemoryRepositoryRegistry
+    val gatewayProvider = defaultGatewayProvider()
+    // Trenger ikke en ekte database for å generere openapi-skjemaet, siden rutene aldri kalles.
+    val dataSource = MockDataSource()
+    val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val motor = Motor(
+        dataSource = dataSource,
+        jobber = ProsesseringsJobber.alle(),
+        prometheus = prometheus,
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider,
+    )
+
     // Starter server
     val server = embeddedServer(Netty, port = 0) {
-        val repositoryRegistry = postgresRepositoryRegistry
-        val gatewayProvider = defaultGatewayProvider()
-
-        server(
-            dbConfig = dbConfig,
-            repositoryRegistry = repositoryRegistry,
-            gatewayProvider = gatewayProvider,
-            prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
-        )
+        configureCommonModules(prometheus)
+        registerApiRoutes(dataSource, dataSource, repositoryRegistry, gatewayProvider, motor, prometheus)
 
         // Tar med /test-rutene (kun brukt lokalt/i tester) slik at de også blir med i det genererte openapi.json-skjemaet.
         apiRouting {
