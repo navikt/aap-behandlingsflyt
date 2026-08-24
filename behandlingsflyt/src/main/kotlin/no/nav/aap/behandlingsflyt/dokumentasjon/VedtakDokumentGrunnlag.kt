@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
@@ -64,6 +65,7 @@ data class VedtakDokumentGrunnlag(
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag?,
     val manuellInntektGrunnlag: ManuellInntektGrunnlag?,
     val beregningVurderingGrunnlag: BeregningGrunnlag?,
+    val lovvalgMedlemskapGrunnlag: MedlemskapArbeidInntektGrunnlag?,
     val forutgåendeMedlemskapGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
     val oppholdskravGrunnlag: OppholdskravGrunnlag?,
 )

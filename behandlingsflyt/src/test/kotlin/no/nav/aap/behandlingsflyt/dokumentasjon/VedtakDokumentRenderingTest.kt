@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregnGrunnlagYrkesskade
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.DOM
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -13,6 +15,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -138,6 +143,50 @@ class VedtakDokumentRenderingTest {
     }
 
     @Test
+    fun `viser manuell vurdering av lovvalg og medlemskap`() {
+        val lovvalgMedlemskapGrunnlag = MedlemskapArbeidInntektGrunnlag(
+            medlemskapGrunnlag = null,
+            inntekterINorgeGrunnlag = emptyList(),
+            arbeiderINorgeGrunnlag = emptyList(),
+            vurderinger = listOf(
+                ManuellVurderingForLovvalgMedlemskap(
+                    lovvalg = LovvalgDto(
+                        begrunnelse = "Sverige er lovvalgsland",
+                        lovvalgsEØSLandEllerLandMedAvtale = EØSLandEllerLandMedAvtale.SWE,
+                    ),
+                    medlemskap = MedlemskapDto(
+                        begrunnelse = "Ikke medlem i norsk folketrygd",
+                        varMedlemIFolketrygd = false,
+                    ),
+                    vurdertAv = Bruker("Z111111"),
+                    vurdertDato = LocalDateTime.of(2024, 1, 1, 12, 0),
+                    overstyrt = true,
+                    fom = LocalDate.of(2024, 1, 1),
+                    tom = LocalDate.of(2024, 1, 31),
+                    vurdertIBehandling = behandlingId,
+                )
+            ),
+        )
+
+        val dom = grunnlag(lovvalgMedlemskapGrunnlag = lovvalgMedlemskapGrunnlag).render()
+        val overskrifter = dom.filterIsInstance<DOM.Header>().map { it.overskrift }
+        val felter = dom.filterIsInstance<DOM.List>().flatMap { it.liste }
+
+        assertThat(overskrifter)
+            .contains("Lovvalg og medlemskap (§ 2)")
+            .anyMatch { it.contains("01. januar 2024 – 31. januar 2024") }
+        assertThat(felter)
+            .contains(
+                listOf("Begrunnelse for lovvalg", "Sverige er lovvalgsland"),
+                listOf("Lovvalgsland", "SWE"),
+                listOf("Medlem i folketrygden", "nei"),
+                listOf("Overstyrt", "ja"),
+                listOf("Begrunnelse for medlemskap", "Ikke medlem i norsk folketrygd"),
+            )
+        assertThat(felter.flatten()).doesNotContain("Z111111")
+    }
+
+    @Test
     fun `viser alle vurderte vilkårstyper`() {
         val periode = DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
         val vilkårsresultat = Vilkårsresultat(
@@ -247,6 +296,7 @@ class VedtakDokumentRenderingTest {
         refusjonkrav: List<RefusjonkravVurdering>? = null,
         vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
         behandlinger: List<BehandlingMedVedtak> = listOf(behandlingMedVedtak),
+        lovvalgMedlemskapGrunnlag: MedlemskapArbeidInntektGrunnlag? = null,
     ) = VedtakDokumentGrunnlag(
         saksnummer = behandlingMedVedtak.saksnummer,
         behandling = behandling,
@@ -279,6 +329,7 @@ class VedtakDokumentRenderingTest {
         overstyringMeldepliktGrunnlag = null,
         manuellInntektGrunnlag = null,
         beregningVurderingGrunnlag = null,
+        lovvalgMedlemskapGrunnlag = lovvalgMedlemskapGrunnlag,
         forutgåendeMedlemskapGrunnlag = null,
         oppholdskravGrunnlag = null,
     )

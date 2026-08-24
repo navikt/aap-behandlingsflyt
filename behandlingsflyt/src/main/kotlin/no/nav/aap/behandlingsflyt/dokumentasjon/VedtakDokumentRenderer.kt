@@ -70,6 +70,7 @@ internal object VedtakDokumentRenderer {
                 refusjonkravSub(),
                 samordningSub(),
                 institusjonsoppholdSub(),
+                lovvalgMedlemskapSub(),
                 forutgåendeMedlemskapSub(),
                 oppholdskravSub(),
                 manuellInntektSub(),
@@ -574,6 +575,29 @@ internal object VedtakDokumentRenderer {
                         "Var medlem med nedsatt arbeidsevne" to JaNeiValg(v.varMedlemMedNedsattArbeidsevne),
                         "Unntak fra maks 5 år" to JaNeiValg(v.medlemMedUnntakAvMaksFemAar),
                     )
+                )
+            }
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.lovvalgMedlemskapSub(): Seksjon? {
+        val grunnlag = lovvalgMedlemskapGrunnlag ?: return null
+        val tidslinje = grunnlag.gjeldendeVurderinger()
+        if (tidslinje.isEmpty()) return null
+        return Seksjon(
+            tittel = Tekst("Lovvalg og medlemskap"),
+            subseksjoner = tidslinje.segmenter().map { (periode, vurdering) ->
+                Seksjon(
+                    tittel = vurderingsoverskrift(vurdering.vurdertIBehandling, periode),
+                    Fritekstfelt("Begrunnelse for lovvalg", vurdering.lovvalg.begrunnelse),
+                    Dict(
+                        "Lovvalgsland" to Tekst(vurdering.lovvalg.lovvalgsEØSLandEllerLandMedAvtale.name),
+                        "Medlem i folketrygden" to JaNeiValg(vurdering.medlemskap?.varMedlemIFolketrygd),
+                        "Overstyrt" to JaNeiValg(vurdering.overstyrt),
+                    ),
+                    vurdering.medlemskap?.let {
+                        Fritekstfelt("Begrunnelse for medlemskap", it.begrunnelse)
+                    },
                 )
             }
         )

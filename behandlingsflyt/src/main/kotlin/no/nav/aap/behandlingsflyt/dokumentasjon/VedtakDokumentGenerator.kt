@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -66,6 +67,7 @@ class VedtakDokumentGenerator(
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapArbeidInntektForutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
 ) {
@@ -97,6 +99,7 @@ class VedtakDokumentGenerator(
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
     )
@@ -169,6 +172,7 @@ class VedtakDokumentGenerator(
             overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId),
             manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId),
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
+            lovvalgMedlemskapGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId),
             forutgåendeMedlemskapGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(
                 behandlingId
             ),
