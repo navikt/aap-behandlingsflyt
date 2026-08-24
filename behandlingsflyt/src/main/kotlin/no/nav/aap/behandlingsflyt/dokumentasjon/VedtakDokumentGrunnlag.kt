@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbei
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
@@ -68,6 +69,7 @@ data class VedtakDokumentGrunnlag(
     val avslag11_27Grunnlag: Avslag11_27Grunnlag?,
     val sykestipendGrunnlag: SykestipendGrunnlag?,
     val inntektsbortfallVurdering: InntektsbortfallVurdering?,
+    val aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag?,
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag?,
     val manuellInntektGrunnlag: ManuellInntektGrunnlag?,
     val beregningVurderingGrunnlag: BeregningGrunnlag?,

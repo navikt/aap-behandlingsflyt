@@ -8,6 +8,9 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.DOM
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall as AktivitetspliktUtfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
@@ -292,6 +295,49 @@ class VedtakDokumentRenderingTest {
     }
 
     @Test
+    fun `viser manuell vurdering av aktivitetsplikt`() {
+        val aktivitetspliktGrunnlag = Aktivitetsplikt11_7Grunnlag(
+            vurderinger = listOf(
+                Aktivitetsplikt11_7Vurdering(
+                    begrunnelse = "Aktivitetsplikten er brutt",
+                    erOppfylt = false,
+                    utfall = AktivitetspliktUtfall.STANS,
+                    vurdertAv = Bruker("Z111111"),
+                    fom = LocalDate.of(2024, 1, 1),
+                    opprettet = Instant.parse("2024-01-01T12:00:00Z"),
+                    vurdertIBehandling = behandlingId,
+                    skalIgnorereVarselFrist = true,
+                )
+            )
+        )
+
+        val dom = grunnlag(aktivitetsplikt11_7Grunnlag = aktivitetspliktGrunnlag).render()
+        val overskrifter = dom.filterIsInstance<DOM.Header>().map { it.overskrift }
+        val vurderinger = dom.filterIsInstance<DOM.Tabell>()
+            .single {
+                it.kolonner == listOf(
+                    "Periode (fom – tom)",
+                    "Oppfylt",
+                    "Utfall",
+                    "Varselfrist skal ignoreres",
+                    "Begrunnelse",
+                )
+            }
+
+        assertThat(overskrifter).contains("Aktivitetsplikt (§ 11-7)")
+        assertThat(vurderinger.rader).containsExactly(
+            listOf(
+                "01.01.2024 – ∞",
+                "nei",
+                "Stans",
+                "ja",
+                "Aktivitetsplikten er brutt",
+            )
+        )
+        assertThat(vurderinger.rader.flatten()).doesNotContain("Z111111")
+    }
+
+    @Test
     fun `viser alle vurderte vilkårstyper`() {
         val periode = DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
         val vilkårsresultat = Vilkårsresultat(
@@ -405,6 +451,7 @@ class VedtakDokumentRenderingTest {
         avslag11_27Grunnlag: Avslag11_27Grunnlag? = null,
         sykestipendGrunnlag: SykestipendGrunnlag? = null,
         inntektsbortfallVurdering: InntektsbortfallVurdering? = null,
+        aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag? = null,
     ) = VedtakDokumentGrunnlag(
         saksnummer = behandlingMedVedtak.saksnummer,
         behandling = behandling,
@@ -437,6 +484,7 @@ class VedtakDokumentRenderingTest {
         avslag11_27Grunnlag = avslag11_27Grunnlag,
         sykestipendGrunnlag = sykestipendGrunnlag,
         inntektsbortfallVurdering = inntektsbortfallVurdering,
+        aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Grunnlag,
         overstyringMeldepliktGrunnlag = null,
         manuellInntektGrunnlag = null,
         beregningVurderingGrunnlag = null,

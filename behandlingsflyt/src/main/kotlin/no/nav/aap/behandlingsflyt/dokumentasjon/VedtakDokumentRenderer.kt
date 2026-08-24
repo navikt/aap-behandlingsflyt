@@ -63,6 +63,7 @@ internal object VedtakDokumentRenderer {
                 arbeidsopptrappingSub(),
                 overgangArbeidSub(),
                 vedtakslengdeSub(),
+                aktivitetsplikt11_7Sub(),
                 fritakSub(),
                 overstyringMeldepliktSub(),
                 stønadsperiodeSub(),
@@ -353,6 +354,30 @@ internal object VedtakDokumentRenderer {
                 tidslinje = tidslinje.map {
                     listOf(JaNeiValg(it.harFritak), Tekst(it.begrunnelse))
                 }
+            )
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.aktivitetsplikt11_7Sub(): Seksjon? {
+        val tidslinje = aktivitetsplikt11_7Grunnlag?.tidslinje() ?: return null
+        if (tidslinje.isEmpty()) return null
+        return Seksjon(
+            tittel = Tekst("Aktivitetsplikt (§ 11-7)"),
+            Tabell.ofTidslinje(
+                kolonner = listOf(
+                    Tekst("Oppfylt"),
+                    Tekst("Utfall"),
+                    Tekst("Varselfrist skal ignoreres"),
+                    Tekst("Begrunnelse"),
+                ),
+                tidslinje = tidslinje.map { vurdering ->
+                    listOf(
+                        JaNeiValg(vurdering.erOppfylt),
+                        PrettyEnum(vurdering.utfall),
+                        JaNeiValg(vurdering.skalIgnorereVarselFrist),
+                        Tekst(vurdering.begrunnelse),
+                    )
+                },
             )
         )
     }

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallRe
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
@@ -70,6 +71,7 @@ class VedtakDokumentGenerator(
     private val avslag11_27Repository: Avslag11_27Repository,
     private val sykestipendRepository: SykestipendRepository,
     private val inntektsbortfallRepository: InntektsbortfallRepository,
+    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
@@ -105,6 +107,7 @@ class VedtakDokumentGenerator(
         avslag11_27Repository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
         inntektsbortfallRepository = repositoryProvider.provide(),
+        aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
@@ -181,6 +184,7 @@ class VedtakDokumentGenerator(
             avslag11_27Grunnlag = avslag11_27Repository.hentHvisEksisterer(behandlingId),
             sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(behandlingId),
             inntektsbortfallVurdering = inntektsbortfallRepository.hentHvisEksisterer(behandlingId),
+            aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId),
             overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId),
             manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId),
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
