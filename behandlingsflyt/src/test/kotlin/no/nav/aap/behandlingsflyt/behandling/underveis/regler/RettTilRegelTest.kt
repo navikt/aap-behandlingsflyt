@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -91,9 +93,19 @@ class RettTilRegelTest {
             )
         )
 
-        val vilkårsresultat = Vilkårsresultat(
-            vilkår = listOf(aldersVilkåret, lovvalgsVilkåret, sykdomsVilkåret, medlemskapVilkåret, bistandVilkåret, grunnlagVilkåret)
-        ).rettighetstypeTidslinje()
+        val vilkårsresultat = vurderRettighetsType(
+            Vilkårsresultat(
+                vilkår = listOf(
+                    aldersVilkåret,
+                    lovvalgsVilkåret,
+                    sykdomsVilkåret,
+                    medlemskapVilkåret,
+                    bistandVilkåret,
+                    grunnlagVilkåret
+                )
+            ),
+            kvoter = KvoteService.standardKvoter,
+        )
 
         assertTidslinje(
             vilkårsresultat,
@@ -189,16 +201,19 @@ class RettTilRegelTest {
             )
         )
 
-        val vilkårsresultat = Vilkårsresultat(
-            vilkår = listOf(
-                aldersVilkåret,
-                lovvalgsVilkåret,
-                sykdomsVilkåret,
-                medlemskapVilkåret,
-                bistandVilkåret,
-                grunnlagVilkåret,
-            )
-        ).rettighetstypeTidslinje()
+        val vilkårsresultat = vurderRettighetsType(
+            Vilkårsresultat(
+                vilkår = listOf(
+                    aldersVilkåret,
+                    lovvalgsVilkåret,
+                    sykdomsVilkåret,
+                    medlemskapVilkåret,
+                    bistandVilkåret,
+                    grunnlagVilkåret,
+                )
+            ),
+            kvoter = KvoteService.standardKvoter,
+        )
 
         assertTidslinje(
             vilkårsresultat,

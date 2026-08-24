@@ -2,7 +2,10 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 
 class KvoteService {
     fun beregn(): Kvoter {
-        return Kvoter.create(
+        return standardKvoter
+    }
+    companion object {
+        val standardKvoter = Kvoter.create(
             /* Så lenge Arena har 784 må vi ha samme som dem, i stede for ANTALL_ARBEIDSDAGER_I_ÅRET * 3. */
             ordinærkvote = 784,
 

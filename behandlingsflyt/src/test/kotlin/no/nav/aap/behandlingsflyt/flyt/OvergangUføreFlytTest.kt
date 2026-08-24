@@ -3,14 +3,12 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSamordningUføreLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -216,11 +214,9 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
-        assertTidslinje(
-            vilkårsresultat.rettighetstypeTidslinje().begrensetTil(underveisPeriode),
-            Periode(søknadstidspunkt, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
-                assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
-            },
+        behandling.assertRettighetstype(
+            Periode(søknadstidspunkt, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to
+                RettighetsType.VURDERES_FOR_UFØRETRYGD
         )
     }
 
