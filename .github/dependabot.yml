@@ -12,6 +12,10 @@ updates:
     directory: /
     commit-message:
       prefix: "AAP-2194"
+    groups:
+        codeql:
+          patterns:
+            - "github/codeql-action*"
     schedule:
       interval: daily
 
@@ -21,7 +25,7 @@ updates:
       prefix: "AAP-2194"
     schedule:
       interval: "cron"
-      cronjob: "0 6 1-7,15-21 * 1" # første og tredje mandag i måneden kl 06:00
+      cronjob: "0 6 1,15 * *" # 1 og 15 hver måned
       timezone: "Europe/Oslo"
     cooldown:
       default-days: 7
@@ -48,5 +52,5 @@ updates:
       prefix: "AAP-2194"
     schedule:
       interval: "cron"
-      cronjob: "0 6 1-7,15-21 * 1" # første og tredje mandag i måneden kl 06:00
+      cronjob: "0 6 1,15 * *" # 1 og 15 hver måned
       timezone: "Europe/Oslo"
