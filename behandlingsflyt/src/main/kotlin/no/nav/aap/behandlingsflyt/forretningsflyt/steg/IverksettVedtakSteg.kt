@@ -299,9 +299,7 @@ class IverksettVedtakSteg internal constructor(
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val gosysService = GosysService(gatewayProvider)
-            val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
-                vilkårsresultatRepository = repositoryProvider.provide(),
-            )
+            val virkningstidspunktUtlederService = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider)
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
             val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
             return IverksettVedtakSteg(

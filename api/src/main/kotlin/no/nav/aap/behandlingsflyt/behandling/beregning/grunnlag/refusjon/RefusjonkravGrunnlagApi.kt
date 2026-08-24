@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.NavKontorService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
@@ -51,8 +50,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val vilkårsresultatRepository =
-                        repositoryProvider.provide<VilkårsresultatRepository>()
+                    val virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider)
 
                     val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
                         it.tilResponse(ansattInfoService)
@@ -63,9 +61,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                     val virkningstidspunkt = try {
                         if (behandling.erYtelsesbehandling()) {
-                            VirkningstidspunktUtleder(
-                                vilkårsresultatRepository = vilkårsresultatRepository
-                            ).utledVirkningsTidspunkt(behandling.id)
+                            virkningstidspunktUtleder.utledVirkningsTidspunkt(behandling.id)
                         } else {
                             null
                         }
