@@ -13,6 +13,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+      pull-requests: write
     env:
       TZ: Europe/Oslo
     steps:
@@ -45,8 +46,60 @@ jobs:
         working-directory: base-branch
         run: ./gradlew genererOpenApiJson
 
-      - name: Sjekk at API-endringer er bakoverkompatible
+      - name: Generer diff-rapport (markdown)
+        # Feiler aldri jobben her, selv om diffen er inkompatibel - resultatet skal kun synliggjøres i PR-kommentaren.
         run: |
           docker run --rm -t -v "${{ github.workspace }}:/specs" openapitools/openapi-diff:latest \
             /specs/base-branch/openapi.json /specs/pr-branch/openapi.json \
-            --fail-on-incompatible
+            --markdown /specs/openapi-diff.md
+
+          state=$(docker run --rm -t -v "${{ github.workspace }}:/specs" openapitools/openapi-diff:latest \
+            /specs/base-branch/openapi.json /specs/pr-branch/openapi.json \
+            --state | tr -d '[:space:]')
+          echo "state=$state" >> "$GITHUB_ENV"
+
+      - name: Kommenter PR med diff-rapport
+        if: always() && hashFiles('openapi-diff.md') != ''
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const diffReport = fs.readFileSync('openapi-diff.md', 'utf8');
+            const state = process.env.state;
+
+            const marker = '## 📄 OpenAPI Diff Report';
+            const banner = state === 'incompatible'
+              ? '\n\n> ⚠️ **Denne endringen inneholder bakoverinkompatible API-endringer.** Se detaljer under.'
+              : '';
+            let comment = `${marker}${banner}\n\n${diffReport}`;
+            if (comment.length > 65000) {
+              comment = comment.slice(0, 65000) + '\n\n... (rapporten er kuttet, se full logg i workflow-kjøringen)';
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes(marker)
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
