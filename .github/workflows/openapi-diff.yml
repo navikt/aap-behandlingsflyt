@@ -1,0 +1,50 @@
+name: OpenAPI Diff
+
+on:
+  pull_request:
+
+concurrency:
+  group: "openapi-diff-${{ github.head_ref || github.sha }}"
+  cancel-in-progress: true
+
+jobs:
+  openapi-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      # Sjekker ut PR-branchen og genererer openapi.json for den nye koden.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: pr-branch
+
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: 25
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          gradle-version: wrapper
+
+      - name: Generer openapi.json for PR-branch
+        working-directory: pr-branch
+        run: ./gradlew genererOpenApiJson
+
+      # Sjekker ut base-branchen (target for PR-en) og genererer openapi.json for den.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base-branch
+
+      - name: Generer openapi.json for base-branch
+        working-directory: base-branch
+        run: ./gradlew genererOpenApiJson
+
+      - name: Sjekk at API-endringer er bakoverkompatible
+        run: |
+          docker run --rm -t -v "${{ github.workspace }}:/specs" openapitools/openapi-diff:latest \
+            /specs/base-branch/openapi.json /specs/pr-branch/openapi.json \
+            --fail-on-incompatible
