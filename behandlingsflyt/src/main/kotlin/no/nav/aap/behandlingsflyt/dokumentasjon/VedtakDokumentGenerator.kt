@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.Over
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
@@ -66,6 +67,7 @@ class VedtakDokumentGenerator(
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
     private val avslag11_27Repository: Avslag11_27Repository,
+    private val sykestipendRepository: SykestipendRepository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
@@ -99,6 +101,7 @@ class VedtakDokumentGenerator(
         sykepengerErstatningRepository = repositoryProvider.provide(),
         refusjonkravRepository = repositoryProvider.provide(),
         avslag11_27Repository = repositoryProvider.provide(),
+        sykestipendRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
@@ -173,6 +176,7 @@ class VedtakDokumentGenerator(
             sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId),
             refusjonkravVurderinger = refusjonkravRepository.hentHvisEksisterer(behandlingId),
             avslag11_27Grunnlag = avslag11_27Repository.hentHvisEksisterer(behandlingId),
+            sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(behandlingId),
             overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId),
             manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId),
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),

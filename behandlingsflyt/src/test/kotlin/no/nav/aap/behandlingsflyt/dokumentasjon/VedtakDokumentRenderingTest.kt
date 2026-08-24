@@ -24,6 +24,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -234,6 +236,39 @@ class VedtakDokumentRenderingTest {
     }
 
     @Test
+    fun `viser manuell vurdering av sykestipend`() {
+        val sykestipendGrunnlag = SykestipendGrunnlag(
+            SykestipendVurdering(
+                begrunnelse = "Brukeren mottar sykestipend i januar",
+                perioder = setOf(
+                    DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31))
+                ),
+                vurdertIBehandling = behandlingId,
+                vurdertAv = Bruker("Z111111"),
+                opprettet = Instant.parse("2024-01-01T12:00:00Z"),
+            )
+        )
+
+        val dom = grunnlag(sykestipendGrunnlag = sykestipendGrunnlag).render()
+        val overskrifter = dom.filterIsInstance<DOM.Header>().map { it.overskrift }
+        val felter = dom.filterIsInstance<DOM.List>().flatMap { it.liste }
+        val perioder = dom.filterIsInstance<DOM.Tabell>()
+            .single {
+                it.kolonner == listOf("Perioder med sykestipend")
+            }
+
+        assertThat(overskrifter).contains("Sykestipend (§ 11-29)", "Vurdering")
+        assertThat(felter).contains(
+            listOf("Begrunnelse", "Brukeren mottar sykestipend i januar"),
+            listOf("Mottar sykestipend", "ja"),
+        )
+        assertThat(perioder.rader).containsExactly(
+            listOf("01.01.2024 – 31.01.2024")
+        )
+        assertThat(felter.flatten()).doesNotContain("Z111111")
+    }
+
+    @Test
     fun `viser alle vurderte vilkårstyper`() {
         val periode = DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
         val vilkårsresultat = Vilkårsresultat(
@@ -345,6 +380,7 @@ class VedtakDokumentRenderingTest {
         behandlinger: List<BehandlingMedVedtak> = listOf(behandlingMedVedtak),
         lovvalgMedlemskapGrunnlag: MedlemskapArbeidInntektGrunnlag? = null,
         avslag11_27Grunnlag: Avslag11_27Grunnlag? = null,
+        sykestipendGrunnlag: SykestipendGrunnlag? = null,
     ) = VedtakDokumentGrunnlag(
         saksnummer = behandlingMedVedtak.saksnummer,
         behandling = behandling,
@@ -375,6 +411,7 @@ class VedtakDokumentRenderingTest {
         sykepengerErstatningGrunnlag = null,
         refusjonkravVurderinger = refusjonkrav,
         avslag11_27Grunnlag = avslag11_27Grunnlag,
+        sykestipendGrunnlag = sykestipendGrunnlag,
         overstyringMeldepliktGrunnlag = null,
         manuellInntektGrunnlag = null,
         beregningVurderingGrunnlag = null,

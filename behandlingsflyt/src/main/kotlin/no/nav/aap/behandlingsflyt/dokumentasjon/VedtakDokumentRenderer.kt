@@ -70,6 +70,7 @@ internal object VedtakDokumentRenderer {
                 refusjonkravSub(),
                 avslag11_27Sub(),
                 samordningSub(),
+                sykestipendSub(),
                 institusjonsoppholdSub(),
                 lovvalgMedlemskapSub(),
                 forutgåendeMedlemskapSub(),
@@ -530,6 +531,29 @@ internal object VedtakDokumentRenderer {
                     )
                 )
             }
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.sykestipendSub(): Seksjon? {
+        val vurdering = sykestipendGrunnlag?.vurdering ?: return null
+        val tidslinje = vurdering.tilMottarSykestipendTidslinje()
+        return Seksjon(
+            tittel = Tekst("Sykestipend (§ 11-29)"),
+            Seksjon(
+                tittel = Tekst("Vurdering"),
+                Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+                Dict(
+                    "Mottar sykestipend" to JaNeiValg(!tidslinje.isEmpty()),
+                ),
+                tidslinje.takeIf { !it.isEmpty() }?.let {
+                    Tabell(
+                        kolonner = listOf(Tekst("Perioder med sykestipend")),
+                        rader = it.segmenter().map { segment ->
+                            listOf(Periode(segment.periode, kompakt = true))
+                        },
+                    )
+                },
+            )
         )
     }
 
