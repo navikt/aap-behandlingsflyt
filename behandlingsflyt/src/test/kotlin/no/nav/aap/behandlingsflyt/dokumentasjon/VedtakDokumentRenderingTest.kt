@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregnGrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.DOM
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
@@ -19,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -47,6 +51,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
+import java.util.UUID
 
 class VedtakDokumentRenderingTest {
     @Test
@@ -187,6 +192,48 @@ class VedtakDokumentRenderingTest {
     }
 
     @Test
+    fun `viser manuell vurdering av annen full ytelse`() {
+        val kravreferanse = Kravreferanse(UUID.randomUUID())
+        val avslag11_27Grunnlag = Avslag11_27Grunnlag(
+            setOf(
+                Avslag11_27Vurdering(
+                    referanse = kravreferanse,
+                    vurdertIBehandling = behandlingId,
+                    opprettet = Instant.parse("2024-01-01T12:00:00Z"),
+                    vurdertAv = Bruker("Z111111"),
+                    begrunnelse = "Brukeren mottar fulle sykepenger",
+                    harAnnenFullYtelse = true,
+                    brukersYtelse = Ytelse.SYKEPENGER,
+                    brukersYtelseTom = LocalDate.of(2024, 2, 29),
+                    harSykepengegrunnlagOver2G = true,
+                    harArbeidsgiverSykepengerUtbetaling = false,
+                    skalAvslås1127 = true,
+                )
+            )
+        )
+
+        val dom = grunnlag(avslag11_27Grunnlag = avslag11_27Grunnlag).render()
+        val overskrifter = dom.filterIsInstance<DOM.Header>().map { it.overskrift }
+        val felter = dom.filterIsInstance<DOM.List>().flatMap { it.liste }
+
+        assertThat(overskrifter).contains(
+            "Vurdering av annen full ytelse (§ 11-27)",
+            "Vurdering",
+        )
+        assertThat(felter)
+            .contains(
+                listOf("Begrunnelse", "Brukeren mottar fulle sykepenger"),
+                listOf("Har annen full ytelse", "ja"),
+                listOf("Ytelse", "Sykepenger"),
+                listOf("Ytelse til og med", "29. februar 2024"),
+                listOf("Sykepengegrunnlag over 2 G", "ja"),
+                listOf("Arbeidsgiver utbetaler sykepenger", "nei"),
+                listOf("Skal avslås etter § 11-27", "ja"),
+            )
+        assertThat(felter.flatten()).doesNotContain("Z111111")
+    }
+
+    @Test
     fun `viser alle vurderte vilkårstyper`() {
         val periode = DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
         val vilkårsresultat = Vilkårsresultat(
@@ -297,6 +344,7 @@ class VedtakDokumentRenderingTest {
         vilkårsresultat: Vilkårsresultat = Vilkårsresultat(),
         behandlinger: List<BehandlingMedVedtak> = listOf(behandlingMedVedtak),
         lovvalgMedlemskapGrunnlag: MedlemskapArbeidInntektGrunnlag? = null,
+        avslag11_27Grunnlag: Avslag11_27Grunnlag? = null,
     ) = VedtakDokumentGrunnlag(
         saksnummer = behandlingMedVedtak.saksnummer,
         behandling = behandling,
@@ -326,6 +374,7 @@ class VedtakDokumentRenderingTest {
         institusjonsoppholdGrunnlag = null,
         sykepengerErstatningGrunnlag = null,
         refusjonkravVurderinger = refusjonkrav,
+        avslag11_27Grunnlag = avslag11_27Grunnlag,
         overstyringMeldepliktGrunnlag = null,
         manuellInntektGrunnlag = null,
         beregningVurderingGrunnlag = null,

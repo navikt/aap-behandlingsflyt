@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
@@ -62,6 +63,7 @@ data class VedtakDokumentGrunnlag(
     val institusjonsoppholdGrunnlag: InstitusjonsoppholdGrunnlag?,
     val sykepengerErstatningGrunnlag: SykepengerErstatningGrunnlag?,
     val refusjonkravVurderinger: List<RefusjonkravVurdering>?,
+    val avslag11_27Grunnlag: Avslag11_27Grunnlag?,
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag?,
     val manuellInntektGrunnlag: ManuellInntektGrunnlag?,
     val beregningVurderingGrunnlag: BeregningGrunnlag?,

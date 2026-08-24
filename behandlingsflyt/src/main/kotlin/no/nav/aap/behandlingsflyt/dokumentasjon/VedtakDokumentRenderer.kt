@@ -68,6 +68,7 @@ internal object VedtakDokumentRenderer {
                 stønadsperiodeSub(),
                 barnetilleggSub(),
                 refusjonkravSub(),
+                avslag11_27Sub(),
                 samordningSub(),
                 institusjonsoppholdSub(),
                 lovvalgMedlemskapSub(),
@@ -498,6 +499,34 @@ internal object VedtakDokumentRenderer {
                     tittel = Periode(p.periode),
                     Dict(
                         "Samordningsgradering" to Prosent(p.gradering),
+                    )
+                )
+            }
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.avslag11_27Sub(): Seksjon? {
+        val vurderinger = avslag11_27Grunnlag
+            ?.gjeldendeVurderinger()
+            ?.sortedBy { it.opprettet }
+            ?.takeIf { it.isNotEmpty() }
+            ?: return null
+        return Seksjon(
+            tittel = Tekst("Vurdering av annen full ytelse (§ 11-27)"),
+            subseksjoner = vurderinger.map { vurdering ->
+                Seksjon(
+                    tittel = Tekst("Vurdering"),
+                    Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+                    Dict(
+                        "Har annen full ytelse" to JaNeiValg(vurdering.harAnnenFullYtelse),
+                        "Ytelse" to PrettyEnum(vurdering.brukersYtelse),
+                        "Ytelse til og med" to
+                            (vurdering.brukersYtelseTom?.let { Dato(it) } ?: Tekst("Ikke satt")),
+                        "Sykepengegrunnlag over 2 G" to JaNeiValg(vurdering.harSykepengegrunnlagOver2G),
+                        "Arbeidsgiver utbetaler sykepenger" to JaNeiValg(
+                            vurdering.harArbeidsgiverSykepengerUtbetaling
+                        ),
+                        "Skal avslås etter § 11-27" to JaNeiValg(vurdering.skalAvslås1127),
                     )
                 )
             }
