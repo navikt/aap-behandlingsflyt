@@ -39,7 +39,8 @@ class AvklarSykdomLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<SykdomRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.somSykdomsvurderingstidslinje() ?: Tidslinje<Unit>()
