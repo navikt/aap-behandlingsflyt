@@ -6,7 +6,7 @@ metadata:
   labels:
     team: aap
     sub: behandlingsflyt
-    systemkatalog.nav.no/system: TE-496
+    systemkatalog.nav.no/system: SK-268
 spec:
   image: {{image}}
   ingresses:
