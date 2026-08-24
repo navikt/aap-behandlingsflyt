@@ -947,7 +947,6 @@ internal object VedtakDokumentRenderer {
                 add(Tekst("Mottatt"))
                 add(Tekst("Registrert"))
                 if (inkludererBehandlingsdetaljer) {
-                    add(Tekst("Behandlet i"))
                     add(Tekst("Vedtakstidspunkt"))
                 }
             }
@@ -962,15 +961,6 @@ internal object VedtakDokumentRenderer {
                             val dokumentetsBehandling = mottattDokument.behandlingId?.let { behandlingId ->
                                 behandlinger.singleOrNull { it.id == behandlingId }
                             }
-                            add(
-                                dokumentetsBehandling?.let {
-                                    ReferanseBehandling(
-                                        behandlingId = it.id,
-                                        inkluderBehandlingsopprinnelse = false,
-                                    )
-                                }
-                                    ?: Tekst("—")
-                            )
                             add(dokumentetsBehandling?.let { Tidspunkt(it.vedtakstidspunkt) } ?: Tekst("—"))
                         }
                     }
