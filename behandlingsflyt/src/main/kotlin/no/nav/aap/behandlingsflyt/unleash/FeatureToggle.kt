@@ -15,6 +15,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     GReguleringUtplukkJobb,
     StudentV2,
     BackfillStansOpphor,
+    BackfillKrav,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     MotorV2,
     IngenStoppHendelseVedAtomaerBehandling,
