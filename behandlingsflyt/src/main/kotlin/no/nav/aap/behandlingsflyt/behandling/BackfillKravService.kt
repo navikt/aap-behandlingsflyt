@@ -98,7 +98,7 @@ class BackfillKravService(
                     referanse = Kravreferanse.ny(),
                     journalpostId = søknad.referanse.asJournalpostId,
                     vurdertAv = SYSTEMBRUKER,
-                    begrunnelse = "Automatisk backfill",
+                    begrunnelse = "Automatisk vurdering",
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),
                     søknadsdato = Søknadsdato(søknad.mottattTidspunkt.toLocalDate(), SøknadsdatoÅrsak.SøknadMottatt),
@@ -110,7 +110,7 @@ class BackfillKravService(
                     referanse = Kravreferanse.ny(),
                     journalpostId = søknad.referanse.asJournalpostId,
                     vurdertAv = SYSTEMBRUKER,
-                    begrunnelse = "Automatisk backfill",
+                    begrunnelse = "Automatisk vurdering",
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),
                 )

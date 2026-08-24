@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -65,21 +67,21 @@ class BackfillKravServiceTest {
 
     @Test
     fun `første søknad i sak gir RelevantKrav med riktig dato`() {
-        val søknadsDato = 10 januar 2024
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsDato)
+        val søknadsdato = 10 januar 2024
+        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
         service.backfillBehandling(sak, behandling)
 
         val krav = InMemoryKravRepository.hent(behandling.id)
         val relevantKrav = assertHarNøyaktigEnRelevantKrav(krav.vurderinger)
-        assertThat(relevantKrav.muligRettFra).isEqualTo(søknadsDato)
-        assertThat(relevantKrav.søknadsdato.dato).isEqualTo(søknadsDato)
+        assertThat(relevantKrav.muligRettFra).isEqualTo(søknadsdato)
+        assertThat(relevantKrav.søknadsdato.dato).isEqualTo(søknadsdato)
         assertThat(relevantKrav.overstyrMuligRettFra).isNull()
     }
 
     @Test
     fun `påfølgende søknader gir Tilleggsopplysning`() {
-        val (sak, behandling) = opprettSakMedTwoSøknader()
+        val (sak, behandling) = opprettSakMedToSøknader()
 
         service.backfillBehandling(sak, behandling)
 
@@ -90,10 +92,10 @@ class BackfillKravServiceTest {
 
     @Test
     fun `revurdering uten søknad kopierer krav fra forrige behandling`() {
-        val søknadsDato = 5 januar 2024
-        val (sak, forstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(søknadsDato = søknadsDato)
+        val søknadsdato = 5 januar 2024
+        val (sak, forstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(søknadsdato = søknadsdato)
 
-        leggTilSøknad(forstegangsbehandling, søknadsDato)
+        leggTilSøknad(forstegangsbehandling, søknadsdato)
 
         service.backfillBehandling(sak, forstegangsbehandling)
         service.backfillBehandling(sak, revurdering)
@@ -104,8 +106,8 @@ class BackfillKravServiceTest {
 
     @Test
     fun `behandling med eksisterende krav returnerer AlleredeBackfilled`() {
-        val søknadsDato = 10 januar 2024
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsDato)
+        val søknadsdato = 10 januar 2024
+        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
         service.backfillBehandling(sak, behandling)
 
@@ -116,8 +118,8 @@ class BackfillKravServiceTest {
 
     @Test
     fun `backfill er idempotent – dobbel kjøring gir samme resultat`() {
-        val søknadsDato = 10 januar 2024
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsDato)
+        val søknadsdato = 10 januar 2024
+        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
         service.backfillBehandling(sak, behandling)
         val kravFørst = InMemoryKravRepository.hent(behandling.id).gjeldendeVurderinger()
@@ -134,13 +136,14 @@ class BackfillKravServiceTest {
 
     @Test
     fun `trukket-søknad-sak hoppes over`() {
-        val søknadsDato = 10 januar 2024
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsDato)
+        val søknadsdato = 10 januar 2024
+        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
         InMemoryTrukketSøknadRepository.lagreTrukketSøknadVurdering(
             behandling.id,
             lagTrukketSøknadVurdering(skalTrekkes = true)
         )
+        InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
         val erTrukket = service.erTrukketSøknadSak(listOf(behandling))
 
@@ -153,9 +156,9 @@ class BackfillKravServiceTest {
 
     @Test
     fun `rettighetsperiodevurdering med overstyring setter OverstyrMuligRettFra`() {
-        val søknadsDato = 10 januar 2024
+        val søknadsdato = 10 januar 2024
         val overstyrtDato = 1 mars 2023
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsDato, rettighetsperiodeFom = overstyrtDato)
+        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato, rettighetsperiodeFom = overstyrtDato)
 
         every { rettighetsperiodeRepository.hentVurdering(behandling.id) } returns
             lagRettighetsperiodeVurdering(
@@ -172,9 +175,9 @@ class BackfillKravServiceTest {
 
     @Test
     fun `gjeldende muligRettFra er minimum av mottattdato og overstyrt dato`() {
-        val søknadsDato = 10 januar 2024
+        val søknadsdato = 10 januar 2024
         val overstyrtDato = 1 mars 2023 // tidligere enn søknad
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsDato, rettighetsperiodeFom = overstyrtDato)
+        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato, rettighetsperiodeFom = overstyrtDato)
 
         every { rettighetsperiodeRepository.hentVurdering(behandling.id) } returns
             lagRettighetsperiodeVurdering(
@@ -190,10 +193,10 @@ class BackfillKravServiceTest {
 
     @Test
     fun `kræsjer hvis rettighetsperiode fom ikke stemmer med krav muligRettFra`() {
-        val søknadsDato = 10 januar 2024
+        val søknadsdato = 10 januar 2024
         val feilRettighetsperiodeFom = 15 januar 2024 // avviker fra søknadsdato
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(
-            søknadsDato,
+            søknadsdato,
             rettighetsperiodeFom = feilRettighetsperiodeFom
         )
 
@@ -208,8 +211,8 @@ class BackfillKravServiceTest {
 
     @Test
     fun `stønadsperiode opprettes for hvert relevant krav`() {
-        val søknadsDato = 10 januar 2024
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsDato)
+        val søknadsdato = 10 januar 2024
+        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
         service.backfillBehandling(sak, behandling)
 
@@ -218,13 +221,13 @@ class BackfillKravServiceTest {
         val vurderinger = stønadsperiode!!.vurderinger
         assertThat(vurderinger).hasSize(1)
         assertThat(vurderinger.first().relevantKravType).isEqualTo(RelevantKravType.NY_STØNADSPERIODE)
-        assertThat(vurderinger.first().startDato).isEqualTo(søknadsDato)
+        assertThat(vurderinger.first().startDato).isEqualTo(søknadsdato)
     }
 
     @Test
     fun `stønadsperiode-backfill er idempotent`() {
-        val søknadsDato = 10 januar 2024
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsDato)
+        val søknadsdato = 10 januar 2024
+        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
         service.backfillBehandling(sak, behandling)
         val antallFørst = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.size
@@ -240,23 +243,23 @@ class BackfillKravServiceTest {
     // -------------------------------------------------------------------------
 
     private fun opprettSakOgBehandlingMedSøknad(
-        søknadsDato: LocalDate,
-        rettighetsperiodeFom: LocalDate = søknadsDato,
+        søknadsdato: LocalDate,
+        rettighetsperiodeFom: LocalDate = søknadsdato,
     ): Pair<Sak, Behandling> {
-        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsDato = søknadsDato)
-        leggTilSøknad(behandling, søknadsDato)
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = søknadsdato)
+        leggTilSøknad(behandling, søknadsdato)
 
         val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, rettighetsperiodeFom)
         return sakMedRettighetsperiode to behandling
     }
 
-    private fun opprettSakMedTwoSøknader(): Pair<Sak, Behandling> {
-        val søknadsDato = 10 januar 2024
-        val andreSøknadsDato = 20 januar 2024
-        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsDato = søknadsDato)
-        leggTilSøknad(behandling, søknadsDato)
-        leggTilSøknad(behandling, andreSøknadsDato)
-        return lagSakMedRettighetsperiode(sak, søknadsDato) to behandling
+    private fun opprettSakMedToSøknader(): Pair<Sak, Behandling> {
+        val søknadsdato = 10 januar 2024
+        val andresøknadsdato = 20 januar 2024
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = søknadsdato)
+        leggTilSøknad(behandling, søknadsdato)
+        leggTilSøknad(behandling, andresøknadsdato)
+        return lagSakMedRettighetsperiode(sak, søknadsdato) to behandling
     }
 
     private fun leggTilSøknad(behandling: Behandling, dato: LocalDate) {
