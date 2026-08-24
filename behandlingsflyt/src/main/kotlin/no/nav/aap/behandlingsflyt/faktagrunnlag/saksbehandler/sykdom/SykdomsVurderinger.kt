@@ -58,7 +58,18 @@ data class Sykdomsvurdering(
     fun erKonsistentForSykdomVisAlleSykdomssteg(harYrkesskadeRegistrert: Boolean): Boolean {
 
         if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
-            log.info("Inkonsistente verdier i sykdom: $harSkadeSykdomEllerLyte $harNedsattArbeidsevne")
+            return false
+        }
+
+        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
+            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
+        ) {
+            return false
+        }
+
+        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
+            && (erSkadeSykdomEllerLyteVesentligdel == true)
+        ) {
             return false
         }
 
@@ -67,7 +78,6 @@ data class Sykdomsvurdering(
             && harYrkesskadeRegistrert
             && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
         ) {
-            log.info("Inkonsistente verdier i sykdom: $erNedsettelseIArbeidsevneMerEnnHalvparten $harYrkesskadeRegistrert $erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense")
             return false
         }
         return true
