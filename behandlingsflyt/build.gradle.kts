@@ -71,8 +71,6 @@ dependencies {
     implementation(libs.tidslinje)
     implementation(libs.kafkaClients)
     implementation(kotlin("reflect"))
-    runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
-
 
     testImplementation(project(":lib-test"))
     testImplementation(project(":repository"))

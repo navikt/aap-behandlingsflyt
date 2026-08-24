@@ -45,9 +45,7 @@ caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4
 jacksonAnnotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.22.2" }
 jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.2" }
-
 hikariCp = { module = "com.zaxxer:HikariCP", version = "7.1.0" }
-postgresql = { module = "org.postgresql:postgresql" }
 
 opentelemetryInstrumentationAnnotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.30.0" }
 opentelemetryLogbackMdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version = "2.30.0-alpha" }
