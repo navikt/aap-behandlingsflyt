@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.outerJoin
@@ -22,19 +21,6 @@ data class SamordningYtelseVurderingGrunnlag(
     val ytelseGrunnlag: SamordningYtelseGrunnlag?,
     val vurderingGrunnlag: SamordningVurderingGrunnlag?
 ) : Faktagrunnlag {
-
-    fun perioderSomIkkeHarBlittVurdert(
-    ): Tidslinje<List<Ytelse>> {
-        val hentedeYtelserByManuelleYtelser = ytelseGrunnlag?.tidslinjeMedSamordningYtelser().orEmpty()
-
-        val perioderSomIkkeHarBlittVurdert =
-            hentedeYtelserByManuelleYtelser.kombiner(
-                vurderingGrunnlag?.vurderingTidslinje().orEmpty(),
-                StandardSammenslåere.minus()
-            )
-
-        return perioderSomIkkeHarBlittVurdert.komprimer()
-    }
 
     /**
      * Regn ut samordning-gradering ved å summere grad for ytelser det skal samordnes mot.
