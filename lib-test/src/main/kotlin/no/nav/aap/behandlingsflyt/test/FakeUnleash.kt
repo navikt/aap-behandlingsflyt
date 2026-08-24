@@ -65,7 +65,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
@@ -77,6 +76,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MotorV2 to true,
         BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
+        BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
@@ -85,8 +85,7 @@ object LokalUnleash : FakeUnleashBase(
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
-        BehandlingsflytFeature.StrekkAvslagOverHelg to true,
-        BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true
+        BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

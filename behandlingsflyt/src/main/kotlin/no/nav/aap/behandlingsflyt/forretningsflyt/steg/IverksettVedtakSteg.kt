@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.GenererVilkårsvurderingOppsummeringJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.HåndterUbehandledeMeldekortForSakJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
@@ -27,14 +28,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-class IverksettVedtakSteg private constructor(
+class IverksettVedtakSteg internal constructor(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
@@ -47,6 +51,7 @@ class IverksettVedtakSteg private constructor(
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
     private val resultatUtleder: ResultatUtleder,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -76,12 +81,24 @@ class IverksettVedtakSteg private constructor(
         flytJobbRepository.leggTil(
             jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
                 .forSak(kontekst.sakId.id)
+                .medPrioritet(Prioritet.LAV)
         )
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF) &&
+            skalGenerereVilkårsvurderingOppsummering(kontekst)
+        ) {
+            flytJobbRepository.leggTil(
+                GenererVilkårsvurderingOppsummeringJobbUtfører.nyJobb(
+                    behandlingId = kontekst.behandlingId,
+                    sakId = kontekst.sakId,
+                )
+                    .medPrioritet(Prioritet.LAV)
+            )
+        }
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             flytJobbRepository.leggTil(
-                HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(kontekst.sakId)
+                HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(kontekst.sakId).medPrioritet(Prioritet.LAV)
             )
         }
 
@@ -98,6 +115,7 @@ class IverksettVedtakSteg private constructor(
             jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
                 .medPayload(kontekst.behandlingId)
                 .forSak(sakId = kontekst.sakId.toLong())
+                .medPrioritet(Prioritet.LAV)
         )
     }
 
@@ -260,6 +278,16 @@ class IverksettVedtakSteg private constructor(
             kontekst.behandlingId
         )
 
+    private fun skalGenerereVilkårsvurderingOppsummering(kontekst: FlytKontekstMedPerioder): Boolean {
+        return when (kontekst.vurderingType) {
+            VurderingType.REVURDERING,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.OVERGANG_UFORE_STANS,
+            VurderingType.FØRSTEGANGSBEHANDLING -> true
+
+            else -> false
+        }
+    }
 
     companion object : FlytSteg {
         override fun konstruer(
@@ -292,7 +320,8 @@ class IverksettVedtakSteg private constructor(
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
                 gosysService = gosysService,
                 resultatUtleder = resultatUtleder,
-                )
+                unleashGateway = gatewayProvider.provide(),
+            )
         }
 
         override fun type(): StegType {

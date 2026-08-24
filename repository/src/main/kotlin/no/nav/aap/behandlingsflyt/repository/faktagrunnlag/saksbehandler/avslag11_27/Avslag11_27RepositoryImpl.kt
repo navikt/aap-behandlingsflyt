@@ -48,15 +48,17 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
         val vurderinger = connection.querySet(
             """
             SELECT
-                v.referanse                       AS v_referanse,
-                v.begrunnelse                     AS v_begrunnelse,
-                v.har_annen_full_ytelse           AS v_har_annen_full_ytelse,
-                v.brukers_ytelse                  AS v_brukers_ytelse,
-                v.har_sykepengegrunnlag_over_2g   AS v_har_sykepengegrunnlag_over_2g,
-                v.skal_avslaas_1127               AS v_skal_avslaas_1127,
-                v.vurdert_i_behandling            AS v_vurdert_i_behandling,
-                v.vurdert_tidspunkt               AS v_vurdert_tidspunkt,
-                v.vurdert_av                      AS v_vurdert_av
+                v.referanse                                 AS v_referanse,
+                v.begrunnelse                               AS v_begrunnelse,
+                v.har_annen_full_ytelse                     AS v_har_annen_full_ytelse,
+                v.brukers_ytelse                            AS v_brukers_ytelse,
+                v.brukers_ytelse_tom                        AS v_brukers_ytelse_tom,
+                v.har_sykepengegrunnlag_over_2g             AS v_har_sykepengegrunnlag_over_2g,
+                v.har_arbeidsgiver_sykepenger_utbetaling    AS v_har_arbeidsgiver_sykepenger_utbetaling,
+                v.skal_avslaas_1127                         AS v_skal_avslaas_1127,
+                v.vurdert_i_behandling                      AS v_vurdert_i_behandling,
+                v.vurdert_tidspunkt                         AS v_vurdert_tidspunkt,
+                v.vurdert_av                                AS v_vurdert_av
             FROM avslag_11_27_grunnlag g
             LEFT JOIN avslag_11_27_vurdering v ON v.avslag_11_27_vurderinger_id = g.avslag_11_27_vurderinger_id
             WHERE g.aktiv = true AND g.behandling_id = ?
@@ -71,7 +73,9 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                     begrunnelse = it.getString("v_begrunnelse"),
                     harAnnenFullYtelse = it.getBoolean("v_har_annen_full_ytelse"),
                     brukersYtelse = it.getStringOrNull("v_brukers_ytelse")?.let { Ytelse.valueOf(it) },
+                    brukersYtelseTom = it.getLocalDateOrNull("v_brukers_ytelse_tom"),
                     harSykepengegrunnlagOver2G = it.getBooleanOrNull("v_har_sykepengegrunnlag_over_2g"),
+                    harArbeidsgiverSykepengerUtbetaling = it.getBooleanOrNull("v_har_arbeidsgiver_sykepenger_utbetaling"),
                     skalAvslås1127 = it.getBooleanOrNull("v_skal_avslaas_1127"),
                     vurdertIBehandling = BehandlingId(it.getLong("v_vurdert_i_behandling")),
                     opprettet = it.getInstant("v_vurdert_tidspunkt"),
@@ -190,8 +194,8 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
 
         val query = """
                 INSERT INTO avslag_11_27_vurdering 
-                (referanse, begrunnelse, har_annen_full_ytelse, brukers_ytelse, har_sykepengegrunnlag_over_2g, skal_avslaas_1127, vurdert_i_behandling, vurdert_tidspunkt, vurdert_av, avslag_11_27_vurderinger_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (referanse, begrunnelse, har_annen_full_ytelse, brukers_ytelse, brukers_ytelse_tom, har_sykepengegrunnlag_over_2g, har_arbeidsgiver_sykepenger_utbetaling, skal_avslaas_1127, vurdert_i_behandling, vurdert_tidspunkt, vurdert_av, avslag_11_27_vurderinger_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -200,12 +204,14 @@ class Avslag11_27RepositoryImpl(private val connection: DBConnection) : Avslag11
                 setString(2, vurdering.begrunnelse)
                 setBoolean(3, vurdering.harAnnenFullYtelse)
                 setString(4, vurdering.brukersYtelse?.name)
-                setBoolean(5, vurdering.harSykepengegrunnlagOver2G)
-                setBoolean(6, vurdering.skalAvslås1127)
-                setLong(7, vurdering.vurdertIBehandling.toLong())
-                setInstant(8, vurdering.opprettet)
-                setString(9, vurdering.vurdertAv.toString())
-                setLong(10, vuderingerId)
+                setLocalDate(5, vurdering.brukersYtelseTom)
+                setBoolean(6, vurdering.harSykepengegrunnlagOver2G)
+                setBoolean(7, vurdering.harArbeidsgiverSykepengerUtbetaling)
+                setBoolean(8, vurdering.skalAvslås1127)
+                setLong(9, vurdering.vurdertIBehandling.toLong())
+                setInstant(10, vurdering.opprettet)
+                setString(11, vurdering.vurdertAv.toString())
+                setLong(12, vuderingerId)
             }
         }
 

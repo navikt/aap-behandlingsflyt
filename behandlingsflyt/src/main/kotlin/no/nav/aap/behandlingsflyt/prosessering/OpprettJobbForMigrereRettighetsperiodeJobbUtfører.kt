@@ -10,6 +10,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.Prioritet
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
@@ -43,7 +44,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
         sakerForMigrering.forEach { sak ->
             if (!finnesAlleredeMigreringsjobbForSak(sak)) {
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
+                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()).medPrioritet(Prioritet.BAKGRUNN))
             } else {
                 log.info("Finnes allerede en jobb for å migrere rettighetsperiode sak ${sak.id} ")
             }

@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.komponenter.verdityper.Beløp
+import java.math.BigDecimal
 import java.time.LocalDate
 
 data class Avslag11_27KravDto(
@@ -47,7 +49,9 @@ data class Avslag11_27VurderingDto(
     val begrunnelse: String,
     val harAnnenFullYtelse: Boolean,
     val brukersYtelse: Ytelse? = null,
+    val brukersYtelseTom: LocalDate? = null,
     val harSykepengegrunnlagOver2G: Boolean? = null, // Kun for sykepenger
+    val harArbeidsgiverSykepengerUtbetaling: Boolean? = null, // Kun for sykepenger
     val skalAvslås1127: Boolean? = null,
     val vurderingerMeta: VurderingerMetaResponse?,
 )

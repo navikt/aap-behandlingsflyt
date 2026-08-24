@@ -22,7 +22,7 @@ data class TjenestePensjonYtelse(
 )
 
 
-// https://github.com/navikt/tp/blob/e99c670da41c23172e2ccc3a3e8dff4c7870fa82/tp-api/src/main/kotlin/no/nav/samhandling/tp/domain/codestable/YtelseTypeCode.kt#L6
+// https://github.com/navikt/tp/blob/main/src/main/kotlin/no/nav/samhandling/tp/domain/codestable/YtelseTypeCode.kt
 enum class YtelseTypeCode(val isSamordningspliktigForAAP: Boolean) {
     ALDER(true),
     UFORE(true),
@@ -32,6 +32,9 @@ enum class YtelseTypeCode(val isSamordningspliktigForAAP: Boolean) {
     UKJENT(true),
     OPPSATT_BTO_PEN(true),
     SAERALDER(true),
+    TIDLIGPENSJON(true),
+    TIDLIGPEN_OVERGANG(true),
+    SAERALDERSPAASLAG(false),
     PAASLAGSPENSJON(false),
     OVERGANGSTILLEGG(false),
     BETINGET_TP(false),

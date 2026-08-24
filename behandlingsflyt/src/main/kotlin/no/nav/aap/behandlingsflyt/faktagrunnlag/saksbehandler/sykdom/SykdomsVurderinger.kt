@@ -155,4 +155,3 @@ enum class ArbeidsevneNedsattValg {
     NEI,
     NEI_MEN_STUDENT
 }
-

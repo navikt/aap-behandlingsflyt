@@ -4,11 +4,6 @@ plugins {
     id("io.github.androa.gradle.plugin.avro") version "0.0.12"
 }
 
-repositories {
-    mavenCentral()
-    maven { url = uri("https://packages.confluent.io/maven/") }
-}
-
 dependencies {
     api(project(":behandlingsflyt"))
     implementation(libs.dbconnect)
@@ -29,7 +24,7 @@ dependencies {
     testImplementation(libs.bundles.junit)
     testImplementation(libs.ktorServerTestHost)
     constraints {
-        implementation("commons-codec:commons-codec:1.20.0")
+        implementation("commons-codec:commons-codec:1.22.1")
     }
     testImplementation(libs.ktorClientContentNegotiation)
     testImplementation(libs.mockOauth2Server)

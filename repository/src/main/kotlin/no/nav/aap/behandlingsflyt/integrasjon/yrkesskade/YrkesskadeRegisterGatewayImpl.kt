@@ -52,6 +52,7 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
          * "DELVIS_GODKJENT" = En eller flere skader i saken er godkjent og andre er ikke det
          * "INNVILGELSE" = Samme som godkjent bare at saken ligger i Kompys
          * Må ikke forveksles med "INNVILGET" eller "DELVIS_INNVILGET" som har med innvilget menerstatning å gjøre
+         * Yrkesskader fra før 1992 blir ikke levert fra tjenesten grunnet dårlig datakvalitet
          */
         val gyldigeStatuser = listOf("GODKJENT", "DELVIS_GODKJENT", "INNVILGELSE")
 

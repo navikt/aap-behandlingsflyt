@@ -8,9 +8,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.tilUføreVedtakDto
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortJobbUtfører
@@ -32,6 +35,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -62,6 +66,7 @@ class BehandlingHendelseServiceImpl(
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
         val vurderingsbehov = behandling.vurderingsbehov()
         val mottattDokumenter = hentMottattDokumenter(vurderingsbehov, behandling)
+        val uføreVedtak = hentUføreVedtak(behandling);
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -76,6 +81,7 @@ class BehandlingHendelseServiceImpl(
             avklaringsbehov = sortererteAvklaringsbehov(behandling, avklaringsbehovene.alle()),
             relevanteIdenterPåBehandling = pipService.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
+            uføreVedtak = uføreVedtak,
             mottattDokumenter = mottattDokumenter,
             reserverTil = hentReservertTil(behandling.id)?.ident,
             opprettetTidspunkt = behandling.opprettetTidspunkt,
@@ -84,10 +90,17 @@ class BehandlingHendelseServiceImpl(
         ).copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
-                .forBehandling(sak.id.id, behandling.id.id)
-        )
+        /**
+         * Trenger ikke å trigge hendelse til oppgave dersom det ikke eksisterer noen avklaringsbehov
+         * Da er hele behandlingen i praksis løst helautomatisk
+         */
+        if (avklaringsbehovene.alle().isNotEmpty()) {
+                flytJobbRepository.leggTil(
+                    JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
+                        .forBehandling(sak.id.id, behandling.id.id)
+                )
+        }
+
         flytJobbRepository.leggTil(
             JobbInput(jobb = StatistikkJobbUtfører).medPayload(
                 BehandlingFlytStoppetHendelseTilStatistikk(
@@ -104,17 +117,19 @@ class BehandlingHendelseServiceImpl(
                 )
             )
                 .forBehandling(sak.id.id, behandling.id.id)
+                .medPrioritet(Prioritet.LAV)
         )
         flytJobbRepository.leggTil(
             JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører).medPayload(behandling.referanse)
                 .forBehandling(sak.id.id, behandling.id.id)
+                .medPrioritet(Prioritet.LAV)
         )
 
         // Sender meldekort til API-intern
-        flytJobbRepository.leggTil(DatadelingMeldekortJobbUtfører.nyJobb(sak.id, behandling.id))
+        flytJobbRepository.leggTil(DatadelingMeldekortJobbUtfører.nyJobb(sak.id, behandling.id).medPrioritet(Prioritet.LAV))
 
         if (behandling.typeBehandling().erYtelsesbehandling()) {
-            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
+            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id).medPrioritet(Prioritet.LAV))
         }
     }
 
@@ -176,6 +191,11 @@ class BehandlingHendelseServiceImpl(
             ?.let { DefaultJsonMapper.fromJson<Melding>(it) } as? NyÅrsakTilBehandlingV0)
             ?.reserverTilBruker
             ?.let(::Bruker)
+    }
+
+    private fun hentUføreVedtak(behandling: Behandling): UførevedtakDto? {
+        val uføreDokument = dokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.UFØRE_VEDTAK_HENDELSE).toList().maxByOrNull { it.opprettetTid };
+        return uføreDokument?.strukturerteData<UførevedtakV0>()?.data?.tilUføreVedtakDto();
     }
 
     private fun hentMottattDokumenter(

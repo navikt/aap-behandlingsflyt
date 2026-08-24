@@ -8,6 +8,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.Prioritet
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
@@ -28,7 +29,7 @@ class HåndterUbehandledeMeldekortForSakJobbUtfører(
                 HåndterUbehandletDokumentJobbUtfører.nyJobb(
                     dokument.sakId,
                     dokument.referanse
-                )
+                ).medPrioritet(Prioritet.LAV)
             )
         }
     }
