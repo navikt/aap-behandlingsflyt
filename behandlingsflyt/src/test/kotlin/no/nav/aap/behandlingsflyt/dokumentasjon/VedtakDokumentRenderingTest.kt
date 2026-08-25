@@ -28,6 +28,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -338,6 +340,45 @@ class VedtakDokumentRenderingTest {
     }
 
     @Test
+    fun `viser studentvurdering`() {
+        val studentGrunnlag = StudentGrunnlag(
+            vurderinger = setOf(
+                StudentVurdering(
+                    fom = LocalDate.of(2024, 1, 1),
+                    tom = LocalDate.of(2024, 6, 30),
+                    begrunnelse = "Studiet ble avbrutt på grunn av sykdom",
+                    harAvbruttStudie = true,
+                    godkjentStudieAvLånekassen = true,
+                    avbruttPgaSykdomEllerSkade = true,
+                    harBehovForBehandling = true,
+                    avbruttStudieDato = LocalDate.of(2024, 1, 15),
+                    avbruddMerEnn6Måneder = true,
+                    vurdertAv = Bruker("Z111111"),
+                    vurdertTidspunkt = LocalDateTime.of(2024, 1, 16, 12, 0),
+                    vurdertIBehandling = behandlingId,
+                )
+            ),
+            oppgittStudent = null,
+        )
+
+        val dom = grunnlag(studentGrunnlag = studentGrunnlag).render()
+        val overskrifter = dom.filterIsInstance<DOM.Header>().map { it.overskrift }
+        val felter = dom.filterIsInstance<DOM.List>().flatMap { it.liste }
+
+        assertThat(overskrifter)
+            .contains("Student (§ 11-14)")
+            .anyMatch {
+                it.contains("01. januar 2024 – 30. juni 2024") &&
+                    it.endsWith("(nåværende behandling)")
+            }
+        assertThat(felter).contains(
+            listOf("Dato for avbrutt studie", "15. januar 2024"),
+            listOf("Begrunnelse", "Studiet ble avbrutt på grunn av sykdom"),
+        )
+        assertThat(felter.flatten()).doesNotContain("Z111111")
+    }
+
+    @Test
     fun `viser alle vurderte vilkårstyper`() {
         val periode = DomenePeriode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31))
         val vilkårsresultat = Vilkårsresultat(
@@ -452,6 +493,7 @@ class VedtakDokumentRenderingTest {
         sykestipendGrunnlag: SykestipendGrunnlag? = null,
         inntektsbortfallVurdering: InntektsbortfallVurdering? = null,
         aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag? = null,
+        studentGrunnlag: StudentGrunnlag? = null,
     ) = VedtakDokumentGrunnlag(
         saksnummer = behandlingMedVedtak.saksnummer,
         behandling = behandling,
@@ -466,7 +508,7 @@ class VedtakDokumentRenderingTest {
         forrigeVilkårsresultat = Vilkårsresultat(),
         sykdomGrunnlag = sykdomGrunnlag,
         bistandGrunnlag = null,
-        studentGrunnlag = null,
+        studentGrunnlag = studentGrunnlag,
         overgangUføreGrunnlag = null,
         etableringEgenVirksomhetGrunnlag = null,
         arbeidsevneGrunnlag = null,

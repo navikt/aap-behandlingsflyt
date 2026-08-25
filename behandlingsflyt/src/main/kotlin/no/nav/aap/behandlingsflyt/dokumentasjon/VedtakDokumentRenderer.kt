@@ -213,15 +213,16 @@ internal object VedtakDokumentRenderer {
 
     private fun VedtakDokumentGrunnlag.studentvurderingerSub(): Seksjon? {
         val grunnlag = studentGrunnlag ?: return null
-        val vurderinger = grunnlag.gjeldendeStudentvurderinger()
-        if (vurderinger.isEmpty()) return null
+        val tidslinje = grunnlag.somStudenttidslinje()
+        if (tidslinje.isEmpty()) return null
         return Seksjon(
             tittel = Tekst("Student (§ 11-14)"),
-            subseksjoner = vurderinger.map { v ->
+            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
                 Seksjon(
-                    tittel = Tekst("Vurdering"),
+                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
                     Dict(
                         "Avbrutt studie" to JaNeiValg(v.harAvbruttStudie),
+                        "Dato for avbrutt studie" to (v.avbruttStudieDato?.let { Dato(it) } ?: Tekst("Ikke satt")),
                         "Godkjent av Lånekassen" to JaNeiValg(v.godkjentStudieAvLånekassen),
                         "Avbrutt pga sykdom/skade" to JaNeiValg(v.avbruttPgaSykdomEllerSkade),
                         "Avbrudd mer enn 6 måneder" to JaNeiValg(v.avbruddMerEnn6Måneder),
@@ -547,12 +548,9 @@ internal object VedtakDokumentRenderer {
                     Dict(
                         "Har annen full ytelse" to JaNeiValg(vurdering.harAnnenFullYtelse),
                         "Ytelse" to PrettyEnum(vurdering.brukersYtelse),
-                        "Ytelse til og med" to
-                            (vurdering.brukersYtelseTom?.let { Dato(it) } ?: Tekst("Ikke satt")),
+                        "Ytelse til og med" to (vurdering.brukersYtelseTom?.let { Dato(it) } ?: Tekst("Ikke satt")),
                         "Sykepengegrunnlag over 2 G" to JaNeiValg(vurdering.harSykepengegrunnlagOver2G),
-                        "Arbeidsgiver utbetaler sykepenger" to JaNeiValg(
-                            vurdering.harArbeidsgiverSykepengerUtbetaling
-                        ),
+                        "Arbeidsgiver utbetaler sykepenger" to JaNeiValg(vurdering.harArbeidsgiverSykepengerUtbetaling),
                         "Skal avslås etter § 11-27" to JaNeiValg(vurdering.skalAvslås1127),
                     )
                 )
