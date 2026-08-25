@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
@@ -69,7 +70,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             vedtakslengdeService = VedtakslengdeService(
                 vedtakslengdeRepository = vedtakslengdeRepository,
                 underveisRepository = underveisRepository,
-                vilkårsresultatRepository = vilkårsresultatRepository,
                 rettighetstypeService = RettighetstypeService(
                     rettighetestypeRepository,
                     vilkårsresultatRepository,
@@ -78,7 +78,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                     mockk<BehandlingRepository>()
                 ),
                 stansOpphørRepository = stansOpphørRepository,
-                clock = clock
+                clock = clock,
+                virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository),
             ),
         )
 
