@@ -85,6 +85,7 @@ internal object VedtakDokumentRenderer {
                 institusjonsoppholdSub(),
                 samordningSub(),
                 samordningUføreSub(),
+                tjenestepensjonRefusjonskravSub(),
                 sykestipendSub(),
                 aktivitetsplikt11_7Sub(),
                 rettighetstypeSub(),
@@ -656,6 +657,19 @@ internal object VedtakDokumentRenderer {
             Tabell.ofTidslinje(
                 kolonner = listOf(Tekst("Uføregrad til samordning")),
                 tidslinje = vurdering.tilTidslinje().map { listOf(Prosent(it)) },
+            ),
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.tjenestepensjonRefusjonskravSub(): Seksjon? {
+        val vurdering = tjenestepensjonRefusjonskravVurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Refusjonskrav fra tjenestepensjonsordning"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            Dict(
+                "Har refusjonskrav" to JaNeiValg(vurdering.harKrav),
+                "Fra og med" to (vurdering.fom?.let(::Dato) ?: Tekst("Ikke satt")),
+                "Til og med" to (vurdering.tom?.let(::Dato) ?: Tekst("Ikke satt")),
             ),
         )
     }
