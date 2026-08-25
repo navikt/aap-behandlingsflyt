@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
@@ -754,6 +755,7 @@ class AvklaringsbehovServiceTest {
                 vurdertAv = Bruker("Z00000"),
                 skalTrekkes = true,
                 vurdert = Instant.parse("2020-01-01T12:12:12Z"),
+                aarsak = AarsakTilTrekkSoknad.ANNET
             )
         )
 

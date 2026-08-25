@@ -70,7 +70,7 @@ class VurderAvslag11_27Løser(
             skalAvslås1127 = vurdering.skalAvslås1127,
             brukersYtelse = vurdering.brukersYtelse,
             brukersYtelseTom = vurdering.brukersYtelseTom,
-            sykepengegrunnlag = vurdering.sykepengegrunnlag,
+            harSykepengegrunnlagOver2G = vurdering.harSykepengegrunnlagOver2G,
             harArbeidsgiverSykepengerUtbetaling = vurdering.harArbeidsgiverSykepengerUtbetaling,
             harAnnenFullYtelse = vurdering.harAnnenFullYtelse,
             begrunnelse = vurdering.begrunnelse,

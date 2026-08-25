@@ -82,16 +82,17 @@ fun NormalOpenAPIRoute.behandlingApi(
                         repositoryProvider.provide<AvklaringsbehovRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
+                    val virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider)
 
                     val behandling = behandling(behandlingRepository, req)
                     val sak = sakRepository.hent(behandling.sakId)
                     val virkningstidspunkt =
                         runCatching {
-                            if (behandling.erYtelsesbehandling()) VirkningstidspunktUtleder(
-                                vilkårsresultatRepository = vilkårsresultatRepository
-                            ).utledVirkningsTidspunkt(
-                                behandling.id
-                            ) else null
+                            if (behandling.erYtelsesbehandling()) {
+                                virkningstidspunktUtleder.utledVirkningsTidspunkt(
+                                    behandling.id
+                                )
+                            } else null
                         }.getOrElse {
                             log.warn("Feil ved utleding av virkningstidspunkt for behandling ${behandling.id}", it)
                             null

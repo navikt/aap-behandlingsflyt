@@ -43,6 +43,7 @@ class GenererVilkårsvurderingOppsummeringJobbUtførerTest {
             virkningstidspunkt = LocalDate.of(2026, 8, 1),
         )
         val dokument = mockk<PdfDokument>()
+        val tittel = "Oppsummering av vilkårsvurderinger for sak 123 – 7. august 2026"
         val pdf = "%PDF-1.4 test".encodeToByteArray()
         every { behandling.sakId } returns sakId
         every { behandling.forrigeBehandlingId } returns forrigeBehandlingId
@@ -57,6 +58,7 @@ class GenererVilkårsvurderingOppsummeringJobbUtførerTest {
                 forrigeBehandlingId = forrigeBehandlingId,
             )
         } returns dokument
+        every { dokument.tittel } returns tittel
         every { pdfGeneratorGateway.genererVurderingerOppsummeringPdfDokument(dokument) } returns pdf
 
         GenererVilkårsvurderingOppsummeringJobbUtfører(
@@ -72,6 +74,7 @@ class GenererVilkårsvurderingOppsummeringJobbUtførerTest {
         verify(exactly = 1) {
             journalføringService.journalførVilkårsvurderingOppsummering(
                 sak = sak,
+                tittel = tittel,
                 pdf = pdf,
             )
         }

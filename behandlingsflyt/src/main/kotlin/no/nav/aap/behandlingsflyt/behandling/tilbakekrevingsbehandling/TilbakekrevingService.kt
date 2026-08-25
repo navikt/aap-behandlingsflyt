@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 
 class TilbakekrevingService(
     private val tilbakekrevingsbehandlingRepository: TilbakekrevingRepository,
@@ -34,6 +35,7 @@ class TilbakekrevingService(
             jobbInput = JobbInput(jobb = OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører)
                 .medParameter("tilbakekrevingBehandlingId", tilbakekrevingshendelse.tilbakekrevingBehandlingId.toString())
                 .forSak(sakId = sakId.toLong())
+                .medPrioritet(Prioritet.LAV)
          )
     }
 
@@ -42,6 +44,7 @@ class TilbakekrevingService(
             jobbInput = JobbInput(jobb = SendFagsysteminfoBehovTilTilbakekrevingUtfører)
                 .medPayload(hendelse)
                 .forSak(sakId = sakId.toLong())
+                .medPrioritet(Prioritet.LAV)
         )
     }
 

@@ -4,9 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.VurderingForKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
-import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 
@@ -21,7 +19,7 @@ data class Avslag11_27Vurdering (
     val brukersYtelse: Ytelse? = null,
     val brukersYtelseTom: LocalDate? = null,
     /*  Kun for sykepenger */
-    val sykepengegrunnlag: Beløp? = null,
+    val harSykepengegrunnlagOver2G: Boolean? = null,
     val harArbeidsgiverSykepengerUtbetaling: Boolean? = null,
     val skalAvslås1127: Boolean? = null,
 ): VurderingForKrav

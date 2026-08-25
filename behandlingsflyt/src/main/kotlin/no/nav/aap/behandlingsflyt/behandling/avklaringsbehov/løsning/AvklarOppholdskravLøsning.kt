@@ -11,8 +11,10 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRe
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_OPPHOLDSKRAV
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -23,17 +25,29 @@ class AvklarOppholdskravLøsning(
         required = true,
         defaultValue = AVKLAR_OPPHOLDSKRAV
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5035`,
-    override val løsningerForPerioder: List<AvklarOppholdkravLøsningForPeriodeDto> // TODO: Implementer LøsningMedPeriodiserteVurderinger
-) : PeriodisertAvklaringsbehovLøsning<AvklarOppholdkravLøsningForPeriodeDto> {
+    override val løsningerForPerioder: List<AvklarOppholdkravLøsningForPeriodeDto>
+) : PeriodisertAvklaringsbehovLøsning<AvklarOppholdkravLøsningForPeriodeDto>, LøsningMedPeriodiserteVurderinger {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarOppholdskravLøser(repositoryProvider).løs(kontekst, this)
     }
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<OppholdskravGrunnlagRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.tidslinje() ?: Tidslinje<Unit>()
     }
+
+    override fun hentVurderinger(
+        behandlingId: BehandlingId,
+        repositoryProvider: RepositoryProvider
+    ): List<PeriodisertVurdering> {
+        val repository = repositoryProvider.provide<OppholdskravGrunnlagRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.somPeriodiserteVurderinger().orEmpty()
+    }
+
+    override fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId) =
+        løsningerForPerioder.map { it.tilOppholdskravPeriodisertVurdering(bruker, behandlingId) }
 }

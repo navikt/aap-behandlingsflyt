@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -41,7 +40,7 @@ fun NormalOpenAPIRoute.vedtakslengdeGrunnlagApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vedtakslengdeRepository = repositoryProvider.provide<VedtakslengdeRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
-                    val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+                    val virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -53,7 +52,7 @@ fun NormalOpenAPIRoute.vedtakslengdeGrunnlagApi(
                     val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
 
                     val vedtakslengdeStartdato =
-                        VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandling.id)
+                        virkningstidspunktUtleder.utledVirkningsTidspunkt(behandling.id)
                             ?: sak.rettighetsperiode.fom
 
                     // Startdato i nye vurderinger fortsetter fra forrige vedtatte grunnlag

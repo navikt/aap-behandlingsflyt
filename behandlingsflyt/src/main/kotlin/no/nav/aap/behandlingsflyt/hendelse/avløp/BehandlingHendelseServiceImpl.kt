@@ -35,6 +35,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -116,17 +117,19 @@ class BehandlingHendelseServiceImpl(
                 )
             )
                 .forBehandling(sak.id.id, behandling.id.id)
+                .medPrioritet(Prioritet.LAV)
         )
         flytJobbRepository.leggTil(
             JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører).medPayload(behandling.referanse)
                 .forBehandling(sak.id.id, behandling.id.id)
+                .medPrioritet(Prioritet.LAV)
         )
 
         // Sender meldekort til API-intern
-        flytJobbRepository.leggTil(DatadelingMeldekortJobbUtfører.nyJobb(sak.id, behandling.id))
+        flytJobbRepository.leggTil(DatadelingMeldekortJobbUtfører.nyJobb(sak.id, behandling.id).medPrioritet(Prioritet.LAV))
 
         if (behandling.typeBehandling().erYtelsesbehandling()) {
-            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
+            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id).medPrioritet(Prioritet.LAV))
         }
     }
 

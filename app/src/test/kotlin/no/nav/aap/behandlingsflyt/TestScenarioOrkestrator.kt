@@ -321,7 +321,7 @@ class TestScenarioOrkestrator(
         return this.løsAvklaringsBehov(
             behandling,
             AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning("", emptyList())
+                vurderingerForSamordning = VurderingerForSamordning("Ingen samordning", emptyList())
             )
         )
     }

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
@@ -183,6 +185,7 @@ class SamordningStegTest {
                 vurdertAv = Bruker("Z00000"),
                 skalTrekkes = true,
                 vurdert = Instant.parse("2020-01-01T12:12:12Z"),
+                aarsak = AarsakTilTrekkSoknad.ANNET
             )
         )
 
@@ -285,11 +288,17 @@ class SamordningStegTest {
         lagreYtelseGrunnlag(
             behandling.id,
             Ytelse.SYKEPENGER,
-            Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(1))
+            Periode(LocalDate.now(), LocalDate.now().plusYears(2))
         )
-        løsBehovet(behandling)
 
-        steg().utfør(kontekst = kontekst)
+        val kontekstMedNyttVurderingsbehov = byggFlytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingsbehovRelevanteForStegMedPerioder = setOf(
+                VurderingsbehovMedPeriode(Vurderingsbehov.SAMORDNING_OG_AVREGNING, LocalDateTime.now())
+            )
+        }
+
+        steg().utfør(kontekst = kontekstMedNyttVurderingsbehov)
 
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
     }
@@ -460,6 +469,52 @@ class SamordningStegTest {
 
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+    }
+
+    @Test
+    fun `ytelser i register fra før søknadstidspunktet krever ikke vurdering`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        settOppRessurser(
+            Ytelse.SYKEPENGER,
+            behandling.id,
+            Periode(LocalDate.now().minusYears(2), LocalDate.now().minusDays(1))
+        )
+
+        val resultat = steg().utfør(flytKontekstMedPerioder(behandling))
+
+        assertThat(resultat).isEqualTo(Fullført)
+
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_GRADERING)).isNull()
+
+        // Grunnlaget skal lagres selv om saksbehandler ikke har vurdert treffet fra registeret
+        assertThat(InMemorySamordningRepository.hentHvisEksisterer(behandling.id)).isNotNull()
+    }
+
+    @Test
+    fun `saksbehandler kan bekrefte kortet uten perioder selv om registeret har funn`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
+        val kontekst = flytKontekstMedPerioder(behandling)
+
+        steg().utfør(kontekst = kontekst)
+        verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
+
+        InMemorySamordningVurderingRepository.lagreVurderinger(
+            behandling.id, SamordningVurderingGrunnlag(
+                begrunnelse = "Ingen samordning aktuelt",
+                vurderinger = emptySet(),
+                vurdertAv = Bruker("ident"),
+                vurdertTidspunkt = LocalDateTime.now()
+            )
+        )
+        løsBehovet(behandling)
+
+        val resultat = steg().utfør(kontekst = kontekst)
+
+        assertThat(resultat).isEqualTo(Fullført)
+        verifiserAvklaringsbehov(behandling, Status.AVSLUTTET)
+        assertThat(InMemorySamordningRepository.hentHvisEksisterer(behandling.id)).isNotNull()
     }
 
     private fun løsBehovet(behandling: Behandling) {

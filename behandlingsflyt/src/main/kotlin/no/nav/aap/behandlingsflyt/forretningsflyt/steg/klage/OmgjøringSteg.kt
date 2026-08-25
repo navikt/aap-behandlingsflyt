@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.Prioritet
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import java.util.*
@@ -52,7 +53,7 @@ class OmgjøringSteg private constructor(
                         kanal = Kanal.DIGITAL,
                         melding = konstruerMelding(resultat, kontekst),
                         mottattTidspunkt = LocalDateTime.now()
-                    ),
+                    ).medPrioritet(Prioritet.LAV),
                 )
                 Fullført
             }

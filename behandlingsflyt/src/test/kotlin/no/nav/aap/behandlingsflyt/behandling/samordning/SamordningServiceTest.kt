@@ -62,68 +62,6 @@ internal class SamordningServiceTest {
     }
 
     @Test
-    fun `sammenlign perioder med registerdata, finner ikke-vurderte perioder`() {
-        val behandlingId = dataSource.transaction { opprettSakdata(it) }
-
-        // Opprett registerdata med vurdering fra 1 januar til 10 januar
-        dataSource.transaction { connection ->
-            opprettYtelseData(
-                SamordningYtelseRepositoryImpl(connection), behandlingId, ytelser = setOf(
-                    SamordningYtelse(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = setOf(
-                            SamordningYtelsePeriode(
-                                periode = Periode(1 januar 2024, 10 januar 2024),
-                                gradering = Prosent.`70_PROSENT`,
-                            )
-                        ),
-                        kilde = "kilde",
-                    )
-                )
-            )
-        }
-
-        // Registrer vurdering fra 5 januar til 10 januar
-        dataSource.transaction { connection ->
-            val ytelseVurderingRepo = SamordningVurderingRepositoryImpl(connection)
-            opprettVurderingData(
-                ytelseVurderingRepo, behandlingId, vurderinger = SamordningVurderingGrunnlag(
-                    begrunnelse = "En god begrunnelse",
-                    vurdertAv = Bruker("ident"),
-                    vurderinger = setOf(
-                        SamordningVurdering(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            vurderingPerioder = setOf(
-                                SamordningVurderingPeriode(
-                                    periode = Periode(5 januar 2024, 10 januar 2024),
-                                    gradering = Prosent.`50_PROSENT`,
-                                    manuell = false,
-                                )
-                            )
-                        )
-                    ),
-                    vurdertTidspunkt = LocalDateTime.now()
-                )
-            )
-        }
-
-        val (ytelser, vurderinger) = dataSource.transaction { connection ->
-            SamordningService(
-                SamordningVurderingRepositoryImpl(connection),
-                SamordningYtelseRepositoryImpl(connection)
-            ).samordningGrunnlag(behandlingId)
-        }
-        val ikkeVurdertePerioder =
-            SamordningYtelseVurderingGrunnlag(ytelser, vurderinger).perioderSomIkkeHarBlittVurdert()
-
-        // Forvent at ikke-vurderte perioder er fra 1 jan til 4 jan
-        assertThat(ikkeVurdertePerioder.segmenter()).hasSize(1)
-        assertThat(ikkeVurdertePerioder.segmenter().first().periode).isEqualTo(
-            Periode(1 januar 2024, 4 januar 2024)
-        )
-    }
-
-    @Test
     fun `gjør vurderinger med overlappende perioder`() {
         val behandlingId = dataSource.transaction { opprettSakdata(it) }
         dataSource.transaction { connection ->

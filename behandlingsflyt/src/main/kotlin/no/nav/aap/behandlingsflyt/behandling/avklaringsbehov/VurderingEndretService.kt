@@ -77,7 +77,7 @@ class VurderingEndretService(
         ),
         Definisjon.ARBEIDSOPPTRAPPING to EndretSjekk(
             hentPåTidspunkt = arbeidsopptrappingRepository::hentArbeidsopptrappingVurderingPåTidspunkt,
-            hentNåværende = { arbeidsopptrappingRepository.hentHvisEksisterer(it)?.vurderinger },
+            hentNåværende = { arbeidsopptrappingRepository.hentHvisEksisterer(it)?.vurderinger?.ifEmpty { null } },
             erLik = List<ArbeidsopptrappingVurdering>::erFunksjoneltLik,
         ),
         Definisjon.AVKLAR_OVERGANG_UFORE to EndretSjekk(
@@ -87,7 +87,7 @@ class VurderingEndretService(
         ),
         Definisjon.ETABLERING_EGEN_VIRKSOMHET to EndretSjekk(
             hentPåTidspunkt = etableringEgenVirksomhetRepository::hentEtableringEgenVirksomhetVurderingPåTidspunkt,
-            hentNåværende = { etableringEgenVirksomhetRepository.hentHvisEksisterer(it)?.vurderinger },
+            hentNåværende = { etableringEgenVirksomhetRepository.hentHvisEksisterer(it)?.vurderinger?.ifEmpty { null } },
             erLik = List<EtableringEgenVirksomhetVurdering>::erFunksjoneltLik
         ),
         Definisjon.FASTSETT_ARBEIDSEVNE to EndretSjekk(

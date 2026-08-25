@@ -1,8 +1,11 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
+import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
@@ -14,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -26,6 +30,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.Over
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
@@ -63,9 +68,14 @@ class VedtakDokumentGenerator(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
+    private val avslag11_27Repository: Avslag11_27Repository,
+    private val sykestipendRepository: SykestipendRepository,
+    private val inntektsbortfallRepository: InntektsbortfallRepository,
+    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapArbeidInntektForutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
 ) {
@@ -94,9 +104,14 @@ class VedtakDokumentGenerator(
         institusjonsoppholdRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
         refusjonkravRepository = repositoryProvider.provide(),
+        avslag11_27Repository = repositoryProvider.provide(),
+        sykestipendRepository = repositoryProvider.provide(),
+        inntektsbortfallRepository = repositoryProvider.provide(),
+        aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
     )
@@ -166,9 +181,14 @@ class VedtakDokumentGenerator(
             institusjonsoppholdGrunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId),
             sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId),
             refusjonkravVurderinger = refusjonkravRepository.hentHvisEksisterer(behandlingId),
+            avslag11_27Grunnlag = avslag11_27Repository.hentHvisEksisterer(behandlingId),
+            sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(behandlingId),
+            inntektsbortfallVurdering = inntektsbortfallRepository.hentHvisEksisterer(behandlingId),
+            aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId),
             overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId),
             manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId),
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
+            lovvalgMedlemskapGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId),
             forutgåendeMedlemskapGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(
                 behandlingId
             ),

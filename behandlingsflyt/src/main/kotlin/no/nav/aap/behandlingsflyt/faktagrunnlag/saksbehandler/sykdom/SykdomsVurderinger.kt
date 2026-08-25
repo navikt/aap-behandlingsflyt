@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
+import org.slf4j.LoggerFactory
 
 import java.time.Instant
 import java.time.LocalDate
@@ -27,6 +28,7 @@ data class Sykdomsvurdering(
 ) : PeriodisertVurdering {
     override val fom: LocalDate = vurderingenGjelderFra
     override val tom: LocalDate? = vurderingenGjelderTil
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
         if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {

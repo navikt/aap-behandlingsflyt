@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.søknad
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -29,6 +30,7 @@ class TrukketSøknadVurderingDto(
     val begrunnelse: String,
     val skalTrekkes: Boolean,
     val vurderingerMeta: VurderingerMetaResponse,
+    val aarsak: AarsakTilTrekkSoknadDto?,
 )
 
 fun NormalOpenAPIRoute.trukketSøknadGrunnlagApi(
@@ -62,6 +64,7 @@ fun NormalOpenAPIRoute.trukketSøknadGrunnlagApi(
                                 behandlingId = behandlingId,
                                 vurdertAv = vurdertAvService.medNavnOgEnhet(it.vurdertAv, it.vurdert),
                             ),
+                            aarsak = it.aarsak?.tilDto(),
                         )
                     }
             )

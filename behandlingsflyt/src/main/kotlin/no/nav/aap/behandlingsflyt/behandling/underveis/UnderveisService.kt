@@ -63,7 +63,8 @@ class UnderveisService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
-    private val rettighetstypeRepository: RettighetstypeRepository
+    private val rettighetstypeRepository: RettighetstypeRepository,
+    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider, gatewayProvider),
@@ -80,7 +81,8 @@ class UnderveisService(
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
-        rettighetstypeRepository = repositoryProvider.provide()
+        rettighetstypeRepository = repositoryProvider.provide(),
+        virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -215,7 +217,7 @@ class UnderveisService(
         }
 
         val startdatoForBehandlingen =
-            VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
+            virkningstidspunktUtleder.utledVirkningsTidspunkt(behandlingId)
                 ?: sak.rettighetsperiode.fom
 
         /**

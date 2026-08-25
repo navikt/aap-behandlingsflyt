@@ -41,7 +41,10 @@ class VurderOppholdskravSteg private constructor(
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.OPPHOLDSKRAV),
+            tvingerAvklaringsbehov = setOf(
+                Vurderingsbehov.OPPHOLDSKRAV,
+                Vurderingsbehov.AVVIST_SOKNAD_OM_AAP_UNDER_OPPHOLD_I_UTLANDET
+            ),
             nårVurderingErRelevant = { nyKontekst -> nårVurderingErRelevant(nyKontekst) },
             nårVurderingErGyldig = { nårVurderingErGyldig(kontekst) },
             tilbakestillGrunnlag = {

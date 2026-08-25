@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
@@ -29,23 +28,27 @@ import java.time.LocalDate
 class VedtakslengdeService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val underveisRepository: UnderveisRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val rettighetstypeService: RettighetstypeService,
     private val stansOpphørRepository: StansOpphørRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
+    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
 ) {
     companion object {
         const val ANTALL_DAGER_FØR_UTVIDELSE = 28L
     }
 
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider,
+        clock: Clock = Clock.systemDefaultZone(),
+    ) : this(
         vedtakslengdeRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        vilkårsresultatRepository = repositoryProvider.provide(),
         rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
         stansOpphørRepository = repositoryProvider.provide(),
-
-        )
+        virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
+        clock = clock,
+    )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -305,7 +308,7 @@ class VedtakslengdeService(
         rettighetsperiode: Periode,
     ): Periode {
         val startdatoForBehandlingen =
-            VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
+            virkningstidspunktUtleder.utledVirkningsTidspunkt(behandlingId)
                 ?: rettighetsperiode.fom
 
         /**

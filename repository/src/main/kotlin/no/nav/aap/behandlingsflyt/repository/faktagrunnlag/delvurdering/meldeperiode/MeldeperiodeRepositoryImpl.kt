@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
+import java.time.DayOfWeek
 
 class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : MeldeperiodeRepository {
     companion object : Factory<MeldeperiodeRepositoryImpl> {
@@ -43,6 +44,12 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
         behandlingId: BehandlingId,
         meldeperiode: Periode?
     ) {
+        if (meldeperiode != null) {
+            check(meldeperiode.fom.dayOfWeek == DayOfWeek.MONDAY) {
+                "Våre meldeperioder starter alltid på en mandag, ${meldeperiode.fom} er en ${meldeperiode.fom.dayOfWeek}."
+            }
+        }
+
         val disableQuery = """
             UPDATE MELDEPERIODE_GRUNNLAG SET aktiv = false WHERE behandling_id = ? AND aktiv
         """.trimIndent()

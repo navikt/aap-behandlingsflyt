@@ -6,6 +6,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.Prioritet
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
@@ -45,7 +46,7 @@ class OpprettJobbForTriggBarnetilleggSatsJobbUtfører(
         log.info("Fant ${saker.size} saker med barnetillegg.")
 
         saker.forEach {
-            flytJobbRepository.leggTil(JobbInput(TriggBarnetilleggSatsJobbUtfører).forSak(it.toLong()))
+            flytJobbRepository.leggTil(JobbInput(TriggBarnetilleggSatsJobbUtfører).forSak(it.toLong()).medPrioritet(Prioritet.BAKGRUNN))
         }
     }
 

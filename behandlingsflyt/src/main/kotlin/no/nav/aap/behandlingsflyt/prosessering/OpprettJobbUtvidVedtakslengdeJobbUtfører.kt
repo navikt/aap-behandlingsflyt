@@ -10,6 +10,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.Prioritet
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
@@ -47,7 +48,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         sakerSomIkkeHarEksisterendeJobb
             .also { log.info("Oppretter jobber for ${it.size} saker som er aktuelle kandidator for utvidelse av vedtakslengde. Saker: $it") }
             .forEach {
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()))
+                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()).medPrioritet(Prioritet.BAKGRUNN))
             }
     }
 

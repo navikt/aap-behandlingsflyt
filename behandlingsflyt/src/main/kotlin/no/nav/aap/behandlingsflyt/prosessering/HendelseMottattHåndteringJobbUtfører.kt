@@ -28,6 +28,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.Prioritet
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
@@ -235,7 +236,37 @@ class HendelseMottattHåndteringJobbUtfører(
                 medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(mottattTidspunkt))
                 medParameter(DIGITALISERT_AV_POSTMOTTAK, DefaultJsonMapper.toJson(digitalisertAvPostmottak ?: false))
                 medPayload(melding)
+                    .medPrioritet(utledPrioritet(brevkategori))
             }
+
+        fun utledPrioritet(brevkategori: InnsendingType): Int {
+            return when (brevkategori) {
+                InnsendingType.SØKNAD,
+                InnsendingType.KLAGE,
+                InnsendingType.MANUELL_REVURDERING,
+                InnsendingType.OMGJØRING_KLAGE_REVURDERING,
+                InnsendingType.ANNET_RELEVANT_DOKUMENT,
+                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> Prioritet.NORMAL
+
+                InnsendingType.AKTIVITETSKORT,
+                InnsendingType.MELDEKORT,
+                InnsendingType.MIGRERING_FRA_ARENA,
+                InnsendingType.LEGEERKLÆRING,
+                InnsendingType.LEGEERKLÆRING_AVVIST,
+                InnsendingType.DIALOGMELDING,
+                InnsendingType.KABAL_HENDELSE,
+                InnsendingType.TILBAKEKREVING_HENDELSE,
+                InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
+                InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
+                InnsendingType.PDL_HENDELSE_DODSFALL_BARN,
+                InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT,
+                InnsendingType.OPPFØLGINGSOPPGAVE,
+                InnsendingType.INSTITUSJONSOPPHOLD,
+                InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
+                InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE,
+                InnsendingType.UFØRE_VEDTAK_HENDELSE -> Prioritet.LAV
+            }
+        }
 
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return HendelseMottattHåndteringJobbUtfører(

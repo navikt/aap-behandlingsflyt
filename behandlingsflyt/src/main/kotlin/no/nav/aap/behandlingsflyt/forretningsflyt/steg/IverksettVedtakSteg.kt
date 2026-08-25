@@ -5,12 +5,10 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -29,7 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -37,6 +34,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
@@ -53,7 +51,6 @@ class IverksettVedtakSteg internal constructor(
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
     private val resultatUtleder: ResultatUtleder,
-    private val stansOpphørService: StansOpphørService,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -84,6 +81,7 @@ class IverksettVedtakSteg internal constructor(
         flytJobbRepository.leggTil(
             jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
                 .forSak(kontekst.sakId.id)
+                .medPrioritet(Prioritet.LAV)
         )
         if (unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF) &&
             skalGenerereVilkårsvurderingOppsummering(kontekst)
@@ -93,13 +91,14 @@ class IverksettVedtakSteg internal constructor(
                     behandlingId = kontekst.behandlingId,
                     sakId = kontekst.sakId,
                 )
+                    .medPrioritet(Prioritet.LAV)
             )
         }
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             flytJobbRepository.leggTil(
-                HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(kontekst.sakId)
+                HåndterUbehandledeMeldekortForSakJobbUtfører.nyJobb(kontekst.sakId).medPrioritet(Prioritet.LAV)
             )
         }
 
@@ -116,6 +115,7 @@ class IverksettVedtakSteg internal constructor(
             jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
                 .medPayload(kontekst.behandlingId)
                 .forSak(sakId = kontekst.sakId.toLong())
+                .medPrioritet(Prioritet.LAV)
         )
     }
 
@@ -279,24 +279,11 @@ class IverksettVedtakSteg internal constructor(
         )
 
     private fun skalGenerereVilkårsvurderingOppsummering(kontekst: FlytKontekstMedPerioder): Boolean {
-        val vurderingstyperSomKanGiStans = setOf(
-            VurderingType.REVURDERING,
-            VurderingType.OVERGANG_UFORE_STANS,
-        )
-        val dekkedeRevurderingsbehov = setOf(
-            Vurderingsbehov.VEDTAKSLENGDE_MANUELT,
-            Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-            Vurderingsbehov.VURDER_KRAV,
-            Vurderingsbehov.BARNETILLEGG,
-        )
-
         return when (kontekst.vurderingType) {
+            VurderingType.REVURDERING,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.FØRSTEGANGSBEHANDLING -> true
-            in vurderingstyperSomKanGiStans if stansOpphørService.vedtattStansOpphør(kontekst.behandlingId)
-                .any { it.vurdertIBehandling == kontekst.behandlingId && it.vurdering is Stans } -> true
-
-            VurderingType.REVURDERING ->
-                kontekst.vurderingsbehovRelevanteForSteg.any { it in dekkedeRevurderingsbehov }
 
             else -> false
         }
@@ -312,9 +299,7 @@ class IverksettVedtakSteg internal constructor(
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val gosysService = GosysService(gatewayProvider)
-            val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
-                vilkårsresultatRepository = repositoryProvider.provide(),
-            )
+            val virkningstidspunktUtlederService = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider)
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
             val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
             return IverksettVedtakSteg(
@@ -333,9 +318,8 @@ class IverksettVedtakSteg internal constructor(
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
                 gosysService = gosysService,
                 resultatUtleder = resultatUtleder,
-                stansOpphørService = StansOpphørService(repositoryProvider, gatewayProvider),
                 unleashGateway = gatewayProvider.provide(),
-                )
+            )
         }
 
         override fun type(): StegType {

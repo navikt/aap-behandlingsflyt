@@ -9,6 +9,7 @@ import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -204,6 +205,7 @@ class PersonOgSakServiceTest {
                         skalTrekkes = false,
                         vurdertAv = Bruker("Z999999"),
                         vurdert = Instant.now(),
+                        aarsak = null
                     )
                 )
 
@@ -250,6 +252,7 @@ class PersonOgSakServiceTest {
                         skalTrekkes = true,
                         vurdertAv = Bruker("Z999999"),
                         vurdert = Instant.now(),
+                        aarsak = AarsakTilTrekkSoknad.BRUKER_SOKTE_FOR_TIDLIG
                     )
                 )
 
@@ -304,6 +307,7 @@ class PersonOgSakServiceTest {
                         skalTrekkes = true,
                         vurdertAv = Bruker("Z999999"),
                         vurdert = Instant.now(),
+                        aarsak = AarsakTilTrekkSoknad.BRUKER_SOKTE_FEIL_YTELSE
                     )
                 )
 

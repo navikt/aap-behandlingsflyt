@@ -11,11 +11,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvslag11_27Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
@@ -48,7 +46,7 @@ class Avslag11_27VisningUtlederTest {
                     harAnnenFullYtelse = true,
                     brukersYtelse = Ytelse.SYKEPENGER,
                     brukersYtelseTom = LocalDate.of(2026, 6, 30),
-                    sykepengegrunnlag = Beløp(BigDecimal("500000")),
+                    harSykepengegrunnlagOver2G = false,
                     harArbeidsgiverSykepengerUtbetaling = false,
                     skalAvslås1127 = true,
                     vurdertIBehandling = behandling.id,

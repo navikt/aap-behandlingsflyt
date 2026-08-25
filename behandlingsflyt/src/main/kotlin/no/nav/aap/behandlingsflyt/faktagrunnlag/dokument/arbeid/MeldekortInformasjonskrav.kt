@@ -21,6 +21,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -90,9 +91,12 @@ class MeldekortInformasjonskrav private constructor(
             val endretAvSaksbehandler = ubehandletMeldekort.opprettetAv != null
             if (ubehandletMeldekort.digitalisertAvPostmottak == true || endretAvSaksbehandler) {
                 flytJobbRepository.leggTil(
-                    JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører).medPayload(
-                        ubehandletMeldekort.journalpostId
-                    ).forSak(sakId = kontekst.sakId.id)
+                    JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører)
+                        .medPayload(
+                            ubehandletMeldekort.journalpostId
+                        )
+                        .forSak(sakId = kontekst.sakId.id)
+                        .medPrioritet(Prioritet.LAV)
                 )
             }
         }

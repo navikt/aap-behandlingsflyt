@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 
 class HåndterVedtakHendelseService(
@@ -38,7 +39,7 @@ class HåndterVedtakHendelseService(
         } else {
             if (!trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {
                 flytJobbRepository.leggTil(
-                    JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId()
+                    JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId().medPrioritet(Prioritet.LAV)
                 )
             }
             mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)

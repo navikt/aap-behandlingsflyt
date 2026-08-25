@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.aktivitetsplikt.Aktivitetsp
 import no.nav.aap.behandlingsflyt.behandling.vilkår.aktivitetsplikt.AktivitetspliktvilkåretGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -15,9 +15,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
+@Suppress("ClassName")
 class Effektuer11_7Steg(
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
+    private val vilkårService: VilkårService,
+    @Suppress("PrivatePropertyName") private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
@@ -26,16 +27,15 @@ class Effektuer11_7Steg(
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING -> {
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                Aktivitetspliktvilkåret(vilkårsresultat).vurder(
-                    AktivitetspliktvilkåretGrunnlag(
+                vilkårService.vurderVilkår(
+                    kontekst.behandlingId, AktivitetspliktvilkåretGrunnlag(
                         aktivitetsplikt117grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)
                             ?: Aktivitetsplikt11_7Grunnlag(vurderinger = emptyList()),
                         vurderFra = kontekst.rettighetsperiode.fom,
-                    )
+                    ), Aktivitetspliktvilkåret
                 )
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
+
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
@@ -55,7 +55,7 @@ class Effektuer11_7Steg(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return Effektuer11_7Steg(
-                vilkårsresultatRepository = repositoryProvider.provide(),
+                vilkårService = VilkårService(repositoryProvider),
                 aktivitetsplikt11_7Repository = repositoryProvider.provide(),
             )
         }
