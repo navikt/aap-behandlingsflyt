@@ -50,7 +50,6 @@ class BackfillKrav(
                             }
                         }
                     }
-                    Thread.sleep(Duration.ofMinutes(5))
                 }
             }
     }
@@ -83,7 +82,7 @@ class BackfillKrav(
                     for (behandling in behandlinger) {
                         if (sakenErFerdigBackfilled) break
                         taSkriveLåsRepository.withLåstBehandling(behandling.id) {
-                            val resultat = backfillService.backfillBehandling(sak, behandling)
+                            val resultat = backfillService.backfillBehandling(sak, behandling, erNyesteBehandling = behandling == behandlinger.last())
                             when (resultat) {
                                 BackfillBehandlingResultat.AlleredeBackfilled -> {
                                     log.info(
@@ -115,6 +114,5 @@ class BackfillKrav(
             "Backfill krav ferdig: {} behandlinger for sak-ider $fra – $til",
             antallBackfillUtført
         )
-        Thread.sleep(Duration.ofMinutes(5))
     }
 }

@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -52,7 +53,7 @@ class BackfillKravService(
      * Returnerer [BackfillBehandlingResultat.AlleredeBackfilled] dersom behandlingen allerede hadde krav –
      * løkken i runner skal da bryte ut av saken, da resten er nyere og allerede har sine vurderinger.
      */
-    fun backfillBehandling(sak: Sak, behandling: Behandling): BackfillBehandlingResultat {
+    fun backfillBehandling(sak: Sak, behandling: Behandling, erNyesteBehandling: Boolean): BackfillBehandlingResultat {
         val eksisterendeKrav = kravRepository.hentHvisEksisterer(behandling.id)
         if (eksisterendeKrav != null) {
             return BackfillBehandlingResultat.AlleredeBackfilled
@@ -75,7 +76,7 @@ class BackfillKravService(
         val grunnlag = KravGrunnlag(alleVurderinger.toSet())
         val oppdatertGrunnlag = håndterRettighetsperiodevurdering(behandling.id, grunnlag)
 
-        verifiserMotRettighetsperiode(sak, oppdatertGrunnlag)
+        verifiserMotRettighetsperiode(sak, oppdatertGrunnlag, erNyesteBehandling)
 
         kravRepository.lagre(behandling.id, oppdatertGrunnlag.vurderinger)
         backfillStønadsperiode(behandling.id, oppdatertGrunnlag)
@@ -91,9 +92,16 @@ class BackfillKravService(
         if (søknader.isEmpty()) return emptySet()
 
         val harForrigeRelevantKrav = forrigeKrav?.gjeldendeRelevanteKrav()?.isNotEmpty() == true
+        val gjeldendeFørsteKrav = forrigeKrav?.gjeldendeRelevanteKrav()?.minByOrNull { it.muligRettFra }
 
-        return søknader.mapIndexed { index, søknad ->
-            if (!harForrigeRelevantKrav && index == 0) {
+        if (forrigeKrav?.kravtidslinje().orEmpty().segmenter().toList().size > 1) {
+            throw IllegalStateException("Forrige krav for behandling ${behandlingId.toLong()} har flere enn ett relevant krav i tidslinjen – dette er uventet")
+        }
+
+        val nyeVurderinger = søknader.mapIndexed { index, søknad ->
+            if (index == 0 && (!harForrigeRelevantKrav || gjeldendeFørsteKrav?.muligRettFra.let {
+                    søknad.mottattTidspunkt.toLocalDate().isBefore(it)
+                })) {
                 RelevantKrav(
                     referanse = Kravreferanse.ny(),
                     journalpostId = søknad.referanse.asJournalpostId,
@@ -116,6 +124,21 @@ class BackfillKravService(
                 )
             }
         }.toSet()
+
+        return if (gjeldendeFørsteKrav != null && nyeVurderinger.filterIsInstance<RelevantKrav>()
+                .firstOrNull()?.muligRettFra?.isBefore(gjeldendeFørsteKrav.muligRettFra) == true
+        ) {
+            nyeVurderinger + Tilleggsopplysning(
+                referanse = gjeldendeFørsteKrav.referanse,
+                begrunnelse = "Automatisk vurdering",
+                journalpostId = gjeldendeFørsteKrav.journalpostId,
+                vurdertAv = SYSTEMBRUKER,
+                vurdertIBehandling = behandlingId,
+                opprettet = Instant.now(),
+            ) // Nedgraderer det tidligere relevante kravet til tilleggsopplysning dersom det nye kravet har en tidligere muligRettFra
+        } else {
+            nyeVurderinger
+        }
     }
 
     /**
@@ -149,7 +172,8 @@ class BackfillKravService(
      * Verifiserer at saken sin rettighetsperiode.fom stemmer med gjeldende krav sin muligRettFra.
      * Kræsjer dersom de ikke er like – dette indikerer en datakonsistensfeil.
      */
-    private fun verifiserMotRettighetsperiode(sak: Sak, grunnlag: KravGrunnlag) {
+    private fun verifiserMotRettighetsperiode(sak: Sak, grunnlag: KravGrunnlag, erNyesteBehandling: Boolean) {
+        if (!erNyesteBehandling) return
         val gjeldendeKrav = grunnlag.gjeldendeRelevanteKrav()
         if (gjeldendeKrav.isEmpty()) return
 
