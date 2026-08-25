@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Oversty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -78,6 +79,7 @@ class VedtakDokumentGenerator(
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
     private val tjenestepensjonRefusjonskravRepository: TjenestepensjonRefusjonsKravVurderingRepository,
+    private val barnepensjonRepository: BarnepensjonRepository,
     private val avslag11_27Repository: Avslag11_27Repository,
     private val sykestipendRepository: SykestipendRepository,
     private val inntektsbortfallRepository: InntektsbortfallRepository,
@@ -120,6 +122,7 @@ class VedtakDokumentGenerator(
         sykepengerErstatningRepository = repositoryProvider.provide(),
         refusjonkravRepository = repositoryProvider.provide(),
         tjenestepensjonRefusjonskravRepository = repositoryProvider.provide(),
+        barnepensjonRepository = repositoryProvider.provide(),
         avslag11_27Repository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
         inntektsbortfallRepository = repositoryProvider.provide(),
@@ -204,6 +207,7 @@ class VedtakDokumentGenerator(
             refusjonkravVurderinger = refusjonkravRepository.hentHvisEksisterer(behandlingId),
             tjenestepensjonRefusjonskravVurdering =
                 tjenestepensjonRefusjonskravRepository.hentHvisEksisterer(behandlingId),
+            barnepensjonGrunnlag = barnepensjonRepository.hentHvisEksisterer(behandlingId),
             avslag11_27Grunnlag = avslag11_27Repository.hentHvisEksisterer(behandlingId),
             sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(behandlingId),
             inntektsbortfallVurdering = inntektsbortfallRepository.hentHvisEksisterer(behandlingId),

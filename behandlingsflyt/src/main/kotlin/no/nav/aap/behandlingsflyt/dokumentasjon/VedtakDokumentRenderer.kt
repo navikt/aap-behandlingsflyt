@@ -87,6 +87,7 @@ internal object VedtakDokumentRenderer {
                 samordningUføreSub(),
                 tjenestepensjonRefusjonskravSub(),
                 samordningArbeidsgiverSub(),
+                samordningBarnepensjonSub(),
                 sykestipendSub(),
                 aktivitetsplikt11_7Sub(),
                 rettighetstypeSub(),
@@ -686,6 +687,24 @@ internal object VedtakDokumentRenderer {
                     .sortedBy { it.fom }
                     .map { listOf(Periode(it)) },
             ),
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.samordningBarnepensjonSub(): Seksjon? {
+        val vurdering = barnepensjonGrunnlag?.vurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Samordning med barnepensjon (§ 11-27)"),
+            blokker = listOf(Fritekstfelt("Begrunnelse", vurdering.begrunnelse)),
+            subseksjoner = vurdering.perioder
+                .sortedBy { it.fom }
+                .map { periode ->
+                    Seksjon(
+                        tittel = vurderingsoverskrift(vurdering.vurdertIBehandling, periode.periode),
+                        Dict(
+                            "Månedsbeløp" to Kroner(periode.månedsats),
+                        ),
+                    )
+                },
         )
     }
 

@@ -175,6 +175,7 @@ class VedtakDokumentRenderingTest {
         sykepengerErstatningGrunnlag = null,
         refusjonkravVurderinger = null,
         tjenestepensjonRefusjonskravVurdering = null,
+        barnepensjonGrunnlag = null,
         avslag11_27Grunnlag = null,
         sykestipendGrunnlag = null,
         inntektsbortfallVurdering = null,

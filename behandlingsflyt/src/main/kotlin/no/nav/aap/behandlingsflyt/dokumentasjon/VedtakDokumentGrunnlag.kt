@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Oversty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
@@ -76,6 +77,7 @@ data class VedtakDokumentGrunnlag(
     val sykepengerErstatningGrunnlag: SykepengerErstatningGrunnlag?,
     val refusjonkravVurderinger: List<RefusjonkravVurdering>?,
     val tjenestepensjonRefusjonskravVurdering: TjenestepensjonRefusjonskravVurdering?,
+    val barnepensjonGrunnlag: BarnepensjonGrunnlag?,
     val avslag11_27Grunnlag: Avslag11_27Grunnlag?,
     val sykestipendGrunnlag: SykestipendGrunnlag?,
     val inntektsbortfallVurdering: InntektsbortfallVurdering?,
