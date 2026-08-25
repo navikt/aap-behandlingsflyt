@@ -206,20 +206,14 @@ internal fun formaterVedtaksdato(
 }
 
 data class ReferanseBehandling(
-    val behandlingId: BehandlingId,
-    val inkluderBehandlingsopprinnelse: Boolean = true,
+    val behandlingId: BehandlingId
 ) : LøpendeTekst {
     override fun render(kontekst: RenderKontekst): String {
-        val behandlingsopprinnelse = if (!inkluderBehandlingsopprinnelse) {
-            ""
-        } else if (behandlingId == kontekst.gjeldendeBehandlingId) {
+        return if (behandlingId == kontekst.gjeldendeBehandlingId) {
             " (nåværende behandling)"
         } else {
             " (tidligere behandling)"
         }
-
-        val behandlingsreferanse = kontekst.vedtak.single { it.id == behandlingId }.referanse
-        return behandlingsreferanse.toString() + behandlingsopprinnelse
     }
 }
 
@@ -286,6 +280,5 @@ fun vurderingsoverskrift(
 ): LøpendeTekst = Span(
     Tekst("Vurdering brukt for "),
     Periode(bruktForPeriode),
-    Tekst(" i "),
     ReferanseBehandling(behandling),
 )
