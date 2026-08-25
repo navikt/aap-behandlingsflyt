@@ -166,6 +166,7 @@ class VedtakDokumentRenderingTest {
         meldepliktGrunnlag = null,
         stønadsperiodeGrunnlag = null,
         barnetilleggGrunnlag = null,
+        barnetilleggVurderinger = null,
         samordningGrunnlag = null,
         rettighetstypeGrunnlag = null,
         institusjonsoppholdGrunnlag = null,

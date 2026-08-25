@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
@@ -63,6 +64,7 @@ data class VedtakDokumentGrunnlag(
     val meldepliktGrunnlag: MeldepliktGrunnlag?,
     val stønadsperiodeGrunnlag: StønadsperiodeGrunnlag?,
     val barnetilleggGrunnlag: BarnetilleggGrunnlag?,
+    val barnetilleggVurderinger: VurderteBarn?,
     val samordningGrunnlag: SamordningGrunnlag?,
     val rettighetstypeGrunnlag: RettighetstypeGrunnlag?,
     val institusjonsoppholdGrunnlag: InstitusjonsoppholdGrunnlag?,

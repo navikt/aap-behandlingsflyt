@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
@@ -65,6 +66,7 @@ class VedtakDokumentGenerator(
     private val meldepliktRepository: MeldepliktRepository,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
     private val barnetilleggRepository: BarnetilleggRepository,
+    private val barnRepository: BarnRepository,
     private val samordningRepository: SamordningRepository,
     private val rettighetstypeRepository: RettighetstypeRepository,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
@@ -103,6 +105,7 @@ class VedtakDokumentGenerator(
         meldepliktRepository = repositoryProvider.provide(),
         stønadsperiodeRepository = repositoryProvider.provide(),
         barnetilleggRepository = repositoryProvider.provide(),
+        barnRepository = repositoryProvider.provide(),
         samordningRepository = repositoryProvider.provide(),
         rettighetstypeRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
@@ -182,6 +185,7 @@ class VedtakDokumentGenerator(
             meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandlingId),
             stønadsperiodeGrunnlag = stønadsperiodeRepository.hentHvisEksisterer(behandlingId),
             barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandlingId),
+            barnetilleggVurderinger = barnRepository.hentVurderteBarnHvisEksisterer(behandlingId),
             samordningGrunnlag = samordningRepository.hentHvisEksisterer(behandlingId),
             rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId),
             institusjonsoppholdGrunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId),

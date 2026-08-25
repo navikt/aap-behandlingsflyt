@@ -507,14 +507,41 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun VedtakDokumentGrunnlag.barnetilleggSub(): Seksjon? {
-        val perioder = barnetilleggGrunnlag?.perioder?.tilTidslinje() ?: return null
-        if (perioder.isEmpty()) return null
+        val perioder = barnetilleggGrunnlag?.perioder?.tilTidslinje().orEmpty()
+        val vurderteBarn = barnetilleggVurderinger?.barn.orEmpty()
+        if (perioder.isEmpty() && vurderteBarn.isEmpty()) return null
+
         return Seksjon(
             tittel = Tekst("Barnetillegg"),
-            Tabell.ofTidslinje(
-                kolonner = listOf(Tekst("Antall barn med rett til barnetillegg")),
-                tidslinje = perioder.map { listOf(Tekst(it.barnMedRettTil().size.toString())) }
-            )
+            blokker = listOfNotNull(
+                perioder.takeIf { it.isNotEmpty() }?.let {
+                    Tabell.ofTidslinje(
+                        kolonner = listOf(Tekst("Antall barn med rett til barnetillegg")),
+                        tidslinje = it.map { periode ->
+                            listOf(Tekst(periode.barnMedRettTil().size.toString()))
+                        },
+                    )
+                },
+            ),
+            subseksjoner = vurderteBarn.mapIndexed { index, barn ->
+                Seksjon(
+                    tittel = Tekst("Barn ${index + 1}"),
+                    Tabell.ofTidslinje(
+                        kolonner = listOf(
+                            Tekst("Har foreldreansvar"),
+                            Tekst("Er fosterforelder"),
+                            Tekst("Begrunnelse"),
+                        ),
+                        tidslinje = barn.tilTidslinje().map { vurdering ->
+                            listOf(
+                                JaNeiValg(vurdering.harForeldreAnsvar),
+                                JaNeiValg(vurdering.erFosterforelder),
+                                Tekst(vurdering.begrunnelse),
+                            )
+                        },
+                    ),
+                )
+            },
         )
     }
 
