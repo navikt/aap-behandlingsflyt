@@ -178,6 +178,7 @@ class VedtakDokumentRenderingTest {
         overstyringMeldepliktGrunnlag = null,
         manuellInntektGrunnlag = null,
         beregningVurderingGrunnlag = null,
+        kravGrunnlag = null,
         lovvalgMedlemskapGrunnlag = null,
         forutgåendeMedlemskapGrunnlag = null,
         oppholdskravGrunnlag = null,

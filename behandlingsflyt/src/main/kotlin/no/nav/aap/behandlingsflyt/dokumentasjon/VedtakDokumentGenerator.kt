@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
@@ -75,6 +76,7 @@ class VedtakDokumentGenerator(
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val kravRepository: KravRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapArbeidInntektForutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
@@ -111,6 +113,7 @@ class VedtakDokumentGenerator(
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
@@ -188,6 +191,7 @@ class VedtakDokumentGenerator(
             overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId),
             manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId),
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
+            kravGrunnlag = kravRepository.hentHvisEksisterer(behandlingId),
             lovvalgMedlemskapGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId),
             forutgåendeMedlemskapGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(
                 behandlingId

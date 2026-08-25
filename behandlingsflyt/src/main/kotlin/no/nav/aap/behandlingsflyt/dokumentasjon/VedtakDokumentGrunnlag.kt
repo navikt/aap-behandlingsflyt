@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
@@ -73,6 +74,7 @@ data class VedtakDokumentGrunnlag(
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag?,
     val manuellInntektGrunnlag: ManuellInntektGrunnlag?,
     val beregningVurderingGrunnlag: BeregningGrunnlag?,
+    val kravGrunnlag: KravGrunnlag?,
     val lovvalgMedlemskapGrunnlag: MedlemskapArbeidInntektGrunnlag?,
     val forutgåendeMedlemskapGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
     val oppholdskravGrunnlag: OppholdskravGrunnlag?,

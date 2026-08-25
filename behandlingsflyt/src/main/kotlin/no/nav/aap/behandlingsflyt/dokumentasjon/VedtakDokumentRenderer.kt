@@ -11,6 +11,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -50,6 +57,7 @@ internal object VedtakDokumentRenderer {
             tittel = Tekst("Vedtak"),
             subseksjoner = listOfNotNull(
                 opplysningerOmBehandlingenSub(),
+                kravSub(),
                 stønadsperiodeSub(),
                 lovvalgMedlemskapSub(),
                 avslag11_27Sub(),
@@ -116,6 +124,61 @@ internal object VedtakDokumentRenderer {
                 }
             )
         )
+    }
+
+    private fun VedtakDokumentGrunnlag.kravSub(): Seksjon? {
+        val vurderinger = kravGrunnlag
+            ?.gjeldendeVurderinger()
+            ?.sortedBy { it.opprettet }
+            ?.takeIf { it.isNotEmpty() }
+            ?: return null
+
+        return Seksjon(
+            tittel = Tekst("Krav"),
+            subseksjoner = vurderinger.map { vurdering ->
+                val overstyring = (vurdering as? RelevantKrav)?.overstyrMuligRettFra
+                Seksjon(
+                    tittel = Span(
+                        Tekst(vurdering.typeTekst()),
+                        ReferanseBehandling(vurdering.vurdertIBehandling),
+                    ),
+                    Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+                    when (vurdering) {
+                        is RelevantKrav -> Dict(
+                            "Søknadsdato" to Dato(vurdering.søknadsdato.dato),
+                            "Årsak til søknadsdato" to Tekst(vurdering.søknadsdato.årsak.visningsnavn()),
+                            "Mulig rett fra" to Dato(vurdering.muligRettFra),
+                            "Overstyrt mulig rett fra" to
+                                (overstyring?.dato?.let(::Dato) ?: Tekst("Ikke overstyrt")),
+                            "Årsak til overstyring" to
+                                (overstyring?.årsak?.visningsnavn()?.let(::Tekst) ?: Tekst("Ikke overstyrt")),
+                        )
+
+                        is Klage,
+                        is Tilleggsopplysning,
+                        is TrukketSøknad -> null
+                    },
+                )
+            },
+        )
+    }
+
+    private fun KravVurdering.typeTekst(): String = when (this) {
+        is RelevantKrav -> "Relevant krav"
+        is TrukketSøknad -> "Trukket søknad"
+        is Klage -> "Klage"
+        is Tilleggsopplysning -> "Tilleggsopplysning"
+    }
+
+    private fun SøknadsdatoÅrsak.visningsnavn(): String = when (this) {
+        SøknadsdatoÅrsak.BrukerHarSøktTidligere -> "Bruker har søkt tidligere"
+        SøknadsdatoÅrsak.FeilregistrertSøknadsdato -> "Feilregistrert søknadsdato"
+        SøknadsdatoÅrsak.SøknadMottatt -> "Søknad mottatt"
+    }
+
+    private fun OverstyrMuligRettFraÅrsak.visningsnavn(): String = when (this) {
+        OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere -> "Ikke i stand til å søke tidligere"
+        OverstyrMuligRettFraÅrsak.MisvisendeOpplysninger -> "Misvisende opplysninger"
     }
 
     private fun grunnlag11_19Rader(
