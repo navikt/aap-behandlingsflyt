@@ -50,35 +50,35 @@ internal object VedtakDokumentRenderer {
             tittel = Tekst("Vedtak"),
             subseksjoner = listOfNotNull(
                 opplysningerOmBehandlingenSub(),
-                grunnlagetSub(),
-                rettighetstypeSub(),
+                stønadsperiodeSub(),
+                lovvalgMedlemskapSub(),
+                avslag11_27Sub(),
+                studentvurderingerSub(),
                 sykdomsvurderingerSub(),
+                bistandsvurderingerSub(),
+                etableringEgenVirksomhetSub(),
+                arbeidsopptrappingSub(),
+                fritakSub(),
+                arbeidsevnevurderingerSub(),
+                overgangUføreSub(),
+                overgangArbeidSub(),
+                refusjonkravSub(),
                 yrkesskadevurderingSub(),
                 sykepengererstatningSub(),
-                bistandsvurderingerSub(),
-                studentvurderingerSub(),
-                overgangUføreSub(),
-                etableringEgenVirksomhetSub(),
-                arbeidsevnevurderingerSub(),
-                arbeidsopptrappingSub(),
-                overgangArbeidSub(),
-                vedtakslengdeSub(),
-                aktivitetsplikt11_7Sub(),
-                fritakSub(),
-                overstyringMeldepliktSub(),
-                stønadsperiodeSub(),
-                barnetilleggSub(),
-                refusjonkravSub(),
-                avslag11_27Sub(),
-                samordningSub(),
-                sykestipendSub(),
+                beregningVurderingSub(),
+                manuellInntektSub(),
+                grunnlagetSub(),
                 inntektsbortfallSub(),
-                institusjonsoppholdSub(),
-                lovvalgMedlemskapSub(),
                 forutgåendeMedlemskapSub(),
                 oppholdskravSub(),
-                manuellInntektSub(),
-                beregningVurderingSub(),
+                barnetilleggSub(),
+                institusjonsoppholdSub(),
+                samordningSub(),
+                sykestipendSub(),
+                aktivitetsplikt11_7Sub(),
+                rettighetstypeSub(),
+                vedtakslengdeSub(),
+                overstyringMeldepliktSub(),
                 vilkårSub(),
                 tilkjentYtelseSub(),
                 vedleggTidligereBehandlingerSub(),
@@ -696,20 +696,20 @@ internal object VedtakDokumentRenderer {
 
     private fun VedtakDokumentGrunnlag.oppholdskravSub(): Seksjon? {
         val grunnlag = oppholdskravGrunnlag ?: return null
-        val tidslinje = grunnlag.tidslinje()
+        val tidslinje = grunnlag.somPeriodiserteVurderinger().gjeldendeVurderinger()
         if (tidslinje.isEmpty()) return null
         return Seksjon(
             tittel = Tekst("Oppholdskrav"),
-            Tabell.ofTidslinje(
-                kolonner = listOf(Tekst("Land"), Tekst("Oppfylt"), Tekst("Begrunnelse")),
-                tidslinje = tidslinje.map { data ->
-                    listOf(
-                        Tekst(data.land ?: "—"),
-                        JaNeiValg(data.oppfylt),
-                        Tekst(data.begrunnelse),
+            subseksjoner = tidslinje.segmenter().map { (periode, vurdering) ->
+                Seksjon(
+                    tittel = vurderingsoverskrift(vurdering.vurdertIBehandling, periode),
+                    Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+                    Dict(
+                        "Land" to Tekst(vurdering.land ?: "—"),
+                        "Oppfylt" to JaNeiValg(vurdering.oppfylt),
                     )
-                }
-            )
+                )
+            }
         )
     }
 
