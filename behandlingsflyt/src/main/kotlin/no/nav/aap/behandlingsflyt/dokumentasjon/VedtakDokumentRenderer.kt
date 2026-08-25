@@ -91,6 +91,7 @@ internal object VedtakDokumentRenderer {
                 sykestipendSub(),
                 samordningAndreStatligeYtelserSub(),
                 aktivitetsplikt11_7Sub(),
+                aktivitetsplikt11_9Sub(),
                 rettighetstypeSub(),
                 vedtakslengdeSub(),
                 overstyringMeldepliktSub(),
@@ -472,6 +473,31 @@ internal object VedtakDokumentRenderer {
                     )
                 },
             )
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.aktivitetsplikt11_9Sub(): Seksjon? {
+        val vurderinger = aktivitetsplikt11_9Grunnlag
+            ?.gjeldendeVurderinger()
+            ?.sortedBy { it.dato }
+            ?.takeIf { it.isNotEmpty() }
+            ?: return null
+        return Seksjon(
+            tittel = Tekst("Brudd på aktivitetsplikten (§ 11-9)"),
+            subseksjoner = vurderinger.map { vurdering ->
+                Seksjon(
+                    tittel = Span(
+                        Tekst("Brudd "),
+                        Dato(vurdering.dato),
+                        ReferanseBehandling(vurdering.vurdertIBehandling),
+                    ),
+                    Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+                    Dict(
+                        "Type brudd" to PrettyEnum(vurdering.brudd),
+                        "Grunn" to PrettyEnum(vurdering.grunn),
+                    ),
+                )
+            },
         )
     }
 

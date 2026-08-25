@@ -181,6 +181,7 @@ class VedtakDokumentRenderingTest {
         sykestipendGrunnlag = null,
         inntektsbortfallVurdering = null,
         aktivitetsplikt11_7Grunnlag = null,
+        aktivitetsplikt11_9Grunnlag = null,
         overstyringMeldepliktGrunnlag = null,
         manuellInntektGrunnlag = null,
         beregningVurderingGrunnlag = null,
