@@ -11,7 +11,7 @@ import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 interface KandidatForPåminnelseRepository : Repository {
-    fun finnKandidaterForPåminnelse(dagensDato: LocalDate = LocalDate.now(), bestillingOpprettetDato: LocalDate): List<BehandlingReferanse>
+    fun finnKandidaterForPåminnelse(bestillingOpprettetDato: LocalDate): List<BehandlingReferanse>
 }
 
 class KandidatForPåminnelseRepositoryImpl(
@@ -20,11 +20,11 @@ class KandidatForPåminnelseRepositoryImpl(
     /**
      * En kandidat for påminnelse er en behandling som:
      * - er åpen
-     * - har en OPPRETTET-endring på BESTILL_LEGEERKLÆRING-avklaringsbehovet som er nøyaktig tre uker og en dag gammel
+     * - har en OPPRETTET-endring på BESTILL_LEGEERKLÆRING-avklaringsbehovet som har opprettetTid lik @param[bestillingOpprettetDato], tre uker og en dag siden i prod
      * - ikke har vurderingsbehov [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_DIALOGMELDING]
      *   eller [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_LEGEERKLÆRING] som er nyere enn tre uker og en dag gammelt.
      */
-    override fun finnKandidaterForPåminnelse(dagensDato: LocalDate, bestillingOpprettetDato: LocalDate): List<BehandlingReferanse> {
+    override fun finnKandidaterForPåminnelse(bestillingOpprettetDato: LocalDate): List<BehandlingReferanse> {
         val query = """
             SELECT b.referanse
             FROM BEHANDLING b

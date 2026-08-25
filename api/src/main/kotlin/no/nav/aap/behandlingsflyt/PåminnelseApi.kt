@@ -32,7 +32,6 @@ fun NormalOpenAPIRoute.påminnelseApi(
                 val kandidatForPåminnelseRepository = repositoryProvider.provide<KandidatForPåminnelseRepository>()
 
                 kandidatForPåminnelseRepository.finnKandidaterForPåminnelse(
-                    LocalDate.now(),
                     bestillingOpprettetDato = bestillingOpprettetDatoForPurringIDag()
                 )
             }
