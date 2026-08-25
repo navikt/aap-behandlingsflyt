@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -68,6 +69,7 @@ class VedtakDokumentGenerator(
     private val barnetilleggRepository: BarnetilleggRepository,
     private val barnRepository: BarnRepository,
     private val samordningRepository: SamordningRepository,
+    private val samordningUføreRepository: SamordningUføreRepository,
     private val rettighetstypeRepository: RettighetstypeRepository,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
@@ -107,6 +109,7 @@ class VedtakDokumentGenerator(
         barnetilleggRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         samordningRepository = repositoryProvider.provide(),
+        samordningUføreRepository = repositoryProvider.provide(),
         rettighetstypeRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
@@ -187,6 +190,7 @@ class VedtakDokumentGenerator(
             barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandlingId),
             barnetilleggVurderinger = barnRepository.hentVurderteBarnHvisEksisterer(behandlingId),
             samordningGrunnlag = samordningRepository.hentHvisEksisterer(behandlingId),
+            samordningUføreGrunnlag = samordningUføreRepository.hentHvisEksisterer(behandlingId),
             rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId),
             institusjonsoppholdGrunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId),
             sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId),

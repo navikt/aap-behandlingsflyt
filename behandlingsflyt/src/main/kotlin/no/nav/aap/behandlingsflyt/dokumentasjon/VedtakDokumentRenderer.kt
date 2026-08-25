@@ -84,6 +84,7 @@ internal object VedtakDokumentRenderer {
                 barnetilleggSub(),
                 institusjonsoppholdSub(),
                 samordningSub(),
+                samordningUføreSub(),
                 sykestipendSub(),
                 aktivitetsplikt11_7Sub(),
                 rettighetstypeSub(),
@@ -644,6 +645,18 @@ internal object VedtakDokumentRenderer {
                     )
                 )
             }
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.samordningUføreSub(): Seksjon? {
+        val vurdering = samordningUføreGrunnlag?.vurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Samordning med uføretrygd"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            Tabell.ofTidslinje(
+                kolonner = listOf(Tekst("Uføregrad til samordning")),
+                tidslinje = vurdering.tilTidslinje().map { listOf(Prosent(it)) },
+            ),
         )
     }
 
