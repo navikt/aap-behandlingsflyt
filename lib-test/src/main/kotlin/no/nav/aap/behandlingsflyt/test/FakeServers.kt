@@ -103,7 +103,9 @@ object FakeServers : AutoCloseable {
         }
 
         fakePersoner = testPersonService
-        allFakes.forEach { it.start() }
+        allFakes.parallelStream().forEach {
+            it.start()
+        }
         setProperties()
     }
 
