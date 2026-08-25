@@ -1112,10 +1112,6 @@ internal object VedtakDokumentRenderer {
 
     private fun Sykdomsvurdering.tilSeksjon(bruktForPeriode: DomenePeriode): Seksjon = Seksjon(
         vurderingsoverskrift(this.vurdertIBehandling, bruktForPeriode),
-        Dict(
-            "Vurderingen gjelder fra og med" to Dato(vurderingenGjelderFra),
-            "Vurderingen gjelder til og med" to (vurderingenGjelderTil?.let { Dato(it) } ?: Tekst("Ikke satt")),
-        ),
         Fritekstfelt("Begrunnelse", this.begrunnelse),
         Dict(
             "Har skade, sykdom eller lyte" to JaNeiValg(this.harSkadeSykdomEllerLyte),
