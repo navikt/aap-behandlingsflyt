@@ -29,7 +29,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklaringsbehovValidering(
     private val repositoryProvider: RepositoryProvider,
-    gatewayProvider: GatewayProvider
+    private val gatewayProvider: GatewayProvider
 ) {
     private val unleashGateway: UnleashGateway = gatewayProvider.provide()
     private val sakRepository: SakRepository = repositoryProvider.provide()
@@ -92,7 +92,7 @@ class AvklaringsbehovValidering(
                 .map { true }.komprimer()
 
             val perioderDekketAvVedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
-                løsning.hentLagredeLøstePerioder(it, repositoryProvider)
+                løsning.hentLagredeLøstePerioder(it, repositoryProvider, gatewayProvider)
             }.orEmpty().map { true }.komprimer()
 
             val perioderDekket = perioderDekketAvVedtatteVurderinger.kombiner(

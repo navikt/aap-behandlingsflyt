@@ -40,7 +40,8 @@ class PeriodisertFastsettArbeidsevneLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<ArbeidsevneRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger().orEmpty()

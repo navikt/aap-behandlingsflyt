@@ -37,7 +37,8 @@ class AvklarVedtakslengdeLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val vedtakslengdeRepository = repositoryProvider.provide<VedtakslengdeRepository>()
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
