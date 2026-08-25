@@ -281,12 +281,13 @@ class AvklaringsbehovService(
     ) {
         val perioderVilkåretErRelevant by lazy { nårVurderingErRelevant(kontekst) }
 
-        val perioderSomBehøverVurdering by lazy {
+        val perioderSomBehøverManuellVurderingIDenneBehandlingen by lazy {
             perioderSomBehøverVurdering(
                 kontekst,
                 perioderVilkåretErRelevant,
                 nårVurderingErRelevant,
-                perioderSomIkkeErTilstrekkeligVurdert
+                perioderSomIkkeErTilstrekkeligVurdert,
+                gjeldendeVurderinger
             )
         }
 
@@ -439,15 +440,18 @@ class AvklaringsbehovService(
         perioderVilkåretErRelevant: Tidslinje<Boolean>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         perioderSomIkkeErTilstrekkeligVurdert: (kontekst: FlytKontekstMedPerioder) -> Set<Periode>?,
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>?,
     ): Set<Periode> {
-        return Tidslinje.map3(
+        return Tidslinje.map4(
             perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
             perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant, perioderSomIkkeErTilstrekkeligVurdert),
-            nårEndringIKrav(kontekst)
-        ) { erRelevant, erVurdert, erKravEndret ->
-            erRelevant == true && (erVurdert != true || erKravEndret == true)
+            nårEndringIKrav(kontekst),
+            gjeldendeVurderinger
+        ) { erRelevant, erVurdertITidligereBehandling, erKravEndret, gjeldendeVurdering ->
+            erRelevant == true && (erVurdertITidligereBehandling != true || erKravEndret == true) && !(gjeldendeVurdering.vurdertIBehandling == kontekst.behandlingId && gjeldendeVurdering.vurdertAvKelvin)
         }
             .filter { it.verdi }
+            // Kanskje lettere å trekke fra perioder som er vurdert automatisk i denne behandlingen
             .komprimer().perioder().toSet()
     }
 
