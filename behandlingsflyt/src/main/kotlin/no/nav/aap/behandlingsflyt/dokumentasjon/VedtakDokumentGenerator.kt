@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.dokumentasjon
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
@@ -77,6 +78,7 @@ class VedtakDokumentGenerator(
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val kravRepository: KravRepository,
+    private val vurderRettighetsperiodeRepository: VurderRettighetsperiodeRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapArbeidInntektForutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
@@ -114,6 +116,7 @@ class VedtakDokumentGenerator(
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         kravRepository = repositoryProvider.provide(),
+        vurderRettighetsperiodeRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
@@ -192,6 +195,7 @@ class VedtakDokumentGenerator(
             manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId),
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
             kravGrunnlag = kravRepository.hentHvisEksisterer(behandlingId),
+            rettighetsperiodeVurdering = vurderRettighetsperiodeRepository.hentVurdering(behandlingId),
             lovvalgMedlemskapGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId),
             forutgåendeMedlemskapGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(
                 behandlingId

@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -58,6 +59,7 @@ internal object VedtakDokumentRenderer {
             subseksjoner = listOfNotNull(
                 opplysningerOmBehandlingenSub(),
                 kravSub(),
+                rettighetsperiodeSub(),
                 stønadsperiodeSub(),
                 lovvalgMedlemskapSub(),
                 avslag11_27Sub(),
@@ -179,6 +181,28 @@ internal object VedtakDokumentRenderer {
     private fun OverstyrMuligRettFraÅrsak.visningsnavn(): String = when (this) {
         OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere -> "Ikke i stand til å søke tidligere"
         OverstyrMuligRettFraÅrsak.MisvisendeOpplysninger -> "Misvisende opplysninger"
+    }
+
+    private fun VedtakDokumentGrunnlag.rettighetsperiodeSub(): Seksjon? {
+        val vurdering = rettighetsperiodeVurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Rettighetsperiode"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            Dict(
+                "Rett utover søknadsdato" to Tekst(vurdering.harRettUtoverSøknadsdato.visningsnavn()),
+                "Startdato" to (vurdering.startDato?.let(::Dato) ?: Tekst("Ikke satt")),
+            ),
+        )
+    }
+
+    private fun RettighetsperiodeHarRett.visningsnavn(): String = when (this) {
+        RettighetsperiodeHarRett.Ja -> "Ja"
+        RettighetsperiodeHarRett.Nei -> "Nei"
+        RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere ->
+            "Ja, ikke i stand til å søke tidligere"
+
+        RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger ->
+            "Ja, mottok misvisende opplysninger"
     }
 
     private fun grunnlag11_19Rader(

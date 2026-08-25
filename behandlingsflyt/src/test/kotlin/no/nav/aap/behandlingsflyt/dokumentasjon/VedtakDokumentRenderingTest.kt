@@ -179,6 +179,7 @@ class VedtakDokumentRenderingTest {
         manuellInntektGrunnlag = null,
         beregningVurderingGrunnlag = null,
         kravGrunnlag = null,
+        rettighetsperiodeVurdering = null,
         lovvalgMedlemskapGrunnlag = null,
         forutgåendeMedlemskapGrunnlag = null,
         oppholdskravGrunnlag = null,
