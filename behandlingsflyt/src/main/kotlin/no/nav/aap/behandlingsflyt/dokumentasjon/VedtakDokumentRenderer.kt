@@ -86,6 +86,7 @@ internal object VedtakDokumentRenderer {
                 samordningSub(),
                 samordningUføreSub(),
                 tjenestepensjonRefusjonskravSub(),
+                samordningArbeidsgiverSub(),
                 sykestipendSub(),
                 aktivitetsplikt11_7Sub(),
                 rettighetstypeSub(),
@@ -670,6 +671,20 @@ internal object VedtakDokumentRenderer {
                 "Har refusjonskrav" to JaNeiValg(vurdering.harKrav),
                 "Fra og med" to (vurdering.fom?.let(::Dato) ?: Tekst("Ikke satt")),
                 "Til og med" to (vurdering.tom?.let(::Dato) ?: Tekst("Ikke satt")),
+            ),
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.samordningArbeidsgiverSub(): Seksjon? {
+        val vurdering = samordningArbeidsgiverGrunnlag?.vurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Reduksjon ved ytelser fra arbeidsgiver (§ 11-24)"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            Tabell(
+                kolonner = listOf(Tekst("Periode")),
+                rader = vurdering.perioder
+                    .sortedBy { it.fom }
+                    .map { listOf(Periode(it)) },
             ),
         )
     }

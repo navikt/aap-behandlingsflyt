@@ -169,6 +169,7 @@ class VedtakDokumentRenderingTest {
         barnetilleggVurderinger = null,
         samordningGrunnlag = null,
         samordningUføreGrunnlag = null,
+        samordningArbeidsgiverGrunnlag = null,
         rettighetstypeGrunnlag = null,
         institusjonsoppholdGrunnlag = null,
         sykepengerErstatningGrunnlag = null,
