@@ -89,6 +89,7 @@ internal object VedtakDokumentRenderer {
                 samordningArbeidsgiverSub(),
                 samordningBarnepensjonSub(),
                 sykestipendSub(),
+                samordningAndreStatligeYtelserSub(),
                 aktivitetsplikt11_7Sub(),
                 rettighetstypeSub(),
                 vedtakslengdeSub(),
@@ -705,6 +706,29 @@ internal object VedtakDokumentRenderer {
                         ),
                     )
                 },
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.samordningAndreStatligeYtelserSub(): Seksjon? {
+        val vurdering = samordningAndreStatligeYtelserGrunnlag?.vurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Samordning med andre statlige ytelser"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            if (vurdering.vurderingPerioder.isEmpty()) {
+                Avsnitt(Tekst("Ingen andre statlige ytelser er registrert."))
+            } else {
+                Tabell(
+                    kolonner = listOf(Tekst("Ytelse"), Tekst("Periode")),
+                    rader = vurdering.vurderingPerioder
+                        .sortedWith(compareBy({ it.periode.fom }, { it.ytelse.name }))
+                        .map {
+                            listOf(
+                                PrettyEnum(it.ytelse),
+                                Periode(it.periode),
+                            )
+                        },
+                )
+            },
         )
     }
 

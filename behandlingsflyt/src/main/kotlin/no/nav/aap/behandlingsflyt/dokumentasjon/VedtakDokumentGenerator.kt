@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -74,6 +75,7 @@ class VedtakDokumentGenerator(
     private val samordningRepository: SamordningRepository,
     private val samordningUføreRepository: SamordningUføreRepository,
     private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
+    private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val rettighetstypeRepository: RettighetstypeRepository,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
@@ -117,6 +119,7 @@ class VedtakDokumentGenerator(
         samordningRepository = repositoryProvider.provide(),
         samordningUføreRepository = repositoryProvider.provide(),
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
+        samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
         rettighetstypeRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
@@ -201,6 +204,8 @@ class VedtakDokumentGenerator(
             samordningGrunnlag = samordningRepository.hentHvisEksisterer(behandlingId),
             samordningUføreGrunnlag = samordningUføreRepository.hentHvisEksisterer(behandlingId),
             samordningArbeidsgiverGrunnlag = samordningArbeidsgiverRepository.hentHvisEksisterer(behandlingId),
+            samordningAndreStatligeYtelserGrunnlag =
+                samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandlingId),
             rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId),
             institusjonsoppholdGrunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId),
             sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId),

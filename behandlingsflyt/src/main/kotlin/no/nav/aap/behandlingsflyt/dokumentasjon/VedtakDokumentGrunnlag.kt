@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.Barnet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -72,6 +73,7 @@ data class VedtakDokumentGrunnlag(
     val samordningGrunnlag: SamordningGrunnlag?,
     val samordningUføreGrunnlag: SamordningUføreGrunnlag?,
     val samordningArbeidsgiverGrunnlag: SamordningArbeidsgiverGrunnlag?,
+    val samordningAndreStatligeYtelserGrunnlag: SamordningAndreStatligeYtelserGrunnlag?,
     val rettighetstypeGrunnlag: RettighetstypeGrunnlag?,
     val institusjonsoppholdGrunnlag: InstitusjonsoppholdGrunnlag?,
     val sykepengerErstatningGrunnlag: SykepengerErstatningGrunnlag?,
