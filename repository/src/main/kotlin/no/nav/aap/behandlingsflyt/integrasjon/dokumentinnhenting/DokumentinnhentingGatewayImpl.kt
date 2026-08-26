@@ -1,5 +1,9 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting
 
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BegrensetDokumentInfoDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumenterForJournalpostParameter
+import no.nav.aap.behandlingsflyt.behandling.dialogmelding.FellesDialogmeldingDto
+import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDialogmeldingerForSakParams
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
@@ -31,6 +35,8 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
     private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_SCOPE"))
     private val påminnelseUri =
         requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_URL") + "/dialogmelding/paaminnelse"
+    private val dialogmeldingUri = requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_URL") + "/dialogmelding"
+    private val dokumenterUri = requiredConfigForKey("INTEGRASJON_DOKUMENTINNHENTING_URL") + ""
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -121,6 +127,42 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
 
         return requireNotNull(client.post(uri = URI.create("$syfoUri/brevpreview"), request))
+    }
+
+    override fun hentDialogmeldingerForSak(request: HentDialogmeldingerForSakParams): List<FellesDialogmeldingDto> {
+        val saksnummer = request.saksnummer
+        val request = GetRequest(
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            )
+        )
+
+        return requireNotNull(
+            client.get(
+                uri = URI.create("$dialogmeldingUri/$saksnummer/dialogmeldinger"),
+                request = request,
+                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+            )
+        )
+    }
+
+    override fun hentDokumentoversiktForJournalpost(request: DokumenterForJournalpostParameter): List<BegrensetDokumentInfoDto> {
+        val journalpostId = request.journalpostId
+        val request = GetRequest(
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            )
+        )
+
+        return requireNotNull(
+            client.get(
+                uri = URI.create("$dokumenterUri/api/dokumenter/$journalpostId/dokumentliste"),
+                request = request,
+                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+            )
+        )
     }
 
     override fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto {
