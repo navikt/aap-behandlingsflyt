@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -281,12 +282,13 @@ class AvklaringsbehovService(
     ) {
         val perioderVilkåretErRelevant by lazy { nårVurderingErRelevant(kontekst) }
 
-        val perioderSomBehøverVurdering by lazy {
+        val perioderSomBehøverManuellVurderingIDenneBehandlingen by lazy {
             perioderSomBehøverVurdering(
                 kontekst,
                 perioderVilkåretErRelevant,
                 nårVurderingErRelevant,
-                perioderSomIkkeErTilstrekkeligVurdert
+                perioderSomIkkeErTilstrekkeligVurdert,
+                gjeldendeVurderinger
             )
         }
 
@@ -318,7 +320,7 @@ class AvklaringsbehovService(
                                     .any { it.verdi.vurdertIBehandling == kontekst.behandlingId /* TODO: løstAv != Kelvin */ }
                             }
 
-                            else -> perioderSomBehøverVurdering.isNotEmpty()
+                            else -> perioderSomBehøverManuellVurderingIDenneBehandlingen.isNotEmpty()
                         }
                     }
 
@@ -333,7 +335,7 @@ class AvklaringsbehovService(
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
-            perioderVedtaketBehøverVurdering = { perioderSomBehøverVurdering },
+            perioderVedtaketBehøverVurdering = { perioderSomBehøverManuellVurderingIDenneBehandlingen },
             perioderSomIkkeErTilstrekkeligVurdert =
                 {
                     val perioderSomIkkeErTilstrekkeligVurdertEvaluert = perioderSomIkkeErTilstrekkeligVurdert(kontekst)
@@ -439,15 +441,23 @@ class AvklaringsbehovService(
         perioderVilkåretErRelevant: Tidslinje<Boolean>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         perioderSomIkkeErTilstrekkeligVurdert: (kontekst: FlytKontekstMedPerioder) -> Set<Periode>?,
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>?,
     ): Set<Periode> {
-        return Tidslinje.map3(
+        val perioderSomBehøverVurdering = Tidslinje.map3(
             perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
             perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant, perioderSomIkkeErTilstrekkeligVurdert),
             nårEndringIKrav(kontekst)
-        ) { erRelevant, erVurdert, erKravEndret ->
-            erRelevant == true && (erVurdert != true || erKravEndret == true)
-        }
-            .filter { it.verdi }
+        ) { erRelevant, erVurdertITidligereBehandling, erKravEndret ->
+            erRelevant == true && (erVurdertITidligereBehandling != true || erKravEndret == true)
+        }.filter { it.verdi }
+
+        val perioderVurdertAutomatiskIDenneBehandlingen = gjeldendeVurderinger().orEmpty()
+            .filter { it.verdi.vurdertIBehandling == kontekst.behandlingId && it.verdi.erAutomatiskVurdert() }
+
+        return perioderSomBehøverVurdering
+            .disjoint(perioderVurdertAutomatiskIDenneBehandlingen) { periode, segment ->
+                Segment(periode, segment.verdi)
+            }
             .komprimer().perioder().toSet()
     }
 
