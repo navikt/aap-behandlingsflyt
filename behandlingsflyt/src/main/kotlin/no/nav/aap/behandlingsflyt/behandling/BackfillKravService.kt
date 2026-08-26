@@ -91,17 +91,26 @@ class BackfillKravService(
     ): Set<KravVurdering> {
         if (søknader.isEmpty()) return emptySet()
 
-        val harForrigeRelevantKrav = forrigeKrav?.gjeldendeRelevanteKrav()?.isNotEmpty() == true
         val gjeldendeFørsteKrav = forrigeKrav?.gjeldendeRelevanteKrav()?.minByOrNull { it.muligRettFra }
+        val harForrigeRelevantKrav = gjeldendeFørsteKrav != null
 
         if (forrigeKrav?.kravtidslinje().orEmpty().segmenter().toList().size > 1) {
             throw IllegalStateException("Forrige krav for behandling ${behandlingId.toLong()} har flere enn ett relevant krav i tidslinjen – dette er uventet")
         }
 
+        val nySøknadSomSkalOvertaForEksisterendeKrav =
+            when {
+                harForrigeRelevantKrav -> søknader.firstOrNull { søknad ->
+                    gjeldendeFørsteKrav.muligRettFra.let {
+                        søknad.mottattTidspunkt.toLocalDate().isBefore(it)
+                    }
+                }
+
+                else -> null
+            }
+
         val nyeVurderinger = søknader.mapIndexed { index, søknad ->
-            if (index == 0 && (!harForrigeRelevantKrav || gjeldendeFørsteKrav?.muligRettFra.let {
-                    søknad.mottattTidspunkt.toLocalDate().isBefore(it)
-                })) {
+            if (index == 0 && (!harForrigeRelevantKrav || nySøknadSomSkalOvertaForEksisterendeKrav?.referanse == søknad.referanse)) {
                 RelevantKrav(
                     referanse = Kravreferanse.ny(),
                     journalpostId = søknad.referanse.asJournalpostId,
@@ -125,9 +134,9 @@ class BackfillKravService(
             }
         }.toSet()
 
-        return if (gjeldendeFørsteKrav != null && nyeVurderinger.filterIsInstance<RelevantKrav>()
-                .firstOrNull()?.muligRettFra?.isBefore(gjeldendeFørsteKrav.muligRettFra) == true
-        ) {
+        val skalNedgraderEksisterendeKravTilTilleggsopplysning = nySøknadSomSkalOvertaForEksisterendeKrav != null
+
+        return if (skalNedgraderEksisterendeKravTilTilleggsopplysning && gjeldendeFørsteKrav != null) {
             nyeVurderinger + Tilleggsopplysning(
                 referanse = gjeldendeFørsteKrav.referanse,
                 begrunnelse = "Automatisk vurdering",
@@ -175,7 +184,7 @@ class BackfillKravService(
     private fun verifiserMotRettighetsperiode(sak: Sak, grunnlag: KravGrunnlag, erNyesteBehandling: Boolean) {
         if (!erNyesteBehandling) return
         val gjeldendeKrav = grunnlag.gjeldendeRelevanteKrav()
-        if (gjeldendeKrav.isEmpty()) return
+        if (gjeldendeKrav.isEmpty()) throw IllegalStateException("Forventet ett relevant krav for nyeste behandling på sak ${sak.id}")
 
         val gjeldendeMuligRettFra: LocalDate = gjeldendeKrav.minOf { it.muligRettFra }
         check(sak.rettighetsperiode.fom == gjeldendeMuligRettFra) {
