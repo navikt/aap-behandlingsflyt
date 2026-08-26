@@ -13,7 +13,7 @@ data class OvergangUføreVurdering(
     val brukerRettPåAAP: Boolean?,
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 ): PeriodisertVurdering {
