@@ -46,10 +46,11 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                 val vedtattKravGrunnlag =
                     behandling.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(behandlingId = it) }
 
-                val nyeVurderinger = kravGrunnlag
+                val nyeKrav = kravGrunnlag
                     ?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }.orEmpty()
-                    .sortedBy { it.journalpostId.identifikator }
-                    .map { it.somDto() }
+                    .sortedBy { it.journalpostId?.identifikator }
+
+                val nyeVurderinger = nyeKrav.map { it.somDto() }
 
                 val sisteVedtatte =
                     vedtattKravGrunnlag?.gjeldendeVurderinger().orEmpty().map { it.somDto() }
@@ -58,7 +59,7 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
 
                 val søknaderUtenKravvurdering =
                     mottattDokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
-                        .filter { søknad -> nyeVurderinger.none { it.journalpostId == søknad.referanse.asJournalpostId } }
+                        .filter { søknad -> nyeKrav.none { krav -> krav.forJournalpostId(søknad.referanse.asJournalpostId) } }
                         .map { it.tilSøknadUtenKravDto() }
                 
                 val saksnummer = repositoryProvider.provide<SakRepository>().hent(behandling.sakId).saksnummer 

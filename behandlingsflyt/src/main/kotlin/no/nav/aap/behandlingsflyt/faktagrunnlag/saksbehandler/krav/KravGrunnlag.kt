@@ -20,6 +20,10 @@ data class KravGrunnlag(
     fun gjeldendeRelevanteKrav(): Set<RelevantKrav> {
         return this.gjeldendeVurderinger().filterIsInstance<RelevantKrav>().toSet()
     }
+
+    fun gjeldendeMigrertKrav(): MigrertKrav? {
+        return this.gjeldendeVurderinger().filterIsInstance<MigrertKrav>().singleOrNull()
+    }
 }
 
 fun Set<KravVurdering>.gjeldendeVurderinger(): Set<KravVurdering> {
