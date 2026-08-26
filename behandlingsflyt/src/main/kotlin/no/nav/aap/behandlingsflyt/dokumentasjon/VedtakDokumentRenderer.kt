@@ -663,18 +663,62 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun VedtakDokumentGrunnlag.samordningSub(): Seksjon? {
-        val grunnlag = samordningGrunnlag ?: return null
-        if (grunnlag.samordningPerioder.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Samordning"),
-            subseksjoner = grunnlag.samordningPerioder.sortedBy { it.periode.fom }.map { p ->
-                Seksjon(
-                    tittel = Periode(p.periode),
-                    Dict(
-                        "Samordningsgradering" to Prosent(p.gradering),
+        val vurdering = samordningVurderingGrunnlag?.let { grunnlag ->
+            val rader = grunnlag.vurderinger
+                .flatMap { vurdering ->
+                    vurdering.vurderingPerioder.map { periode -> vurdering.ytelseType to periode }
+                }
+                .sortedWith(compareBy({ it.second.periode.fom }, { it.first.name }))
+
+            Seksjon(
+                tittel = Tekst("Vurdering"),
+                grunnlag.begrunnelse?.let { Fritekstfelt("Begrunnelse", it) },
+                if (rader.isEmpty()) {
+                    Avsnitt(Tekst("Ingen ytelser er vurdert for samordning."))
+                } else {
+                    Tabell(
+                        kolonner = listOf(
+                            Tekst("Ytelse"),
+                            Tekst("Periode"),
+                            Tekst("Gradering"),
+                            Tekst("Manuelt vurdert"),
+                        ),
+                        rader = rader.map { (ytelse, periode) ->
+                            listOf(
+                                PrettyEnum(ytelse),
+                                Periode(periode.periode),
+                                periode.gradering?.let(::Prosent) ?: Tekst("Ikke vurdert"),
+                                JaNeiValg(periode.manuell),
+                            )
+                        },
                     )
+                },
+            )
+        }
+
+        val resultat = samordningGrunnlag
+            ?.samordningPerioder
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { perioder ->
+                Seksjon(
+                    tittel = Tekst("Resultat"),
+                    subseksjoner = perioder.sortedBy { it.periode.fom }.map { periode ->
+                        Seksjon(
+                            tittel = Periode(periode.periode),
+                            Dict(
+                                "Samordningsgradering" to Prosent(periode.gradering),
+                            ),
+                        )
+                    },
                 )
             }
+
+        if (vurdering == null && resultat == null) return null
+
+        return Seksjon(
+            tittel = Tekst("Samordning"),
+            vurdering,
+            resultat,
         )
     }
 

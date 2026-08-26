@@ -171,6 +171,7 @@ class VedtakDokumentRenderingTest {
         samordningUføreGrunnlag = null,
         samordningArbeidsgiverGrunnlag = null,
         samordningAndreStatligeYtelserGrunnlag = null,
+        samordningVurderingGrunnlag = null,
         rettighetstypeGrunnlag = null,
         institusjonsoppholdGrunnlag = null,
         sykepengerErstatningGrunnlag = null,
