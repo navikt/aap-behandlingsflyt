@@ -487,7 +487,7 @@ internal object VedtakDokumentRenderer {
             subseksjoner = vurderinger.map { vurdering ->
                 Seksjon(
                     tittel = Span(
-                        Tekst("Brudd "),
+                        Tekst("Brudd"),
                         Dato(vurdering.dato),
                         ReferanseBehandling(vurdering.vurdertIBehandling),
                     ),
