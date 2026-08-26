@@ -50,7 +50,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OpprettRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangArbeidSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
@@ -71,7 +70,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TjenestepensjonRefusjonskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VedtakslengdeSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VisGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAvslag11_27Steg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
@@ -316,7 +314,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .medSteg(steg = VisGrunnlagSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(
                 steg = ManglendeLigningGrunnlagSteg,
                 informasjonskrav = listOf(InntektInformasjonskrav),
@@ -497,9 +494,6 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = MeldingOmVedtakBrevSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGReguleringUnntattMigrering()
-            )
-            .medSteg(
-                steg = OpprettRevurderingSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
             .build()
     }
