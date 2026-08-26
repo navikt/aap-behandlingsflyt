@@ -2,9 +2,13 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
@@ -17,12 +21,14 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -30,6 +36,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -76,6 +83,81 @@ class KravStegTest {
 
         assertThat(resultat).isEqualTo(Fullført)
         assertThat(InMemoryKravRepository.hentHvisEksisterer(behandling.id)).isNull()
+    }
+
+    @Test
+    fun `migrering fra Arena - hopper over automatisk krav-vurdering selv med søknad i behandlingen`() {
+        val stegMedManuellVurdering = KravSteg(
+            unleashGateway = KravManuellVurderingUnleash,
+            kravRepository = InMemoryKravRepository,
+            mottattDokumentRepository = InMemoryMottattDokumentRepository,
+            avklaringsbehovService = mockk(relaxed = true),
+            sakRepository = InMemorySakRepository,
+            behandlingService = behandlingService,
+        )
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 1, 15).atStartOfDay())
+
+        stegMedManuellVurdering.utfør(flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = VurderingType.MIGERING_FRA_ARENA
+        })
+
+        assertThat(InMemoryKravRepository.hentHvisEksisterer(behandling.id)).isNull()
+    }
+
+    @Test
+    fun `migrering fra Arena - vedtakBehøverVurdering og erTilstrekkeligVurdert reflekterer krav-grunnlaget`() {
+        val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
+        val stegMedManuellVurdering = KravSteg(
+            unleashGateway = KravManuellVurderingUnleash,
+            kravRepository = InMemoryKravRepository,
+            mottattDokumentRepository = InMemoryMottattDokumentRepository,
+            avklaringsbehovService = avklaringsbehovService,
+            sakRepository = InMemorySakRepository,
+            behandlingService = behandlingService,
+        )
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+
+        val vedtakBehøverVurdering = slot<() -> Boolean>()
+        val erTilstrekkeligVurdert = slot<() -> Boolean>()
+        every {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon = any(),
+                vedtakBehøverVurdering = capture(vedtakBehøverVurdering),
+                erTilstrekkeligVurdert = capture(erTilstrekkeligVurdert),
+                tilbakestillGrunnlag = any(),
+                kontekst = any(),
+            )
+        } returns Unit
+
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = VurderingType.MIGERING_FRA_ARENA
+        }
+
+        stegMedManuellVurdering.utfør(kontekst)
+        assertThat(vedtakBehøverVurdering.captured()).isTrue()
+        assertThat(erTilstrekkeligVurdert.captured()).isFalse()
+
+        val migrertKrav = MigrertKrav(
+            referanse = Kravreferanse.ny(),
+            vurdertAv = SYSTEMBRUKER,
+            begrunnelse = "Migrert fra Arena",
+            vurdertIBehandling = behandling.id,
+            opprettet = Instant.now(),
+            virkningstidspunktArena = LocalDate.of(2020, 1, 1),
+            muligRettFra = LocalDate.of(2020, 1, 1),
+            arenaSaksnummer = "ARENA-1",
+            rettighetstype = MigrertRettighetstype.ORDINÆR,
+            resterendeKvoteOrdinaer = 0,
+        )
+        InMemoryKravRepository.lagre(behandling.id, setOf(migrertKrav))
+
+        stegMedManuellVurdering.utfør(kontekst)
+        assertThat(erTilstrekkeligVurdert.captured()).isTrue()
     }
 
     @Test
@@ -498,4 +580,15 @@ class KravStegTest {
     )
 
     private object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(emptyList())
+
+    /**
+     * Unleash-fake som simulerer at manuell vurdering av krav er skrudd på for alle saker,
+     * slik at KravSteg tar veien via when(vurderingType)-grenen (inkl. migrering fra Arena).
+     */
+    private object KravManuellVurderingUnleash : FakeUnleashBaseWithDefaultDisabled(
+        listOf(BehandlingsflytFeature.KravSteg)
+    ) {
+        override fun erPåskruddForSak(featureToggle: FeatureToggle, variantName: String, saksnummer: Saksnummer) =
+            featureToggle == BehandlingsflytFeature.KravManuellVurdering
+    }
 }

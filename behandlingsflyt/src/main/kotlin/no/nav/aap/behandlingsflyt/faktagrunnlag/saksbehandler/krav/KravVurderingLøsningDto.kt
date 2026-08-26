@@ -45,6 +45,19 @@ sealed class KravVurderingLøsningDto(
                 opprettet = opprettetTid,
             )
 
+            is MigrertKravLøsningDto -> MigrertKrav(
+                referanse = referanse?.let(::Kravreferanse) ?: Kravreferanse.ny(),
+                vurdertAv = bruker,
+                begrunnelse = begrunnelse,
+                vurdertIBehandling = behandlingId,
+                opprettet = opprettetTid,
+                arenaSaksnummer = arenaSaksnummer,
+                muligRettFra = muligRettFra,
+                resterendeKvoteOrdinaer = resterendeKvoteOrdinaer,
+                rettighetstype = rettighetstype,
+                virkningstidspunktArena = virkningstidspunktArena,
+            )
+
             is TrukketSøknadKravLøsningDto, is KlageKravLøsningDto -> throw UgyldigForespørselException(
                 "Kelvin støtter foreløpig ikke ${this.kravType}."
             )
@@ -94,3 +107,14 @@ data class TilleggsopplysningKravLøsningDto(
     val journalpostId: JournalpostId,
     val begrunnelse: String,
 ) : KravVurderingLøsningDto(KravType.TILLEGGSOPPLYSNING)
+
+@JsonTypeName(value = "MIGRERT_KRAV")
+data class MigrertKravLøsningDto(
+    val referanse: UUID? = null,
+    val begrunnelse: String,
+    val virkningstidspunktArena: LocalDate,
+    val muligRettFra: LocalDate,
+    val arenaSaksnummer: String,
+    val rettighetstype: MigrertRettighetstype,
+    val resterendeKvoteOrdinaer: Int,
+) : KravVurderingLøsningDto(KravType.MIGRERT_KRAV)

@@ -784,7 +784,7 @@ private fun hentSakId(saksnummer: Saksnummer): SakId {
 
 private fun nesteJournalpostId(eksisterende: Set<KravVurdering>): JournalpostId {
     val nesteId = eksisterende
-        .mapNotNull { it.journalpostId.identifikator.toLongOrNull() }
+        .mapNotNull { it.journalpostId?.identifikator?.toLongOrNull() }
         .maxOrNull()
         ?.plus(1)
         ?: 9_000_000L
@@ -850,5 +850,7 @@ private fun mapKravVurdering(
             vurdertIBehandling = behandlingId,
             opprettet = now,
         )
+
+        KravType.MIGRERT_KRAV -> error("Test-API-et støtter ikke å opprette ${KravType.MIGRERT_KRAV}.")
     }
 }

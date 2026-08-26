@@ -32,7 +32,11 @@ class AvklarStønadsperiodeSteg(
 
         when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
-                vurderAutomatisk(kontekst)
+                if(kontekst.erMigreringFraArena()) {
+                    vurderMigrertKravAutomatisk(kontekst)
+                } else {
+                    vurderAutomatisk(kontekst)
+                }
             }
 
             else -> {}
@@ -59,6 +63,23 @@ class AvklarStønadsperiodeSteg(
         val nyeVurderinger = kravSomManglerVurdering.map { vurderStønadsperiode(it, kontekst) }
 
         stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtatteStønadsperiodeVurderinger + nyeVurderinger)
+    }
+
+    // TODO: Vurdere om vi skal ha egen kravtype for migrering?
+    private fun vurderMigrertKravAutomatisk(kontekst: FlytKontekstMedPerioder) {
+        kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeMigrertKrav()?.let { migrertKrav ->
+            stønadsperiodeRepository.lagre(kontekst.behandlingId, setOf(StønadsperiodeVurdering(
+                referanse = migrertKrav.referanse,
+                opprettet = Instant.now(),
+                vurdertIBehandling = kontekst.behandlingId,
+                vurdertAv = SYSTEMBRUKER,
+                begrunnelse = "Migrert stønadsperiode fra Arenasak ${migrertKrav.arenaSaksnummer}",
+                harHattOrdinærSiste52Uker = false,
+                harGjenværendeKvote = false,
+                relevantKravType = RelevantKravType.MIGRERT_STØNADSPERIODE,
+                startDato = migrertKrav.muligRettFra
+            )))
+        }
     }
 
     // TODO: Antar ny stønadsperiode enn så lenge

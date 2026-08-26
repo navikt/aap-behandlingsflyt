@@ -154,7 +154,7 @@ class AvklaringsbehovValidering(
         definisjon: Definisjon, gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>
     ): Boolean {
         return when (stønadsperiodeVurdering.relevantKravType) {
-            RelevantKravType.NY_STØNADSPERIODE -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
+            RelevantKravType.NY_STØNADSPERIODE, RelevantKravType.MIGRERT_STØNADSPERIODE -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
 
             is RelevantKravType.GJENOPPTAK_ETTER_STANS -> {
                 val stansensVilkår = stønadsperiodeVurdering.relevantKravType.gjennopptakEtter.flatMap { it.vilkårstyper } .toSet()

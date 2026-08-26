@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
@@ -66,6 +68,19 @@ internal class KravRepositoryImplTest {
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
         )
+
+        private fun migrertKrav(behandlingId: BehandlingId) = MigrertKrav(
+            referanse = Kravreferanse.ny(),
+            vurdertAv = SYSTEMBRUKER,
+            begrunnelse = "Migrert fra Arena",
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            virkningstidspunktArena = 1 januar 2024,
+            muligRettFra = 1 januar 2024,
+            arenaSaksnummer = "ARENA-4711",
+            rettighetstype = MigrertRettighetstype.ORDINÆR,
+            resterendeKvoteOrdinaer = 123,
+        )
     }
 
     @Test
@@ -130,6 +145,42 @@ internal class KravRepositoryImplTest {
             assertThat(hentet.vurderinger).usingRecursiveComparison()
                 .ignoringFields("opprettet")
                 .isEqualTo(setOf(v1, v2))
+        }
+    }
+
+    @Test
+    fun `kan lagre og hente MigrertKrav uten journalpostId`() {
+        dataSource.transaction { connection ->
+            val repo = KravRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val vurdering = migrertKrav(behandling.id)
+
+            repo.lagre(behandling.id, setOf(vurdering))
+
+            val hentet = repo.hent(behandling.id)
+            assertThat(hentet.vurderinger).usingRecursiveComparison()
+                .ignoringFields("opprettet")
+                .isEqualTo(setOf(vurdering))
+            assertThat(hentet.vurderinger.single().journalpostId).isNull()
+        }
+    }
+
+    @Test
+    fun `kan lagre MigrertKrav sammen med krav som har journalpostId`() {
+        dataSource.transaction { connection ->
+            val repo = KravRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val migrert = migrertKrav(behandling.id)
+            val relevant = nyttKrav(behandling.id)
+
+            repo.lagre(behandling.id, setOf(migrert, relevant))
+
+            val hentet = repo.hent(behandling.id)
+            assertThat(hentet.vurderinger).usingRecursiveComparison()
+                .ignoringFields("opprettet")
+                .isEqualTo(setOf(migrert, relevant))
         }
     }
 
