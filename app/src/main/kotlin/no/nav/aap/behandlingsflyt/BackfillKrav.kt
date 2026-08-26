@@ -50,6 +50,7 @@ class BackfillKrav(
                             }
                         }
                     }
+                    Thread.sleep(Duration.ofMinutes(5))
                 }
             }
     }
@@ -114,5 +115,6 @@ class BackfillKrav(
             "Backfill krav ferdig: {} behandlinger for sak-ider $fra – $til",
             antallBackfillUtført
         )
+        Thread.sleep(Duration.ofMinutes(5))
     }
 }
