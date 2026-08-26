@@ -71,6 +71,7 @@ enum class TypeBrev {
             VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27,
             VEDTAK_11_18_OPPHØR_DELVIS_UFØR,
             VEDTAK_11_18_OPPHØR_FULL_UFØR,
+            VEDTAK_AVSLAG_11_5,
         ).contains(this)
     }
 }
