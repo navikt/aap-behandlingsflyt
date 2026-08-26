@@ -42,7 +42,8 @@ class SamordningSteg(
             definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SAMORDNING_OG_AVREGNING,
-                Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER
+                Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+                Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE
             ),
             nårVurderingErRelevant = ::perioderMedVurderingsbehov,
             kontekst = kontekst,
