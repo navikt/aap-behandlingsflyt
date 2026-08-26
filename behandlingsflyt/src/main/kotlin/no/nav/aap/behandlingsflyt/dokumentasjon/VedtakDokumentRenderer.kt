@@ -11,6 +11,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -50,6 +58,8 @@ internal object VedtakDokumentRenderer {
             tittel = Tekst("Vedtak"),
             subseksjoner = listOfNotNull(
                 opplysningerOmBehandlingenSub(),
+                kravSub(),
+                rettighetsperiodeSub(),
                 stønadsperiodeSub(),
                 lovvalgMedlemskapSub(),
                 avslag11_27Sub(),
@@ -74,8 +84,14 @@ internal object VedtakDokumentRenderer {
                 barnetilleggSub(),
                 institusjonsoppholdSub(),
                 samordningSub(),
+                samordningUføreSub(),
+                tjenestepensjonRefusjonskravSub(),
+                samordningArbeidsgiverSub(),
+                samordningBarnepensjonSub(),
                 sykestipendSub(),
+                samordningAndreStatligeYtelserSub(),
                 aktivitetsplikt11_7Sub(),
+                aktivitetsplikt11_9Sub(),
                 rettighetstypeSub(),
                 vedtakslengdeSub(),
                 overstyringMeldepliktSub(),
@@ -116,6 +132,83 @@ internal object VedtakDokumentRenderer {
                 }
             )
         )
+    }
+
+    private fun VedtakDokumentGrunnlag.kravSub(): Seksjon? {
+        val vurderinger = kravGrunnlag
+            ?.gjeldendeVurderinger()
+            ?.sortedBy { it.opprettet }
+            ?.takeIf { it.isNotEmpty() }
+            ?: return null
+
+        return Seksjon(
+            tittel = Tekst("Krav"),
+            subseksjoner = vurderinger.map { vurdering ->
+                val overstyring = (vurdering as? RelevantKrav)?.overstyrMuligRettFra
+                Seksjon(
+                    tittel = Span(
+                        Tekst(vurdering.typeTekst()),
+                        ReferanseBehandling(vurdering.vurdertIBehandling),
+                    ),
+                    Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+                    when (vurdering) {
+                        is RelevantKrav -> Dict(
+                            "Søknadsdato" to Dato(vurdering.søknadsdato.dato),
+                            "Årsak til søknadsdato" to Tekst(vurdering.søknadsdato.årsak.visningsnavn()),
+                            "Mulig rett fra" to Dato(vurdering.muligRettFra),
+                            "Overstyrt mulig rett fra" to
+                                (overstyring?.dato?.let(::Dato) ?: Tekst("Ikke overstyrt")),
+                            "Årsak til overstyring" to
+                                (overstyring?.årsak?.visningsnavn()?.let(::Tekst) ?: Tekst("Ikke overstyrt")),
+                        )
+
+                        is Klage,
+                        is Tilleggsopplysning,
+                        is TrukketSøknad -> null
+                    },
+                )
+            },
+        )
+    }
+
+    private fun KravVurdering.typeTekst(): String = when (this) {
+        is RelevantKrav -> "Relevant krav"
+        is TrukketSøknad -> "Trukket søknad"
+        is Klage -> "Klage"
+        is Tilleggsopplysning -> "Tilleggsopplysning"
+    }
+
+    private fun SøknadsdatoÅrsak.visningsnavn(): String = when (this) {
+        SøknadsdatoÅrsak.BrukerHarSøktTidligere -> "Bruker har søkt tidligere"
+        SøknadsdatoÅrsak.FeilregistrertSøknadsdato -> "Feilregistrert søknadsdato"
+        SøknadsdatoÅrsak.SøknadMottatt -> "Søknad mottatt"
+    }
+
+    private fun OverstyrMuligRettFraÅrsak.visningsnavn(): String = when (this) {
+        OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere -> "Ikke i stand til å søke tidligere"
+        OverstyrMuligRettFraÅrsak.MisvisendeOpplysninger -> "Misvisende opplysninger"
+    }
+
+    private fun VedtakDokumentGrunnlag.rettighetsperiodeSub(): Seksjon? {
+        val vurdering = rettighetsperiodeVurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Rettighetsperiode"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            Dict(
+                "Rett utover søknadsdato" to Tekst(vurdering.harRettUtoverSøknadsdato.visningsnavn()),
+                "Startdato" to (vurdering.startDato?.let(::Dato) ?: Tekst("Ikke satt")),
+            ),
+        )
+    }
+
+    private fun RettighetsperiodeHarRett.visningsnavn(): String = when (this) {
+        RettighetsperiodeHarRett.Ja -> "Ja"
+        RettighetsperiodeHarRett.Nei -> "Nei"
+        RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere ->
+            "Ja, ikke i stand til å søke tidligere"
+
+        RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger ->
+            "Ja, mottok misvisende opplysninger"
     }
 
     private fun grunnlag11_19Rader(
@@ -383,6 +476,31 @@ internal object VedtakDokumentRenderer {
         )
     }
 
+    private fun VedtakDokumentGrunnlag.aktivitetsplikt11_9Sub(): Seksjon? {
+        val vurderinger = aktivitetsplikt11_9Grunnlag
+            ?.gjeldendeVurderinger()
+            ?.sortedBy { it.dato }
+            ?.takeIf { it.isNotEmpty() }
+            ?: return null
+        return Seksjon(
+            tittel = Tekst("Brudd på aktivitetsplikten (§ 11-9)"),
+            subseksjoner = vurderinger.map { vurdering ->
+                Seksjon(
+                    tittel = Span(
+                        Tekst("Brudd"),
+                        Dato(vurdering.dato),
+                        ReferanseBehandling(vurdering.vurdertIBehandling),
+                    ),
+                    Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+                    Dict(
+                        "Type brudd" to PrettyEnum(vurdering.brudd),
+                        "Grunn" to PrettyEnum(vurdering.grunn),
+                    ),
+                )
+            },
+        )
+    }
+
     private fun VedtakDokumentGrunnlag.stønadsperiodeSub(): Seksjon? {
         val grunnlag = stønadsperiodeGrunnlag ?: return null
         val vurderinger = grunnlag.gjeldendeVurderinger()
@@ -420,14 +538,41 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun VedtakDokumentGrunnlag.barnetilleggSub(): Seksjon? {
-        val perioder = barnetilleggGrunnlag?.perioder?.tilTidslinje() ?: return null
-        if (perioder.isEmpty()) return null
+        val perioder = barnetilleggGrunnlag?.perioder?.tilTidslinje().orEmpty()
+        val vurderteBarn = barnetilleggVurderinger?.barn.orEmpty()
+        if (perioder.isEmpty() && vurderteBarn.isEmpty()) return null
+
         return Seksjon(
             tittel = Tekst("Barnetillegg"),
-            Tabell.ofTidslinje(
-                kolonner = listOf(Tekst("Antall barn med rett til barnetillegg")),
-                tidslinje = perioder.map { listOf(Tekst(it.barnMedRettTil().size.toString())) }
-            )
+            blokker = listOfNotNull(
+                perioder.takeIf { it.isNotEmpty() }?.let {
+                    Tabell.ofTidslinje(
+                        kolonner = listOf(Tekst("Antall barn med rett til barnetillegg")),
+                        tidslinje = it.map { periode ->
+                            listOf(Tekst(periode.barnMedRettTil().size.toString()))
+                        },
+                    )
+                },
+            ),
+            subseksjoner = vurderteBarn.mapIndexed { index, barn ->
+                Seksjon(
+                    tittel = Tekst("Barn ${index + 1}"),
+                    Tabell.ofTidslinje(
+                        kolonner = listOf(
+                            Tekst("Har foreldreansvar"),
+                            Tekst("Er fosterforelder"),
+                            Tekst("Begrunnelse"),
+                        ),
+                        tidslinje = barn.tilTidslinje().map { vurdering ->
+                            listOf(
+                                JaNeiValg(vurdering.harForeldreAnsvar),
+                                JaNeiValg(vurdering.erFosterforelder),
+                                Tekst(vurdering.begrunnelse),
+                            )
+                        },
+                    ),
+                )
+            },
         )
     }
 
@@ -518,18 +663,142 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun VedtakDokumentGrunnlag.samordningSub(): Seksjon? {
-        val grunnlag = samordningGrunnlag ?: return null
-        if (grunnlag.samordningPerioder.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Samordning"),
-            subseksjoner = grunnlag.samordningPerioder.sortedBy { it.periode.fom }.map { p ->
-                Seksjon(
-                    tittel = Periode(p.periode),
-                    Dict(
-                        "Samordningsgradering" to Prosent(p.gradering),
+        val vurdering = samordningVurderingGrunnlag?.let { grunnlag ->
+            val rader = grunnlag.vurderinger
+                .flatMap { vurdering ->
+                    vurdering.vurderingPerioder.map { periode -> vurdering.ytelseType to periode }
+                }
+                .sortedWith(compareBy({ it.second.periode.fom }, { it.first.name }))
+
+            Seksjon(
+                tittel = Tekst("Vurdering"),
+                grunnlag.begrunnelse?.let { Fritekstfelt("Begrunnelse", it) },
+                if (rader.isEmpty()) {
+                    Avsnitt(Tekst("Ingen ytelser er vurdert for samordning."))
+                } else {
+                    Tabell(
+                        kolonner = listOf(
+                            Tekst("Ytelse"),
+                            Tekst("Periode"),
+                            Tekst("Gradering"),
+                            Tekst("Manuelt vurdert"),
+                        ),
+                        rader = rader.map { (ytelse, periode) ->
+                            listOf(
+                                PrettyEnum(ytelse),
+                                Periode(periode.periode),
+                                periode.gradering?.let(::Prosent) ?: Tekst("Ikke vurdert"),
+                                JaNeiValg(periode.manuell),
+                            )
+                        },
                     )
+                },
+            )
+        }
+
+        val resultat = samordningGrunnlag
+            ?.samordningPerioder
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { perioder ->
+                Seksjon(
+                    tittel = Tekst("Resultat"),
+                    subseksjoner = perioder.sortedBy { it.periode.fom }.map { periode ->
+                        Seksjon(
+                            tittel = Periode(periode.periode),
+                            Dict(
+                                "Samordningsgradering" to Prosent(periode.gradering),
+                            ),
+                        )
+                    },
                 )
             }
+
+        if (vurdering == null && resultat == null) return null
+
+        return Seksjon(
+            tittel = Tekst("Samordning"),
+            vurdering,
+            resultat,
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.samordningUføreSub(): Seksjon? {
+        val vurdering = samordningUføreGrunnlag?.vurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Samordning med uføretrygd"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            Tabell.ofTidslinje(
+                kolonner = listOf(Tekst("Uføregrad til samordning")),
+                tidslinje = vurdering.tilTidslinje().map { listOf(Prosent(it)) },
+            ),
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.tjenestepensjonRefusjonskravSub(): Seksjon? {
+        val vurdering = tjenestepensjonRefusjonskravVurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Refusjonskrav fra tjenestepensjonsordning"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            Dict(
+                "Har refusjonskrav" to JaNeiValg(vurdering.harKrav),
+                "Fra og med" to (vurdering.fom?.let(::Dato) ?: Tekst("Ikke satt")),
+                "Til og med" to (vurdering.tom?.let(::Dato) ?: Tekst("Ikke satt")),
+            ),
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.samordningArbeidsgiverSub(): Seksjon? {
+        val vurdering = samordningArbeidsgiverGrunnlag?.vurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Reduksjon ved ytelser fra arbeidsgiver (§ 11-24)"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            Tabell(
+                kolonner = listOf(Tekst("Periode")),
+                rader = vurdering.perioder
+                    .sortedBy { it.fom }
+                    .map { listOf(Periode(it)) },
+            ),
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.samordningBarnepensjonSub(): Seksjon? {
+        val vurdering = barnepensjonGrunnlag?.vurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Samordning med barnepensjon (§ 11-27)"),
+            blokker = listOf(Fritekstfelt("Begrunnelse", vurdering.begrunnelse)),
+            subseksjoner = vurdering.perioder
+                .sortedBy { it.fom }
+                .map { periode ->
+                    Seksjon(
+                        tittel = vurderingsoverskrift(vurdering.vurdertIBehandling, periode.periode),
+                        Dict(
+                            "Månedsbeløp" to Kroner(periode.månedsats),
+                        ),
+                    )
+                },
+        )
+    }
+
+    private fun VedtakDokumentGrunnlag.samordningAndreStatligeYtelserSub(): Seksjon? {
+        val vurdering = samordningAndreStatligeYtelserGrunnlag?.vurdering ?: return null
+        return Seksjon(
+            tittel = Tekst("Samordning med andre statlige ytelser"),
+            Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
+            if (vurdering.vurderingPerioder.isEmpty()) {
+                Avsnitt(Tekst("Ingen andre statlige ytelser er registrert."))
+            } else {
+                Tabell(
+                    kolonner = listOf(Tekst("Ytelse"), Tekst("Periode")),
+                    rader = vurdering.vurderingPerioder
+                        .sortedWith(compareBy({ it.periode.fom }, { it.ytelse.name }))
+                        .map {
+                            listOf(
+                                PrettyEnum(it.ytelse),
+                                Periode(it.periode),
+                            )
+                        },
+                )
+            },
         )
     }
 
