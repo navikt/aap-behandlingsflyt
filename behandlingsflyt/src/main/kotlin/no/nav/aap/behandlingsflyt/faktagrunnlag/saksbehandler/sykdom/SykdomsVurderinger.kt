@@ -22,7 +22,7 @@ data class Sykdomsvurdering(
     val yrkesskadeBegrunnelse: String?,
     val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val diagnose: Diagnose?,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 ) : PeriodisertVurdering {

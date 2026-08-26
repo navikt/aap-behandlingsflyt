@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.Instant
 import java.time.LocalDate
@@ -13,6 +14,7 @@ interface PeriodisertVurdering {
     val tom: LocalDate?
     val vurdertIBehandling: BehandlingId
     val opprettet: Instant
+    val vurdertAv: Bruker
 }
 
 fun <T: PeriodisertVurdering> List<T>.gjeldendeVurderinger(): Tidslinje<T> {
