@@ -18,6 +18,8 @@ open class FakeUnleashBase(
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev) = isEnabled(featureToggle)
 
+    override fun isEnabled(featureToggle: FeatureToggle, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
@@ -43,6 +45,8 @@ open class FakeUnleashBaseWithDefaultDisabled(
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev) = isEnabled(featureToggle)
 
+    override fun isEnabled(featureToggle: FeatureToggle, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
@@ -64,6 +68,7 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
+        BehandlingsflytFeature.BrevtyperTilNyBrevbygger to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
