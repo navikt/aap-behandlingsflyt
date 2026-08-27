@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
@@ -32,8 +31,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbUtvidVedtakslengdeJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -537,6 +536,9 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val rettighetsperiode = sak.rettighetsperiode
         val startDato = sak.rettighetsperiode.fom
+        val maksdato = startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+            .plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR)
+            .plussEtÅrMedHverdager(ÅrMedHverdager.TREDJE_ÅR)
 
         førstegangsbehandling
             .løsSykdom(startDato)
@@ -566,17 +568,11 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.OPPFYLT)
             assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
 
-            val rettighetstypeTidslinje =
-                VilkårsresultatRepositoryImpl(connection).hent(førstegangsbehandling.id).rettighetstypeTidslinje()
+            val rettighetstypeTidslinje = RettighetstypeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)!!
+                .rettighetstypeTidslinje
 
-            // Rettighetstidslinjen begrenses av aldersvilkåret
-            val aldersvilkåret = VilkårsresultatRepositoryImpl(connection).hent(førstegangsbehandling.id)
-                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-
-            assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(
-                aldersvilkåret.tidslinje().segmenter().filter { it.verdi.utfall == Utfall.OPPFYLT }
-                    .maxOfOrNull { it.periode.tom })
-
+            // Rettighetstidslinjen er begrenset av kvote, ikke vedtakslengde
+            assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(maksdato)
             sisteUnderveisperiode.periode.tom
         }
 
@@ -602,16 +598,11 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.OPPFYLT)
             assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
 
-            val rettighetstypeTidslinje =
-                VilkårsresultatRepositoryImpl(connection).hent(automatiskBehandling.id).rettighetstypeTidslinje()
+            val rettighetstypeTidslinje = RettighetstypeRepositoryImpl(connection).hentHvisEksisterer(automatiskBehandling.id)!!
+                .rettighetstypeTidslinje
 
-            // Rettighetstidslinjen begrenses av aldersvilkåret
-            val aldersvilkåret = VilkårsresultatRepositoryImpl(connection).hent(automatiskBehandling.id)
-                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-
-            assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(
-                aldersvilkåret.tidslinje().segmenter().filter { it.verdi.utfall == Utfall.OPPFYLT }
-                    .maxOfOrNull { it.periode.tom })
+            // Rettighetstidslinjen begrenses av maksdato, ikke vedtakslengde
+            assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(maksdato)
         }
     }
 
@@ -904,9 +895,10 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
 
             val nySluttdato = sluttdatoFørstegangsbehandling.plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR)
+            val maksdato = nySluttdato.plussEtÅrMedHverdager(ÅrMedHverdager.TREDJE_ÅR)
 
-            verifiserUtvidetSluttdato(connection, automatiskBehandling.id, nySluttdato)
-            verifiserUtvidetSluttdato(connection, åpenBehandling.id, nySluttdato)
+            verifiserUtvidetSluttdato(connection, automatiskBehandling.id, nySluttdato, maksdato)
+            verifiserUtvidetSluttdato(connection, åpenBehandling.id, nySluttdato, maksdato)
         }
 
     }
@@ -914,7 +906,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
     private fun verifiserUtvidetSluttdato(
         connection: DBConnection,
         behandlingId: BehandlingId,
-        nySluttdato: LocalDate
+        nySluttdato: LocalDate,
+        maksdato: LocalDate,
     ) {
         val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingId)
         assertThat(vedtakslengdeVurdering).isNotNull
@@ -926,16 +919,11 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.OPPFYLT)
         assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
 
-        val rettighetstypeTidslinje =
-            VilkårsresultatRepositoryImpl(connection).hent(behandlingId).rettighetstypeTidslinje()
+        val rettighetstypeTidslinje = RettighetstypeRepositoryImpl(connection).hentHvisEksisterer(behandlingId)!!
+            .rettighetstypeTidslinje
 
-        // Rettighetstidslinjen begrenses av aldersvilkåret
-        val aldersvilkåret = VilkårsresultatRepositoryImpl(connection).hent(behandlingId)
-            .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-
-        assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(
-            aldersvilkåret.tidslinje().segmenter().filter { it.verdi.utfall == Utfall.OPPFYLT }
-                .maxOfOrNull { it.periode.tom })
+        // Rettighetstidslinjen begrenses av kvote, ikke vedtakslengde
+        assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(maksdato)
     }
 
     @Test
