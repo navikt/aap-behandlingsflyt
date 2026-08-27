@@ -1317,7 +1317,7 @@ internal object VedtakDokumentRenderer {
                 InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
                 InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE,
                 InnsendingType.UFØRE_VEDTAK_HENDELSE ->
-                    Tekst(" ${mottattDokument.referanse}")
+                    Tekst("${mottattDokument.referanse}")
             }
         }
 
