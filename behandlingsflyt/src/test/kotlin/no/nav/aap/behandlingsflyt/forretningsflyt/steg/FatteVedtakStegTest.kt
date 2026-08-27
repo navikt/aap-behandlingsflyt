@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -45,7 +45,7 @@ class FatteVedtakStegTest {
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
     val trukketSøknadService = mockk<TrukketSøknadService>()
     val vedtakService = mockk<VedtakService>(relaxed = true)
-    val virkningstidspunktUtleder = mockk<VirkningstidspunktUtleder>(relaxed = true)
+    val virkningstidspunktService = mockk<VirkningstidspunktService>(relaxed = true)
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
 
     @BeforeEach
@@ -76,7 +76,7 @@ class FatteVedtakStegTest {
         avbrytRevurderingService = avbrytRevurderingService,
         trukketSøknadService = trukketSøknadService,
         vedtakService = vedtakService,
-        virkningstidspunktUtleder = virkningstidspunktUtleder,
+        virkningstidspunktService = virkningstidspunktService,
         avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService,
     )
 
@@ -157,7 +157,7 @@ class FatteVedtakStegTest {
 
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
         every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns false
-        every { virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId) } returns virkningstidspunkt
+        every { virkningstidspunktService.finnVirkningstidspunkt(kontekst.behandlingId) } returns virkningstidspunkt
 
         opprettAvklaringsbehovMedEndringer(
             behandlingId = kontekst.behandlingId,
@@ -241,7 +241,7 @@ class FatteVedtakStegTest {
 
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
         every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns false
-        every { virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId) } returns virkningstidspunkt
+        every { virkningstidspunktService.finnVirkningstidspunkt(kontekst.behandlingId) } returns virkningstidspunkt
 
         opprettAvklaringsbehovMedEndringer(
             behandlingId = kontekst.behandlingId,
@@ -296,7 +296,7 @@ class FatteVedtakStegTest {
 
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
         every { trukketSøknadService.søknadErTrukket(kontekst.behandlingId) } returns false
-        every { virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId) } returns virkningstidspunkt
+        every { virkningstidspunktService.finnVirkningstidspunkt(kontekst.behandlingId) } returns virkningstidspunkt
         opprettAvklaringsbehovMedEndringer(
             behandlingId = kontekst.behandlingId,
             definisjon = Definisjon.SKRIV_SYKDOMSVURDERING_BREV,

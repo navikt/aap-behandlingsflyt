@@ -4,7 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
@@ -26,7 +26,11 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.getGrunnlag
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+
+private val log: Logger = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.RefuksjonkravGrunnlagApi")
 
 fun NormalOpenAPIRoute.refusjonGrunnlagApi(
     dataSource: DataSource,
@@ -50,7 +54,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider)
+                    val virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider)
 
                     val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
                         it.tilResponse(ansattInfoService)
@@ -60,13 +64,10 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                     val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
 
                     val virkningstidspunkt = try {
-                        if (behandling.erYtelsesbehandling()) {
-                            virkningstidspunktUtleder.utledVirkningsTidspunkt(behandling.id)
-                        } else {
-                            null
-                        }
-                    } catch (_: Exception) {
+                        virkningstidspunktService.finnVirkningstidspunkt(behandling)
+                    } catch (e: Exception) {
                         // TODO: Undersøk hvorfor vi forventer at denne kan feile, og erstatt i så fall med en metode som håndterer dette mer eksplisitt
+                        log.warn("feil {} i utleding av virkningstidspunkt for behandling ${behandling.id}", e.javaClass.simpleName, e)
                         null
                     }
 

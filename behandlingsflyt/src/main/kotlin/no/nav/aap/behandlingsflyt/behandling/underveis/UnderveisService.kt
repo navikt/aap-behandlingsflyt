@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
@@ -64,7 +64,7 @@ class UnderveisService(
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
     private val rettighetstypeRepository: RettighetstypeRepository,
-    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val virkningstidspunktService: VirkningstidspunktService,
     private val kvoteService: KvoteService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -83,7 +83,7 @@ class UnderveisService(
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
         rettighetstypeRepository = repositoryProvider.provide(),
-        virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
+        virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider),
         kvoteService = KvoteService(repositoryProvider, gatewayProvider)
     )
 
@@ -218,7 +218,7 @@ class UnderveisService(
         }
 
         val startdatoForBehandlingen =
-            virkningstidspunktUtleder.utledVirkningsTidspunkt(behandlingId)
+            virkningstidspunktService.finnVirkningstidspunkt(behandlingId)
                 ?: sak.rettighetsperiode.fom
 
         /**
