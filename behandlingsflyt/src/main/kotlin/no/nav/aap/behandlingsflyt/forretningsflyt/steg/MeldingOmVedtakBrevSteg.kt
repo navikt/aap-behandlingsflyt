@@ -179,9 +179,9 @@ class MeldingOmVedtakBrevSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) ?: return false
         val endretAv = avklaringsbehov.endretAv()
-        val brukBrevbyggerTogglePåBrevtype = unleashGateway.isEnabled(BehandlingsflytFeature.BrevtyperTilNyBrevbygger, typeBrev)
-        val brukBrevbyggerTogglePåBrevtypeOgBrukerident = unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbyggerV3, endretAv, typeBrev)
-        return brukBrevbyggerTogglePåBrevtype || brukBrevbyggerTogglePåBrevtypeOgBrukerident
+        val brukBrevbyggerTogglePåKunBrevtype = unleashGateway.isEnabled(BehandlingsflytFeature.BrevtyperTilNyBrevbygger, typeBrev)
+        val brukBrevbyggerTogglePåBådeBrevtypeOgBrukerident = unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbyggerV3, endretAv, typeBrev)
+        return brukBrevbyggerTogglePåKunBrevtype || brukBrevbyggerTogglePåBådeBrevtypeOgBrukerident
     }
 
     companion object : FlytSteg {
