@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -24,6 +26,8 @@ data class GrunnlagBeregning(
     val inntekterPerÅr: List<InntektPerÅr>,
     val beregningsgrunnlag: Beløp?,
     val beregningsutfallKategori: BeregningsutfallKategori? = null,
+    val årsakBeregningstidspunkt: ÅrsakBeregningstidspunkt? = null,
+    val årsakYtterligereNedsattTidspunkt: ÅrsakYtterligereNedsatt? = null,
 ) {
     /** Resultat av § 11-19-beregningen. Null kun når beregningsgrunnlag er null (manglende dato, f.eks. VurderesForUføretrygd). */
     enum class BeregningsutfallKategori {

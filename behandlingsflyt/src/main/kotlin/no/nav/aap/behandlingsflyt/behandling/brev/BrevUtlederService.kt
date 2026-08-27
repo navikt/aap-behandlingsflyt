@@ -573,6 +573,8 @@ class BrevUtlederService(
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
             beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(grunnlag, minstesats) else null,
+            årsakBeregningstidspunkt = beregningstidspunktVurdering?.årsak,
+            årsakYtterligereNedsattTidspunkt = beregningstidspunktVurdering?.ytterligereNedsattÅrsak,
         )
     }
 
@@ -593,6 +595,8 @@ class BrevUtlederService(
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
             beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(vinnende, minstesats) else null,
+            årsakBeregningstidspunkt = beregningstidspunktVurdering?.årsak,
+            årsakYtterligereNedsattTidspunkt = beregningstidspunktVurdering?.ytterligereNedsattÅrsak,
         )
     }
 
