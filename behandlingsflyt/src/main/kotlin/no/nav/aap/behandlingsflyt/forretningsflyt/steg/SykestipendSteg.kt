@@ -51,8 +51,6 @@ class SykestipendSteg private constructor(
 
                     VurderingType.REVURDERING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                                && (studentGrunnlag?.gjeldendeStudentvurderinger()?.any { it.erOppfylt() } == true
-                                || sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null)
                                 && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
 
                     VurderingType.UTVID_VEDTAKSLENGDE,
