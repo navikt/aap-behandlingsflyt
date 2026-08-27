@@ -11,7 +11,8 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_11_2("§ 11-2"),
 
     FOLKETRYGDLOVEN_11_3("§ 11-3"),
-    FOLKETRYGDLOVEN_11_4("§ 11-4"), 
+    FOLKETRYGDLOVEN_11_4("§ 11-4"),
+    FOLKETRYGDLOVEN_11_4_INNTEKTSBORTFALL("§ 11-4 2. ledd"),
     FOLKETRYGDLOVEN_11_5("§ 11-5"),
     FOLKETRYGDLOVEN_11_6("§ 11-6"),
 
@@ -39,7 +40,7 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_11_26("§ 11-26"),
     FOLKETRYGDLOVEN_11_27("§ 11-27"),
     FOLKETRYGDLOVEN_11_28("§ 11-28"),
-    FOLKETRYGDLOVEN_11_29("§ 11-29"), // TODO: Hva kan klages på her?
+    FOLKETRYGDLOVEN_11_29_SYKESTIPEND("§ 11-29"), // TODO: Hva kan klages på her?
 
     // FOLKETRYGDLOVEN_11_30("§ 11-30"), // Ikke relevant
     FOLKETRYGDLOVEN_11_31("§ 11-31"), // TODO: Hva kan klages på her?
@@ -66,6 +67,8 @@ enum class Hjemmel(val hjemmel: String) {
             // Førstegangsbehandling / Revurdering
             FOLKETRYGDLOVEN_11_2 -> listOf(Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
             FOLKETRYGDLOVEN_11_3 -> listOf(Vurderingsbehov.OPPHOLDSKRAV)
+
+            FOLKETRYGDLOVEN_11_4_INNTEKTSBORTFALL -> listOf(Vurderingsbehov.REVURDER_INNTEKTSBORTFALL)
 
             FOLKETRYGDLOVEN_11_5,
             FOLKETRYGDLOVEN_11_6,
@@ -103,7 +106,7 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_14 -> listOf(Vurderingsbehov.REVURDER_STUDENT)
             FOLKETRYGDLOVEN_11_15 -> listOf(Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET)
             FOLKETRYGDLOVEN_11_23_OVERGNG_ARB -> listOf(Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING)
-            FOLKETRYGDLOVEN_11_29 -> listOf(Vurderingsbehov.REVURDER_SYKESTIPEND)
+            FOLKETRYGDLOVEN_11_29_SYKESTIPEND -> listOf(Vurderingsbehov.REVURDER_SYKESTIPEND)
             
             FOLKETRYGDLOVEN_11_4, // TODO: Hva klages på her?
             FOLKETRYGDLOVEN_11_8, // TODO: Ikke implementert
