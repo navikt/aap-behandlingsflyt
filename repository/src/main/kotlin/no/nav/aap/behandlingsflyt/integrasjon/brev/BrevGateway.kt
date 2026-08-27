@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -377,7 +379,10 @@ class BrevGateway : BrevbestillingGateway {
                     add(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
                     add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
-                    brevBehov.grunnlagBeregning?.let { add(grunnlagBeregningTilFaktagrunnlag(it)) }
+                    brevBehov.grunnlagBeregning?.let { grunnlag ->
+                        add(grunnlagBeregningTilFaktagrunnlag(grunnlag))
+                        aarsakTidspunktVurderingTilFaktagrunnlag(grunnlag)?.let { add(it) }
+                    }
                     brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
                     brevBehov.foreldreansvarVurderinger?.let { add(foreldreansvarVurderingerTilFaktaGrunnlag(it)) }
                     brevBehov.forholdTilAndreYtelser?.let { add(forholdTilAndreYtelserTilFaktagrunnlag(it)) }
@@ -390,7 +395,10 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     add(Faktagrunnlag.KravdatoUføretrygd(brevBehov.kravdatoUføretrygd))
                     add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
-                    brevBehov.grunnlagBeregning?.let { add(grunnlagBeregningTilFaktagrunnlag(it)) }
+                    brevBehov.grunnlagBeregning?.let { grunnlag ->
+                        add(grunnlagBeregningTilFaktagrunnlag(grunnlag))
+                        aarsakTidspunktVurderingTilFaktagrunnlag(grunnlag)?.let { add(it) }
+                    }
                     brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
                 }
             }
@@ -569,4 +577,46 @@ class BrevGateway : BrevbestillingGateway {
             },
         )
     }
+    private fun aarsakTidspunktVurderingTilFaktagrunnlag(
+        grunnlag: GrunnlagBeregning
+    ): Faktagrunnlag.AarsakTidspunktVurdering? {
+        val aarsakBeregningsTidspunktVurdering = grunnlag.årsakBeregningstidspunkt.tilKontrakt()
+        val aarsakYtterligereNedsattTidspunktVurdering = grunnlag.årsakYtterligereNedsattTidspunkt.tilKontrakt()
+
+        if (aarsakBeregningsTidspunktVurdering == null && aarsakYtterligereNedsattTidspunktVurdering == null) {
+            return null
+        }
+
+        return Faktagrunnlag.AarsakTidspunktVurdering(
+            aarsakBeregningsTidspunktVurdering = aarsakBeregningsTidspunktVurdering,
+            aarsakYtterligereNedsattTidspunktVurdering = aarsakYtterligereNedsattTidspunktVurdering,
+        )
+    }
+
+    private fun ÅrsakBeregningstidspunkt?.tilKontrakt():
+            Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt? =
+        when (this) {
+            ÅrsakBeregningstidspunkt.SYKEMELDINGSDATO -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SYKEMELDINGSDATO
+            ÅrsakBeregningstidspunkt.KRAVDATO -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.KRAVDATO
+            ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.UFOERETIDSPUNKT
+            ÅrsakBeregningstidspunkt.DATO_PAA_LEGEERKLÆRING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.DATO_PAA_LEGEERKLAERING
+            ÅrsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING
+            ÅrsakBeregningstidspunkt.SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SEKSTEN_AAR_SOM_BEREGNINGSTIDSPUNKT
+            ÅrsakBeregningstidspunkt.ANNET, null -> null
+        }
+
+    private fun ÅrsakYtterligereNedsatt?.tilKontrakt():
+            Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt? =
+        when (this) {
+            ÅrsakYtterligereNedsatt.UFØRETIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.UFOERETIDSPUNKT
+            ÅrsakYtterligereNedsatt.YTTERLIGERE_NEDSATT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.YTTERLIGERE_NEDSATT
+            ÅrsakYtterligereNedsatt.ØKT_UFØREGRAD -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.OKT_UFOEREGRAD
+            ÅrsakYtterligereNedsatt.IKKE_BETYDNING_IKKE_RELEVANT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.IKKE_BETYDNING_IKKE_RELEVANT
+            ÅrsakYtterligereNedsatt.ANNET, null -> null
+            ÅrsakYtterligereNedsatt.SYKEMELDINGSDATO,
+            ÅrsakYtterligereNedsatt.KRAVDATO,
+            ÅrsakYtterligereNedsatt.DATO_PAA_LEGEERKLÆRING,
+            ÅrsakYtterligereNedsatt.HENVIST_TIL_BEHANDLING -> null
+        }
+
 }
