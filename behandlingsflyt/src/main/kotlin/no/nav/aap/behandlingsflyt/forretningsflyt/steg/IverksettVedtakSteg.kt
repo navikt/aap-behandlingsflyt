@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -25,7 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -44,7 +42,6 @@ class IverksettVedtakSteg internal constructor(
     private val refusjonkravRepository: RefusjonkravRepository,
     private val utbetalingService: UtbetalingService,
     private val vedtakService: VedtakService,
-    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val gosysService: GosysService,
@@ -59,13 +56,6 @@ class IverksettVedtakSteg internal constructor(
         if (harTrukketSøknadIBehandlingen(kontekst) || harAvbruttRevurderingIBehandlingen(kontekst)) {
             return Fullført
         }
-
-        /** Denne lagringen skjer nå i `FatteVedtakSteg`, siden det er i det steget
-         * at vedtaket fattes. Det kan i prinsippet være åpne behandlinger som
-         * er forbi `FatteVedtakSteg` men som ikke har fullført `IverksettVedtakSteg`,
-         * så vi lagrer her også til vi er sikre på at ingen behandlinger faller mellom to stoler.
-         */
-        lagreVedtak(kontekst)
 
         val vedtak = vedtakService.hentVedtak(behandlingId = kontekst.behandlingId)
             ?: error("Forventet å finne et vedtak for behandling ${kontekst.behandlingId} ved iverksetting")
@@ -250,24 +240,6 @@ class IverksettVedtakSteg internal constructor(
         }
     }
 
-    fun lagreVedtak(kontekst: FlytKontekstMedPerioder) {
-        if (vedtakService.hentVedtak(kontekst.behandlingId) != null) {
-            /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
-            return
-        }
-        log.warn("Forventet å finne allerede lagret vedtak fra FatteVedtakSteg. Lagrer vedtak...")
-
-        val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
-        val vedtakstidspunkt = stegHistorikk
-            .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
-            ?.tidspunkt()
-            ?: error("Forventet å finne et avsluttet fatte vedtak steg")
-
-        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
-        vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
-    }
-
-
     private fun harAvbruttRevurderingIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
         kontekst.behandlingType == TypeBehandling.Revurdering && avbrytRevurderingService.revurderingErAvbrutt(
             kontekst.behandlingId
@@ -299,7 +271,6 @@ class IverksettVedtakSteg internal constructor(
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val gosysService = GosysService(gatewayProvider)
-            val virkningstidspunktUtlederService = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider)
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
             val resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider)
             return IverksettVedtakSteg(
@@ -311,7 +282,6 @@ class IverksettVedtakSteg internal constructor(
                     gatewayProvider = gatewayProvider
                 ),
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
-                virkningstidspunktUtleder = virkningstidspunktUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 flytJobbRepository = flytJobbRepository,
