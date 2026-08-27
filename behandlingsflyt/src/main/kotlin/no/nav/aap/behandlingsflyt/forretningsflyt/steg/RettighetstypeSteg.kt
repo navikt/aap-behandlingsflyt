@@ -48,7 +48,7 @@ class RettighetstypeSteg(
         vilkårService = VilkårService(repositoryProvider),
         stansOpphørRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
-        kvoteService = KvoteService(),
+        kvoteService = KvoteService(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {

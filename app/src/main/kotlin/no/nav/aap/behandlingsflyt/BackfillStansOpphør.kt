@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.utledStansEllerOpphør
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -110,8 +111,10 @@ class BackfillStansOpphør(
         val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
         val sakRepository = SakRepositoryImpl(connection)
         val underveisRepository = UnderveisRepositoryImpl(connection)
+        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+        val kvoteService = KvoteService(repositoryProvider, gatewayProvider)
         val rettighetstypeService =
-            RettighetstypeService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            RettighetstypeService(repositoryProvider, gatewayProvider)
         val grunnlag = stansOpphørGrunnlagRepository.hentHvisEksisterer(behandling.id)
 
         if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
@@ -172,7 +175,7 @@ class BackfillStansOpphør(
                 ?.helePerioden()
                 ?: sakRepository.hent(behandling.sakId).rettighetsperiode
 
-            val stansOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = rettighetsperiode)
+            val stansOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = rettighetsperiode, kvoter = kvoteService.beregn())
             val nyttGrunnlag = (grunnlag ?: StansOpphørGrunnlag().utledNyttGrunnlag(stansOpphør, behandling.id))
                 .copy(stansOpphørV2 = stansOpphør)
 

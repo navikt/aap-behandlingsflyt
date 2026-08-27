@@ -316,7 +316,7 @@ class VedtakslengdeServiceTest {
             rettighetstypeService = rettighetstypeService,
             stansOpphørRepository = stansOpphørRepository,
             clock = clock,
-            virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository),
+            virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository, mockk()),
         )
 
     /**
