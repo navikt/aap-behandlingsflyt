@@ -24,6 +24,7 @@ dependencies {
     testImplementation(project(":lib-test"))
     testImplementation(libs.dbtest)
     testImplementation(libs.mockk)
+    testImplementation(testFixtures(libs.infrastructure))
 
     testRuntimeOnly(libs.junitPlatformLauncher)
     testImplementation(libs.bundles.junit)
