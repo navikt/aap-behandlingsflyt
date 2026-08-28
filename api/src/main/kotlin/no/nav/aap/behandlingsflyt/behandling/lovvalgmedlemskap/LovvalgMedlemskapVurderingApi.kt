@@ -75,8 +75,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                             oppgittUtenlandsOppholdGrunnlag
                         ),
                         sak.rettighetsperiode,
-                        null,
-                        unleashGateway
+                        unleashGateway = unleashGateway
                     )
                 }
                 if (vurdering == null) {

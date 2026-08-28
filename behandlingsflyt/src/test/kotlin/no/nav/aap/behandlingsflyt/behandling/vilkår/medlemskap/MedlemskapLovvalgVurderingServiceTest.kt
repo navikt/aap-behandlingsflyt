@@ -11,6 +11,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -19,6 +21,9 @@ import java.time.LocalDate
 
 class MedlemskapLovvalgVurderingServiceTest {
     private val service = MedlemskapLovvalgVurderingService()
+    private val unleash = FakeUnleashBaseWithDefaultDisabled(
+        enabledFlags = listOf(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp)
+    )
 
     @Test
     fun `automatisk om alle krav er oppfylt`() {
@@ -59,7 +64,11 @@ class MedlemskapLovvalgVurderingServiceTest {
             )
         )
 
-        val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now().minusYears(1), LocalDate.now()))
+        val resultat = service.vurderTilhørighet(
+            grunnlag,
+            Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+            unleashGateway = unleash
+        )
         assertEquals(true, resultat.kanBehandlesAutomatisk)
     }
 
@@ -103,7 +112,11 @@ class MedlemskapLovvalgVurderingServiceTest {
             )
         )
 
-        val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now().minusYears(1), LocalDate.now()))
+        val resultat = service.vurderTilhørighet(
+            grunnlag,
+            Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+            unleashGateway = unleash
+        )
         assertEquals(true, resultat.kanBehandlesAutomatisk)
     }
 
@@ -145,7 +158,11 @@ class MedlemskapLovvalgVurderingServiceTest {
             )
         )
 
-        val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now().minusYears(1), LocalDate.now()))
+        val resultat = service.vurderTilhørighet(
+            grunnlag,
+            Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+            unleashGateway = unleash
+        )
         assertEquals(false, resultat.kanBehandlesAutomatisk)
     }
 }

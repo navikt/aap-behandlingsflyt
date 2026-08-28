@@ -68,7 +68,7 @@ class Medlemskapvilkåret(
                 grunnlag,
                 rettighetsPeriode,
                 vurderingstype,
-                unleashGateway
+                unleashGateway = unleashGateway
             ).kanBehandlesAutomatisk
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             val vurderingsResultat = VurderingsResultat(utfall, null, null)

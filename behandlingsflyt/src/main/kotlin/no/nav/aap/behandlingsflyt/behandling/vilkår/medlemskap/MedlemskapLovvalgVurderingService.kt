@@ -386,9 +386,8 @@ class MedlemskapLovvalgVurderingService {
                 )
             } ?: emptyList()
 
-        val bosattOgNorskStatsborgerskapGrunnlag = BosattOgNorskStatsborgerskapGrunnlag(grunnlag?.status, gyldigeStatsborgerskap)
-
-        grunnlag?.status
+        val bosattOgNorskStatsborgerskapGrunnlag =
+            BosattOgNorskStatsborgerskapGrunnlag(grunnlag?.status, gyldigeStatsborgerskap)
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),
