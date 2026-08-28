@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
@@ -86,16 +86,19 @@ class RettighetstypeServiceTest {
             )
         )
 
-        InMemoryVilkårsresultatRepository.lagre(BehandlingId(1), fulltAvslag)
-        InMemoryVilkårsresultatRepository.lagre(BehandlingId(2), avslagPåAlderIGår)
-        InMemoryVilkårsresultatRepository.lagre(BehandlingId(3), avslagPåAlderIDag)
+        val (_, behandling1) = opprettInMemorySakOgBehandling()
+        val (_, behandling2) = opprettInMemorySakOgBehandling()
+        val (_, behandling3) = opprettInMemorySakOgBehandling()
+        InMemoryVilkårsresultatRepository.lagre(behandling1.id, fulltAvslag)
+        InMemoryVilkårsresultatRepository.lagre(behandling2.id, avslagPåAlderIGår)
+        InMemoryVilkårsresultatRepository.lagre(behandling3.id, avslagPåAlderIDag)
 
         val rettighetstypeService = RettighetstypeService(inMemoryRepositoryProvider, minimalGatewayProvider {  })
 
 
         assertThat(
             rettighetstypeService.harRettInnenforPeriode(
-                BehandlingId(1),
+                behandling1.id,
                 Periode(
                     nå,
                     rettighetsperiode.tom
@@ -106,7 +109,7 @@ class RettighetstypeServiceTest {
         
         assertThat(
             rettighetstypeService.harRettInnenforPeriode(
-                 BehandlingId(2),
+                 behandling2.id,
                 Periode(
                     nå,
                     rettighetsperiode.tom
@@ -116,7 +119,7 @@ class RettighetstypeServiceTest {
 
         assertThat(
             rettighetstypeService.harRettInnenforPeriode(
-                BehandlingId(3),
+                behandling3.id,
                 Periode(
                     nå,
                     rettighetsperiode.tom
