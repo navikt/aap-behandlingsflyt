@@ -253,33 +253,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                             )
                         }
 
-                    val alleDialogmeldinger = dialogmeldinger + dialogmeldingerLegeerklæringer
-
                     respond(dialogmeldinger + dialogmeldingerLegeerklæringer)
-
-                    /*
-                    val dokumenterForSak = SafGateway.hentDokumenterForSak(Saksnummer(saksnummer), token())
-                    dokumenterForSak.map { dokument ->
-                        val dialogmelding =
-                            dialogmeldingerDtos.firstOrNull { dto -> dto.journalpostId == dokument.journalpostId }
-                        if (dialogmelding != null) {
-                            dialogmelding.dokumentIdListe.addAll(dokument.dokumenter.map { it.tilBegrensetDto() })
-                        }
-                    }
-                    */
-
-                    /*
-                    TODO:
-                    - Gjør kall mot nytt endepunkt om dialogmeldinger fra dokumentinnhenting
-                        - Legeerklæringer ligger lagret i egen DB i behandlingsflyt
-                    - Gjør kall mot SAF for hver av følgende:
-                        - Med journalpostene fra behandlingsflyt (berike de som allerede
-                            ligger der)
-                        - Med journalpostene fra dokumentinnhenting
-                        - Fra legeerklæringene i behandlingsflyt
-                    - Syr ting sammen
-                    - Henter ting fra SAF via dokumentinnhenting
-                     */
                 }
             }
         }
