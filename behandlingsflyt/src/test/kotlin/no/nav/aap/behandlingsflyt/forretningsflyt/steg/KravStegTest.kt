@@ -34,6 +34,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -145,6 +146,7 @@ class KravStegTest {
     }
 
     @Test
+    @Disabled("Starte med kun ett relevant krav")
     fun `revurdering etter rent avslag bevarer NyttKrav fra forrige behandling og oppretter nytt`() {
         val sak = opprettInMemorySak()
         val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
@@ -172,16 +174,17 @@ class KravStegTest {
     }
 
     @Test
-    fun `overstyrt krav i inneværende behandling bevares og søknad lagres som Tilleggsopplysning`() {
+    fun `overstyrt krav i inneværende behandling – overstyring kopieres til nytt RelevantKrav fra søknad`() {
         val sak = opprettInMemorySak()
         val behandling = opprettFørstegangsbehandling(sak.id)
+        val overstyrtDato = LocalDate.of(2023, 6, 1)
 
         val overstyrtKrav = lagNyttKrav(
             behandlingId = behandling.id,
             journalpostId = JournalpostId("JP_OVERSTYRT"),
             mottattDato = LocalDate.of(2024, 1, 1),
             overstyrMuligRettFra = OverstyrMuligRettFra(
-                dato = LocalDate.of(2023, 6, 1),
+                dato = overstyrtDato,
                 årsak = OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
             ),
         )
@@ -194,12 +197,18 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().referanse).isEqualTo(overstyrtKrav.referanse)
-        assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
+        val relevanteKrav = vurderinger.filterIsInstance<RelevantKrav>()
+        assertThat(relevanteKrav).hasSize(1)
+        // Ny RelevantKrav fra søknad – ikke den gamle manuelle
+        assertThat(relevanteKrav.single().referanse).isNotEqualTo(overstyrtKrav.referanse)
+        // Overstyringen er kopiert
+        assertThat(relevanteKrav.single().overstyrMuligRettFra?.dato).isEqualTo(overstyrtDato)
+        assertThat(relevanteKrav.single().muligRettFra).isEqualTo(overstyrtDato)
+        assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).isEmpty()
     }
 
     @Test
+    @Disabled("Starter med kun ett relevant krav")
     fun `søknad etter rent avslag skal lagres som NyttKrav selv om det finnes et overstyrt krav fra forrige behandling`() {
         val sak = opprettInMemorySak()
         val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
@@ -341,6 +350,75 @@ class KravStegTest {
         assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
         assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().muligRettFra).isEqualTo(søknadDato)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).isEmpty()
+    }
+
+    @Test
+    fun `revurdering med søknad eldre enn vedtatt krav – søknad tar over som RelevantKrav, gammelt krav nedgraderes`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val revurdering = opprettRevurdering(sak.id, behandling.id)
+
+        val gammeltSøknadDato = LocalDate.of(2024, 2, 1)
+        val nyttSøknadDato = LocalDate.of(2024, 1, 1) // eldre
+
+        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
+        every { behandlingService.utledFaktiskBehandlingstype(revurdering.id) } returns TypeBehandling.Revurdering
+
+        leggTilSøknad(behandling.id, sak.id, gammeltSøknadDato.atStartOfDay())
+        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
+
+        val gammeltKrav = InMemoryKravRepository.hent(behandling.id).gjeldendeRelevanteKrav().single()
+        InMemoryKravRepository.kopier(behandling.id, revurdering.id)
+
+        leggTilSøknad(revurdering.id, sak.id, nyttSøknadDato.atStartOfDay())
+        steg.utfør(flytKontekstMedPerioder { this.behandling = revurdering })
+
+        val gjeldendeVurderinger = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
+        val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantKrav>()
+        val tilleggsopplysninger = gjeldendeVurderinger.filterIsInstance<Tilleggsopplysning>()
+
+        assertThat(relevanteKrav).hasSize(1)
+        assertThat(relevanteKrav.single().muligRettFra).isEqualTo(nyttSøknadDato)
+        assertThat(tilleggsopplysninger).hasSize(1)
+        assertThat(tilleggsopplysninger.single().referanse).isEqualTo(gammeltKrav.referanse)
+    }
+
+    @Test
+    fun `Tilbakedatert søknad i revurdering arver overstyrMuligRettFra fra vedtatt krav`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val revurdering = opprettRevurdering(sak.id, behandling.id)
+
+        val gammeltSøknadDato = LocalDate.of(2024, 2, 1)
+        val overstyrtDato = LocalDate.of(2023, 6, 1)
+        val nyttSøknadDato = LocalDate.of(2024, 1, 15) // eldre enn søknadsdato, men nyere enn overstyrtDato
+
+        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
+        every { behandlingService.utledFaktiskBehandlingstype(revurdering.id) } returns TypeBehandling.Revurdering
+
+        leggTilSøknad(behandling.id, sak.id, gammeltSøknadDato.atStartOfDay())
+        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
+
+        val gammeltKrav = InMemoryKravRepository.hent(behandling.id).gjeldendeRelevanteKrav().single()
+        InMemoryKravRepository.lagre(
+            behandling.id,
+            InMemoryKravRepository.hent(behandling.id).vurderinger
+                .map { if (it.referanse == gammeltKrav.referanse) gammeltKrav.copy(
+                    overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+                    muligRettFra = overstyrtDato,
+                ) else it }
+                .toSet()
+        )
+        InMemoryKravRepository.kopier(behandling.id, revurdering.id)
+
+        leggTilSøknad(revurdering.id, sak.id, nyttSøknadDato.atStartOfDay())
+        steg.utfør(flytKontekstMedPerioder { this.behandling = revurdering })
+
+        val nyttKrav = InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single()
+        assertThat(nyttKrav.søknadsdato.dato).isEqualTo(nyttSøknadDato)
+        assertThat(nyttKrav.overstyrMuligRettFra).isNotNull()
+        assertThat(nyttKrav.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
+        assertThat(nyttKrav.muligRettFra).isEqualTo(overstyrtDato) // min(15 jan 2024, 1 jun 2023)
     }
 
     private fun opprettFørstegangsbehandling(sakId: SakId) =

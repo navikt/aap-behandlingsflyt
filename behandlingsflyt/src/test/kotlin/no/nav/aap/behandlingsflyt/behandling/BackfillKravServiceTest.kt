@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.gjeldendeVurderinger
@@ -19,6 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
@@ -318,6 +321,88 @@ class BackfillKravServiceTest {
 
         val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
         assertThat(krav.muligRettFra).isEqualTo(søknadsdato)
+    }
+
+    @Test
+    fun `søknad mottatt før søknadsdato på forrige krav – overtaker selv om muligRettFra er overstyrt lavere`() {
+        // Gammelt krav: søknadsdato = 10 feb, overstyrt til 1 jan → muligRettFra = 1 jan
+        // Ny søknad: 15 jan < 10 feb (søknadsdato) → skal overta (feil med gammel muligRettFra-sammenligning)
+        val gammeltSøknadsdato = 10 februar 2024
+        val overstyrtDato = 1 januar 2024
+        val nySøknadsdato = 15 januar 2024
+
+        val (sak, førstegangsbehandling, revurdering) =
+            opprettInMemorySakOgRevurdering(søknadsdato = gammeltSøknadsdato)
+
+        leggTilSøknad(førstegangsbehandling, gammeltSøknadsdato)
+        service.backfillBehandling(
+            lagSakMedRettighetsperiode(sak, overstyrtDato),
+            førstegangsbehandling,
+            erNyesteBehandling = false,
+        )
+        // Sett overstyrMuligRettFra manuelt på det lagrede kravet
+        val gammeltKrav = InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
+        InMemoryKravRepository.lagre(
+            førstegangsbehandling.id,
+            setOf(gammeltKrav.copy(
+                overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+                muligRettFra = overstyrtDato,
+            ))
+        )
+
+        leggTilSøknad(revurdering, nySøknadsdato)
+        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(nySøknadsdato, Tid.MAKS))
+
+        service.backfillBehandling(
+            lagSakMedRettighetsperiode(sak, nySøknadsdato),
+            revurdering,
+            erNyesteBehandling = true,
+        )
+
+        val gjeldendeVurderinger = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
+        val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantKrav>()
+        assertThat(relevanteKrav).hasSize(1)
+        assertThat(relevanteKrav.single().muligRettFra).isEqualTo(nySøknadsdato)
+        assertThat(gjeldendeVurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
+    }
+
+    @Test
+    fun `overstyrMuligRettFra kopieres til nytt krav som overtar`() {
+        val gammeltSøknadsdato = 10 januar 2024
+        val overstyrtDato = 1 mars 2023
+        val nySøknadsdato = 5 januar 2024 // eldre enn gammelt søknadsdato
+
+        val (sak, førstegangsbehandling, revurdering) =
+            opprettInMemorySakOgRevurdering(søknadsdato = gammeltSøknadsdato)
+
+        leggTilSøknad(førstegangsbehandling, gammeltSøknadsdato)
+        service.backfillBehandling(
+            lagSakMedRettighetsperiode(sak, gammeltSøknadsdato),
+            førstegangsbehandling,
+            erNyesteBehandling = false,
+        )
+        val gammeltKrav = InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
+        InMemoryKravRepository.lagre(
+            førstegangsbehandling.id,
+            setOf(gammeltKrav.copy(
+                overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+                muligRettFra = overstyrtDato,
+            ))
+        )
+
+        leggTilSøknad(revurdering, nySøknadsdato)
+        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(overstyrtDato, Tid.MAKS))
+
+        service.backfillBehandling(
+            lagSakMedRettighetsperiode(sak, overstyrtDato),
+            revurdering,
+            erNyesteBehandling = true,
+        )
+
+        val nyttKrav = InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single()
+        assertThat(nyttKrav.overstyrMuligRettFra).isNotNull
+        assertThat(nyttKrav.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
+        assertThat(nyttKrav.muligRettFra).isEqualTo(overstyrtDato) // min(5 jan 2024, 1 mar 2023)
     }
 
     private fun opprettSakOgBehandlingMedSøknad(

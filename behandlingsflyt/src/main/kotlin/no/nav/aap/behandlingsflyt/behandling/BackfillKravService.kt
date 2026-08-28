@@ -111,10 +111,13 @@ class BackfillKravService(
         val nyttDokumentSomSkalOvertaForEksisterendeKrav =
             when {
                 harForrigeRelevantKrav -> alleDokumenter.firstOrNull { dokument ->
-                    dokument.mottattTidspunkt.toLocalDate().isBefore(gjeldendeFørsteKrav.muligRettFra)
+                    dokument.mottattTidspunkt.toLocalDate().isBefore(gjeldendeFørsteKrav.søknadsdato.dato)
                 }
                 else -> null
             }
+
+        val overstyringFraGammeltKrav = nyttDokumentSomSkalOvertaForEksisterendeKrav
+            ?.let { gjeldendeFørsteKrav?.overstyrMuligRettFra }
 
         val nyeVurderinger = alleDokumenter.mapIndexedNotNull { index, dokument ->
             val erFørsteOgSkalOvertaSomKrav =
@@ -128,8 +131,11 @@ class BackfillKravService(
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),
                     søknadsdato = Søknadsdato(dokument.mottattTidspunkt.toLocalDate(), SøknadsdatoÅrsak.SøknadMottatt),
-                    overstyrMuligRettFra = null,
-                    muligRettFra = dokument.mottattTidspunkt.toLocalDate(),
+                    overstyrMuligRettFra = overstyringFraGammeltKrav,
+                    muligRettFra = listOfNotNull(
+                        dokument.mottattTidspunkt.toLocalDate(),
+                        overstyringFraGammeltKrav?.dato,
+                    ).min(),
                 )
                 dokument.type == InnsendingType.SØKNAD -> Tilleggsopplysning(
                     referanse = Kravreferanse.ny(),
