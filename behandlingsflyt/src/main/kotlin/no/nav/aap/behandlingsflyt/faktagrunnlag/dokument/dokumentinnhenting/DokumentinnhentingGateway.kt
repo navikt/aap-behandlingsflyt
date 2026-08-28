@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
 
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BegrensetDokumentInfoDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumenterForJournalpostParameter
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.FellesDialogmeldingDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FellesDialogmeldingDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentDokumentoversiktJournalpostResponse
 import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDialogmeldingerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
@@ -22,6 +22,6 @@ interface DokumentinnhentingGateway : Gateway {
     fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto>
     fun forhåndsvisDialogmelding(request: ForhåndsvisDialogmeldingDto): DialogmeldingForhåndsvisningDto
     fun hentDialogmeldingerForSak(request: HentDialogmeldingerForSakParams): List<FellesDialogmeldingDto>
-    fun hentDokumentoversiktForJournalpost(request: DokumenterForJournalpostParameter): List<BegrensetDokumentInfoDto>
+    fun hentDokumentoversiktForJournalpost(request: DokumenterForJournalpostParameter): HentDokumentoversiktJournalpostResponse
     fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto
 }
