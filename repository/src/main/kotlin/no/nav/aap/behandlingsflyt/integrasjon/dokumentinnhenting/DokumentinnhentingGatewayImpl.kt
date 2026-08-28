@@ -1,9 +1,13 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting
 
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BegrensetDokumentInfoDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BegrensetJournalpostDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumenterForJournalpostParameter
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.FellesDialogmeldingDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FellesDialogmeldingDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentDokumentoversiktJournalpostResponse
+import no.nav.aap.behandlingsflyt.behandling.dialogmelding.DialogmeldingLeveringStatus
 import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDialogmeldingerForSakParams
+import no.nav.aap.behandlingsflyt.behandling.dialogmelding.InnkommendeUtgaaende
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
@@ -26,6 +30,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
+import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
+import java.time.LocalDateTime
 
 /**
  * Bestiller dokumenter fra dokumentinnhenting
@@ -147,7 +153,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
     }
 
-    override fun hentDokumentoversiktForJournalpost(request: DokumenterForJournalpostParameter): List<BegrensetDokumentInfoDto> {
+    override fun hentDokumentoversiktForJournalpost(request: DokumenterForJournalpostParameter): HentDokumentoversiktJournalpostResponse {
         val journalpostId = request.journalpostId
         val request = GetRequest(
             additionalHeaders = listOf(

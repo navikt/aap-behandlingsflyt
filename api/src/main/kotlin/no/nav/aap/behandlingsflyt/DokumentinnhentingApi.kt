@@ -5,13 +5,16 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DialogmeldingMedDokumenter
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumenterForJournalpostParameter
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FellesDialogmeldingDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDialogmeldingerForSakParams
+import no.nav.aap.behandlingsflyt.behandling.dialogmelding.InnkommendeUtgaaende
 import no.nav.aap.behandlingsflyt.behandling.krav.tilSøknadUtenKravDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
@@ -47,6 +50,7 @@ import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
+import io.ktor.server.routing.RoutingContext
 
 fun NormalOpenAPIRoute.dokumentinnhentingApi(
     dataSource: DataSource,
@@ -190,48 +194,68 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 }
             }
 
-            route("/dialogmelding/{saksnummer}") {
+            route("/dialogmeldinger/{saksnummer}") {
                 authorizedGet<HentStatusLegeerklæring, List<DialogmeldingMedDokumenter>>(
                     AuthorizationParamPathConfig(
                         // TODO: Hva slags config skal denne ha?
-                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
-                            repositoryRegistry,
-                            dataSource
-                        ),
-                        behandlingPathParam = BehandlingPathParam(
-                            "saksnummer"
-                        )
+                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        applicationsOnly = false,
+                        sakPathParam = SakPathParam("saksnummer")
                     )
-                ) { param ->
-                    val saksnummer = param.saksnummer
-
+                ) { params ->
                     val dialogmeldingerFraDokumentinnhenting = dokumentinnhentingGateway.hentDialogmeldingerForSak(
-                        HentDialogmeldingerForSakParams(param.saksnummer)
+                        HentDialogmeldingerForSakParams(params.saksnummer)
                     )
 
-                    val journalpostIDer = mutableSetOf<String>()
-                    journalpostIDer.addAll(dialogmeldingerFraDokumentinnhenting.mapNotNull { it.journalpostId })
+                    val dialogmeldinger = dialogmeldingerFraDokumentinnhenting
+                        .filter { dialogmelding -> dialogmelding.journalpostId != null }
+                        .map { dialogmelding ->
+                            val response = dokumentinnhentingGateway.hentDokumentoversiktForJournalpost(
+                                DokumenterForJournalpostParameter(dialogmelding.journalpostId!!)
+                            )
+                            DialogmeldingMedDokumenter(
+                                dialogmelding = dialogmelding,
+                                dokumentIdListe = response.journalpost?.dokumenter ?: listOf()
+                            )
+                        }
 
-                    dataSource.transaction { connection ->
+                    val legeerklæringer = dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
-                        val sak = repositoryProvider.provide<SakRepository>().hent(Saksnummer.fra(saksnummer))
+                        val sak = repositoryProvider.provide<SakRepository>().hent(Saksnummer.fra(params.saksnummer))
 
                         val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-                        val legeerklæringer = mottattDokumentRepository.hentDokumenterAvType(
+
+                        mottattDokumentRepository.hentDokumenterAvType(
                             sak.id,
                             InnsendingType.LEGEERKLÆRING
                         )
-                        if (legeerklæringer.isNotEmpty()) {
-                            journalpostIDer.addAll(legeerklæringer.map {
-                                it.tilSøknadUtenKravDto().journalpostId.toString()
-                            })
-                        }
                     }
 
-                    // TODO: Lag nytt dialogmeldingobjekt for hver av disse!
-                    journalpostIDer.forEach { journalpostId ->
-                        dokumentinnhentingGateway.hentDokumentoversiktForJournalpost(DokumenterForJournalpostParameter(journalpostId))
-                    }
+                    val dialogmeldingerLegeerklæringer = legeerklæringer
+                        .map { legeerklæring ->
+                            val journalpostId = legeerklæring.tilSøknadUtenKravDto().journalpostId.toString()
+                            val dokumentoversikt = dokumentinnhentingGateway.hentDokumentoversiktForJournalpost(
+                                DokumenterForJournalpostParameter(journalpostId)
+                            )
+                            DialogmeldingMedDokumenter(
+                                dialogmelding = FellesDialogmeldingDto(
+                                    innkommendeUtgaaende = InnkommendeUtgaaende.INNKOMMENDE,
+                                    meldingFraNavn = dokumentoversikt.journalpost?.avsenderMottakerDto?.navn ?: "",
+                                    // TODO: Bruke dette tidpunktet eller det fra 'legeerklæring.mottattTidspunkt'?
+                                    opprettetTidspunkt = legeerklæring.tilSøknadUtenKravDto().mottattTidspunkt,
+                                    dokumentasjonsType = DokumentasjonType.L40,
+                                    tekst = "",
+                                    meldingStatus = null,
+                                    journalpostId = journalpostId
+                                ),
+                                dokumentIdListe =
+                                    dokumentoversikt.journalpost?.dokumenter ?: listOf()
+                            )
+                        }
+
+                    val alleDialogmeldinger = dialogmeldinger + dialogmeldingerLegeerklæringer
+
+                    respond(dialogmeldinger + dialogmeldingerLegeerklæringer)
 
                     /*
                     val dokumenterForSak = SafGateway.hentDokumenterForSak(Saksnummer(saksnummer), token())
