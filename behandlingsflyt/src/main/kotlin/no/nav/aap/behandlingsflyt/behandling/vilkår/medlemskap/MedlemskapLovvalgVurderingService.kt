@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsoppho
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
 import no.nav.aap.behandlingsflyt.lovvalgAutomatiskGjennomslipp
 import no.nav.aap.behandlingsflyt.lovvalgBosattOgIngenAndreDel1
@@ -18,8 +17,6 @@ import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel
 import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurderingOppfyltDel1
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import kotlin.enums.enumEntries
 
@@ -27,10 +24,9 @@ class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(
         grunnlag: MedlemskapLovvalgGrunnlag,
         rettighetsPeriode: Periode,
-        type: VurderingType? = null,
-        unleashGateway: UnleashGateway
+        type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
-        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag, rettighetsPeriode, unleashGateway)
+        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag, rettighetsPeriode)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any { it.resultat }
@@ -90,13 +86,12 @@ class MedlemskapLovvalgVurderingService {
     private fun vurderFørsteDelKriteier(
         grunnlag: MedlemskapLovvalgGrunnlag,
         rettighetsPeriode: Periode,
-        unleashGateway: UnleashGateway,
     ): List<TilhørighetVurdering> {
         val mottarSykepengerVurdering = mottarSykepenger(grunnlag.medlemskapArbeidInntektGrunnlag)
         val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag)
         val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
 
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp)) {
+        return if (grunnlag.vurderBosattStatusOgNorskStatsborgerskap) {
             val bosattOgNorskStatsborger =
                 harBosattStatusOgNorskStatsborgerskap(grunnlag.personopplysning, rettighetsPeriode)
             listOf(mottarSykepengerVurdering, arbeidInntektINorgeVurdering, vedtakIMedl, bosattOgNorskStatsborger)
@@ -378,13 +373,13 @@ class MedlemskapLovvalgVurderingService {
                 ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.toString() && it.erGyldigIPeriode(rettighetsPeriode) }
 
         val gyldigeStatsborgerskap =
-            grunnlag?.statsborgerskap?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
+            grunnlag?.statsborgerskap.orEmpty().filter { it.erGyldigIPeriode(rettighetsPeriode) }.map {
                 GyldigStatsborgerskap(
                     land = it.land,
                     gyldigFraOgMed = it.gyldigFraOgMed,
                     gyldigTilOgMed = it.gyldigTilOgMed
                 )
-            } ?: emptyList()
+            }
 
         val bosattOgNorskStatsborgerskapGrunnlag =
             BosattOgNorskStatsborgerskapGrunnlag(grunnlag?.status, gyldigeStatsborgerskap)

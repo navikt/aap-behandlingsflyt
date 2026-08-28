@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -69,7 +70,7 @@ class VurderLovvalgSteg private constructor(
                 // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
                 val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, kontekst.vurderingType, unleashGateway)
+                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, kontekst.vurderingType)
                     .vurder(grunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
@@ -153,7 +154,7 @@ class VurderLovvalgSteg private constructor(
             )
         )
 
-        Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, null, unleashGateway)
+        Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
             .vurder(grunnlagUtenManuellVurdering)
 
         return vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).tidslinje()
@@ -191,7 +192,9 @@ class VurderLovvalgSteg private constructor(
         val grunnlag = MedlemskapLovvalgGrunnlag(
             medlemskapArbeidInntektGrunnlag,
             brukerPersonopplysning,
-            oppgittUtenlandsOppholdGrunnlag
+            oppgittUtenlandsOppholdGrunnlag,
+            vurderBosattStatusOgNorskStatsborgerskap =
+                unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp),
         )
         return grunnlag
     }

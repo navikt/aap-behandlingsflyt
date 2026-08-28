@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -72,10 +73,11 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                         MedlemskapLovvalgGrunnlag(
                             medlemskapArbeidInntektGrunnlag,
                             brukerPersonopplysning,
-                            oppgittUtenlandsOppholdGrunnlag
+                            oppgittUtenlandsOppholdGrunnlag,
+                            vurderBosattStatusOgNorskStatsborgerskap =
+                                unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp),
                         ),
-                        sak.rettighetsperiode,
-                        unleashGateway = unleashGateway
+                        sak.rettighetsperiode
                     )
                 }
                 if (vurdering == null) {

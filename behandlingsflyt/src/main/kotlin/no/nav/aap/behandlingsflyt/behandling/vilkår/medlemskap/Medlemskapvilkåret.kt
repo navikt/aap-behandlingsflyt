@@ -10,14 +10,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 
 class Medlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode,
     private val vurderingstype: VurderingType? = null,
-    private val unleashGateway: UnleashGateway
 ) : Vilkårsvurderer<MedlemskapLovvalgGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 
@@ -67,8 +65,7 @@ class Medlemskapvilkåret(
             val kanBehandlesAutomatisk = MedlemskapLovvalgVurderingService().vurderTilhørighet(
                 grunnlag,
                 rettighetsPeriode,
-                vurderingstype,
-                unleashGateway = unleashGateway
+                vurderingstype
             ).kanBehandlesAutomatisk
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             val vurderingsResultat = VurderingsResultat(utfall, null, null)
