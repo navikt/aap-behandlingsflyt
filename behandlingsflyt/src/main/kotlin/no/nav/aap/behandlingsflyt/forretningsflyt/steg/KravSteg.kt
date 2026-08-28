@@ -152,13 +152,26 @@ class KravSteg(
     }
 
     private fun vurderHelautomatisk(kontekst: FlytKontekstMedPerioder) {
+        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        // Forrige behandling er ikke migrert – BackfillKrav håndterer den.
+        if (kravGrunnlag == null && kontekst.forrigeBehandlingId != null) return
+
         val behandlingstype = behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId)
-        
+
         val søknaderMottattIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
-                .sortedBy { it.mottattTidspunkt }
-        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
-        
+
+        // Legeerklæring kan i noen tilfeller være første dokument på en første behandlingen.
+        val legeerklæringerMottattIBehandling = if (kontekst.forrigeBehandlingId == null) {
+            mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.LEGEERKLÆRING)
+        } else {
+            emptyList()
+        }
+
+        val alleDokumenter = (søknaderMottattIBehandling + legeerklæringerMottattIBehandling)
+            .sortedBy { it.mottattTidspunkt }
+
         // Dersom vi har overstyrt rettighetsperioden i denne behandlingen, 
         // beholder vi denne som nytt krav uavhengig av mottattidspunkt for søknad.
         val overstyrteKravIDenneBehandlingen = kravGrunnlag?.vurderinger
@@ -167,17 +180,16 @@ class KravSteg(
             ?.filter { it.vurdertIBehandling == kontekst.behandlingId }
             .orEmpty().toSet()
 
-        val vurderinger =
-            søknaderMottattIBehandling.mapIndexed { index, søknad ->
-                if (behandlingstype == TypeBehandling.Førstegangsbehandling
-                    && overstyrteKravIDenneBehandlingen.isEmpty()
-                    && index == 0
-                ) {
-                    nyttKrav(kontekst.behandlingId, søknad)
-                } else {
-                    tilleggsopplysning(kontekst.behandlingId, søknad)
-                }
+        val vurderinger = alleDokumenter.mapIndexedNotNull { index, dokument ->
+            val erFørsteKrav = behandlingstype == TypeBehandling.Førstegangsbehandling
+                && overstyrteKravIDenneBehandlingen.isEmpty()
+                && index == 0
+            when {
+                erFørsteKrav -> nyttKrav(kontekst.behandlingId, dokument)
+                dokument.type == InnsendingType.SØKNAD -> tilleggsopplysning(kontekst.behandlingId, dokument)
+                else -> null // Legeerklæring som ikke er eldste dokument – ingen separat vurdering
             }
+        }
 
         val vedtatteVurderinger =
             kontekst.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()

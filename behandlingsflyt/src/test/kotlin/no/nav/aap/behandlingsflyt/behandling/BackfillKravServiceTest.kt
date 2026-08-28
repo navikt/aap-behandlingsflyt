@@ -63,10 +63,6 @@ class BackfillKravServiceTest {
         )
     }
 
-    // -------------------------------------------------------------------------
-    // Kravutledning
-    // -------------------------------------------------------------------------
-
     @Test
     fun `første søknad i sak gir RelevantKrav med riktig dato`() {
         val søknadsdato = 10 januar 2024
@@ -75,7 +71,7 @@ class BackfillKravServiceTest {
         service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
 
         val krav = InMemoryKravRepository.hent(behandling.id)
-        val relevantKrav = assertHarNøyaktigEnRelevantKrav(krav.vurderinger)
+        val relevantKrav = assertHarNøyaktigEttRelevantKrav(krav.vurderinger)
         assertThat(relevantKrav.muligRettFra).isEqualTo(søknadsdato)
         assertThat(relevantKrav.søknadsdato.dato).isEqualTo(søknadsdato)
         assertThat(relevantKrav.overstyrMuligRettFra).isNull()
@@ -103,7 +99,7 @@ class BackfillKravServiceTest {
         service.backfillBehandling(sak, revurdering, erNyesteBehandling = true)
 
         val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
-        assertHarNøyaktigEnRelevantKrav(kravRevurdering.vurderinger)
+        assertHarNøyaktigEttRelevantKrav(kravRevurdering.vurderinger)
     }
 
     @Test
@@ -170,7 +166,7 @@ class BackfillKravServiceTest {
 
         service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
 
-        val krav = assertHarNøyaktigEnRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
+        val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
         assertThat(krav.overstyrMuligRettFra).isNotNull
         assertThat(krav.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
     }
@@ -189,7 +185,7 @@ class BackfillKravServiceTest {
 
         service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
 
-        val krav = assertHarNøyaktigEnRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
+        val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
         assertThat(krav.muligRettFra).isEqualTo(overstyrtDato)
     }
 
@@ -206,11 +202,8 @@ class BackfillKravServiceTest {
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("rettighetsperiode.fom")
     }
-
-    // -------------------------------------------------------------------------
-    // Stønadsperiode
-    // -------------------------------------------------------------------------
-
+    
+    
     @Test
     fun `stønadsperiode opprettes for hvert relevant krav`() {
         val søknadsdato = 10 januar 2024
@@ -272,10 +265,60 @@ class BackfillKravServiceTest {
         assertThat(tilleggsopplysninger).hasSize(1)
         assertThat(tilleggsopplysninger.single().referanse).isEqualTo(relevantKravFørstegangsbehandling.referanse)
     }
+    
+    @Test
+    fun `behandling uten søknad men med legeerklæring bruker legeerklæringen som krav`() {
+        val legeerklæringDato = 15 januar 2024
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = legeerklæringDato)
+        leggTilLegeerklæring(behandling, legeerklæringDato)
 
-    // -------------------------------------------------------------------------
-    // Hjelpefunksjoner
-    // -------------------------------------------------------------------------
+        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, legeerklæringDato)
+        service.backfillBehandling(sakMedRettighetsperiode, behandling, erNyesteBehandling = true)
+
+        val krav = InMemoryKravRepository.hent(behandling.id)
+        val relevantKrav = assertHarNøyaktigEttRelevantKrav(krav.vurderinger)
+        assertThat(relevantKrav.muligRettFra).isEqualTo(legeerklæringDato)
+    }
+
+    @Test
+    fun `behandling uten søknad og uten legeerklæring kaster feil`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 10 januar 2024)
+
+        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, 10 januar 2024)
+        assertThatThrownBy { service.backfillBehandling(sakMedRettighetsperiode, behandling, erNyesteBehandling = true) }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("Ingen søknad eller legeerklæring")
+    }
+
+    @Test
+    fun `legeerklæring mottatt før søknad gir muligRettFra basert på legeerklæring`() {
+        val legeerklæringDato = 1 januar 2024
+        val søknadsdato = 10 januar 2024
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = legeerklæringDato)
+        leggTilLegeerklæring(behandling, legeerklæringDato)
+        leggTilSøknad(behandling, søknadsdato)
+
+        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, legeerklæringDato)
+        service.backfillBehandling(sakMedRettighetsperiode, behandling, erNyesteBehandling = true)
+
+        val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
+        assertThat(krav.muligRettFra).isEqualTo(legeerklæringDato)
+    }
+
+    @Test
+    fun `søknad mottatt før legeerklæring gir muligRettFra basert på søknad`() {
+        val søknadsdato = 1 januar 2024
+        val legeerklæringDato = 10 januar 2024
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = søknadsdato)
+        leggTilSøknad(behandling, søknadsdato)
+        leggTilLegeerklæring(behandling, legeerklæringDato)
+
+        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, søknadsdato)
+        service.backfillBehandling(sakMedRettighetsperiode, behandling, erNyesteBehandling = true)
+
+        val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
+        assertThat(krav.muligRettFra).isEqualTo(søknadsdato)
+    }
 
     private fun opprettSakOgBehandlingMedSøknad(
         søknadsdato: LocalDate,
@@ -311,6 +354,20 @@ class BackfillKravServiceTest {
         )
     }
 
+    private fun leggTilLegeerklæring(behandling: Behandling, dato: LocalDate) {
+        InMemoryMottattDokumentRepository.lagre(
+            MottattDokument(
+                referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, UUID.randomUUID().toString()),
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                mottattTidspunkt = dato.atStartOfDay(),
+                type = InnsendingType.LEGEERKLÆRING,
+                kanal = Kanal.DIGITAL,
+                strukturertDokument = null,
+            )
+        )
+    }
+
     private fun lagSakMedRettighetsperiode(sak: Sak, fom: LocalDate): Sak {
         return Sak(
             id = sak.id,
@@ -321,7 +378,7 @@ class BackfillKravServiceTest {
         )
     }
 
-    private fun assertHarNøyaktigEnRelevantKrav(vurderinger: Set<KravVurdering>): RelevantKrav {
+    private fun assertHarNøyaktigEttRelevantKrav(vurderinger: Set<KravVurdering>): RelevantKrav {
         val relevanteKrav = vurderinger.gjeldendeVurderinger().filterIsInstance<RelevantKrav>()
         assertThat(relevanteKrav).hasSize(1)
         return relevanteKrav.single()

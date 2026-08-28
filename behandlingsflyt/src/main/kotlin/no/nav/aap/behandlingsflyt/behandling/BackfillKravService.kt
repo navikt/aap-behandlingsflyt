@@ -63,15 +63,15 @@ class BackfillKravService(
             .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
             .sortedBy { it.mottattTidspunkt }
 
+        val legeerklæringer = mottattDokumentRepository
+            .hentDokumenterAvType(behandling.id, InnsendingType.LEGEERKLÆRING)
+            .sortedBy { it.mottattTidspunkt }
+
         val forrigeKrav = behandling.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }
 
-        val nyeVurderinger: Set<KravVurdering> = utledNyeVurderinger(behandling.id, søknader, forrigeKrav)
+        val nyeVurderinger: Set<KravVurdering> = utledNyeVurderinger(behandling.id, søknader, legeerklæringer, forrigeKrav)
 
         val alleVurderinger = (forrigeKrav?.vurderinger.orEmpty()) + nyeVurderinger
-        if (alleVurderinger.isEmpty()) {
-            log.info("Ingen kravvurderinger for behandling ${behandling.id.toLong()} – hopper over")
-            return BackfillBehandlingResultat.Backfilled
-        }
 
         val grunnlag = KravGrunnlag(alleVurderinger.toSet())
         val oppdatertGrunnlag = håndterRettighetsperiodevurdering(behandling.id, grunnlag)
@@ -87,9 +87,19 @@ class BackfillKravService(
     private fun utledNyeVurderinger(
         behandlingId: BehandlingId,
         søknader: List<MottattDokument>,
+        legeerklæringer: List<MottattDokument>,
         forrigeKrav: KravGrunnlag?,
     ): Set<KravVurdering> {
-        if (søknader.isEmpty()) return emptySet()
+        // Kombiner søknader og eldste legeerklæring, sorter på mottattTidspunkt.
+        // Legeerklæring kan ha kommet inn før søknad og etablerer da muligRettFra.
+        val alleDokumenter = (søknader + legeerklæringer).sortedBy { it.mottattTidspunkt }
+
+        if (alleDokumenter.isEmpty()) {
+            if (forrigeKrav != null) return emptySet() // revurdering uten nye dokumenter – arver fra forrige
+            throw IllegalStateException(
+                "Ingen søknad eller legeerklæring for behandling ${behandlingId.toLong()}"
+            )
+        }
 
         val gjeldendeFørsteKrav = forrigeKrav?.gjeldendeRelevanteKrav()?.minByOrNull { it.muligRettFra }
         val harForrigeRelevantKrav = gjeldendeFørsteKrav != null
@@ -98,43 +108,42 @@ class BackfillKravService(
             throw IllegalStateException("Forrige krav for behandling ${behandlingId.toLong()} har flere enn ett relevant krav i tidslinjen – dette er uventet")
         }
 
-        val nySøknadSomSkalOvertaForEksisterendeKrav =
+        val nyttDokumentSomSkalOvertaForEksisterendeKrav =
             when {
-                harForrigeRelevantKrav -> søknader.firstOrNull { søknad ->
-                    gjeldendeFørsteKrav.muligRettFra.let {
-                        søknad.mottattTidspunkt.toLocalDate().isBefore(it)
-                    }
+                harForrigeRelevantKrav -> alleDokumenter.firstOrNull { dokument ->
+                    dokument.mottattTidspunkt.toLocalDate().isBefore(gjeldendeFørsteKrav.muligRettFra)
                 }
-
                 else -> null
             }
 
-        val nyeVurderinger = søknader.mapIndexed { index, søknad ->
-            if (index == 0 && (!harForrigeRelevantKrav || nySøknadSomSkalOvertaForEksisterendeKrav?.referanse == søknad.referanse)) {
-                RelevantKrav(
+        val nyeVurderinger = alleDokumenter.mapIndexedNotNull { index, dokument ->
+            val erFørsteOgSkalOvertaSomKrav =
+                index == 0 && (!harForrigeRelevantKrav || nyttDokumentSomSkalOvertaForEksisterendeKrav?.referanse == dokument.referanse)
+            when {
+                erFørsteOgSkalOvertaSomKrav -> RelevantKrav(
                     referanse = Kravreferanse.ny(),
-                    journalpostId = søknad.referanse.asJournalpostId,
+                    journalpostId = dokument.referanse.asJournalpostId,
                     vurdertAv = SYSTEMBRUKER,
                     begrunnelse = "Automatisk vurdering",
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),
-                    søknadsdato = Søknadsdato(søknad.mottattTidspunkt.toLocalDate(), SøknadsdatoÅrsak.SøknadMottatt),
+                    søknadsdato = Søknadsdato(dokument.mottattTidspunkt.toLocalDate(), SøknadsdatoÅrsak.SøknadMottatt),
                     overstyrMuligRettFra = null,
-                    muligRettFra = søknad.mottattTidspunkt.toLocalDate(),
+                    muligRettFra = dokument.mottattTidspunkt.toLocalDate(),
                 )
-            } else {
-                Tilleggsopplysning(
+                dokument.type == InnsendingType.SØKNAD -> Tilleggsopplysning(
                     referanse = Kravreferanse.ny(),
-                    journalpostId = søknad.referanse.asJournalpostId,
+                    journalpostId = dokument.referanse.asJournalpostId,
                     vurdertAv = SYSTEMBRUKER,
                     begrunnelse = "Automatisk vurdering",
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),
                 )
+                else -> null // Legeerklæring som ikke er eldste dokument – ingen separat vurdering
             }
         }.toSet()
 
-        val skalNedgraderEksisterendeKravTilTilleggsopplysning = nySøknadSomSkalOvertaForEksisterendeKrav != null
+        val skalNedgraderEksisterendeKravTilTilleggsopplysning = nyttDokumentSomSkalOvertaForEksisterendeKrav != null
 
         return if (skalNedgraderEksisterendeKravTilTilleggsopplysning && gjeldendeFørsteKrav != null) {
             nyeVurderinger + Tilleggsopplysning(
