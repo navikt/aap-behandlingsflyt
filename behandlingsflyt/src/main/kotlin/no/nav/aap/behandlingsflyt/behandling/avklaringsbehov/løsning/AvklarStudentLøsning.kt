@@ -38,7 +38,8 @@ class AvklarStudentLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<StudentRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.somStudenttidslinje() ?: Tidslinje<Unit>()

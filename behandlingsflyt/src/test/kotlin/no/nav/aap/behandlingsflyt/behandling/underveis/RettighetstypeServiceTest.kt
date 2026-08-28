@@ -7,12 +7,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRettighetstypeRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
@@ -92,13 +90,7 @@ class RettighetstypeServiceTest {
         InMemoryVilkårsresultatRepository.lagre(BehandlingId(2), avslagPåAlderIGår)
         InMemoryVilkårsresultatRepository.lagre(BehandlingId(3), avslagPåAlderIDag)
 
-        val rettighetstypeService = RettighetstypeService(
-            InMemoryRettighetstypeRepository,
-            InMemoryVilkårsresultatRepository,
-            InMemoryUnderveisRepository,
-            InMemorySakRepository,
-            InMemoryBehandlingRepository
-        )
+        val rettighetstypeService = RettighetstypeService(inMemoryRepositoryProvider, minimalGatewayProvider {  })
 
 
         assertThat(

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
@@ -19,14 +20,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.desember
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -315,10 +313,10 @@ class VedtakslengdeServiceTest {
         VedtakslengdeService(
             vedtakslengdeRepository = vedtakslengdeRepository,
             underveisRepository = underveisRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             rettighetstypeService = rettighetstypeService,
             stansOpphørRepository = stansOpphørRepository,
             clock = clock,
+            virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository, mockk()),
         )
 
     /**

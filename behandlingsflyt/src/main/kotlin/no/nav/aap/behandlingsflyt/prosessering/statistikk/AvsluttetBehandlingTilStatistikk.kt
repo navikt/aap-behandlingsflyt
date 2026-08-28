@@ -131,6 +131,10 @@ class AvsluttetBehandlingTilStatistikk(
 
         val vedtakTidspunkt = vedtakService.vedtakstidspunkt(behandling)
 
+        if (vedtakTidspunkt == null) {
+            log.warn("Fant ikke vedtakstidspunkt for behandling ${behandling.referanse.referanse} selv om behandlingen har status ${behandling.status()}. Sak: ${sak.saksnummer}")
+        }
+
         val tilkjentYtelse = mapTilkjentYtelse(behandling)
 
         if (tilkjentYtelse == null) {

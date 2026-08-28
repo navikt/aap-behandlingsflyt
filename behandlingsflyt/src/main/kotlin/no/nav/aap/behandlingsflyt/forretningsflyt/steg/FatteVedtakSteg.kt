@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisRegel
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -146,7 +145,7 @@ class FatteVedtakSteg(
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
-                virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),
+                virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
             )
         }
 

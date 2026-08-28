@@ -15,7 +15,7 @@ import kotlin.enums.enumEntries
 data class ManuellVurderingForLovvalgMedlemskap(
     val lovvalg: LovvalgDto,
     val medlemskap: MedlemskapDto?,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     val vurdertDato: LocalDateTime,
     val overstyrt: Boolean = false,
     override val fom: LocalDate,
@@ -23,7 +23,7 @@ data class ManuellVurderingForLovvalgMedlemskap(
     override val vurdertIBehandling: BehandlingId,
 ) : PeriodisertVurdering {
     override val opprettet: Instant = vurdertDato.atZone(ZoneId.of("Europe/Oslo")).toInstant()
-    
+
     fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
         val lovvalgsLand = lovvalg.lovvalgsEØSLandEllerLandMedAvtale
         return lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumEntries<EØSLandEllerLandMedAvtale>().map { it }
@@ -37,7 +37,8 @@ data class ManuellVurderingForLovvalgMedlemskap(
 data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
     override val fom: LocalDate,
     override val tom: LocalDate?,
-    override val begrunnelse: String,
+
+    @Deprecated("Bruk begrunnelse i lovvag/medlemskap istedet") override val begrunnelse: String,
     val lovvalg: LovvalgDto,
     val medlemskap: MedlemskapDto?,
 ) : LøsningForPeriode {

@@ -9,6 +9,10 @@ data class VurderingerForSamordning(
     val vurderteSamordningerData: List<SamordningVurderingData>
 ) {
     fun valider() {
+        if (begrunnelse.isNullOrBlank()) {
+            throw UgyldigForespørselException("Begrunnelse må være satt for samordning med andre folketrygdytelser")
+        }
+
         vurderteSamordningerData.groupBy { it.ytelseType }.forEach { (_, samordninger) ->
             // VERIFISER INGEN OVERLAPP
             samordninger

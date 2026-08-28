@@ -42,7 +42,8 @@ class AvklarOvergangArbeidLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<OvergangArbeidRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger().orEmpty()

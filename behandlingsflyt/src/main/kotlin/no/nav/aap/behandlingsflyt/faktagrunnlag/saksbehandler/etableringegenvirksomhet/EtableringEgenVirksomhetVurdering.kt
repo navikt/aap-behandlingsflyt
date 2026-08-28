@@ -17,7 +17,7 @@ data class EtableringEgenVirksomhetVurdering(
     val kanFøreTilSelvforsørget: Boolean?,
     val utviklingsPerioder: List<Periode>,
     val oppstartsPerioder: List<Periode>,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
     override val fom: LocalDate,

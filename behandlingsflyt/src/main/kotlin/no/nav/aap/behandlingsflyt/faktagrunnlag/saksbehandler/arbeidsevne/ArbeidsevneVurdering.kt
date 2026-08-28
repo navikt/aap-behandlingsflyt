@@ -16,7 +16,7 @@ data class ArbeidsevneVurdering(
     override val tom: LocalDate?,
     override val vurdertIBehandling: BehandlingId,
     val opprettetTid: LocalDateTime,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
 ) : PeriodisertVurdering {
     fun toArbeidsevneVurderingData(): ArbeidsevneVurderingData {
         return ArbeidsevneVurderingData(

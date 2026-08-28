@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
@@ -157,7 +156,7 @@ class BrevUtlederService(
             it.brukerHarFåttVedtakOmUføretrygd in setOf(
                 UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
                 UføreSøknadVedtakResultat.JA_INNVILGET_FULL
-            ) && it.vurdertAv == SYSTEMBRUKER && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
+            ) && it.erAutomatiskVurdert() && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
         }
 
         when (behandling.typeBehandling()) {
@@ -574,6 +573,8 @@ class BrevUtlederService(
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
             beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(grunnlag, minstesats) else null,
+            årsakBeregningstidspunkt = beregningstidspunktVurdering?.årsak,
+            årsakYtterligereNedsattTidspunkt = beregningstidspunktVurdering?.ytterligereNedsattÅrsak,
         )
     }
 
@@ -594,6 +595,8 @@ class BrevUtlederService(
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
             beregningsutfallKategori = if (Miljø.erDev()) utledBeregningsutfallKategori(vinnende, minstesats) else null,
+            årsakBeregningstidspunkt = beregningstidspunktVurdering?.årsak,
+            årsakYtterligereNedsattTidspunkt = beregningstidspunktVurdering?.ytterligereNedsattÅrsak,
         )
     }
 

@@ -43,7 +43,8 @@ class EtableringEgenVirksomhetLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<EtableringEgenVirksomhetRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderingerSomTidslinje().orEmpty()

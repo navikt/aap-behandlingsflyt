@@ -63,7 +63,9 @@ class UnderveisService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
-    private val rettighetstypeRepository: RettighetstypeRepository
+    private val rettighetstypeRepository: RettighetstypeRepository,
+    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val kvoteService: KvoteService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider, gatewayProvider),
@@ -80,12 +82,13 @@ class UnderveisService(
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
-        rettighetstypeRepository = repositoryProvider.provide()
+        rettighetstypeRepository = repositoryProvider.provide(),
+        virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
+        kvoteService = KvoteService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val kvoteService = KvoteService()
 
     companion object {
         private val regelset = listOf(
@@ -215,7 +218,7 @@ class UnderveisService(
         }
 
         val startdatoForBehandlingen =
-            VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
+            virkningstidspunktUtleder.utledVirkningsTidspunkt(behandlingId)
                 ?: sak.rettighetsperiode.fom
 
         /**

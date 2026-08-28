@@ -25,6 +25,7 @@ class RettighetstypeService(
     private val underveisRepository: UnderveisRepository,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
+    private val kvoteService: KvoteService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         rettighetstypeRepository = repositoryProvider.provide(),
@@ -32,6 +33,7 @@ class RettighetstypeService(
         underveisRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
+        kvoteService = KvoteService(repositoryProvider, gatewayProvider),
     )
 
     fun harRettInnenforPeriode(behandlingId: BehandlingId, periode: Periode): Boolean {
@@ -71,7 +73,7 @@ class RettighetstypeService(
     private fun utledRettighetstidslinjeBakoverkompatibel(behandlingId: BehandlingId): Tidslinje<RettighetsType> {
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
         val underveisperioder = underveisRepository.hentHvisEksisterer(behandlingId)?.somTidslinje()
-        val utlededeRettighetstyper = vurderRettighetstypeOgKvoter(vilkårsresultat, KvoteService().beregn())
+        val utlededeRettighetstyper = vurderRettighetstypeOgKvoter(vilkårsresultat, kvoteService.beregn())
             .filter { it.verdi is KvoteOk }
             .mapNotNull { it.rettighetsType }
             .komprimer()

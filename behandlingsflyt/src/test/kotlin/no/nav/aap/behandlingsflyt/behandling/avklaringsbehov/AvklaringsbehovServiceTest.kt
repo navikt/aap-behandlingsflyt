@@ -85,6 +85,7 @@ class AvklaringsbehovServiceTest {
                         override val tom = null
                         override val vurdertIBehandling = revurdering.id
                         override val opprettet = Instant.now()
+                        override val vurdertAv = Bruker("Z000")
                     })
                 )
             }

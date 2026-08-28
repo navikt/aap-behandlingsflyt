@@ -65,7 +65,8 @@ class ProsesserBehandlingService(
     fun triggProsesserBehandling(
         sakId: SakId,
         behandlingId: BehandlingId,
-        parameters: List<Pair<String, String>> = emptyList()
+        parameters: List<Pair<String, String>> = emptyList(),
+        prioritet: Int = Prioritet.NORMAL
     ) {
         val eksisterendeJobber = flytJobbRepository.hentJobberForBehandling(behandlingId.toLong())
             .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
@@ -77,9 +78,9 @@ class ProsesserBehandlingService(
             return
         }
 
-        val jobbInput = JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
-            sakId.toLong(), behandlingId.toLong()
-        )
+        val jobbInput = JobbInput(jobb = ProsesserBehandlingJobbUtfører)
+            .forBehandling(sakId.toLong(), behandlingId.toLong())
+            .medPrioritet(prioritet)
             .medCallId()
 
         parameters.forEach {
@@ -99,7 +100,7 @@ class ProsesserBehandlingService(
             }
         }
 
-        triggProsesserBehandling(behandling.sakId, behandling.id)
+        triggProsesserBehandling(sakId = behandling.sakId, behandlingId = behandling.id, prioritet = Prioritet.LAV)
         log.info("Prosessererte behandling ${behandling.referanse} atomært")
 
         val åpenBehandling = opprettetBehandling.åpenBehandling

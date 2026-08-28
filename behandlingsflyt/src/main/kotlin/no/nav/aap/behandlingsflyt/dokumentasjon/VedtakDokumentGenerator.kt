@@ -1,31 +1,46 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
+import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
@@ -58,14 +73,29 @@ class VedtakDokumentGenerator(
     private val meldepliktRepository: MeldepliktRepository,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
     private val barnetilleggRepository: BarnetilleggRepository,
+    private val barnRepository: BarnRepository,
     private val samordningRepository: SamordningRepository,
+    private val samordningUføreRepository: SamordningUføreRepository,
+    private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
+    private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
+    private val samordningVurderingRepository: SamordningVurderingRepository,
     private val rettighetstypeRepository: RettighetstypeRepository,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
+    private val tjenestepensjonRefusjonskravRepository: TjenestepensjonRefusjonsKravVurderingRepository,
+    private val barnepensjonRepository: BarnepensjonRepository,
+    private val avslag11_27Repository: Avslag11_27Repository,
+    private val sykestipendRepository: SykestipendRepository,
+    private val inntektsbortfallRepository: InntektsbortfallRepository,
+    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
+    private val aktivitetsplikt11_9Repository: Aktivitetsplikt11_9Repository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
+    private val kravRepository: KravRepository,
+    private val vurderRettighetsperiodeRepository: VurderRettighetsperiodeRepository,
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val medlemskapArbeidInntektForutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
 ) {
@@ -89,14 +119,29 @@ class VedtakDokumentGenerator(
         meldepliktRepository = repositoryProvider.provide(),
         stønadsperiodeRepository = repositoryProvider.provide(),
         barnetilleggRepository = repositoryProvider.provide(),
+        barnRepository = repositoryProvider.provide(),
         samordningRepository = repositoryProvider.provide(),
+        samordningUføreRepository = repositoryProvider.provide(),
+        samordningArbeidsgiverRepository = repositoryProvider.provide(),
+        samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
+        samordningVurderingRepository = repositoryProvider.provide(),
         rettighetstypeRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
         refusjonkravRepository = repositoryProvider.provide(),
+        tjenestepensjonRefusjonskravRepository = repositoryProvider.provide(),
+        barnepensjonRepository = repositoryProvider.provide(),
+        avslag11_27Repository = repositoryProvider.provide(),
+        sykestipendRepository = repositoryProvider.provide(),
+        inntektsbortfallRepository = repositoryProvider.provide(),
+        aktivitetsplikt11_7Repository = repositoryProvider.provide(),
+        aktivitetsplikt11_9Repository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
+        vurderRettighetsperiodeRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
     )
@@ -161,14 +206,31 @@ class VedtakDokumentGenerator(
             meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandlingId),
             stønadsperiodeGrunnlag = stønadsperiodeRepository.hentHvisEksisterer(behandlingId),
             barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandlingId),
+            barnetilleggVurderinger = barnRepository.hentVurderteBarnHvisEksisterer(behandlingId),
             samordningGrunnlag = samordningRepository.hentHvisEksisterer(behandlingId),
+            samordningUføreGrunnlag = samordningUføreRepository.hentHvisEksisterer(behandlingId),
+            samordningArbeidsgiverGrunnlag = samordningArbeidsgiverRepository.hentHvisEksisterer(behandlingId),
+            samordningAndreStatligeYtelserGrunnlag =
+                samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandlingId),
+            samordningVurderingGrunnlag = samordningVurderingRepository.hentHvisEksisterer(behandlingId),
             rettighetstypeGrunnlag = rettighetstypeRepository.hentHvisEksisterer(behandlingId),
             institusjonsoppholdGrunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId),
             sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandlingId),
             refusjonkravVurderinger = refusjonkravRepository.hentHvisEksisterer(behandlingId),
+            tjenestepensjonRefusjonskravVurdering =
+                tjenestepensjonRefusjonskravRepository.hentHvisEksisterer(behandlingId),
+            barnepensjonGrunnlag = barnepensjonRepository.hentHvisEksisterer(behandlingId),
+            avslag11_27Grunnlag = avslag11_27Repository.hentHvisEksisterer(behandlingId),
+            sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(behandlingId),
+            inntektsbortfallVurdering = inntektsbortfallRepository.hentHvisEksisterer(behandlingId),
+            aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId),
+            aktivitetsplikt11_9Grunnlag = aktivitetsplikt11_9Repository.hentHvisEksisterer(behandlingId),
             overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId),
             manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId),
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
+            kravGrunnlag = kravRepository.hentHvisEksisterer(behandlingId),
+            rettighetsperiodeVurdering = vurderRettighetsperiodeRepository.hentVurdering(behandlingId),
+            lovvalgMedlemskapGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId),
             forutgåendeMedlemskapGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(
                 behandlingId
             ),

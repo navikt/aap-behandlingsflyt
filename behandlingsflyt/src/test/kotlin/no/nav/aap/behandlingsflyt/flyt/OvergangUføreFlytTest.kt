@@ -3,14 +3,12 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSamordningUføreLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -216,11 +214,9 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
-        assertTidslinje(
-            vilkårsresultat.rettighetstypeTidslinje().begrensetTil(underveisPeriode),
-            Periode(søknadstidspunkt, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
-                assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
-            },
+        behandling.assertRettighetstype(
+            Periode(søknadstidspunkt, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to
+                RettighetsType.VURDERES_FOR_UFØRETRYGD
         )
     }
 
@@ -406,7 +402,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER && it.fom == overgangUførDato }
+                ?.singleOrNull { it.erAutomatiskVurdert() && it.fom == overgangUførDato }
 
             assertThat(vurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
             assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER)
@@ -420,7 +416,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val automatiskVurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER && it.fom == overgangUførDato }
+                ?.singleOrNull { it.erAutomatiskVurdert() && it.fom == overgangUførDato }
 
             assertThat(automatiskVurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
             assertThat(automatiskVurdering.fom).isEqualTo(overgangUførDato)
@@ -514,7 +510,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             val vurdering = OvergangUføreRepositoryImpl(connection)
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
-                ?.singleOrNull { it.vurdertAv == SYSTEMBRUKER && it.fom == overgangUførDato }
+                ?.singleOrNull { it.erAutomatiskVurdert() && it.fom == overgangUførDato }
             assertThat(vurdering).isNotNull
             assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
         }

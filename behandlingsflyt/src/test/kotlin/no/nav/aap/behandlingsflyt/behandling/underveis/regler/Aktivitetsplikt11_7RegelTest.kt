@@ -6,9 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.februar
@@ -85,8 +83,6 @@ class Aktivitetsplikt11_7RegelTest {
     }
 
     private fun vurder(grunnlag: Aktivitetsplikt11_7Grunnlag, fraDato: LocalDate): Tidslinje<Vilkårsvurdering> {
-        val vilkårsvurdering = Vilkårsresultat()
-        Aktivitetspliktvilkåret(vilkårsvurdering).vurder(AktivitetspliktvilkåretGrunnlag(grunnlag, fraDato))
-        return vilkårsvurdering.finnVilkår(Vilkårtype.AKTIVITETSPLIKT).tidslinje()
+        return Aktivitetspliktvilkåret.vurder(AktivitetspliktvilkåretGrunnlag(grunnlag, fraDato))
     }
 }

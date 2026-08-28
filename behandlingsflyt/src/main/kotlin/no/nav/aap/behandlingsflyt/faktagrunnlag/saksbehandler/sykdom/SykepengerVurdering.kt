@@ -13,7 +13,7 @@ data class SykepengerVurdering(
     val harRettPå: Boolean,
     override val vurdertIBehandling: BehandlingId,
     val grunn: SykepengerGrunn? = null,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime,
     override val fom: LocalDate,
     override val tom: LocalDate? = null,

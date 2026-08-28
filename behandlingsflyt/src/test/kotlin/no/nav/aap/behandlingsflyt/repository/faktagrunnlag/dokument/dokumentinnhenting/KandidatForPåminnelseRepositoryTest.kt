@@ -50,7 +50,7 @@ internal class KandidatForPåminnelseRepositoryTest {
                 status = Status.UTREDES
             )
 
-            // avklaringsbehov opprettes i dag og behandling skal bli kandidat for påminnelse om tre uker og en dag
+            // avklaringsbehov opprettes i dag, skal bare plukkes om bestillingOpprettetDato er i dag
             val avklaringsbehov1 = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling1.id)
             avklaringsbehov1.leggTil(
                 Definisjon.BESTILL_LEGEERKLÆRING,
@@ -60,29 +60,24 @@ internal class KandidatForPåminnelseRepositoryTest {
                 frist = LocalDate.now(clockTreUkerOgEnDagFremITid).plusDays(14)
             )
 
-            val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockTreUkerOgEnDagFremITid),
-                LocalDate.now()
-
-            )
-            assertThat(kandidaterTreUkerFraIDag).contains(behandling1.referanse)
-
-
-            val clockToUkerFremITid = fixedClock(LocalDate.now().plusWeeks(2))
-            val kandidaterToUkerFraIDag =
+            val behandlingerMedBestillingOpprettetIDag =
                 KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                    LocalDate.now(
-                        clockToUkerFremITid
-                    ), LocalDate.now().minusDays(1)
-                )
-            assertThat(kandidaterToUkerFraIDag).doesNotContain(behandling1.referanse)
+                    LocalDate.now()
 
-            val clockFireUkerFremITid = fixedClock(LocalDate.now().plusWeeks(4))
-            val kandidaterFireUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockFireUkerFremITid),
-                LocalDate.now().plusWeeks(1)
-            )
-            assertThat(kandidaterFireUkerFraIDag).doesNotContain(behandling1.referanse)
+                )
+            assertThat(behandlingerMedBestillingOpprettetIDag).contains(behandling1.referanse)
+
+            val behandlingerMedBestillingOpprettetIGår =
+                KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
+                    LocalDate.now().minusDays(1)
+                )
+            assertThat(behandlingerMedBestillingOpprettetIGår).doesNotContain(behandling1.referanse)
+
+            val behandlingerMedBestillingOpprettetIMorgen =
+                KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
+                    LocalDate.now().plusDays(1)
+                )
+            assertThat(behandlingerMedBestillingOpprettetIMorgen).doesNotContain(behandling1.referanse)
         }
     }
 
@@ -113,7 +108,6 @@ internal class KandidatForPåminnelseRepositoryTest {
 
 
             val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockTreUkerOgEnDagFremITid),
                 LocalDate.now()
             )
             assertThat(kandidaterTreUkerFraIDag).contains(behandling1.referanse)
@@ -140,7 +134,7 @@ internal class KandidatForPåminnelseRepositoryTest {
                 frist = LocalDate.now(clockTreUkerOgEnDagFremITid).plusDays(14)
             )
 
-            // svar på legeerklæring om fire dager
+            // svar på legeerklæring er nyere enn bestilling
             BehandlingRepositoryImpl(connection).oppdaterVurderingsbehovOgÅrsak(
                 behandling = behandling1,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
@@ -157,7 +151,6 @@ internal class KandidatForPåminnelseRepositoryTest {
 
             // forespørsel er besvart, behandling skal ikke plukkes som kandidat
             val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
-                LocalDate.now(clockTreUkerOgEnDagFremITid),
                 LocalDate.now()
             )
             assertThat(kandidaterTreUkerFraIDag).doesNotContain(behandling1.referanse)

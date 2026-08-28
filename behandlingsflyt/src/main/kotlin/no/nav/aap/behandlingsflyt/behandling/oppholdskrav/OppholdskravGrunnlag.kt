@@ -94,7 +94,7 @@ data class OppholdskravPeriodisertVurdering(
     val land: String?,
     val oppfylt: Boolean,
     val begrunnelse: String,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     override val vurdertIBehandling: BehandlingId,
     val opprettetTid: LocalDateTime,
 ) : PeriodisertVurdering {

@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
@@ -37,7 +38,6 @@ import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRettighetstypeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStansOpphørRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
@@ -103,7 +103,7 @@ class VedtakslengdeStegTest {
 
         InMemoryRettighetstypeRepository.lagre(
             behandlingId = inneværendeBehandling.id,
-            rettighetstypeTidslinje = vedtattVilkårsresultat.rettighetstypeTidslinje(),
+            rettighetstypeTidslinje = vurderRettighetsType(vedtattVilkårsresultat, KvoteService.standardKvoter),
             faktagrunnlag = RettighetstypeFaktagrunnlag(vedtattVilkårsresultat),
             versjon = "1",
         )
@@ -119,17 +119,8 @@ class VedtakslengdeStegTest {
 
         val steg = VedtakslengdeSteg(
             vedtakslengdeService = VedtakslengdeService(
-                vedtakslengdeRepository = InMemoryVedtakslengdeRepository,
-                underveisRepository = InMemoryUnderveisRepository,
-                vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-                rettighetstypeService = RettighetstypeService(
-                    InMemoryRettighetstypeRepository,
-                    InMemoryVilkårsresultatRepository,
-                    InMemoryUnderveisRepository,
-                    InMemorySakRepository,
-                    InMemoryBehandlingRepository
-                ),
-                stansOpphørRepository = InMemoryStansOpphørRepository,
+                inMemoryRepositoryProvider,
+                gatewayProvider,
                 clock = fixedClock(dagensDato),
             ),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),

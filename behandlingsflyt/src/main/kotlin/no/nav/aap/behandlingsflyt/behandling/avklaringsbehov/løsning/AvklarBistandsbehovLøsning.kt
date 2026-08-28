@@ -36,7 +36,8 @@ class AvklarBistandsbehovLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<BistandRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.somBistandsvurderingstidslinje() ?: Tidslinje<Unit>()

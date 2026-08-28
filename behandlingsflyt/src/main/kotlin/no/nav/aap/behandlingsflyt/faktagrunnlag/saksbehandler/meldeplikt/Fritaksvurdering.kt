@@ -13,7 +13,7 @@ data class Fritaksvurdering(
     override val fom: LocalDate,
     override val tom: LocalDate? = null,
     val begrunnelse: String,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     val opprettetTid: LocalDateTime,
     override val vurdertIBehandling: BehandlingId,
 ) : PeriodisertVurdering {

@@ -1,11 +1,11 @@
 [versions]
 ktor = "3.5.2"
-komponenter = "2.0.142"
+komponenter = "2.0.146"
 tilgang = "1.0.235"
 utbetaling = "0.0.135"
-brev = "0.0.279"
+brev = "0.0.280"
 meldekort = "0.0.237"
-apiIntern = "0.0.101"
+apiIntern = "0.0.102"
 dokumentinnhenting = "0.0.4"
 junit = "6.1.3"
 testcontainers = "2.0.5"
@@ -43,11 +43,9 @@ dokumentinnhentingKontrakt = { module = "no.nav.aap.dokumentinnhenting:kontrakt"
 
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
 jacksonAnnotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }
-jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.22.1" }
-jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.1" }
-
+jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.22.2" }
+jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.2" }
 hikariCp = { module = "com.zaxxer:HikariCP", version = "7.1.0" }
-postgresql = { module = "org.postgresql:postgresql" }
 
 opentelemetryInstrumentationAnnotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.30.0" }
 opentelemetryLogbackMdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version = "2.30.0-alpha" }
@@ -55,7 +53,7 @@ opentelemetryKtor = { module = "io.opentelemetry.instrumentation:opentelemetry-k
 
 joseJwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
 
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.2" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.3" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.17.0" }
 julToSlf4J = { module = "org.slf4j:jul-to-slf4j", version = "2.0.18" }
@@ -75,7 +73,7 @@ tabletest = { module = "org.tabletest:tabletest-junit", version = "1.2.2" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainersPostgres = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
 testcontainersKafka = { module = "org.testcontainers:testcontainers-kafka", version.ref = "testcontainers" }
-mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "6.0.0" }
+mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "6.0.1" }
 mockk = { module = "io.mockk:mockk", version = "1.14.11" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }

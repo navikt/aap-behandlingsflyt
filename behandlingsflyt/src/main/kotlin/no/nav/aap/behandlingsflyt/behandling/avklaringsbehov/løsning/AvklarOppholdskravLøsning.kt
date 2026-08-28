@@ -33,7 +33,8 @@ class AvklarOppholdskravLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<OppholdskravGrunnlagRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.tidslinje() ?: Tidslinje<Unit>()

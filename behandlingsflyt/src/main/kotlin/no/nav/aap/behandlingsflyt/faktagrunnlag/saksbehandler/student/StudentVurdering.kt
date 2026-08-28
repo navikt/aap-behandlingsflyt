@@ -20,7 +20,7 @@ data class StudentVurdering(
     val harBehovForBehandling: Boolean?,
     val avbruttStudieDato: LocalDate?,
     val avbruddMerEnn6Måneder: Boolean?,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
     override val vurdertIBehandling: BehandlingId,
     val diagnose: Diagnose? = null,

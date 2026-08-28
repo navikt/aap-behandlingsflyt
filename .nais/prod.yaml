@@ -6,6 +6,7 @@ metadata:
   labels:
     team: aap
     sub: behandlingsflyt
+    systemkatalog.nav.no/system: SK-268
 spec:
   image: {{image}}
   replicas:
@@ -43,6 +44,8 @@ spec:
           - name: pgaudit.log
             value: "write,ddl,role"
           - name: "pgaudit.log_parameter"
+            value: "on"
+          - name: "pgaudit.log_relation"
             value: "on"
   terminationGracePeriodSeconds: 30
   liveness:

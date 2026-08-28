@@ -99,8 +99,6 @@ dependencies {
     implementation(project(":repository"))
     implementation(libs.hikariCp)
 
-    runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
-
     implementation(libs.opentelemetryLogbackMdc)
     implementation(libs.opentelemetryKtor)
     implementation(libs.avro)

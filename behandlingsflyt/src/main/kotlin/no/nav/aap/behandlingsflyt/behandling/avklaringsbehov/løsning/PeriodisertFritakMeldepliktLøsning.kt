@@ -41,7 +41,8 @@ class PeriodisertFritakMeldepliktLøsning(
 
     override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<MeldepliktRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger().orEmpty()
