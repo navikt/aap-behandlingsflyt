@@ -165,4 +165,124 @@ class MedlemskapLovvalgVurderingServiceTest {
         )
         assertEquals(false, resultat.kanBehandlesAutomatisk)
     }
+
+    @Test
+    fun `bosatt person med gyldig norsk statsborgerskap behandles automatisk`() {
+        val rettighetsperiode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31))
+        val grunnlag = grunnlagUtenAndreGjennomslippskriterier(
+            statsborgerskap = listOf(
+                Statsborgerskap(
+                    land = EØSLandEllerLandMedAvtale.NOR.name,
+                    gyldigFraOgMed = LocalDate.of(2026, 1, 1),
+                    gyldigTilOgMed = LocalDate.of(2026, 12, 31),
+                )
+            )
+        )
+
+        val resultat = service.vurderTilhørighet(
+            grunnlag,
+            rettighetsperiode,
+            unleashGateway = unleash,
+        )
+
+        assertEquals(true, resultat.kanBehandlesAutomatisk)
+        val vurdering = resultat.tilhørighetVurdering.single {
+            it.opplysning == "Bosatt i Norge med norsk statsborgerskap"
+        }
+        assertEquals(true, vurdering.resultat)
+    }
+
+    @Test
+    fun `bosatt person uten norsk statsborgerskap behandles ikke automatisk`() {
+        val rettighetsperiode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31))
+        val grunnlag = grunnlagUtenAndreGjennomslippskriterier(
+            statsborgerskap = listOf(Statsborgerskap(EØSLandEllerLandMedAvtale.SWE.name))
+        )
+
+        val resultat = service.vurderTilhørighet(
+            grunnlag,
+            rettighetsperiode,
+            unleashGateway = unleash,
+        )
+
+        assertEquals(false, resultat.kanBehandlesAutomatisk)
+        val vurdering = resultat.tilhørighetVurdering.single {
+            it.opplysning == "Bosatt i Norge med norsk statsborgerskap"
+        }
+        assertEquals(false, vurdering.resultat)
+    }
+
+    @Test
+    fun `bosatt og norsk statsborgerskap utenfor rettighetsperioden gir ikke gjennomslipp`() {
+        val rettighetsperiode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31))
+        val grunnlag = grunnlagUtenAndreGjennomslippskriterier(
+            statsborgerskap = listOf(
+                Statsborgerskap(
+                    land = EØSLandEllerLandMedAvtale.NOR.name,
+                    gyldigFraOgMed = LocalDate.of(2024, 1, 1),
+                    gyldigTilOgMed = LocalDate.of(2025, 12, 31),
+                )
+            )
+        )
+
+        val resultat = service.vurderTilhørighet(
+            grunnlag,
+            rettighetsperiode,
+            unleashGateway = unleash,
+        )
+
+        assertEquals(false, resultat.kanBehandlesAutomatisk)
+        val vurdering = resultat.tilhørighetVurdering.single {
+            it.opplysning == "Bosatt i Norge med norsk statsborgerskap"
+        }
+        assertEquals(false, vurdering.resultat)
+        assertEquals(
+            emptyList<GyldigStatsborgerskap>(),
+            vurdering.bosattStatusOgNorskStatsborgerskap?.statsborgerskap,
+        )
+    }
+
+    @Test
+    fun `norsk statsborger uten bosattstatus får ikke gjennomslipp`() {
+        val rettighetsperiode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31))
+        val grunnlag = grunnlagUtenAndreGjennomslippskriterier(
+            personStatus = PersonStatus.ikkeBosatt,
+            statsborgerskap = listOf(Statsborgerskap(EØSLandEllerLandMedAvtale.NOR.name)),
+        )
+
+        val resultat = service.vurderTilhørighet(
+            grunnlag,
+            rettighetsperiode,
+            unleashGateway = unleash,
+        )
+
+        assertEquals(false, resultat.kanBehandlesAutomatisk)
+        val vurdering = resultat.tilhørighetVurdering.single {
+            it.opplysning == "Bosatt i Norge med norsk statsborgerskap"
+        }
+        assertEquals(false, vurdering.resultat)
+    }
+
+    private fun grunnlagUtenAndreGjennomslippskriterier(
+        personStatus: PersonStatus = PersonStatus.bosatt,
+        statsborgerskap: List<Statsborgerskap>,
+    ) = MedlemskapLovvalgGrunnlag(
+        medlemskapArbeidInntektGrunnlag = MedlemskapArbeidInntektGrunnlag(
+            medlemskapGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
+            inntekterINorgeGrunnlag = emptyList(),
+            arbeiderINorgeGrunnlag = emptyList(),
+        ),
+        personopplysning = Personopplysning(
+            fødselsdato = Fødselsdato(LocalDate.of(1990, 1, 1)),
+            status = personStatus,
+            statsborgerskap = statsborgerskap,
+        ),
+        nyeSoknadGrunnlag = UtenlandsOppholdData(
+            harBoddINorgeSiste5År = true,
+            harArbeidetINorgeSiste5År = true,
+            arbeidetUtenforNorgeFørSykdom = false,
+            iTilleggArbeidUtenforNorge = false,
+            utenlandsOpphold = null,
+        ),
+    )
 }
