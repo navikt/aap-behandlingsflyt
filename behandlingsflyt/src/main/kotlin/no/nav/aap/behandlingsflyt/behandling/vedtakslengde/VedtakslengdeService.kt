@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
@@ -31,7 +31,7 @@ class VedtakslengdeService(
     private val rettighetstypeService: RettighetstypeService,
     private val stansOpphørRepository: StansOpphørRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
-    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val virkningstidspunktService: VirkningstidspunktService,
 ) {
     companion object {
         const val ANTALL_DAGER_FØR_UTVIDELSE = 28L
@@ -46,7 +46,7 @@ class VedtakslengdeService(
         underveisRepository = repositoryProvider.provide(),
         rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
         stansOpphørRepository = repositoryProvider.provide(),
-        virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
+        virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider),
         clock = clock,
     )
 
@@ -308,7 +308,7 @@ class VedtakslengdeService(
         rettighetsperiode: Periode,
     ): Periode {
         val startdatoForBehandlingen =
-            virkningstidspunktUtleder.utledVirkningsTidspunkt(behandlingId)
+            virkningstidspunktService.finnVirkningstidspunkt(behandlingId)
                 ?: rettighetsperiode.fom
 
         /**
