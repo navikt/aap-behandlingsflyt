@@ -108,6 +108,7 @@ dependencies {
     implementation(libs.motorTestUtils)
     testImplementation(libs.bundles.junit)
     testImplementation(kotlin("test"))
+    testImplementation(testFixtures(libs.infrastructure))
 
     testImplementation(libs.kafkaClients)
 
