@@ -5,22 +5,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.tilUføreVedtakDto
 import no.nav.aap.behandlingsflyt.pip.PipService
-import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
-import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldekortJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.BehandlingFlytStoppetHendelseTilStatistikk
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.tilKontrakt
@@ -68,7 +66,7 @@ class BehandlingHendelseServiceImpl(
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
         val vurderingsbehov = behandling.vurderingsbehov()
         val mottattDokumenter = hentMottattDokumenter(vurderingsbehov, behandling)
-        val uføreVedtak = hentUføreVedtak(behandling)
+        val uføreVedtak = hentUføreVedtak(behandling);
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -86,7 +84,6 @@ class BehandlingHendelseServiceImpl(
             uføreVedtak = uføreVedtak,
             mottattDokumenter = mottattDokumenter,
             reserverTil = hentReservertTil(behandling.id)?.ident,
-            reserverTilPerAvklaringsbehov = finnReserverTilBrukerPerAvklaringsbehov(behandling.id),
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
@@ -98,10 +95,10 @@ class BehandlingHendelseServiceImpl(
          * Da er hele behandlingen i praksis løst helautomatisk
          */
         if (avklaringsbehovene.alle().isNotEmpty()) {
-            flytJobbRepository.leggTil(
-                JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
-                    .forBehandling(sak.id.id, behandling.id.id)
-            )
+                flytJobbRepository.leggTil(
+                    JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
+                        .forBehandling(sak.id.id, behandling.id.id)
+                )
         }
 
         flytJobbRepository.leggTil(
@@ -129,14 +126,10 @@ class BehandlingHendelseServiceImpl(
         )
 
         // Sender meldekort til API-intern
-        flytJobbRepository.leggTil(
-            DatadelingMeldekortJobbUtfører.nyJobb(sak.id, behandling.id).medPrioritet(Prioritet.LAV)
-        )
+        flytJobbRepository.leggTil(DatadelingMeldekortJobbUtfører.nyJobb(sak.id, behandling.id).medPrioritet(Prioritet.LAV))
 
         if (behandling.typeBehandling().erYtelsesbehandling()) {
-            flytJobbRepository.leggTil(
-                MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id).medPrioritet(Prioritet.LAV)
-            )
+            flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id).medPrioritet(Prioritet.LAV))
         }
     }
 
@@ -166,30 +159,6 @@ class BehandlingHendelseServiceImpl(
         ?: reserverTilBrukerSøknadTrukket
     }
 
-    private fun finnReserverTilBrukerPerAvklaringsbehov(behandlingId: BehandlingId): Map<String, String> = buildMap {
-        val oppfølgingsoppgavedokument =
-            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
-
-        oppfølgingsoppgavedokument?.reserverTilBruker?.ident?.let { ident ->
-            when (oppfølgingsoppgavedokument.hvemSkalFølgeOpp) {
-                HvemSkalFølgeOpp.Lokalkontor -> put(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR.kode.name, ident)
-                HvemSkalFølgeOpp.NasjonalEnhet -> put(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY.kode.name, ident)
-            }
-        }
-
-        finnReserverTilBrukerGittVurderingsbehov(
-            behandlingId,
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
-        )
-            ?.ident?.let { put(Definisjon.AVBRYT_REVURDERING.kode.name, it) }
-
-        finnReserverTilBrukerGittVurderingsbehov(
-            behandlingId,
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET
-        )
-            ?.ident?.let { put(Definisjon.VURDER_TREKK_AV_SØKNAD.kode.name, it) }
-    }
-
     private fun hentBehandlingOpprettetAv(behandlingId: BehandlingId): Bruker? {
         val eldsteManuellVurderingDokument = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
             behandlingId,
@@ -209,13 +178,13 @@ class BehandlingHendelseServiceImpl(
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
         )
 
-        val dokument = nyÅrsakTilBehandlingDokumenter.filter { dokument ->
+        val dokument = nyÅrsakTilBehandlingDokumenter.find { dokument ->
             val melding = dokument.ustrukturerteData()?.let { DefaultJsonMapper.fromJson<Melding>(it) }
             melding is NyÅrsakTilBehandlingV0 &&
                     melding.årsakerTilBehandling.contains(
                         vurderingsbehov
                     )
-        }.maxByOrNull { it.mottattTidspunkt }
+        }
 
         return (dokument
             ?.ustrukturerteData()
@@ -225,10 +194,8 @@ class BehandlingHendelseServiceImpl(
     }
 
     private fun hentUføreVedtak(behandling: Behandling): UførevedtakDto? {
-        val uføreDokument =
-            dokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.UFØRE_VEDTAK_HENDELSE).toList()
-                .maxByOrNull { it.opprettetTid }
-        return uføreDokument?.strukturerteData<UførevedtakV0>()?.data?.tilUføreVedtakDto()
+        val uføreDokument = dokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.UFØRE_VEDTAK_HENDELSE).toList().maxByOrNull { it.opprettetTid };
+        return uføreDokument?.strukturerteData<UførevedtakV0>()?.data?.tilUføreVedtakDto();
     }
 
     private fun hentMottattDokumenter(

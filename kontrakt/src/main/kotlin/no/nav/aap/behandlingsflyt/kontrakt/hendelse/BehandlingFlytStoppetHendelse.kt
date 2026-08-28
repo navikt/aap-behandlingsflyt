@@ -30,9 +30,7 @@ public data class BehandlingFlytStoppetHendelse(
     val uføreVedtak: UførevedtakDto?,
     val relevanteIdenterPåBehandling: List<String>?,
     val mottattDokumenter: List<MottattDokumentDto>,
-    @Deprecated("Kan fjernes når oppgave har byttet til å bruke reserverTilPerAvklaringsbehov")
     val reserverTil: String? = null,
-    val reserverTilPerAvklaringsbehov: Map<String, String>,
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,
     val versjon: String,

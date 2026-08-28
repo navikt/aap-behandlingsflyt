@@ -6,21 +6,15 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
@@ -40,12 +34,10 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
-import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class BehandlingHendelseServiceTest {
     private val sakService = mockk<SakService>()
@@ -75,15 +67,7 @@ class BehandlingHendelseServiceTest {
 
         val avklaringsbehovene = mockk<Avklaringsbehovene>()
 
-        every { avklaringsbehovene.alle() } returns listOf(
-            Avklaringsbehov(
-                1L,
-                Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-                emptyList(),
-                StegType.VURDER_LOVVALG,
-                true
-            )
-        )
+        every { avklaringsbehovene.alle() } returns listOf(Avklaringsbehov(1L, Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, emptyList(), StegType.VURDER_LOVVALG, true))
         every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
 
         // ACT
@@ -98,7 +82,7 @@ class BehandlingHendelseServiceTest {
         }
 
         assertThat(calls.size).isEqualTo(5)
-        val jobbTyperOpprettet = calls.map { it.type() }
+        val jobbTyperOpprettet = calls.map {it.type()}
         assertThat(jobbTyperOpprettet).contains(VarsleOppgaveOmHendelseJobbUtFører.type)
         assertThat(jobbTyperOpprettet).contains(StatistikkJobbUtfører.type)
         assertThat(jobbTyperOpprettet).contains(DatadelingMeldePerioderOgSakStatusJobbUtfører.type)
@@ -132,103 +116,12 @@ class BehandlingHendelseServiceTest {
         }
 
         assertThat(calls.size).isEqualTo(4)
-        val jobbTyperOpprettet = calls.map { it.type() }
+        val jobbTyperOpprettet = calls.map {it.type()}
         assertThat(jobbTyperOpprettet).doesNotContain(VarsleOppgaveOmHendelseJobbUtFører.type)
         assertThat(jobbTyperOpprettet).contains(StatistikkJobbUtfører.type)
         assertThat(jobbTyperOpprettet).contains(DatadelingMeldePerioderOgSakStatusJobbUtfører.type)
         assertThat(jobbTyperOpprettet).contains(DatadelingMeldekortJobbUtfører.type)
         assertThat(jobbTyperOpprettet).contains(MeldeperiodeTilMeldekortBackendJobbUtfører.type)
-    }
-
-
-    @Test
-    fun `Hvis vurderingsbehov opprettet flere ganger på samme sak, utled reserverTil basert på senest mottatte dokument`() {
-        val (behandlingHendelseService, behandling) = settOppFlyt()
-
-        val avklaringsbehovene = mockk<Avklaringsbehovene>()
-
-        every { avklaringsbehovene.alle() } returns listOf(
-            Avklaringsbehov(
-                1L,
-                Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-                emptyList(),
-                StegType.VURDER_LOVVALG,
-                true
-            )
-        )
-        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
-
-        // To trekk søknad-"dokumenter"
-        every {
-            mottattDokumentRepository.hentDokumenterAvType(
-                any<BehandlingId>(),
-                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
-            )
-        } returns setOf(
-            MottattDokument(
-                referanse = InnsendingReferanse(
-                    type = InnsendingReferanse.Type.MANUELL_OPPRETTELSE,
-                    verdi = "123"
-                ),
-                sakId = SakId(123),
-                behandlingId = behandling.id,
-                mottattTidspunkt = LocalDateTime.now().minusDays(1),
-                opprettetTid = LocalDateTime.now().minusDays(1),
-                type = InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
-                kanal = Kanal.DIGITAL,
-                status = Status.MOTTATT,
-                strukturertDokument = StrukturertDokument(
-                    data = NyÅrsakTilBehandlingV0(
-                        årsakerTilBehandling = listOf(Vurderingsbehov.SØKNAD_TRUKKET),
-                        behandlingReferanse = behandling.referanse.toString(),
-                        reserverTilBruker = "Veileder",
-                        beskrivelse = "Søknad skal kanskje trekkes"
-                    )
-                )
-            ),
-            MottattDokument(
-                referanse = InnsendingReferanse(
-                    type = InnsendingReferanse.Type.MANUELL_OPPRETTELSE,
-                    verdi = "123"
-                ),
-                sakId = SakId(123),
-                behandlingId = behandling.id,
-                mottattTidspunkt = LocalDateTime.now().minusHours(2),
-                opprettetTid = LocalDateTime.now().minusHours(2),
-                type = InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
-                kanal = Kanal.DIGITAL,
-                status = Status.MOTTATT,
-                strukturertDokument = StrukturertDokument(
-                    data = NyÅrsakTilBehandlingV0(
-                        årsakerTilBehandling = listOf(Vurderingsbehov.SØKNAD_TRUKKET),
-                        behandlingReferanse = behandling.referanse.toString(),
-                        reserverTilBruker = "Veileder2",
-                        beskrivelse = "Søknad skal kanskje trekkes"
-                    )
-                )
-            ),
-        )
-
-        behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
-
-        val calls = mutableListOf<JobbInput>()
-        verify {
-            flytJobbRepository.leggTil(capture(calls))
-        }
-
-        // reserverTil skal settes til veileder som opprettet avklaringsbehovet sist
-        val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(calls.first().payload())
-        assertThat(hendelse.referanse.referanse).isEqualTo(behandling.referanse.referanse)
-        assertThat(hendelse.reserverTil).isEqualTo("Veileder2")
-        assertThat(hendelse.reserverTilPerAvklaringsbehov).isEqualTo(
-            mutableMapOf(
-                Pair(
-                    Definisjon.VURDER_TREKK_AV_SØKNAD.kode.name,
-                    "Veileder2"
-                )
-            )
-        )
-
     }
 
     private fun settOppFlyt(): Pair<BehandlingHendelseServiceImpl, Behandling> {
