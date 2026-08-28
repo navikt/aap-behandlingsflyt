@@ -3,9 +3,9 @@
 
 plugins {
     base
-    `maven-publish`
     id("org.cyclonedx.bom") version "3.4.1"
     id("aap.conventions")
+    id("aap.publishing")
 }
 
 // Produser en SBOM (Software Bill of Materials) og last den opp som et Maven-artifact
@@ -40,17 +40,6 @@ publishing {
                 extension = "xml"
             }
             artifactId = "sbom"
-        }
-    }
-
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/navikt/aap-behandlingsflyt")
-            credentials {
-                username = "x-access-token"
-                password = System.getenv("GITHUB_TOKEN")
-            }
         }
     }
 }
