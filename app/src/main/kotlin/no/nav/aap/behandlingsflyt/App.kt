@@ -350,7 +350,7 @@ internal fun Application.server(
                 påminnelseApi(fellesDataSource, repositoryRegistry)
                 mottattHendelseApi(fellesDataSource, repositoryRegistry)
                 underveisVurderingerApi(fellesDataSource, repositoryRegistry)
-                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry)
+                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 lovvalgMedlemskapGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 samordningGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
                 forutgåendeMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)

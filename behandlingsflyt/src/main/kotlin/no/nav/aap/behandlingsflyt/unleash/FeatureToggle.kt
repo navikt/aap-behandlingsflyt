@@ -33,7 +33,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Avslag11_27,
     SkalViseAlleSykdomssteg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
-    HoppOverKvalitetssikringVedIngenEndring
+    HoppOverKvalitetssikringVedIngenEndring,
+    BosattStatsborgerskapGjennomslipp
     ;
 
     override fun key(): String = name
