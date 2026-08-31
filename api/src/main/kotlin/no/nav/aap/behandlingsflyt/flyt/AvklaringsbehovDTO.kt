@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -12,6 +13,7 @@ import java.time.LocalDateTime
 
 data class AvklaringsbehovDTO(
     val definisjon: Definisjon,
+    val gradBehov: GradBehovDTO?,
     val status: Status,
     val endringer: List<EndringDTO>,
     /** Periodene er sortert og har ikke overlapp. */
@@ -20,6 +22,19 @@ data class AvklaringsbehovDTO(
     constructor(avklaringsbehov: Avklaringsbehov, kravdato: LocalDate) : this(
         definisjon = avklaringsbehov.definisjon,
         status = avklaringsbehov.status(),
+        gradBehov = when (avklaringsbehov.definisjon.type) {
+            Definisjon.BehovType.MANUELT_PÅKREVD ->
+                GradBehovDTO.PÅKREVD
+            Definisjon.BehovType.MANUELT_FRIVILLIG
+                    if avklaringsbehov.definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
+                -> GradBehovDTO.FRIVILLIG
+
+            Definisjon.BehovType.MANUELT_FRIVILLIG,
+            Definisjon.BehovType.OVERSTYR,
+            Definisjon.BehovType.BREV,
+            Definisjon.BehovType.BREV_VENTEPUNKT,
+            Definisjon.BehovType.VENTEPUNKT -> null
+        },
         endringer = avklaringsbehov.historikk.map { endring ->
             EndringDTO(
                 status = endring.status,
@@ -42,6 +57,11 @@ data class AvklaringsbehovDTO(
                         .map { it.verdi }
                 }
     )
+}
+
+enum class GradBehovDTO {
+    PÅKREVD,
+    FRIVILLIG,
 }
 
 data class AvklaringsbehovPeriodeDTO(

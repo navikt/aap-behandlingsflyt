@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.type.Periode
@@ -13,6 +14,7 @@ import java.time.LocalDateTime
 class Avklaringsbehov(
     val id: Long,
     val definisjon: Definisjon,
+    val behov: GradBehov?,
     historikk: List<Endring> = emptyList(),
     val funnetISteg: StegType,
     private var kreverToTrinn: Boolean?

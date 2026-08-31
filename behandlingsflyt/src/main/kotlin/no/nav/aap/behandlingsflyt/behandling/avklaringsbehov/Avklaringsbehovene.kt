@@ -347,7 +347,8 @@ class Avklaringsbehovene(
                         )
                     ),
                     funnetISteg = definisjon.løsesISteg,
-                    kreverToTrinn = null
+                    kreverToTrinn = null,
+                    behov = null,
                 )
             }.toMutableList()
         list.addAll(eksisterendeBehov)
