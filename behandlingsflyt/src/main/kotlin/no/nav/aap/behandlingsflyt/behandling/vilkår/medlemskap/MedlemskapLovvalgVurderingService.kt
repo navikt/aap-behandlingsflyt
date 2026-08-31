@@ -83,7 +83,7 @@ class MedlemskapLovvalgVurderingService {
     }
 
     // Minst én må oppfylles
-    private fun vurderFørsteDelKriteier(
+    private fun vurderFørsteDelKriterier(
         grunnlag: MedlemskapLovvalgGrunnlag,
         rettighetsPeriode: Periode,
     ): List<TilhørighetVurdering> {
