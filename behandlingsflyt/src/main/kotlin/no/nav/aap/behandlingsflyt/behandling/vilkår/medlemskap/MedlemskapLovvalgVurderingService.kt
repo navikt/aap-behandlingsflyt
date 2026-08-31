@@ -26,7 +26,7 @@ class MedlemskapLovvalgVurderingService {
         rettighetsPeriode: Periode,
         type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
-        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag, rettighetsPeriode)
+        val førsteDelVurderinger = vurderFørsteDelKriterier(grunnlag, rettighetsPeriode)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any { it.resultat }
