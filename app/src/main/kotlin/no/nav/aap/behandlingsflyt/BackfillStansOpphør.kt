@@ -117,8 +117,9 @@ class BackfillStansOpphør(
             RettighetstypeService(repositoryProvider, gatewayProvider)
         val grunnlag = stansOpphørGrunnlagRepository.hentHvisEksisterer(behandling.id)
 
-        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
-            && behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)
+        if (behandling.status().erÅpen() &&
+            behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling &&
+            behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)
         ) {
             log.info(
                 "Ingen backfill for behandling {}: førstegangsbehandling og ikke nådd steget",
@@ -142,8 +143,9 @@ class BackfillStansOpphør(
             }
 
 
-            if (behandling.typeBehandling() == TypeBehandling.Revurdering
-                && behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)
+            if (behandling.status().erÅpen () &&
+                behandling.typeBehandling() == TypeBehandling.Revurdering &&
+                behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)
             ) {
                 val forrigeGrunnlag =
                     requireNotNull(stansOpphørGrunnlagRepository.hentHvisEksisterer(behandling.forrigeBehandlingId!!)) {
