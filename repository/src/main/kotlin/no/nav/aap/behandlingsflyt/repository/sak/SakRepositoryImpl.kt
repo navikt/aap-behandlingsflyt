@@ -86,6 +86,16 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
+    fun backfillSakstatusDatadelingHentSakIderMellom(fra: Long, til: Long): List<SakId> {
+        return connection.queryList("SELECT id FROM SAK WHERE id BETWEEN ? AND ?") {
+            setParams {
+                setLong(1, fra)
+                setLong(2, til)
+            }
+            setRowMapper { row -> SakId(row.getLong("id")) }
+        }
+    }
+
     override fun finnSiste(antall: Int): List<Sak> {
         return connection.queryList("SELECT * FROM SAK ORDER BY id DESC LIMIT ?") {
             setParams {
