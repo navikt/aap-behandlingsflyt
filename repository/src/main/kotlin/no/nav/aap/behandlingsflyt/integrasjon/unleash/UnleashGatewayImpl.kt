@@ -44,6 +44,19 @@ object UnleashGatewayImpl : UnleashGateway {
         ) ?: false
 
     @WithSpan
+    override fun isEnabled(
+        featureToggle: FeatureToggle,
+        typeBrev: TypeBrev
+    ): Boolean =
+        unleash?.isEnabled(
+            featureToggle.key(),
+            UnleashContext.builder()
+                .addProperty("typeBrev", typeBrev.name)
+                .build()
+        )
+            ?: false
+
+    @WithSpan
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
         val variant = unleash?.getVariant(featureToggle.key()) ?: return ""
         return if (variant.isEnabled && variant.name == variantName) {

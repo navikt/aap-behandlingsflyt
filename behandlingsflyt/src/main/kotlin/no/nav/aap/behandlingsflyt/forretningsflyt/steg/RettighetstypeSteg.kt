@@ -56,7 +56,7 @@ class RettighetstypeSteg(
 
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
-        val kvoter = kvoteService.beregn()
+        val kvoter = kvoteService.gjeldendeKvoter()
         val kvotevurdering = vurderRettighetstypeOgKvoter(vilkårsresultat, kvoter)
 
         val rettighetstypeJustertForKvote =

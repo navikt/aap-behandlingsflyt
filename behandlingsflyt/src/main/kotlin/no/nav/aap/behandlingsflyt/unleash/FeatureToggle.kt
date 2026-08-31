@@ -8,6 +8,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
     NyBrevbyggerV3,
+    BrevtyperTilNyBrevbygger,
     Under18,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,

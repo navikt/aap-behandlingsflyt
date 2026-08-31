@@ -11,21 +11,22 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_11_2("§ 11-2"),
 
     FOLKETRYGDLOVEN_11_3("§ 11-3"),
-    FOLKETRYGDLOVEN_11_4("§ 11-4"), // TODO: Hva klages på her?
+    FOLKETRYGDLOVEN_11_4("§ 11-4"),
+    FOLKETRYGDLOVEN_11_4_INNTEKTSBORTFALL("§ 11-4 2. ledd"),
     FOLKETRYGDLOVEN_11_5("§ 11-5"),
     FOLKETRYGDLOVEN_11_6("§ 11-6"),
 
     FOLKETRYGDLOVEN_11_7("§ 11-7"),
-    FOLKETRYGDLOVEN_11_8("§ 11-8"), // TODO: Mangler
+    FOLKETRYGDLOVEN_11_8("§ 11-8"), 
     FOLKETRYGDLOVEN_11_9("§ 11-9"),
     FOLKETRYGDLOVEN_11_10_FRITAK("§ 11-10 Fritak meldeplikt"),
 
     FOLKETRYGDLOVEN_11_10_MELDEPLIKT("§ 11-10 Meldeplikt"), // TODO: Underveis - Mangler mulighet til å korrigere meldedato
-    FOLKETRYGDLOVEN_11_12("§ 11-12"), // TODO: Hva klages på  her?
+    FOLKETRYGDLOVEN_11_12("§ 11-12"), 
     FOLKETRYGDLOVEN_11_13("§ 11-13"),
 
-    FOLKETRYGDLOVEN_11_14("§ 11-14"), // TODO: Mangler revurdering student - må evt. sende ny søknad?
-    FOLKETRYGDLOVEN_11_15("§ 11-15"), // TODO: Mangler steg
+    FOLKETRYGDLOVEN_11_14("§ 11-14"),
+    FOLKETRYGDLOVEN_11_15("§ 11-15"),
     FOLKETRYGDLOVEN_11_17("§ 11-17"),
     FOLKETRYGDLOVEN_11_18("§ 11-18"),
     FOLKETRYGDLOVEN_11_19("§ 11-19"),
@@ -39,7 +40,7 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_11_26("§ 11-26"),
     FOLKETRYGDLOVEN_11_27("§ 11-27"),
     FOLKETRYGDLOVEN_11_28("§ 11-28"),
-    FOLKETRYGDLOVEN_11_29("§ 11-29"), // TODO: Hva kan klages på her?
+    FOLKETRYGDLOVEN_11_29_SYKESTIPEND("§ 11-29"), // TODO: Hva kan klages på her?
 
     // FOLKETRYGDLOVEN_11_30("§ 11-30"), // Ikke relevant
     FOLKETRYGDLOVEN_11_31("§ 11-31"), // TODO: Hva kan klages på her?
@@ -67,17 +68,19 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_2 -> listOf(Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
             FOLKETRYGDLOVEN_11_3 -> listOf(Vurderingsbehov.OPPHOLDSKRAV)
 
+            FOLKETRYGDLOVEN_11_4_INNTEKTSBORTFALL -> listOf(Vurderingsbehov.REVURDER_INNTEKTSBORTFALL)
+
             FOLKETRYGDLOVEN_11_5,
             FOLKETRYGDLOVEN_11_6,
             FOLKETRYGDLOVEN_11_10_FRITAK,
-            FOLKETRYGDLOVEN_11_13,
-            FOLKETRYGDLOVEN_11_17,
-            FOLKETRYGDLOVEN_11_18,
+            FOLKETRYGDLOVEN_11_13, // TODO: Få vurderingsbehov for 11-13 til å funke dersom 11-5 og 11-6 er i "feil tilstand" for at 11-13 er relevant (se 11-18 og 11-17)
             FOLKETRYGDLOVEN_11_23_UUTNYTTET_ARB_EVNE
                 -> listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
             FOLKETRYGDLOVEN_11_10_MELDEPLIKT -> listOf(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN)
 
+            FOLKETRYGDLOVEN_11_17 -> listOf(Vurderingsbehov.OVERGANG_ARBEID)
+            FOLKETRYGDLOVEN_11_18 -> listOf(Vurderingsbehov.OVERGANG_UFORE)
             FOLKETRYGDLOVEN_11_19 -> listOf(Vurderingsbehov.REVURDER_BEREGNING)
 
             FOLKETRYGDLOVEN_11_20 -> listOf(Vurderingsbehov.BARNETILLEGG)
@@ -100,20 +103,20 @@ enum class Hjemmel(val hjemmel: String) {
                 Vurderingsbehov.VURDER_RETTIGHETSPERIODE
             )
 
-            FOLKETRYGDLOVEN_11_4,
-            FOLKETRYGDLOVEN_11_7,
-            FOLKETRYGDLOVEN_11_8,
-            FOLKETRYGDLOVEN_11_9,
-            FOLKETRYGDLOVEN_11_12,
-            FOLKETRYGDLOVEN_11_14,
-            FOLKETRYGDLOVEN_11_15,
-            FOLKETRYGDLOVEN_11_23_OVERGNG_ARB,
-            FOLKETRYGDLOVEN_11_29,
-            FOLKETRYGDLOVEN_11_31,
-            FOLKETRYGDLOVEN_21_3,
-            FOLKETRYGDLOVEN_21_7,
-            FOLKETRYGDLOVEN_22_15,
-            FOLKETRYGDLOVEN_22_17 -> throw IllegalStateException("Ingen ÅrsakTilBehandling-mapping er implementert for klage på hjemmel $name ($hjemmel).")
+            FOLKETRYGDLOVEN_11_14 -> listOf(Vurderingsbehov.REVURDER_STUDENT)
+            FOLKETRYGDLOVEN_11_15 -> listOf(Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET)
+            FOLKETRYGDLOVEN_11_23_OVERGNG_ARB -> listOf(Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING)
+            FOLKETRYGDLOVEN_11_29_SYKESTIPEND -> listOf(Vurderingsbehov.REVURDER_SYKESTIPEND)
+            
+            FOLKETRYGDLOVEN_11_4, // TODO: Hva klages på her?
+            FOLKETRYGDLOVEN_11_8, // TODO: Ikke implementert
+            FOLKETRYGDLOVEN_11_12, // TODO: Ikke implementert
+            FOLKETRYGDLOVEN_11_31, // TODO: Hva skal trigges her? Revurder krav?
+            FOLKETRYGDLOVEN_21_3, // Ikke aktuell?
+            FOLKETRYGDLOVEN_21_7, // Ikke aktuell?
+            FOLKETRYGDLOVEN_22_15, // TODO: Opprett tilbakekreving
+            FOLKETRYGDLOVEN_22_17 // Ikke aktuell?
+                -> throw IllegalStateException("Ingen ÅrsakTilBehandling-mapping er implementert for klage på hjemmel $name ($hjemmel).")
         }
     }
 }

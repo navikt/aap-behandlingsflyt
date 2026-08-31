@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.Innhe
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
 data class SykdomGrunnlagResponse(
@@ -31,6 +32,7 @@ data class SykdomsvurderingResponse(
 
     /** Hvis null, så gjelder den fra starten. */
     val begrunnelse: String,
+    val vurderingenGjelderFra: LocalDate?, @Deprecated("Bruk fom")
     val harNedsattArbeidsevne: ArbeidsevneNedsattValg?,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
@@ -68,6 +70,7 @@ data class SykdomsvurderingResponse(
             tom: LocalDate? = sykdomsvurdering.vurderingenGjelderTil
         ) = SykdomsvurderingResponse(
             begrunnelse = sykdomsvurdering.begrunnelse,
+            vurderingenGjelderFra = sykdomsvurdering.vurderingenGjelderFra,
             harNedsattArbeidsevne = sykdomsvurdering.harNedsattArbeidsevne,
             harSkadeSykdomEllerLyte = sykdomsvurdering.harSkadeSykdomEllerLyte,
             erSkadeSykdomEllerLyteVesentligdel = sykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel,
