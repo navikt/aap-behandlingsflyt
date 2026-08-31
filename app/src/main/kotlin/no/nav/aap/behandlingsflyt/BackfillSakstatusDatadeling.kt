@@ -7,8 +7,10 @@ import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldePeriode
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.motor.FlytJobbRepositoryImpl
@@ -33,6 +35,7 @@ class BackfillSakstatusDatadeling(
 ) {
     private val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
+    @Suppress("TooGenericExceptionCaught")
     fun kjør() {
         Thread.ofVirtual()
             .name("backfillSakstatusDatadeling")
@@ -79,27 +82,7 @@ class BackfillSakstatusDatadeling(
         for (batch in sakIder.chunked(BATCH_STØRRELSE)) {
             for (sakId in batch) {
                 dataSource.transaction { connection ->
-                    val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val trukketSøknadService = TrukketSøknadService(repositoryProvider)
-                    val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
-                    val flytJobbRepository = FlytJobbRepositoryImpl(connection)
-
-                    val behandlingerSomTrengerBackfill = behandlingRepository
-                        .hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
-                        .filter {
-                            trukketSøknadService.søknadErTrukket(it.id) || avbrytRevurderingService.revurderingErAvbrutt(it.id)
-                        }
-
-                    for (behandling in behandlingerSomTrengerBackfill) {
-                        flytJobbRepository.leggTil(
-                            JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører)
-                                .medPayload(behandling.referanse)
-                                .forBehandling(sakId.toLong(), behandling.id.toLong())
-                                .medPrioritet(Prioritet.BAKGRUNN)
-                        )
-                        antallOpprettedeJobber += 1
-                    }
+                    antallOpprettedeJobber += enqueueBackfillJobberForSak(connection, sakId)
                 }
             }
             log.info("Opprettet {} jobber for backfill av sakstatus-datadeling så langt", antallOpprettedeJobber)
@@ -115,5 +98,34 @@ class BackfillSakstatusDatadeling(
     companion object {
         private const val BATCH_STØRRELSE = 100
         private val BATCH_PAUSE = Duration.ofSeconds(30)
+
+        /**
+         * Finner behandlinger med trukket søknad eller avbrutt revurdering for den gitte saken,
+         * og legger til jobber som sender oppdatert sakstatus til api-intern for hver av dem.
+         * Returnerer antall jobber som ble opprettet.
+         */
+        internal fun enqueueBackfillJobberForSak(connection: DBConnection, sakId: SakId): Int {
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val trukketSøknadService = TrukketSøknadService(repositoryProvider)
+            val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
+            val flytJobbRepository = FlytJobbRepositoryImpl(connection)
+
+            val behandlingerSomTrengerBackfill = behandlingRepository
+                .hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
+                .filter {
+                    trukketSøknadService.søknadErTrukket(it.id) || avbrytRevurderingService.revurderingErAvbrutt(it.id)
+                }
+
+            for (behandling in behandlingerSomTrengerBackfill) {
+                flytJobbRepository.leggTil(
+                    JobbInput(jobb = DatadelingMeldePerioderOgSakStatusJobbUtfører)
+                        .medPayload(behandling.referanse)
+                        .forBehandling(sakId.toLong(), behandling.id.toLong())
+                        .medPrioritet(Prioritet.BAKGRUNN)
+                )
+            }
+            return behandlingerSomTrengerBackfill.size
+        }
     }
 }
