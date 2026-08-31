@@ -302,7 +302,7 @@ internal fun Application.server(
                 institusjonApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseApi(fellesDataSource, repositoryRegistry)
-                foreslaaVedtakApi(fellesDataSource, repositoryRegistry)
+                foreslaaVedtakApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 foreslaaVedtakVedtakslengdeApi(fellesDataSource, repositoryRegistry)
                 trukketSøknadGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 avbrytRevurderingGrunnlagApi(fellesDataSource, repositoryRegistry)
