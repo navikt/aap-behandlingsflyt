@@ -28,7 +28,7 @@ class FastsettMeldeperiodeStegTest {
 
 
         var aktuellPeriode = Periode(10 mars 2025, 10 april 2025)
-        steg.oppdaterFørsteMeldeperiode(behandlingId, aktuellPeriode)
+        steg.oppdaterFastsattDag(behandlingId, aktuellPeriode.fom)
         InMemoryMeldeperiodeRepository.hentMeldeperioder(behandlingId, aktuellPeriode).also {
             assertEquals(
                 listOf(
@@ -44,7 +44,7 @@ class FastsettMeldeperiodeStegTest {
             aktuellPeriode.fom.minusDays(7),
             aktuellPeriode.tom,
         )
-        steg.oppdaterFørsteMeldeperiode(behandlingId, aktuellPeriode)
+        steg.oppdaterFastsattDag(behandlingId, aktuellPeriode.fom)
         InMemoryMeldeperiodeRepository.hentMeldeperioder(behandlingId, aktuellPeriode).also {
             assertEquals(
                 listOf(
@@ -61,7 +61,7 @@ class FastsettMeldeperiodeStegTest {
             aktuellPeriode.fom,
             aktuellPeriode.tom.plusDays(14),
         )
-        steg.oppdaterFørsteMeldeperiode(behandlingId, aktuellPeriode)
+        steg.oppdaterFastsattDag(behandlingId, aktuellPeriode.fom)
         InMemoryMeldeperiodeRepository.hentMeldeperioder(behandlingId, aktuellPeriode).also {
             assertEquals(
                 listOf(
@@ -87,9 +87,9 @@ class FastsettMeldeperiodeStegTest {
         val behandlingId = BehandlingId(Random().nextLong())
         val meldeperiodeFraStart = Periode(startMeldeperiode, startMeldeperiode)
         val nyMeldeperiodeMedUlikSluttdato = Periode(startMeldeperiode, startMeldeperiode.plusDays(14))
-        InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandlingId, meldeperiodeFraStart)
-        steg.oppdaterFørsteMeldeperiode(behandlingId, nyMeldeperiodeMedUlikSluttdato)
-        val persistertMeldeperiode = InMemoryMeldeperiodeRepository.hentFørsteMeldeperiode(behandlingId)
-        assertThat(persistertMeldeperiode).isEqualTo(meldeperiodeFraStart)
+        InMemoryMeldeperiodeRepository.lagreFastsattDag(behandlingId, startMeldeperiode)
+        steg.oppdaterFastsattDag(behandlingId, nyMeldeperiodeMedUlikSluttdato.fom)
+        val persistertMeldeperiode = InMemoryMeldeperiodeRepository.hentFastsattDag(behandlingId)
+        assertThat(persistertMeldeperiode).isEqualTo(meldeperiodeFraStart.fom)
     }
 }
