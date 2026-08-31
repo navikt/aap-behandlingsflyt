@@ -324,7 +324,7 @@ class BackfillKravServiceTest {
     }
 
     @Test
-    fun `søknad mottatt før søknadsdato på forrige krav – overtaker selv om muligRettFra er overstyrt lavere`() {
+    fun `søknad mottatt før søknadsdato på forrige krav – overtar selv om muligRettFra er overstyrt lavere`() {
         // Gammelt krav: søknadsdato = 10 feb, overstyrt til 1 jan → muligRettFra = 1 jan
         // Ny søknad: 15 jan < 10 feb (søknadsdato) → skal overta (feil med gammel muligRettFra-sammenligning)
         val gammeltSøknadsdato = 10 februar 2024
@@ -351,10 +351,9 @@ class BackfillKravServiceTest {
         )
 
         leggTilSøknad(revurdering, nySøknadsdato)
-        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(nySøknadsdato, Tid.MAKS))
 
         service.backfillBehandling(
-            lagSakMedRettighetsperiode(sak, nySøknadsdato),
+            lagSakMedRettighetsperiode(sak, overstyrtDato),
             revurdering,
             erNyesteBehandling = true,
         )
@@ -362,7 +361,8 @@ class BackfillKravServiceTest {
         val gjeldendeVurderinger = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
         val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantKrav>()
         assertThat(relevanteKrav).hasSize(1)
-        assertThat(relevanteKrav.single().muligRettFra).isEqualTo(nySøknadsdato)
+        assertThat(relevanteKrav.single().søknadsdato.dato).isEqualTo(nySøknadsdato)
+        assertThat(relevanteKrav.single().muligRettFra).isEqualTo(overstyrtDato)
         assertThat(gjeldendeVurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
     }
 
