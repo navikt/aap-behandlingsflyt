@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DialogmeldingMedDokumenter
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DialogmeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumenterForJournalpostParameter
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
@@ -44,13 +44,11 @@ import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
-import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import javax.sql.DataSource
-import io.ktor.server.routing.RoutingContext
 
 fun NormalOpenAPIRoute.dokumentinnhentingApi(
     dataSource: DataSource,
@@ -195,7 +193,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
             }
 
             route("/dialogmeldinger/{saksnummer}") {
-                authorizedGet<HentStatusLegeerklæring, List<DialogmeldingMedDokumenter>>(
+                authorizedGet<HentStatusLegeerklæring, List<DialogmeldingMedDokumenterDto>>(
                     AuthorizationParamPathConfig(
                         // TODO: Hva slags config skal denne ha?
                         relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
@@ -213,9 +211,9 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                             val response = dokumentinnhentingGateway.hentDokumentoversiktForJournalpost(
                                 DokumenterForJournalpostParameter(dialogmelding.journalpostId!!)
                             )
-                            DialogmeldingMedDokumenter(
+                            DialogmeldingMedDokumenterDto(
                                 dialogmelding = dialogmelding,
-                                dokumentIdListe = response.journalpost?.dokumenter ?: listOf()
+                                dokumentIdListe = response.journalpost?.dokumenter.orEmpty()
                             )
                         }
 
@@ -231,29 +229,28 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                         )
                     }
 
-                    val dialogmeldingerLegeerklæringer = legeerklæringer
+                    val helsedokumenter = legeerklæringer
                         .map { legeerklæring ->
                             val journalpostId = legeerklæring.tilSøknadUtenKravDto().journalpostId.toString()
                             val dokumentoversikt = dokumentinnhentingGateway.hentDokumentoversiktForJournalpost(
                                 DokumenterForJournalpostParameter(journalpostId)
                             )
-                            DialogmeldingMedDokumenter(
+                            DialogmeldingMedDokumenterDto(
                                 dialogmelding = FellesDialogmeldingDto(
                                     innkommendeUtgaaende = InnkommendeUtgaaende.INNKOMMENDE,
                                     meldingFraNavn = dokumentoversikt.journalpost?.avsenderMottakerDto?.navn ?: "",
-                                    // TODO: Bruke dette tidpunktet eller det fra 'legeerklæring.mottattTidspunkt'?
-                                    opprettetTidspunkt = legeerklæring.tilSøknadUtenKravDto().mottattTidspunkt,
+                                    opprettetTidspunkt = legeerklæring.mottattTidspunkt,
                                     dokumentasjonsType = DokumentasjonType.L40,
                                     tekst = "",
                                     meldingStatus = null,
                                     journalpostId = journalpostId
                                 ),
                                 dokumentIdListe =
-                                    dokumentoversikt.journalpost?.dokumenter ?: listOf()
+                                    dokumentoversikt.journalpost?.dokumenter.orEmpty()
                             )
                         }
 
-                    respond(dialogmeldinger + dialogmeldingerLegeerklæringer)
+                    respond(dialogmeldinger + helsedokumenter)
                 }
             }
         }
