@@ -370,7 +370,7 @@ class MedlemskapLovvalgVurderingService {
     ): TilhørighetVurdering {
         val harNorskStatsborgerskap =
             grunnlag?.statsborgerskap
-                ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.toString() && it.erGyldigIPeriode(rettighetsPeriode) }
+                ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.name && it.erGyldigIPeriode(rettighetsPeriode) }
 
         val gyldigeStatsborgerskap =
             grunnlag?.statsborgerskap.orEmpty().filter { it.erGyldigIPeriode(rettighetsPeriode) }.map {
