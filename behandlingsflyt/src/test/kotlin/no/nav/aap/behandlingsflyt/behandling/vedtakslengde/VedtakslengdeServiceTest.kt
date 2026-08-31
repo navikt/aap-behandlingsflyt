@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
@@ -316,7 +316,7 @@ class VedtakslengdeServiceTest {
             rettighetstypeService = rettighetstypeService,
             stansOpphørRepository = stansOpphørRepository,
             clock = clock,
-            virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository, mockk()),
+            virkningstidspunktService = VirkningstidspunktService(vilkårsresultatRepository, mockk(), mockk(), mockk()),
         )
 
     /**

@@ -6,7 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
@@ -82,7 +82,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
                 ),
                 stansOpphørRepository = stansOpphørRepository,
                 clock = clock,
-                virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository, mockk()),
+                virkningstidspunktService = VirkningstidspunktService(vilkårsresultatRepository, mockk(), mockk(), mockk()),
             ),
         )
 

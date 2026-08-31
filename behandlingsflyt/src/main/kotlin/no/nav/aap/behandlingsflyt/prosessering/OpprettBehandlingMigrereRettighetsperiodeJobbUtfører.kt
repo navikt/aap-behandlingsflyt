@@ -94,8 +94,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     ) {
         val vilkårFør = vilkårsresultatRepository.hent(behandlingFørMigrering.id)
         val vilkårEtter = vilkårsresultatRepository.hent(behandlingEtterMigrering.id)
-        val rettighetstypeFør = vurderRettighetsType(vilkårFør, kvoteService.beregn())
-        val rettighetstypeEtter = vurderRettighetsType(vilkårEtter, kvoteService.beregn())
+        val rettighetstypeFør = vurderRettighetsType(vilkårFør, kvoteService.gjeldendeKvoter())
+        val rettighetstypeEtter = vurderRettighetsType(vilkårEtter, kvoteService.gjeldendeKvoter())
         if (rettighetstypeFør.isEmpty() && rettighetstypeEtter.isEmpty()) {
             log.info("Rettighetstypen er tom før og etter migrering - totalt avslag")
             return
