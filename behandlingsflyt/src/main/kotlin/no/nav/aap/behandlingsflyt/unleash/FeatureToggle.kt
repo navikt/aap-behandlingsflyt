@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.unleash
 
 interface FeatureToggle {
     fun key(): String
+
+    /** Hva feature skal være, hvis unleash er utilgjengelig. */
+    val default: Boolean get() = false
 }
 
 enum class BehandlingsflytFeature : FeatureToggle {
