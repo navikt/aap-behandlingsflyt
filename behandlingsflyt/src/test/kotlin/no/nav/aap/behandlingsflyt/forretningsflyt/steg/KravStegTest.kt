@@ -406,7 +406,7 @@ class KravStegTest {
             behandling.id,
             InMemoryKravRepository.hent(behandling.id).vurderinger
                 .map { if (it.referanse == gammeltKrav.referanse) gammeltKrav.copy(
-                    overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+                    overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere, "Min begrunnelse"),
                     muligRettFra = overstyrtDato,
                 ) else it }
                 .toSet()
