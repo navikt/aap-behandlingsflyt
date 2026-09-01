@@ -424,7 +424,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             deaktiverEksisterende(behandlingId)
         }
 
-        val oppgittBarn = oppgitteBarn.oppgitteBarn
+        val oppgittBarn = oppgitteBarn.oppgitteBarn.distinctBy { it.ident ?: it.identifikator() }
 
         val oppgittBarnId = if (oppgittBarn.isNotEmpty()) {
             connection.executeReturnKey("INSERT INTO OPPGITT_BARNOPPLYSNING DEFAULT VALUES")
