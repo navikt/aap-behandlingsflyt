@@ -15,7 +15,7 @@ import no.nav.aap.komponenter.type.Periode
 class Medlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode,
-    private val vurderingstype: VurderingType? = null
+    private val vurderingstype: VurderingType? = null,
 ) : Vilkårsvurderer<MedlemskapLovvalgGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 

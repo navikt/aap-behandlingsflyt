@@ -76,13 +76,14 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
+        BehandlingsflytFeature.BackfillSakstatusDatadeling to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.MotorV2 to true,
-        BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
         // --- Krav ---
+        BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
         BehandlingsflytFeature.KravAutomatiskVurdering to true,
@@ -91,6 +92,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
         BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true,
+        BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
@@ -99,7 +101,10 @@ object LokalUnleash : FakeUnleashBase(
                 BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
                 "saksnumre"
             ) -> "LoCAL_4LDW2A8"
-
+            Pair(
+                BehandlingsflytFeature.BackfillKrav,
+                "backfill-saker-ider"
+            ) -> "2,3" //LoCAL_4LDSUJK,LoCAL_4LDRRYo
             else -> "1,100"
         }
     }

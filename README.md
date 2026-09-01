@@ -45,7 +45,7 @@ Eller på en spesifikk modul:
 ./gradlew kontrakt:detekt
 ```
 
-Detekt-konfigurasjonen finnes i `config/detekt/detekt.yml`.
+Detekt-konfigurasjonen finnes i `config/detekt/detekt.yml`. Detekt-versjonen er pinnet i `build-logic/build.gradle.kts`; ved oppgradering av detekt-versjonen bør config-filen sjekkes mot detekt sin changelog for eventuelle byttede/fjernede properties.
 
 ### Kjøre lokalt
 

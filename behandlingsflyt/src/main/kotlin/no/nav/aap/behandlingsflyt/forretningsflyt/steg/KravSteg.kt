@@ -4,9 +4,11 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -151,57 +153,104 @@ class KravSteg(
         }
     }
 
+    // Denne antar kun ett relevant krav. Når vi skal støtte flere relevante krav må vi løfte avklaringsbehov
     private fun vurderHelautomatisk(kontekst: FlytKontekstMedPerioder) {
-        val behandlingstype = behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId)
-        
+        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        // Early return: Forrige behandling er ikke migrert – BackfillKrav håndterer den.
+        if (kravGrunnlag == null && kontekst.forrigeBehandlingId != null) return
+
         val søknaderMottattIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
-                .sortedBy { it.mottattTidspunkt }
-        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
-        
-        // Dersom vi har overstyrt rettighetsperioden i denne behandlingen, 
-        // beholder vi denne som nytt krav uavhengig av mottattidspunkt for søknad.
-        val overstyrteKravIDenneBehandlingen = kravGrunnlag?.vurderinger
-            ?.filterIsInstance<RelevantKrav>()
-            ?.filter { it.overstyrMuligRettFra != null }
-            ?.filter { it.vurdertIBehandling == kontekst.behandlingId }
-            .orEmpty().toSet()
 
-        val vurderinger =
-            søknaderMottattIBehandling.mapIndexed { index, søknad ->
-                if (behandlingstype == TypeBehandling.Førstegangsbehandling
-                    && overstyrteKravIDenneBehandlingen.isEmpty()
-                    && index == 0
-                ) {
-                    nyttKrav(kontekst.behandlingId, søknad)
-                } else {
-                    tilleggsopplysning(kontekst.behandlingId, søknad)
-                }
-            }
+        // Legeerklæring kan i noen tilfeller være første dokument på en første behandlingen.
+        val legeerklæringerMottattIBehandling = if (kontekst.forrigeBehandlingId == null) {
+            mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.LEGEERKLÆRING)
+        } else {
+            emptyList()
+        }
+
+        val alleDokumenter = (søknaderMottattIBehandling + legeerklæringerMottattIBehandling)
+            .sortedBy { it.mottattTidspunkt }
+
+        // Dersom saksbehandler har overstyrt muligRettFra i denne behandlingen, bevarer vi overstyringen
+        // (verdien) men lar KravSteg re-vurdere hvilken søknad som er RelevantKrav.
+        val overstyringFraDenneBehandlingen = kravGrunnlag
+            ?.gjeldendeRelevanteKrav()
+            ?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
+            ?.overstyrMuligRettFra
 
         val vedtatteVurderinger =
             kontekst.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
-        val resultat = vedtatteVurderinger + overstyrteKravIDenneBehandlingen + vurderinger
+        val gjeldendeKravFraForrige = KravGrunnlag(vedtatteVurderinger.toSet())
+            .gjeldendeRelevanteKrav()
+            .minByOrNull { it.muligRettFra }
+
+        // Dersom eldste nye dokument er eldre enn det vedtatte kravets søknadsdato, overtar det som nytt RelevantKrav.
+        val dokumentSomOvertarSomKrav = if (gjeldendeKravFraForrige != null) {
+            alleDokumenter.firstOrNull {
+                it.mottattTidspunkt.toLocalDate().isBefore(gjeldendeKravFraForrige.søknadsdato.dato)
+            }
+        } else null
+
+        val overstyringFraVedtattKrav = dokumentSomOvertarSomKrav
+            ?.let { gjeldendeKravFraForrige?.overstyrMuligRettFra }
+
+        val gjeldendeOverstyring = overstyringFraDenneBehandlingen ?: overstyringFraVedtattKrav
+
+        val vurderinger = alleDokumenter.mapIndexedNotNull { index, dokument ->
+            val erNyttKrav = dokumentSomOvertarSomKrav?.referanse == dokument.referanse
+                || (gjeldendeKravFraForrige == null && index == 0)
+            when {
+                erNyttKrav -> nyttKrav(kontekst.behandlingId, dokument, gjeldendeOverstyring)
+                dokument.type == InnsendingType.SØKNAD -> tilleggsopplysning(kontekst.behandlingId, dokument)
+                else -> null // Legeerklæring som ikke er eldste dokument – ingen separat vurdering
+            }
+        }
+
+        // Nedgrader det vedtatte kravet til Tilleggsopplysning ved å legge til ny rad med samme referanse.
+        // gjeldendeVurderinger() plukker maxBy { opprettet } per referanse, så den nye Tilleggsopplysning vinner.
+        val nedgradertVedtattKrav = if (dokumentSomOvertarSomKrav != null && gjeldendeKravFraForrige != null) {
+            setOf(
+                Tilleggsopplysning(
+                    referanse = gjeldendeKravFraForrige.referanse,
+                    journalpostId = gjeldendeKravFraForrige.journalpostId,
+                    vurdertAv = SYSTEMBRUKER,
+                    begrunnelse = "Automatisk vurdert",
+                    vurdertIBehandling = kontekst.behandlingId,
+                    opprettet = Instant.now(),
+                )
+            )
+        } else emptySet()
+
+        val resultat = vedtatteVurderinger + vurderinger + nedgradertVedtattKrav
         if (resultat.isNotEmpty()) {
             kravRepository.lagre(kontekst.behandlingId, resultat)
         }
     }
 
-    private fun nyttKrav(behandlingId: BehandlingId, søknad: MottattDokument): RelevantKrav {
+    private fun nyttKrav(
+        behandlingId: BehandlingId,
+        dokument: MottattDokument,
+        overstyrMuligRettFra: OverstyrMuligRettFra? = null,
+    ): RelevantKrav {
         return RelevantKrav(
             referanse = Kravreferanse.ny(),
-            journalpostId = søknad.referanse.asJournalpostId,
+            journalpostId = dokument.referanse.asJournalpostId,
             vurdertAv = SYSTEMBRUKER,
             begrunnelse = "Automatisk vurdert",
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
             søknadsdato = Søknadsdato(
-                søknad.mottattTidspunkt.toLocalDate(),
+                dokument.mottattTidspunkt.toLocalDate(),
                 SøknadsdatoÅrsak.SøknadMottatt
             ),
-            overstyrMuligRettFra = null,
-            muligRettFra = søknad.mottattTidspunkt.toLocalDate()
+            overstyrMuligRettFra = overstyrMuligRettFra,
+            muligRettFra = listOfNotNull(
+                dokument.mottattTidspunkt.toLocalDate(),
+                overstyrMuligRettFra?.dato,
+            ).min(),
         )
     }
 
