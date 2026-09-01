@@ -47,7 +47,7 @@ class VurderKlageNayLøser(
         if (ugyldigeHjemler.isNotEmpty()) {
             return Validation.Invalid(
                 løsning,
-                "Løsningen inneholder omgjøring av hjemler som ikke ikke har implementert omgjøring via revurdering: ${ugyldigeHjemler.joinToString { it.name }}"
+                "Løsningen inneholder omgjøring av hjemler som ikke ikke har implementert omgjøring via revurdering: ${ugyldigeHjemler.joinToString { it.hjemmel }}"
             )
         }
 
