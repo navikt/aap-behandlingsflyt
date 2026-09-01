@@ -69,9 +69,6 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.Melde
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -219,6 +216,7 @@ class StatistikkJobbUtførerTest {
             vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
             mottattDokumenter = emptyList(),
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
+            reserverTilPerAvklaringsbehov = emptyMap()
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -484,7 +482,9 @@ class StatistikkJobbUtførerTest {
             vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE.name),
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             reserverTil = "meg",
-            mottattDokumenter = emptyList()
+            mottattDokumenter = emptyList(),
+            reserverTilPerAvklaringsbehov = emptyMap()
+
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -666,6 +666,7 @@ class StatistikkJobbUtførerTest {
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             mottattDokumenter = emptyList(),
             reserverTil = "meg",
+            reserverTilPerAvklaringsbehov = emptyMap()
         )
 
         val hendelse = DefaultJsonMapper.toJson(payload)

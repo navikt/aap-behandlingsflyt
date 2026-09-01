@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
@@ -64,7 +64,8 @@ class UnderveisService(
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
     private val rettighetstypeRepository: RettighetstypeRepository,
-    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val virkningstidspunktService: VirkningstidspunktService,
+    private val kvoteService: KvoteService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider, gatewayProvider),
@@ -82,12 +83,12 @@ class UnderveisService(
         behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
         rettighetstypeRepository = repositoryProvider.provide(),
-        virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
+        virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider),
+        kvoteService = KvoteService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val kvoteService = KvoteService()
 
     companion object {
         private val regelset = listOf(
@@ -166,7 +167,7 @@ class UnderveisService(
         val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandlingId)
         val meldekort = meldekortGrunnlag?.meldekort().orEmpty()
         val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
-        val kvote = kvoteService.beregn()
+        val kvote = kvoteService.gjeldendeKvoter()
         val utlederResultat =
             institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
 
@@ -217,7 +218,7 @@ class UnderveisService(
         }
 
         val startdatoForBehandlingen =
-            virkningstidspunktUtleder.utledVirkningsTidspunkt(behandlingId)
+            virkningstidspunktService.finnVirkningstidspunkt(behandlingId)
                 ?: sak.rettighetsperiode.fom
 
         /**

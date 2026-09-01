@@ -34,6 +34,12 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
         val sak = sakRepository.hent(behandling.sakId)
         val personIdent = sak.person.aktivIdent()
 
+        val sakstatus = sakstatusDatadelingService.utledSakstatus(referanse)
+        apiInternGateway.sendSakStatus(
+            personIdent.identifikator,
+            sakstatus,
+        )
+
         if (trukketSøknadService.søknadErTrukket(behandling.id)) {
             log.info("Søknad er trukket, sender tom liste til api-intern")
             apiInternGateway.sendPerioder(personIdent.identifikator, emptyList())
@@ -48,12 +54,6 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
         val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandling.id, aktuellPeriode)
 
         apiInternGateway.sendPerioder(personIdent.identifikator, meldeperioder)
-
-        val sakstatus = sakstatusDatadelingService.utledSakstatus(referanse)
-        apiInternGateway.sendSakStatus(
-            personIdent.identifikator,
-            sakstatus,
-        )
     }
 
     companion object : ProvidersJobbSpesifikasjon {

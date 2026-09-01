@@ -15,7 +15,7 @@ import kotlin.enums.enumEntries
 data class ManuellVurderingForLovvalgMedlemskap(
     val lovvalg: LovvalgDto,
     val medlemskap: MedlemskapDto?,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     val vurdertDato: LocalDateTime,
     val overstyrt: Boolean = false,
     override val fom: LocalDate,

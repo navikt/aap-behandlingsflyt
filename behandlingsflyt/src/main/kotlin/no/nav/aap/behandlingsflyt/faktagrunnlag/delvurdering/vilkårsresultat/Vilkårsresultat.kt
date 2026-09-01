@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.outerJoinNotNull
@@ -40,10 +39,6 @@ class Vilkårsresultat(
         return alle()
             .map { vilkår -> vilkår.tidslinje().mapValue { vurdering -> vilkår.type to vurdering } }
             .outerJoinNotNull { it.toMap() }
-    }
-
-    fun rettighetstypeTidslinje(): Tidslinje<RettighetsType> {
-        return vurderRettighetsType(this)
     }
 
     fun tidslinjeFor(vilkårstype: Vilkårtype): Tidslinje<Vilkårsvurdering> {

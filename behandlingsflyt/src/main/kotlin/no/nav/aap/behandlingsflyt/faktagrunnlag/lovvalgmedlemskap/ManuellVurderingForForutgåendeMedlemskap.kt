@@ -16,7 +16,7 @@ data class ManuellVurderingForForutgåendeMedlemskap(
     val harForutgåendeMedlemskap: Boolean,
     val varMedlemMedNedsattArbeidsevne: Boolean?,
     val medlemMedUnntakAvMaksFemAar: Boolean?,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime,
     val overstyrt: Boolean = false,
     override val vurdertIBehandling: BehandlingId,

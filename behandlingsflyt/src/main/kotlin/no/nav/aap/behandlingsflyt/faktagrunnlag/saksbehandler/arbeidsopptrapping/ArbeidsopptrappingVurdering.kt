@@ -12,7 +12,7 @@ data class ArbeidsopptrappingVurdering(
     override val tom: LocalDate?,
     val reellMulighetTilOpptrapping: Boolean,
     val rettPaaAAPIOpptrapping: Boolean,
-    val vurdertAv: Bruker,
+    override val vurdertAv: Bruker,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
 ) : PeriodisertVurdering
