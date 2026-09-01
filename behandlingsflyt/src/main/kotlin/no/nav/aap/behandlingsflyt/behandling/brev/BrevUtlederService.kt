@@ -432,7 +432,7 @@ class BrevUtlederService(
             .toSet()
     }
 
-    private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
+    private fun brevBehovAvslag(behandling: Behandling): BrevBehov {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
         val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id)
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
@@ -452,11 +452,17 @@ class BrevUtlederService(
             ) {
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
-            if (avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
-            {
-                return AvslagBrev.Avslag1127(
-                    sykdomsvurdering = sykdomsvurdering,
-                    sykepengeGrunnlagOver2G = avslag1127.harSykepengegrunnlagOver2G
+            if (avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG) {
+                val underveisGrunnlag = underveisRepository.hent(behandling.id)
+
+                return AvslagAnnenYtelse(
+                    ytelsetype = checkNotNull(avslag1127.brukersYtelse) {
+                        "Mangler brukersYtelse for avslag 11-27 i behandling ${behandling.id}"
+                    }.name,
+                    sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
+                    sykepengeGrunnlagOver2G = checkNotNull(avslag1127.harSykepengegrunnlagOver2G) {
+                        "Mangler harSykepengegrunnlagOver2G for avslag 11-27 i behandling ${behandling.id}"
+                    }
                 )
             }
         }
