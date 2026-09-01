@@ -60,7 +60,7 @@ class MigrerKravService(
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 dato = rettighetsperiodeVurdering.startDato,
                 årsak = rettighetsperiodeVurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak(),
-                begrunnelse = "",
+                begrunnelse = rettighetsperiodeVurdering.begrunnelse,
             ),
             muligRettFra = rettighetsperiodeVurdering.startDato,
         )
