@@ -345,7 +345,7 @@ class BackfillKravServiceTest {
         InMemoryKravRepository.lagre(
             førstegangsbehandling.id,
             setOf(gammeltKrav.copy(
-                overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+                overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere, begrunnelse = "Min begrunnelse"),
                 muligRettFra = overstyrtDato,
             ))
         )
@@ -385,7 +385,7 @@ class BackfillKravServiceTest {
         InMemoryKravRepository.lagre(
             førstegangsbehandling.id,
             setOf(gammeltKrav.copy(
-                overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+                overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere, "Min begrunnelse"),
                 muligRettFra = overstyrtDato,
             ))
         )
