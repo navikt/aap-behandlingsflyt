@@ -454,7 +454,10 @@ class BrevUtlederService(
             }
             if (avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG)
             {
-                return AvslagBrev.Avslag1127(sykdomsvurdering = sykdomsvurdering, avslag1127.brukersYtelse)
+                return AvslagBrev.Avslag1127(
+                    sykdomsvurdering = sykdomsvurdering,
+                    sykepengeGrunnlagOver2G = avslag1127.harSykepengegrunnlagOver2G
+                )
             }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
