@@ -96,7 +96,7 @@ class BackfillSakstatusDatadeling(
     }
 
     companion object {
-        private const val BATCH_STØRRELSE = 100
+        private const val BATCH_STØRRELSE = 2000
         private val BATCH_PAUSE = Duration.ofSeconds(30)
 
         /**
