@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
-import no.nav.aap.behandlingsflyt.behandling.brev.AvslagAnnenYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.AvslagBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
@@ -416,6 +415,20 @@ class BrevGateway : BrevbestillingGateway {
             is AvslagBrev -> {
                 buildSet {
                     brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
+
+                    when (brevBehov) {
+                        is AvslagBrev.AvslagAnnenYtelse -> {
+                            add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
+                            add(
+                                Faktagrunnlag.GrunnlagAndreYtelser(
+                                    ytelseType = brevBehov.ytelsetype,
+                                    ytelseTom = brevBehov.sisteDagMedYtelse,
+                                    sykepengeGrunnlagOver2G = brevBehov.sykepengeGrunnlagOver2G
+                                )
+                            )
+                        }
+                        else -> Unit
+                    }
                 }
             }
 
@@ -442,21 +455,6 @@ class BrevGateway : BrevbestillingGateway {
                 buildSet {
                     add(
                         Faktagrunnlag.InnvilgetUføretrygd(brevBehov.virkningstidspunkt)
-                    )
-                }
-            }
-
-            is AvslagAnnenYtelse -> {
-                buildSet {
-                    add(
-                        Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
-                    )
-                    add(
-                        Faktagrunnlag.GrunnlagAndreYtelser(
-                            ytelseType = brevBehov.ytelsetype,
-                            ytelseTom = brevBehov.sisteDagMedYtelse,
-                            sykepengeGrunnlagOver2G = brevBehov.sykepengeGrunnlagOver2G
-                        )
                     )
                 }
             }

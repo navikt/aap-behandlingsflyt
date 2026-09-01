@@ -364,6 +364,7 @@ class BrevUtlederService(
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG
         )
         return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
@@ -432,15 +433,10 @@ class BrevUtlederService(
             .toSet()
     }
 
-    private fun brevBehovAvslag(behandling: Behandling): BrevBehov {
+    private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
         val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id)
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
-
-        val avslag1127 = avslag11_27Repository.hentHvisEksisterer(behandling.id)
-            ?.gjeldendeVurderinger()
-            ?.firstOrNull { it.vurdertIBehandling == behandling.id && it.skalAvslås1127 == true }
-            ?: error("Mangler avslag 11-27-vurdering for behandling ${behandling.id}")
 
         if (Miljø.erDev() && avslagsårsak != null) {
             /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
@@ -453,16 +449,18 @@ class BrevUtlederService(
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
             if (avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG) {
-                val underveisGrunnlag = underveisRepository.hent(behandling.id)
+                val avslag1127 = avslag11_27Repository.hentHvisEksisterer(behandling.id)
+                    ?.gjeldendeVurderinger()
+                    ?.firstOrNull { it.vurdertIBehandling == behandling.id && it.skalAvslås1127 == true }
+                    ?: error("Mangler avslag 11-27-vurdering for behandling ${behandling.id}")
 
-                return AvslagAnnenYtelse(
+                return AvslagBrev.AvslagAnnenYtelse(
+                    sykdomsvurdering = sykdomsvurdering,
+                    sykepengeGrunnlagOver2G = avslag1127.harSykepengegrunnlagOver2G == true,
                     ytelsetype = checkNotNull(avslag1127.brukersYtelse) {
                         "Mangler brukersYtelse for avslag 11-27 i behandling ${behandling.id}"
                     }.name,
-                    sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
-                    sykepengeGrunnlagOver2G = checkNotNull(avslag1127.harSykepengegrunnlagOver2G) {
-                        "Mangler harSykepengegrunnlagOver2G for avslag 11-27 i behandling ${behandling.id}"
-                    }
+                    sisteDagMedYtelse = underveisRepository.hent(behandling.id).sisteDagMedYtelse(),
                 )
             }
         }
