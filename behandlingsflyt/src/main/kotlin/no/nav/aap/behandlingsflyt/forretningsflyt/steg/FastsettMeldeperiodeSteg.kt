@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder.utledMeldeperiode
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -14,8 +13,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 class FastsettMeldeperiodeSteg(
     private val meldeperiodeRepository: MeldeperiodeRepository,
@@ -35,8 +36,8 @@ class FastsettMeldeperiodeSteg(
                     return Fullført
                 }
 
-                val aktuellPeriode = sakRepository.hent(kontekst.sakId).rettighetsperiodeEttÅrFraStartDato()
-                oppdaterFørsteMeldeperiode(kontekst.behandlingId, aktuellPeriode)
+                val søknadsdato = sakRepository.hent(kontekst.sakId).rettighetsperiode.fom
+                oppdaterFastsattDag(kontekst.behandlingId, søknadsdato)
                 return Fullført
             }
 
@@ -53,16 +54,18 @@ class FastsettMeldeperiodeSteg(
         }
     }
 
-    fun oppdaterFørsteMeldeperiode(behandlingId: BehandlingId, aktuellPeriode: Periode) {
-        val førsteMeldeperiode = meldeperiodeRepository.hentFørsteMeldeperiode(behandlingId)
-
-        val startdatoForrigeMeldeperiode = førsteMeldeperiode?.fom
-        val meldeperioder = utledMeldeperiode(startdatoForrigeMeldeperiode, aktuellPeriode)
-
-        val startdatoNyMeldeperiode = meldeperioder.first().fom
-        if (startdatoNyMeldeperiode != startdatoForrigeMeldeperiode) {
-            meldeperiodeRepository.lagreFørsteMeldeperiode(behandlingId, meldeperioder.first())
+    fun oppdaterFastsattDag(behandlingId: BehandlingId, søknadsdato: LocalDate) {
+        val fastsattDag = meldeperiodeRepository.hentFastsattDag(behandlingId)
+        if (fastsattDag != null) {
+            /* Oppdatere ikke hvis allerede satt. Utleding av meldeperioder fungerer
+             * uansett om fastsatt dag er før, iløpet av, eller etter rettighetsperioden. */
+            return
         }
+
+        meldeperiodeRepository.lagreFastsattDag(
+            behandlingId,
+            søknadsdato.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        )
     }
 
     companion object : FlytSteg {

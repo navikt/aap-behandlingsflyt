@@ -137,9 +137,9 @@ private fun lagreMeldeperioder(
     meldeperiodeRepository: MeldeperiodeRepositoryImpl,
     testBehandling: Behandling
 ): List<Periode> {
-    val førsteMeldeperiode = Periode(periodeStart, periodeStart.plusDays(13))
+    val periodeStart = periodeStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     val aktuellPeriode = Periode(periodeStart.plusDays(28), periodeStart.plusDays(41))
-    meldeperiodeRepository.lagreFørsteMeldeperiode(testBehandling.id, førsteMeldeperiode)
+    meldeperiodeRepository.lagreFastsattDag(testBehandling.id, periodeStart)
     val meldeperioderDb = meldeperiodeRepository.hentMeldeperioder(testBehandling.id, aktuellPeriode)
     assertThat(meldeperioderDb).hasSize(3)
     return meldeperioderDb

@@ -598,11 +598,9 @@ class BrevGateway : BrevbestillingGateway {
         when (this) {
             ÅrsakBeregningstidspunkt.SYKEMELDINGSDATO -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SYKEMELDINGSDATO
             ÅrsakBeregningstidspunkt.KRAVDATO -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.KRAVDATO
-            ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.UFOERETIDSPUNKT
             ÅrsakBeregningstidspunkt.DATO_PAA_LEGEERKLÆRING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.DATO_PAA_LEGEERKLAERING
             ÅrsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING
-            ÅrsakBeregningstidspunkt.SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SEKSTEN_AAR_SOM_BEREGNINGSTIDSPUNKT
-            ÅrsakBeregningstidspunkt.ANNET, null -> null
+            ÅrsakBeregningstidspunkt.ANNET,  ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT, null -> null
         }
 
     private fun ÅrsakYtterligereNedsatt?.tilKontrakt():
@@ -612,11 +610,11 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakYtterligereNedsatt.YTTERLIGERE_NEDSATT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.YTTERLIGERE_NEDSATT
             ÅrsakYtterligereNedsatt.ØKT_UFØREGRAD -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.OKT_UFOEREGRAD
             ÅrsakYtterligereNedsatt.IKKE_BETYDNING_IKKE_RELEVANT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.IKKE_BETYDNING_IKKE_RELEVANT
-            ÅrsakYtterligereNedsatt.ANNET, null -> null
             ÅrsakYtterligereNedsatt.SYKEMELDINGSDATO,
             ÅrsakYtterligereNedsatt.KRAVDATO,
             ÅrsakYtterligereNedsatt.DATO_PAA_LEGEERKLÆRING,
             ÅrsakYtterligereNedsatt.HENVIST_TIL_BEHANDLING -> null
+            ÅrsakYtterligereNedsatt.ANNET, null -> null
         }
 
 }

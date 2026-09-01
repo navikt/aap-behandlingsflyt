@@ -18,6 +18,8 @@ open class FakeUnleashBase(
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev) = isEnabled(featureToggle)
 
+    override fun isEnabled(featureToggle: FeatureToggle, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
@@ -43,6 +45,8 @@ open class FakeUnleashBaseWithDefaultDisabled(
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev) = isEnabled(featureToggle)
 
+    override fun isEnabled(featureToggle: FeatureToggle, typeBrev: TypeBrev) = isEnabled(featureToggle)
+
     override fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String) = false
 
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String) = ""
@@ -64,6 +68,7 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
+        BehandlingsflytFeature.BrevtyperTilNyBrevbygger to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
@@ -71,13 +76,14 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
+        BehandlingsflytFeature.BackfillSakstatusDatadeling to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.MotorV2 to true,
-        BehandlingsflytFeature.IngenStoppHendelseVedAtomaerBehandling to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
         // --- Krav ---
+        BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
         BehandlingsflytFeature.KravAutomatiskVurdering to true,
@@ -86,6 +92,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
         BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true,
+        BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
@@ -94,7 +101,10 @@ object LokalUnleash : FakeUnleashBase(
                 BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
                 "saksnumre"
             ) -> "LoCAL_4LDW2A8"
-
+            Pair(
+                BehandlingsflytFeature.BackfillKrav,
+                "backfill-saker-ider"
+            ) -> "2,3" //LoCAL_4LDSUJK,LoCAL_4LDRRYo
             else -> "1,100"
         }
     }

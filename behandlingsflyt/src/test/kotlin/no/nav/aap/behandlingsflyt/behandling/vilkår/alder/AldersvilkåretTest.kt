@@ -189,7 +189,7 @@ class AldersvilkåretTest {
 
         val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
 
-        val måned67 = YearMonth.from(aldersgrunnlaget.fødselsdato.dato.plusYears(67).minusDays(1)).atEndOfMonth()
+        val måned67 = YearMonth.from(aldersgrunnlaget.fødselsdato.dato.plusYears(67)).atEndOfMonth()
 
         assertTidslinje(resultat, Periode(søknadsdato, måned67) to {
             assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)

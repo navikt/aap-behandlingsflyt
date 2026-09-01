@@ -11,7 +11,6 @@ enum class ÅrsakBeregningstidspunkt {
     UFØRETIDSPUNKT,
     DATO_PAA_LEGEERKLÆRING,
     HENVIST_TIL_BEHANDLING,
-    SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT,
     ANNET,
 }
 
