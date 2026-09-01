@@ -600,7 +600,7 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakBeregningstidspunkt.KRAVDATO -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.KRAVDATO
             ÅrsakBeregningstidspunkt.DATO_PAA_LEGEERKLÆRING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.DATO_PAA_LEGEERKLAERING
             ÅrsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING
-            ÅrsakBeregningstidspunkt.ANNET, null -> null
+            ÅrsakBeregningstidspunkt.ANNET,  ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT, null -> null
         }
 
     private fun ÅrsakYtterligereNedsatt?.tilKontrakt():
