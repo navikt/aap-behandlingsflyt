@@ -1,9 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.KlagebehandlingMedVedtaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.pip.BehandlingDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -13,6 +17,7 @@ import java.util.UUID
 
 data class PåklagetBehandlingGrunnlagDto(
     val behandlinger: List<BehandlingMedVedtakDto>,
+    val vedtatteKlagebehandlinger: List<KlagebehandlingDto>,
     val gjeldendeVurdering: PåklagetBehandlingVurderingDto?,
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurderingerMeta: VurderingerMetaResponse,
@@ -34,6 +39,22 @@ data class BehandlingMedVedtakDto(
     val vurderingsbehov: Set<Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?
 )
+
+data class KlagebehandlingDto(
+    val saksnummer: String,
+    val referanse: UUID,
+    val vedtaksdato: LocalDate
+) {
+    companion object {
+        fun fraDomene(klagebehandlingMedVedtaksdato: KlagebehandlingMedVedtaksdato, saksnummer: Saksnummer): KlagebehandlingDto {
+            return KlagebehandlingDto(
+                saksnummer = saksnummer.toString(),
+                referanse = klagebehandlingMedVedtaksdato.behandling.referanse.referanse,
+                vedtaksdato = klagebehandlingMedVedtaksdato.vedtaksdato
+            )
+        }
+    }
+}
 
 internal fun BehandlingMedVedtak.tilBehandlingMedVedtakDto() =
     BehandlingMedVedtakDto(

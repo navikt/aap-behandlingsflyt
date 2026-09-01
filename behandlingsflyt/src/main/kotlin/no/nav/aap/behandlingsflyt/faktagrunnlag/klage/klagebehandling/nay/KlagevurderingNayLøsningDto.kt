@@ -2,33 +2,18 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.Klagevurdering
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 
 data class KlagevurderingNayLøsningDto(
     val begrunnelse: String,
     val notat: String?,
-    val innstilling: KlageInnstilling,
-    val vilkårSomOpprettholdes: List<Hjemmel>,
-    val vilkårSomOmgjøres: List<Hjemmel>,
-) {
+    override val innstilling: KlageInnstilling,
+    override val vilkårSomOpprettholdes: List<Hjemmel>,
+    override val vilkårSomOmgjøres: List<Hjemmel>,
+): Klagevurdering {
     init {
-        when (innstilling) {
-            KlageInnstilling.OPPRETTHOLD -> {
-                if (vilkårSomOpprettholdes.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal opprettholdes dersom innstilling er 'OPPRETTHOLD' ")
-                if (vilkårSomOmgjøres.isNotEmpty()) throw UgyldigForespørselException("Kan ikke sette vilkår som skal omgjøres dersom innstilling er 'OPPRETTHOLD' ")
-            }
-
-            KlageInnstilling.OMGJØR -> {
-                if (vilkårSomOmgjøres.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal omgjøres dersom innstilling er 'OMGJØR' ")
-                if (vilkårSomOpprettholdes.isNotEmpty()) throw UgyldigForespørselException("Kan ikke sette vilkår som skal opprettholdes dersom innstilling er 'OMGJØR' ")
-            }
-
-            KlageInnstilling.DELVIS_OMGJØR -> {
-                if (vilkårSomOmgjøres.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal omgjøres dersom innstilling er 'DELVIS_OMGJØR' ")
-                if (vilkårSomOpprettholdes.isEmpty()) throw UgyldigForespørselException("Må sette vilkår som skal opprettholdes dersom innstilling er 'DELVIS_OMGJØR' ")
-            }
-        }
+        validerHjemler()
     }
 
     fun tilVurdering(vurdertAv: Bruker) = KlagevurderingNay(
