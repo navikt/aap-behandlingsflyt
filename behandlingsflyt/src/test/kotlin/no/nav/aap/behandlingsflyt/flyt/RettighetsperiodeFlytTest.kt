@@ -332,7 +332,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                                 overstyrMuligRettFra = OverstyrMuligRettFra(
                                     dato = rettighetsperiodeVurdering.first,
                                     årsak = rettighetsperiodeVurdering.third.tilOverstyrMuligRettFraÅrsak(),
-                                    begrunnelse = ""
+                                    begrunnelse = "Var ikke i stand til å søke tidligere"
                                 ),
                                 vurdertIBehandling = behandling.id,
                                 referanse = Kravreferanse.ny() // Ignorert
