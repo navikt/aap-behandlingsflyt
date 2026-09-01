@@ -81,7 +81,7 @@ class BackfillStansOpphør(
         for (sakId in fra..til) {
             dataSource.transaction { connection ->
                 val sakRepository = SakRepositoryImpl(connection)
-                val sak = sakRepository.backfillStansOpphørHentHvisFinnes(sakId)
+                val sak = sakRepository.hentSakHvisEksisterer(sakId)
                     ?: return@transaction
 
                 if (Miljø.erDev() && sak.opprettetTidspunkt <= LocalDate.parse("2025-04-01").atStartOfDay()) {

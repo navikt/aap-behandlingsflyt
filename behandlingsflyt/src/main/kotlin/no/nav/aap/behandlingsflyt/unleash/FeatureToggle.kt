@@ -23,6 +23,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     GenererVilkarsvurderingOppsummeringPDF,
 
     // --- Krav ---
+    BackfillKrav,
     KravSteg, // Visning
     LagreVurderRettighetsperiodeSomKrav, // Double write
     KravAutomatiskVurdering, // Double write

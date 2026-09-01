@@ -83,6 +83,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
         // --- Krav ---
+        BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
         BehandlingsflytFeature.KravAutomatiskVurdering to true,
@@ -100,7 +101,10 @@ object LokalUnleash : FakeUnleashBase(
                 BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
                 "saksnumre"
             ) -> "LoCAL_4LDW2A8"
-
+            Pair(
+                BehandlingsflytFeature.BackfillKrav,
+                "backfill-saker-ider"
+            ) -> "2,3" //LoCAL_4LDSUJK,LoCAL_4LDRRYo
             else -> "1,100"
         }
     }

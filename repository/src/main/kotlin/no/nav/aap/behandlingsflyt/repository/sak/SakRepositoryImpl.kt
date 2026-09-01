@@ -330,7 +330,7 @@ where aktiv = true
         // Denne trengs ikke implementeres
     }
 
-    fun backfillStansOpphørHentHvisFinnes(sakId: Long): Sak? {
+    fun hentSakHvisEksisterer(sakId: Long): Sak? {
         return connection.queryFirstOrNull("SELECT * FROM SAK WHERE id = ?") {
             setParams {
                 setLong(1, sakId)
