@@ -159,7 +159,8 @@ class MigrerKravServiceTest {
             søknadsdato = 15 april 2024,
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 1 mars 2023,
-                OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere
+                OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
+                begrunnelse = "Test"
             )
         )
         InMemoryKravRepository.lagre(behandlingIdB, setOf(vedtattOverstyrtKrav))
@@ -266,7 +267,7 @@ class MigrerKravServiceTest {
         begrunnelse = "Test",
         vurdertIBehandling = behandlingId,
         opprettet = Instant.now(),
-        søknadsdato = Søknadsdato(søknadsdato, SøknadsdatoÅrsak.SøknadMottatt),
+        søknadsdato = Søknadsdato(søknadsdato, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
         overstyrMuligRettFra = overstyrMuligRettFra,
         muligRettFra = muligRettFra,
     )

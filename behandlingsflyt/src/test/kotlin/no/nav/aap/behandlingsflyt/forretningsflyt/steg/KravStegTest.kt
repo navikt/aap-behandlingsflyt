@@ -189,6 +189,7 @@ class KravStegTest {
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 dato = LocalDate.of(2023, 6, 1),
                 årsak = OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
+                begrunnelse = "Overstyrt",
             ),
         )
         InMemoryKravRepository.lagre(behandling.id, setOf(overstyrtKrav))
@@ -218,6 +219,7 @@ class KravStegTest {
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 dato = LocalDate.of(2022, 6, 1),
                 årsak = OverstyrMuligRettFraÅrsak.MisvisendeOpplysninger,
+                begrunnelse = "Overstyrt",
             ),
         )
         InMemoryKravRepository.lagre(forrigeBehandling.id, setOf(overstyrtKravFraForrige))
@@ -300,7 +302,7 @@ class KravStegTest {
         begrunnelse = "Test",
         vurdertIBehandling = behandlingId,
         opprettet = Instant.now(),
-        søknadsdato = Søknadsdato(mottattDato, SøknadsdatoÅrsak.SøknadMottatt),
+        søknadsdato = Søknadsdato(mottattDato, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
         overstyrMuligRettFra = overstyrMuligRettFra,
         muligRettFra = overstyrMuligRettFra?.dato ?: mottattDato,
     )
