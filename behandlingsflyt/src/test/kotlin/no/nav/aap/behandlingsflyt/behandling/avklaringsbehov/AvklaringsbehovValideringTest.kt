@@ -632,7 +632,7 @@ class AvklaringsbehovValideringTest {
         begrunnelse = "Nytt krav",
         vurdertIBehandling = behandlingId,
         opprettet = Instant.now(),
-        søknadsdato = Søknadsdato(muligRettFra, SøknadsdatoÅrsak.SøknadMottatt),
+        søknadsdato = Søknadsdato(muligRettFra, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
         overstyrMuligRettFra = null,
         muligRettFra = muligRettFra,
     )

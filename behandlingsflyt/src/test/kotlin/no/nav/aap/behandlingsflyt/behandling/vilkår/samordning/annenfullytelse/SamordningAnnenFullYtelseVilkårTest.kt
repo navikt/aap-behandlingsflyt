@@ -322,7 +322,7 @@ class SamordningAnnenFullYtelseVilkårTest {
                 begrunnelse = "begrunnelse nytt krav b",
                 vurdertIBehandling = behandlingId,
                 opprettet = Instant.now(),
-                søknadsdato = Søknadsdato(periode.fom, SøknadsdatoÅrsak.SøknadMottatt),
+                søknadsdato = Søknadsdato(periode.fom, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
                 overstyrMuligRettFra = null,
                 muligRettFra = periode.fom,
             )
