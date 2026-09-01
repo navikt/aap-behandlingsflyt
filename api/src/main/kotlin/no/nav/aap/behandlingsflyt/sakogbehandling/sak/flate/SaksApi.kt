@@ -68,6 +68,9 @@ fun NormalOpenAPIRoute.saksApi(
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
     val ansattInfoService = AnsattInfoService(gatewayProvider)
 
+    /**
+     * Kalles av postmottak.
+     */
     route("/api/sak").tag(Tags.Sak) {
         route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
             AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))

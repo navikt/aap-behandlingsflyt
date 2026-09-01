@@ -43,6 +43,8 @@ class SakOgBehandlingService(
             val gjeldendeBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
                 ?.let { behandlingRepository.hent(it.behandlingId) }
 
+            val finnesÅpenBehandling = behandlingService.finnÅpenYtelsesbehandling(sak.id) !== null
+
             val resultat = if (gjeldendeBehandling == null) {
                 behandlingRepository.hentAlleFor(sak.id)
                     .filter { it.erYtelsesbehandling() }
@@ -56,6 +58,7 @@ class SakOgBehandlingService(
 
             SaksinfoDTO(
                 saksnummer = sak.saksnummer.toString(),
+                finnesÅpenBehandling = finnesÅpenBehandling,
                 opprettetTidspunkt = sak.opprettetTidspunkt,
                 periode = sak.rettighetsperiode,
                 ident = sak.person.aktivIdent().identifikator,
