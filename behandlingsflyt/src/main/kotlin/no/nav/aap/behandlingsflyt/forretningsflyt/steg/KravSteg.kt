@@ -142,7 +142,8 @@ class KravSteg(
                             opprettet = Instant.now(),
                             søknadsdato = Søknadsdato(
                                 søknad.mottattTidspunkt.toLocalDate(),
-                                SøknadsdatoÅrsak.SøknadMottatt
+                                SøknadsdatoÅrsak.SøknadMottatt,
+                                begrunnelse = "Automatisk vurdert"
                             ),
                             overstyrMuligRettFra = null,
                             muligRettFra = søknad.mottattTidspunkt.toLocalDate()
@@ -244,7 +245,8 @@ class KravSteg(
             opprettet = Instant.now(),
             søknadsdato = Søknadsdato(
                 dokument.mottattTidspunkt.toLocalDate(),
-                SøknadsdatoÅrsak.SøknadMottatt
+                SøknadsdatoÅrsak.SøknadMottatt,
+                begrunnelse = "Automatisk vurdert"
             ),
             overstyrMuligRettFra = overstyrMuligRettFra,
             muligRettFra = listOfNotNull(

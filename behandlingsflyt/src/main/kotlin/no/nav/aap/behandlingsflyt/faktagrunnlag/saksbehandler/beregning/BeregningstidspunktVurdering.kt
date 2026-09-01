@@ -8,8 +8,10 @@ import java.time.LocalDateTime
 enum class ÅrsakBeregningstidspunkt {
     SYKEMELDINGSDATO,
     KRAVDATO,
+    UFØRETIDSPUNKT,
     DATO_PAA_LEGEERKLÆRING,
     HENVIST_TIL_BEHANDLING,
+    SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT,
     ANNET,
 }
 

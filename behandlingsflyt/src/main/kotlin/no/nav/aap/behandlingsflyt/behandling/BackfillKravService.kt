@@ -130,7 +130,7 @@ class BackfillKravService(
                     begrunnelse = "Automatisk vurdering",
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),
-                    søknadsdato = Søknadsdato(dokument.mottattTidspunkt.toLocalDate(), SøknadsdatoÅrsak.SøknadMottatt),
+                    søknadsdato = Søknadsdato(dokument.mottattTidspunkt.toLocalDate(), SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = ""),
                     overstyrMuligRettFra = overstyringFraGammeltKrav,
                     muligRettFra = listOfNotNull(
                         dokument.mottattTidspunkt.toLocalDate(),
@@ -184,6 +184,8 @@ class BackfillKravService(
                 overstyrMuligRettFra = OverstyrMuligRettFra(
                     dato = vurdering.startDato,
                     årsak = vurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak(),
+                    begrunnelse = vurdering.begrunnelse
+
                 ),
                 muligRettFra = gjeldendeMuligRettFra,
             )

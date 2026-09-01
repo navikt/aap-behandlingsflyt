@@ -265,7 +265,8 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                                 muligRettFra = nå.toLocalDate(),
                                 søknadsdato = Søknadsdato(
                                     årsak = SøknadsdatoÅrsak.SøknadMottatt,
-                                    dato = nå.toLocalDate()
+                                    dato = nå.toLocalDate(),
+                                    begrunnelse = "Automatisk vurdert"
                                 ),
                                 journalpostId = journalpostId,
                                 vurdertAv = SYSTEMBRUKER,
@@ -321,7 +322,8 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                                 muligRettFra = rettighetsperiodeVurdering.first,
                                 søknadsdato = Søknadsdato(
                                     årsak = SøknadsdatoÅrsak.SøknadMottatt,
-                                    dato = nå.toLocalDate()
+                                    dato = nå.toLocalDate(),
+                                    begrunnelse = "Automatisk vurdert"
                                 ),
                                 journalpostId = journalpostId,
                                 vurdertAv = Bruker("SAKSBEHANDLER"),
@@ -329,7 +331,8 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                                 opprettet = Instant.now(), //Ignorert
                                 overstyrMuligRettFra = OverstyrMuligRettFra(
                                     dato = rettighetsperiodeVurdering.first,
-                                    årsak = rettighetsperiodeVurdering.third.tilOverstyrMuligRettFraÅrsak()
+                                    årsak = rettighetsperiodeVurdering.third.tilOverstyrMuligRettFraÅrsak(),
+                                    begrunnelse = "Var ikke i stand til å søke tidligere"
                                 ),
                                 vurdertIBehandling = behandling.id,
                                 referanse = Kravreferanse.ny() // Ignorert
