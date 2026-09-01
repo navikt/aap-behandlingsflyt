@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
@@ -27,7 +28,6 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOvergangUføreRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -71,7 +71,6 @@ class VurderBistandsbehovStegTest {
 
 
         val steg = VurderBistandsbehovSteg(
-            unleashGateway = AlleAvskruddUnleash,
             bistandRepository = bistandMock,
             sykdomsRepository = mockk {
                 every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
@@ -95,7 +94,7 @@ class VurderBistandsbehovStegTest {
                     )
                 )
             },
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+            vilkårService = VilkårService(inMemoryRepositoryProvider),
             overgangUføreRepository = InMemoryOvergangUføreRepository,
             tidligereVurderinger = FakeTidligereVurderinger(),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),

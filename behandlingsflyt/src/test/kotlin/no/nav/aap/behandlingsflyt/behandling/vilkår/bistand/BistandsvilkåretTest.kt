@@ -4,7 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistan
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -32,6 +34,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -66,22 +70,31 @@ class BistandsvilkåretTest {
         register<AlleAvskruddUnleash>()
     }
 
+    val vilkårService = VilkårService(inMemoryRepositoryProvider)
+
+    private fun vilkårsperioder(behandling: Behandling): List<Vilkårsperiode> =
+        InMemoryVilkårsresultatRepository.hent(behandling.id)
+            .finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+            .vilkårsperioder()
+
     @Test
     fun `nye vurderinger skal overskrive`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
-        Bistandsvilkåret(vilkårsresultat).vurder(
+        vilkårService.vurderVilkår(
+            behandling.id,
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 bistandGrunnlag = BistandGrunnlag(listOf(bistandvurdering())),
-            )
+            ),
+            Bistandsvilkåret,
         )
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-        assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.OPPFYLT }
+        assertThat(vilkårsperioder(behandling))
+            .hasSize(1).allMatch { periode -> periode.utfall == Utfall.OPPFYLT }
 
-        Bistandsvilkåret(vilkårsresultat).vurder(
+        vilkårService.vurderVilkår(
+            behandling.id,
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 bistandGrunnlag = BistandGrunnlag(
@@ -93,18 +106,18 @@ class BistandsvilkåretTest {
                         )
                     )
                 ),
-            )
+            ),
+            Bistandsvilkåret,
         )
-        assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
+
+        assertThat(vilkårsperioder(behandling))
+            .hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
     }
 
     @Test
     fun `Skal kunne ha vurderinger med ulike utfall`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
         val iDag = LocalDate.now()
-        Bistandsvilkåret(vilkårsresultat).vurder(
+        val vilkårsvurderinger = Bistandsvilkåret.vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 bistandGrunnlag = BistandGrunnlag(
@@ -118,16 +131,15 @@ class BistandsvilkåretTest {
                     )
                 ),
             )
-        )
+        ).segmenter().toList()
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
-        assertThat(vilkår.vilkårsperioder().first().utfall).isEqualTo(Utfall.OPPFYLT)
-        assertThat(vilkår.vilkårsperioder().last().innvilgelsesårsak).isNull()
-        assertThat(vilkår.vilkårsperioder().last().utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        assertThat(vilkår.vilkårsperioder().last().avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
-        assertThat(vilkår.vilkårsperioder().last().periode.fom).isEqualTo(iDag.plusDays(10))
+        assertThat(vilkårsvurderinger).hasSize(2)
+        assertThat(vilkårsvurderinger.first().verdi.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(vilkårsvurderinger.last().verdi.innvilgelsesårsak).isNull()
+        assertThat(vilkårsvurderinger.last().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(vilkårsvurderinger.last().verdi.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
+        assertThat(vilkårsvurderinger.last().periode.fom).isEqualTo(iDag.plusDays(10))
     }
 
 
@@ -260,9 +272,6 @@ class BistandsvilkåretTest {
 
     @Test
     fun `to vurderinger med ulike utfall gir riktig tidslinje`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
         val vurdering1 = Bistandsvurdering(
             begrunnelse = "Begrunnelse 1",
             erBehovForAktivBehandling = false,
@@ -291,25 +300,24 @@ class BistandsvilkåretTest {
             vurdertIBehandling = BehandlingId(70608)
         )
 
-        Bistandsvilkåret(vilkårsresultat).vurder(
+        val vilkår = Bistandsvilkåret.vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.of(2999, 1, 1),
                 bistandGrunnlag = BistandGrunnlag(listOf(vurdering2, vurdering1)),
             )
-        )
+        ).segmenter().toList()
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
+        assertThat(vilkår).hasSize(2)
 
-        val periode1 = vilkår.vilkårsperioder().first()
-        val periode2 = vilkår.vilkårsperioder().last()
+        val periode1 = vilkår.first()
+        val periode2 = vilkår.last()
 
-        assertThat(periode1.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(periode1.verdi.utfall).isEqualTo(Utfall.OPPFYLT)
         assertThat(periode1.periode).isEqualTo(Periode(LocalDate.of(2025, 11, 25), LocalDate.of(2026, 4, 20)))
 
-        assertThat(periode2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        assertThat(periode2.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
+        assertThat(periode2.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(periode2.verdi.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
         assertThat(periode2.periode).isEqualTo(Periode(LocalDate.of(2026, 4, 21), LocalDate.of(2999, 1, 1)))
     }
 
