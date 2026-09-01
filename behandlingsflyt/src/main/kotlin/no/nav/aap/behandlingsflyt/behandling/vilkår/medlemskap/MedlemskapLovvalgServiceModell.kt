@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import kotlin.String
 
 data class KanBehandlesAutomatiskVurdering(
     val kanBehandlesAutomatisk: Boolean,
@@ -31,6 +32,7 @@ data class TilhørighetVurdering(
     val utenlandsAddresserGrunnlag: UtenlandsAdresserGrunnlag? = null,
     val visuellTidslinje: List<VisuellTidslinjeArbeidInntektINorge> = emptyList(),
     val bestemtArbeidsgruppeINorge: List<BestemtArbeidsgruppeINorgeGrunnlag>? = null,
+    val bosattStatusOgNorskStatsborgerskap: BosattOgNorskStatsborgerskapGrunnlag? = null
 )
 
 data class VisuellTidslinjeInntektDetalj(
@@ -58,6 +60,17 @@ data class ArbeidInntektINorgeGrunnlag(
     val beloep: Double,
     val periode: Periode,
 )
+
+data class BosattOgNorskStatsborgerskapGrunnlag(
+    val personStatus: PersonStatus?,
+    val statsborgerskap: List<GyldigStatsborgerskap>,
+)
+
+data class GyldigStatsborgerskap(
+    val land: String,
+    override val gyldigFraOgMed: LocalDate? = null,
+    override val gyldigTilOgMed: LocalDate? = null,
+) : GyldigPeriode
 
 data class BestemtArbeidsgruppeINorgeGrunnlag(
     val virksomhetId: String,
