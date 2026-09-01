@@ -60,9 +60,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
                 rettighetsperiode
             ).take(3)
 
-            InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(
+            InMemoryMeldeperiodeRepository.lagreFastsattDag(
                 behandling.id,
-                perioder.first()
+                perioder.first().fom,
             )
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiode.fom)
@@ -178,7 +178,7 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
             val perioder = MeldeperiodeUtleder.utledMeldeperiode(null, rettighetsperiode).take(3)
 
-            InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandling.id, perioder.first())
+            InMemoryMeldeperiodeRepository.lagreFastsattDag(behandling.id, perioder.first().fom)
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiode.fom)
             val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->
@@ -228,8 +228,8 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             val perioderFørsteBehandling = MeldeperiodeUtleder.utledMeldeperiode(null, rettighetsperiodeB1).take(3)
             val perioderAndreBehandling = MeldeperiodeUtleder.utledMeldeperiode(null, rettighetsperiodeB2).take(3)
 
-            InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandling.id, perioderFørsteBehandling.first())
-            InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandling2.id, perioderAndreBehandling.first())
+            InMemoryMeldeperiodeRepository.lagreFastsattDag(behandling.id, perioderFørsteBehandling.first().fom)
+            InMemoryMeldeperiodeRepository.lagreFastsattDag(behandling2.id, perioderAndreBehandling.first().fom)
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiodeB1.fom)
 

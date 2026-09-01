@@ -16,14 +16,14 @@ enum class BehandlingsflytFeature : FeatureToggle {
     GReguleringUtplukkJobb,
     StudentV2,
     BackfillStansOpphor,
-    BackfillKrav,
+    BackfillSakstatusDatadeling,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     MotorV2,
-    IngenStoppHendelseVedAtomaerBehandling,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     GenererVilkarsvurderingOppsummeringPDF,
 
     // --- Krav ---
+    BackfillKrav,
     KravSteg, // Visning
     LagreVurderRettighetsperiodeSomKrav, // Double write
     KravAutomatiskVurdering, // Double write

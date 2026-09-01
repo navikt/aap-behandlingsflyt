@@ -602,7 +602,8 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakBeregningstidspunkt.DATO_PAA_LEGEERKLÆRING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.DATO_PAA_LEGEERKLAERING
             ÅrsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING
             ÅrsakBeregningstidspunkt.SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SEKSTEN_AAR_SOM_BEREGNINGSTIDSPUNKT
-            ÅrsakBeregningstidspunkt.ANNET, null -> null
+            ÅrsakBeregningstidspunkt.ANNET -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.ANNET
+            null -> null
         }
 
     private fun ÅrsakYtterligereNedsatt?.tilKontrakt():
@@ -612,11 +613,12 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakYtterligereNedsatt.YTTERLIGERE_NEDSATT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.YTTERLIGERE_NEDSATT
             ÅrsakYtterligereNedsatt.ØKT_UFØREGRAD -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.OKT_UFOEREGRAD
             ÅrsakYtterligereNedsatt.IKKE_BETYDNING_IKKE_RELEVANT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.IKKE_BETYDNING_IKKE_RELEVANT
-            ÅrsakYtterligereNedsatt.ANNET, null -> null
+            ÅrsakYtterligereNedsatt.ANNET ->  Faktagrunnlag.AarsakTidspunktVurdering.AarsakYtterligereNedsatt.ANNET
             ÅrsakYtterligereNedsatt.SYKEMELDINGSDATO,
             ÅrsakYtterligereNedsatt.KRAVDATO,
             ÅrsakYtterligereNedsatt.DATO_PAA_LEGEERKLÆRING,
             ÅrsakYtterligereNedsatt.HENVIST_TIL_BEHANDLING -> null
+            null -> null
         }
 
 }
