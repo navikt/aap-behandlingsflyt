@@ -405,6 +405,64 @@ class BackfillKravServiceTest {
         assertThat(nyttKrav.muligRettFra).isEqualTo(overstyrtDato) // min(5 jan 2024, 1 mar 2023)
     }
 
+    @Test
+    fun `stønadsperiodevurdering videreføres fra forrige behandling ved revurdering uten kravendring`() {
+        val søknadsdato = 10 januar 2024
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(søknadsdato = søknadsdato)
+
+        leggTilSøknad(førstegangsbehandling, søknadsdato)
+
+        service.backfillBehandling(sak, førstegangsbehandling, erNyesteBehandling = false)
+        val vurderingFørstegangsbehandling =
+            InMemoryStønadsperiodeRepository.hentHvisEksisterer(førstegangsbehandling.id)!!.vurderinger.single()
+
+        service.backfillBehandling(sak, revurdering, erNyesteBehandling = true)
+        val vurderingerRevurdering =
+            InMemoryStønadsperiodeRepository.hentHvisEksisterer(revurdering.id)!!.vurderinger
+
+        // Vurderingen skal videreføres uendret – ikke erstattes med en ny automatisk vurdering
+        assertThat(vurderingerRevurdering).hasSize(1)
+        val vurderingRevurdering = vurderingerRevurdering.single()
+        assertThat(vurderingRevurdering.referanse).isEqualTo(vurderingFørstegangsbehandling.referanse)
+        assertThat(vurderingRevurdering.opprettet).isEqualTo(vurderingFørstegangsbehandling.opprettet)
+        assertThat(vurderingRevurdering.vurdertIBehandling).isEqualTo(vurderingFørstegangsbehandling.vurdertIBehandling)
+    }
+
+    @Test
+    fun `stønadsperiodevurdering for nedgradert krav fjernes ikke – filtreres bort ved bruk`() {
+        val senereSøknadsdato = 10 januar 2024
+        val tidligereSøknadsdato = 5 januar 2024
+        val (sak, førstegangsbehandling, revurdering) =
+            opprettInMemorySakOgRevurdering(søknadsdato = senereSøknadsdato)
+
+        leggTilSøknad(førstegangsbehandling, senereSøknadsdato)
+        leggTilSøknad(revurdering, tidligereSøknadsdato)
+
+        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(tidligereSøknadsdato, Tid.MAKS))
+
+        service.backfillBehandling(sak, førstegangsbehandling, erNyesteBehandling = false)
+        val relevantKravFørstegangsbehandling =
+            InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
+
+        service.backfillBehandling(
+            lagSakMedRettighetsperiode(sak, tidligereSøknadsdato),
+            revurdering,
+            erNyesteBehandling = true,
+        )
+
+        val stønadsperiodeRevurdering =
+            InMemoryStønadsperiodeRepository.hentHvisEksisterer(revurdering.id)!!.vurderinger
+
+        // Stønadsperiodevurderingen for det gamle (nå nedgraderte) kravet skal fortsatt finnes i settet
+        assertThat(stønadsperiodeRevurdering.map { it.referanse })
+            .contains(relevantKravFørstegangsbehandling.referanse)
+
+        // ...men skal filtreres bort når den vurderes mot gjeldende krav (nedgradert krav er ikke lenger relevant)
+        val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
+        val gjeldendeKravReferanser = kravRevurdering.gjeldendeRelevanteKrav().map { it.referanse }
+        assertThat(gjeldendeKravReferanser).doesNotContain(relevantKravFørstegangsbehandling.referanse)
+    }
+
     private fun opprettSakOgBehandlingMedSøknad(
         søknadsdato: LocalDate,
         rettighetsperiodeFom: LocalDate = søknadsdato,

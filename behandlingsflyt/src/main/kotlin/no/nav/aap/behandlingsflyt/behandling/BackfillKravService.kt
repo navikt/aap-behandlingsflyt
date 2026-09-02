@@ -79,7 +79,7 @@ class BackfillKravService(
         verifiserMotRettighetsperiode(sak, oppdatertGrunnlag, erNyesteBehandling)
 
         kravRepository.lagre(behandling.id, oppdatertGrunnlag.vurderinger)
-        backfillStønadsperiode(behandling.id, oppdatertGrunnlag)
+        backfillStønadsperiode(behandling.id, oppdatertGrunnlag, behandling.forrigeBehandlingId)
 
         return BackfillBehandlingResultat.Backfilled
     }
@@ -210,7 +210,20 @@ class BackfillKravService(
         }
     }
 
-    private fun backfillStønadsperiode(behandlingId: BehandlingId, grunnlag: KravGrunnlag) {
+    /**
+     * Vurderinger fra forrige behandling videreføres (kopieres) – kun krav som mangler vurdering,
+     * eller har en automatisk (SYSTEMBRUKER) vurdering der startDato ikke lenger stemmer med
+     * krav.muligRettFra, får en ny automatisk vurdering. Dette speiler logikken i
+     * [no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStønadsperiodeSteg].
+     *
+     * Vurderinger for krav som ikke lenger er blant gjeldende relevante krav (f.eks. et krav som er
+     * nedgradert til tilleggsopplysning) skal ikke fjernes – de filtreres bort ved bruk
+     */
+    private fun backfillStønadsperiode(
+        behandlingId: BehandlingId,
+        grunnlag: KravGrunnlag,
+        forrigeBehandlingId: BehandlingId?,
+    ) {
         val gjeldendeRelevanteKrav = grunnlag.gjeldendeRelevanteKrav()
         if (gjeldendeRelevanteKrav.isEmpty()) return
 
@@ -221,7 +234,19 @@ class BackfillKravService(
 
         if (stønadsperiodeRepository.hentHvisEksisterer(behandlingId) != null) return
 
-        val nyeVurderinger = gjeldendeRelevanteKrav.map { krav ->
+        val vedtatteStønadsperiodeVurderinger = forrigeBehandlingId
+            ?.let { stønadsperiodeRepository.hentHvisEksisterer(it)?.gjeldendeVurderinger() }
+            .orEmpty()
+
+        val kravSomManglerVurdering = gjeldendeRelevanteKrav.filter { krav ->
+            val vedtattStønadsperiodeForKrav = vedtatteStønadsperiodeVurderinger.firstOrNull { it.referanse == krav.referanse }
+            vedtattStønadsperiodeForKrav == null || (
+                    vedtattStønadsperiodeForKrav.vurdertAv == SYSTEMBRUKER &&
+                            vedtattStønadsperiodeForKrav.startDato != krav.muligRettFra
+                    )
+        }
+
+        val nyeVurderinger = kravSomManglerVurdering.map { krav ->
             StønadsperiodeVurdering(
                 referanse = krav.referanse,
                 opprettet = Instant.now(),
@@ -233,9 +258,9 @@ class BackfillKravService(
                 relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
                 startDato = krav.muligRettFra,
             )
-        }.toSet()
+        }
 
-        stønadsperiodeRepository.lagre(behandlingId, nyeVurderinger)
+        stønadsperiodeRepository.lagre(behandlingId, vedtatteStønadsperiodeVurderinger + nyeVurderinger)
     }
 }
 
