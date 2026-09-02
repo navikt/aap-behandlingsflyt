@@ -129,14 +129,6 @@ fun NormalOpenAPIRoute.flytApi(
                         else -> null
                     }
 
-                    LoggingKontekst(
-                        repositoryProvider.provide(),
-                        LogKontekst(referanse = BehandlingReferanse(req.referanse))
-                    ).use {
-                        val behandlingVersjon = behandling.versjon
-                        log.info("Henter flyt med behandlingversjon: $behandlingVersjon")
-                    }
-
 
                     BehandlingFlytOgTilstandDto(
                         flyt = stegGrupper.map { (gruppe, steg) ->
