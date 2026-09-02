@@ -448,7 +448,7 @@ class BrevUtlederService(
             ) {
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
-            if (avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG) {
+            if (Miljø.erDev() && avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG) {
                 val avslag1127 = avslag11_27Repository.hentHvisEksisterer(behandling.id)
                     ?.gjeldendeVurderinger()
                     ?.firstOrNull { it.vurdertIBehandling == behandling.id && it.skalAvslås1127 == true }
