@@ -88,4 +88,5 @@ enum class SøknadsdatoÅrsak {
 enum class OverstyrMuligRettFraÅrsak {
     IkkeIStandTilÅSøkeTidligere,
     MisvisendeOpplysninger,
+    Ukjent // Utført før årsak ble lagt inn, skal ikke brukes på nye ting
 }

@@ -187,6 +187,7 @@ internal object VedtakDokumentRenderer {
     private fun OverstyrMuligRettFraÅrsak.visningsnavn(): String = when (this) {
         OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere -> "Ikke i stand til å søke tidligere"
         OverstyrMuligRettFraÅrsak.MisvisendeOpplysninger -> "Misvisende opplysninger"
+        OverstyrMuligRettFraÅrsak.Ukjent -> "Ukjent"
     }
 
     private fun VedtakDokumentGrunnlag.rettighetsperiodeSub(): Seksjon? {
