@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.repository.sak
 
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakMedVedtakResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigrering
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.Factory
 
 class ArenaMigreringRepositoryImpl(private val connection: DBConnection) : ArenaMigreringRepository {
@@ -17,8 +19,8 @@ class ArenaMigreringRepositoryImpl(private val connection: DBConnection) : Arena
     override fun lagre(migrering: ArenaMigrering) {
         connection.execute(
             """
-            INSERT INTO ARENA_MIGRERING (sak_id, saksnummer_arena, ident, migrert_tid)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO ARENA_MIGRERING (sak_id, saksnummer_arena, ident, migrert_tid, arena_sak_data)
+            VALUES (?, ?, ?, ?, ?::jsonb)
             """.trimIndent()
         ) {
             setParams {
@@ -26,6 +28,7 @@ class ArenaMigreringRepositoryImpl(private val connection: DBConnection) : Arena
                 setString(2, migrering.saksnummerArena)
                 setString(3, migrering.ident)
                 setLocalDateTime(4, migrering.migrertTidspunkt)
+                setString(5, migrering.arenaSakData?.let { DefaultJsonMapper.toJson(it) })
             }
         }
     }
@@ -45,6 +48,8 @@ class ArenaMigreringRepositoryImpl(private val connection: DBConnection) : Arena
                     saksnummerArena = row.getString("saksnummer_arena"),
                     ident = row.getString("ident"),
                     migrertTidspunkt = row.getLocalDateTime("migrert_tid"),
+                    arenaSakData = row.getStringOrNull("arena_sak_data")
+                        ?.let { DefaultJsonMapper.fromJson<ArenaSakMedVedtakResponse>(it) },
                 )
             }
         }

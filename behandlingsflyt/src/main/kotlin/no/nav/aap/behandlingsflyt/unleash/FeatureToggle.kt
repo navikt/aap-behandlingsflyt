@@ -21,6 +21,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MotorV2,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     GenererVilkarsvurderingOppsummeringPDF,
+    MigreringHentArenaGrunnlag,
 
     // --- Krav ---
     BackfillKrav,

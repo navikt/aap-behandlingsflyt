@@ -82,6 +82,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MotorV2 to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
+        BehandlingsflytFeature.MigreringHentArenaGrunnlag to true,
         // --- Krav ---
         BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
