@@ -509,8 +509,6 @@ fun Application.startMotor(
     gatewayProvider: GatewayProvider,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
-    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
     val motor = Motor(
         dataSource = dataSource,
         antallKammer = AppConfig.ANTALL_WORKERS_FOR_MOTOR,

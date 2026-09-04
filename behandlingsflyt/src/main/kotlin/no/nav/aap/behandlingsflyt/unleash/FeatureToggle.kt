@@ -18,7 +18,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BackfillStansOpphor,
     BackfillSakstatusDatadeling,
     VentStatusForTilbakekrevingIBehandlingsflyt,
-    MotorV2,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     GenererVilkarsvurderingOppsummeringPDF,
 
