@@ -58,4 +58,7 @@ interface ApiInternGateway : Gateway {
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 
     fun hentSakerForPerson(personidentifikator: String): ArenaSakerResponse
+
+    data class Meldekortsyklus(val år: Int, val ukenummer: Int)
+    fun hentArenaMeldekortsyklus(ident: Ident): Meldekortsyklus?
 }
