@@ -9,5 +9,11 @@ data class SaksinfoDTO(
     val opprettetTidspunkt: LocalDateTime,
     val periode: Periode,
     val ident: String,
-    val resultat: ResultatKode? = null
+    val resultat: ResultatKode? = null, )
+
+data class SaksInfoTilPostmottak(
+    val saksnummer: String,
+    val periode: Periode,
+    val resultat: ResultatKode?,
+    val finnesÅpenBehandling: Boolean
 )

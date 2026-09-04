@@ -36,37 +36,56 @@ class SakOgBehandlingService(
         personRepository = repositoryProvider.provide(),
     )
 
+    fun finnsSaksInfoTilPostmottak(ident: Ident): List<SaksInfoTilPostmottak> {
+        val person = personRepository.finn(ident) ?: return emptyList()
+
+        return sakRepository.finnSakerFor(person.id).map { sak ->
+            val finnesÅpenBehandling = behandlingService.finnÅpenYtelsesbehandling(sak.id) !== null
+
+            SaksInfoTilPostmottak(
+                saksnummer = sak.saksnummer.toString(),
+                finnesÅpenBehandling = finnesÅpenBehandling,
+                periode = sak.rettighetsperiode,
+                resultat = utledResultatKode(sak)
+            )
+        }
+    }
+
     fun finnSaksinfo(ident: Ident): List<SaksinfoDTO> {
         val person = personRepository.finn(ident) ?: return emptyList()
 
         return sakRepository.finnSakerFor(person.id).map { sak ->
-            val gjeldendeBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
-                ?.let { behandlingRepository.hent(it.behandlingId) }
-
-            val resultat = if (gjeldendeBehandling == null) {
-                behandlingRepository.hentAlleFor(sak.id)
-                    .filter { it.erYtelsesbehandling() }
-                    .maxByOrNull { it.opprettetTidspunkt }
-                    ?.let {
-                        resultatUtleder.utledResultat(it).takeIf { res -> res == Resultat.TRUKKET }
-                    }
-            } else {
-                resultatUtleder.utledResultat(gjeldendeBehandling)
-            }
-
             SaksinfoDTO(
                 saksnummer = sak.saksnummer.toString(),
                 opprettetTidspunkt = sak.opprettetTidspunkt,
                 periode = sak.rettighetsperiode,
                 ident = sak.person.aktivIdent().identifikator,
-                resultat = when (resultat) {
-                    Resultat.INNVILGELSE -> ResultatKode.INNVILGET
-                    Resultat.AVSLAG -> ResultatKode.AVSLAG
-                    Resultat.TRUKKET -> ResultatKode.TRUKKET
-                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
-                    null -> null
-                }
+                resultat = utledResultatKode(sak)
             )
+        }
+    }
+
+    private fun utledResultatKode(sak: Sak): ResultatKode? {
+        val gjeldendeBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+            ?.let { behandlingRepository.hent(it.behandlingId) }
+
+        val resultat = if (gjeldendeBehandling == null) {
+            behandlingRepository.hentAlleFor(sak.id)
+                .filter { it.erYtelsesbehandling() }
+                .maxByOrNull { it.opprettetTidspunkt }
+                ?.let {
+                    resultatUtleder.utledResultat(it).takeIf { res -> res == Resultat.TRUKKET }
+                }
+        } else {
+            resultatUtleder.utledResultat(gjeldendeBehandling)
+        }
+
+        return when (resultat) {
+            Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+            Resultat.AVSLAG -> ResultatKode.AVSLAG
+            Resultat.TRUKKET -> ResultatKode.TRUKKET
+            Resultat.AVBRUTT -> ResultatKode.AVBRUTT
+            null -> null
         }
     }
 
