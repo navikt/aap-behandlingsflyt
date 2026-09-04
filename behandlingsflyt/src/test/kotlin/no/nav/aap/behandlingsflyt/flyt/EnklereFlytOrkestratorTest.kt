@@ -337,9 +337,9 @@ class EnklereFlytOrkestratorTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjon = Definisjon.AVKLAR_STUDENT, funnetISteg = AVKLAR_STUDENT, null, null
+            definisjon = Definisjon.VURDER_AVSLAG_11_27, funnetISteg = VURDER_AVSLAG_11_27, null, null
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", Bruker("TESTEN"))
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_AVSLAG_11_27, "asdf", Bruker("TESTEN"))
         avklaringsbehovene.leggTil(
             definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null
         )
@@ -514,17 +514,6 @@ class EnklereFlytOrkestratorTest {
                     stegStatus = StegStatus.AVKLARINGSPUNKT,
                 ),
                 StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.AVSLUTTER),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START),
-                StegTilstand(
-                    stegType = AVKLAR_STUDENT,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
-                ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER),
-                StegTilstand(
-                    stegType = AVKLAR_STUDENT,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT,
-                ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
@@ -536,12 +525,12 @@ class EnklereFlytOrkestratorTest {
         )
 
         flytOrkestrator.forberedLøsingAvBehov(
-            behovDefinisjon = Definisjon.AVKLAR_STUDENT,
+            behovDefinisjon = Definisjon.VURDER_AVSLAG_11_27,
             behandling = behandling,
             kontekst = behandling.flytKontekst(),
             bruker = Bruker("Z123456")
         )
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", Bruker("TESTEN"))
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_AVSLAG_11_27, "asdf", Bruker("TESTEN"))
 
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
 
@@ -711,17 +700,6 @@ class EnklereFlytOrkestratorTest {
                     stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
                 StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.AVSLUTTER),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START),
-                StegTilstand(
-                    stegType = AVKLAR_STUDENT,
-                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
-                ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER),
-                StegTilstand(
-                    stegType = AVKLAR_STUDENT,
-                    stegStatus = StegStatus.AVKLARINGSPUNKT
-                ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
@@ -730,18 +708,18 @@ class EnklereFlytOrkestratorTest {
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.TILBAKEFØRT),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.TILBAKEFØRT),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.TILBAKEFØRT),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.START),
                 StegTilstand(
-                    stegType = AVKLAR_STUDENT,
+                    stegType = VURDER_AVSLAG_11_27,
                     stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG
                 ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.UTFØRER),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.UTFØRER),
                 StegTilstand(
-                    stegType = AVKLAR_STUDENT,
+                    stegType = VURDER_AVSLAG_11_27,
                     stegStatus = StegStatus.AVKLARINGSPUNKT
                 ),
-                StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER),
+                StegTilstand(stegType = VURDER_AVSLAG_11_27, stegStatus = StegStatus.AVSLUTTER),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
