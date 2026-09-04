@@ -72,9 +72,7 @@ class VurderSykdomSteg(
 
         val skalTriggesVedRevurderingOvergangArbeid = forrigeOvergangArbeidGrunnlag?.vurderinger.isNullOrEmpty()
         val skalTriggesVedRevurderingStudent =
-            vedtatteSykdomsvurderinger?.none { it.potensieltOppfyltStudent() } == true && unleashGateway.isEnabled(
-                BehandlingsflytFeature.StudentV2
-            )
+            vedtatteSykdomsvurderinger?.none { it.potensieltOppfyltStudent() } == true
 
         val irrelevanteVurderingsbehov = buildSet {
             if (!skalTriggesVedRevurderingStudent) add(Vurderingsbehov.REVURDER_STUDENT)

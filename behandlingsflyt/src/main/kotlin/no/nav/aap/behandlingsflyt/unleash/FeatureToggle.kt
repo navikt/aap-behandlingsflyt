@@ -14,7 +14,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MigrerStansOgOpphor,
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
-    StudentV2,
     BackfillStansOpphor,
     BackfillSakstatusDatadeling,
     VentStatusForTilbakekrevingIBehandlingsflyt,

@@ -44,14 +44,14 @@ class VurderStudentSteg private constructor(
             definisjon = Definisjon.AVKLAR_STUDENT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA-> {
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg) && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
+                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA -> {
+                        false
                     }
+
                     VurderingType.REVURDERING -> {
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
+                        false
                     }
+
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.MELDEKORT,

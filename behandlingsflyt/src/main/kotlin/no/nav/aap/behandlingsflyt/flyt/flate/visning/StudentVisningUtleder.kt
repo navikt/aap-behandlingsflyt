@@ -25,13 +25,7 @@ class StudentVisningUtleder(
     )
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-        if (studentGrunnlag?.vurderinger != null && unleashGateway.isDisabled(BehandlingsflytFeature.StudentV2)) {
-            return true
-        }
-        val hentAvklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        return hentAvklaringsbehovene
-            .hentBehovForDefinisjon(Definisjon.AVKLAR_STUDENT)?.erIkkeAvbrutt() == true
+        return false
     }
 
     override fun gruppe(): StegGruppe {

@@ -74,7 +74,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
-        BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.BackfillSakstatusDatadeling to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
