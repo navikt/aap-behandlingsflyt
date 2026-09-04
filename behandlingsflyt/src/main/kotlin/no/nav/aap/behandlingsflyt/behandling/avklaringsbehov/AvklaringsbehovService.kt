@@ -23,11 +23,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class AvklaringsbehovService(
@@ -41,6 +43,8 @@ class AvklaringsbehovService(
     private val unleashGateway: UnleashGateway,
     private val avklaringsbehovValidering: AvklaringsbehovValidering
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
@@ -122,6 +126,10 @@ class AvklaringsbehovService(
          * - Du burde ikke rydde opp for andre steg eller avklaringsbehov.
          * - Hvis register-data og menneskelige vurderinger er lagret i samme grunnlag, så pass
          *   på at du ikke tilbakestiller register-dataen!
+         * - Merk at kallet kan bli hoppet over: for periodiserte ytelsesvilkår kalles ikke
+         *   funksjonen når alle vurderingene denne behandlingen har lagt inn er automatisk vurdert
+         *   (se [oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår]). Ikke legg logikk som må kjøre
+         *   uansett i denne callbacken.
          */
         tilbakestillGrunnlag: () -> Unit,
         kontekst: FlytKontekstMedPerioder
@@ -281,12 +289,13 @@ class AvklaringsbehovService(
     ) {
         val perioderVilkåretErRelevant by lazy { nårVurderingErRelevant(kontekst) }
 
-        val perioderSomBehøverVurdering by lazy {
+        val perioderSomBehøverManuellVurderingIDenneBehandlingen by lazy {
             perioderSomBehøverVurdering(
                 kontekst,
                 perioderVilkåretErRelevant,
                 nårVurderingErRelevant,
-                perioderSomIkkeErTilstrekkeligVurdert
+                perioderSomIkkeErTilstrekkeligVurdert,
+                gjeldendeVurderinger
             )
         }
 
@@ -318,7 +327,7 @@ class AvklaringsbehovService(
                                     .any { it.verdi.vurdertIBehandling == kontekst.behandlingId /* TODO: løstAv != Kelvin */ }
                             }
 
-                            else -> perioderSomBehøverVurdering.isNotEmpty()
+                            else -> perioderSomBehøverManuellVurderingIDenneBehandlingen.isNotEmpty()
                         }
                     }
 
@@ -333,7 +342,7 @@ class AvklaringsbehovService(
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
-            perioderVedtaketBehøverVurdering = { perioderSomBehøverVurdering },
+            perioderVedtaketBehøverVurdering = { perioderSomBehøverManuellVurderingIDenneBehandlingen },
             perioderSomIkkeErTilstrekkeligVurdert =
                 {
                     val perioderSomIkkeErTilstrekkeligVurdertEvaluert = perioderSomIkkeErTilstrekkeligVurdert(kontekst)
@@ -364,7 +373,28 @@ class AvklaringsbehovService(
                     }
                 },
             erTilstrekkeligVurdert = { false },
-            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            tilbakestillGrunnlag = {
+                val vurderingerFraDenneBehandlingen = gjeldendeVurderinger().orEmpty()
+                    .filter { it.verdi.vurdertIBehandling == kontekst.behandlingId }
+
+                val kunAutomatiskeVurderinger = vurderingerFraDenneBehandlingen.isNotEmpty() &&
+                        vurderingerFraDenneBehandlingen.all { it.erAutomatiskVurdert() }
+
+                /* Hopper over tilbakestilling når alt denne behandlingen har lagt inn er automatisk
+                 * vurdert og minst en periode er relevant: det er steget selv som har skrevet vurderingene,
+                 * så en tilbakestilling ville bare ført til at de ble skrevet på nytt ved neste gjennomkjøring.
+                 * Finnes det manuelle vurderinger i behandlingen, må de fortsatt ryddes bort.
+                 */
+                if (kunAutomatiskeVurderinger && perioderVilkåretErRelevant.segmenter().any { it.verdi }) {
+                    log.info(
+                        "Tilbakestiller ikke grunnlag for {} i behandling {}: alle vurderingene i behandlingen er automatisk vurdert.",
+                        definisjon,
+                        kontekst.behandlingId
+                    )
+                } else {
+                    tilbakestillGrunnlag()
+                }
+            },
             kontekst = kontekst
         )
     }
@@ -439,15 +469,23 @@ class AvklaringsbehovService(
         perioderVilkåretErRelevant: Tidslinje<Boolean>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         perioderSomIkkeErTilstrekkeligVurdert: (kontekst: FlytKontekstMedPerioder) -> Set<Periode>?,
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>?,
     ): Set<Periode> {
-        return Tidslinje.map3(
+        val perioderSomBehøverVurdering = Tidslinje.map3(
             perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
             perioderVilkåretErVurdert(kontekst, nårVurderingErRelevant, perioderSomIkkeErTilstrekkeligVurdert),
             nårEndringIKrav(kontekst)
-        ) { erRelevant, erVurdert, erKravEndret ->
-            erRelevant == true && (erVurdert != true || erKravEndret == true)
-        }
-            .filter { it.verdi }
+        ) { erRelevant, erVurdertITidligereBehandling, erKravEndret ->
+            erRelevant == true && (erVurdertITidligereBehandling != true || erKravEndret == true)
+        }.filter { it.verdi }
+
+        val perioderVurdertAutomatiskIDenneBehandlingen = gjeldendeVurderinger().orEmpty()
+            .filter { it.verdi.vurdertIBehandling == kontekst.behandlingId && it.verdi.erAutomatiskVurdert() }
+
+        return perioderSomBehøverVurdering
+            .disjoint(perioderVurdertAutomatiskIDenneBehandlingen) { periode, segment ->
+                Segment(periode, segment.verdi)
+            }
             .komprimer().perioder().toSet()
     }
 
