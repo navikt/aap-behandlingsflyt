@@ -1,8 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.behandlerdialog
 
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDialogmeldingerForSakParams
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDokumentoversiktJournalpostListeParams
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DialogmeldingLeveringStatus
 import no.nav.aap.behandlingsflyt.behandling.krav.tilSøknadUtenKravDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -12,11 +9,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetJournalpostDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
+import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
+import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
-import kotlin.collections.getOrDefault
 
 class HentBehandlerDialogService(
     private val dataSource: DataSource,
@@ -87,8 +85,8 @@ class HentBehandlerDialogService(
             val dokumentoversikt = journalposter[dialogmelding.journalpostId]
 
             MeldingMedDokumenterDto(
-                dialogmelding = MeldingDto(
-                    `innkommendeUtgående` = `InnkommendeUtgående`.UTGÅENDE,
+                melding = MeldingDto(
+                    `innkommendeUtgående` = dialogmelding.innkommendeUtgående.tilResponseType(),
                     meldingFraNavn = dialogmelding.meldingFraNavn,
                     opprettetTidspunkt = dialogmelding.opprettetTidspunkt,
                     dokumentasjonsType = dialogmelding.dokumentasjonsType,
@@ -110,7 +108,7 @@ class HentBehandlerDialogService(
             val journalpost = journalposter[journalpostId]
 
             MeldingMedDokumenterDto(
-                dialogmelding = MeldingDto(
+                melding = MeldingDto(
                     `innkommendeUtgående` = `InnkommendeUtgående`.INNKOMMENDE,
                     meldingFraNavn = journalpost?.avsenderMottakerDto?.navn ?: "",
                     opprettetTidspunkt = helsedokument.mottattTidspunkt,
@@ -121,6 +119,13 @@ class HentBehandlerDialogService(
                 ),
                 dokumentIdListe = journalpost?.dokumenter?.map { it.tilResponseDto() }.orEmpty()
             )
+        }
+    }
+
+    private fun no.nav.aap.dokumentinnhenting.kontrakt.InnkommendeUtgående.tilResponseType(): InnkommendeUtgående {
+        return when (this) {
+            no.nav.aap.dokumentinnhenting.kontrakt.InnkommendeUtgående.INNKOMMENDE -> InnkommendeUtgående.INNKOMMENDE
+            no.nav.aap.dokumentinnhenting.kontrakt.InnkommendeUtgående.UTGÅENDE -> InnkommendeUtgående.UTGÅENDE
         }
     }
 

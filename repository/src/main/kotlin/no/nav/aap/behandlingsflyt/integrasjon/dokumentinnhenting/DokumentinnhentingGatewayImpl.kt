@@ -1,10 +1,5 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting
 
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumenterForJournalpostParameter
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentDokumentoversiktJournalpostListeResponse
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentDokumentoversiktJournalpostResponse
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDialogmeldingerForSakParams
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
@@ -13,6 +8,11 @@ import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslings
 import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
+import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
+import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
+import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeResponse
+import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostParams
+import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -149,7 +149,7 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
     }
 
-    override fun hentDokumentoversiktForJournalpost(request: DokumenterForJournalpostParameter): HentDokumentoversiktJournalpostResponse {
+    override fun hentDokumentoversiktForJournalpost(request: HentDokumentoversiktJournalpostParams): HentDokumentoversiktJournalpostResponse {
         val journalpostId = request.journalpostId
         val request = GetRequest(
             additionalHeaders = listOf(
