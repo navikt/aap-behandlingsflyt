@@ -76,7 +76,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
@@ -134,15 +133,6 @@ object Revurdering : BehandlingType {
             .medSteg(steg = FastsettMeldeperiodeSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(steg = VurderAlderSteg, vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle())
             .medSteg(steg = VurderAvslag11_27Steg, vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.VURDER_AVSLAG_11_27))
-            .medSteg(
-                steg = VurderStudentSteg,
-                vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.MIGRERING_FRA_ARENA,
-                    Vurderingsbehov.REVURDER_STUDENT,
-                    Vurderingsbehov.HELHETLIG_VURDERING,
-                )
-            )
             .medSteg(
                 steg = VurderSykdomSteg,
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
