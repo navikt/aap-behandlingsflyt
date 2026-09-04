@@ -1,19 +1,17 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dokumentinnhenting
 
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BegrensetDokumentInfoDto
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BegrensetJournalpostDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumenterForJournalpostParameter
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FellesDialogmeldingDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentDokumentoversiktJournalpostListeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentDokumentoversiktJournalpostResponse
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.DialogmeldingLeveringStatus
 import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDialogmeldingerForSakParams
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.InnkommendeUtgaaende
+import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
+import no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
@@ -30,8 +28,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
-import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
-import java.time.LocalDateTime
 
 /**
  * Bestiller dokumenter fra dokumentinnhenting
@@ -169,6 +165,18 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
                 mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
             )
         )
+    }
+
+    override fun hentDokumentoversiktForJournalpostListe(request: HentDokumentoversiktJournalpostListeParams): HentDokumentoversiktJournalpostListeResponse {
+        val request = PostRequest(
+            body = request,
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            ),
+        )
+
+        return requireNotNull(client.post(uri = URI.create("$dokumenterUri/api/dokumenter/dokumentliste"), request))
     }
 
     override fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto {
