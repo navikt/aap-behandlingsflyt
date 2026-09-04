@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.krav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
@@ -26,7 +28,7 @@ data class KravGrunnlagDto(
 sealed interface KravVurderingDto {
     val referanse: UUID
     val type: KravType
-    val journalpostId: JournalpostId
+    val journalpostId: JournalpostId?
     val vurdertAv: Bruker
     val begrunnelse: String
     val vurdertIBehandling: BehandlingId
@@ -82,6 +84,23 @@ data class TilleggsopplysningDto(
     override val type: KravType = KravType.TILLEGGSOPPLYSNING
 }
 
+data class MigrertKravDto(
+    override val referanse: UUID,
+    override val vurdertAv: Bruker,
+    override val begrunnelse: String,
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+
+    val virkningstidspunktArena: LocalDate,
+    val muligRettFra: LocalDate,
+    val arenaSaksnummer: String,
+    val rettighetstype: MigrertRettighetstype,
+    val resterendeKvoteOrdinaer: Int,
+) : KravVurderingDto {
+    override val type: KravType = KravType.MIGRERT_KRAV
+    override val journalpostId: JournalpostId? = null
+}
+
 fun KravVurdering.somDto(): KravVurderingDto = when (this) {
     is RelevantKrav -> RelevantKravDto(
         referanse = this.referanse.verdi,
@@ -120,5 +139,18 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
         begrunnelse = this.begrunnelse,
         vurdertIBehandling = this.vurdertIBehandling,
         opprettet = this.opprettet,
+    )
+
+    is MigrertKrav -> MigrertKravDto(
+        referanse = this.referanse.verdi,
+        vurdertAv = this.vurdertAv,
+        begrunnelse = this.begrunnelse,
+        vurdertIBehandling = this.vurdertIBehandling,
+        opprettet = this.opprettet,
+        virkningstidspunktArena = this.virkningstidspunktArena,
+        muligRettFra = this.muligRettFra,
+        arenaSaksnummer = this.arenaSaksnummer,
+        rettighetstype = this.rettighetstype,
+        resterendeKvoteOrdinaer = this.resterendeKvoteOrdinaer,
     )
 }

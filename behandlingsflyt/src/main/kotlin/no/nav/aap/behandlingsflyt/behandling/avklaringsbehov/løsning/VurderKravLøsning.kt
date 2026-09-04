@@ -26,6 +26,6 @@ class VurderKravLøsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
-        return VurderKravLøser(repositoryProvider).løs(kontekst, this)
+        return VurderKravLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

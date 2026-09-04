@@ -17,7 +17,7 @@ value class Kravreferanse(val verdi: UUID) {
 
 sealed interface KravVurdering {
     val referanse: Kravreferanse
-    val journalpostId: JournalpostId
+    val journalpostId: JournalpostId?
     val vurdertAv: Bruker
     val begrunnelse: String
     val vurdertIBehandling: BehandlingId
@@ -25,7 +25,14 @@ sealed interface KravVurdering {
 
     fun erAutomatiskVurdert(): Boolean {
         return vurdertAv == SYSTEMBRUKER
+    }
 
+    fun forJournalpostId(journalpostId: JournalpostId): Boolean {
+        return this.journalpostId == journalpostId
+    }
+
+    fun forJournalpostId(journalpostId: String): Boolean {
+        return this.journalpostId?.identifikator == journalpostId
     }
 }
 
@@ -69,11 +76,35 @@ data class Tilleggsopplysning(
     override val opprettet: Instant,
 ) : KravVurdering
 
+data class MigrertKrav(
+    override val referanse: Kravreferanse,
+    override val vurdertAv: Bruker,
+    override val begrunnelse: String,
+    override val vurdertIBehandling: BehandlingId,
+    override val opprettet: Instant,
+
+    val virkningstidspunktArena: LocalDate,
+    val muligRettFra: LocalDate,
+    val arenaSaksnummer: String,
+    val rettighetstype: MigrertRettighetstype,
+    val resterendeKvoteOrdinaer: Int,
+) : KravVurdering {
+    override val journalpostId: JournalpostId? = null
+}
+
+enum class MigrertRettighetstype {
+    ORDINÆR,
+    UNNTAK_11_12_ÅR_4,
+    UNNTAK_11_12_ÅR_5,
+    SP_ERSTATNING_11_13,
+}
+
 enum class KravType {
     RELEVANT_KRAV,
     TRUKKET_SØKNAD,
     KLAGE,
     TILLEGGSOPPLYSNING,
+    MIGRERT_KRAV
 }
 
 data class OverstyrMuligRettFra(val dato: LocalDate, val årsak: OverstyrMuligRettFraÅrsak, val begrunnelse: String)

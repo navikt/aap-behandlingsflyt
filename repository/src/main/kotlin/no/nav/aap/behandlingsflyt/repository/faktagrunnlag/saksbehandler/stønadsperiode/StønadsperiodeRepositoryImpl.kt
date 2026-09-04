@@ -97,6 +97,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
 
                             "GJENINNTREDEN_ETTER_OPPHØR" -> RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR
                             "NY_STØNADSPERIODE" -> RelevantKravType.NY_STØNADSPERIODE
+                            "MIGRERT_STØNADSPERIODE" -> RelevantKravType.MIGRERT_STØNADSPERIODE
                             "AVSLAG" -> RelevantKravType.AVSLAG
                             else -> error("ukjent kravtype $kravtype")
                         },
@@ -217,6 +218,10 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                     }
                     RelevantKravType.NY_STØNADSPERIODE -> {
                         setString(5, "NY_STØNADSPERIODE")
+                        setArray(6, emptyList())
+                    }
+                    RelevantKravType.MIGRERT_STØNADSPERIODE -> {
+                        setString(5, "MIGRERT_STØNADSPERIODE")
                         setArray(6, emptyList())
                     }
                 }

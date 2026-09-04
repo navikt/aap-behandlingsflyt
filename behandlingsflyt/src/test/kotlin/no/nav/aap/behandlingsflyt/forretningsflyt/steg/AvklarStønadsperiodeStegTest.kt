@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -108,7 +111,44 @@ class AvklarStønadsperiodeStegTest {
         assertThat(vurderinger).hasSize(1)
         assertThat(vurderinger.single().referanse).isEqualTo(krav.referanse)
     }
-    
+
+    @Test
+    fun `migrering fra Arena - lagrer migrert stønadsperiode med riktig startdato og begrunnelse`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val migrertKrav = lagMigrertKrav(behandling.id, LocalDate.of(2020, 3, 1))
+        InMemoryKravRepository.lagre(behandling.id, setOf(migrertKrav))
+
+        steg.utfør(flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = VurderingType.MIGERING_FRA_ARENA
+        })
+
+        val vurderinger = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger
+        assertThat(vurderinger).hasSize(1)
+        val vurdering = vurderinger.single()
+        assertThat(vurdering.referanse).isEqualTo(migrertKrav.referanse)
+        assertThat(vurdering.relevantKravType).isEqualTo(RelevantKravType.MIGRERT_STØNADSPERIODE)
+        assertThat(vurdering.startDato).isEqualTo(migrertKrav.muligRettFra)
+        assertThat(vurdering.harHattOrdinærSiste52Uker).isFalse()
+        assertThat(vurdering.harGjenværendeKvote).isFalse()
+        assertThat(vurdering.begrunnelse).contains(migrertKrav.arenaSaksnummer)
+    }
+
+    @Test
+    fun `migrering fra Arena uten migrert krav - lagrer tomt grunnlag`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+
+        steg.utfør(flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingType = VurderingType.MIGERING_FRA_ARENA
+        })
+
+        val vurderinger = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+        assertThat(vurderinger).isNullOrEmpty()
+    }
+
     private fun opprettFørstegangsbehandling(sakId: SakId) =
         InMemoryBehandlingRepository.opprettBehandling(
             sakId = sakId,
@@ -144,6 +184,22 @@ class AvklarStønadsperiodeStegTest {
         søknadsdato = Søknadsdato(mottattDato, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
         overstyrMuligRettFra = null,
         muligRettFra = mottattDato,
+    )
+
+    private fun lagMigrertKrav(
+        behandlingId: BehandlingId,
+        muligRettFra: LocalDate,
+    ) = MigrertKrav(
+        referanse = Kravreferanse.ny(),
+        vurdertAv = SYSTEMBRUKER,
+        begrunnelse = "Migrert fra Arena",
+        vurdertIBehandling = behandlingId,
+        opprettet = Instant.now(),
+        virkningstidspunktArena = muligRettFra,
+        muligRettFra = muligRettFra,
+        arenaSaksnummer = "ARENA-4711",
+        rettighetstype = MigrertRettighetstype.ORDINÆR,
+        resterendeKvoteOrdinaer = 0,
     )
 
     private fun lagStønadsperiodeVurdering(

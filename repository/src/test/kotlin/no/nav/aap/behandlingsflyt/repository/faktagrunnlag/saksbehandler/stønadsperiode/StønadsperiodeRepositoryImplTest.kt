@@ -200,7 +200,8 @@ class StønadsperiodeRepositoryImplTest {
         RelevantKravType.NY_STØNADSPERIODE,
         RelevantKravType.AVSLAG,
         RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR,
-        RelevantKravType.GJENOPPTAK_ETTER_STANS(listOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS))
+        RelevantKravType.GJENOPPTAK_ETTER_STANS(listOf(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS)),
+        RelevantKravType.MIGRERT_STØNADSPERIODE,
     )
 
     @Test
