@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import javax.sql.DataSource
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -210,23 +211,7 @@ internal fun Application.server(
     gatewayProvider: GatewayProvider,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ) {
-    DefaultJsonMapper.objectMapper()
-        .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
-
-    commonKtorModule(
-        prometheus = prometheus,
-        infoModel = InfoModel(
-            title = "AAP - Behandlingsflyt",
-            version = ApplikasjonsVersjon.versjon,
-            description = """
-            For å teste API i dev, besøk
-            <a href="https://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt">Token Generator</a> for å få token.
-            """.trimIndent(),
-        ),
-        identityProvider = IdentityProvider.ENTRA_ID
-    )
-
-    install(StatusPages, StatusPagesConfigHelper.setup())
+    configureCommonModules(prometheus)
 
     val dedicatedMotorConnections = AppConfig.ANTALL_WORKERS_FOR_MOTOR * 2
     val fellesDataSource = initDatasource(
@@ -270,6 +255,38 @@ internal fun Application.server(
         )
     }
     verifiserTidssone(fellesDataSource)
+
+    registerApiRoutes(fellesDataSource, pipDataSource, repositoryRegistry, gatewayProvider, motor, prometheus)
+}
+
+internal fun Application.configureCommonModules(prometheus: PrometheusMeterRegistry) {
+    DefaultJsonMapper.objectMapper()
+        .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
+
+    commonKtorModule(
+        prometheus = prometheus,
+        infoModel = InfoModel(
+            title = "AAP - Behandlingsflyt",
+            version = ApplikasjonsVersjon.versjon,
+            description = """
+            For å teste API i dev, besøk
+            <a href="https://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt">Token Generator</a> for å få token.
+            """.trimIndent(),
+        ),
+        identityProvider = IdentityProvider.ENTRA_ID
+    )
+
+    install(StatusPages, StatusPagesConfigHelper.setup())
+}
+
+internal fun Application.registerApiRoutes(
+    fellesDataSource: DataSource,
+    pipDataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+    motor: Motor,
+    prometheus: PrometheusMeterRegistry,
+) {
     val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
 
     routing {
