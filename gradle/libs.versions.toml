@@ -47,19 +47,19 @@ jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", vers
 jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.2" }
 hikariCp = { module = "com.zaxxer:HikariCP", version = "7.1.0" }
 
-opentelemetryInstrumentationAnnotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.30.0" }
-opentelemetryLogbackMdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version = "2.30.0-alpha" }
-opentelemetryKtor = { module = "io.opentelemetry.instrumentation:opentelemetry-ktor-3.0", version = "2.30.0-alpha" }
+opentelemetryInstrumentationAnnotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.31.1" }
+opentelemetryLogbackMdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version = "2.31.1-alpha" }
+opentelemetryKtor = { module = "io.opentelemetry.instrumentation:opentelemetry-ktor-3.0", version = "2.31.1-alpha" }
 
 joseJwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
 
 logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.3" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
-micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.17.0" }
+micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.17.1" }
 julToSlf4J = { module = "org.slf4j:jul-to-slf4j", version = "2.0.18" }
 logbackSyslog = { module = "com.papertrailapp:logback-syslog4j", version = "1.0.0" }
 
-avro = { module = "org.apache.avro:avro", version = "1.12.1" }
+avro = { module = "org.apache.avro:avro", version = "1.12.2" }
 kafkaAvroSerializer = { module = "io.confluent:kafka-avro-serializer", version = "7.6.0" }
 kafkaClients = { module = "org.apache.kafka:kafka-clients", version = "4.3.1" }
 
@@ -73,7 +73,7 @@ tabletest = { module = "org.tabletest:tabletest-junit", version = "1.2.2" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainersPostgres = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
 testcontainersKafka = { module = "org.testcontainers:testcontainers-kafka", version.ref = "testcontainers" }
-mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "6.0.1" }
+mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "6.0.2" }
 mockk = { module = "io.mockk:mockk", version = "1.14.11" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
