@@ -47,6 +47,7 @@ class AzureTokenGen(private val audience: String) {
                         "brev",
                         "pip-api",
                         "medlemskaplovvalg-api",
+                        "hent-oppgave-enhet",
                         "oppdater-behandlingsflyt-oppgaver",
                         "oppdater-postmottak-oppgaver",
                         "syfo-api"
