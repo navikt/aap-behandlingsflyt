@@ -519,7 +519,7 @@ fun Application.startMotor(
         prometheus = prometheus,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider,
-        enableV2 = { unleashGateway.isEnabled(BehandlingsflytFeature.MotorV2) },
+        enableV2 = { true },
     )
 
     dataSource.transaction { dbConnection ->
