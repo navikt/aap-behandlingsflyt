@@ -25,7 +25,5 @@ dependencies {
     testImplementation(libs.dbtest)
     testImplementation(libs.mockk)
 
-    testRuntimeOnly(libs.junitPlatformLauncher)
-    testImplementation(libs.bundles.junit)
     testImplementation(kotlin("test"))
 }
