@@ -615,17 +615,13 @@ private fun opprettNySakOgBehandling(
 
     with(testScenarioOrkestrator) {
         // Student eller sykdom
-        if (dto.student) {
-            løsStudent(behandling, vurderingenGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom)
-        } else {
-            if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
-            løsSykdom(
-                behandling = behandling,
-                vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
-                harNedsattArbeidsevne = if (dto.harNedsattArbeidsevne) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
-                erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
-            )
-        }
+        if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
+        løsSykdom(
+            behandling = behandling,
+            vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
+            harNedsattArbeidsevne = if (dto.harNedsattArbeidsevne) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
+        )
 
         val harBehandlingsgrunnlag = dto.harNedsattArbeidsevne && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
 

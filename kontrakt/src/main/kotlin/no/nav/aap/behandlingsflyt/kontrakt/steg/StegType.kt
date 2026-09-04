@@ -55,6 +55,7 @@ public enum class StegType(
         gruppe = StegGruppe.AVSLAG_11_27,
         status = Status.UTREDES
     ),
+    @Deprecated("Nytt steg AVKLAR_STUDENT_V2")
     AVKLAR_STUDENT(
         gruppe = StegGruppe.STUDENT,
         status = Status.UTREDES

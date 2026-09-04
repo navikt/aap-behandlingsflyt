@@ -113,6 +113,7 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         )
     ),
+    @Deprecated("Brukt i tidligere behandlinger, erstattet av AVKLAR_STUDENT_V2")
     AVKLAR_STUDENT(
         kode = AvklaringsbehovKode.`5001`,
         type = BehovType.MANUELT_PÅKREVD,
