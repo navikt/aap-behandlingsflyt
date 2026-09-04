@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.behandlerdialog
 
-data class BegrensetDokumentInfoDto(
+data class DokumentInfoDto(
     val dokumentInfoId: String,
     val tittel: String?
 )

@@ -5,22 +5,16 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DialogmeldingMedDokumenterDto
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumenterForJournalpostParameter
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FellesDialogmeldingDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.HentDialogmeldingerForSakParams
-import no.nav.aap.behandlingsflyt.behandling.dialogmelding.InnkommendeUtgaaende
-import no.nav.aap.behandlingsflyt.behandling.krav.tilSøknadUtenKravDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
@@ -193,64 +187,15 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
             }
 
             route("/dialogmeldinger/{saksnummer}") {
-                authorizedGet<HentStatusLegeerklæring, List<DialogmeldingMedDokumenterDto>>(
+                authorizedGet<HentStatusLegeerklæring, List<MeldingMedDokumenterDto>>(
                     AuthorizationParamPathConfig(
-                        // TODO: Hva slags config skal denne ha?
                         relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                         applicationsOnly = false,
                         sakPathParam = SakPathParam("saksnummer")
                     )
                 ) { params ->
-                    val dialogmeldingerFraDokumentinnhenting = dokumentinnhentingGateway.hentDialogmeldingerForSak(
-                        HentDialogmeldingerForSakParams(params.saksnummer)
-                    )
-
-                    val dialogmeldinger = dialogmeldingerFraDokumentinnhenting
-                        .filter { dialogmelding -> dialogmelding.journalpostId != null }
-                        .map { dialogmelding ->
-                            val response = dokumentinnhentingGateway.hentDokumentoversiktForJournalpost(
-                                DokumenterForJournalpostParameter(dialogmelding.journalpostId!!)
-                            )
-                            DialogmeldingMedDokumenterDto(
-                                dialogmelding = dialogmelding,
-                                dokumentIdListe = response.journalpost?.dokumenter.orEmpty()
-                            )
-                        }
-
-                    val legeerklæringer = dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val sak = repositoryProvider.provide<SakRepository>().hent(Saksnummer.fra(params.saksnummer))
-
-                        val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-
-                        mottattDokumentRepository.hentDokumenterAvType(
-                            sak.id,
-                            InnsendingType.LEGEERKLÆRING
-                        )
-                    }
-
-                    val helsedokumenter = legeerklæringer
-                        .map { legeerklæring ->
-                            val journalpostId = legeerklæring.tilSøknadUtenKravDto().journalpostId.toString()
-                            val dokumentoversikt = dokumentinnhentingGateway.hentDokumentoversiktForJournalpost(
-                                DokumenterForJournalpostParameter(journalpostId)
-                            )
-                            DialogmeldingMedDokumenterDto(
-                                dialogmelding = FellesDialogmeldingDto(
-                                    innkommendeUtgaaende = InnkommendeUtgaaende.INNKOMMENDE,
-                                    meldingFraNavn = dokumentoversikt.journalpost?.avsenderMottakerDto?.navn ?: "",
-                                    opprettetTidspunkt = legeerklæring.mottattTidspunkt,
-                                    dokumentasjonsType = DokumentasjonType.L40,
-                                    tekst = "",
-                                    meldingStatus = null,
-                                    journalpostId = journalpostId
-                                ),
-                                dokumentIdListe =
-                                    dokumentoversikt.journalpost?.dokumenter.orEmpty()
-                            )
-                        }
-
-                    respond(dialogmeldinger + helsedokumenter)
+                    val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
+                    respond(service.hentDialogForSak(params.saksnummer))
                 }
             }
         }
