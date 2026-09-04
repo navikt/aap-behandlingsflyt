@@ -96,7 +96,7 @@ class SamordningSteg(
         ) { utfall, samordningYtelser, vurdering ->
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     // Bruker kan ha oppgitt i søknaden at hen mottar sykepenger. Krev da vurdering
                     // av samordning selv om vi ennå ikke har mottatt vedtak om sykepenger fra registeret.

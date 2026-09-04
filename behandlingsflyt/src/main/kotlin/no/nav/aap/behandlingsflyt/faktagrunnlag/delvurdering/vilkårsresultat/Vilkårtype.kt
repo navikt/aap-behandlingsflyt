@@ -25,6 +25,15 @@ enum class Vilkårtype(
         hjemmel = "§ 11-4",
         kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.ALDERSVILKÅRET,
     ),
+    AVSLAG_11_27(
+        kode = "AAP-27",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG,
+        ),
+        hjemmel = "§ 11-27",
+        kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.AVSLAG_11_27,
+    ),
     LOVVALG(
         kode = "AAP-3",
         spesielleInnvilgelsesÅrsaker = emptyList(),

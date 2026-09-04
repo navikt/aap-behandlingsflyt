@@ -92,7 +92,7 @@ class TidligereVurderingerImpl(
 
                 avslag11_27Tidslinje.mapNotNull { vurdering ->
                     if (vurdering.skalAvslås1127 == true)
-                        TidligereVurderinger.UunngåeligAvslag
+                        TidligereVurderinger.UunngåeligAvslag(Vilkårtype.AVSLAG_11_27)
                     else
                         null
                 }
@@ -132,7 +132,7 @@ class TidligereVurderingerImpl(
                     }
 
                     if (foreløpigRettighetstype == null && sykdomDefinitivtAvslag) {
-                        return@leftJoin TidligereVurderinger.UunngåeligAvslag
+                        return@leftJoin TidligereVurderinger.UunngåeligAvslag(Vilkårtype.SYKDOMSVILKÅRET)
 
                     }
 
@@ -189,7 +189,7 @@ class TidligereVurderingerImpl(
 
                         foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && foreløpigUtfall.rettighetstype == null && skalIkkeVurderesForStudentEllerSykepengeerstatning(
                             sykdomsvurdering
-                        ) -> TidligereVurderinger.UunngåeligAvslag
+                        ) -> TidligereVurderinger.UunngåeligAvslag(Vilkårtype.OVERGANGARBEIDVILKÅRET)
 
                         else -> TidligereVurderinger.PotensieltOppfylt(
                             null,
@@ -218,7 +218,9 @@ class TidligereVurderingerImpl(
                                 RettighetsType.SYKEPENGEERSTATNING
                             )
                             // Siste mulige rettighetstype
-                            akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == null -> TidligereVurderinger.UunngåeligAvslag
+                            akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == null -> TidligereVurderinger.UunngåeligAvslag(
+                                Vilkårtype.SYKEPENGEERSTATNING
+                            )
 
                             else -> TidligereVurderinger.PotensieltOppfylt(null)
                         }
@@ -228,7 +230,10 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { vilkårsresultat, _, tidligereVurderinger ->
                 tidligereVurderinger.leftJoin(vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)) { akkumulertUtfall, sykdomsvilkåret ->
                     when {
-                        akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == RettighetsType.BISTANDSBEHOV && sykdomsvilkåret?.utfall == Utfall.IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag
+                        akkumulertUtfall is TidligereVurderinger.PotensieltOppfylt && akkumulertUtfall.rettighetstype == RettighetsType.BISTANDSBEHOV && sykdomsvilkåret?.utfall == Utfall.IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag(
+                            Vilkårtype.SYKDOMSVILKÅRET
+                        )
+
                         else -> TidligereVurderinger.PotensieltOppfylt(null)
                     }
                 }
@@ -310,11 +315,12 @@ class TidligereVurderingerImpl(
             }
 
             utfall.segmenter()
-                .all { it.verdi == TidligereVurderinger.UunngåeligAvslag } -> TidligereVurderinger.UunngåeligAvslag.also {
-                log.info(
-                    "Gir avslag for TidligereVurderinger.UunngåeligAvslag i steg: $førSteg."
-                )
-            }
+                .all { it.verdi is TidligereVurderinger.UunngåeligAvslag } ->
+                (utfall.segmenter().first().verdi as TidligereVurderinger.UunngåeligAvslag).also {
+                    log.info(
+                        "Gir avslag for TidligereVurderinger.UunngåeligAvslag i steg: $førSteg, vilkår: ${it.vilkårtype}."
+                    )
+                }
 
             else -> TidligereVurderinger.PotensieltOppfylt(null)
         }
@@ -353,10 +359,12 @@ class TidligereVurderingerImpl(
                     vilkårsresultat, kontekst, foreløpigTidslinje
                 )
             ) { foreløpigUtfall, nesteUtfall ->
+
                 when {
                     nesteUtfall == null -> foreløpigUtfall
                     foreløpigUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag || nesteUtfall is TidligereVurderinger.IkkeBehandlingsgrunnlag -> TidligereVurderinger.IkkeBehandlingsgrunnlag
-                    foreløpigUtfall is TidligereVurderinger.UunngåeligAvslag || nesteUtfall is TidligereVurderinger.UunngåeligAvslag -> TidligereVurderinger.UunngåeligAvslag
+                    foreløpigUtfall is TidligereVurderinger.UunngåeligAvslag -> foreløpigUtfall
+                    nesteUtfall is TidligereVurderinger.UunngåeligAvslag -> nesteUtfall
                     foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt && nesteUtfall is TidligereVurderinger.PotensieltOppfylt -> TidligereVurderinger.PotensieltOppfylt(
                         rettighetstype = foreløpigUtfall.rettighetstype ?: nesteUtfall.rettighetstype,
                         muligRettFraNavKontor = foreløpigUtfall.muligRettFraNavKontor
@@ -373,15 +381,13 @@ class TidligereVurderingerImpl(
     override fun girAvslagEllerIngenBehandlingsgrunnlag(
         kontekst: FlytKontekstMedPerioder, førSteg: StegType
     ): Boolean {
-        return (gir(kontekst, førSteg) in listOf(
-            TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag
-        ))
+        val utfall = gir(kontekst, førSteg)
+        return utfall is TidligereVurderinger.IkkeBehandlingsgrunnlag || utfall is TidligereVurderinger.UunngåeligAvslag
     }
 
     override fun girAvslag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
-        return (gir(kontekst, førSteg) == TidligereVurderinger.UunngåeligAvslag)
+        return gir(kontekst, førSteg) is TidligereVurderinger.UunngåeligAvslag
     }
-
 
     override fun girIngenBehandlingsgrunnlag(
         kontekst: FlytKontekstMedPerioder, førSteg: StegType
@@ -397,7 +403,7 @@ class TidligereVurderingerImpl(
     ): Tidslinje<TidligereVurderinger.Behandlingsutfall> {
         return vilkårsresultat.tidslinjeFor(vilkårtype).mapValue {
             when (it.utfall) {
-                Utfall.IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag
+                Utfall.IKKE_OPPFYLT -> TidligereVurderinger.UunngåeligAvslag(vilkårtype)
                 else -> TidligereVurderinger.PotensieltOppfylt(null)
             }
         }
