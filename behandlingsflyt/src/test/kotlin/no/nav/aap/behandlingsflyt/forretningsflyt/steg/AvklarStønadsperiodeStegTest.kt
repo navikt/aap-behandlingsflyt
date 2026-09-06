@@ -141,7 +141,7 @@ class AvklarStønadsperiodeStegTest {
         begrunnelse = "Test",
         vurdertIBehandling = behandlingId,
         opprettet = Instant.now(),
-        søknadsdato = Søknadsdato(mottattDato, SøknadsdatoÅrsak.SøknadMottatt),
+        søknadsdato = Søknadsdato(mottattDato, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
         overstyrMuligRettFra = null,
         muligRettFra = mottattDato,
     )

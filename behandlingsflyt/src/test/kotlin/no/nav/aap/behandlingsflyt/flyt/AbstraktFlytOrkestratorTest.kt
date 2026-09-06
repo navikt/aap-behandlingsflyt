@@ -1481,7 +1481,7 @@ open class AbstraktFlytOrkestratorTest(
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
-    protected fun Behandling.løsVedtaksbrevKlage(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
+    protected fun Behandling.løsVedtaksbrevSaksbehandler(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
         val brevbestilling = hentBrevAvType(this, typeBrev)
 
         return this.løsAvklaringsBehov(vedtaksbrevKlageLøsning(brevbestilling.referanse.brevbestillingReferanse))

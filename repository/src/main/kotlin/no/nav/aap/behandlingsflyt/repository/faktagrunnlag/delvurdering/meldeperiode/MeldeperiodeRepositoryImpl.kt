@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import java.time.DayOfWeek
+import java.time.LocalDate
 
 class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : MeldeperiodeRepository {
     companion object : Factory<MeldeperiodeRepositoryImpl> {
@@ -15,39 +15,33 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
         }
     }
 
-    override fun hentFørsteMeldeperiode(behandlingId: BehandlingId): Periode? {
+    override fun hentFastsattDag(behandlingId: BehandlingId): LocalDate? {
         val query = """
             SELECT periode FROM MELDEPERIODE 
             JOIN MELDEPERIODE_GRUNNLAG ON MELDEPERIODE.meldeperiodegrunnlag_id = MELDEPERIODE_GRUNNLAG.id
             WHERE behandling_id = ? AND aktiv = true
             order by periode
         """.trimIndent()
-        return connection.queryFirstOrNull<Periode>(query) {
+        return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                it.getPeriode("periode")
+                it.getPeriode("periode").fom
             }
         }
     }
 
-    override fun hentMeldeperioder(
-        behandlingId: BehandlingId,
-        periode: Periode
-    ): List<Periode> = MeldeperiodeUtleder.utledMeldeperiode(hentFørsteMeldeperiode(behandlingId)?.fom, periode)
 
     /**
      * Lagrer kun ned første meldeperioden - resten kan utledes
      */
-    override fun lagreFørsteMeldeperiode(
+    override fun lagreFastsattDag(
         behandlingId: BehandlingId,
-        meldeperiode: Periode?
+        fastsattDag: LocalDate,
     ) {
-        if (meldeperiode != null) {
-            check(meldeperiode.fom.dayOfWeek == DayOfWeek.MONDAY) {
-                "Våre meldeperioder starter alltid på en mandag, ${meldeperiode.fom} er en ${meldeperiode.fom.dayOfWeek}."
-            }
+        check(fastsattDag.dayOfWeek == DayOfWeek.MONDAY) {
+            "Våre meldeperioder starter alltid på en mandag, $fastsattDag er en ${fastsattDag.dayOfWeek}."
         }
 
         val disableQuery = """
@@ -73,15 +67,12 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
             INSERT INTO MELDEPERIODE (meldeperiodegrunnlag_id, periode)
             VALUES (?, ?::daterange)
         """.trimIndent()
-        meldeperiode?.let {
-            connection.execute(query) {
-                setParams {
-                    setLong(1, key)
-                    setPeriode(2, it)
-                }
+        connection.execute(query) {
+            setParams {
+                setLong(1, key)
+                setPeriode(2, Periode(fastsattDag, fastsattDag.plusDays(13)))
             }
         }
-
     }
 
     override fun slett(behandlingId: BehandlingId) {
@@ -89,6 +80,9 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        lagreFørsteMeldeperiode(tilBehandling, hentFørsteMeldeperiode(fraBehandling))
+        val fastsattDag = hentFastsattDag(fraBehandling)
+        if (fastsattDag != null) {
+            lagreFastsattDag(tilBehandling, fastsattDag)
+        }
     }
 }

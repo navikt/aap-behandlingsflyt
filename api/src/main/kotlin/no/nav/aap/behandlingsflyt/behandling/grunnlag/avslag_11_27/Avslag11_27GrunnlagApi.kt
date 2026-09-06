@@ -42,9 +42,7 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
                 val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
                 val kravGrunnlag = kravRepository.hentHvisEksisterer(behandling.id)
 
-                val kravMedDatoListe = kravGrunnlag?.gjeldendeVurderinger()
-                    ?.filterIsInstance<RelevantKrav>()
-                    .orEmpty()
+                val kravMedDatoListe = kravGrunnlag?.gjeldendeRelevanteKrav().orEmpty().toList()
 
                 val kravListeDto = Avslag11_27KravDto.avslag11_27TilDto(kravMedDatoListe)
 

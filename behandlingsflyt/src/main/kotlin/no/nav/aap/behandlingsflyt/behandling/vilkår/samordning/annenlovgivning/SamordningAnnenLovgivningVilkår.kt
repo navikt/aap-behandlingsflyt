@@ -1,33 +1,31 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 
-class SamordningAnnenLovgivningVilkår(vilkårsresultat: Vilkårsresultat) :
+object SamordningAnnenLovgivningVilkår :
     Vilkårsvurderer<SamordningAnnenLovgivningFaktagrunnlag> {
-    private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
 
-    override fun vurder(grunnlag: SamordningAnnenLovgivningFaktagrunnlag) {
+    override val vilkårtype: Vilkårtype = Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING
+
+    override fun vurder(faktagrunnlag: SamordningAnnenLovgivningFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
 
         val mottarSykestipendTidslinje: Tidslinje<Boolean> = Tidslinje(
-            listOf(Segment(grunnlag.rettighetsperiode, false))
-        ).leftJoin(grunnlag.sykestipendGrunnlag?.tilMottarSykestipendTidslinje().orEmpty()) { _, mottarSykestipend ->
+            listOf(Segment(faktagrunnlag.rettighetsperiode, false))
+        ).leftJoin(faktagrunnlag.sykestipendGrunnlag?.tilMottarSykestipendTidslinje().orEmpty()) { _, mottarSykestipend ->
             mottarSykestipend == true
         }.komprimer()
 
-
         val tidslinje =
-            mottarSykestipendTidslinje.map { mottarSykestipend -> opprettVilkårsvurdering(mottarSykestipend, grunnlag) }
+            mottarSykestipendTidslinje.map { mottarSykestipend -> opprettVilkårsvurdering(mottarSykestipend, faktagrunnlag) }
 
-        vilkår.leggTilVurderinger(tidslinje)
+        return tidslinje
     }
 
     private fun opprettVilkårsvurdering(

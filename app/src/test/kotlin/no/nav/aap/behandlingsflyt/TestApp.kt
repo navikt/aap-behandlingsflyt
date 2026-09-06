@@ -811,12 +811,14 @@ private fun mapKravVurdering(
             opprettet = now,
             søknadsdato = Søknadsdato(
                 dato = krav.søknadsdato,
-                årsak = SøknadsdatoÅrsak.SøknadMottatt
+                årsak = SøknadsdatoÅrsak.SøknadMottatt,
+                begrunnelse = "Nytt krav"
             ),
             overstyrMuligRettFra = krav.overstyrMuligRettFra?.let {
                 OverstyrMuligRettFra(
                     it,
-                    OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere
+                    OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
+                    begrunnelse = "Nytt krav"
                 )
             },
             muligRettFra = krav.overstyrMuligRettFra ?: krav.søknadsdato

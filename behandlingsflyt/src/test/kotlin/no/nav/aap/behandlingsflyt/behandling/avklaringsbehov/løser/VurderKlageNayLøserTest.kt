@@ -59,6 +59,6 @@ class VurderKlageNayLøserTest {
             )
         }
 
-        assertThat(exception.message).contains("FOLKETRYGDLOVEN_11_3")
+        assertThat(exception.message).contains("§ 11-31")
     }
 }

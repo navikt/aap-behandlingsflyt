@@ -53,8 +53,8 @@ internal class KravRepositoryImplTest {
             begrunnelse = "Standard krav om AAP",
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
-            søknadsdato = Søknadsdato(1 januar 2024, SøknadsdatoÅrsak.BrukerHarSøktTidligere),
-            overstyrMuligRettFra = OverstyrMuligRettFra(15 januar 2024, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere),
+            søknadsdato = Søknadsdato(1 januar 2024, SøknadsdatoÅrsak.BrukerHarSøktTidligere, begrunnelse = "Søkte tidligere"),
+            overstyrMuligRettFra = OverstyrMuligRettFra(15 januar 2024, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere, begrunnelse = "Ikke i stand til å søke tidligere"),
             muligRettFra = 1 januar 2024,
         )
 

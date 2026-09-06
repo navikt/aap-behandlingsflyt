@@ -5,6 +5,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 // TODO: Hjemler her som er markert som TODO er ting som kan klages på
 // men det er ikke implementert noen revurdering på de, så det vil feile
 enum class Hjemmel(val hjemmel: String) {
+    FOLKETRYGDLOVEN_21_12("§ 21-12"),
+    FVL_31("Fvl. § 31"),
+
     EOES_883_2004("EØS-forordningen (lovvalg / medlemskap)"),
 
     FOLKETRYGDLOVEN_KAPITTEL_2("Kapittel 2"),
@@ -17,12 +20,12 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_11_6("§ 11-6"),
 
     FOLKETRYGDLOVEN_11_7("§ 11-7"),
-    FOLKETRYGDLOVEN_11_8("§ 11-8"), 
+    FOLKETRYGDLOVEN_11_8("§ 11-8"),
     FOLKETRYGDLOVEN_11_9("§ 11-9"),
     FOLKETRYGDLOVEN_11_10_FRITAK("§ 11-10 Fritak meldeplikt"),
 
     FOLKETRYGDLOVEN_11_10_MELDEPLIKT("§ 11-10 Meldeplikt"), // TODO: Underveis - Mangler mulighet til å korrigere meldedato
-    FOLKETRYGDLOVEN_11_12("§ 11-12"), 
+    FOLKETRYGDLOVEN_11_12("§ 11-12"),
     FOLKETRYGDLOVEN_11_13("§ 11-13"),
 
     FOLKETRYGDLOVEN_11_14("§ 11-14"),
@@ -60,6 +63,9 @@ enum class Hjemmel(val hjemmel: String) {
 
     fun tilVurderingsbehov(): List<Vurderingsbehov> {
         return when (this) {
+            // Klage
+            FOLKETRYGDLOVEN_21_12, FVL_31 -> throw IllegalStateException("Klage på avvisningsvedtak skal er kun gyldig for opprettholdelse")
+
             // Aktivitetspliktbehandling
             FOLKETRYGDLOVEN_11_7 -> listOf(Vurderingsbehov.AKTIVITETSPLIKT_11_7)
             FOLKETRYGDLOVEN_11_9 -> listOf(Vurderingsbehov.AKTIVITETSPLIKT_11_9)
@@ -107,7 +113,7 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_15 -> listOf(Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET)
             FOLKETRYGDLOVEN_11_23_OVERGNG_ARB -> listOf(Vurderingsbehov.VURDER_ARBEIDSOPPTRAPPING)
             FOLKETRYGDLOVEN_11_29_SYKESTIPEND -> listOf(Vurderingsbehov.REVURDER_SYKESTIPEND)
-            
+
             FOLKETRYGDLOVEN_11_4, // TODO: Hva klages på her?
             FOLKETRYGDLOVEN_11_8, // TODO: Ikke implementert
             FOLKETRYGDLOVEN_11_12, // TODO: Ikke implementert

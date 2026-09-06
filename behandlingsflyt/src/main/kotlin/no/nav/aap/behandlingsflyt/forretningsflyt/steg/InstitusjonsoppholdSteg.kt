@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.straffegjennomføring.StraffegjennomføringGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.straffegjennomføring.StraffegjennomføringVilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -29,14 +29,14 @@ class InstitusjonsoppholdSteg(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårService: VilkårService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         institusjonsoppholdRepository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
-        vilkårsresultatRepository = repositoryProvider.provide()
+        vilkårService = VilkårService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -99,14 +99,11 @@ class InstitusjonsoppholdSteg(
                     begrensetTilRettighetsperiode = false
                 )
 
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                StraffegjennomføringVilkår(vilkårsresultat).vurder(
-                    StraffegjennomføringGrunnlag(
-                        vurderFra = kontekst.rettighetsperiode.fom,
-                        institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat),
-                    )
-                )
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                vilkårService.vurderVilkår(kontekst.behandlingId, StraffegjennomføringGrunnlag(
+                    vurderFra = kontekst.rettighetsperiode.fom,
+                    institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat),
+                ), StraffegjennomføringVilkår)
+
             }
 
             VurderingType.MELDEKORT,

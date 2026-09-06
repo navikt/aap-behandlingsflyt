@@ -5,11 +5,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning.SamordningAnnenLovgivningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning.SamordningAnnenLovgivningVilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.skalVurdereStudent
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -26,14 +25,14 @@ class SykestipendSteg private constructor(
     private val sykestipendRepository: SykestipendRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårService: VilkårService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
-        vilkårsresultatRepository = repositoryProvider.provide()
+        vilkårService = VilkårService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -81,16 +80,12 @@ class SykestipendSteg private constructor(
 
     // Bør kanskje inn i et eget steg?
     private fun vurderSamordningAnnenLovgivningVilkår(kontekst: FlytKontekstMedPerioder) {
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-
         val grunnlag = SamordningAnnenLovgivningFaktagrunnlag(
             kontekst.rettighetsperiode,
             sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId),
         )
 
-        SamordningAnnenLovgivningVilkår(vilkårsresultat).vurder(grunnlag)
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        vilkårService.vurderVilkår(kontekst.behandlingId, grunnlag, SamordningAnnenLovgivningVilkår)
     }
 
     companion object : FlytSteg {

@@ -76,8 +76,8 @@ enum class KravType {
     TILLEGGSOPPLYSNING,
 }
 
-data class OverstyrMuligRettFra(val dato: LocalDate, val årsak: OverstyrMuligRettFraÅrsak)
-data class Søknadsdato(val dato: LocalDate, val årsak: SøknadsdatoÅrsak)
+data class OverstyrMuligRettFra(val dato: LocalDate, val årsak: OverstyrMuligRettFraÅrsak, val begrunnelse: String)
+data class Søknadsdato(val dato: LocalDate, val årsak: SøknadsdatoÅrsak, val begrunnelse: String)
 
 enum class SøknadsdatoÅrsak {
     BrukerHarSøktTidligere,
@@ -88,4 +88,5 @@ enum class SøknadsdatoÅrsak {
 enum class OverstyrMuligRettFraÅrsak {
     IkkeIStandTilÅSøkeTidligere,
     MisvisendeOpplysninger,
+    Ukjent // Utført før årsak ble lagt inn, skal ikke brukes på nye ting
 }

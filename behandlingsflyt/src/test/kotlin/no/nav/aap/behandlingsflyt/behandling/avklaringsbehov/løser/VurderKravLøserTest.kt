@@ -46,7 +46,7 @@ class VurderKravLøserTest {
                 RelevantKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
-                    søknadsdato = Søknadsdato(16 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
+                    søknadsdato = Søknadsdato(16 januar 2026, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
                     overstyrMuligRettFra = null,
                 )
             )
@@ -72,7 +72,7 @@ class VurderKravLøserTest {
                 RelevantKravLøsningDto(
                     journalpostId = JournalpostId("111122224"),
                     begrunnelse = "Ny søknad",
-                    søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
+                    søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
                     overstyrMuligRettFra = null,
                 )
             )
@@ -97,10 +97,11 @@ class VurderKravLøserTest {
                 RelevantKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "test",
-                    søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
+                    søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
                     overstyrMuligRettFra = OverstyrMuligRettFra(
                         20 januar 2026,
-                        OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere
+                        OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
+                        begrunnelse = "Overstyrt"
                     ),
                 )
             )
@@ -146,7 +147,7 @@ class VurderKravLøserTest {
                 RelevantKravLøsningDto(
                     journalpostId = JournalpostId("1112223"),
                     begrunnelse = "Gyldig krav",
-                    søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt),
+                    søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
                     overstyrMuligRettFra = null,
                 )
             )

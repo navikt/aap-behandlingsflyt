@@ -13,9 +13,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.Rett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -29,6 +31,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.LagtTil
+import no.nav.aap.behandlingsflyt.utils.Uendret
+import no.nav.aap.behandlingsflyt.utils.diffMap
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -167,7 +172,14 @@ class RettighetstypeSteg(
                         is Stans -> Stans(it.vurdering.årsaker)
                     }
                 }
-                if (stansOpphørV1 != grunnlag.stansOpphørV2) {
+                val uendret = diffMap(stansOpphørV1, grunnlag.stansOpphørV2).all { (_, diff) ->
+                    diff is Uendret<*> ||
+                            /* Gammel stans/opphør ble regnet ut da vi brukte MANGLENDE_DOKUMENTASJON, som betyr at
+                             * de ikke fikk med seg disse opphørene. Godtar derfor at opphør dukker opp, siden det nå brukes
+                             * riktig avslagsårsak. */
+                            (diff is LagtTil<StansEllerOpphør> && diff.lagtTil.årsaker == setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE))
+                }
+                if (!uendret) {
                     log.warn(
                         "stansOpphørV2 samsvarer ikke med gjeldendeStansOgOpphør() V1={} V2={}",
                         stansOpphørV1,

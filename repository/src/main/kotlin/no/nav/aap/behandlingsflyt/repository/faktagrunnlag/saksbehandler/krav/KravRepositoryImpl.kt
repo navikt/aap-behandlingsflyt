@@ -59,10 +59,10 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 krav_vurderinger_id, 
                 journalpost_id, vurdert_av, opprettet_tid,
                 begrunnelse, vurdert_i_behandling,
-                krav_type, soknadsdato, soknadsdato_aarsak,
-                overstyr_mulig_rett_fra, overstyr_mulig_rett_fra_aarsak,
+                krav_type, soknadsdato, soknadsdato_aarsak, soknadsdato_begrunnelse,
+                overstyr_mulig_rett_fra, overstyr_mulig_rett_fra_aarsak, overstyr_mulig_rett_fra_begrunnelse,
                 mulig_rett_fra, referanse
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             grunnlag.vurderinger
         ) {
@@ -73,42 +73,50 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 setInstant(4, v.opprettet)
                 setString(5, v.begrunnelse)
                 setLong(6, v.vurdertIBehandling.id)
-                setUUID(13, v.referanse.verdi)
+                setUUID(15, v.referanse.verdi)
                 when (v) {
                     is RelevantKrav -> {
                         setEnumName(7, KravType.RELEVANT_KRAV)
                         setLocalDate(8, v.søknadsdato.dato)
                         setEnumName(9, v.søknadsdato.årsak)
-                        setLocalDate(10, v.overstyrMuligRettFra?.dato)
-                        setEnumName(11, v.overstyrMuligRettFra?.årsak)
-                        setLocalDate(12, v.muligRettFra)
+                        setString(10, v.søknadsdato.begrunnelse)
+                        setLocalDate(11, v.overstyrMuligRettFra?.dato)
+                        setEnumName(12, v.overstyrMuligRettFra?.årsak)
+                        setString(13, v.overstyrMuligRettFra?.begrunnelse)
+                        setLocalDate(14, v.muligRettFra)
                     }
 
                     is TrukketSøknad -> {
                         setEnumName(7, KravType.TRUKKET_SØKNAD)
                         setLocalDate(8, null)
                         setEnumName(9, null as Enum<*>?)
-                        setLocalDate(10, null)
-                        setEnumName(11, null as Enum<*>?)
-                        setLocalDate(12, null)
+                        setString(10, null)
+                        setLocalDate(11, null)
+                        setEnumName(12, null as Enum<*>?)
+                        setString(13, null)
+                        setLocalDate(14, null)
                     }
 
                     is Klage -> {
                         setEnumName(7, KravType.KLAGE)
                         setLocalDate(8, null)
                         setEnumName(9, null as Enum<*>?)
-                        setLocalDate(10, null)
-                        setEnumName(11, null as Enum<*>?)
-                        setLocalDate(12, null)
+                        setString(10, null)
+                        setLocalDate(11, null)
+                        setEnumName(12, null as Enum<*>?)
+                        setString(13, null)
+                        setLocalDate(14, null)
                     }
 
                     is Tilleggsopplysning -> {
                         setEnumName(7, KravType.TILLEGGSOPPLYSNING)
                         setLocalDate(8, null)
                         setEnumName(9, null as Enum<*>?)
-                        setLocalDate(10, null)
-                        setEnumName(11, null as Enum<*>?)
-                        setLocalDate(12, null)
+                        setString(10, null)
+                        setLocalDate(11, null)
+                        setEnumName(12, null as Enum<*>?)
+                        setString(13, null)
+                        setLocalDate(14, null)
                     }
                 }
             }
@@ -146,8 +154,8 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         return connection.querySet(
             """
             SELECT referanse, journalpost_id, vurdert_av, krav_type,
-                   soknadsdato, soknadsdato_aarsak,
-                   overstyr_mulig_rett_fra, overstyr_mulig_rett_fra_aarsak,
+                   soknadsdato, soknadsdato_aarsak, soknadsdato_begrunnelse,
+                   overstyr_mulig_rett_fra, overstyr_mulig_rett_fra_aarsak, overstyr_mulig_rett_fra_begrunnelse,
                    begrunnelse, mulig_rett_fra, vurdert_i_behandling, opprettet_tid
             FROM krav_vurdering
             WHERE krav_vurderinger_id = ?
@@ -202,13 +210,20 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
 
     private fun mapOverstyrMuligRettFra(row: Row): OverstyrMuligRettFra? {
         return row.getLocalDateOrNull("overstyr_mulig_rett_fra")
-            ?.let { OverstyrMuligRettFra(dato = it, årsak = row.getEnum("overstyr_mulig_rett_fra_aarsak")) }
+            ?.let {
+                OverstyrMuligRettFra(
+                    dato = it,
+                    årsak = row.getEnum("overstyr_mulig_rett_fra_aarsak"),
+                    begrunnelse = row.getStringOrNull("overstyr_mulig_rett_fra_begrunnelse") ?: "",
+                )
+            }
     }
 
     private fun mapSøknadsdato(row: Row): Søknadsdato {
         return Søknadsdato(
             dato = row.getLocalDate("soknadsdato"),
-            årsak = row.getEnum("soknadsdato_aarsak")
+            årsak = row.getEnum("soknadsdato_aarsak"),
+            begrunnelse = row.getStringOrNull("soknadsdato_begrunnelse") ?: "",
         )
     }
 

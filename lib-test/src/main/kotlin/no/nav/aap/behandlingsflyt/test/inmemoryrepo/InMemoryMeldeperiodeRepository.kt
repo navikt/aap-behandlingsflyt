@@ -1,27 +1,24 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
-object InMemoryMeldeperiodeRepository: MeldeperiodeRepository {
+object InMemoryMeldeperiodeRepository : MeldeperiodeRepository {
     private val meldeperioder = HashMap<BehandlingId, List<Periode>>()
 
-    override fun hentFørsteMeldeperiode(behandlingId: BehandlingId): Periode? = synchronized(this) {
-        meldeperioder[behandlingId]?.firstOrNull()
+    override fun hentFastsattDag(behandlingId: BehandlingId): LocalDate? = synchronized(this) {
+        meldeperioder[behandlingId]?.firstOrNull()?.fom
     }
 
-    override fun hentMeldeperioder(
+    override fun lagreFastsattDag(
         behandlingId: BehandlingId,
-        periode: Periode
-    ): List<Periode> = MeldeperiodeUtleder.utledMeldeperiode(hentFørsteMeldeperiode(behandlingId)?.fom, periode)
-
-    override fun lagreFørsteMeldeperiode(
-        behandlingId: BehandlingId,
-        meldeperiode: Periode?
+        fastsattDag: LocalDate,
     ) = synchronized(this) {
-        this.meldeperioder[behandlingId] = meldeperiode?.let { listOf(it) } ?: emptyList()
+        this.meldeperioder[behandlingId] = listOf(
+            Periode(fastsattDag, fastsattDag.plusDays(13))
+        )
     }
 
     override fun slett(behandlingId: BehandlingId) {
