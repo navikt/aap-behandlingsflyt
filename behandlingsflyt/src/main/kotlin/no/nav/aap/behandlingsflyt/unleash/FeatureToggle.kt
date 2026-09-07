@@ -32,7 +32,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Avslag11_27,
     SkalViseAlleSykdomssteg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
-    HoppOverKvalitetssikringVedIngenEndring,
     BosattStatsborgerskapGjennomslipp
     ;
 
