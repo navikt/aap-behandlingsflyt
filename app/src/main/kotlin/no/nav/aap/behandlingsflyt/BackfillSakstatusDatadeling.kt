@@ -42,11 +42,8 @@ class BackfillSakstatusDatadeling(
             .start {
                 var forrigeFraTil: List<Long>? = null
                 while (true) {
-                    if (isLeader(log) && unleashGateway.isEnabled(BehandlingsflytFeature.BackfillSakstatusDatadeling)) {
-                        val fraTil = unleashGateway.getVariantValue(
-                            BehandlingsflytFeature.BackfillSakstatusDatadeling,
-                            "backfill-sak-ider"
-                        ).split(",").map(String::toLong)
+                    if (isLeader(log)) {
+                        val fraTil = listOf(0L, 100_000L)
 
                         if (forrigeFraTil != fraTil) {
                             try {
