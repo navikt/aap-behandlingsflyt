@@ -41,5 +41,8 @@ enum class ÅrsakTilOpprettelse {
     UFØRE_VEDTAK_HENDELSE,
 
     // Migrering fra Arena
-    MIGRERING_FRA_ARENA
+    MIGRERING_FRA_ARENA,
+
+    // Korrigering av søknadsdato § 22-13 femte ledd
+    KORRIGER_SØKNADSDATO
 }
