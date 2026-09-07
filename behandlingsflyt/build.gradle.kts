@@ -49,10 +49,10 @@ fun runCommand(command: String): String {
 
 dependencies {
     api(project(":kontrakt"))
-    implementation(libs.micrometerRegistryPrometheus)
-    implementation(libs.logbackClassic)
-    implementation(libs.logstashLogbackEncoder)
-    implementation(libs.opentelemetryInstrumentationAnnotations)
+    implementation(kelvinLibs.micrometer.prometheus)
+    implementation(kelvinLibs.logback.classic)
+    implementation(kelvinLibs.logstash.logback.encoder)
+    implementation(kelvinLibs.opentelemetry.annotations)
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
@@ -69,22 +69,17 @@ dependencies {
     implementation(libs.infrastructure)
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
-    implementation(libs.kafkaClients)
+    implementation(kelvinLibs.kafka.clients)
     implementation(kotlin("reflect"))
 
     testImplementation(project(":lib-test"))
     testImplementation(project(":repository"))
     testImplementation(libs.dbtest)
-    testImplementation(libs.tabletest)
+    testImplementation(kelvinLibs.tabletest)
     implementation(libs.motorTestUtils)
-    testImplementation(libs.bundles.junit)
+    testImplementation(kelvinLibs.bundles.junit)
 
-    testImplementation(libs.testcontainersPostgres)
-    constraints {
-        implementation("org.apache.commons:commons-compress:1.28.0") {
-            because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
-        }
-    }
-    testImplementation(libs.mockk)
+    testImplementation(kelvinLibs.testcontainers.postgresql)
+    testImplementation(kelvinLibs.mockk)
     testImplementation(kotlin("test"))
 }
