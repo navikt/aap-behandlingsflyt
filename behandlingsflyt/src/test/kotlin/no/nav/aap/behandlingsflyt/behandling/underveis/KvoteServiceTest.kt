@@ -32,7 +32,7 @@ class KvoteServiceTest {
     fun `uten migrert krav-vurdering returneres standardkvoter`() {
         val behandling = opprettBehandling()
 
-        val kvoter = kvoteService.gjeldendeKvoter(behandling)
+        val kvoter = kvoteService.gjeldendeKvoter(behandling.id)
 
         assertThat(kvoter).isEqualTo(KvoteService.standardKvoter)
     }
@@ -43,22 +43,10 @@ class KvoteServiceTest {
         val resterendeKvoteOrdinaer = 42
         kravRepository.lagre(behandling.id, setOf(lagMigrertKrav(behandling.id, resterendeKvoteOrdinaer)))
 
-        val kvoter = kvoteService.gjeldendeKvoter(behandling)
+        val kvoter = kvoteService.gjeldendeKvoter(behandling.id)
 
         assertThat(kvoter.ordinærkvote).isEqualTo(Hverdager(resterendeKvoteOrdinaer))
         assertThat(kvoter.sykepengeerstatningkvote).isEqualTo(KvoteService.standardKvoter.sykepengeerstatningkvote)
-    }
-
-    @Test
-    fun `gjeldendeKvoter med behandlingId gir samme resultat som med behandling`() {
-        val behandling = opprettBehandling()
-        val resterendeKvoteOrdinaer = 17
-        kravRepository.lagre(behandling.id, setOf(lagMigrertKrav(behandling.id, resterendeKvoteOrdinaer)))
-
-        val kvoterMedId = kvoteService.gjeldendeKvoter(behandling.id)
-        val kvoterMedBehandling = kvoteService.gjeldendeKvoter(behandling)
-
-        assertThat(kvoterMedId).isEqualTo(kvoterMedBehandling)
     }
 
     private fun opprettBehandling() =
@@ -83,6 +71,6 @@ class KvoteServiceTest {
             muligRettFra = LocalDate.of(2020, 1, 1),
             arenaSaksnummer = "ARENA-4711",
             rettighetstype = MigrertRettighetstype.ORDINÆR,
-            resterendeKvoteOrdinaer = resterendeKvoteOrdinaer,
+            resterendeKvoteOrdinær = resterendeKvoteOrdinaer,
         )
 }
