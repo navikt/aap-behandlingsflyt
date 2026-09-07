@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -69,6 +70,11 @@ class BackfillKrav(
                 val behandlingService =
                     BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 val behandlinger = behandlingService.alleYtelsesbehandlinger(sak.id)
+
+                // Saker som stammer fra behandlinger som er opprettet i forbindelse med migrering fra arena skal ikke backfilles
+                if (behandlinger.any { it.årsakTilOpprettelse === ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA }) {
+                    return@transaction
+                }
 
                 val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
                 val backfillService = BackfillKravService(postgresRepositoryRegistry.provider(connection))
