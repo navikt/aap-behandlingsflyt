@@ -23,7 +23,7 @@ class HentBehandlerDialogService(
 ) {
     fun hentDialogForSak(saksnummer: String): List<MeldingMedDokumenterDto> {
         val dialogmeldinger = hentDialogmeldingerFraDokumentinnhenting(saksnummer)
-        val legeerklæringer = `hentLegeerklæringerForSakFraDatabase`(saksnummer)
+        val legeerklæringer = hentLegeerklæringerForSakFraDatabase(saksnummer)
 
         val journalpostIDerForDialogmeldinger = dialogmeldinger.mapNotNull { it.journalpostId }
         val journalpostIDerForHelsedokumenter = legeerklæringer.map { it.tilSøknadUtenKravDto().journalpostId.toString() }
@@ -44,7 +44,7 @@ class HentBehandlerDialogService(
         )
     }
 
-    private fun `hentLegeerklæringerForSakFraDatabase`(saksnummer: String): Set<MottattDokument> {
+    private fun hentLegeerklæringerForSakFraDatabase(saksnummer: String): Set<MottattDokument> {
         return dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val sak = repositoryProvider.provide<SakRepository>().hent(Saksnummer.fra(saksnummer))
