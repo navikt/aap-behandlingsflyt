@@ -74,7 +74,7 @@ class BackfillKravService(
         val alleVurderinger = (forrigeKrav?.vurderinger.orEmpty()) + nyeVurderinger
 
         val grunnlag = KravGrunnlag(alleVurderinger.toSet())
-        val oppdatertGrunnlag = håndterRettighetsperiodevurdering(behandling.id, grunnlag)
+        val oppdatertGrunnlag = håndterRettighetsperiodevurdering(behandling.id, behandling.forrigeBehandlingId,grunnlag)
 
         verifiserMotRettighetsperiode(sak, oppdatertGrunnlag, erNyesteBehandling)
 
@@ -172,15 +172,21 @@ class BackfillKravService(
      */
     private fun håndterRettighetsperiodevurdering(
         behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
         grunnlag: KravGrunnlag,
     ): KravGrunnlag {
+        val forrigeVurdering = forrigeBehandlingId?.let {rettighetsperiodeRepository.hentVurdering(it) }
         val vurdering = rettighetsperiodeRepository.hentVurdering(behandlingId) ?: return grunnlag
+        
+        if (forrigeVurdering == vurdering) return grunnlag
+        
         if (!vurdering.harRettUtoverSøknadsdato.harOverstyrt() || vurdering.startDato == null) return grunnlag
-
-        val oppdaterteVurderinger = grunnlag.vurderinger.map { krav ->
+        
+        val oppdaterteNyeVurderinger = grunnlag.vurderinger.filter{it.vurdertIBehandling == behandlingId}.map { krav ->
             if (krav !is RelevantKrav) return@map krav
             val gjeldendeMuligRettFra = minOf(krav.muligRettFra, vurdering.startDato)
             krav.copy(
+                vurdertIBehandling = behandlingId,
                 overstyrMuligRettFra = OverstyrMuligRettFra(
                     dato = vurdering.startDato,
                     årsak = vurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak(),
@@ -190,8 +196,24 @@ class BackfillKravService(
                 muligRettFra = gjeldendeMuligRettFra,
             )
         }.toSet()
+        
+        val overskrevedeVedtatte = grunnlag.vurderinger.filter{it.vurdertIBehandling != behandlingId}.mapNotNull { krav ->
+            if (krav !is RelevantKrav) return@mapNotNull null
+            val gjeldendeMuligRettFra = minOf(krav.muligRettFra, vurdering.startDato)
+            krav.copy(
+                vurdertIBehandling = behandlingId,
+                overstyrMuligRettFra = OverstyrMuligRettFra(
+                    dato = vurdering.startDato,
+                    årsak = vurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak(),
+                    begrunnelse = vurdering.begrunnelse
+                ),
+                muligRettFra = gjeldendeMuligRettFra,
+            )
+        }.toSet()
 
-        return grunnlag.copy(vurderinger = oppdaterteVurderinger)
+        val vedtatte = grunnlag.vurderinger.filter{it.vurdertIBehandling != behandlingId}
+        
+        return grunnlag.copy(vurderinger = oppdaterteNyeVurderinger + vedtatte + overskrevedeVedtatte)
     }
 
     /**
