@@ -91,11 +91,8 @@ class AvklarStudentStegV2 private constructor(
             sykdomsvurderinger
         ) { _, utfall, sykdomsvurdering ->
             when (utfall) {
-                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                is TidligereVurderinger.UunngåeligAvslag -> false
-                is TidligereVurderinger.PotensieltOppfylt -> sykdomsvurdering?.potensieltOppfyltStudent() == true && unleashGateway.isEnabled(
-                    BehandlingsflytFeature.StudentV2
-                )
+                TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.PotensieltOppfylt -> sykdomsvurdering?.potensieltOppfyltStudent() == true
 
                 else -> false
             }

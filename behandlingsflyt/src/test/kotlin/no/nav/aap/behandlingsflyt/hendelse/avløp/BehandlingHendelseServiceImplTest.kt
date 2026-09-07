@@ -39,8 +39,8 @@ class BehandlingHendelseServiceImplTest {
             null,
             null
         )
-        avklaringsbehovene.leggTil(Definisjon.AVKLAR_STUDENT, StegType.AVKLAR_STUDENT, null, null)
         avklaringsbehovene.leggTil(Definisjon.AVKLAR_SYKDOM, StegType.AVKLAR_SYKDOM, null, null)
+        avklaringsbehovene.leggTil(Definisjon.AVKLAR_STUDENT_V2, StegType.AVKLAR_STUDENT_V2, null, null)
 
         behandlingHendelseSerice.stoppet(behandling, avklaringsbehovene)
 
@@ -49,8 +49,8 @@ class BehandlingHendelseServiceImplTest {
             .payload<BehandlingFlytStoppetHendelse>()
         assertThat(hendelse.avklaringsbehov.map { it.avklaringsbehovDefinisjon })
             .containsExactly(
-                Definisjon.AVKLAR_STUDENT,
                 Definisjon.AVKLAR_SYKDOM,
+                Definisjon.AVKLAR_STUDENT_V2,
                 Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP
             )
     }

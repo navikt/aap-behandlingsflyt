@@ -55,10 +55,6 @@ public enum class StegType(
         gruppe = StegGruppe.AVSLAG_11_27,
         status = Status.UTREDES
     ),
-    AVKLAR_STUDENT(
-        gruppe = StegGruppe.STUDENT,
-        status = Status.UTREDES
-    ),
     AVKLAR_STUDENT_V2(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES,
@@ -336,6 +332,10 @@ public enum class StegType(
     ),
     VIS_GRUNNLAG(
         gruppe = StegGruppe.GRUNNLAG,
+        status = Status.UTREDES
+    ),
+    AVKLAR_STUDENT(
+        gruppe = StegGruppe.STUDENT,
         status = Status.UTREDES
     ),
 }

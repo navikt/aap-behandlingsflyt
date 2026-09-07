@@ -109,13 +109,6 @@ class SignaturServiceTest {
         // SAKSBEHANDLER_NASJONAL
         leggTilEndring(
             behandling = behandling,
-            definisjon = Definisjon.AVKLAR_STUDENT,
-            endretAv = saksbehandlerIdent,
-            status = AvklaringsbehovStatus.AVSLUTTET,
-            oppgaveEnhet = "4567"
-        )
-        leggTilEndring(
-            behandling = behandling,
             definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             endretAv = saksbehandlerIdent,
             status = AvklaringsbehovStatus.AVSLUTTET,
@@ -220,7 +213,7 @@ class SignaturServiceTest {
         // SAKSBEHANDLER_NASJONAL
         leggTilEndring(
             behandling = behandling,
-            definisjon = Definisjon.AVKLAR_STUDENT,
+            definisjon = Definisjon.AVKLAR_STUDENT_V2,
             endretAv = veilederIdent,
             status = AvklaringsbehovStatus.AVSLUTTET,
             oppgaveEnhet = "3456"

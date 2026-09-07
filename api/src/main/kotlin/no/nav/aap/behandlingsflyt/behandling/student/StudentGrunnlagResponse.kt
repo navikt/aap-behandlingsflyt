@@ -64,7 +64,7 @@ data class StudentVurderingResponse(
                 fom = fom,
                 tom = tom,
                 vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-                    definisjon = Definisjon.AVKLAR_STUDENT,
+                    definisjon = Definisjon.AVKLAR_STUDENT_V2,
                     behandlingId = studentVurdering.vurdertIBehandling,
                     vurdertAv = vurdertAvService.medNavnOgEnhet(
                         studentVurdering.vurdertAv,

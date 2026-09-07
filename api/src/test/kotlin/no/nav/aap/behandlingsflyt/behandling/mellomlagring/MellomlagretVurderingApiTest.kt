@@ -71,7 +71,7 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
     fun `skal overskrive ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
         val behandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
-        val avklaringsbehovKode = AvklaringsbehovKode.`5001`
+        val avklaringsbehovKode = AvklaringsbehovKode.`5037`
 
         val mellomlagretVurdering = MellomlagretVurdering(
             behandlingId = behandling.id,
@@ -147,7 +147,7 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
     fun `skal slette mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
         val behandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Revurdering)
-        val avklaringsbehovKode = AvklaringsbehovKode.`5001`
+        val avklaringsbehovKode = AvklaringsbehovKode.`5037`
 
         val mellomlagretVurdering = MellomlagretVurdering(
             behandlingId = behandling.id,
