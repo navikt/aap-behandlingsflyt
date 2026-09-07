@@ -24,10 +24,14 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.Collections.synchronizedList
 
 class FakeApiInternGateway : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
-        val sendteSakStatuser = mutableListOf<Pair<String, SakStatus>>()
+        // Synkronisert liste er kun trådsikker for enkeltoperasjoner (add/clear/size).
+        // Ved iterasjon (Iterator/Stream/for-løkke) må man selv synkronisere på listen, jf. Collections.synchronizedList sin dokumentasjon.
+        val sendteSakStatuser: MutableList<Pair<String, SakStatus>> =
+            synchronizedList(mutableListOf<Pair<String, SakStatus>>())
 
         override fun konstruer(): ApiInternGateway {
             return FakeApiInternGateway()
