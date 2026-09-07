@@ -450,6 +450,11 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         val startDato = sak.rettighetsperiode.fom
 
         førstegangsbehandling
+            .løsSykdom(vurderingGjelderFra = startDato, erStudent = true, erOppfylt = true )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarStudentLøsningV2(
                     løsningerForPerioder = listOf(
@@ -466,11 +471,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                     ),
                 )
             )
-            .løsSykdom(vurderingGjelderFra = startDato.plusMonths(6), erOppfylt = false)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
             .løsBeregningstidspunkt(startDato)
             .løsOppholdskrav(startDato)
             .løsSykestipend()
