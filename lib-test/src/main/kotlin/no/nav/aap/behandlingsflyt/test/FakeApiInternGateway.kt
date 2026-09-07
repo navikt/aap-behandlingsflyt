@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Gjelde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.BarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -26,6 +27,8 @@ import java.time.LocalDate
 
 class FakeApiInternGateway : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
+        val sendteSakStatuser = mutableListOf<Pair<String, SakStatus>>()
+
         override fun konstruer(): ApiInternGateway {
             return FakeApiInternGateway()
         }
@@ -37,7 +40,7 @@ class FakeApiInternGateway : ApiInternGateway {
     }
 
     override fun sendSakStatus(ident: String, sakStatus: SakStatus) {
-        // No-op
+        sendteSakStatuser.add(ident to sakStatus)
     }
 
     override fun sendBehandling(
@@ -53,7 +56,8 @@ class FakeApiInternGateway : ApiInternGateway {
         perioderMedFritakMeldeplikt: List<Periode>,
         underveisperioder: List<UnderveisperiodeDatadeling>,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
-        muligMaksdato: LocalDate?
+        muligMaksdato: LocalDate?,
+        barnMedBarnetillegg: List<BarnMedBarnetillegg>
     ) {
         // No-op
     }
