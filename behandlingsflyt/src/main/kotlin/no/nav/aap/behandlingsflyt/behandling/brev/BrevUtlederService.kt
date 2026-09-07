@@ -77,7 +77,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
-import java.util.UUID
 import kotlin.collections.emptyList
 
 class BrevUtlederService(
@@ -143,13 +142,6 @@ class BrevUtlederService(
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
-        /**
-         * Feilet behandling i produksjon som aldri skulle ha hatt utvidet vedtakslengde og vedtaksbrev.
-         * Manuell revurdering og brev er opprettet i etterkant for denne
-         */
-        if (behandling.referanse.referanse == UUID.fromString("04c2bf06-ce04-4f30-b537-1f86f60a0bed")) {
-           return null
-        }
         val forrigeBehandlingId = behandling.forrigeBehandlingId
         val harBehandlingenArbeidsopptrapping =
             arbeidsopptrappingRepository.hentHvisEksisterer(behandlingId).perioderMedArbeidsopptrapping().isNotEmpty()
