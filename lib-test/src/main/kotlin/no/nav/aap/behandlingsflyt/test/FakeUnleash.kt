@@ -75,7 +75,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
-        BehandlingsflytFeature.BackfillSakstatusDatadeling to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
@@ -89,7 +88,6 @@ object LokalUnleash : FakeUnleashBase(
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
-        BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true,
         BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true
     )
 ) {
