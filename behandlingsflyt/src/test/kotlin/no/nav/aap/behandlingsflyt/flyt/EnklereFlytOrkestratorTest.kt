@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STUDENT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FASTSETT_MELDEPERIODER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FATTE_VEDTAK
@@ -274,7 +273,6 @@ class EnklereFlytOrkestratorTest {
                 FASTSETT_MELDEPERIODER,
                 VURDER_ALDER,
                 VURDER_AVSLAG_11_27,
-                AVKLAR_STUDENT,
                 AVKLAR_SYKDOM
             )
         )
@@ -299,7 +297,6 @@ class EnklereFlytOrkestratorTest {
                 FASTSETT_MELDEPERIODER,
                 VURDER_ALDER,
                 VURDER_AVSLAG_11_27,
-                AVKLAR_STUDENT,
                 AVKLAR_SYKDOM,
             )
         )
