@@ -26,7 +26,7 @@ class HentBehandlerDialogService(
         val legeerklæringer = hentLegeerklæringerForSakFraDatabase(saksnummer)
 
         val journalpostIDerForDialogmeldinger = dialogmeldinger.mapNotNull { it.journalpostId }
-        val journalpostIDerForHelsedokumenter = legeerklæringer.map { it.tilSøknadUtenKravDto().journalpostId.toString() }
+        val journalpostIDerForHelsedokumenter = legeerklæringer.map { it.tilSøknadUtenKravDto().journalpostId.identifikator }
 
         val journalposter = hentBegrensetJournalposterFraDokumentinnhenting(
             journalpostIDerForDialogmeldinger + journalpostIDerForHelsedokumenter,
@@ -99,11 +99,11 @@ class HentBehandlerDialogService(
     }
 
     private fun lagMeldingMedDokumentoversiktForLegeerklæringer(
-        `legeerklæringer`: Set<MottattDokument>,
+        legeerklæringer: Set<MottattDokument>,
         journalposter: Map<String, BegrensetJournalpostDto>
     ): List<MeldingMedDokumenterDto> {
-        return `legeerklæringer`.map { helsedokument ->
-            val journalpostId = helsedokument.tilSøknadUtenKravDto().journalpostId.toString()
+        return legeerklæringer.map { helsedokument ->
+            val journalpostId = helsedokument.tilSøknadUtenKravDto().journalpostId.identifikator
             val journalpost = journalposter[journalpostId]
 
             MeldingMedDokumenterDto(
