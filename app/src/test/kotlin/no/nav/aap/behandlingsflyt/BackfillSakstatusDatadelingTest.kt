@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytr
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -42,7 +43,7 @@ class BackfillSakstatusDatadelingTest {
                 repositoryRegistry = postgresRepositoryRegistry,
                 gatewayProvider = createGatewayProvider {
                     register<AlleAvskruddUnleash>()
-                    register<FakeCapturingApiInternGateway>()
+                    register<FakeApiInternGateway>()
                 }
             )
             motor.start()
@@ -58,7 +59,7 @@ class BackfillSakstatusDatadelingTest {
 
     @BeforeEach
     fun clearFakeGateway() {
-        FakeCapturingApiInternGateway.sendteSakStatuser.clear()
+        FakeApiInternGateway.sendteSakStatuser.clear()
     }
 
     @Test
@@ -100,6 +101,6 @@ class BackfillSakstatusDatadelingTest {
 
         motor.kjørJobber()
 
-        assertThat(FakeCapturingApiInternGateway.sendteSakStatuser).hasSize(2)
+        assertThat(FakeApiInternGateway.sendteSakStatuser).hasSize(2)
     }
 }
