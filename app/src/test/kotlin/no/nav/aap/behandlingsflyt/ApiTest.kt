@@ -159,18 +159,21 @@ class ApiTest {
                 runBlocking { server.engine.resolvedConnectors().first { it.type == ConnectorType.HTTP }.port }
         }
 
+        // Delt datakilde for verifiseringer i tester. Må ikke opprettes på nytt per test,
+        // det lekker Hikari-connection pools og tømmer postgres-containerens max_connections.
+        private val dataSource = initDatasource(dbConfig)
+
         @JvmStatic
         @AfterAll
         fun afterAll() {
             server.stop()
+            dataSource.close()
             postgres.close()
         }
     }
 
     @Test
     fun `kalle medlemsskaps-api`() {
-        val dataSource = initDatasource(dbConfig)
-
         val opprettetBehandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection, LocalDate.now())
 
@@ -219,8 +222,7 @@ class ApiTest {
 
     @Test
     fun `kalle beregningsgrunnlag-api`() {
-        val ds = initDatasource(dbConfig)
-        val referanse = ds.transaction { connection ->
+        val referanse = dataSource.transaction { connection ->
             val sak = opprettSak(connection, LocalDate.now())
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val behandling = behandlingRepo.opprettBehandling(

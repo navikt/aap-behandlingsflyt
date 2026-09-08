@@ -78,15 +78,18 @@ class PipTest {
             }
         }
 
+        // Delt datakilde for verifiseringer i tester. Må ikke opprettes på nytt per test,
+        // det lekker Hikari-connection pools og tømmer postgres-containerens max_connections.
+        private val dataSource = initDatasource(dbConfig)
+
         @JvmStatic
         @AfterAll
         fun afterAll() {
             server.stop()
+            dataSource.close()
             postgres.close()
         }
     }
-
-    val dataSource = initDatasource(dbConfig)
 
     @Test
     fun `pip test sak`() {

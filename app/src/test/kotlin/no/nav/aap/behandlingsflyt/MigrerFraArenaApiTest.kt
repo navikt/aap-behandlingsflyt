@@ -102,10 +102,15 @@ class MigrerFraArenaApiTest {
             }
         }
 
+        // Delt datakilde for verifiseringer i tester. Må ikke opprettes på nytt per kall,
+        // det lekker Hikari-connection pools og tømmer postgres-containerens max_connections.
+        private val dataSource = initDatasource(dbConfig)
+
         @JvmStatic
         @AfterAll
         fun afterAll() {
             server.stop()
+            dataSource.close()
             postgres.close()
         }
     }
@@ -179,7 +184,6 @@ class MigrerFraArenaApiTest {
     private fun pollMigreringFraArenaBehandlingOpprettet(
         saksnummer: String,
     ) = runBlocking {
-        val dataSource = initDatasource(dbConfig)
         repeat(30) {
             try {
                 val behandling = dataSource.transaction(readOnly = true) { connection ->
