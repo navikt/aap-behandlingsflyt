@@ -189,9 +189,7 @@ class BackfillKravService(
         val vurdering = rettighetsperiodeRepository.hentVurdering(behandlingId) ?: return grunnlag
 
         if (forrigeVurdering == vurdering) return grunnlag
-
-        if (!vurdering.harRettUtoverSøknadsdato.harOverstyrt() || vurdering.startDato == null) return grunnlag
-
+        
         val (nyeRelevanteKrav, nyeIkkeRelevanteKrav) = grunnlag.vurderinger.filter{it.vurdertIBehandling == behandlingId}.partition { it is RelevantKrav }
         val nyeRelevanteKravOppdatertMedRettighetsperiodeVurdering = nyeRelevanteKrav.filterIsInstance<RelevantKrav>().map { krav: RelevantKrav ->
             krav.medRettighetsperiodeOverstyring(vurdering, behandlingId)
@@ -213,6 +211,12 @@ class BackfillKravService(
         vurdering: RettighetsperiodeVurdering,
         behandlingId: BehandlingId,
     ): RelevantKrav {
+        val muligRettFra = when {
+            // "Revertere" rettighetsperiodvurderingen / "Nei"
+            (!vurdering.harRettUtoverSøknadsdato.harOverstyrt() || vurdering.startDato == null) -> søknadsdato.dato
+            else -> minOf(søknadsdato.dato, vurdering.startDato)
+        }    
+        
         val overstyrtStartDato = requireNotNull(vurdering.startDato)
         return copy(
             opprettet = Instant.now(),
@@ -222,7 +226,7 @@ class BackfillKravService(
                 årsak = vurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak(),
                 begrunnelse = vurdering.begrunnelse,
             ),
-            muligRettFra = minOf(muligRettFra, overstyrtStartDato),
+            muligRettFra = muligRettFra
         )
     }
 

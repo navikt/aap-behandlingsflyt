@@ -151,10 +151,6 @@ class BackfillKravServiceTest {
         assertThat(erTrukket).isTrue()
     }
 
-    // -------------------------------------------------------------------------
-    // Rettighetsperiodevurdering
-    // -------------------------------------------------------------------------
-
     @Test
     fun `rettighetsperiodevurdering med overstyring setter OverstyrMuligRettFra`() {
         val søknadsdato = 10 januar 2024
@@ -251,6 +247,20 @@ class BackfillKravServiceTest {
 
         // behandlingId skal være lik den i rettighetsperiodevurderingen (nåværende/åpne behandling)
         assertThat(gjeldendeKrav.vurdertIBehandling).isEqualTo(revurdering.id)
+        
+        // Fjerne overstyringen
+        every { rettighetsperiodeRepository.hentVurdering(revurdering.id) } returns
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.Nei,
+                    startDato = null,
+                )
+
+        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(søknadsdato, Tid.MAKS)) // Rettighetsperiode ligger på saksnivå
+        service.backfillBehandling(sakMedRettighetsperiode, revurdering, erNyesteBehandling = true)
+        
+        assertThat(InMemoryKravRepository.hent(revurdering.id).vurderinger).hasSize(2)
+        assertThat(InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single().overstyrMuligRettFra).isNull()
+        assertThat(InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single().muligRettFra).isEqualTo(søknadsdato)
     }
 
 
