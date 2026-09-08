@@ -117,7 +117,6 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         // Validér avklaring
         behandling
-            .løsLovvalg(sak.rettighetsperiode.fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
             } // Oppretter bestilling av legeerklæring
@@ -129,7 +128,6 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
                     Definisjon.AVKLAR_SYKDOM
                 )
             }
-            .løsLovvalg(sak.rettighetsperiode.fom, false)
             .medKontekst {
                 // Ønsker å dra rett til foreslå vedtak!
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(

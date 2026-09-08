@@ -90,14 +90,10 @@ class MedlemskapLovvalgVurderingService {
         val mottarSykepengerVurdering = mottarSykepenger(grunnlag.medlemskapArbeidInntektGrunnlag)
         val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag)
         val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
+        val bosattOgNorskStatsborger =
+            harBosattStatusOgNorskStatsborgerskap(grunnlag.personopplysning, rettighetsPeriode)
+        return listOf(mottarSykepengerVurdering, arbeidInntektINorgeVurdering, vedtakIMedl, bosattOgNorskStatsborger)
 
-        return if (grunnlag.vurderBosattStatusOgNorskStatsborgerskap) {
-            val bosattOgNorskStatsborger =
-                harBosattStatusOgNorskStatsborgerskap(grunnlag.personopplysning, rettighetsPeriode)
-            listOf(mottarSykepengerVurdering, arbeidInntektINorgeVurdering, vedtakIMedl, bosattOgNorskStatsborger)
-        } else {
-            listOf(mottarSykepengerVurdering, arbeidInntektINorgeVurdering, vedtakIMedl)
-        }
     }
 
     // Ingen kan inntreffe
