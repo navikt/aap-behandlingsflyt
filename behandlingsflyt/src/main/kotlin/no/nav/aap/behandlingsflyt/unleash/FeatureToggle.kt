@@ -22,7 +22,6 @@ enum class BehandlingsflytFeature(
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
-    GenererVilkarsvurderingOppsummeringPDF,
 
     // --- Krav ---
     BackfillKrav,
