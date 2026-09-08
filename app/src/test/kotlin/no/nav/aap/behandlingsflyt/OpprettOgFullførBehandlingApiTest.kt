@@ -493,7 +493,7 @@ class OpprettOgFullførBehandlingApiTest {
 
     private fun pollRevurderingAvsluttet(saksnummer: String, antallForventet: Int): Boolean = runBlocking {
         val dataSource = initDatasource(dbConfig)
-        repeat(120) {
+        repeat(20) {
             try {
                 val behandlinger = dataSource.transaction(readOnly = true) { connection ->
                     val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
