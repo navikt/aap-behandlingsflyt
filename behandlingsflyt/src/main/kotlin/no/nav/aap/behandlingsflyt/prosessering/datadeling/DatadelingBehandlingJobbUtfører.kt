@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -12,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.utledBarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -38,6 +40,7 @@ class DatadelingBehandlingJobbUtfører(
     private val stansOpphørService: StansOpphørService,
     private val rettighetstypeService: RettighetstypeService,
     private val utledArenaVedtakstype: UtledArenaVedtakstype,
+    private val barnetilleggRepository: BarnetilleggRepository,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -88,6 +91,9 @@ class DatadelingBehandlingJobbUtfører(
             .map { it.harFritak }.segmenter()
             .filter { it.verdi }.map { it.periode }
 
+        val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(behandling.id)
+        val barnMedBarnetillegg = utledBarnMedBarnetillegg(tilkjentYtelse, barnetilleggGrunnlag)
+
         apiInternGateway.sendBehandling(
             sak = sak,
             behandling = behandling,
@@ -102,6 +108,7 @@ class DatadelingBehandlingJobbUtfører(
             perioderMedFritakMeldeplikt = perioderMedFritakMeldeplikt,
             underveisperioder = underveistidslinje.map { it.tilDatadeling() }.komprimer().segmenter().map { it.verdi },
             arenavedtak = utledArenaVedtakstype.utledVedtak(sak),
+            barnMedBarnetillegg = barnMedBarnetillegg,
         )
     }
 
@@ -128,6 +135,7 @@ class DatadelingBehandlingJobbUtfører(
                 ),
                 rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
                 utledArenaVedtakstype = UtledArenaVedtakstype(repositoryProvider, gatewayProvider),
+                barnetilleggRepository = repositoryProvider.provide(),
             )
         }
     }
