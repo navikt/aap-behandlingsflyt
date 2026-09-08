@@ -27,7 +27,6 @@ public data class DatadelingDTO(
     val stansOpphørVurdering: Set<GjeldendeStansEllerOpphørDTO>?,
     val arenavedtak: List<ArenavedtakDTO>,
     val underveisperioder: List<UnderveisperiodeDatadelingDTO>,
-    val barnMedBarnetillegg: List<BarnMedBarnetilleggDTO> = emptyList(),
 )
 
 public data class SamIdOgTpnr(val samId: String, val tpnr: String?)
@@ -166,20 +165,6 @@ public data class ArbeidIPeriodeDTO(
     val periodeFom: LocalDate,
     val periodeTom: LocalDate,
     val timerArbeidet: BigDecimal
-)
-
-/**
- * @param ident Personnummer til barnet. `null` hvis barnet kun er registrert med navn/fødselsdato.
- */
-public data class BarnMedBarnetilleggDTO(
-    val ident: String?,
-    val perioderMedBarnetillegg: List<PeriodeMedBeløpDTO>,
-)
-
-public data class PeriodeMedBeløpDTO(
-    val fom: LocalDate,
-    val tom: LocalDate,
-    val beløp: BigDecimal,
 )
 
 public data class DetaljertMeldekortDTO(
