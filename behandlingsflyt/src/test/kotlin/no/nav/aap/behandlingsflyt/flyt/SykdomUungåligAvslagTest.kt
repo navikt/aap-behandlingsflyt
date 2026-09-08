@@ -71,7 +71,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)) {
+                if (toggleForHoppOverBeslutter()) {
                     assertThat(åpneAvklaringsbehov.map { it.definisjon })
                         .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
                     assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
@@ -81,7 +81,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                 }
             }
         val behandlingMedFattetVedtak =
-            if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)) {
+            if (toggleForHoppOverBeslutter()) {
                 behandling
             } else {
                 behandling.fattVedtak()
@@ -436,4 +436,8 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
 
     }
 
+    private fun toggleForHoppOverBeslutter(): Boolean {
+        return gatewayProvider.provide<UnleashGateway>()
+            .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
+    }
 }
