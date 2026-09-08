@@ -189,14 +189,16 @@ class BackfillKravService(
         val vurdering = rettighetsperiodeRepository.hentVurdering(behandlingId) ?: return grunnlag
 
         if (forrigeVurdering == vurdering) return grunnlag
-        
-        val (nyeRelevanteKrav, nyeIkkeRelevanteKrav) = grunnlag.vurderinger.filter{it.vurdertIBehandling == behandlingId}.partition { it is RelevantKrav }
-        val nyeRelevanteKravOppdatertMedRettighetsperiodeVurdering = nyeRelevanteKrav.filterIsInstance<RelevantKrav>().map { krav: RelevantKrav ->
-            krav.medRettighetsperiodeOverstyring(vurdering, behandlingId)
-        }.toSet()
+
+        val (nyeRelevanteKrav, nyeIkkeRelevanteKrav) = grunnlag.vurderinger.filter { it.vurdertIBehandling == behandlingId }
+            .partition { it is RelevantKrav }
+        val nyeRelevanteKravOppdatertMedRettighetsperiodeVurdering =
+            nyeRelevanteKrav.filterIsInstance<RelevantKrav>().map { krav: RelevantKrav ->
+                krav.medRettighetsperiodeOverstyring(vurdering, behandlingId)
+            }.toSet()
 
         val vedtatte = grunnlag.vurderinger.filter { it.vurdertIBehandling != behandlingId }.toSet()
-        
+
         // Vi ønsker kun å overskrive vedtatte relevante krav dersom de er gjeldende
         val gjeldendeVedtatteRelevanteKravOppdatertMedRettighetsperiodeVurdering =
             grunnlag.gjeldendeRelevanteKrav().filter { it.vurdertIBehandling != behandlingId }
@@ -211,23 +213,26 @@ class BackfillKravService(
         vurdering: RettighetsperiodeVurdering,
         behandlingId: BehandlingId,
     ): RelevantKrav {
-        val muligRettFra = when {
+        return when {
             // "Revertere" rettighetsperiodvurderingen / "Nei"
-            (!vurdering.harRettUtoverSøknadsdato.harOverstyrt() || vurdering.startDato == null) -> søknadsdato.dato
-            else -> minOf(søknadsdato.dato, vurdering.startDato)
-        }    
-        
-        val overstyrtStartDato = requireNotNull(vurdering.startDato)
-        return copy(
-            opprettet = Instant.now(),
-            vurdertIBehandling = behandlingId,
-            overstyrMuligRettFra = OverstyrMuligRettFra(
-                dato = overstyrtStartDato,
-                årsak = vurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak(),
-                begrunnelse = vurdering.begrunnelse,
-            ),
-            muligRettFra = muligRettFra
-        )
+            (!vurdering.harRettUtoverSøknadsdato.harOverstyrt() || vurdering.startDato == null) -> copy(
+                opprettet = Instant.now(),
+                vurdertIBehandling = behandlingId,
+                overstyrMuligRettFra = null,
+                muligRettFra = søknadsdato.dato
+            )
+
+            else -> copy(
+                opprettet = Instant.now(),
+                vurdertIBehandling = behandlingId,
+                overstyrMuligRettFra = OverstyrMuligRettFra(
+                    dato = vurdering.startDato,
+                    årsak = vurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak(),
+                    begrunnelse = vurdering.begrunnelse,
+                ),
+                muligRettFra = minOf(vurdering.startDato, søknadsdato.dato)
+            )
+        }
     }
 
     /**
