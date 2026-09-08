@@ -253,7 +253,6 @@ internal fun Application.server(
 
     BackfillStansOpphør(fellesDataSource, gatewayProvider).kjør()
     BackfillKrav(fellesDataSource, gatewayProvider).kjør()
-    BackfillSakstatusDatadeling(fellesDataSource, gatewayProvider).kjør()
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -266,7 +265,7 @@ internal fun Application.server(
         // Helt til slutt, nå som vi har stanset Motor, etc. Lukk executor og database-koblinger.
         lukkRessurser(
             environment.log,
-            listOf(informasjonskravExecutor, fellesDataSource, motorDataSource, pipDataSource)
+            listOf(fellesDataSource, motorDataSource, pipDataSource)
         )
     }
     verifiserTidssone(fellesDataSource)

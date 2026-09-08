@@ -355,6 +355,7 @@ class AvklaringsbehovValideringTest {
             RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> true
             is RelevantKravType.GJENOPPTAK_ETTER_STANS -> true
             RelevantKravType.NY_STØNADSPERIODE -> false
+            RelevantKravType.MIGRERT_STØNADSPERIODE -> false
         },
         relevantKravType = relevantKravType,
         startDato = startDato,
@@ -433,6 +434,69 @@ class AvklaringsbehovValideringTest {
                 stønadsperiodevurering(
                     krav,
                     relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+                    startDato = krav.muligRettFra
+                )
+            )
+        )
+
+        val løsningFom = muligRettFra.minusDays(1)
+        val løsning = løsning(fom = løsningFom)
+        val gjeldendeVurderinger =
+            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+        assertTidslinje(
+            resultat,
+            Periode(krav.muligRettFra, Tid.MAKS) to {
+                assertFalse(it)
+            }
+        )
+    }
+
+    @Test
+    fun `MigrertStønadsperiode er dekket når løsning fom er lik muligRettFra`() {
+        val behandlingId = nesteBehandlingId()
+        val forrigeBehandlingId = nesteBehandlingId()
+        val muligRettFra = LocalDate.of(2024, 1, 1)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
+        val krav = nyttKrav(behandlingId, muligRettFra)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    behandlingId,
+                    RelevantKravType.MIGRERT_STØNADSPERIODE,
+                    krav.muligRettFra
+                )
+            )
+        )
+
+        val løsning = løsning(fom = muligRettFra)
+        val gjeldendeVurderinger =
+            løsning.somVurderinger(Bruker("saksbehandler"), forrigeBehandlingId).gjeldendeVurderinger()
+
+        val resultat = avklaringsbehovValidering.nårKravHarLøsning(løsning.definisjon(), gjeldendeVurderinger, kontekst)
+
+        assertTidslinje(
+            resultat,
+            Periode(muligRettFra, Tid.MAKS) to { assertTrue(it) }
+        )
+    }
+
+    @Test
+    fun `MigrertStønadsperiode er ikke dekket når løsning fom er før muligRettFra`() {
+        val behandlingId = nesteBehandlingId()
+        val forrigeBehandlingId = nesteBehandlingId()
+        val muligRettFra = LocalDate.of(2024, 6, 1)
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId, forrigeBehandlingId = forrigeBehandlingId)
+        val krav = nyttKrav(behandlingId, muligRettFra)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    relevantKravType = RelevantKravType.MIGRERT_STØNADSPERIODE,
                     startDato = krav.muligRettFra
                 )
             )
