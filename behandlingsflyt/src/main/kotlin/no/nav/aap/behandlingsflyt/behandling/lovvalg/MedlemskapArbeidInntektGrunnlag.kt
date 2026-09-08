@@ -16,8 +16,7 @@ import java.time.LocalDate
 data class MedlemskapLovvalgGrunnlag(
     val medlemskapArbeidInntektGrunnlag: MedlemskapArbeidInntektGrunnlag?,
     val personopplysning: Personopplysning?,
-    val nyeSoknadGrunnlag: UtenlandsOppholdData?,
-    val vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
+    val nyeSoknadGrunnlag: UtenlandsOppholdData?
 ) : Faktagrunnlag
 
 data class MedlemskapArbeidInntektGrunnlag(

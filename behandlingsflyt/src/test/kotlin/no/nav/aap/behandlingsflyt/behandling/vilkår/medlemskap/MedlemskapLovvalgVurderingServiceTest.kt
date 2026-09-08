@@ -271,7 +271,6 @@ class MedlemskapLovvalgVurderingServiceTest {
             arbeidetUtenforNorgeFørSykdom = false,
             iTilleggArbeidUtenforNorge = false,
             utenlandsOpphold = null,
-        ),
-        vurderBosattStatusOgNorskStatsborgerskap = true,
+        )
     )
 }
