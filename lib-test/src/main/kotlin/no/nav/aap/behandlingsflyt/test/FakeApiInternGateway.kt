@@ -24,10 +24,12 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.Collections
 
 class FakeApiInternGateway : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
-        val sendteSakStatuser = mutableListOf<Pair<String, SakStatus>>()
+        // Delt statisk liste - kan aksesseres fra flere motor-tråder samtidig, må derfor være trådsikker
+        val sendteSakStatuser: MutableList<Pair<String, SakStatus>> = Collections.synchronizedList(mutableListOf())
 
         override fun konstruer(): ApiInternGateway {
             return FakeApiInternGateway()
