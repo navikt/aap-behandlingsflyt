@@ -1,15 +1,20 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -22,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -30,6 +36,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 import kotlin.lazy
 
 class VurderLovvalgSteg private constructor(
@@ -38,7 +45,8 @@ class VurderLovvalgSteg private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val arenaMigreringService: ArenaMigreringService,
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -46,10 +54,17 @@ class VurderLovvalgSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide()
+        unleashGateway = gatewayProvider.provide(),
+        arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.erMigreringFraArena() &&
+            unleashGateway.isEnabled(BehandlingsflytFeature.MigererLovvalgMedlemskapFraArenaAutomatisk)
+        ) {
+            migrerVurderingFraArena(kontekst)
+        }
+
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
         val tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
@@ -60,6 +75,7 @@ class VurderLovvalgSteg private constructor(
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
+            gjeldendeVurderinger =  { grunnlag.value.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger() }
         )
 
         when (kontekst.vurderingType) {
@@ -90,7 +106,6 @@ class VurderLovvalgSteg private constructor(
 
         return Fullført
     }
-
 
     private fun perioderSomIkkeErTilstrekkeligVurdert (
         kontekst: FlytKontekstMedPerioder,
@@ -197,6 +212,41 @@ class VurderLovvalgSteg private constructor(
                 unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp),
         )
         return grunnlag
+    }
+
+    private fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
+        val lovvalgOgMedlemskapFraArena =
+            arenaMigreringService.hentLovvalgOgMedlemskapFraArena(kontekst.sakId)
+
+        /**
+         * Brukere med midlertidige medlemskap er ikke aktuelt å migrere automatisk ennå
+         */
+        if (lovvalgOgMedlemskapFraArena.medlemskapTom != null) {
+            throw IllegalStateException("Kan ikke migrere vurdering fra Arena når medlemskapTom er satt.")
+        }
+
+        /**
+         * Antar at alle migrerte saker har Norge som lovvalg og at bruker har medlemskap
+         * i folketryden.
+         */
+        val begrunnelse = "Automatisk migrert fra Arena"
+        val vurdering = ManuellVurderingForLovvalgMedlemskap(
+            lovvalg = LovvalgDto(
+                begrunnelse = begrunnelse,
+                lovvalgsEØSLandEllerLandMedAvtale = EØSLandEllerLandMedAvtale.NOR,
+            ),
+            medlemskap = MedlemskapDto(
+                begrunnelse = begrunnelse,
+                varMedlemIFolketrygd = true,
+            ),
+            vurdertAv = SYSTEMBRUKER, // TODO egen variant for migrerte saker?
+            vurdertDato = LocalDateTime.now(),
+            fom = kontekst.rettighetsperiode.fom,
+            tom = kontekst.rettighetsperiode.tom,
+            vurdertIBehandling = kontekst.behandlingId,
+        )
+
+        medlemskapArbeidInntektRepository.lagreVurderinger(kontekst.behandlingId, listOf(vurdering))
     }
 
     override val stegType = type()

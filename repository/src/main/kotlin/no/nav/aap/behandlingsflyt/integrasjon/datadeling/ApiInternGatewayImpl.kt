@@ -45,6 +45,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerRequest
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaLovvalgOgMedlemskapResponse
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -299,6 +300,11 @@ class ApiInternGatewayImpl : ApiInternGateway {
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /arena/person/saker" }
         return response
+    }
+
+    override fun hentLovvalgOgMedlemskapFraArena(saksnummerArena: String): ArenaLovvalgOgMedlemskapResponse? {
+        // TODO
+        return null
     }
 
     override fun oppdaterIdenter(

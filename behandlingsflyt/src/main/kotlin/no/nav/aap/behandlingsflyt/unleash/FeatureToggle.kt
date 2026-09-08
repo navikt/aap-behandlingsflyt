@@ -36,7 +36,8 @@ enum class BehandlingsflytFeature(
     Avslag11_27,
     SkalViseAlleSykdomssteg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
-    BosattStatsborgerskapGjennomslipp
+    BosattStatsborgerskapGjennomslipp,
+    MigererLovvalgMedlemskapFraArenaAutomatisk
     ;
 
     override fun key(): String = name
