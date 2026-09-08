@@ -189,7 +189,7 @@ class MeldingOmVedtakBrevSteg(
     private fun brukBrevbyggerTogglePåBrevtypeOgBrukerident(typeBrev: TypeBrev, bruker: Bruker): Boolean {
         val brukereSomSkalBrukeBrevbygger = listOf("B101286", "B171715", "L168492", "S128047", "S132438", "H136900", "J158692", "R152079")
         val brevtyperSomSkalBrukeBrevbygger = listOf(TypeBrev.VEDTAK_INNVILGELSE)
-        return brevtyperSomSkalBrukeBrevbygger.contains(typeBrev) && brukereSomSkalBrukeBrevbygger.contains(bruker.ident)
+        return typeBrev in brevtyperSomSkalBrukeBrevbygger && bruker.ident in brukereSomSkalBrukeBrevbygger
     }
 
     companion object : FlytSteg {
