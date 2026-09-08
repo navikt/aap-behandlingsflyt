@@ -188,7 +188,8 @@ class BackfillKravService(
         val forrigeVurdering = forrigeBehandlingId?.let { rettighetsperiodeRepository.hentVurdering(it) }
         val vurdering = rettighetsperiodeRepository.hentVurdering(behandlingId) ?: return grunnlag
 
-        if (forrigeVurdering == vurdering) return grunnlag
+        // vurdertDato ble satt i database, som gjorde at vi tidligere fikk nytt timestamp i kopiert vurdering. Ignorerer derfor dette feltet ved sammenligning
+        if (forrigeVurdering?.copy(vurdertDato = vurdering.vurdertDato) == vurdering) return grunnlag
 
         val (nyeRelevanteKrav, nyeIkkeRelevanteKrav) = grunnlag.vurderinger.filter { it.vurdertIBehandling == behandlingId }
             .partition { it is RelevantKrav }
