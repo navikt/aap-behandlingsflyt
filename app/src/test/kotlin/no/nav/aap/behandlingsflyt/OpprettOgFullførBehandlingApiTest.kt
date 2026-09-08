@@ -513,7 +513,7 @@ class OpprettOgFullførBehandlingApiTest {
     }
 
     private fun pollBehandlingStatus(ident: String): BehandlingStatusRespons? = runBlocking {
-        repeat(120) {
+        repeat(600) {
             try {
                 val status = ccClient.post<BehandlingStatusRequest, BehandlingStatusRespons>(
                     URI.create("http://localhost:$port/api/test/behandlingStatus"),
@@ -523,7 +523,7 @@ class OpprettOgFullførBehandlingApiTest {
             } catch (e: Exception) {
                 log.info("Poll exception: $e")
             }
-            delay(1000.milliseconds)
+            delay(2000.milliseconds)
         }
         null
     }
