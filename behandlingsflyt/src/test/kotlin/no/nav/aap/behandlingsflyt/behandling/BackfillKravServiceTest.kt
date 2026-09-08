@@ -263,7 +263,7 @@ class BackfillKravServiceTest {
         leggTilSøknad(førstegangsbehandling, søknadsdato)
         val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, overstyrtDato)
 
-        // Ny åpen revurdering får en rettighetsperiodevurdering med overstyring – ingen ny søknad er mottatt
+        // Rettighetsperiodevurdering med overstyring
         every { rettighetsperiodeRepository.hentVurdering(førstegangsbehandling.id) } returns
                 lagRettighetsperiodeVurdering(
                     harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
