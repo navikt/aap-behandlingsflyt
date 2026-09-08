@@ -296,6 +296,43 @@ class BackfillKravServiceTest {
     }
 
     @Test
+    fun `uendret rettighetsperiodevurdering mellom behandlinger oppretter ikke ny kravvurdering`() {
+        val søknadsdato = 10 januar 2024
+        val overstyrtDato = 1 mars 2023
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(søknadsdato = søknadsdato)
+
+        leggTilSøknad(førstegangsbehandling, søknadsdato)
+        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, overstyrtDato)
+
+        // Samme rettighetsperiodevurdering (strukturelt lik – data class equals) for begge behandlinger
+        every { rettighetsperiodeRepository.hentVurdering(førstegangsbehandling.id) } returns
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
+                    startDato = overstyrtDato,
+                )
+        every { rettighetsperiodeRepository.hentVurdering(revurdering.id) } returns
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
+                    startDato = overstyrtDato,
+                )
+
+        // Vedtatt behandling backfilles først – etablerer det opprinnelige relevante kravet
+        service.backfillBehandling(sakMedRettighetsperiode, førstegangsbehandling, erNyesteBehandling = false)
+        val opprinneligKrav =
+            assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(førstegangsbehandling.id).vurderinger)
+
+        service.backfillBehandling(sakMedRettighetsperiode, revurdering, erNyesteBehandling = true)
+
+        val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
+
+        // Rettighetsperiodevurderingen er uendret fra forrige behandling – ingen ny kravvurdering skal opprettes
+        assertThat(kravRevurdering.vurderinger).hasSize(1)
+        val gjeldendeKrav = kravRevurdering.gjeldendeRelevanteKrav().single()
+        assertThat(gjeldendeKrav).isEqualTo(opprinneligKrav)
+        assertThat(gjeldendeKrav.vurdertIBehandling).isEqualTo(førstegangsbehandling.id)
+    }
+
+    @Test
     fun `stønadsperiode opprettes for hvert relevant krav`() {
         val søknadsdato = 10 januar 2024
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
