@@ -88,10 +88,19 @@ private fun bestemAntallTestTråder(): Int {
     return antallTråder
 }
 
+/**
+ * Semafor som sørger for at kun én `Test`-task kjører om gangen på tvers av moduler.
+ * Se [aap.gradle.TestForkThrottle] for hvorfor.
+ */
+val testTaskSemafor = gradle.sharedServices.registerIfAbsent("aapTestForkThrottle", aap.gradle.TestForkThrottle::class) {
+    maxParallelUsages.set(1)
+}
+
 tasks {
     test {
         useJUnitPlatform()
         maxParallelForks = bestemAntallTestTråder()
+        usesService(testTaskSemafor)
         systemProperty("junit.jupiter.execution.timeout.default", "3m")
         testLogging {
             events("passed", "skipped", "failed")

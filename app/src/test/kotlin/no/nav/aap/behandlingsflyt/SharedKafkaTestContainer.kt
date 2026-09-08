@@ -23,9 +23,16 @@ internal object SharedKafkaTestContainer {
     }
 }
 
+/**
+ * Standard-timeouten er romslig med vilje. Lokalt konsumeres meldingen på under ett sekund, men på CI
+ * konkurrerer test-JVM-ene om CPU, og consumer-group-join mot en Testcontainers-broker kan da ta mange
+ * sekunder. Konsumentene bruker `auto.offset.reset = earliest` og en unik `group.id` per test, så det
+ * finnes ingen kappløp mellom subscribe og produsering — meldingen leses uansett rekkefølge. Det eneste
+ * som kan slå feil er tidsbudsjettet.
+ */
 internal fun awaitAtMost(
     description: String,
-    timeout: kotlin.time.Duration = 20.seconds,
+    timeout: kotlin.time.Duration = 60.seconds,
     interval: kotlin.time.Duration = 100.milliseconds,
     condition: () -> Boolean,
 ) {

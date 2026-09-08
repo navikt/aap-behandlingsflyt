@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import io.ktor.server.engine.*
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.netty.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -63,6 +64,15 @@ class OpprettOgFullførBehandlingApiTest {
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object {
+        /**
+         * Antall polleforsøk med 1 sekunds mellomrom. Testene har `junit.jupiter.execution.timeout.default = 3m`.
+         * `andre kall med annen payload oppretter revurdering` poller to ganger etter hverandre
+         * ([pollBehandlingStatus] + [pollRevurderingAvsluttet]), så budsjettet må være lavt nok til at
+         * summen holder seg innenfor timeouten. Ellers får vi en intetsigende "timed out after 3 minutes"
+         * i stedet for en assertion som faktisk sier hva som manglet.
+         */
+        private const val POLL_FORSOEK = 60
+
         private val postgres = postgreSQLContainer()
 
         private val dbConfig = DbConfig(
@@ -76,6 +86,15 @@ class OpprettOgFullførBehandlingApiTest {
             tokenProvider = AzureM2MTokenProvider,
             responseHandler = DefaultResponseHandler(),
         )
+
+        /**
+         * Én delt datasource for hele testklassen. Tidligere kalte hver test [initDatasource], som
+         * lager en ny HikariDataSource med `maximumPoolSize = 23` og `minimumIdle = 1` som aldri ble
+         * lukket. Med ~11 tester lekket vi et tilsvarende antall pooler mot en Postgres-container med
+         * `max_connections = 100`, i tillegg til poolene selve appen holder. Under CI-last ga det
+         * connection-svelt og dermed timeouts.
+         */
+        private val datasource: HikariDataSource by lazy { initDatasource(dbConfig) }
 
         private val server = embeddedServer(Netty, port = 0) {
             server(
@@ -96,6 +115,7 @@ class OpprettOgFullførBehandlingApiTest {
         @AfterAll
         fun afterAll() {
             server.stop()
+            datasource.close()
             postgres.close()
         }
 
@@ -190,8 +210,7 @@ class OpprettOgFullførBehandlingApiTest {
 
         assertThat(andreRespons.saksnummer).isEqualTo(førstRespons.saksnummer)
 
-        val dataSource = initDatasource(dbConfig)
-        dataSource.transaction { connection ->
+        datasource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
 
@@ -237,8 +256,7 @@ class OpprettOgFullførBehandlingApiTest {
         assertThat(behandlingStatus?.ferdig).isTrue()
         assertThat(behandlingStatus?.behandlingStatus).isEqualTo(BehandlingStatusEnum.AVSLUTTET)
 
-        val dataSource = initDatasource(dbConfig)
-        dataSource.transaction { connection ->
+        datasource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
 
@@ -314,8 +332,7 @@ class OpprettOgFullførBehandlingApiTest {
 
         requireNotNull(respons) { "Ingen respons fra opprettOgFullforBehandling" }
 
-        val dataSource = initDatasource(dbConfig)
-        dataSource.transaction { connection ->
+        datasource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(respons.saksnummer))
             assertThat(sak.rettighetsperiode.fom).isEqualTo(søknadsdato)
@@ -372,16 +389,14 @@ class OpprettOgFullførBehandlingApiTest {
         val revurderingFerdig = pollRevurderingAvsluttet(førstRespons.saksnummer, antallForventet = 2)
         assertThat(revurderingFerdig).isTrue()
 
-        val dataSource = initDatasource(dbConfig)
-        dataSource.transaction { connection ->
+        datasource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
 
             val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
             val behandlinger = behandlingRepo.hentAlleFor(sak.id)
             assertThat(behandlinger).hasSize(2)
-            assertThat(behandlinger.first().status()).isEqualTo(Status.AVSLUTTET)
-            assertThat(behandlinger.last().status()).isEqualTo(Status.AVSLUTTET)
+            assertThat(behandlinger.map { it.status() }).containsOnly(Status.AVSLUTTET)
         }
     }
     @Test
@@ -419,10 +434,9 @@ class OpprettOgFullførBehandlingApiTest {
     }
 
     private fun pollMeldekortDokumenter(saksnummer: String) = runBlocking {
-        val dataSource = initDatasource(dbConfig)
         repeat(60) {
             try {
-                val (dokumenter, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
+                val (dokumenter, behandlinger) = datasource.transaction(readOnly = true) { connection ->
                     val provider = postgresRepositoryRegistry.provider(connection)
                     val sak = provider.provide<SakRepository>().hent(Saksnummer(saksnummer))
                     val dokumenter = provider.provide<MottattDokumentRepository>()
@@ -478,8 +492,7 @@ class OpprettOgFullførBehandlingApiTest {
         assertThat(behandlingStatus?.ferdig).isTrue()
         assertThat(behandlingStatus?.behandlingStatus).isEqualTo(BehandlingStatusEnum.AVSLUTTET)
 
-        val dataSource = initDatasource(dbConfig)
-        dataSource.transaction { connection ->
+        datasource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(saksnummer))
 
@@ -492,16 +505,15 @@ class OpprettOgFullførBehandlingApiTest {
     }
 
     private fun pollRevurderingAvsluttet(saksnummer: String, antallForventet: Int): Boolean = runBlocking {
-        val dataSource = initDatasource(dbConfig)
-        repeat(120) {
+        repeat(POLL_FORSOEK) {
             try {
-                val behandlinger = dataSource.transaction(readOnly = true) { connection ->
+                val behandlinger = datasource.transaction(readOnly = true) { connection ->
                     val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
                     val sak = sakRepo.hent(Saksnummer(saksnummer))
                     val behandlingRepo = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
                     behandlingRepo.hentAlleFor(sak.id)
                 }
-                if (behandlinger.size >= antallForventet && behandlinger.first().status() == Status.AVSLUTTET) {
+                if (behandlinger.size >= antallForventet && behandlinger.all { it.status() == Status.AVSLUTTET }) {
                     return@runBlocking true
                 }
             } catch (e: Exception) {
@@ -513,7 +525,7 @@ class OpprettOgFullførBehandlingApiTest {
     }
 
     private fun pollBehandlingStatus(ident: String): BehandlingStatusRespons? = runBlocking {
-        repeat(120) {
+        repeat(POLL_FORSOEK) {
             try {
                 val status = ccClient.post<BehandlingStatusRequest, BehandlingStatusRespons>(
                     URI.create("http://localhost:$port/api/test/behandlingStatus"),
