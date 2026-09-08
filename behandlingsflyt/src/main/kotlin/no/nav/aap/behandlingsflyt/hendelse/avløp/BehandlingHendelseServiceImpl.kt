@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -273,7 +274,7 @@ class BehandlingHendelseServiceFactory : BehandlingHendelseServiceProvider {
         return BehandlingHendelseServiceImpl(repositoryProvider, gatewayProvider)
     }
 
-    companion object : no.nav.aap.komponenter.gateway.Factory<BehandlingHendelseServiceProvider> {
+    companion object : Factory<BehandlingHendelseServiceProvider> {
         override fun konstruer(): BehandlingHendelseServiceProvider = BehandlingHendelseServiceFactory()
     }
 }
