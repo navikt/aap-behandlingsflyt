@@ -63,6 +63,7 @@ class AvklarOppfølgingStegTest {
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
     private val behandlingRepository = mockk<BehandlingRepository>()
     private val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
+    private val trukketSøknadService = mockk<TrukketSøknadService>(relaxed = true)
 
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private val gatewayProvider = createGatewayProvider {
@@ -217,6 +218,7 @@ class AvklarOppfølgingStegTest {
             mottaDokumentService = mottaDokumentService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = avklaringsbehovRepository,
+            trukketSøknadService = trukketSøknadService
         )
 
         val kontekst = flytKontekstMedPerioder {

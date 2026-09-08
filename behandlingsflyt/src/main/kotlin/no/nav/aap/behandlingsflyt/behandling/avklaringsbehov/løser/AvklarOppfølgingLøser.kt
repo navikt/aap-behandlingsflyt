@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppf
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryProvider
@@ -21,8 +22,9 @@ class AvklarOppfølgingLokalkontorLøser(private val repositoryProvider: Reposit
         løsning: AvklarOppfølgingLokalkontorLøsning
     ): LøsningsResultat {
         val repo = repositoryProvider.provide<OppfølgingsBehandlingRepository>()
+        val trukketSøknadRepository = repositoryProvider.provide<TrukketSøknadRepository>()
 
-        return resultat(kontekst, repo, løsning.avklarOppfølgingsbehovVurdering)
+        return resultat(kontekst, repo, trukketSøknadRepository, løsning.avklarOppfølgingsbehovVurdering)
     }
 
     override fun forBehov(): Definisjon = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
@@ -35,8 +37,9 @@ class AvklarOppfølgingNAYLøser(private val repositoryProvider: RepositoryProvi
         løsning: AvklarOppfølgingNAYLøsning
     ): LøsningsResultat {
         val repo = repositoryProvider.provide<OppfølgingsBehandlingRepository>()
+        val trukketSøknadRepository = repositoryProvider.provide<TrukketSøknadRepository>()
 
-        return resultat(kontekst, repo, løsning.avklarOppfølgingsbehovVurdering)
+        return resultat(kontekst, repo, trukketSøknadRepository, løsning.avklarOppfølgingsbehovVurdering)
     }
 
     override fun forBehov(): Definisjon = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY
@@ -45,6 +48,7 @@ class AvklarOppfølgingNAYLøser(private val repositoryProvider: RepositoryProvi
 private fun resultat(
     kontekst: AvklaringsbehovKontekst,
     oppfølgingsBehandlingsRepo: OppfølgingsBehandlingRepository,
+    trukketSøknadRepository: TrukketSøknadRepository,
     løsning: OppfølgingsoppgaveGrunnlagDto
 ): LøsningsResultat {
     val behandlingId = kontekst.behandlingId()
@@ -53,6 +57,9 @@ private fun resultat(
     if (løsning.konsekvensAvOppfølging == KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV) {
         if (løsning.opplysningerTilRevurdering.isNullOrEmpty()) {
             throw UgyldigForespørselException("Må oppgi opplysninger til revurdering.")
+        }
+        if (trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId).any { it.skalTrekkes }) {
+            throw UgyldigForespørselException("Kan ikke opprette vurderingsbehov når søknad er trukket.")
         }
     }
 
