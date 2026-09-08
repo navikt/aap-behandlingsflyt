@@ -116,9 +116,38 @@ class BarnMedBarnetilleggTest {
             .isEqualTo(listOf(PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`))))
     }
 
+    @Test
+    fun `periode uten utbetaling fra tilkjent ytelse gir ikke barnetilleggperiode`() {
+        val januarPeriode = Periode(1 januar 2024, 31 januar 2024)
+        val februarPeriode = Periode(1 februar 2024, 29 februar 2024)
+        val heleRettighetsperioden = Periode(1 januar 2024, 29 februar 2024)
+
+        val tilkjentYtelse = listOf(
+            TilkjentYtelsePeriode(januarPeriode, tilkjent(redusertDagsats = Beløp(0))),
+            TilkjentYtelsePeriode(februarPeriode, tilkjent(redusertDagsats = Beløp(100))),
+        )
+        val grunnlag = BarnetilleggGrunnlag(listOf(BarnetilleggPeriode(heleRettighetsperioden, setOf(barnMedIdent))))
+
+        val resultat = utledBarnMedBarnetillegg(tilkjentYtelse, grunnlag)
+
+        assertThat(resultat)
+            .usingRecursiveComparison()
+            .isEqualTo(
+                listOf(
+                    BarnMedBarnetillegg(
+                        ident = "12345678901",
+                        perioderMedBarnetillegg = listOf(
+                            PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`))
+                        )
+                    )
+                )
+            )
+    }
+
     private fun tilkjent(
         gradering: Prosent = Prosent.`100_PROSENT`,
         barnetilleggsats: Beløp = Beløp(38),
+        redusertDagsats: Beløp = Beløp(100),
     ) = Tilkjent(
         dagsats = Beløp(100),
         gradering = gradering,
@@ -138,7 +167,7 @@ class BarnMedBarnetilleggTest {
         barnetillegg = barnetilleggsats,
         utbetalingsdato = 1 januar 2024,
         minsteSats = Minstesats.IKKE_MINSTESATS,
-        redusertDagsats = Beløp(100)
+        redusertDagsats = redusertDagsats
     )
 }
 
