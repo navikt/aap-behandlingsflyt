@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -70,10 +71,22 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)) {
+                    assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                        .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                } else {
+                    assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
             }
-            .fattVedtak()
+        val behandlingMedFattetVedtak =
+            if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)) {
+                behandling
+            } else {
+                behandling.fattVedtak()
+            }
+        behandlingMedFattetVedtak
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 

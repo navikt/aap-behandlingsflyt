@@ -101,11 +101,23 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)) {
+                    assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                        .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                } else {
+                    assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
             }
-            .fattVedtak()
+
+        val behandlingMedFattetVedtak =
+            if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)) {
+                behandling
+            } else {
+                behandling.fattVedtak()
+            }
+        behandlingMedFattetVedtak
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
