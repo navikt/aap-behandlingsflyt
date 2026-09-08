@@ -62,7 +62,6 @@ class HentBehandlerDialogService(
         journalpostIDer: List<String>
     ) : Map<String, BegrensetJournalpostDto> {
         val journalposter = dokumentinnhentingGateway.hentDokumentoversiktForJournalpostListe(
-            // TODO: Endre til Kontrakt-versjon!
             HentDokumentoversiktJournalpostListeParams(
                 journalpostIDer
             )
@@ -86,7 +85,7 @@ class HentBehandlerDialogService(
 
             MeldingMedDokumenterDto(
                 melding = MeldingDto(
-                    `innkommendeUtgående` = dialogmelding.innkommendeUtgående.tilResponseType(),
+                    innkommendeUtgående = dialogmelding.innkommendeUtgående.tilResponseType(),
                     meldingFraNavn = dialogmelding.meldingFraNavn,
                     opprettetTidspunkt = dialogmelding.opprettetTidspunkt,
                     dokumentasjonsType = dialogmelding.dokumentasjonsType,
@@ -109,11 +108,11 @@ class HentBehandlerDialogService(
 
             MeldingMedDokumenterDto(
                 melding = MeldingDto(
-                    `innkommendeUtgående` = `InnkommendeUtgående`.INNKOMMENDE,
-                    meldingFraNavn = journalpost?.avsenderMottakerDto?.navn ?: "",
+                    innkommendeUtgående = InnkommendeUtgående.INNKOMMENDE,
+                    meldingFraNavn = journalpost?.avsenderMottakerDto?.navn,
                     opprettetTidspunkt = helsedokument.mottattTidspunkt,
                     dokumentasjonsType = DokumentasjonType.L40,
-                    tekst = "",
+                    tekst = null,
                     meldingStatus = null,
                     journalpostId = journalpostId
                 ),
