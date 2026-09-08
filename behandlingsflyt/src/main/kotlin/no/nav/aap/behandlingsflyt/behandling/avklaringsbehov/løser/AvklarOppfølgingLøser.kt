@@ -6,8 +6,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppf
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryProvider
 
@@ -15,31 +17,35 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
  * Har disse to (denne og [AvklarOppfølgingNAYLøser] i samme fil siden de deler logikk. Er to klasser kun fordi de løser
  * to forskjellige avklaringsbehobv.
  */
-class AvklarOppfølgingLokalkontorLøser(private val repositoryProvider: RepositoryProvider) :
+class AvklarOppfølgingLokalkontorLøser(
+    private val repositoryProvider: RepositoryProvider,
+    private val gatewayProvider: GatewayProvider,
+) :
     AvklaringsbehovsLøser<AvklarOppfølgingLokalkontorLøsning> {
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarOppfølgingLokalkontorLøsning
     ): LøsningsResultat {
         val repo = repositoryProvider.provide<OppfølgingsBehandlingRepository>()
-        val trukketSøknadRepository = repositoryProvider.provide<TrukketSøknadRepository>()
 
-        return resultat(kontekst, repo, trukketSøknadRepository, løsning.avklarOppfølgingsbehovVurdering)
+        return resultat(kontekst, repo, repositoryProvider, gatewayProvider, løsning.avklarOppfølgingsbehovVurdering)
     }
 
     override fun forBehov(): Definisjon = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
 }
 
-class AvklarOppfølgingNAYLøser(private val repositoryProvider: RepositoryProvider) :
+class AvklarOppfølgingNAYLøser(
+    private val repositoryProvider: RepositoryProvider,
+    private val gatewayProvider: GatewayProvider,
+) :
     AvklaringsbehovsLøser<AvklarOppfølgingNAYLøsning> {
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarOppfølgingNAYLøsning
     ): LøsningsResultat {
         val repo = repositoryProvider.provide<OppfølgingsBehandlingRepository>()
-        val trukketSøknadRepository = repositoryProvider.provide<TrukketSøknadRepository>()
 
-        return resultat(kontekst, repo, trukketSøknadRepository, løsning.avklarOppfølgingsbehovVurdering)
+        return resultat(kontekst, repo, repositoryProvider, gatewayProvider, løsning.avklarOppfølgingsbehovVurdering)
     }
 
     override fun forBehov(): Definisjon = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY
@@ -48,7 +54,8 @@ class AvklarOppfølgingNAYLøser(private val repositoryProvider: RepositoryProvi
 private fun resultat(
     kontekst: AvklaringsbehovKontekst,
     oppfølgingsBehandlingsRepo: OppfølgingsBehandlingRepository,
-    trukketSøknadRepository: TrukketSøknadRepository,
+    repositoryProvider: RepositoryProvider,
+    gatewayProvider: GatewayProvider,
     løsning: OppfølgingsoppgaveGrunnlagDto
 ): LøsningsResultat {
     val behandlingId = kontekst.behandlingId()
@@ -58,8 +65,12 @@ private fun resultat(
         if (løsning.opplysningerTilRevurdering.isNullOrEmpty()) {
             throw UgyldigForespørselException("Må oppgi opplysninger til revurdering.")
         }
-        if (trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId).any { it.skalTrekkes }) {
-            throw UgyldigForespørselException("Kan ikke opprette vurderingsbehov når søknad er trukket.")
+
+        val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+        val trukketSøknadService = TrukketSøknadService(repositoryProvider)
+        val ytelsesbehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(kontekst.sakId())
+        if (ytelsesbehandling != null && trukketSøknadService.søknadErTrukket(ytelsesbehandling.id)) {
+            throw UgyldigForespørselException("Søknaden er trukket. Velg \"Ingen konsekvens for saken\" for å behandle oppfølgingsoppgaven.")
         }
     }
 

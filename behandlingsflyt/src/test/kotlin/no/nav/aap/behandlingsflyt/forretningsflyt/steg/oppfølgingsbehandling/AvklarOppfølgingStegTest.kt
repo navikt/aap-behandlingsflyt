@@ -50,7 +50,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 class AvklarOppfølgingStegTest {
     private val oppfølgingsBehandlingRepository = mockk<OppfølgingsBehandlingRepository>()
@@ -97,6 +97,8 @@ class AvklarOppfølgingStegTest {
     @BeforeEach
     fun setup() {
         every { behandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
+        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(any()) } returns behandling
+        every { trukketSøknadService.søknadErTrukket(any()) } returns false
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any()) } returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now().plusDays(7),
