@@ -67,44 +67,12 @@ class BistandsvilkåretTest {
     }
 
     @Test
-    fun `nye vurderinger skal overskrive`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
-        Bistandsvilkåret(vilkårsresultat).vurder(
-            BistandFaktagrunnlag(
-                sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                bistandGrunnlag = BistandGrunnlag(listOf(bistandvurdering())),
-            )
-        )
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.OPPFYLT }
-
-        Bistandsvilkåret(vilkårsresultat).vurder(
-            BistandFaktagrunnlag(
-                sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                bistandGrunnlag = BistandGrunnlag(
-                    listOf(
-                        bistandvurdering(
-                            erBehovForAktivBehandling = false,
-                            erBehovForAnnenOppfølging = false,
-                            erBehovForArbeidsrettetTiltak = false
-                        )
-                    )
-                ),
-            )
-        )
-        assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
-    }
-
-    @Test
     fun `Skal kunne ha vurderinger med ulike utfall`() {
         val vilkårsresultat = Vilkårsresultat()
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
 
         val iDag = LocalDate.now()
-        Bistandsvilkåret(vilkårsresultat).vurder(
+        val resultat = Bistandsvilkåret.vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 bistandGrunnlag = BistandGrunnlag(
@@ -120,14 +88,12 @@ class BistandsvilkåretTest {
             )
         )
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
-        assertThat(vilkår.vilkårsperioder().first().utfall).isEqualTo(Utfall.OPPFYLT)
-        assertThat(vilkår.vilkårsperioder().last().innvilgelsesårsak).isNull()
-        assertThat(vilkår.vilkårsperioder().last().utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        assertThat(vilkår.vilkårsperioder().last().avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
-        assertThat(vilkår.vilkårsperioder().last().periode.fom).isEqualTo(iDag.plusDays(10))
+        assertThat(resultat.segmenter()).hasSize(2)
+        assertThat(resultat.segmenter().first().verdi.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(resultat.segmenter().last().verdi.innvilgelsesårsak).isNull()
+        assertThat(resultat.segmenter().last().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(resultat.segmenter().last().verdi.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
+        assertThat(resultat.segmenter().last().periode.fom).isEqualTo(iDag.plusDays(10))
     }
 
 
@@ -260,9 +226,6 @@ class BistandsvilkåretTest {
 
     @Test
     fun `to vurderinger med ulike utfall gir riktig tidslinje`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
         val vurdering1 = Bistandsvurdering(
             begrunnelse = "Begrunnelse 1",
             erBehovForAktivBehandling = false,
@@ -291,25 +254,23 @@ class BistandsvilkåretTest {
             vurdertIBehandling = BehandlingId(70608)
         )
 
-        Bistandsvilkåret(vilkårsresultat).vurder(
+        val res1 = Bistandsvilkåret.vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.of(2999, 1, 1),
                 bistandGrunnlag = BistandGrunnlag(listOf(vurdering2, vurdering1)),
             )
         )
 
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+        assertThat(res1.perioder()).hasSize(2)
 
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
+        val periode1 = res1.segmenter().first()
+        val periode2 = res1.segmenter().last()
 
-        val periode1 = vilkår.vilkårsperioder().first()
-        val periode2 = vilkår.vilkårsperioder().last()
-
-        assertThat(periode1.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(periode1.verdi.utfall).isEqualTo(Utfall.OPPFYLT)
         assertThat(periode1.periode).isEqualTo(Periode(LocalDate.of(2025, 11, 25), LocalDate.of(2026, 4, 20)))
-
-        assertThat(periode2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        assertThat(periode2.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
+//
+        assertThat(periode2.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(periode2.verdi.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
         assertThat(periode2.periode).isEqualTo(Periode(LocalDate.of(2026, 4, 21), LocalDate.of(2999, 1, 1)))
     }
 
