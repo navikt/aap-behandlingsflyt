@@ -258,4 +258,56 @@ internal class BarnRepositoryImplTest {
 
         assertThat(uthentet.saksbehandlerOppgitteBarn?.barn).containsExactly(saksbehandlerOppgittBarn)
     }
+
+    @Test
+    fun `Ikke lagre duplikate oppgitte barn`() {
+        val behandling = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            finnEllerOpprettBehandling(connection, sak)
+        }
+        val oppgittFosterBarn = OppgitteBarn.OppgittBarn(
+            ident = Ident("123456"),
+            navn = "Mini Mus",
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(5)),
+            relasjon = Relasjon.FOSTERFORELDER
+        )
+
+        val oppgittFosterBarnDuplikat = oppgittFosterBarn.copy(
+            navn = "mini mus",
+        )
+
+        val oppgittBarn = OppgitteBarn.OppgittBarn(
+            navn = "Mikke Mus",
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(10)),
+            relasjon = Relasjon.FORELDER,
+            ident = null,
+        )
+
+        val oppgittBarnDuplikat = oppgittBarn.copy()
+
+        dataSource.transaction {
+            BarnRepositoryImpl(it).lagreOppgitteBarn(
+                behandling.id,
+                OppgitteBarn(
+                    id = 1L,
+                    oppgitteBarn = listOf(
+                        oppgittBarn,
+                        oppgittBarnDuplikat,
+                        oppgittFosterBarn,
+                        oppgittFosterBarnDuplikat
+                    )
+                )
+            )
+        }
+
+        val uthentet = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet.oppgitteBarn?.oppgitteBarn).hasSize(2)
+        assertThat(listOf(uthentet.oppgitteBarn?.oppgitteBarn?.map { it.identifikator() })).containsExactlyInAnyOrder(
+            listOf(oppgittBarn.identifikator(), oppgittFosterBarn.identifikator())
+        )
+
+    }
 }

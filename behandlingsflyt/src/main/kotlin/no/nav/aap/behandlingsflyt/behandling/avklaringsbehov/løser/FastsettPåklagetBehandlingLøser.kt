@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettP�
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -41,7 +42,7 @@ class FastsettPåklagetBehandlingLøser(
     }
 
     private fun Behandling.valider(): Behandling {
-        if (!this.typeBehandling().erYtelsesbehandling()) {
+        if (!this.typeBehandling().erYtelsesbehandling() && this.typeBehandling() != TypeBehandling.Klage) {
             throw UgyldigForespørselException("Kan ikke klage på type ${this.typeBehandling()}")
         }
 

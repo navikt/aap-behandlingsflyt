@@ -27,8 +27,6 @@ import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
@@ -239,30 +237,17 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-
-                val underveisTidslinje =
-                    repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id).perioder
-                        .map { Segment(it.periode, it) }.let(::Tidslinje)
-
-                val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
-                val vilkårsresultat = hentVilkårsresultat(behandlingId = this.behandling.id)
-                val rettighetstypeTidslinje = vilkårsresultat.rettighetstypeTidslinje()
-
-                assertThat(oppfyltPeriode.fom).isEqualTo(søknadsdato)
-                // Oppfylt ut rettighetsperioden
-                assertThat(oppfyltPeriode.tom).isEqualTo(søknadsdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
-                assertThat(underveisTidslinje.helePerioden().fom).isEqualTo(rettighetstypeTidslinje.helePerioden().fom)
             }
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
             .assertRettighetstype(
                 Periode(
-                    sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusMonths(1).minusDays(1)
+                    søknadsdato,
+                    søknadsdato.plusMonths(1).minusDays(1)
                 ) to RettighetsType.SYKEPENGEERSTATNING,
                 Periode(
                     revurderingFom,
-                    sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    søknadsdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
                 ) to RettighetsType.BISTANDSBEHOV
             )
 

@@ -22,10 +22,11 @@ class KravVurderingLøsningDtoTest {
             referanse = null,
             journalpostId = JournalpostId("123456789"),
             begrunnelse = "Begrunnelse",
-            søknadsdato = Søknadsdato(dato = 1 februar 2026, SøknadsdatoÅrsak.SøknadMottatt),
+            søknadsdato = Søknadsdato(dato = 1 februar 2026, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Søknadsdato-begrunnelse"),
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 dato = 1 januar 2026,
-                OverstyrMuligRettFraÅrsak.MisvisendeOpplysninger
+                OverstyrMuligRettFraÅrsak.MisvisendeOpplysninger,
+                begrunnelse = "Overstyrt-begrunnelse"
             )
         )
 
@@ -38,11 +39,13 @@ class KravVurderingLøsningDtoTest {
               "begrunnelse" : "Begrunnelse",
               "søknadsdato" : {
                 "dato" : "2026-02-01",
-                "årsak" : "SøknadMottatt"
+                "årsak" : "SøknadMottatt",
+                "begrunnelse" : "Søknadsdato-begrunnelse"
               },
               "overstyrMuligRettFra" : {
                 "dato" : "2026-01-01",
-                "årsak" : "MisvisendeOpplysninger"
+                "årsak" : "MisvisendeOpplysninger",
+                "begrunnelse" : "Overstyrt-begrunnelse"
               }
             }
         """.trimIndent()

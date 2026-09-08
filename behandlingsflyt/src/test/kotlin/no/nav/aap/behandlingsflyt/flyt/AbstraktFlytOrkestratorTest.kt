@@ -700,8 +700,10 @@ open class AbstraktFlytOrkestratorTest(
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null,
         vissVarighet: Boolean? = true,
         erOppfylt: Boolean = true,
+        erStudent: Boolean = false
     ): Behandling {
         val harNedsattArbeidsevne = when {
+            erStudent -> ArbeidsevneNedsattValg.NEI_MEN_STUDENT
             vissVarighet == false -> ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
             erOppfylt -> ArbeidsevneNedsattValg.JA
             else -> ArbeidsevneNedsattValg.NEI
@@ -1481,7 +1483,7 @@ open class AbstraktFlytOrkestratorTest(
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
-    protected fun Behandling.løsVedtaksbrevKlage(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
+    protected fun Behandling.løsVedtaksbrevSaksbehandler(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
         val brevbestilling = hentBrevAvType(this, typeBrev)
 
         return this.løsAvklaringsBehov(vedtaksbrevKlageLøsning(brevbestilling.referanse.brevbestillingReferanse))

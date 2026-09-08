@@ -10,7 +10,7 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -82,17 +82,13 @@ fun NormalOpenAPIRoute.behandlingApi(
                         repositoryProvider.provide<AvklaringsbehovRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
-                    val virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider)
+                    val virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider)
 
                     val behandling = behandling(behandlingRepository, req)
                     val sak = sakRepository.hent(behandling.sakId)
                     val virkningstidspunkt =
                         runCatching {
-                            if (behandling.erYtelsesbehandling()) {
-                                virkningstidspunktUtleder.utledVirkningsTidspunkt(
-                                    behandling.id
-                                )
-                            } else null
+                            virkningstidspunktService.finnVirkningstidspunkt(behandling)
                         }.getOrElse {
                             log.warn("Feil ved utleding av virkningstidspunkt for behandling ${behandling.id}", it)
                             null

@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.stansopphør.StansOpphørService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
@@ -47,7 +46,6 @@ class IverksettVedtakStegTest {
     private val refusjonkravRepository = mockk<RefusjonkravRepository>(relaxed = true)
     private val utbetalingService = mockk<UtbetalingService>()
     private val vedtakService = mockk<VedtakService>()
-    private val virkningstidspunktUtleder = mockk<VirkningstidspunktUtleder>(relaxed = true)
     private val trukketSøknadService = mockk<TrukketSøknadService>()
     private val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
     private val gosysService = mockk<GosysService>(relaxed = true)
@@ -110,7 +108,6 @@ class IverksettVedtakStegTest {
             refusjonkravRepository = refusjonkravRepository,
             utbetalingService = utbetalingService,
             vedtakService = vedtakService,
-            virkningstidspunktUtleder = virkningstidspunktUtleder,
             trukketSøknadService = trukketSøknadService,
             avbrytRevurderingService = avbrytRevurderingService,
             gosysService = gosysService,

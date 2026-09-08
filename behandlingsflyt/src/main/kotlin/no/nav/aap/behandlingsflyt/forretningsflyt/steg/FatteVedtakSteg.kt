@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -37,7 +37,7 @@ class FatteVedtakSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
-    private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val virkningstidspunktService: VirkningstidspunktService,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -66,7 +66,7 @@ class FatteVedtakSteg(
             vedtakService.lagreVedtak(
                 behandlingId = kontekst.behandlingId,
                 vedtakstidspunkt = vedtakstidspunkt,
-                virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId),
+                virkningstidspunkt = virkningstidspunktService.finnVirkningstidspunkt(kontekst.behandlingId),
             )
         }
 
@@ -145,7 +145,7 @@ class FatteVedtakSteg(
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
-                virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider, gatewayProvider),
+                virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider),
             )
         }
 

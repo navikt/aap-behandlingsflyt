@@ -11,7 +11,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SimulerUtbetalingSteg private constructor() : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        // TODO slett meg
         // TODO: Simuler utbetaling mot økonomi
 
         return Fullført

@@ -349,7 +349,7 @@ class AvklarStønadsperiodeLøserTest {
             begrunnelse = "Test",
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
-            søknadsdato = Søknadsdato(søknadsdato, SøknadsdatoÅrsak.SøknadMottatt),
+            søknadsdato = Søknadsdato(søknadsdato, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
             overstyrMuligRettFra = null,
             muligRettFra = søknadsdato,
         )

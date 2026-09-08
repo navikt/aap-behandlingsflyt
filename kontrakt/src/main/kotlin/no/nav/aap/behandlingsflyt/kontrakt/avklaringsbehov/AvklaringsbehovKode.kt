@@ -7,7 +7,6 @@ public const val VURDER_BRUDD_11_7_KODE: String = "4101"
 public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT: String = "4102"
 public const val VURDER_BRUDD_11_9_KODE: String = "4201"
 public const val AVBRYT_AKTIVITETSPLIKTBEHANDING_KODE: String = "4301"
-public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
 public const val FASTSETT_ARBEIDSEVNE_KODE: String = "5004"
@@ -82,6 +81,10 @@ public const val BESTILL_BREV_KODE: String = "9002"
 public const val BESTILL_LEGEERKLÆRING_KODE: String = "9003"
 public const val OPPRETT_HENDELSE_PÅ_SAK_KODE: String = "9004"
 
+// Har vært i produksjon, men ikke lenger i bruk
+@Deprecated("AVKLAR_STUDENT_KODE_V2")
+public const val AVKLAR_STUDENT_KODE: String = "5001"
+
 @Suppress("EnumEntryName")
 public enum class AvklaringsbehovKode {
     /**
@@ -104,6 +107,7 @@ public enum class AvklaringsbehovKode {
      */
     `4301`,
 
+    @Deprecated("Erstattet av 5037")
     /**
      * [AVKLAR_STUDENT_KODE]
      */

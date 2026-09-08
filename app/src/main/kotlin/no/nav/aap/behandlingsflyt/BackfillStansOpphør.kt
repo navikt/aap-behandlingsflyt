@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.utledStansEllerOpphør
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
@@ -80,7 +81,7 @@ class BackfillStansOpphør(
         for (sakId in fra..til) {
             dataSource.transaction { connection ->
                 val sakRepository = SakRepositoryImpl(connection)
-                val sak = sakRepository.backfillStansOpphørHentHvisFinnes(sakId)
+                val sak = sakRepository.hentSakHvisEksisterer(sakId)
                     ?: return@transaction
 
                 if (Miljø.erDev() && sak.opprettetTidspunkt <= LocalDate.parse("2025-04-01").atStartOfDay()) {
@@ -110,12 +111,15 @@ class BackfillStansOpphør(
         val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
         val sakRepository = SakRepositoryImpl(connection)
         val underveisRepository = UnderveisRepositoryImpl(connection)
+        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+        val kvoteService = KvoteService(repositoryProvider, gatewayProvider)
         val rettighetstypeService =
-            RettighetstypeService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            RettighetstypeService(repositoryProvider, gatewayProvider)
         val grunnlag = stansOpphørGrunnlagRepository.hentHvisEksisterer(behandling.id)
 
-        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
-            && behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)
+        if (behandling.status().erÅpen() &&
+            behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling &&
+            behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)
         ) {
             log.info(
                 "Ingen backfill for behandling {}: førstegangsbehandling og ikke nådd steget",
@@ -139,8 +143,9 @@ class BackfillStansOpphør(
             }
 
 
-            if (behandling.typeBehandling() == TypeBehandling.Revurdering
-                && behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)
+            if (behandling.status().erÅpen () &&
+                behandling.typeBehandling() == TypeBehandling.Revurdering &&
+                behandling.flyt().erStegFør(behandling.aktivtSteg(), StegType.FASTSETT_RETTIGHETSTYPE)
             ) {
                 val forrigeGrunnlag =
                     requireNotNull(stansOpphørGrunnlagRepository.hentHvisEksisterer(behandling.forrigeBehandlingId!!)) {
@@ -172,7 +177,7 @@ class BackfillStansOpphør(
                 ?.helePerioden()
                 ?: sakRepository.hent(behandling.sakId).rettighetsperiode
 
-            val stansOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = rettighetsperiode)
+            val stansOpphør = utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = rettighetsperiode, kvoter = kvoteService.historiskBruktKvoter(behandling))
             val nyttGrunnlag = (grunnlag ?: StansOpphørGrunnlag().utledNyttGrunnlag(stansOpphør, behandling.id))
                 .copy(stansOpphørV2 = stansOpphør)
 

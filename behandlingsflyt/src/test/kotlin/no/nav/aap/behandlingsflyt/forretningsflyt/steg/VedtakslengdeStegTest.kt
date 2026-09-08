@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
@@ -101,7 +103,7 @@ class VedtakslengdeStegTest {
 
         InMemoryRettighetstypeRepository.lagre(
             behandlingId = inneværendeBehandling.id,
-            rettighetstypeTidslinje = vedtattVilkårsresultat.rettighetstypeTidslinje(),
+            rettighetstypeTidslinje = vurderRettighetsType(vedtattVilkårsresultat, KvoteService.standardKvoter),
             faktagrunnlag = RettighetstypeFaktagrunnlag(vedtattVilkårsresultat),
             versjon = "1",
         )

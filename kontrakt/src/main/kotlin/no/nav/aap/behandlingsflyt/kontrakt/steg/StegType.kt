@@ -55,10 +55,6 @@ public enum class StegType(
         gruppe = StegGruppe.AVSLAG_11_27,
         status = Status.UTREDES
     ),
-    AVKLAR_STUDENT(
-        gruppe = StegGruppe.STUDENT,
-        status = Status.UTREDES
-    ),
     AVKLAR_STUDENT_V2(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES,
@@ -124,10 +120,6 @@ public enum class StegType(
         status = Status.UTREDES
     ),
     FASTSETT_BEREGNINGSTIDSPUNKT(
-        gruppe = StegGruppe.GRUNNLAG,
-        status = Status.UTREDES
-    ),
-    VIS_GRUNNLAG(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),
@@ -239,10 +231,6 @@ public enum class StegType(
         gruppe = StegGruppe.BREV,
         status = Status.IVERKSETTES,
     ),
-    OPPRETT_REVURDERING(
-        gruppe = StegGruppe.IVERKSETT_VEDTAK,
-        status = Status.IVERKSETTES
-    ),
 
     // Klage start
     PÅKLAGET_BEHANDLING(
@@ -305,13 +293,13 @@ public enum class StegType(
     ),
 
     // Oppfølgingsbehandling slutt
-    
+
     // Aktivitetsplikt start
     VURDER_AKTIVITETSPLIKT_11_7(
         gruppe = StegGruppe.AKTIVITETSPLIKT_11_7,
         status = Status.UTREDES,
     ),
-    
+
     IVERKSETT_BRUDD(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.IVERKSETTES,
@@ -328,10 +316,26 @@ public enum class StegType(
     ),
 
     // Aktivitetsplikt slutt
-    
+
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,
         tekniskSteg = true,
     ), // Forbeholdt deklarasjon for avklaringsbehov som
+
+    /**
+     * Ikke i bruk. Verdien finnes fortsatt i DB.
+     */
+    OPPRETT_REVURDERING(
+        gruppe = StegGruppe.IVERKSETT_VEDTAK,
+        status = Status.IVERKSETTES
+    ),
+    VIS_GRUNNLAG(
+        gruppe = StegGruppe.GRUNNLAG,
+        status = Status.UTREDES
+    ),
+    AVKLAR_STUDENT(
+        gruppe = StegGruppe.STUDENT,
+        status = Status.UTREDES
+    ),
 }

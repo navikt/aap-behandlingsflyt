@@ -80,7 +80,9 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
-        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isEqualTo(BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
+        assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata).isEqualTo(
+            BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING
+        )
     }
 
     @Test
@@ -103,7 +105,13 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
     fun `førstegangsbehandling med kun avslag sykdomsvurderinger setter AVSLAG_11_5_FØRSTEGANGSBEHANDLING når den står i fatte vedtak-steg`() {
         InMemorySykdomRepository.lagre(behandlingId, listOf(avslagSykdomsvurdering(), avslagSykdomsvurdering()))
 
-        utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling, aktivtSteg = StegType.FATTE_VEDTAK, status = Status.UTREDES))
+        utfører.utfør(
+            jobbInput(
+                TypeBehandling.Førstegangsbehandling,
+                aktivtSteg = StegType.FATTE_VEDTAK,
+                status = Status.UTREDES
+            )
+        )
 
         assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata)
             .isEqualTo(BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
@@ -113,7 +121,13 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
     fun `førstegangsbehandling med kun avslag sykdomsvurderinger setter AVSLAG_11_5_FØRSTEGANGSBEHANDLING når den er står i brevsteg`() {
         InMemorySykdomRepository.lagre(behandlingId, listOf(avslagSykdomsvurdering(), avslagSykdomsvurdering()))
 
-        utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling, status = Status.IVERKSETTES, aktivtSteg = StegType.BREV))
+        utfører.utfør(
+            jobbInput(
+                TypeBehandling.Førstegangsbehandling,
+                status = Status.IVERKSETTES,
+                aktivtSteg = StegType.BREV
+            )
+        )
 
         assertThat(CapturingOppgavestyringGateway.instans.hendelseTilOppgave?.behandlingMetadata)
             .isEqualTo(BehandlingMetadata.AVSLAG_11_5_FØRSTEGANGSBEHANDLING)
@@ -140,7 +154,10 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
 
     @Test
     fun `førstegangsbehandling med én yrkesskade oppfylt og én avslag setter ikke AVSLAG_11_5_FØRSTEGANGSBEHANDLING`() {
-        InMemorySykdomRepository.lagre(behandlingId, listOf(yrkesskadeOppfyltSykdomsvurdering(), avslagSykdomsvurdering()))
+        InMemorySykdomRepository.lagre(
+            behandlingId,
+            listOf(yrkesskadeOppfyltSykdomsvurdering(), avslagSykdomsvurdering())
+        )
 
         utfører.utfør(jobbInput(TypeBehandling.Førstegangsbehandling))
 
@@ -157,30 +174,36 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
     }
 
 
-    private fun jobbInput(behandlingType: TypeBehandling, status: Status = Status.OPPRETTET, aktivtSteg: StegType? = StegType.FATTE_VEDTAK): JobbInput =
+    private fun jobbInput(
+        behandlingType: TypeBehandling,
+        status: Status = Status.OPPRETTET,
+        aktivtSteg: StegType? = StegType.FATTE_VEDTAK
+    ): JobbInput =
         JobbInput(VarsleOppgaveOmHendelseJobbUtFører)
             .medPayload(enHendelse(behandlingType, status, aktivtSteg))
             .forBehandling(sakId, behandlingId.id)
 
-    private fun enHendelse(behandlingType: TypeBehandling, status: Status, aktivtSteg: StegType?) = BehandlingFlytStoppetHendelse(
-        personIdent = "12345678901",
-        saksnummer = Saksnummer("SAK-001"),
-        referanse = BehandlingReferanse(),
-        behandlingType = behandlingType,
-        årsakerTilBehandling = emptyList(),
-        vurderingsbehov = emptyList(),
-        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-        status = status,
-        aktivtSteg = aktivtSteg,
-        avklaringsbehov = emptyList(),
-        erPåVent = false,
-        uføreVedtak = null,
-        relevanteIdenterPåBehandling = emptyList(),
-        mottattDokumenter = emptyList(),
-        opprettetTidspunkt = LocalDateTime.now(),
-        hendelsesTidspunkt = LocalDateTime.now(),
-        versjon = "1",
-    )
+    private fun enHendelse(behandlingType: TypeBehandling, status: Status, aktivtSteg: StegType?) =
+        BehandlingFlytStoppetHendelse(
+            personIdent = "12345678901",
+            saksnummer = Saksnummer("SAK-001"),
+            referanse = BehandlingReferanse(),
+            behandlingType = behandlingType,
+            årsakerTilBehandling = emptyList(),
+            vurderingsbehov = emptyList(),
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            status = status,
+            aktivtSteg = aktivtSteg,
+            avklaringsbehov = emptyList(),
+            erPåVent = false,
+            uføreVedtak = null,
+            relevanteIdenterPåBehandling = emptyList(),
+            mottattDokumenter = emptyList(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            hendelsesTidspunkt = LocalDateTime.now(),
+            versjon = "1",
+            reserverTilPerAvklaringsbehov = emptyMap()
+        )
 
     private fun avslagSykdomsvurdering() = Sykdomsvurdering(
         begrunnelse = "Ikke oppfylt",

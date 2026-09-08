@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.rettighetstype
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
@@ -155,7 +154,7 @@ internal fun vurderKvoter(
 
 fun vurderRettighetsType(
     vilkårsresultat: Vilkårsresultat,
-    kvoter: Kvoter = KvoteService().beregn()
+    kvoter: Kvoter,
 ): Tidslinje<RettighetsType> {
     val vurderKvoter = vurderRettighetstypeOgKvoter(vilkårsresultat, kvoter)
     return vurderKvoter
@@ -195,7 +194,7 @@ fun vurderRettighetstypeOgKvoter(
  */
 fun utledStansEllerOpphør(
     vilkårsresultat: Vilkårsresultat,
-    kvoter: Kvoter = KvoteService().beregn(),
+    kvoter: Kvoter,
     rettighetsperiode: Periode,
 ): Map<LocalDate, StansEllerOpphør> {
     val rettighetstypeVurderingTidslinje = utledRettighetstypevurderinger(vilkårsresultat)

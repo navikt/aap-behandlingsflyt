@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.rettighetstype
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.BRUKER_OVER_67
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
@@ -64,7 +65,7 @@ class KravForRettighetsTypeTest {
         vilkårsresultat.vurdertOppfylt(SYKDOMSVILKÅRET, Periode(22 september 2025, 21 september 2026))
         vilkårsresultat.vurdertIkkeOppfylt(SYKEPENGEERSTATNING, Periode(22 september 2025, 21 september 2026), Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING)
 
-        assertThat(utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(22 september 2025, 21 september 2026)))
+        assertThat(utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(22 september 2025, 21 september 2026), kvoter = KvoteService.standardKvoter))
             .isEqualTo(mapOf<LocalDate, StansEllerOpphør>())
     }
 
@@ -88,14 +89,14 @@ class KravForRettighetsTypeTest {
         )
 
         assertTidslinje(
-            vurderRettighetsType(vilkårsresultat),
+            vurderRettighetsType(vilkårsresultat, KvoteService.standardKvoter),
             Periode(kravdato, sisteDagAldersvilkåretOppfylt) to {
                 assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
             },
         )
 
         assertEquals(
-            utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(kravdato, Tid.MAKS)),
+            utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(kravdato, Tid.MAKS), kvoter = KvoteService.standardKvoter),
             mapOf(
                 sisteDagAldersvilkåretOppfylt.plusDays(1) to Opphør(setOf(BRUKER_OVER_67))
             )
@@ -128,14 +129,14 @@ class KravForRettighetsTypeTest {
         )
 
         assertTidslinje(
-            vurderRettighetsType(vilkårsresultat),
+            vurderRettighetsType(vilkårsresultat, kvoter = KvoteService.standardKvoter),
             Periode(kravdato, sisteDagOvergangUføre) to {
                 assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
             },
         )
 
         assertEquals(
-            utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(kravdato, Tid.MAKS)),
+            utledStansEllerOpphør(vilkårsresultat, rettighetsperiode = Periode(kravdato, Tid.MAKS), kvoter = KvoteService.standardKvoter),
             mapOf(
                 sisteDagOvergangUføre.plusDays(1) to
                         /* Legg spesielt merke til at IKKE_BEHOV_FOR_OPPFOLGING

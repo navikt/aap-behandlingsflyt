@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.BISTANDSVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.SYKDOMSVILKÅRET
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
@@ -68,7 +70,7 @@ class VilkårsresultatTest {
                 )
             )
 
-            val tidslinje = v.rettighetstypeTidslinje()
+            val tidslinje = vurderRettighetsType(v, KvoteService.standardKvoter)
             assertThat(tidslinje.segmenter()).hasSize(1)
             assertThat(tidslinje.segmenter().first().verdi).isEqualTo(RettighetsType.STUDENT)
             assertThat(tidslinje.helePerioden()).isEqualTo(Periode(startDag, startDag.plusDays(4)))
@@ -108,7 +110,7 @@ class VilkårsresultatTest {
                 )
             )
             v.leggTilFellesVilkår(Periode(nå, nå.plusDays(30)))
-            val tidslinje = v.rettighetstypeTidslinje()
+            val tidslinje = vurderRettighetsType(v, KvoteService.standardKvoter)
             assertThat(tidslinje.segmenter()).hasSize(2)
             assertThat(tidslinje.erSammenhengende()).isFalse
             assertThat(tidslinje.helePerioden()).isEqualTo(Periode(nå, nå.plusDays(30)))
@@ -142,7 +144,7 @@ class VilkårsresultatTest {
             )
             v.leggTilFellesVilkår(Periode(dagensDato.minusDays(5), dagensDato.plusDays(15)))
 
-            val res = v.rettighetstypeTidslinje()
+            val res = vurderRettighetsType(v, KvoteService.standardKvoter)
             assertTidslinje(
                 res, førstePeriode to {
                     assertThat(it).`as`(dagensDato.toString()).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
@@ -188,7 +190,7 @@ class VilkårsresultatTest {
             )
             v.leggTilFellesVilkår(Periode(nå.minusDays(5), nå.plusDays(15)))
 
-            val res = v.rettighetstypeTidslinje().komprimer()
+            val res = vurderRettighetsType(v, KvoteService.standardKvoter).komprimer()
             assertThat(res.segmenter()).hasSize(2)
             assertThat(res.segmenter().first().verdi).isEqualTo(RettighetsType.BISTANDSBEHOV)
             // Kun sykepengererstatning først
@@ -250,7 +252,7 @@ class VilkårsresultatTest {
             )
             v.leggTilFellesVilkår(Periode(nå, nå.plusDays(30)))
 
-            val res = v.rettighetstypeTidslinje().komprimer()
+            val res = vurderRettighetsType(v, KvoteService.standardKvoter).komprimer()
             assertTidslinje(
                 res, Periode(nå, sykepengerPeriode) to {
                     assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
@@ -318,7 +320,7 @@ class VilkårsresultatTest {
             v.leggTilFellesVilkår(ordinærPeriode)
             v.leggTilFellesVilkår(arbeidssøkerPeriode)
 
-            val res = v.rettighetstypeTidslinje().komprimer()
+            val res = vurderRettighetsType(v, KvoteService.standardKvoter).komprimer()
             assertTidslinje(
                 res,
                 ordinærPeriode to {
@@ -361,7 +363,7 @@ class VilkårsresultatTest {
             )
             v.leggTilFellesVilkår(Periode(nå, sykepengerPeriode))
 
-            val res = v.rettighetstypeTidslinje().komprimer()
+            val res = vurderRettighetsType(v, KvoteService.standardKvoter).komprimer()
             assertTidslinje(
                 res,
                 Periode(nå, sykepengerPeriode) to {
@@ -411,7 +413,7 @@ class VilkårsresultatTest {
             )
             v.leggTilFellesVilkår(Periode(nå, sykepengerPeriode))
 
-            val res = v.rettighetstypeTidslinje().komprimer()
+            val res = vurderRettighetsType(v, KvoteService.standardKvoter).komprimer()
             assertTidslinje(
                 res,
                 Periode(nå, sykepengerPeriode) to {

@@ -93,7 +93,12 @@ object InMemorySakRepository : SakRepository {
         sakId: SakId,
         periode: Periode
     ) {
-        TODO("Not yet implemented")
+        synchronized(lock) {
+            val sak = memory.getValue(sakId)
+            val field = sak::class.java.getDeclaredField("rettighetsperiode")
+            field.trySetAccessible()
+            field.set(sak, periode)
+        }
     }
 
     override fun slett(behandlingId: BehandlingId) {

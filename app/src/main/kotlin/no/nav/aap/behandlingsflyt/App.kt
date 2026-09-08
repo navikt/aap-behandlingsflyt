@@ -252,6 +252,7 @@ internal fun Application.server(
     TilgangGateway.initialiserPrometheus(prometheus)
 
     BackfillStansOpphør(fellesDataSource, gatewayProvider).kjør()
+    BackfillKrav(fellesDataSource, gatewayProvider).kjør()
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -264,7 +265,7 @@ internal fun Application.server(
         // Helt til slutt, nå som vi har stanset Motor, etc. Lukk executor og database-koblinger.
         lukkRessurser(
             environment.log,
-            listOf(informasjonskravExecutor, fellesDataSource, motorDataSource, pipDataSource)
+            listOf(fellesDataSource, motorDataSource, pipDataSource)
         )
     }
     verifiserTidssone(fellesDataSource)
@@ -350,7 +351,7 @@ internal fun Application.server(
                 påminnelseApi(fellesDataSource, repositoryRegistry)
                 mottattHendelseApi(fellesDataSource, repositoryRegistry)
                 underveisVurderingerApi(fellesDataSource, repositoryRegistry)
-                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry)
+                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 lovvalgMedlemskapGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 samordningGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
                 forutgåendeMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -507,8 +508,6 @@ fun Application.startMotor(
     gatewayProvider: GatewayProvider,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
 ): Motor {
-    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
     val motor = Motor(
         dataSource = dataSource,
         antallKammer = AppConfig.ANTALL_WORKERS_FOR_MOTOR,
@@ -517,7 +516,7 @@ fun Application.startMotor(
         prometheus = prometheus,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider,
-        enableV2 = { unleashGateway.isEnabled(BehandlingsflytFeature.MotorV2) },
+        enableV2 = { true },
     )
 
     dataSource.transaction { dbConnection ->

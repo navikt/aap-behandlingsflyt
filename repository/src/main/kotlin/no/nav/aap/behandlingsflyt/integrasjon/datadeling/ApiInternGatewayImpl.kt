@@ -17,15 +17,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.BarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenaVedtaksvariantDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenavedtakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.AvslagsårsakDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BarnMedBarnetilleggDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphørDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.PeriodeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.PeriodeMedBeløpDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SamIdOgTpnr
@@ -131,6 +134,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
         underveisperioder: List<UnderveisperiodeDatadeling>,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
         muligMaksdato: LocalDate?,
+        barnMedBarnetillegg: List<BarnMedBarnetillegg>,
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -209,6 +213,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     perioderMedFritakMeldeplikt = perioderMedFritakMeldeplikt.map { PeriodeDTO(it.fom, it.tom) },
                     underveisperioder = underveisperioder.map { it.tilDatadelingDTO() },
+                    barnMedBarnetillegg = barnMedBarnetillegg.map { it.tilDatadelingDTO() },
                 ),
             ),
             mapper = { _, _ ->
@@ -321,3 +326,10 @@ internal fun UnderveisperiodeDatadeling.tilDatadelingDTO() = UnderveisperiodeDat
 )
 
 internal fun Periode.tilDatadelingDTO() = PeriodeDTO(fom, tom)
+
+internal fun BarnMedBarnetillegg.tilDatadelingDTO() = BarnMedBarnetilleggDTO(
+    ident = ident,
+    perioderMedBarnetillegg = perioderMedBarnetillegg.map {
+        PeriodeMedBeløpDTO(fom = it.periode.fom, tom = it.periode.tom, beløp = it.beløp.verdi)
+    }
+)

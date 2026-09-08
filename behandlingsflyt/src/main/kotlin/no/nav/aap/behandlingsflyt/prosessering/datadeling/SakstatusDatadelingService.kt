@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus.DatadelingBehandlingStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -17,29 +19,40 @@ class SakstatusDatadelingService(
     private val sakRepository: SakRepository,
     private val behandlingService: BehandlingService,
     private val mottattDokumentRepository: MottattDokumentRepository,
+    private val trukketSøknadService: TrukketSøknadService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         repositoryProvider.provide(),
         repositoryProvider.provide(),
         BehandlingService(repositoryProvider, gatewayProvider),
         mottattDokumentRepository = repositoryProvider.provide(),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
     )
 
     fun utledSakstatus(referanse: BehandlingReferanse): SakStatus {
         val behandling = behandlingRepository.hent(referanse)
         val sak = sakRepository.hent(behandling.sakId)
 
-        val sisteYtelseBehandling =
-            requireNotNull(behandlingService.finnSisteYtelsesbehandlingFor(sak.id)) { "Fant ingen ytelsesbehandling for sak ${sak.id}" }
-
         val datadelingBehandlingStatus = when {
-            sisteYtelseBehandling.status()
-                .erÅpen() && sisteYtelseBehandling.vurderingsbehov()
-                .find { it.type == Vurderingsbehov.MOTTATT_SØKNAD } != null -> DatadelingBehandlingStatus.SOKNAD_UNDER_BEHANDLING
+            trukketSøknadService.søknadErTrukket(behandling.id) ||
+                avbrytRevurderingService.revurderingErAvbrutt(behandling.id) -> DatadelingBehandlingStatus.FERDIGBEHANDLET
 
-            sisteYtelseBehandling.status().erÅpen() -> DatadelingBehandlingStatus.REVURDERING_UNDER_BEHANDLING
+            else -> {
+                val sisteYtelseBehandling =
+                    requireNotNull(behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)) { "Fant ingen ytelsesbehandling for sak ${sak.id}" }
 
-            else -> DatadelingBehandlingStatus.FERDIGBEHANDLET
+                when {
+                    sisteYtelseBehandling.status()
+                        .erÅpen() && sisteYtelseBehandling.vurderingsbehov()
+                        .find { it.type == Vurderingsbehov.MOTTATT_SØKNAD } != null -> DatadelingBehandlingStatus.SOKNAD_UNDER_BEHANDLING
+
+                    sisteYtelseBehandling.status().erÅpen() -> DatadelingBehandlingStatus.REVURDERING_UNDER_BEHANDLING
+
+                    else -> DatadelingBehandlingStatus.FERDIGBEHANDLET
+                }
+            }
         }
 
         val søknadsdatoer = mottattDokumentRepository

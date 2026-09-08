@@ -26,7 +26,7 @@ class MedlemskapLovvalgVurderingService {
         rettighetsPeriode: Periode,
         type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
-        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag)
+        val førsteDelVurderinger = vurderFørsteDelKriterier(grunnlag, rettighetsPeriode)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any { it.resultat }
@@ -83,12 +83,21 @@ class MedlemskapLovvalgVurderingService {
     }
 
     // Minst én må oppfylles
-    private fun vurderFørsteDelKriteier(grunnlag: MedlemskapLovvalgGrunnlag): List<TilhørighetVurdering> {
+    private fun vurderFørsteDelKriterier(
+        grunnlag: MedlemskapLovvalgGrunnlag,
+        rettighetsPeriode: Periode,
+    ): List<TilhørighetVurdering> {
         val mottarSykepengerVurdering = mottarSykepenger(grunnlag.medlemskapArbeidInntektGrunnlag)
         val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag)
         val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
 
-        return listOf(mottarSykepengerVurdering, arbeidInntektINorgeVurdering, vedtakIMedl)
+        return if (grunnlag.vurderBosattStatusOgNorskStatsborgerskap) {
+            val bosattOgNorskStatsborger =
+                harBosattStatusOgNorskStatsborgerskap(grunnlag.personopplysning, rettighetsPeriode)
+            listOf(mottarSykepengerVurdering, arbeidInntektINorgeVurdering, vedtakIMedl, bosattOgNorskStatsborger)
+        } else {
+            listOf(mottarSykepengerVurdering, arbeidInntektINorgeVurdering, vedtakIMedl)
+        }
     }
 
     // Ingen kan inntreffe
@@ -355,4 +364,33 @@ class MedlemskapLovvalgVurderingService {
         )
     }
 
+    private fun harBosattStatusOgNorskStatsborgerskap(
+        grunnlag: Personopplysning?,
+        rettighetsPeriode: Periode
+    ): TilhørighetVurdering {
+        val harNorskStatsborgerskap =
+            grunnlag?.statsborgerskap
+                ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.name && it.erGyldigIPeriode(rettighetsPeriode) }
+
+        val gyldigeStatsborgerskap =
+            grunnlag?.statsborgerskap.orEmpty().filter { it.erGyldigIPeriode(rettighetsPeriode) }.map {
+                GyldigStatsborgerskap(
+                    land = it.land,
+                    gyldigFraOgMed = it.gyldigFraOgMed,
+                    gyldigTilOgMed = it.gyldigTilOgMed
+                )
+            }
+
+        val bosattOgNorskStatsborgerskapGrunnlag =
+            BosattOgNorskStatsborgerskapGrunnlag(grunnlag?.status, gyldigeStatsborgerskap)
+
+        return TilhørighetVurdering(
+            kilde = listOf(Kilde.PDL),
+            indikasjon = Indikasjon.I_NORGE,
+            opplysning = "Bosatt i Norge med norsk statsborgerskap",
+            resultat = harNorskStatsborgerskap == true && grunnlag.status == PersonStatus.bosatt,
+            bosattStatusOgNorskStatsborgerskap = bosattOgNorskStatsborgerskapGrunnlag,
+            vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
+        )
+    }
 }

@@ -11,6 +11,7 @@ interface UnleashGateway : Gateway {
     fun isEnabled(featureToggle: FeatureToggle, ident: Bruker): Boolean
     fun isDisabled(featureToggle: FeatureToggle, ident: Bruker): Boolean = !isEnabled(featureToggle, ident)
     fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev): Boolean
+    fun isEnabled(featureToggle: FeatureToggle, typeBrev: TypeBrev): Boolean
 
     fun isVariantEnabled(featureToggle: FeatureToggle, variantName: String): Boolean
     fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String

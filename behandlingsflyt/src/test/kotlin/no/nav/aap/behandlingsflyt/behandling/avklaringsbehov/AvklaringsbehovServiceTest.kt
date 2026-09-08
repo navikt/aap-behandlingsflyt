@@ -1123,7 +1123,7 @@ class AvklaringsbehovServiceTest {
             begrunnelse = "Standard krav om AAP",
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
-            søknadsdato = Søknadsdato(kravdato, SøknadsdatoÅrsak.SøknadMottatt),
+            søknadsdato = Søknadsdato(kravdato, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
             overstyrMuligRettFra = null,
             muligRettFra = kravdato,
         )

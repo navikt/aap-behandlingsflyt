@@ -72,10 +72,7 @@ class SamordningSteg(
     }
 
     private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        if (Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER in kontekst.vurderingsbehovRelevanteForSteg) {
-            // FIXME: Stygg hack for å tvinge manuell revurdering
-            return Tidslinje(kontekst.rettighetsperiode, true)
-        }
+        val skalRevurdereSamordning = Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER in kontekst.vurderingsbehovRelevanteForSteg
 
         val mottarSykepengerOppgittISøknad = sykepengerOgFerieOppgittISøknadRepository
             .hentHvisEksisterer(kontekst.behandlingId)
@@ -100,7 +97,7 @@ class SamordningSteg(
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     // Bruker kan ha oppgitt i søknaden at hen mottar sykepenger. Krev da vurdering
                     // av samordning selv om vi ennå ikke har mottatt vedtak om sykepenger fra registeret.
-                    mottarSykepengerOppgittISøknad || !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
+                    skalRevurdereSamordning || mottarSykepengerOppgittISøknad || !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
                 }
 
                 null -> false

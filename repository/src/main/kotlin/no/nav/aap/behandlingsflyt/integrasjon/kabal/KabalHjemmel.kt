@@ -4,7 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 
 // https://github.com/navikt/klage-kodeverk/blob/main/src/main/kotlin/no/nav/klage/kodeverk/hjemmel/YtelseToHjemler.kt
 enum class KabalHjemmel {
-    FTRL_21_12_FVL_31,
+    FTRL_21_12,
+    FVL_31,
     EOES_883_2004,
     FTRL_11_2,
     FTRL_11_3,
@@ -42,11 +43,14 @@ enum class KabalHjemmel {
 
 fun Hjemmel.tilKabalHjemmel(): KabalHjemmel {
     return when (this) {
+        Hjemmel.FOLKETRYGDLOVEN_21_12 -> KabalHjemmel.FTRL_21_12
+        Hjemmel.FVL_31 -> KabalHjemmel.FVL_31
         Hjemmel.EOES_883_2004 -> KabalHjemmel.EOES_883_2004
         Hjemmel.FOLKETRYGDLOVEN_KAPITTEL_2 -> KabalHjemmel.FTRL_KAPITTEL_2
         Hjemmel.FOLKETRYGDLOVEN_11_2 -> KabalHjemmel.FTRL_11_2
         Hjemmel.FOLKETRYGDLOVEN_11_3 -> KabalHjemmel.FTRL_11_3
         Hjemmel.FOLKETRYGDLOVEN_11_4 -> KabalHjemmel.FTRL_11_4
+        Hjemmel.FOLKETRYGDLOVEN_11_4_INNTEKTSBORTFALL -> KabalHjemmel.FTRL_11_4
         Hjemmel.FOLKETRYGDLOVEN_11_5 -> KabalHjemmel.FTRL_11_5
         Hjemmel.FOLKETRYGDLOVEN_11_6 -> KabalHjemmel.FTRL_11_6
 
@@ -78,7 +82,7 @@ fun Hjemmel.tilKabalHjemmel(): KabalHjemmel {
         Hjemmel.FOLKETRYGDLOVEN_11_27,
         Hjemmel.FOLKETRYGDLOVEN_11_28 -> KabalHjemmel.FTRL_11_27_11_28
 
-        Hjemmel.FOLKETRYGDLOVEN_11_29 -> KabalHjemmel.FTRL_11_29
+        Hjemmel.FOLKETRYGDLOVEN_11_29_SYKESTIPEND -> KabalHjemmel.FTRL_11_29
         Hjemmel.FOLKETRYGDLOVEN_11_31 -> KabalHjemmel.FTRL_11_31
 
         Hjemmel.FOLKETRYGDLOVEN_21_3 -> KabalHjemmel.FTRL_21_3

@@ -94,7 +94,7 @@ class KvalitetssikringsStegTest {
     }
 
     @Test
-    fun `om et behov godkjennes og senere løses på nytt, så skal det kvalitetssikres på nytt`() {
+    fun `skal hoppe over kvalitetssikring hvis behandling trekkes tilbake men ingen endringer gjøres`() {
         Scenario().apply {
             opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
 
@@ -110,8 +110,7 @@ class KvalitetssikringsStegTest {
             opprettOgLøs(Definisjon.AVKLAR_SYKDOM)
 
             kjørSteg()
-            assertStatus(Definisjon.AVKLAR_SYKDOM, Status.AVSLUTTET)
-            assertStatus(Definisjon.KVALITETSSIKRING, Status.OPPRETTET)
+            assertStatus(Definisjon.KVALITETSSIKRING, Status.AVSLUTTET)
         }
     }
 
@@ -134,7 +133,6 @@ class KvalitetssikringsStegTest {
             behandlingRepository = inMemoryRepositoryProvider.provide(),
             vurderingEndretService = VurderingEndretService(inMemoryRepositoryProvider),
             behandlingService = BehandlingService(inMemoryRepositoryProvider, minimalGatewayProvider()),
-            unleashGateway = AlleAvskruddUnleash
         )
 
         fun kjørSteg() {
