@@ -483,7 +483,7 @@ class AvklaringsbehovService(
             .filter { it.verdi.vurdertIBehandling == kontekst.behandlingId && it.verdi.erAutomatiskVurdert() }
 
         return perioderSomBehøverVurdering
-            .disjoint(perioderVurdertAutomatiskIDenneBehandlingen) { periode, segment ->
+            .trekkFra(perioderVurdertAutomatiskIDenneBehandlingen) { periode, segment ->
                 Segment(periode, segment.verdi)
             }
             .komprimer().perioder().toSet()
@@ -559,4 +559,10 @@ class AvklaringsbehovService(
             }
             .orEmpty()
     }
+
+    /** Alias for [Tidslinje.disjoint] med et mer beskrivende navn: trekker fra [other] fra [this]. */
+    private fun <A, B> Tidslinje<A>.trekkFra(
+        other: Tidslinje<B>,
+        create: (Periode, Segment<A>) -> Segment<A>
+    ): Tidslinje<A> = this.disjoint(other, create)
 }
