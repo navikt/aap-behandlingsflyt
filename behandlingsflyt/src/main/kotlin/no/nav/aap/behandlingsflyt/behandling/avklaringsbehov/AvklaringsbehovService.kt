@@ -482,6 +482,10 @@ class AvklaringsbehovService(
         val perioderVurdertAutomatiskIDenneBehandlingen = gjeldendeVurderinger().orEmpty()
             .filter { it.verdi.vurdertIBehandling == kontekst.behandlingId && it.verdi.erAutomatiskVurdert() }
 
+        if (perioderVurdertAutomatiskIDenneBehandlingen.isNotEmpty()) {
+            log.info("Perioder som er vurdert automatisk: ${perioderVurdertAutomatiskIDenneBehandlingen.perioder()}")
+        }
+
         return perioderSomBehøverVurdering
             .trekkFra(perioderVurdertAutomatiskIDenneBehandlingen) { periode, segment ->
                 Segment(periode, segment.verdi)
