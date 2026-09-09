@@ -7,7 +7,14 @@ plugins {
 }
 
 dependencyResolutionManagement {
+    versionCatalogs {
+        create("kelvinLibs") {
+            from("no.nav.aap.kelvin:version-catalog:2.0.157")
+        }
+    }
+    @Suppress("UnstableApiUsage")
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    @Suppress("UnstableApiUsage")
     repositories {
         // Cache for GitHub Package Registry, hvor de fleste av avhengighetene våre publiseres
         maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")

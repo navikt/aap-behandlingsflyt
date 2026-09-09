@@ -7,13 +7,13 @@ plugins {
 }
 
 dependencies {
-    api(libs.jacksonAnnotations)
+    api(kelvinLibs.jackson.annotations)
     api(libs.ktorOpenApiGenerator)
     implementation(libs.json)
     compileOnly(libs.tilgangKontrakt)
 
     testRuntimeOnly(libs.tilgangKontrakt)
-    testImplementation(libs.bundles.junit)
+    testImplementation(kelvinLibs.bundles.junit)
 }
 
 kotlin {

@@ -13,18 +13,18 @@ dependencies {
     implementation(libs.tidslinje)
     implementation(libs.dbconnect)
 
-    implementation(libs.ktorServerContentNegotation)
+    implementation(kelvinLibs.ktor.server.content.negotiation)
 
-    implementation(libs.ktorServerNetty)
-    implementation(libs.ktorServerStatusPages)
+    implementation(kelvinLibs.ktor.server.netty)
+    implementation(kelvinLibs.ktor.server.status.pages)
 
-    implementation(libs.ktorSerializationJackson)
-    implementation(libs.jacksonDatabind)
-    implementation(libs.jacksonDatatypeJsr310)
+    implementation(kelvinLibs.ktor.serialization.jackson)
+    implementation(kelvinLibs.jackson.databind)
+    implementation(kelvinLibs.jackson.datatype.jsr310)
 
-    implementation(libs.logbackClassic)
+    implementation(kelvinLibs.logback.classic)
 
-    implementation(libs.joseJwt)
+    implementation(kelvinLibs.nimbus.jose.jwt)
 
-    implementation(libs.bundles.junit)
+    implementation(kelvinLibs.bundles.junit)
 }

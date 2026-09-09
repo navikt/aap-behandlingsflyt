@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id("aap.conventions")
-    alias(libs.plugins.ktor)
+    alias(kelvinLibs.plugins.ktor)
     id("com.gradleup.shadow") version "9.6.1"
 }
 
@@ -74,12 +74,12 @@ tasks.register<JavaExec>("beregnCSV") {
 }
 
 dependencies {
-    implementation(libs.ktorServerStatusPages)
+    implementation(kelvinLibs.ktor.server.status.pages)
 
-    implementation(libs.micrometerRegistryPrometheus)
-    implementation(libs.logbackClassic)
-    implementation(libs.logstashLogbackEncoder)
-    implementation(libs.julToSlf4J) // trengs for postgres-logging
+    implementation(kelvinLibs.micrometer.prometheus)
+    implementation(kelvinLibs.logback.classic)
+    implementation(kelvinLibs.logstash.logback.encoder)
+    implementation(kelvinLibs.jul.to.slf4j)
 
     implementation(libs.motor)
     implementation(libs.dbconnect)
@@ -92,26 +92,26 @@ dependencies {
     implementation(libs.tidslinje)
 
     // Auditlogging
-    runtimeOnly(libs.logbackSyslog)
+    runtimeOnly(kelvinLibs.logback.syslog)
 
     implementation(project(":api"))
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
-    implementation(libs.hikariCp)
+    implementation(kelvinLibs.hikaricp)
 
-    implementation(libs.opentelemetryLogbackMdc)
-    implementation(libs.opentelemetryKtor)
-    implementation(libs.avro)
-    implementation(libs.kafkaAvroSerializer)
+    implementation(kelvinLibs.opentelemetry.ktor)
+    implementation(kelvinLibs.avro)
+    implementation(kelvinLibs.kafka.avro.serializer)
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)
-    testImplementation(libs.bundles.junit)
+
+    testImplementation(kelvinLibs.bundles.junit)
     testImplementation(kotlin("test"))
 
-    testImplementation(libs.kafkaClients)
+    testImplementation(kelvinLibs.kafka.clients)
 
-    testImplementation(libs.testcontainers)
-    testImplementation(libs.testcontainersPostgres)
-    testImplementation(libs.testcontainersKafka)
+    testImplementation(kelvinLibs.testcontainers)
+    testImplementation(kelvinLibs.testcontainers.postgresql)
+    testImplementation(kelvinLibs.testcontainers.kafka)
 }
