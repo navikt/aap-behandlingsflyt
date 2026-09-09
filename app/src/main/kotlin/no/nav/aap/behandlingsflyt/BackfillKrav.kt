@@ -73,25 +73,6 @@ class BackfillKrav(
                     BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 val behandlinger = behandlingService.alleYtelsesbehandlinger(sak.id)
 
-                if (Miljø.erDev() && behandlinger.any { behandling ->
-                        /**
-                         * Her vet vi ikke 100 % at rettighetsperioden er oppdatert og at revurderingen er avbrutt (man kan ha svart "nei" i vurderingene), 
-                         * men det er ikke så viktig siden vi kun gjør denne sjekken i dev.
-                         * Det er en eksisterende bug der rettighetsperioden ikke blir tilbakestilt dersom revurderingen avbrytes, 
-                         * noe som gjør at backfilling vil feile på rettighetsperiodesjekken.
-                         * I produksjon ønsker vi at det skal feile slik at vi kan håndtere disse sakene, da de har feil rettighetsperiode.
-                         * **/
-                        behandling.vurderingsbehov().map { it.type }.containsAll(
-                            listOf(
-                                Vurderingsbehov.REVURDERING_AVBRUTT,
-                                Vurderingsbehov.VURDER_RETTIGHETSPERIODE
-                            )
-                        )
-                    }) {
-                    log.info("Hopper over sak ${sak.id.toLong()} – har behandling med REVURDERING_AVBRUTT og VURDER_RETTIGHETSPERIODE")
-                }
-
-
                 // Saker som stammer fra behandlinger som er opprettet i forbindelse med migrering fra arena skal ikke backfilles
                 if (behandlinger.any { it.årsakTilOpprettelse === ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA }) {
                     return@transaction
@@ -112,6 +93,7 @@ class BackfillKrav(
                         taSkriveLåsRepository.withLåstBehandling(behandling.id) {
                             val resultat = backfillService.backfillBehandling(
                                 sak,
+                                behandlinger,
                                 behandling,
                                 erNyesteBehandling = behandling == behandlinger.last()
                             )
