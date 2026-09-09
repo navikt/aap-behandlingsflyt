@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.behandlerdialog
 
-import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import java.time.LocalDateTime
 
 data class MeldingDto(

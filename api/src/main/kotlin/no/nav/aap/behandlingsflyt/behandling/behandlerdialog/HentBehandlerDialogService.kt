@@ -51,7 +51,7 @@ class HentBehandlerDialogService(
 
             val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
 
-            return@transaction mottattDokumentRepository.hentDokumenterAvType(
+            mottattDokumentRepository.hentDokumenterAvType(
                 sak.id,
                 InnsendingType.LEGEERKLÆRING
             )
@@ -88,7 +88,7 @@ class HentBehandlerDialogService(
                     innkommendeUtgående = dialogmelding.innkommendeUtgående.tilResponseType(),
                     meldingFraNavn = dialogmelding.meldingFraNavn,
                     opprettetTidspunkt = dialogmelding.opprettetTidspunkt,
-                    dokumentasjonsType = dialogmelding.dokumentasjonsType,
+                    dokumentasjonsType = dialogmelding.dokumentasjonsType?.tilResponseType(),
                     tekst = dialogmelding.tekst,
                     meldingStatus = dialogmelding.meldingStatus?.tilResponseDto(),
                     journalpostId = dialogmelding.journalpostId,
@@ -111,7 +111,7 @@ class HentBehandlerDialogService(
                     innkommendeUtgående = InnkommendeUtgående.INNKOMMENDE,
                     meldingFraNavn = journalpost?.avsenderMottakerDto?.navn,
                     opprettetTidspunkt = helsedokument.mottattTidspunkt,
-                    dokumentasjonsType = DokumentasjonType.L40,
+                    dokumentasjonsType = no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40,
                     tekst = null,
                     meldingStatus = null,
                     journalpostId = journalpostId
@@ -133,6 +133,17 @@ class HentBehandlerDialogService(
             MeldingStatusDto.SENDT -> DialogmeldingLeveringStatus.SENDT
             MeldingStatusDto.LEVERT -> DialogmeldingLeveringStatus.LEVERT
             MeldingStatusDto.FEILET -> DialogmeldingLeveringStatus.FEILET
+        }
+    }
+
+    private fun DokumentasjonType.tilResponseType(): no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType {
+        return when (this) {
+            DokumentasjonType.L40 -> no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40
+            DokumentasjonType.L8 -> no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L8
+            DokumentasjonType.L120 -> no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L120
+            DokumentasjonType.MELDING_FRA_NAV -> no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.MELDING_FRA_NAV
+            DokumentasjonType.RETUR_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.RETUR_LEGEERKLÆRING
+            DokumentasjonType.PURRING -> no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.PURRING
         }
     }
 
