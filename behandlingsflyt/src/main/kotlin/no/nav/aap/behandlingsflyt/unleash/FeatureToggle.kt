@@ -37,6 +37,7 @@ enum class BehandlingsflytFeature(
     SkalViseAlleSykdomssteg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     BosattStatsborgerskapGjennomslipp,
+    HoppOverBeslutterVedAvslagSykdom,
     MigererLovvalgMedlemskapFraArenaAutomatisk
     ;
 
