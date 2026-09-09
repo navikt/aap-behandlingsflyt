@@ -54,6 +54,13 @@ data class SykdomGrunnlag(
         return vedtattSykdomstidslinje(behandlingId, maksDato).segmenter().map { it.verdi }
     }
 
+    fun avslagSykdomForHelePerioden(rettighetsperiode: Periode): Boolean {
+        val sykdomsvurderingTidslinje = sykdomsvurderinger.somSykdomsvurderingTidslinje()
+        return sykdomsvurderingTidslinje.isNotEmpty() && sykdomsvurderingTidslinje.all { it.erIkkeOppfylt() }
+                && sykdomsvurderingTidslinje.helePerioden() == rettighetsperiode
+                && sykdomsvurderingTidslinje.erSammenhengende()
+    }
+
     private fun filtrertSykdomstidslinje(
         maksDato: LocalDate = Tid.MAKS,
         filter: (sykdomsvurdering: Sykdomsvurdering) -> Boolean
