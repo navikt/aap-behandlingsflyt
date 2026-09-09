@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -344,7 +345,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
     }
 
     @Test
-    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering uten kvalitetssikring`() {
+    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering som kan revurderes manuelt`() {
         val overgangUførDato = LocalDate.now().plusMonths(1)
         val virkningsdato = LocalDate.now()
         val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = virkningsdato.atStartOfDay())
@@ -438,6 +439,37 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             assertThat(overgangUføreVilkårEtter!!.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
             assertThat(overgangUføreVilkårEtter.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE)
         }
+
+        val manuellRevurdering = sak.opprettManuellRevurdering(
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
+        )
+        assertThat(manuellRevurdering.forrigeBehandlingId).isEqualTo(revurdering.id)
+
+        manuellRevurdering
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                    .contains(Definisjon.AVKLAR_OVERGANG_UFORE)
+            }
+            .løsOvergangUføre(
+                fom = overgangUførDato,
+                brukerHarSøktOmUføretrygd = true,
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
+                brukerHarRettPåAap = true
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                    .doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE)
+                val vurdering = repositoryProvider.provide<OvergangUføreRepository>()
+                    .hentHvisEksisterer(manuellRevurdering.id)
+                    ?.somOvergangUforevurderingstidslinje()
+                    ?.segment(overgangUførDato)
+                    ?.verdi
+                assertThat(vurdering).isNotNull
+                requireNotNull(vurdering)
+                assertThat(vurdering.vurdertIBehandling).isEqualTo(manuellRevurdering.id)
+                assertThat(vurdering.erAutomatiskVurdert()).isFalse()
+                assertThat(vurdering.brukerRettPåAAP).isTrue()
+            }
     }
 
     @Test

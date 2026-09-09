@@ -4,11 +4,9 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
-import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettRevurdering
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
