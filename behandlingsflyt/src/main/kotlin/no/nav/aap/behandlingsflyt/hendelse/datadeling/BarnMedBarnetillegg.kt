@@ -35,8 +35,13 @@ fun utledBarnMedBarnetillegg(
 
     val barnPerioder: List<Pair<BarnIdentifikator, PeriodeMedBeløp>> = tilkjentTidslinje
         .innerJoin(rettTidslinje) { periode, tilkjent, rett ->
-            rett.barnMedRettTil().map { barn ->
-                barn to PeriodeMedBeløp(periode, tilkjent.barnetilleggsats.multiplisert(tilkjent.gradering))
+            // Ingen periode skal opprettes hvis det ikke utbetales noe fra tilkjent ytelse.
+            if (tilkjent.redusertDagsats() == Beløp(0)) {
+                emptyList()
+            } else {
+                rett.barnMedRettTil().map { barn ->
+                    barn to PeriodeMedBeløp(periode, tilkjent.barnetilleggsats.multiplisert(tilkjent.gradering))
+                }
             }
         }
         .segmenter()

@@ -13,6 +13,9 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somSykdomsvurderingTidslinje
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -21,8 +24,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -38,12 +45,21 @@ class FatteVedtakSteg(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
     private val virkningstidspunktService: VirkningstidspunktService,
+    private val sykdomRepository: SykdomRepository,
+    private val behandlingService: BehandlingService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val skalHoppeOverBeslutter =
+            unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
+                    && behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId) == TypeBehandling.Førstegangsbehandling
+                    && skalHoppeOverBeslutterPåGrunnAvAvslagSykdom(
+                kontekst
+            )
 
-        val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene)
-        val erTilstrekkeligVurdert = erTilstrekkeligVurdert(kontekst, avklaringsbehovene)
+        val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene, skalHoppeOverBeslutter)
+        val erTilstrekkeligVurdert = erTilstrekkeligVurdert(kontekst, avklaringsbehovene, skalHoppeOverBeslutter)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.FATTE_VEDTAK,
@@ -96,11 +112,13 @@ class FatteVedtakSteg(
 
     private fun vedtakBehøverVurdering(
         kontekst: FlytKontekstMedPerioder,
-        avklaringsbehovene: Avklaringsbehovene
+        avklaringsbehovene: Avklaringsbehovene,
+        skalHoppeOverBeslutter: Boolean
     ): Boolean {
         if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
             trekkKlageService.klageErTrukket(kontekst.behandlingId) ||
-            avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
+            avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId) ||
+            skalHoppeOverBeslutter
         ) {
             return false
         }
@@ -117,7 +135,8 @@ class FatteVedtakSteg(
 
     private fun erTilstrekkeligVurdert(
         kontekst: FlytKontekstMedPerioder,
-        avklaringsbehovene: Avklaringsbehovene
+        avklaringsbehovene: Avklaringsbehovene,
+        skalHoppeOverBeslutter: Boolean
     ): Boolean {
         val erTrukketEllerIngenGrunnlag =
             tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
@@ -125,9 +144,26 @@ class FatteVedtakSteg(
 
         return when {
             erTrukketEllerIngenGrunnlag -> true
+            skalHoppeOverBeslutter -> true
             avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent() -> false
             else -> true
         }
+    }
+
+    private fun skalHoppeOverBeslutterPåGrunnAvAvslagSykdom(kontekst: FlytKontekstMedPerioder): Boolean {
+        val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return false
+        // OBS: sjekken gjøres på hele rettighetsperioden. Må endres til stønadsperiode når krav er på plass
+        return avslagSykdomForHelePerioden(sykdomsGrunnlag.sykdomsvurderinger, kontekst.rettighetsperiode)
+    }
+
+    private fun avslagSykdomForHelePerioden(
+        sykdomsvurderinger: List<Sykdomsvurdering>,
+        rettighetsperiode: Periode
+    ): Boolean {
+        val sykdomsvurderingTidslinje = sykdomsvurderinger.somSykdomsvurderingTidslinje()
+        return sykdomsvurderinger.isNotEmpty() && sykdomsvurderingTidslinje.all { it.erIkkeOppfylt() }
+                && sykdomsvurderingTidslinje.helePerioden() == rettighetsperiode
+                && sykdomsvurderingTidslinje.erSammenhengende()
     }
 
     companion object : FlytSteg {
@@ -146,6 +182,9 @@ class FatteVedtakSteg(
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider, gatewayProvider),
                 virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider),
+                sykdomRepository = repositoryProvider.provide(),
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 

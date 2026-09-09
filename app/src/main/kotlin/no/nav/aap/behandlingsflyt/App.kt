@@ -232,16 +232,19 @@ internal fun Application.server(
         dbConfig,
         maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections - AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
+        poolName = "felles",
     )
     val motorDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = dedicatedMotorConnections,
         prometheus = prometheus,
+        poolName = "motor",
     )
     val pipDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
+        poolName = "pip",
     )
     Migrering.migrate(fellesDataSource)
 
@@ -559,6 +562,7 @@ fun initDatasource(
     dbConfig: DbConfig,
     maximumPoolSize: Int = AppConfig.hikariMaxPoolSize,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
+    poolName: String? = null,
 ): HikariDataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
@@ -568,6 +572,14 @@ fun initDatasource(
     minimumIdle = 1
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus
+
+    /* Uten eksplisitt navn får poolene "HikariPool-1/2/3" etter opprettelsesrekkefølge, og
+     * `pool`-labelen i Prometheus blir umulig å tolke. Navnet gjør metrikkene entydige.
+     * Settes kun når det er oppgitt, slik at tester beholder autogenererte, unike navn.
+     */
+    if (poolName != null) {
+        this.poolName = poolName
+    }
 })
 
 class JsonDeserializerInstitusjonsOppholdHendelse : Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {

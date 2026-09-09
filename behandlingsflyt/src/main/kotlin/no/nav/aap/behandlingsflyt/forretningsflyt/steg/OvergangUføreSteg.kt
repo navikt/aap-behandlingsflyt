@@ -117,6 +117,8 @@ class OvergangUføreSteg private constructor(
     }
 
     private fun erAutomatiskOpphør11_18(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (kontekst.vurderingType != VurderingType.OVERGANG_UFORE_STANS) return false
+
         val uførevedtak = hentUførevedtak(kontekst.sakId) ?: return false
         return uførevedtak.resultat == UførevedtakResultat.INNV &&
                 uførevedtak.virkningsdato.isAfter(LocalDate.now())
