@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -161,7 +162,7 @@ internal object VedtakDokumentRenderer {
                             "Årsak til overstyring" to
                                 (overstyring?.årsak?.visningsnavn()?.let(::Tekst) ?: Tekst("Ikke overstyrt")),
                         )
-
+                        is MigrertKrav,
                         is Klage,
                         is Tilleggsopplysning,
                         is TrukketSøknad -> null
@@ -176,6 +177,7 @@ internal object VedtakDokumentRenderer {
         is TrukketSøknad -> "Trukket søknad"
         is Klage -> "Klage"
         is Tilleggsopplysning -> "Tilleggsopplysning"
+        is MigrertKrav -> "Migrert krav"
     }
 
     private fun SøknadsdatoÅrsak.visningsnavn(): String = when (this) {
@@ -517,6 +519,7 @@ internal object VedtakDokumentRenderer {
                             RelevantKravType.NY_STØNADSPERIODE -> Tekst("Ny stønadsperiode")
                             RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR -> Tekst("Gjeninntreden etter opphør")
                             RelevantKravType.AVSLAG -> Tekst("Avslag")
+                            RelevantKravType.MIGRERT_STØNADSPERIODE -> Tekst("Migrert stønadsperiode")
                             is RelevantKravType.GJENOPPTAK_ETTER_STANS -> Span(
                                 Tekst("Gjenopptak etter stans"),
                                 kravtype.gjennopptakEtter

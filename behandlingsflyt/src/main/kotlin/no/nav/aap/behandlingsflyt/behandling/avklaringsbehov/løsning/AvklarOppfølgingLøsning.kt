@@ -28,8 +28,12 @@ class AvklarOppfølgingLokalkontorLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`8001`
 ) :
     EnkeltAvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return AvklarOppfølgingLokalkontorLøser(repositoryProvider).løs(kontekst, this)
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
+        return AvklarOppfølgingLokalkontorLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }
 
@@ -47,7 +51,11 @@ class AvklarOppfølgingNAYLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`8002`
 ) :
     EnkeltAvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return AvklarOppfølgingNAYLøser(repositoryProvider).løs(kontekst, this)
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
+        return AvklarOppfølgingNAYLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

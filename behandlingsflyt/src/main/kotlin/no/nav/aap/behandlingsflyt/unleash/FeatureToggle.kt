@@ -4,10 +4,12 @@ interface FeatureToggle {
     fun key(): String
 
     /** Hva feature skal være, hvis unleash er utilgjengelig. */
-    val default: Boolean get() = false
+    val default: Boolean
 }
 
-enum class BehandlingsflytFeature : FeatureToggle {
+enum class BehandlingsflytFeature(
+    override val default: Boolean = false,
+): FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
     NyBrevbyggerV3,
@@ -34,7 +36,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Avslag11_27,
     SkalViseAlleSykdomssteg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
-    BosattStatsborgerskapGjennomslipp
+    BosattStatsborgerskapGjennomslipp,
+    HoppOverBeslutterVedAvslagSykdom
     ;
 
     override fun key(): String = name

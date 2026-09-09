@@ -209,7 +209,6 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
-        private val secureLogger = LoggerFactory.getLogger("team-logs")
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): SamordningYtelseVurderingInformasjonskrav {
@@ -240,13 +239,6 @@ class SamordningYtelseVurderingInformasjonskrav(
                         // Vi er interessert i graderingsendringer på foreldrepenger, men om det er sykepenger, er vi bare interessert dersom vi ikke allerede har registrert en 100% gradering. Da regnes det om at "vi kjenner til" Sykepenger
                         .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
 
-                    secureLogger.info(
-                        "Hentet samordningytelse eksisterende ${eksisterende.ytelser} med nye samordningsytelser ${nye.map { it.ytelsePerioder }}  ${nye.map { it.ytelseType.name }} Overlapp grunnlag" + isPeriodeDekketAvEksisterendePerioder(
-                            relevanteEksPerioder,
-                            nyPeriode
-                        )
-                    )
-
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
                         return true
                     }
@@ -270,13 +262,6 @@ class SamordningYtelseVurderingInformasjonskrav(
                         .flatMap { it.vurderingPerioder }
                         // Vi er interessert i graderingsendringer på foreldrepenger, men om det er sykepenger, er vi bare interessert dersom vi ikke allerede har registrert en 100% gradering. Da regnes det om at "vi kjenner til" Sykepenger
                         .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
-
-                    secureLogger.info(
-                        "Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }} Overlapp vurderinger" + isPeriodeDekketAvEksisterendePerioder(
-                            relevanteEksPerioder,
-                            nyPeriode
-                        )
-                    )
 
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
                         return true

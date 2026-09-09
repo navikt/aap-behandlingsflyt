@@ -60,7 +60,7 @@ data class StønadsperiodeVurdering(
                 harGjenværendeKvote && harHattOrdinærSiste52Uker
             )
 
-            RelevantKravType.AVSLAG -> {}
+            RelevantKravType.MIGRERT_STØNADSPERIODE, RelevantKravType.AVSLAG -> {}
         }
     }
 }
@@ -70,6 +70,7 @@ enum class RelevantKravTypeNavn {
     GJENINNTREDEN_ETTER_OPPHØR,
     NY_STØNADSPERIODE,
     AVSLAG,
+    MIGRERT_STØNADSPERIODE,
 }
 
 @JsonTypeInfo(
@@ -96,6 +97,11 @@ sealed interface RelevantKravType {
     @JsonTypeName("NY_STØNADSPERIODE")
     data object NY_STØNADSPERIODE : RelevantKravType {
         override val type = RelevantKravTypeNavn.NY_STØNADSPERIODE
+    }
+
+    @JsonTypeName("MIGRERT_STØNADSPERIODE")
+    data object MIGRERT_STØNADSPERIODE : RelevantKravType {
+        override val type = RelevantKravTypeNavn.MIGRERT_STØNADSPERIODE
     }
 
     @JsonTypeName("AVSLAG")
