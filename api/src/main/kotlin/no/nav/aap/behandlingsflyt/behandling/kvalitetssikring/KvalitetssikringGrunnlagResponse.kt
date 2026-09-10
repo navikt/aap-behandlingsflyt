@@ -7,5 +7,6 @@ data class KvalitetssikringGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val harGjortVilkårsvurderingerPåBehandling: Boolean,
     val vurderinger: List<TotrinnsVurderingResponse>,
-    val historikk: List<Historikk>
+    val historikk: List<Historikk>,
+    val kvalitetssikrerFatterVedtak: Boolean,
 )
