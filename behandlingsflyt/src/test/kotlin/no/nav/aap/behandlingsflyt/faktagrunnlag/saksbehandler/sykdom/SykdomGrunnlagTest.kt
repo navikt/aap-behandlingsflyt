@@ -3,8 +3,10 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -138,7 +140,7 @@ class SykdomGrunnlagTest {
             }
         )
     }
-    
+
     @Test
     fun `Gjeldende vurderinger skal fungere med tom tidslinje`() {
         val sykdomsGrunnlag = SykdomGrunnlag(
@@ -148,6 +150,60 @@ class SykdomGrunnlagTest {
 
         assertThat(sykdomsGrunnlag.gjeldendeSykdomsvurderinger())
             .isEmpty()
+    }
+
+    @Test
+    fun `Skal gi avslag for hele perioden når nei på 11-5 i hele perioden`() {
+        val rettighetsperiode = Periode(1 januar 2020, 31 desember 2020)
+        val sykdomsGrunnlag = SykdomGrunnlag(
+            yrkesskadevurdering = null,
+            sykdomsvurderinger = listOf(
+                sykdomsvurdering(
+                    harSkadeSykdomEllerLyte = false,
+                    vurderingenGjelderFra = 1 januar 2020,
+                    vurderingenGjelderTil = 31 desember 2020,
+                    vurdertIBehandling = BehandlingId(1)
+                )
+            )
+        )
+
+        assertThat(sykdomsGrunnlag.avslagSykdomForHelePerioden(rettighetsperiode)).isTrue()
+    }
+
+    @Test
+    fun `Skal ikke gi avslag for hele perioden når sykdomsvurdering er oppfylt`() {
+        val rettighetsperiode = Periode(1 januar 2020, 31 desember 2020)
+        val sykdomsGrunnlag = SykdomGrunnlag(
+            yrkesskadevurdering = null,
+            sykdomsvurderinger = listOf(
+                sykdomsvurdering(
+                    harSkadeSykdomEllerLyte = true,
+                    vurderingenGjelderFra = 1 januar 2020,
+                    vurderingenGjelderTil = 31 desember 2020,
+                    vurdertIBehandling = BehandlingId(1)
+                )
+            )
+        )
+
+        assertThat(sykdomsGrunnlag.avslagSykdomForHelePerioden(rettighetsperiode)).isFalse()
+    }
+
+    @Test
+    fun `Skal ikke gi avslag for hele perioden når kun deler av rettighetsperioden er avslått`() {
+        val rettighetsperiode = Periode(1 januar 2020, 31 desember 2020)
+        val sykdomsGrunnlag = SykdomGrunnlag(
+            yrkesskadevurdering = null,
+            sykdomsvurderinger = listOf(
+                sykdomsvurdering(
+                    harSkadeSykdomEllerLyte = false,
+                    vurderingenGjelderFra = 1 januar 2020,
+                    vurderingenGjelderTil = 30 juni 2020,
+                    vurdertIBehandling = BehandlingId(1)
+                )
+            )
+        )
+
+        assertThat(sykdomsGrunnlag.avslagSykdomForHelePerioden(rettighetsperiode)).isFalse()
     }
 
     private fun sykdomsvurdering(
