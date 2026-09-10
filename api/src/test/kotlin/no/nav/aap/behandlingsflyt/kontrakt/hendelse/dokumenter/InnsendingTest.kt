@@ -263,6 +263,41 @@ class InnsendingTest {
         assertThat(oppfølgingsoppgave).isEqualTo(tilbakeIgjen)
     }
 
+    @Test
+    fun `parse korriger søknadsdato fra full melding`() {
+        @Language("JSON")
+        val s = """{
+  "saksnummer": "4LDQPDS",
+  "referanse": {
+    "type": "MANUELL_OPPRETTELSE",
+    "verdi": "e8a9ca4b-83b9-44dc-b54a-df2199a4a244"
+  },
+  "type": "KORRIGER_SØKNADSDATO",
+  "kanal": "DIGITAL",
+  "mottattTidspunkt": "2025-07-16T10:15:53.359Z",
+  "melding": {
+    "meldingType": "KorrigerSøknadsdatoV0",
+    "begrunnelse": "Feilregistrert søknadsdato"
+  }
+}
+"""
+        val obj = DefaultJsonMapper.fromJson<Innsending>(s)
+
+        assertThat(obj.melding).isInstanceOf(KorrigerSøknadsdatoV0::class.java)
+        val korrigerSøknadsdatoActual = obj.melding as KorrigerSøknadsdatoV0
+        assertThat(korrigerSøknadsdatoActual.begrunnelse).isEqualTo("Feilregistrert søknadsdato")
+    }
+
+    @Test
+    fun `serialisere og deserialisere korriger søknadsdato`() {
+        val korrigerSøknadsdato = KorrigerSøknadsdatoV0(
+            begrunnelse = "Feilregistrert søknadsdato"
+        )
+
+        val somJSON = DefaultJsonMapper.toJson(korrigerSøknadsdato)
+        assertThat(DefaultJsonMapper.fromJson<Melding>(somJSON)).isEqualTo(korrigerSøknadsdato)
+    }
+
     companion object {
         @JvmStatic
         fun hvemSkalFølgeOppMethodSource() = listOf(

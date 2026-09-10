@@ -1320,7 +1320,8 @@ internal object VedtakDokumentRenderer {
                 InnsendingType.INSTITUSJONSOPPHOLD,
                 InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
                 InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE,
-                InnsendingType.UFØRE_VEDTAK_HENDELSE ->
+                InnsendingType.UFØRE_VEDTAK_HENDELSE,
+                InnsendingType.KORRIGER_SØKNADSDATO ->
                     Tekst("${mottattDokument.referanse}")
             }
         }

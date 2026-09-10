@@ -115,7 +115,8 @@ class HåndterTilbakekrevingHendelseService(
             ÅrsakTilOpprettelse.G_REGULERING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             ÅrsakTilOpprettelse.MELDEKORT,
-            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
+            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+            ÅrsakTilOpprettelse.KORRIGER_SØKNADSDATO -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
 
             ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,
             ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE,

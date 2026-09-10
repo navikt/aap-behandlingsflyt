@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokument
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KorrigerSøknadsdatoV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArenaV0
@@ -45,6 +46,7 @@ object MottattHendelseUtleder {
             InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT -> throw IllegalArgumentException("Folkeregisteridenthendelser skal trigge oppdatering av person og sak - ikke opprette en behandling")
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
             InnsendingType.MIGRERING_FRA_ARENA -> ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
+            InnsendingType.KORRIGER_SØKNADSDATO -> ÅrsakTilOpprettelse.KORRIGER_SØKNADSDATO
         }
     }
 
@@ -107,6 +109,8 @@ object MottattHendelseUtleder {
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> emptyList()
 
             InnsendingType.MIGRERING_FRA_ARENA -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MIGRERING_FRA_ARENA))
+
+            InnsendingType.KORRIGER_SØKNADSDATO -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.VURDER_KRAV))
         }
     }
 
@@ -122,6 +126,7 @@ object MottattHendelseUtleder {
         is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
         is AnnetRelevantDokument -> melding.begrunnelse
         is MigreringFraArenaV0 -> melding.beskrivelse
+        is KorrigerSøknadsdatoV0 -> melding.begrunnelse
         else -> null
     }
 
