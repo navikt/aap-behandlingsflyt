@@ -21,7 +21,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.St
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -54,7 +56,7 @@ class BackfillKravService(
      * Returnerer [BackfillBehandlingResultat.AlleredeBackfilled] dersom behandlingen allerede hadde krav –
      * løkken i runner skal da bryte ut av saken, da resten er nyere og allerede har sine vurderinger.
      */
-    fun backfillBehandling(sak: Sak, behandling: Behandling, erNyesteBehandling: Boolean): BackfillBehandlingResultat {
+    fun backfillBehandling(sak: Sak, behandlinger: List<Behandling>, behandling: Behandling, erNyesteBehandling: Boolean): BackfillBehandlingResultat {
         val eksisterendeKrav = kravRepository.hentHvisEksisterer(behandling.id)
         if (eksisterendeKrav != null) {
             return BackfillBehandlingResultat.AlleredeBackfilled
@@ -78,8 +80,8 @@ class BackfillKravService(
         val grunnlag = KravGrunnlag(alleVurderinger.toSet())
         val oppdatertGrunnlag =
             håndterRettighetsperiodevurdering(behandling.id, behandling.forrigeBehandlingId, grunnlag)
-
-        verifiserMotRettighetsperiode(sak, oppdatertGrunnlag, erNyesteBehandling)
+        
+        verifiserMotRettighetsperiode(sak, behandlinger, oppdatertGrunnlag, erNyesteBehandling)
 
         kravRepository.lagre(behandling.id, oppdatertGrunnlag.vurderinger)
         backfillStønadsperiode(behandling.id, oppdatertGrunnlag, behandling.forrigeBehandlingId)
@@ -240,8 +242,28 @@ class BackfillKravService(
      * Verifiserer at saken sin rettighetsperiode.fom stemmer med gjeldende krav sin muligRettFra.
      * Kræsjer dersom de ikke er like – dette indikerer en datakonsistensfeil.
      */
-    private fun verifiserMotRettighetsperiode(sak: Sak, grunnlag: KravGrunnlag, erNyesteBehandling: Boolean) {
+    private fun verifiserMotRettighetsperiode(sak: Sak, behandlinger: List<Behandling>, grunnlag: KravGrunnlag, erNyesteBehandling: Boolean) {
         if (!erNyesteBehandling) return
+
+        if (Miljø.erDev() && behandlinger.any { behandling ->
+                /**
+                 * Her vet vi ikke 100 % at rettighetsperioden er oppdatert og at revurderingen er avbrutt (man kan ha svart "nei" i vurderingene), 
+                 * men det er ikke så viktig siden vi kun gjør denne sjekken i dev.
+                 * Det er en eksisterende bug der rettighetsperioden ikke blir tilbakestilt dersom revurderingen avbrytes, 
+                 * noe som gjør at backfilling vil feile på rettighetsperiodesjekken.
+                 * I produksjon ønsker vi at det skal feile slik at vi kan håndtere disse sakene, da de har feil rettighetsperiode.
+                 * **/
+                behandling.vurderingsbehov().map { it.type }.containsAll(
+                    listOf(
+                        Vurderingsbehov.REVURDERING_AVBRUTT,
+                        Vurderingsbehov.VURDER_RETTIGHETSPERIODE
+                    )
+                )
+            }) {
+            log.info("Hopper over verifisering av rettighetsperiode for ${sak.id.toLong()} – har behandling med REVURDERING_AVBRUTT og VURDER_RETTIGHETSPERIODE")
+            return
+        }
+        
         val gjeldendeKrav = grunnlag.gjeldendeRelevanteKrav()
         if (gjeldendeKrav.isEmpty()) throw IllegalStateException("Forventet ett relevant krav for nyeste behandling på sak ${sak.id}")
 
