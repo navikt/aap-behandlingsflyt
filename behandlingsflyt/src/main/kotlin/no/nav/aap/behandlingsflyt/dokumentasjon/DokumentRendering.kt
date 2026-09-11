@@ -249,9 +249,10 @@ data class Periode(val periode: DomenePeriode, val kompakt: Boolean = false) : L
     }
 }
 
-data class Tidspunkt(val tidspunkt: LocalDateTime) : LøpendeTekst {
+data class Tidspunkt(val tidspunkt: LocalDateTime, val kompakt: Boolean = false) : LøpendeTekst {
     override fun render(kontekst: RenderKontekst) =
-        tidspunkt.toLocalDate().format(Dato.formatter) + " " + tidspunkt.toLocalTime().toString()
+        tidspunkt.toLocalDate().format(if (kompakt) Dato.kompaktFormatter else Dato.formatter) +
+            " " + tidspunkt.toLocalTime().toString()
 }
 
 data class Prosent(val prosent: DomeneProsent) : LøpendeTekst {

@@ -22,7 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.utils.Diff
 import no.nav.aap.behandlingsflyt.utils.Endret
@@ -64,7 +64,6 @@ internal object VedtakDokumentRenderer {
                 stønadsperiodeSub(),
                 lovvalgMedlemskapSub(),
                 avslag11_27Sub(),
-                studentvurderingerSub(),
                 sykdomsvurderingerSub(),
                 bistandsvurderingerSub(),
                 etableringEgenVirksomhetSub(),
@@ -75,6 +74,7 @@ internal object VedtakDokumentRenderer {
                 overgangArbeidSub(),
                 refusjonkravSub(),
                 yrkesskadevurderingSub(),
+                studentvurderingerSub(),
                 sykepengererstatningSub(),
                 beregningVurderingSub(),
                 manuellInntektSub(),
@@ -1273,55 +1273,36 @@ internal object VedtakDokumentRenderer {
     )
 
     private fun VedtakDokumentGrunnlag.vedleggTidligereBehandlingerSub(): Seksjon {
+        val tidligereBehandlinger = behandlinger.filter { it.id != behandling.id }
         return Seksjon(
             "Tidligere behandlinger av retten til og størrelsen på AAP",
-            Dict(
-                behandlinger.filter { it.id != behandling.id }
-                    .map {
-                        Span(Tekst("Vedtatt "), Tidspunkt(it.vedtakstidspunkt), Tekst(".")) to
-                                Span(
-                                    Tekst("Opprettet "),
-                                    Tidspunkt(it.opprettetTidspunkt),
-                                    Tekst("."),
-                                    Tekst(" Årsak "),
-                                    it.årsakTilOpprettelse?.let { PrettyEnum(it) },
-                                    Tekst("."),
-                                    Tekst(" Referanse ${it.referanse}.")
-                                )
-                    }
-            ),
+            tidligereBehandlinger.takeIf { it.isNotEmpty() }?.let { tidligere ->
+                Tabell(
+                    kolonner = listOf(
+                        Tekst("Referanse"),
+                        Tekst("Opprettet"),
+                        Tekst("Vedtakstidspunkt"),
+                        Tekst("Årsak til opprettelse"),
+                    ),
+                    rader = tidligere.map {
+                        listOf(
+                            Tekst(it.referanse.toString()),
+                            Tidspunkt(it.opprettetTidspunkt, kompakt = true),
+                            Tidspunkt(it.vedtakstidspunkt, kompakt = true),
+                            PrettyEnum(it.årsakTilOpprettelse),
+                        )
+                    },
+                )
+            },
         )
     }
 
     private fun VedtakDokumentGrunnlag.vedleggDokumentoversiktSub(): Seksjon {
-        fun referanse(mottattDokument: MottattDokument): LøpendeTekst? {
-            return when (mottattDokument.type) {
-                InnsendingType.SØKNAD,
-                InnsendingType.MELDEKORT ->
-                    ReferanseJournalpost(mottattDokument.referanse.asJournalpostId)
-
-                InnsendingType.AKTIVITETSKORT,
-                InnsendingType.LEGEERKLÆRING,
-                InnsendingType.LEGEERKLÆRING_AVVIST,
-                InnsendingType.DIALOGMELDING,
-                InnsendingType.KLAGE,
-                InnsendingType.ANNET_RELEVANT_DOKUMENT,
-                InnsendingType.MANUELL_REVURDERING,
-                InnsendingType.OMGJØRING_KLAGE_REVURDERING,
-                InnsendingType.MIGRERING_FRA_ARENA,
-                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
-                InnsendingType.KABAL_HENDELSE,
-                InnsendingType.TILBAKEKREVING_HENDELSE,
-                InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
-                InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
-                InnsendingType.PDL_HENDELSE_DODSFALL_BARN,
-                InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT,
-                InnsendingType.OPPFØLGINGSOPPGAVE,
-                InnsendingType.INSTITUSJONSOPPHOLD,
-                InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
-                InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE,
-                InnsendingType.UFØRE_VEDTAK_HENDELSE ->
-                    Tekst("${mottattDokument.referanse}")
+        fun referanse(mottattDokument: MottattDokument): LøpendeTekst {
+            val referanse = mottattDokument.referanse
+            return when (referanse.type) {
+                InnsendingReferanse.Type.JOURNALPOST -> ReferanseJournalpost(referanse.asJournalpostId)
+                else -> Span(PrettyEnum(referanse.type), Tekst(": "), Tekst(referanse.verdi))
             }
         }
 
@@ -1330,7 +1311,7 @@ internal object VedtakDokumentRenderer {
             inkludererBehandlingsdetaljer: Boolean,
         ): Tabell? {
             val kolonner = buildList<LøpendeTekst> {
-                add(Tekst("Journalpost"))
+                add(Tekst("Referanse"))
                 add(Tekst("Type"))
                 add(Tekst("Mottatt"))
                 add(Tekst("Registrert"))
@@ -1338,19 +1319,17 @@ internal object VedtakDokumentRenderer {
                     add(Tekst("Vedtakstidspunkt"))
                 }
             }
-            val rader = dokumenter.mapNotNull { mottattDokument ->
-                referanse(mottattDokument)?.let { referanse ->
-                    buildList<LøpendeTekst> {
-                        add(referanse)
-                        add(PrettyEnum(mottattDokument.type))
-                        add(Tidspunkt(mottattDokument.mottattTidspunkt))
-                        add(Tidspunkt(mottattDokument.opprettetTid))
-                        if (inkludererBehandlingsdetaljer) {
-                            val dokumentetsBehandling = mottattDokument.behandlingId?.let { behandlingId ->
-                                behandlinger.singleOrNull { it.id == behandlingId }
-                            }
-                            add(dokumentetsBehandling?.let { Tidspunkt(it.vedtakstidspunkt) } ?: Tekst("—"))
+            val rader = dokumenter.map { mottattDokument ->
+                buildList<LøpendeTekst> {
+                    add(referanse(mottattDokument))
+                    add(PrettyEnum(mottattDokument.type))
+                    add(Tidspunkt(mottattDokument.mottattTidspunkt, kompakt = true))
+                    add(Tidspunkt(mottattDokument.opprettetTid, kompakt = true))
+                    if (inkludererBehandlingsdetaljer) {
+                        val dokumentetsBehandling = mottattDokument.behandlingId?.let { behandlingId ->
+                            behandlinger.singleOrNull { it.id == behandlingId }
                         }
+                        add(dokumentetsBehandling?.let { Tidspunkt(it.vedtakstidspunkt, kompakt = true) } ?: Tekst("—"))
                     }
                 }
             }
