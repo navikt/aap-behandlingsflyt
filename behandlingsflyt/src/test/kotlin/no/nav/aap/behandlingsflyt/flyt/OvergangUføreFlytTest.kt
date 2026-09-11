@@ -272,7 +272,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
 
-        val (melding, revurdering) = opprettUførevedtakshendelse(sak, behandling)
+        val (melding, revurdering) = opprettUførevedtakshendelse(sak, behandling, virkningsdato = ikkeLengerSykDato)
         assertThat(revurdering.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
 
         dataSource.transaction { connection ->
