@@ -106,7 +106,6 @@ dependencies {
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)
-    testImplementation(libs.bundles.junit)
     testImplementation(kotlin("test"))
 
     testImplementation(libs.kafkaClients)

@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 
 plugins {
     id("aap.conventions")
-    `maven-publish`
+    id("aap.publishing")
     `java-library`
 }
 
@@ -13,7 +13,6 @@ dependencies {
     compileOnly(libs.tilgangKontrakt)
 
     testRuntimeOnly(libs.tilgangKontrakt)
-    testImplementation(libs.bundles.junit)
 }
 
 kotlin {
@@ -30,17 +29,6 @@ publishing {
             artifactId = project.name
             version = project.findProperty("version")?.toString() ?: "0.0.0"
             from(components["java"])
-        }
-    }
-
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/navikt/aap-behandlingsflyt")
-            credentials {
-                username = "x-access-token"
-                password = System.getenv("GITHUB_TOKEN")
-            }
         }
     }
 }

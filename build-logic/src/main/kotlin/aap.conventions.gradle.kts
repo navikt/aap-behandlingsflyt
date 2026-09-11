@@ -1,3 +1,4 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 import kotlin.math.max
 import kotlin.math.min
@@ -11,11 +12,17 @@ plugins {
     `jvm-test-suite`
 }
 
+// Precompiled script plugins får ikke type-safe `libs`-accessors automatisk, så vi henter
+// den delte versjonskatalogen (se build-logic/settings.gradle.kts) via den offentlige APIen i stedet.
+val libsCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
 group = "no.nav.aap.behandlingsflyt"
 version = project.findProperty("version")?.toString() ?: "0.0.0"
 
 dependencies {
     dokkaPlugin("com.glureau:html-mermaid-dokka-plugin:0.6.0")
+    // Felles for alle moduler, for å unngå at hver enkelt build.gradle.kts må deklarere den selv
+    testImplementation(libsCatalog.findBundle("junit").get())
 }
 
 // https://docs.gradle.org/9.6.1/userguide/java_testing.html#java_testing
