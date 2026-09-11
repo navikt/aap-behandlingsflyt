@@ -101,4 +101,7 @@ class FakeApiInternGateway : ApiInternGateway {
         )
     }
 
+    override fun hentArenaMeldekortsyklus(ident: Ident): ApiInternGateway.Meldekortsyklus? {
+        return null
+    }
 }
