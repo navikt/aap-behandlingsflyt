@@ -37,7 +37,6 @@ class HentSamIdJobbUtfører(
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
-        val vedtaksTidspunkt = requireNotNull(vedtakRepository.hent(behandling.id)).vedtakstidspunkt
         val tpRefusjonskravVurdering = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
 
         if (tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {
@@ -55,7 +54,7 @@ class HentSamIdJobbUtfører(
         flytJobbRepository.leggTil(
             jobbInput = JobbInput(DatadelingBehandlingJobbUtfører).medPayload(
                 Pair(
-                    behandlingId, vedtaksTidspunkt
+                    behandlingId, null
                 )
             )
                 .forSak(sak.id.id)
