@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -189,7 +190,7 @@ class MeldingOmVedtakBrevSteg(
     private fun brukBrevbyggerTogglePåBrevtypeOgBrukerident(typeBrev: TypeBrev, bruker: Bruker): Boolean {
         val brukereSomSkalBrukeBrevbygger = listOf("B101286", "B171715", "L168492", "S128047", "S132438", "H136900", "J158692", "R152079", "B156492", "S154973")
         val brevtyperSomSkalBrukeBrevbygger = listOf(TypeBrev.VEDTAK_INNVILGELSE)
-        return typeBrev in brevtyperSomSkalBrukeBrevbygger && bruker.ident in brukereSomSkalBrukeBrevbygger
+        return typeBrev in brevtyperSomSkalBrukeBrevbygger && (bruker.ident in brukereSomSkalBrukeBrevbygger || Miljø.erDev())
     }
 
     companion object : FlytSteg {
