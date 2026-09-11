@@ -12,7 +12,11 @@ class DatoFraDokumentUtleder(private val mottattDokumentRepository: MottattDokum
             sakId,
             InnsendingType.SØKNAD
         )
-        return søknader
+        val legeerklæringer = mottattDokumentRepository.hentDokumenterAvType(
+            sakId,
+            InnsendingType.LEGEERKLÆRING
+        )
+        return (søknader + legeerklæringer)
             .minOfOrNull { it.mottattTidspunkt }
 
     }
