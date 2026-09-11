@@ -85,7 +85,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         },
                         kanVurderes = listOf(
                             Periode(
-                                sak.rettighetsperiode.fom.minusMonths(8),
+                                sak.rettighetsperiode.fom,
                                 sak.rettighetsperiode.tom
                             )
                         ),
