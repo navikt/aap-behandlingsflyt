@@ -199,7 +199,6 @@ public enum class Utfall {
 
 public enum class Vilkårtype {
     ALDERSVILKÅRET,
-    AVSLAG_11_27,
     SYKDOMSVILKÅRET,
     BISTANDSVILKÅRET,
     MEDLEMSKAP,

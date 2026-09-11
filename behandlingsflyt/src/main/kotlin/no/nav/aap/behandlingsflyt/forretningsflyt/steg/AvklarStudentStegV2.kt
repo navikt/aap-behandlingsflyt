@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -91,7 +92,7 @@ class AvklarStudentStegV2 private constructor(
             sykdomsvurderinger
         ) { _, utfall, sykdomsvurdering ->
             when (utfall) {
-                TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+                TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag(Vilkårtype.STUDENT) -> false
                 is TidligereVurderinger.PotensieltOppfylt -> sykdomsvurdering?.potensieltOppfyltStudent() == true
 
                 else -> false

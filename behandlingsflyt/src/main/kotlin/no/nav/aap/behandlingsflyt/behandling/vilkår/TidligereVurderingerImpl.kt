@@ -92,7 +92,7 @@ class TidligereVurderingerImpl(
 
                 avslag11_27Tidslinje.mapNotNull { vurdering ->
                     if (vurdering.skalAvslås1127 == true)
-                        TidligereVurderinger.UunngåeligAvslag(Vilkårtype.AVSLAG_11_27)
+                        TidligereVurderinger.UunngåeligAvslag(Vilkårtype.SAMORDNING)
                     else
                         null
                 }
@@ -108,7 +108,6 @@ class TidligereVurderingerImpl(
                     )
                 }
             },
-
 
             Sjekk(StegType.AVKLAR_SYKDOM) { _, kontekst, tidligereVurderinger ->
                 val sykdomstidslinje =
@@ -159,14 +158,34 @@ class TidligereVurderingerImpl(
                 }
             },
 
-            Sjekk(StegType.OVERGANG_UFORE) { vilkårsresultat, _, _ ->
-                vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGUFØREVILKÅRET).map {
-                    TidligereVurderinger.PotensieltOppfylt(
-                        when {
-                            it.utfall == Utfall.OPPFYLT -> RettighetsType.VURDERES_FOR_UFØRETRYGD
-                            else -> null
-                        }
-                    )
+            Sjekk(StegType.OVERGANG_UFORE) { vilkårsresultat, kontekst, tidligereVurderinger ->
+                val sykdomstidslinje =
+                    sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje()
+                        .orEmpty()
+                Tidslinje.map3(
+                    tidligereVurderinger,
+                    vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGUFØREVILKÅRET),
+                    sykdomstidslinje
+                ) { segmentPeriode, foreløpigUtfall, overgangUføreVilkåret, sykdomsvurdering ->
+                    val resultat: TidligereVurderinger.Behandlingsutfall = when {
+                        overgangUføreVilkåret?.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
+                            RettighetsType.VURDERES_FOR_UFØRETRYGD
+                        )
+
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt
+                                && foreløpigUtfall.rettighetstype == null
+                                && skalIkkeVurderesForStudentEllerSykepengeerstatning(sykdomsvurdering)
+                                && !potensieltOppfyltOvergangArbeid(
+                            kontekst.rettighetsperiode,
+                            segmentPeriode,
+                            sykdomstidslinje
+                        ) -> TidligereVurderinger.UunngåeligAvslag(
+                            Vilkårtype.OVERGANGUFØREVILKÅRET
+                        )
+
+                        else -> TidligereVurderinger.PotensieltOppfylt(null)
+                    }
+                    resultat
                 }
             },
 
@@ -196,14 +215,29 @@ class TidligereVurderingerImpl(
                 }
             },
 
-            Sjekk(StegType.AVKLAR_STUDENT_V2) { vilkårsresultat, _, _ ->
-                vilkårsresultat.tidslinjeFor(Vilkårtype.STUDENT).map {
-                    TidligereVurderinger.PotensieltOppfylt(
-                        when {
-                            it.utfall == Utfall.OPPFYLT -> RettighetsType.STUDENT
-                            else -> null
-                        }
-                    )
+            Sjekk(StegType.AVKLAR_STUDENT_V2) { vilkårsresultat, kontekst, tidligereVurderinger ->
+                val sykdomstidslinje =
+                    sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje()
+                        .orEmpty()
+                Tidslinje.map3(
+                    tidligereVurderinger,
+                    vilkårsresultat.tidslinjeFor(Vilkårtype.STUDENT),
+                    sykdomstidslinje
+                ) { foreløpigUtfall, student, sykdomsvurdering ->
+                    val resultat: TidligereVurderinger.Behandlingsutfall = when {
+                        student?.utfall == Utfall.OPPFYLT -> TidligereVurderinger.PotensieltOppfylt(
+                            RettighetsType.STUDENT
+                        )
+
+                        foreløpigUtfall is TidligereVurderinger.PotensieltOppfylt
+                                && foreløpigUtfall.rettighetstype == null
+                                && sykdomsvurdering?.skalVurderesForSykepengeerstatning() != true -> TidligereVurderinger.UunngåeligAvslag(
+                            Vilkårtype.STUDENT
+                        )
+
+                        else -> TidligereVurderinger.PotensieltOppfylt(null)
+                    }
+                    resultat
                 }
             },
 

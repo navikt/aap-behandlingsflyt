@@ -9,8 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -25,7 +23,6 @@ import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -83,7 +80,8 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                         )
                     }
 
-                    val kontekstMedPerioder = flytKontekstMedPeriodeService.utled(behandling.flytKontekst(), StegType.FORESLÅ_VEDTAK)
+                    val kontekstMedPerioder =
+                        flytKontekstMedPeriodeService.utled(behandling.flytKontekst(), StegType.FORESLÅ_VEDTAK)
                     val tidslinjeTidligereVurdering = tidligereVurderingerImpl.behandlingsutfall(
                         kontekstMedPerioder,
                         StegType.FORESLÅ_VEDTAK
@@ -108,22 +106,26 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     if (underveisGrunnlag == null) {
                         ForeslåVedtakResponse(emptyList(), stansOgOpphørDto, kanSaksbehandle())
                     } else {
-                        val foreslåVedtakPerioder =
+                        val foreslåVedtakData: Tidslinje<Pair<ForeslåVedtakData, List<VilkårsavslagDto>>> =
                             underveisGrunnlag
                                 .tilForeslåVedtakDataTidslinje()
+                                .leftJoin(uunngåeligAvslagTidslinje) { data, vilkårsavslag ->
+                                    data to (vilkårsavslag?.let { listOf(it) } ?: emptyList())
+                                }
+                                .komprimer()
+
+                        val foreslåVedtakPerioder =
+                            foreslåVedtakData
                                 .segmenter()
                                 .map {
-                                    val vilkårsavslag =
-                                        uunngåeligAvslagTidslinje.begrensetTil(it.periode).segmenter()
-                                            .map { segment -> segment.verdi }
-
+                                    val (data, vilkårsavslag) = it.verdi
                                     ForeslåVedtakDto(
                                         periode = it.periode,
-                                        utfall = it.verdi.utfall,
-                                        rettighetsType = it.verdi.rettighetsType,
+                                        utfall = data.utfall,
+                                        rettighetsType = data.rettighetsType,
                                         avslagsårsak = AvslagsårsakDto(
                                             vilkårsavslag = vilkårsavslag,
-                                            underveisavslag = it.verdi.underveisÅrsak
+                                            underveisavslag = data.underveisÅrsak
                                         )
                                     )
                                 }
