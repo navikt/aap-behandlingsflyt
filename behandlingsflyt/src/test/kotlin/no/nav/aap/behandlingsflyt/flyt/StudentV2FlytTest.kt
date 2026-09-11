@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsningV2
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -11,6 +13,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.Periodiser
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
@@ -258,5 +262,57 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                     31 desember 2025
                 ) to RettighetsType.STUDENT
             )
+    }
+
+    @Test
+    fun `UunngåeligAvslag for AVKLAR_STUDENT_V2 inneholder riktig vilkårtype når studentvilkåret ikke er oppfylt`() {
+        val fom = 24 november 2025
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            søknad = TestSøknader.SØKNAD_STUDENT
+        )
+
+        behandling
+            .løsSykdomSomPotensieltOppfyltStudent(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsAvklaringsBehov(
+                AvklarStudentLøsningV2(
+                    løsningerForPerioder = listOf(
+                        PeriodisertStudentDto(
+                            fom = fom,
+                            begrunnelse = "Ikke lenger student",
+                            harAvbruttStudie = false,
+                            godkjentStudieAvLånekassen = false,
+                            avbruttPgaSykdomEllerSkade = false,
+                            harBehovForBehandling = false,
+                            avbruttStudieDato = null,
+                            avbruddMerEnn6Måneder = false
+                        )
+                    )
+                )
+            )
+            .medKontekst {
+                val tidligereVurderinger =
+                    TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
+                val flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider)
+                val kontekstMedPerioder = flytKontekstMedPeriodeService.utled(
+                    this.behandling.flytKontekst(),
+                    StegType.VURDER_SYKEPENGEERSTATNING
+                )
+
+                val utfall = tidligereVurderinger.behandlingsutfall(kontekstMedPerioder, StegType.VURDER_SYKEPENGEERSTATNING)
+
+                assertThat(utfall.segmenter()).anySatisfy {
+                    assertThat(it.verdi).isInstanceOf(TidligereVurderinger.UunngåeligAvslag::class.java)
+                    assertThat((it.verdi as TidligereVurderinger.UunngåeligAvslag).vilkårtype)
+                        .isEqualTo(Vilkårtype.STUDENT)
+                }
+            }
     }
 }
