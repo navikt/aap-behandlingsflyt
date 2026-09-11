@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -28,6 +30,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafka
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -546,6 +549,48 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             assertThat(vurdering).isNotNull
             assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
         }
+    }
+
+    @Test
+    fun `UunngåeligAvslag for OVERGANG_UFORE inneholder riktig vilkårtype når vilkåret ikke er oppfylt`() {
+        val fom = LocalDate.of(2026, 1, 1)
+
+        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+        behandling
+            .løsSykdom(fom, erOppfylt = true)
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        BistandLøsningDto(
+                            begrunnelse = "Ikke oppfylt bistand",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Yep",
+                            fom = fom,
+                            tom = null
+                        )
+                    ),
+                ),
+            )
+            .medKontekst {
+                val tidligereVurderinger =
+                    TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
+                val flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider)
+                val kontekstMedPerioder = flytKontekstMedPeriodeService.utled(
+                    this.behandling.flytKontekst(),
+                    StegType.OVERGANG_ARBEID
+                )
+
+                val utfall = tidligereVurderinger.behandlingsutfall(kontekstMedPerioder, StegType.OVERGANG_ARBEID)
+
+                assertThat(utfall.segmenter()).anySatisfy {
+                    assertThat(it.verdi).isInstanceOf(TidligereVurderinger.UunngåeligAvslag::class.java)
+                    assertThat((it.verdi as TidligereVurderinger.UunngåeligAvslag).vilkårtype)
+                        .isEqualTo(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                }
+            }
     }
 
     @Suppress("FunctionParameterNaming")

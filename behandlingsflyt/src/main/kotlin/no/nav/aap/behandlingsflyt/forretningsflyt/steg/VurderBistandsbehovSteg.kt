@@ -128,7 +128,7 @@ class VurderBistandsbehovSteg(
             when (behandlingsutfall) {
                 null -> false
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     when (behandlingsutfall.rettighetstype) {
                         null -> sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true

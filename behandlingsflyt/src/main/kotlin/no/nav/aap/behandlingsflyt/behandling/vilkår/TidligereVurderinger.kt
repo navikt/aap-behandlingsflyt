@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -29,7 +30,9 @@ interface TidligereVurderinger {
 
     sealed interface Behandlingsutfall
     data object IkkeBehandlingsgrunnlag : Behandlingsutfall
-    data object UunngåeligAvslag : Behandlingsutfall
+    data class UunngåeligAvslag(
+        val vilkårtype: Vilkårtype
+    ) : Behandlingsutfall
     data class PotensieltOppfylt(
         val rettighetstype: RettighetsType?,
         val muligRettFraNavKontor: RettighetsType? = null
