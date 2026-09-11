@@ -19,7 +19,7 @@ data class BarnMedBarnetillegg(
     val perioderMedBarnetillegg: List<PeriodeMedBeløp>,
 )
 
-data class PeriodeMedBeløp(val periode: Periode, val beløp: Beløp)
+data class PeriodeMedBeløp(val periode: Periode, val beløp: Beløp, val sats: Beløp, val uredusertBeløp: Beløp)
 
 /**
  * Kombinerer tilkjent ytelse-perioder (som har gradering og barnetilleggsats) med
@@ -40,7 +40,12 @@ fun utledBarnMedBarnetillegg(
                 emptyList()
             } else {
                 rett.barnMedRettTil().map { barn ->
-                    barn to PeriodeMedBeløp(periode, tilkjent.barnetilleggsats.multiplisert(tilkjent.gradering))
+                    barn to PeriodeMedBeløp(
+                        periode = periode,
+                        beløp = tilkjent.barnetilleggsats.multiplisert(tilkjent.gradering),
+                        sats = tilkjent.barnetilleggsats,
+                        uredusertBeløp = tilkjent.barnetilleggsats
+                    )
                 }
             }
         }
