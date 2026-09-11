@@ -345,6 +345,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER -> Brevtype.AVSLAG_UNDER_17_AAR_9_MAANEDER
         TypeBrev.VEDTAK_AVSLAG_11_5 -> Brevtype.AVSLAG_11_5
+        TypeBrev.VEDTAK_AVSLAG_11_27 -> Brevtype.AVSLAG_11_27
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
         TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> Brevtype.VEDTAK_UTVID_VEDTAKSLENGDE
         TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
@@ -414,6 +415,20 @@ class BrevGateway : BrevbestillingGateway {
             is AvslagBrev -> {
                 buildSet {
                     brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
+
+                    when (brevBehov) {
+                        is AvslagBrev.AvslagAnnenYtelse -> {
+                            add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
+                            add(
+                                Faktagrunnlag.GrunnlagAndreYtelser(
+                                    ytelseType = brevBehov.ytelsetype,
+                                    ytelseTom = brevBehov.sisteDagMedYtelse,
+                                    sykepengeGrunnlagOver2G = brevBehov.sykepengeGrunnlagOver2G
+                                )
+                            )
+                        }
+                        else -> Unit
+                    }
                 }
             }
 
