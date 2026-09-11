@@ -335,7 +335,7 @@ public enum class StegType(
         status = Status.UTREDES
     ),
     AVKLAR_STUDENT(
-        gruppe = StegGruppe.STUDENT,
+        gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES
     ),
 }
