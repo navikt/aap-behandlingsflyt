@@ -94,10 +94,10 @@ fun NormalOpenAPIRoute.driftApi(
         route("/person") {
             authorizedPost<Unit, PersonSøkDriftsinfoDto, IdentDto>(
                 AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.DRIFTE
+                    operasjon = Operasjon.DRIFT_LES
                 )
             ) { _, req ->
-                val saker = dataSource.transaction { connection ->
+                val saker = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
                     val person = repositoryProvider.provide<PersonRepository>()
@@ -205,10 +205,10 @@ fun NormalOpenAPIRoute.driftApi(
             authorizedPost<BehandlingReferanse, List<VilkårDriftsinfoDTO>, Unit>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse"),
-                    operasjon = Operasjon.DRIFTE
+                    operasjon = Operasjon.DRIFT_LES
                 )
             ) { params, _ ->
-                val vilkår = dataSource.transaction { connection ->
+                val vilkår = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
@@ -246,11 +246,15 @@ fun NormalOpenAPIRoute.driftApi(
             authorizedPost<BehandlingReferanse, TilkjentYtelse2Dto, Unit>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse"),
-                    operasjon = Operasjon.DRIFTE
+                    operasjon = Operasjon.DRIFT_LES
                 )
             ) { params, _ ->
-                val tilkjentYtelseDto = TilkjentYtelseService(dataSource, repositoryRegistry)
-                    .hentTilkjentYtelse(params)
+                val tilkjentYtelseDto= dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    TilkjentYtelseService(repositoryProvider)
+                        .hentTilkjentYtelse(params)
+                }
 
                 krevDtoErUtenFødselsnummer(tilkjentYtelseDto)
 
@@ -262,7 +266,7 @@ fun NormalOpenAPIRoute.driftApi(
             authorizedGet<BehandlingReferanse, List<YrkesskadeDriftsinfoDto>>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse"),
-                    operasjon = Operasjon.DRIFTE
+                    operasjon = Operasjon.DRIFT_LES
                 )
             ) { behandlingReferanse ->
                 val yrkesskader = dataSource.transaction(readOnly = true) { connection ->
@@ -316,10 +320,10 @@ fun NormalOpenAPIRoute.driftApi(
             authorizedPost<BehandlingReferanse, DriftRettighetsinfoDto, Unit>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse"),
-                    operasjon = Operasjon.DRIFTE
+                    operasjon = Operasjon.DRIFT_LES
                 )
             ) { params, _ ->
-                val res = dataSource.transaction { connection ->
+                val res = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val rettighetstypeRepository = repositoryProvider.provide<RettighetstypeRepository>()
                     val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
@@ -378,7 +382,7 @@ fun NormalOpenAPIRoute.driftApi(
                 behandlingPathParam = BehandlingPathParam(
                     "referanse"
                 ),
-                operasjon = Operasjon.DRIFTE
+                operasjon = Operasjon.DRIFT_LES
             )
         ) { req ->
             val response = dataSource.transaction(readOnly = true) { connection ->
@@ -419,10 +423,10 @@ fun NormalOpenAPIRoute.driftApi(
             authorizedPost<SaksnummerParameter, SakDriftsinfoDTO, Unit>(
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer"),
-                    operasjon = Operasjon.DRIFTE,
+                    operasjon = Operasjon.DRIFT_LES,
                 ),
             ) { params, _ ->
-                val sakDriftsinfoDTO = dataSource.transaction { connection ->
+                val sakDriftsinfoDTO = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
                     val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -457,7 +461,11 @@ fun NormalOpenAPIRoute.driftApi(
                                     }
                                 }.sortedByDescending { it.tidsstempel }
 
-                            BehandlingDriftsinfo.fra(behandling, avklaringsbehovene, vedtak.find { it.id == behandling.id }?.vedtakstidspunkt )
+                            BehandlingDriftsinfo.fra(
+                                behandling,
+                                avklaringsbehovene,
+                                vedtak.find { it.id == behandling.id }?.vedtakstidspunkt
+                            )
                         }
                         .sortedByDescending { it.opprettet }
 
@@ -485,10 +493,10 @@ fun NormalOpenAPIRoute.driftApi(
             authorizedPost<SaksnummerParameter, List<MottattDokumentDriftsinfoDTO>, Unit>(
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer"),
-                    operasjon = Operasjon.DRIFTE,
+                    operasjon = Operasjon.DRIFT_LES,
                 ),
             ) { params, _ ->
-                val dokumenter = dataSource.transaction { connection ->
+                val dokumenter = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
                     val sakRepository = repositoryProvider.provide<SakRepository>()
