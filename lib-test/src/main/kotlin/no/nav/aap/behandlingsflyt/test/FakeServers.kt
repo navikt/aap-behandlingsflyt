@@ -224,7 +224,11 @@ object FakeServers : AutoCloseable {
         System.setProperty("INTEGRASJON_TILGANG_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_BREV_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_POSTMOTTAK_AZP", java.util.UUID.randomUUID().toString())
+        // Kan overstyres med en fast verdi via env, slik at en frittstående testapp
+        // (f.eks. postmottak) kan sende inn tokens med matchende azp-claim.
+        if (System.getenv("INTEGRASJON_POSTMOTTAK_AZP").isNullOrEmpty()) {
+            System.setProperty("INTEGRASJON_POSTMOTTAK_AZP", java.util.UUID.randomUUID().toString())
+        }
         System.setProperty("INTEGRASJON_SAKSBEHANDLING_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP", java.util.UUID.randomUUID().toString())
 
