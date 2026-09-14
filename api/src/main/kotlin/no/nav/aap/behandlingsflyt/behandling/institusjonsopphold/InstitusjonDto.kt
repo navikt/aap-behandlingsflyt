@@ -16,6 +16,7 @@ data class InstitusjonsoppholdDto(
     val avsluttetDato: LocalDate,
     val kildeinstitusjon: String,
     val tidligsteReduksjonsdato: LocalDate?,  // null dersom ikke beregnet (f.eks. soningsopphold)
+    val delperioder: List<InstitusjonsoppholdDelperiodeDto> = emptyList() // enkeltoppholdene i kjeden
 ) {
     companion object {
         fun institusjonToDto(institusjonsopphold: Segment<Institusjon>) =
@@ -39,6 +40,12 @@ data class InstitusjonsoppholdDto(
             )
     }
 }
+
+data class InstitusjonsoppholdDelperiodeDto(
+    val institusjonsnavn: String,
+    val fom: LocalDate,
+    val tom: LocalDate
+)
 
 data class HelseinstitusjonGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,

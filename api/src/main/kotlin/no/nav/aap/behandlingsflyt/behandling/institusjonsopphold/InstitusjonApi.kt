@@ -315,10 +315,14 @@ private fun SammenhengendeOppholdGruppe.tilDto(): InstitusjonsoppholdDto {
         institusjonstype = først.verdi.type.beskrivelse,
         oppholdstype = først.verdi.kategori.beskrivelse,
         status = if (sist.periode.tom > LocalDate.now()) StatusDto.AKTIV.toString() else StatusDto.AVSLUTTET.toString(),
-        kildeinstitusjon = først.verdi.navn,
+        kildeinstitusjon = if (segmenter.size == 1) først.verdi.navn
+        else segmenter.joinToString(" → ") { it.verdi.navn },
         oppholdFra = først.periode.fom,
         avsluttetDato = sist.periode.tom,
-        tidligsteReduksjonsdato = null
+        tidligsteReduksjonsdato = null,
+        delperioder = segmenter.map {
+            InstitusjonsoppholdDelperiodeDto(it.verdi.navn, it.periode.fom, it.periode.tom)
+        }
     )
 }
 
