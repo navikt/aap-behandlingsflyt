@@ -97,7 +97,7 @@ class MeldingOmVedtakBrevSteg(
         }
         return Fullført
     }
-    
+
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
         log.warn(
             "Dette steget støtter ikke tilbakestilling. Steget er i status IVERKSETTES og vedtaksresultat " +
@@ -179,6 +179,11 @@ class MeldingOmVedtakBrevSteg(
 
     private fun brukApiV3(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+        if (
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) == null ||
+            typeBrev in setOf(TypeBrev.VEDTAK_AVSLAG_11_5)
+        ) return false
+
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) ?: return false
         val endretAv = avklaringsbehov.endretAv()
         val brukBrevbyggerTogglePåKunBrevtype = unleashGateway.isEnabled(BehandlingsflytFeature.BrevtyperTilNyBrevbygger, typeBrev)
