@@ -703,7 +703,6 @@ open class AbstraktFlytOrkestratorTest(
         erStudent: Boolean = false
     ): Behandling {
         val harNedsattArbeidsevne = when {
-            erStudent -> ArbeidsevneNedsattValg.NEI_MEN_STUDENT
             vissVarighet == false -> ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
             erOppfylt -> ArbeidsevneNedsattValg.JA
             else -> ArbeidsevneNedsattValg.NEI
