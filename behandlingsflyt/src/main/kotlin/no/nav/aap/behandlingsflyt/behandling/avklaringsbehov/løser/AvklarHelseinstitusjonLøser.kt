@@ -2,7 +2,10 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.SammenhengendeOppholdGruppe
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligsteReduksjonsdatoPerOpphold
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.grupperSammenhengendeOppholdSegmenter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -169,20 +172,23 @@ class AvklarHelseinstitusjonLøser(
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
         if (opphold.isEmpty() || nyeVurderinger.isEmpty()) return Validation.Valid(nyeVurderinger)
 
+        val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
+
         // Håndterer når vedtatte vurderinger finnes. Dette skjer i revurdering
-        val vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>> =
-            // Finn vurderinger per opphold ved å matche oppholdets periode med vurderingenes periode.
-            opphold.associateWith { o ->
+        val vurderingerPerKjede: Map<SammenhengendeOppholdGruppe, List<HelseinstitusjonVurderingDto>> =
+            kjeder.associateWith { kjede ->
                 nyeVurderinger
-                    .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
+                    .filter { v -> v.periode.fom >= kjede.periode.fom && v.periode.tom <= kjede.periode.tom }
                     .sortedBy { it.periode }
             }
 
-        // Henter forhåndsberegnet tidligste reduksjonsdato per opphold fra util
-        val tidligsteReduksjonsdatoPerOpphold = beregnTidligsteReduksjonsdatoPerOpphold(opphold)
+        // Henter forhåndsberegnet tidligste reduksjonsdato per kjede (bruker kjedens første segment som representant)
+        val tidligsteReduksjonsdatoPerKjede = kjeder.associateWith { kjede ->
+            beregnTidligsteReduksjonsdatoPerOpphold(listOf(kjede.segmenter.first()))[kjede.segmenter.first()]
+        }
 
-        vurderingerPerOpphold.entries.forEach { (oppholdSegment, vurderinger) ->
-            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerOpphold[oppholdSegment] ?: return@forEach
+        vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
+            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach
             val første = førsteReduksjonsvurdering(vurderinger)
             val resultat = validerReduksjonsdato(
                 vurderinger,
@@ -200,6 +206,7 @@ class AvklarHelseinstitusjonLøser(
             it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false
         }
     }
+
 
     private fun validerReduksjonsdato(
         vurderinger: List<HelseinstitusjonVurderingDto>,
