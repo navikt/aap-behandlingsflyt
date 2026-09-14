@@ -24,6 +24,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.InternfeilException
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -289,17 +290,19 @@ fun hentOppholdSomSkalVurderes(
     behovPerioder: Tidslinje<InstitusjonsoppholdVurdering>,
     vedtatteVurderingerDto: List<HelseoppholdDto>
 ): List<InstitusjonsoppholdDto> {
-    val behovOpphold = oppholdInfo.segmenter().mapNotNull { segment ->
-        val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-        val oppholdFra = dto.oppholdFra
-        val avsluttetDato = dto.avsluttetDato
+    val segmenter = oppholdInfo.segmenter().sortedBy { it.periode.fom }
+    val kjeder = grupperSammenhengendeSegmenter(segmenter)
+
+    val behovOpphold = kjeder.flatMap { kjede ->
+        val kjedePeriode = Periode(kjede.first().periode.fom, kjede.last().periode.tom)
 
         val harUavklartOpphold = behovPerioder.segmenter().any { periode ->
             val fom = periode.periode.fom
             val tom = periode.periode.tom
-            (oppholdFra <= tom && avsluttetDato >= fom)
+            (kjedePeriode.fom <= tom && kjedePeriode.tom >= fom)
         }
-        if (harUavklartOpphold) dto else null
+
+        if (harUavklartOpphold) kjede.map { InstitusjonsoppholdDto.institusjonToDto(it) } else emptyList()
     }
 
     val vedtatteOpphold = vedtatteVurderingerDto
@@ -313,6 +316,25 @@ fun hentOppholdSomSkalVurderes(
         }.flatten()
 
     return (behovOpphold + vedtatteOpphold).distinctBy { it.oppholdId }
+}
+
+// Grupperer sortere segmenter som er sammenhengende (tilstøtende eller overlappende) i kjeder.
+// Merk: byggTidslinjeForInstitusjonsopphold justerer allerede tom med -1 dag ved overlapp,
+// så "tilstøtende" betyr her at neste segment starter senest dagen etter forrige slutter.
+private fun <T> grupperSammenhengendeSegmenter(
+    segmenter: List<Segment<T>>
+): List<List<Segment<T>>> {
+    return segmenter.fold(mutableListOf<MutableList<Segment<T>>>()) { kjeder, segment ->
+        val sisteKjede = kjeder.lastOrNull()
+        val forrige = sisteKjede?.lastOrNull()
+
+        if (forrige != null && !segment.periode.fom.isAfter(forrige.periode.tom.plusDays(1))) {
+            sisteKjede.add(segment)
+        } else {
+            kjeder.add(mutableListOf(segment))
+        }
+        kjeder
+    }
 }
 
 // Public for testing

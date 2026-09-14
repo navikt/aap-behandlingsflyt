@@ -21,6 +21,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -207,6 +208,35 @@ class InstitusjonApiTest {
                 vurderinger = emptyList(),
                 status = OppholdVurderingDto.GODKJENT
             )
+
+        @Test
+        fun `sammenhengende opphold skal begge inkluderes selv om kun det siste isolert overlapper behovsperioden`() {
+            val oppholdA = Segment(
+                Periode(
+                    4 november 2025,
+                    7 januar 2026
+                ), // tom justert -1 dag, som byggTidslinjeForInstitusjonsopphold gjør
+                Institusjon(Institusjonstype.HS, Oppholdstype.H, "12345", "St. Mungos Hospital")
+            )
+            val oppholdB = Segment(
+                Periode(8 januar 2026, 1 juli 2026),
+                Institusjon(Institusjonstype.HS, Oppholdstype.D, "67890", "Helgelandssykehus Dialyse")
+            )
+            val oppholdInfo = Tidslinje(listOf(oppholdA, oppholdB))
+
+            val behovPerioder = Tidslinje(
+                listOf(
+                    Segment(
+                        Periode(22 januar 2026, Tid.MAKS),
+                        InstitusjonsoppholdVurdering(helse = HelseOpphold(OppholdVurdering.UAVKLART))
+                    )
+                )
+            )
+
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
+
+            assertThat(resultat).hasSize(2)
+        }
 
         // -------------------------------------------------------------------------
         // Ingen opphold / ingen behov
