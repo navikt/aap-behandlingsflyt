@@ -28,31 +28,6 @@ data class Sykdomsvurdering(
     override val tom: LocalDate? = vurderingenGjelderTil
 
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
-        if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
-            return false
-        }
-
-        if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
-            return false
-        }
-
-        if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI
-            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
-        ) {
-            return false
-        }
-
-        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
-            && !erNedsettelseIArbeidsevneMerEnnHalvparten
-            && harYrkesskadeRegistrert
-            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
-        ) {
-            return false
-        }
-        return true
-    }
-
-    fun erKonsistentForSykdomVisAlleSykdomssteg(harYrkesskadeRegistrert: Boolean): Boolean {
 
         if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
             return false
