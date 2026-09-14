@@ -1,26 +1,22 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.bistand
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 
-class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<BistandFaktagrunnlag> {
-    private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+object Bistandsvilkåret : Vilkårsvurderer<BistandFaktagrunnlag> {
+    override val vilkårtype: Vilkårtype = Vilkårtype.BISTANDSVILKÅRET
 
-    override fun vurder(grunnlag: BistandFaktagrunnlag) {
+    override fun vurder(faktagrunnlag: BistandFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
         val bistandvurderingTidslinje =
-            grunnlag.bistandGrunnlag?.somBistandsvurderingstidslinje(grunnlag.sisteDagMedMuligYtelse).orEmpty()
+            faktagrunnlag.bistandGrunnlag?.somBistandsvurderingstidslinje(faktagrunnlag.sisteDagMedMuligYtelse).orEmpty()
 
-        val tidslinje =
-            bistandvurderingTidslinje.map { bistandVurdering -> opprettVilkårsvurdering(bistandVurdering, grunnlag) }
-
-        vilkår.leggTilVurderinger(tidslinje)
+        return bistandvurderingTidslinje.map { bistandVurdering -> opprettVilkårsvurdering(bistandVurdering, faktagrunnlag) }
     }
 
     private fun opprettVilkårsvurdering(

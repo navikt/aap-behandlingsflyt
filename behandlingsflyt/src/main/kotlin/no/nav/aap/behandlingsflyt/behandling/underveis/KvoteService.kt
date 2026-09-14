@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -10,14 +13,30 @@ import java.time.LocalDateTime
 
 class KvoteService(
     private val behandlingRepository: BehandlingRepository,
+    private val kravRepository: KravRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
     )
 
-    /* Kvoter som skal brukes i alle nye og åpne behandlinger. */
-    fun gjeldendeKvoter(): Kvoter {
-        return standardKvoter
+    /** Kvoter som skal brukes i alle nye og åpne behandlinger.
+     *
+     * Hvis behandlingen har en gjeldende [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav]-vurdering,
+     * overstyrer feltet resterendeKvoteOrdinaer på denne vurderingen [Kvoter.ordinærkvote]. Dette brukes for saker som er
+     * migrert fra Arena, der gjenstående kvote ved migreringstidspunktet skal legges til grunn i stedet for standardkvoten.
+     * */
+    fun gjeldendeKvoter(behandlingId: BehandlingId): Kvoter {
+        val migrertKrav = kravRepository.hentHvisEksisterer(behandlingId)?.gjeldendeMigrertKrav()
+
+        return if (migrertKrav != null) {
+            Kvoter(
+                ordinærkvote = Hverdager(migrertKrav.resterendeKvoteOrdinær),
+                sykepengeerstatningkvote = standardKvoter.sykepengeerstatningkvote,
+            )
+        } else {
+            standardKvoter
+        }
     }
 
     /** Kvoter som ble brukt i en potensielt historisk behandling.
@@ -35,7 +54,7 @@ class KvoteService(
                 sykepengeerstatningkvote = 130,
             )
         } else {
-            gjeldendeKvoter()
+            gjeldendeKvoter(behandling.id)
         }
     }
 

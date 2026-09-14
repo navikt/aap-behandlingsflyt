@@ -67,7 +67,6 @@ open class FakeUnleashBaseWithDefaultDisabled(
 object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
-        BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BrevtyperTilNyBrevbygger to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
@@ -88,7 +87,8 @@ object LokalUnleash : FakeUnleashBase(
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
-        BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true
+        BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true,
+        BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom to true
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

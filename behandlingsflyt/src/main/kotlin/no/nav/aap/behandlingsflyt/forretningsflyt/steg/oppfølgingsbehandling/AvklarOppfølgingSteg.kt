@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
@@ -34,6 +35,7 @@ class AvklarOppfølgingSteg(
     private val mottaDokumentService: MottaDokumentService,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val trukketSøknadService: TrukketSøknadService
 ) :
     BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -85,6 +87,12 @@ class AvklarOppfølgingSteg(
             }
 
             KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> {
+                val ytelsesbehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(kontekst.sakId)
+                if (ytelsesbehandling != null && trukketSøknadService.søknadErTrukket(ytelsesbehandling.id)) {
+                    log.info("Søknad er trukket for sak ${kontekst.sakId}, oppretter ikke ny behandling fra oppfølgingsbehandling.")
+                    return
+                }
+
                 val vurderingsbehov = grunnlag.opplysningerTilRevurdering
                 log.info("Oppretter ny behandling med vurderingsbehov $vurderingsbehov for sak ${kontekst.sakId}.")
                 val behandling = behandlingService.finnEllerOpprettOrdinærBehandling(
@@ -118,6 +126,7 @@ class AvklarOppfølgingSteg(
                 mottaDokumentService = MottaDokumentService(repositoryProvider.provide()),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 avklaringsbehovRepository = repositoryProvider.provide(),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider)
             )
         }
 

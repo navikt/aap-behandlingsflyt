@@ -50,7 +50,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 class AvklarOppfølgingStegTest {
     private val oppfølgingsBehandlingRepository = mockk<OppfølgingsBehandlingRepository>()
@@ -63,6 +63,7 @@ class AvklarOppfølgingStegTest {
     private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
     private val behandlingRepository = mockk<BehandlingRepository>()
     private val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
+    private val trukketSøknadService = mockk<TrukketSøknadService>(relaxed = true)
 
     private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private val gatewayProvider = createGatewayProvider {
@@ -96,6 +97,8 @@ class AvklarOppfølgingStegTest {
     @BeforeEach
     fun setup() {
         every { behandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
+        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(any()) } returns behandling
+        every { trukketSøknadService.søknadErTrukket(any()) } returns false
 
         every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any()) } returns BehandletOppfølgingsOppgave(
             datoForOppfølging = LocalDate.now().plusDays(7),
@@ -217,6 +220,7 @@ class AvklarOppfølgingStegTest {
             mottaDokumentService = mottaDokumentService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = avklaringsbehovRepository,
+            trukketSøknadService = trukketSøknadService
         )
 
         val kontekst = flytKontekstMedPerioder {
