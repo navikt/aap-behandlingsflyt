@@ -25,6 +25,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class DatadelingBehandlingJobbUtfører(
     private val apiInternGateway: ApiInternGateway,
@@ -44,7 +45,7 @@ class DatadelingBehandlingJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        val (behandlingId, _) = input.payload<Pair<BehandlingId, Any>>()
+        val (behandlingId, _) = input.payload<Pair<BehandlingId, LocalDateTime?>>()
         val behandling = behandlingRepository.hent(behandlingId)
 
         if (behandling.typeBehandling() !in listOf(
