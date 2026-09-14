@@ -703,6 +703,7 @@ open class AbstraktFlytOrkestratorTest(
         erStudent: Boolean = false
     ): Behandling {
         val harNedsattArbeidsevne = when {
+            erStudent -> ArbeidsevneNedsattValg.NEI_MEN_STUDENT
             vissVarighet == false -> ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
             erOppfylt -> ArbeidsevneNedsattValg.JA
             else -> ArbeidsevneNedsattValg.NEI
@@ -714,8 +715,13 @@ open class AbstraktFlytOrkestratorTest(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = erOppfylt,
-                        erSkadeSykdomEllerLyteVesentligdel = true.takeIf { erOppfylt },
+                        erSkadeSykdomEllerLyteVesentligdel = when {
+                            erStudent -> null
+                            erOppfylt -> true
+                            else -> null
+                        },
                         erNedsettelseIArbeidsevneMerEnnHalvparten = when {
+                            erStudent -> null
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null -> false
                             erOppfylt -> true
                             else -> null

@@ -450,7 +450,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         val startDato = sak.rettighetsperiode.fom
 
         førstegangsbehandling
-            .løsSykdom(vurderingGjelderFra = startDato, erStudent = true, erOppfylt = true )
+            .løsSykdom(vurderingGjelderFra = startDato, erStudent = true, erOppfylt = true)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
