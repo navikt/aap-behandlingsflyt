@@ -21,6 +21,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
@@ -82,11 +84,12 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     }
 
     private fun hentInstitusjonsopphold(sak: Sak): List<Institusjonsopphold> {
-        return institusjonsoppholdRegisterGateway
+        val gyldigeOpphold = institusjonsoppholdRegisterGateway
             .innhent(sak.person)
             .filter {
                 try {
-                    it.periode().overlapper(sak.rettighetsperiode)
+                    it.periode()
+                    true
                 } catch (e: IllegalArgumentException) {
                     logger.error(
                         "Ugyldig periode for institusjonsopphold funnet i sak ${sak.id} og ignoreres (startdato=${it.startdato}, sluttdato=${it.sluttdato}",
@@ -95,6 +98,8 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
                     false
                 }
             }
+
+        return finnRelevanteOpphold(gyldigeOpphold, sak.rettighetsperiode)
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
@@ -135,6 +140,41 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         ): Boolean {
             val oppholdeneFraRegister = Oppholdene(opphold = institusjonsopphold.map { it.tilInstitusjonSegment() })
             return eksisterendeGrunnlag == null || eksisterendeGrunnlag.oppholdene != oppholdeneFraRegister
+        }
+
+        private data class SammenhengendeOpphold(val opphold: List<Institusjonsopphold>, val periode: Periode)
+
+        fun finnRelevanteOpphold(
+            alleOpphold: List<Institusjonsopphold>,
+            rettighetsperiode: Periode
+        ): List<Institusjonsopphold> {
+            return utledGrupperMedSammenhengendeOpphold(alleOpphold)
+                .filter { it.periode.overlapper(rettighetsperiode) }
+                .flatMap { it.opphold }
+        }
+
+        private fun utledGrupperMedSammenhengendeOpphold(
+            alleOpphold: List<Institusjonsopphold>
+        ): List<SammenhengendeOpphold> {
+            return alleOpphold
+                .sortedBy { it.startdato }
+                .fold(mutableListOf()) { grupper, opphold ->
+                    val sluttdato = opphold.sluttdato ?: Tid.MAKS
+                    val siste = grupper.lastOrNull()
+
+                    when {
+                        siste != null && !opphold.startdato.isAfter(siste.periode.tom) ->
+                            grupper[grupper.lastIndex] = SammenhengendeOpphold(
+                                opphold = siste.opphold + opphold,
+                                periode = Periode(siste.periode.fom, maxOf(siste.periode.tom, sluttdato))
+                            )
+
+                        else ->
+                            grupper += SammenhengendeOpphold(listOf(opphold), Periode(opphold.startdato, sluttdato))
+                    }
+
+                    grupper
+                }
         }
     }
 }
