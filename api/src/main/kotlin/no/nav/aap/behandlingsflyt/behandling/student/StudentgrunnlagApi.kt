@@ -32,7 +32,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
             getGrunnlag<BehandlingReferanse, StudentGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                påkrevdRolle = Definisjon.AVKLAR_STUDENT.løsesAv
+                påkrevdRolle = Definisjon.AVKLAR_STUDENT_V2.løsesAv
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -72,7 +72,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
                         sisteVedtatteVurderinger = sisteVedtatte,
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
-                        ikkeRelevantePerioder = emptyList(/* Steget bruker ikke periodsert avkalringsbehov, så opplysningene er ikke lett tilgjengelig.*/),
+                        ikkeRelevantePerioder = emptyList() //TODO: Utled,
                     )
                 }
 

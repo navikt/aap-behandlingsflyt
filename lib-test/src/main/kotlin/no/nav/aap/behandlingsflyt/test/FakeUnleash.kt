@@ -67,19 +67,15 @@ open class FakeUnleashBaseWithDefaultDisabled(
 object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
-        BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BrevtyperTilNyBrevbygger to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
-        BehandlingsflytFeature.StudentV2 to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
-        BehandlingsflytFeature.BackfillSakstatusDatadeling to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
-        BehandlingsflytFeature.MotorV2 to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
         // --- Krav ---
@@ -91,8 +87,8 @@ object LokalUnleash : FakeUnleashBase(
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
-        BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring to true,
-        BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true
+        BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true,
+        BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom to true
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

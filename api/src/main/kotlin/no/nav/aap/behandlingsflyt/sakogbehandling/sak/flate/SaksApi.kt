@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -68,13 +67,16 @@ fun NormalOpenAPIRoute.saksApi(
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
     val ansattInfoService = AnsattInfoService(gatewayProvider)
 
+    /**
+     * Kalles av postmottak.
+     */
     route("/api/sak").tag(Tags.Sak) {
-        route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
+        route("/ekstern/finn").authorizedPost<Unit, List<SaksInfoTilPostmottak>, FinnSakForIdentDTO>(
             AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))
         ) { _, dto ->
-            val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+            val saker: List<SaksInfoTilPostmottak> = dataSource.transaction(readOnly = true) { connection ->
                 SakOgBehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                    .finnSaksinfo(Ident(dto.ident))
+                    .finnsSaksInfoTilPostmottak(Ident(dto.ident))
             }
             respond(saker)
         }
@@ -378,9 +380,10 @@ fun NormalOpenAPIRoute.saksApi(
                 val behandlinger = dataSource.transaction { connection ->
                     val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
                     val behandlingRepository = repositoryRegistry.provider(connection).provide<BehandlingRepository>()
-                    val sakId = sakRepository.hent(Saksnummer(saksnummer.saksnummer)).id
+                    val sak = sakRepository.hentHvisFinnes(Saksnummer(saksnummer.saksnummer))
+                        ?: throw VerdiIkkeFunnetException("Fant ikke sak med saksnummer ${saksnummer.saksnummer}")
 
-                    behandlingRepository.hentAlleFor(sakId, behandlingstypeFilter = listOf(typeBehandling))
+                    behandlingRepository.hentAlleFor(sak.id, behandlingstypeFilter = listOf(typeBehandling))
                 }
                 respond(
                     behandlinger.map { BehandlingAvTypeDTO(it.referanse.referanse, it.opprettetTidspunkt) }

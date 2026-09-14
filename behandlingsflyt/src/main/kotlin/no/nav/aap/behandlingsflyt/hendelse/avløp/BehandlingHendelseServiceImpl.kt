@@ -261,7 +261,8 @@ class BehandlingHendelseServiceImpl(
     private fun MottattDokument.tilMottattDokumentDto(): MottattDokumentDto =
         MottattDokumentDto(
             type = this.type,
-            referanse = this.referanse
+            referanse = this.referanse,
+            mottattTidspunkt = this.mottattTidspunkt
         )
 }
 

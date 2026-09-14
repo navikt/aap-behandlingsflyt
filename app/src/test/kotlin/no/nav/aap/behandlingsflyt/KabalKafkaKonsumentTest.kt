@@ -100,12 +100,6 @@ class KabalKafkaKonsumentTest {
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
         }
 
-        val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
-        produserHendelse(
-            listOf(Pair("1", DefaultJsonMapper.toJson(hendelse))),
-            testTopic
-        )
-
         val konsument = KabalKafkaKonsument(
             testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
             dataSource = dataSource,
@@ -117,6 +111,12 @@ class KabalKafkaKonsumentTest {
         val pollThread = startConsumerThread {
             konsument.konsumer()
         }
+
+        val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
+        produserHendelse(
+            listOf(Pair("1", DefaultJsonMapper.toJson(hendelse))),
+            testTopic
+        )
 
         try {
             awaitAtMost("Konsumenten mottok ikke forventet Kabal-melding") {
@@ -174,12 +174,6 @@ class KabalKafkaKonsumentTest {
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
         }
 
-        val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
-        produserHendelse(
-            listOf(Pair("1", "blabla"), Pair("2", DefaultJsonMapper.toJson(hendelse))),
-            testTopic
-        )
-
         val konsument = KabalKafkaKonsument(
             testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
             dataSource = dataSource,
@@ -191,6 +185,12 @@ class KabalKafkaKonsumentTest {
         val pollThread = startConsumerThread {
             konsument.konsumer()
         }
+
+        val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
+        produserHendelse(
+            listOf(Pair("1", "blabla"), Pair("2", DefaultJsonMapper.toJson(hendelse))),
+            testTopic
+        )
 
         try {
             awaitAtMost("Konsumenten lukket seg ikke etter ugyldig melding") {

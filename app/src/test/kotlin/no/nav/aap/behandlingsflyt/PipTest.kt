@@ -78,15 +78,16 @@ class PipTest {
             }
         }
 
+        private val dataSource = initDatasource(dbConfig)
+
         @JvmStatic
         @AfterAll
         fun afterAll() {
             server.stop()
+            dataSource.close()
             postgres.close()
         }
     }
-
-    val dataSource = initDatasource(dbConfig)
 
     @Test
     fun `pip test sak`() {

@@ -6,10 +6,13 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import javax.sql.DataSource
@@ -70,6 +73,11 @@ class BackfillKrav(
                     BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 val behandlinger = behandlingService.alleYtelsesbehandlinger(sak.id)
 
+                // Saker som stammer fra behandlinger som er opprettet i forbindelse med migrering fra arena skal ikke backfilles
+                if (behandlinger.any { it.årsakTilOpprettelse === ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA }) {
+                    return@transaction
+                }
+
                 val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
                 val backfillService = BackfillKravService(postgresRepositoryRegistry.provider(connection))
 
@@ -83,12 +91,17 @@ class BackfillKrav(
                     for (behandling in behandlinger) {
                         if (sakenErFerdigBackfilled) break
                         taSkriveLåsRepository.withLåstBehandling(behandling.id) {
-                            val resultat = backfillService.backfillBehandling(sak, behandling, erNyesteBehandling = behandling == behandlinger.last())
+                            val resultat = backfillService.backfillBehandling(
+                                sak,
+                                behandlinger,
+                                behandling,
+                                erNyesteBehandling = behandling == behandlinger.last()
+                            )
                             when (resultat) {
                                 BackfillBehandlingResultat.AlleredeBackfilled -> {
                                     log.info(
                                         "Behandling ${behandling.id.toLong()} i sak ${sak.id.toLong()} " +
-                                            "hadde allerede krav – stopper backfill for saken"
+                                                "hadde allerede krav – stopper backfill for saken"
                                     )
                                     sakenErFerdigBackfilled = true
                                 }

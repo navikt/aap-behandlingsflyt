@@ -63,7 +63,7 @@ jobs:
                 **/build/reports/
                 **/build/test-results
 
-      - uses: nais/docker-build-push@8e41f1f58749b9248e376c25d33bfbdd2b1163c0 # v0
+      - uses: nais/docker-build-push@0e73849f69ff260ee27597553c0a7848ca4e9795 # v0
         id: docker-push
         with:
             team: aap # required
@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
 
   publiser-kontrakt:
@@ -131,7 +131,7 @@ jobs:
             with:
                 fetch-depth: 0
             #  Ha denne tidlig, så action kan skippe raskt om ingen endringer.
-          - uses: paulhatch/semantic-version@502226b17e3e242e4befd0a45690fcbb27dd1373 # v6.0.3
+          - uses: paulhatch/semantic-version@4d6da96a9bc3116da3613309a11ff75fba58eb8d # v6.0.4
             id: tag
             with:
                 change_path: "kontrakt/"
@@ -160,7 +160,7 @@ jobs:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             run: |
                 ./gradlew -Pversion=${{ steps.tag.outputs.version }} publish
-          - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+          - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
             if: ${{ steps.tag.outputs.version_type != 'none' }}
             id: create_release
             env:

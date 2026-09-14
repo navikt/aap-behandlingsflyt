@@ -24,17 +24,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderStudentSteg private constructor(
     private val studentRepository: StudentRepository,
-    private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         studentRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårService = VilkårService(repositoryProvider.provide()),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -42,28 +38,7 @@ class VurderStudentSteg private constructor(
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.AVKLAR_STUDENT,
-            vedtakBehøverVurdering = {
-                when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA-> {
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                (studentGrunnlag.skalVurdereStudent() || Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg) && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
-                    }
-                    VurderingType.REVURDERING -> {
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                                Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg && !unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2)
-                    }
-                    VurderingType.UTVID_VEDTAKSLENGDE,
-                    VurderingType.MIGRER_RETTIGHETSPERIODE,
-                    VurderingType.MELDEKORT,
-                    VurderingType.AUTOMATISK_BREV,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                    VurderingType.G_REGULERING,
-                    VurderingType.OVERGANG_UFORE_STANS,
-                    VurderingType.IKKE_RELEVANT ->
-                        false
-                }
-            },
+            vedtakBehøverVurdering = { false },
             erTilstrekkeligVurdert = {
                 !studentGrunnlag?.vurderinger.isNullOrEmpty()
             },

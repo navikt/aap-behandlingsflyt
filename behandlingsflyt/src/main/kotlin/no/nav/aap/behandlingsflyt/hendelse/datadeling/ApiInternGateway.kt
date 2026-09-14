@@ -41,6 +41,7 @@ interface ApiInternGateway : Gateway {
         underveisperioder: List<UnderveisperiodeDatadeling>,
         arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>,
         muligMaksdato: LocalDate?,
+        barnMedBarnetillegg: List<BarnMedBarnetillegg> = emptyList(),
     )
 
     fun sendDetaljertMeldekortListe(

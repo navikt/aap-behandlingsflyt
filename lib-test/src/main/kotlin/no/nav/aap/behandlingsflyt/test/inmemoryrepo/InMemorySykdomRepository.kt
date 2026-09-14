@@ -70,7 +70,7 @@ object InMemorySykdomRepository : SykdomRepository {
     override fun hentSykdomsvurderingerPåTidspunkt(
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime
-    ): List<Sykdomsvurdering> {
-        return emptyList()
+    ): List<Sykdomsvurdering>? {
+        return null
     }
 }

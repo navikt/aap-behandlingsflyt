@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsningV2
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -86,7 +86,7 @@ class TestScenarioOrkestrator(
     fun løsStudent(behandling: Behandling, vurderingenGjelderFra: LocalDate): Behandling {
         return løsAvklaringsBehov(
             behandling,
-            AvklarStudentLøsning(
+            AvklarStudentLøsningV2(
                 løsningerForPerioder = listOf(
                     PeriodisertStudentDto(
                         fom = vurderingenGjelderFra,
@@ -97,7 +97,8 @@ class TestScenarioOrkestrator(
                         harBehovForBehandling = true,
                         avbruttStudieDato = LocalDate.now().minusMonths(1),
                         avbruddMerEnn6Måneder = true,
-                    ))
+                    )
+                )
             )
         )
     }

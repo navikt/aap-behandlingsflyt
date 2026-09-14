@@ -29,8 +29,8 @@ object InMemoryBistandRepository : BistandRepository {
     override fun hentBistandsvurderingPåTidspunkt(
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime
-    ): List<Bistandsvurdering> {
-        return emptyList()
+    ): List<Bistandsvurdering>? {
+        return null
     }
 
     override fun kopier(

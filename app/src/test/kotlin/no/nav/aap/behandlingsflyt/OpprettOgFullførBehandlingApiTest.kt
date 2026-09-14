@@ -71,6 +71,8 @@ class OpprettOgFullførBehandlingApiTest {
             password = postgres.password,
         )
 
+        private val dataSource = initDatasource(dbConfig)
+
         private val ccClient: RestClient<InputStream> = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = AzureM2MTokenProvider,
@@ -96,6 +98,7 @@ class OpprettOgFullførBehandlingApiTest {
         @AfterAll
         fun afterAll() {
             server.stop()
+            dataSource.close()
             postgres.close()
         }
 
@@ -190,7 +193,6 @@ class OpprettOgFullførBehandlingApiTest {
 
         assertThat(andreRespons.saksnummer).isEqualTo(førstRespons.saksnummer)
 
-        val dataSource = initDatasource(dbConfig)
         dataSource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
@@ -237,7 +239,6 @@ class OpprettOgFullførBehandlingApiTest {
         assertThat(behandlingStatus?.ferdig).isTrue()
         assertThat(behandlingStatus?.behandlingStatus).isEqualTo(BehandlingStatusEnum.AVSLUTTET)
 
-        val dataSource = initDatasource(dbConfig)
         dataSource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
@@ -314,7 +315,6 @@ class OpprettOgFullførBehandlingApiTest {
 
         requireNotNull(respons) { "Ingen respons fra opprettOgFullforBehandling" }
 
-        val dataSource = initDatasource(dbConfig)
         dataSource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(respons.saksnummer))
@@ -372,7 +372,6 @@ class OpprettOgFullførBehandlingApiTest {
         val revurderingFerdig = pollRevurderingAvsluttet(førstRespons.saksnummer, antallForventet = 2)
         assertThat(revurderingFerdig).isTrue()
 
-        val dataSource = initDatasource(dbConfig)
         dataSource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(førstRespons.saksnummer))
@@ -419,7 +418,7 @@ class OpprettOgFullførBehandlingApiTest {
     }
 
     private fun pollMeldekortDokumenter(saksnummer: String) = runBlocking {
-        val dataSource = initDatasource(dbConfig)
+
         repeat(60) {
             try {
                 val (dokumenter, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
@@ -478,7 +477,6 @@ class OpprettOgFullførBehandlingApiTest {
         assertThat(behandlingStatus?.ferdig).isTrue()
         assertThat(behandlingStatus?.behandlingStatus).isEqualTo(BehandlingStatusEnum.AVSLUTTET)
 
-        val dataSource = initDatasource(dbConfig)
         dataSource.transaction { connection ->
             val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()
             val sak = sakRepo.hent(Saksnummer(saksnummer))
@@ -492,8 +490,8 @@ class OpprettOgFullførBehandlingApiTest {
     }
 
     private fun pollRevurderingAvsluttet(saksnummer: String, antallForventet: Int): Boolean = runBlocking {
-        val dataSource = initDatasource(dbConfig)
-        repeat(120) {
+
+        repeat(20) {
             try {
                 val behandlinger = dataSource.transaction(readOnly = true) { connection ->
                     val sakRepo = postgresRepositoryRegistry.provider(connection).provide<SakRepository>()

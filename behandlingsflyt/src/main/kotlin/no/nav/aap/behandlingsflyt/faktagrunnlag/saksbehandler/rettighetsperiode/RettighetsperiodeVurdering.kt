@@ -44,7 +44,8 @@ enum class RettighetsperiodeHarRett {
 
     fun tilOverstyrMuligRettFraÅrsak(): OverstyrMuligRettFraÅrsak {
         return when (this) {
-            Ja, Nei -> throw IllegalArgumentException("Mulig rett fra kan ikke utledes fra disse verdiene")
+            Nei -> throw IllegalArgumentException("Mulig rett fra kan ikke utledes fra disse verdiene")
+            Ja -> OverstyrMuligRettFraÅrsak.Ukjent
             HarRettIkkeIStandTilÅSøkeTidligere -> OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere
             HarRettMisvisendeOpplysninger -> OverstyrMuligRettFraÅrsak.MisvisendeOpplysninger
         }

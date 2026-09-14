@@ -116,10 +116,7 @@ class TidligereVurderingerImpl(
                         .orEmpty()
 
                 tidligereVurderinger.leftJoin(sykdomstidslinje) { segmentPeriode, foreløpigUtfall, sykdomsvurdering ->
-                    val sykdomDefinitivtAvslag = sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == false
-                            && !sykdomsvurdering.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()
-                            && !sykdomsvurdering.skalVurderesForSykepengeerstatning()
-                            && !sykdomsvurdering.potensieltOppfyltStudent()
+                    val sykdomDefinitivtAvslag = sykdomsvurdering?.erIkkeOppfylt() == true
                             && !potensieltOppfyltOvergangArbeid(
                         kontekst.rettighetsperiode,
                         segmentPeriode,
@@ -261,10 +258,7 @@ class TidligereVurderingerImpl(
 
         val listeMedSjekker = definerteSjekker
             .let { sjekker ->
-                // skip gammel student-sjekk når nytt steg er påskrudd
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.StudentV2))
-                    sjekker.filterNot { it.steg == StegType.AVKLAR_STUDENT }
-                else sjekker
+                sjekker.filterNot { it.steg == StegType.AVKLAR_STUDENT }
             }
             .let { sjekker ->
                 if (unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27))

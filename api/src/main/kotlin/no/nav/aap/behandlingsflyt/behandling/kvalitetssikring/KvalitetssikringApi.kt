@@ -13,14 +13,19 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Aksjon
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.DefinisjonEndring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.Historikk
 import no.nav.aap.behandlingsflyt.behandling.totrinnsvurdering.TotrinnsVurderingResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -29,6 +34,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Interval
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -57,9 +63,14 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val avklaringsbehovRepository =
                         repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandling.id)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
+                    val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
                     val avklaringsbehovene =
                         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val flyt = behandling.flyt()
@@ -80,6 +91,12 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                         harGjortVilkårsvurderingerPåBehandling = brukerHarGjortVilkårsvurderingerPåBehandling(
                             avklaringsbehovene,
                             bruker()
+                        ),
+                        kvalitetssikrerFatterVedtak = unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
+                                && utledKvalitetssikrerFatterVedtak(
+                            sykdomGrunnlag,
+                            rettighetsperiode,
+                            behandlingService.utledFaktiskBehandlingstype(behandling)
                         )
                     )
                 }
@@ -87,6 +104,16 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
             }
         }
     }
+}
+
+private fun utledKvalitetssikrerFatterVedtak(
+    sykdomGrunnlag: SykdomGrunnlag?,
+    rettighetsperiode: Periode,
+    typeBehandling: TypeBehandling
+): Boolean {
+    return sykdomGrunnlag != null && typeBehandling == TypeBehandling.Førstegangsbehandling && sykdomGrunnlag.avslagSykdomForHelePerioden(
+        rettighetsperiode
+    )
 }
 
 private fun utledHarTilgangTilÅSaksbehandle(

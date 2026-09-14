@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
@@ -12,18 +11,28 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktSe
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -32,6 +41,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.random.Random
@@ -41,17 +51,21 @@ class FatteVedtakStegTest {
     val klageresultatUtleder = mockk<KlageresultatUtleder>(relaxed = true)
     val tidligereVurderinger = mockk<TidligereVurderinger>()
     val trekkKlageService = mockk<TrekkKlageService>()
-    val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
     val trukketSøknadService = mockk<TrukketSøknadService>()
     val vedtakService = mockk<VedtakService>(relaxed = true)
     val virkningstidspunktService = mockk<VirkningstidspunktService>(relaxed = true)
     val avbrytAktivitetspliktbehandlingService = mockk<AvbrytAktivitetspliktbehandlingService>()
+    val sykdomRepository = mockk<SykdomRepository>()
+    val behandlingService = mockk<BehandlingService>()
 
     @BeforeEach
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
         every { avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(any()) } returns false
+        every { trukketSøknadService.søknadErTrukket(any()) } returns false
+        every { sykdomRepository.hentHvisEksisterer(any()) } returns null
+        every { behandlingService.utledFaktiskBehandlingstype(any<BehandlingId>()) } returns TypeBehandling.Førstegangsbehandling
     }
 
     private fun kontekst(
@@ -72,12 +86,20 @@ class FatteVedtakStegTest {
         tidligereVurderinger = tidligereVurderinger,
         klageresultatUtleder = klageresultatUtleder,
         trekkKlageService = trekkKlageService,
-        avklaringsbehovService = avklaringsbehovService,
+        avklaringsbehovService = AvklaringsbehovService(
+            inMemoryRepositoryProvider,
+            createGatewayProvider {
+                register<BeslutterFakeUnleash>()
+            }
+        ),
         avbrytRevurderingService = avbrytRevurderingService,
         trukketSøknadService = trukketSøknadService,
         vedtakService = vedtakService,
         virkningstidspunktService = virkningstidspunktService,
         avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService,
+        sykdomRepository = sykdomRepository,
+        unleashGateway = BeslutterFakeUnleash,
+        behandlingService = behandlingService
     )
 
     @Test
@@ -109,6 +131,163 @@ class FatteVedtakStegTest {
         val resultat = steg().utfør(kontekst)
         assertThat(resultat).isEqualTo(Fullført)
     }
+
+    @Test
+    fun `Skal hoppe over besluttersteget hvis førstegangsbehandling med rent avslag 11-5`() {
+        val nå = LocalDateTime.now()
+        val kontekst = kontekst(
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD
+        )
+        every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
+
+        every { sykdomRepository.hentHvisEksisterer(kontekst.behandlingId) } returns SykdomGrunnlag(
+            yrkesskadevurdering = null,
+            sykdomsvurderinger = listOf(
+                Sykdomsvurdering(
+                    begrunnelse = "syk",
+                    vurderingenGjelderFra = kontekst.rettighetsperiode.fom,
+                    vurderingenGjelderTil = kontekst.rettighetsperiode.tom,
+                    harSkadeSykdomEllerLyte = false,
+                    diagnose = null,
+                    vurdertAv = Bruker("veileder"),
+                    vurdertIBehandling = kontekst.behandlingId,
+                    opprettet = Instant.now(),
+                    erSkadeSykdomEllerLyteVesentligdel = false,
+                    erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                    yrkesskadeBegrunnelse = null,
+                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI
+                )
+            )
+        )
+
+        opprettAvklaringsbehovMedEndringer(
+            behandlingId = kontekst.behandlingId,
+            definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
+            endringer = listOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    tidsstempel = nå.plusMinutes(1),
+                    begrunnelse = "Begrunnelse",
+                    endretAv = Bruker("Ident"),
+                ),
+                Endring(
+                    status = Status.AVSLUTTET,
+                    tidsstempel = nå.plusMinutes(2),
+                    begrunnelse = "Begrunnelse",
+                    endretAv = Bruker("Ident"),
+                ),
+            )
+        )
+
+        val resultat = steg().utfør(kontekst)
+        assertThat(
+            InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                .hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
+        ).isNull()
+        verify(exactly = 1) { vedtakService.lagreVedtak(kontekst.behandlingId, any(), any()) }
+        assertThat(resultat).isEqualTo(Fullført)
+    }
+
+    @Test
+    fun `Skal ikke hoppe over besluttersteget hvis avslag 11-5 ikke dekker hele perioden`() {
+        val nå = LocalDateTime.now()
+        val kontekst = kontekst(
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD
+        )
+        every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
+
+        every { sykdomRepository.hentHvisEksisterer(kontekst.behandlingId) } returns SykdomGrunnlag(
+            yrkesskadevurdering = null,
+            sykdomsvurderinger = listOf(
+                Sykdomsvurdering(
+                    begrunnelse = "syk",
+                    vurderingenGjelderFra = kontekst.rettighetsperiode.fom.plusDays(4),
+                    vurderingenGjelderTil = kontekst.rettighetsperiode.tom,
+                    harSkadeSykdomEllerLyte = false,
+                    diagnose = null,
+                    vurdertAv = Bruker("veileder"),
+                    vurdertIBehandling = kontekst.behandlingId,
+                    opprettet = Instant.now(),
+                    erSkadeSykdomEllerLyteVesentligdel = false,
+                    erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                    yrkesskadeBegrunnelse = null,
+                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.NEI
+                )
+            )
+        )
+
+        opprettAvklaringsbehovMedEndringer(
+            behandlingId = kontekst.behandlingId,
+            definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
+            endringer = listOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    tidsstempel = nå.plusMinutes(1),
+                    begrunnelse = "Begrunnelse",
+                    endretAv = Bruker("Ident"),
+                ),
+                Endring(
+                    status = Status.AVSLUTTET,
+                    tidsstempel = nå.plusMinutes(2),
+                    begrunnelse = "Begrunnelse",
+                    endretAv = Bruker("Ident"),
+                ),
+            )
+        )
+
+        val resultat = steg().utfør(kontekst)
+        assertThat(
+            InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                .hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)?.status()
+        ).isEqualTo(
+            Status.OPPRETTET
+        )
+        assertThat(resultat).isEqualTo(Fullført)
+    }
+
+    @Test
+    fun `Ikke hopp over beslutter hvis sykdom ikke er vurdert`() {
+        val nå = LocalDateTime.now()
+        val kontekst = kontekst(
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD
+        )
+        every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
+
+        every { sykdomRepository.hentHvisEksisterer(kontekst.behandlingId) } returns null
+
+        opprettAvklaringsbehovMedEndringer(
+            behandlingId = kontekst.behandlingId,
+            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
+            endringer = listOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    tidsstempel = nå.plusMinutes(1),
+                    begrunnelse = "Begrunnelse",
+                    endretAv = Bruker("Ident"),
+                ),
+                Endring(
+                    status = Status.AVSLUTTET,
+                    tidsstempel = nå.plusMinutes(2),
+                    begrunnelse = "Begrunnelse",
+                    endretAv = Bruker("Ident"),
+                ),
+            )
+        )
+        val resultat = steg().utfør(kontekst)
+        assertThat(
+            InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                .hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)?.status()
+        ).isEqualTo(
+            Status.OPPRETTET
+        )
+        assertThat(resultat).isEqualTo(Fullført)
+    }
+
 
     @ParameterizedTest
     @EnumSource(TypeBehandling::class, mode = Mode.INCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
@@ -387,3 +566,10 @@ class FatteVedtakStegTest {
             .maxOf { it.tidsstempel }
     }
 }
+
+object BeslutterFakeUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
+        BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom
+    )
+)

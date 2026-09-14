@@ -27,11 +27,11 @@ object UnleashGatewayImpl : UnleashGateway {
     }
 
     @WithSpan
-    override fun isEnabled(featureToggle: FeatureToggle): Boolean = unleash?.isEnabled(featureToggle.key()) ?: false
+    override fun isEnabled(featureToggle: FeatureToggle): Boolean = unleash?.isEnabled(featureToggle.key(), featureToggle.default) ?: false
 
     @WithSpan
     override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker): Boolean =
-        unleash?.isEnabled(featureToggle.key(), UnleashContext.builder().userId(ident.ident).build()) ?: false
+        unleash?.isEnabled(featureToggle.key(), UnleashContext.builder().userId(ident.ident).build(), featureToggle.default) ?: false
 
     @WithSpan
     override fun isEnabled(featureToggle: FeatureToggle, ident: Bruker, typeBrev: TypeBrev): Boolean =
@@ -40,7 +40,8 @@ object UnleashGatewayImpl : UnleashGateway {
             UnleashContext.builder()
                 .userId(ident.ident)
                 .addProperty("typeBrev", typeBrev.name)
-                .build()
+                .build(),
+            featureToggle.default,
         ) ?: false
 
     @WithSpan
@@ -52,7 +53,8 @@ object UnleashGatewayImpl : UnleashGateway {
             featureToggle.key(),
             UnleashContext.builder()
                 .addProperty("typeBrev", typeBrev.name)
-                .build()
+                .build(),
+            featureToggle.default,
         )
             ?: false
 

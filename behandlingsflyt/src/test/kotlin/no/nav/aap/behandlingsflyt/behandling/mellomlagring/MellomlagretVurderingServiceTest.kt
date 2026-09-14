@@ -65,10 +65,7 @@ class MellomlagretVurderingServiceTest {
     fun `skal returnere mellomlagrede vurderinger for gitt rolle før gitt steg`() {
         dataSource.transaction { connection ->
             val (behandling, service) = opprettBehandlingOgService(connection)
-
-            // AVKLAR_STUDENT er før gitt steg men løses av SAKSBEHANDLER_NASJONAL – skal IKKE returneres
-            lagreMellomlagretVurdering(connection, behandling.id, Definisjon.AVKLAR_STUDENT.kode)
-
+            
             // AVKLAR_SYKDOM er før gitt steg, løses av SAKSBEHANDLER_OPPFOLGING, skal returneres
             lagreMellomlagretVurdering(connection, behandling.id, Definisjon.AVKLAR_SYKDOM.kode)
 

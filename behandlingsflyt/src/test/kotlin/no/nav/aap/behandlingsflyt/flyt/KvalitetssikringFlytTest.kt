@@ -351,6 +351,5 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
 object UnleashMedKSToggle : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.IngenValidering,
-        BehandlingsflytFeature.HoppOverKvalitetssikringVedIngenEndring
     )
 )

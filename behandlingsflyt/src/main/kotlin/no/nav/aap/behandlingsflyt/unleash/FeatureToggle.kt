@@ -2,23 +2,24 @@ package no.nav.aap.behandlingsflyt.unleash
 
 interface FeatureToggle {
     fun key(): String
+
+    /** Hva feature skal være, hvis unleash er utilgjengelig. */
+    val default: Boolean
 }
 
-enum class BehandlingsflytFeature : FeatureToggle {
+enum class BehandlingsflytFeature(
+    override val default: Boolean = false,
+): FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
-    NyBrevbyggerV3,
     BrevtyperTilNyBrevbygger,
     Under18,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
     SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
-    StudentV2,
     BackfillStansOpphor,
-    BackfillSakstatusDatadeling,
     VentStatusForTilbakekrevingIBehandlingsflyt,
-    MotorV2,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     GenererVilkarsvurderingOppsummeringPDF,
 
@@ -34,8 +35,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Avslag11_27,
     SkalViseAlleSykdomssteg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
-    HoppOverKvalitetssikringVedIngenEndring,
-    BosattStatsborgerskapGjennomslipp
+    BosattStatsborgerskapGjennomslipp,
+    HoppOverBeslutterVedAvslagSykdom
     ;
 
     override fun key(): String = name

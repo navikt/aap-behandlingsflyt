@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -268,21 +267,6 @@ class TestBehandlingFullføringService(
                     begrunnelse = "Tilleggsopplysning",
                 )
             }.toSet()
-        )
-
-        Definisjon.AVKLAR_STUDENT -> AvklarStudentLøsning(
-            løsningerForPerioder = listOf(
-                PeriodisertStudentDto(
-                    fom = sak.rettighetsperiode.fom,
-                    begrunnelse = "Er student ok",
-                    harAvbruttStudie = true,
-                    godkjentStudieAvLånekassen = true,
-                    avbruttPgaSykdomEllerSkade = true,
-                    harBehovForBehandling = true,
-                    avbruttStudieDato = LocalDate.now().minusMonths(1),
-                    avbruddMerEnn6Måneder = true,
-                )
-            )
         )
 
         Definisjon.AVKLAR_SYKDOM -> AvklarSykdomLøsning(

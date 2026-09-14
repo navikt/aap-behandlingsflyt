@@ -102,10 +102,13 @@ class MigrerFraArenaApiTest {
             }
         }
 
+        private val dataSource = initDatasource(dbConfig)
+
         @JvmStatic
         @AfterAll
         fun afterAll() {
             server.stop()
+            dataSource.close()
             postgres.close()
         }
     }
@@ -179,7 +182,6 @@ class MigrerFraArenaApiTest {
     private fun pollMigreringFraArenaBehandlingOpprettet(
         saksnummer: String,
     ) = runBlocking {
-        val dataSource = initDatasource(dbConfig)
         repeat(30) {
             try {
                 val behandling = dataSource.transaction(readOnly = true) { connection ->

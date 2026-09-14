@@ -342,7 +342,7 @@ WHERE BEREGNING_ID = ?
             SELECT b.BEREGNINGSTYPE, b.ID
             FROM BEREGNINGSGRUNNLAG bg
             INNER JOIN BEREGNING b ON bg.BEREGNING_ID = b.ID
-            WHERE bg.AKTIV is true AND bg.BEHANDLING_ID = ?
+            WHERE bg.AKTIV = true AND bg.BEHANDLING_ID = ?
             """.trimIndent()
         ) {
             setParams {

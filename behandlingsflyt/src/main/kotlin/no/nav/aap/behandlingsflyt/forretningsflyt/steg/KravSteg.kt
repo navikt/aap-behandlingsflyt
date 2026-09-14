@@ -55,6 +55,20 @@ class KravSteg(
             return Fullført
         }
 
+        // Migreringssaker har egne krav, kunne vært i den normale switch-casen, men vi ønsker at disse alltid
+        // skal gå gjennom selv om feature-toggelen under er skrudd av så lenge krav-steget er skrudd på
+        // så midlertidig legges koden fort sette her for å være utenfor feature-toggelen.
+        if(kontekst.erMigreringFraArena()) {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon = Definisjon.VURDER_KRAV,
+                vedtakBehøverVurdering = { vedtakBehøverVurderingForMigrering(kontekst) },
+                erTilstrekkeligVurdert = { erTilstrekkeligVurdertForMigrering(kontekst) },
+                tilbakestillGrunnlag = { },
+                kontekst = kontekst
+            )
+            return Fullført
+        }
+
         val erManuellVurderingAktivertForSak = unleashGateway.erPåskruddForSak(
             BehandlingsflytFeature.KravManuellVurdering,
             "saksnummer"
@@ -70,7 +84,7 @@ class KravSteg(
             when (kontekst.behandlingType) {
                 TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                     when (kontekst.vurderingType) {
-                        VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGERING_FRA_ARENA -> {
+                        VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                             vurderAutomatiskHvisMulig(kontekst)
 
                             avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -82,6 +96,7 @@ class KravSteg(
                             )
                         }
 
+                        VurderingType.MIGERING_FRA_ARENA,
                         VurderingType.OVERGANG_UFORE_STANS,
                         VurderingType.MELDEKORT,
                         VurderingType.UTVID_VEDTAKSLENGDE,
@@ -110,6 +125,10 @@ class KravSteg(
         return KravValidering.erKravVurderingTilstrekkeligVurdert(søknaderIBehandling, kravVurderinger)
     }
 
+    private fun erTilstrekkeligVurdertForMigrering(kontekst: FlytKontekstMedPerioder): Boolean {
+        return !kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.isNullOrEmpty()
+    }
+
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
         val søknaderIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
@@ -117,11 +136,15 @@ class KravSteg(
         val kravVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
 
         val erAlleSøknaderIBehandlingAutomatiskVurdert =
-            søknaderIBehandling.all { søknad -> kravVurderinger.any { it.journalpostId == søknad.referanse.asJournalpostId && it.erAutomatiskVurdert() } }
+            søknaderIBehandling.all { søknad -> kravVurderinger.any { it.forJournalpostId(søknad.referanse.asJournalpostId) && it.erAutomatiskVurdert() } }
 
         return (harSøknadIBehandling && !erAlleSøknaderIBehandlingAutomatiskVurdert) || kontekst.vurderingsbehovRelevanteForSteg.contains(
             Vurderingsbehov.VURDER_KRAV
         )
+    }
+
+    private fun vedtakBehøverVurderingForMigrering(kontekst: FlytKontekstMedPerioder): Boolean {
+        return kontekst.erMigreringFraArena()
     }
 
     private fun vurderAutomatiskHvisMulig(kontekst: FlytKontekstMedPerioder) {
