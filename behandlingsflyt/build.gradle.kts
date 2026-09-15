@@ -77,7 +77,6 @@ dependencies {
     testImplementation(libs.dbtest)
     testImplementation(libs.tabletest)
     implementation(libs.motorTestUtils)
-    testImplementation(libs.bundles.junit)
 
     testImplementation(libs.testcontainersPostgres)
     constraints {
