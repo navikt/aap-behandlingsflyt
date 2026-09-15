@@ -1210,6 +1210,70 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
     }
 
     @Test
+    fun `revurdering med endret rettighetstype skal ikke overskrive manuelt overstyrt vedtakslengde automatisk`() {
+        val søknadstidspunkt = LocalDateTime.now(clock)
+        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
+        val startDato = sak.rettighetsperiode.fom
+
+        val manueltOverstyrtSluttdato = startDato.plusMonths(15)
+        val manueltOverstyrtBegrunnelse = "Vurdert vedtakslengde manuelt"
+
+        førstegangsbehandling
+            .løsSykdom(startDato, erOppfylt = true)
+            .løsBistand(startDato, erOppfylt = true)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            // Overstyrer automatisk vurdert vedtakslengde manuelt til 15 måneder
+            .løsAvklaringsBehov(
+                AvklarVedtakslengdeLøsning(
+                    løsningerForPerioder = listOf(
+                        VedtakslengdeVurderingDto(
+                            fom = startDato,
+                            tom = manueltOverstyrtSluttdato,
+                            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
+                            sluttdato = manueltOverstyrtSluttdato,
+                            begrunnelse = manueltOverstyrtBegrunnelse
+                        )
+                    )
+                )
+            )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+        // Overgang til arbeid 11 måneder ut i perioden ville, uten overstyringen, automatisk gitt en
+        // sluttdato (overgangDato + 6 måneder) som ligger etter den manuelle overstyringen på 15 måneder.
+        val overgangDato = startDato.plusMonths(11)
+
+        sak.opprettManuellRevurdering(
+            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        )
+            .løsSykdom(vurderingGjelderFra = overgangDato, erOppfylt = false)
+            .løsBistand(overgangDato, erOppfylt = false)
+            .løsOvergangArbeid(Utfall.OPPFYLT, fom = overgangDato)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .medKontekst {
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(this.behandling.id)
+
+                // Den manuelle overstyringen skal fortsatt gjelde, selv om automatisk beregning i
+                // revurderingen ville gitt en annen (senere) sluttdato
+                assertThat(vedtakslengdeGrunnlag?.vurderinger?.size).isEqualTo(2)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.sluttdato).isEqualTo(manueltOverstyrtSluttdato)
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.begrunnelse).isEqualTo(
+                    manueltOverstyrtBegrunnelse
+                )
+                assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
+            }
+    }
+
+    @Test
     fun `jobb oppretter manuell behandling når neste periode inneholder to korte perioder med bistand`() {
         val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
