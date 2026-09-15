@@ -30,6 +30,7 @@ enum class TypeBrev {
     KLAGE_MOTTATT,
     FORVALTNINGSMELDING;
 
+
     fun erVedtak(): Boolean {
         return setOf(
             VEDTAK_AVSLAG,
@@ -56,8 +57,8 @@ enum class TypeBrev {
         ).contains(this)
     }
 
-    fun erAutomatiskBrev(): Boolean {
-        return setOf(
+    companion object {
+        private val AUTOMATISK_BREV: Set<TypeBrev> = setOf(
             KLAGE_MOTTATT,
             VARSEL_OM_BESTILLING,
             FORVALTNINGSMELDING,
@@ -71,25 +72,14 @@ enum class TypeBrev {
             VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27,
             VEDTAK_11_18_OPPHØR_DELVIS_UFØR,
             VEDTAK_11_18_OPPHØR_FULL_UFØR,
-            VEDTAK_AVSLAG_11_5,
-        ).contains(this)
+            VEDTAK_AVSLAG_11_5
+        )
+
+        private val UTEN_SIGNATUR: Set<TypeBrev> =
+            AUTOMATISK_BREV - VEDTAK_AVSLAG_11_5
     }
 
-    fun skalIkkeHaSignatur(): Boolean {
-        return setOf(
-            KLAGE_MOTTATT,
-            VARSEL_OM_BESTILLING,
-            FORVALTNINGSMELDING,
-            BARNETILLEGG_SATS_REGULERING,
-            VEDTAK_UTVID_VEDTAKSLENGDE,
-            VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_MEDLEMSKAP,
-            VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_3,
-            VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4,
-            VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_12,
-            VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_26,
-            VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27,
-            VEDTAK_11_18_OPPHØR_DELVIS_UFØR,
-            VEDTAK_11_18_OPPHØR_FULL_UFØR,
-        ).contains(this)
-    }
+    fun erAutomatiskBrev(): Boolean = AUTOMATISK_BREV.contains(this)
+    fun skalIkkeHaSignatur(): Boolean = UTEN_SIGNATUR.contains(this)
 }
+
