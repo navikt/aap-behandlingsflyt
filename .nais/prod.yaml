@@ -284,3 +284,5 @@ spec:
       value: api://prod-gcp.aap.pdfgenerator/.default
     - name: NAIS_TEAM_AAP
       value: ee2a0374-97a6-462e-9a05-3cb7be3d8fc5
+    - name: AAP_DRIFT_LES
+      value: ec868c89-5d4f-47b4-8298-e954035d3873
