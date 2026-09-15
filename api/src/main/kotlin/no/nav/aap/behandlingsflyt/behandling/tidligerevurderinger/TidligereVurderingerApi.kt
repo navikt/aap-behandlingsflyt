@@ -102,7 +102,7 @@ enum class BehandlingsutfallType {
         fun fraBehandlingsutfall(behandlingsutfall: TidligereVurderinger.Behandlingsutfall): BehandlingsutfallType =
             when (behandlingsutfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> IKKE_BEHANDLINGSGRUNNLAG
-                TidligereVurderinger.UunngåeligAvslag -> UUNNGÅELIG_AVSLAG
+                is TidligereVurderinger.UunngåeligAvslag -> UUNNGÅELIG_AVSLAG
                 is TidligereVurderinger.PotensieltOppfylt -> POTENSIELT_OPPFYLT
             }
     }

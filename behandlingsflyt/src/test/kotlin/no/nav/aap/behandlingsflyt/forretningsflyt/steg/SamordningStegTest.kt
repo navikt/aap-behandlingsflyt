@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieSøknad
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder as byggFlytKontekstMedPerioder
@@ -194,7 +195,7 @@ class SamordningStegTest {
             FakeTidligereVurderinger(
                 Tidslinje(
                     sak.rettighetsperiode,
-                    TidligereVurderinger.UunngåeligAvslag
+                    TidligereVurderinger.UunngåeligAvslag(Vilkårtype.SAMORDNING)
                 )
             ).apply {
                 avslagEllerIngenBehandlingsgrunnlag = true
@@ -447,7 +448,7 @@ class SamordningStegTest {
             FakeTidligereVurderinger(
                 Tidslinje(
                     sak.rettighetsperiode,
-                    TidligereVurderinger.UunngåeligAvslag
+                    TidligereVurderinger.UunngåeligAvslag(Vilkårtype.SAMORDNING)
                 )
             )
         ).utfør(flytKontekstMedPerioder(behandling))

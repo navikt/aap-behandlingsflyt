@@ -50,8 +50,8 @@ class ArbeidsopptrappingSteg private constructor(
     ): Tidslinje<Boolean> {
         return tidligereVurderinger.behandlingsutfall(kontekst, type()).map { utfall ->
             when (utfall) {
-                TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
-
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> true
             }
         }
