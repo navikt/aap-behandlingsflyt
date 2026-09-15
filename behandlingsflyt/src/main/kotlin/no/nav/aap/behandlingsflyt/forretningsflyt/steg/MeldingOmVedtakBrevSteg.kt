@@ -179,10 +179,10 @@ class MeldingOmVedtakBrevSteg(
 
     private fun brukApiV3(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        if (typeBrev != TypeBrev.VEDTAK_AVSLAG_11_5) {
-            if (
-                avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) == null
-            ) return false
+        if (typeBrev != TypeBrev.VEDTAK_AVSLAG_11_5 &&
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) == null
+        ) {
+            return false
         }
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
         val endretAv = Bruker(avklaringsbehov?.endretAv()?.ident ?: "Ukjent bruker")
