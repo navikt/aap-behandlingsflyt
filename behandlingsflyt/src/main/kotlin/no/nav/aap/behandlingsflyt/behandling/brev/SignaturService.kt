@@ -37,7 +37,7 @@ class SignaturService(
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
 
-        return if (brevbestilling.typeBrev.erAutomatiskBrev()) {
+        return if (brevbestilling.typeBrev.skalIkkeHaSignatur()) {
             emptyList()
         } else if (brevbestilling.typeBrev.erVedtak()) {
             utledSignaturerForVedtak(brevbestilling, innloggetBruker)
