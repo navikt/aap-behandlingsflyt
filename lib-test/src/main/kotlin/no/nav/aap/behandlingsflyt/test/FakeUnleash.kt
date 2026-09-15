@@ -86,7 +86,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
-        BehandlingsflytFeature.SkalViseAlleSykdomssteg to true,
         BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true,
         BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom to true,
         BehandlingsflytFeature.KanVurdereRefusjonIRevurdering to false,

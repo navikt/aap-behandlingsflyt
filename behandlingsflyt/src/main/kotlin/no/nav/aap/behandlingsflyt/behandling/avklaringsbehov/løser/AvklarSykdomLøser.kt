@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -72,16 +71,9 @@ class AvklarSykdomLøser(
 
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
         sykdomLøsning.segmenter().forEach {
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.SkalViseAlleSykdomssteg)) {
-                if (!it.verdi.erKonsistentForSykdomVisAlleSykdomssteg(harYrkesskade)) {
-                    logWarning(harYrkesskade, behandling, it)
-                    throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
-                }
-            } else {
-                if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
-                    logWarning(harYrkesskade, behandling, it)
-                    throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
-                }
+            if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
+                logWarning(harYrkesskade, behandling, it)
+                throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
             }
         }
     }
