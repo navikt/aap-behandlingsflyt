@@ -45,7 +45,7 @@ class DatadelingBehandlingJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        val (behandlingId, vedtaksTidspunkt) = input.payload<Pair<BehandlingId, LocalDateTime>>()
+        val (behandlingId, _) = input.payload<Pair<BehandlingId, LocalDateTime?>>()
         val behandling = behandlingRepository.hent(behandlingId)
 
         if (behandling.typeBehandling() !in listOf(
@@ -70,7 +70,9 @@ class DatadelingBehandlingJobbUtfører(
         val vilkårsresultatTidslinje = underveistidslinje
             .mapNotNull { it.rettighetsType }.komprimer()
 
-        val vedtakId = vedtakRepository.hentId(behandling.id)
+        val vedtak = requireNotNull(vedtakRepository.hent(behandling.id))
+        val vedtakId = vedtak.id.id
+        val vedtaksTidspunkt = vedtak.vedtakstidspunkt
         // Todo: Dele ut både tp-nr og sam-id!
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
