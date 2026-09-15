@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
@@ -399,7 +400,9 @@ class InstitusjonsoppholdUtlederService(
         val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
         val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
 
-        val opphold = grunnlag?.oppholdene?.opphold.orEmpty()
+        val alleOpphold = grunnlag?.oppholdene?.opphold.orEmpty()
+        val opphold = finnRelevanteOppholdSegmenter(alleOpphold, rettighetsperiode)
+
         val soningsvurderinger: Soningsvurderinger?
         val helsevurderinger: Helseoppholdvurderinger?
         if (basertPåVurderingerFørDenneBehandlingen) {
@@ -506,5 +509,46 @@ class InstitusjonsoppholdUtlederService(
             )
             .kombiner(oppholdEtterBarnetillegg, joinStyle = StandardSammenslåere.prioriterVenstreSideCrossJoin())
     }
+}
 
+fun finnRelevanteOppholdSegmenter(
+    segmenter: List<Segment<Institusjon>>,
+    periode: Periode
+): List<Segment<Institusjon>> {
+    return grupperSammenhengendeOppholdSegmenter(segmenter)
+        .filter { it.periode.overlapper(periode) }
+        .flatMap { it.segmenter }
+}
+
+fun grupperSammenhengendeOppholdSegmenter(
+    segmenter: List<Segment<Institusjon>>
+): List<SammenhengendeOppholdGruppe> {
+    return segmenter
+        .sortedBy { it.periode.fom }
+        .fold(mutableListOf<SammenhengendeOppholdGruppe>()) { grupper, segment ->
+            val siste = grupper.lastOrNull()
+            if (siste != null && !segment.periode.fom.isAfter(siste.periode.tom.plusDays(1))) {
+                grupper[grupper.lastIndex] = siste.utvidMed(segment)
+            } else {
+                grupper += SammenhengendeOppholdGruppe.nyGruppe(segment)
+            }
+            grupper
+        }
+}
+
+data class SammenhengendeOppholdGruppe(
+    val segmenter: List<Segment<Institusjon>>,
+    val periode: Periode
+) {
+    fun utvidMed(segment: Segment<Institusjon>): SammenhengendeOppholdGruppe {
+        return SammenhengendeOppholdGruppe(
+            segmenter = segmenter + segment,
+            periode = Periode(periode.fom, maxOf(periode.tom, segment.periode.tom))
+        )
+    }
+
+    companion object {
+        fun nyGruppe(segment: Segment<Institusjon>) =
+            SammenhengendeOppholdGruppe(listOf(segment), segment.periode)
+    }
 }

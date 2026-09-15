@@ -21,9 +21,9 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.exception.InternfeilException
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -237,32 +237,25 @@ fun NormalOpenAPIRoute.institusjonApi(
     }
 }
 
-private fun mapVurderingerToDto(
+fun mapVurderingerToDto(
     vurderingerPerOpphold: Map<Periode, List<HelseinstitusjonVurdering>>,
     oppholdInfo: Tidslinje<Institusjon>,
     vurdertAvService: VurdertAvService,
-): List<HelseoppholdDto> =
-    vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
+): List<HelseoppholdDto> {
+    val alleKjeder = grupperSammenhengendeOppholdSegmenter(oppholdInfo.segmenter().toList())
 
-        val matchingSegments = oppholdInfo.filter { segment ->
-            segment.periode.fom <= vurderingPeriode.tom &&
-                    segment.periode.tom >= vurderingPeriode.fom
-        }.segmenter()
-        val oppholdSegment = matchingSegments.firstOrNull() ?: return@flatMap emptyList()
+    return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
+        val kjede = alleKjeder.firstOrNull { it.periode.overlapper(vurderingPeriode) }
+            ?: return@flatMap emptyList()
+        val først = kjede.segmenter.first()
 
         listOf(
             HelseoppholdDto(
                 periode = vurderingPeriode,
-                oppholdId = lagOppholdId(
-                    oppholdSegment.verdi.navn,
-                    oppholdSegment.periode.fom
-                ),
+                oppholdId = lagOppholdId(først.verdi.navn, først.periode.fom),
                 vurderinger = vurderingerForPeriode.map { vurdering ->
                     HelseinstitusjonVurderingDto(
-                        oppholdId = lagOppholdId(
-                            oppholdSegment.verdi.navn,
-                            oppholdSegment.periode.fom
-                        ),
+                        oppholdId = lagOppholdId(først.verdi.navn, først.periode.fom),
                         begrunnelse = vurdering.begrunnelse,
                         faarFriKostOgLosji = vurdering.faarFriKostOgLosji,
                         forsoergerEktefelle = vurdering.forsoergerEktefelle,
@@ -272,7 +265,7 @@ private fun mapVurderingerToDto(
                             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
                             behandlingId = vurdering.vurdertIBehandling,
                             vurdertAv = vurdertAvService.medNavnOgEnhet(
-                                ident = vurdering.vurdertAv ?: Bruker("ukjent") /* hacky, burdeikke kalle PDL med ukjent som ident */,
+                                ident = vurdering.vurdertAv ?: Bruker("ukjent"),
                                 dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
                             ),
                         )
@@ -282,6 +275,7 @@ private fun mapVurderingerToDto(
             )
         )
     }
+}
 
 // Public for testing
 fun hentOppholdSomSkalVurderes(
@@ -289,30 +283,47 @@ fun hentOppholdSomSkalVurderes(
     behovPerioder: Tidslinje<InstitusjonsoppholdVurdering>,
     vedtatteVurderingerDto: List<HelseoppholdDto>
 ): List<InstitusjonsoppholdDto> {
-    val behovOpphold = oppholdInfo.segmenter().mapNotNull { segment ->
-        val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-        val oppholdFra = dto.oppholdFra
-        val avsluttetDato = dto.avsluttetDato
+    val alleKjeder = grupperSammenhengendeOppholdSegmenter(oppholdInfo.segmenter().toList())
 
-        val harUavklartOpphold = behovPerioder.segmenter().any { periode ->
-            val fom = periode.periode.fom
-            val tom = periode.periode.tom
-            (oppholdFra <= tom && avsluttetDato >= fom)
+    val behovOpphold = alleKjeder
+        .filter { kjede ->
+            behovPerioder.segmenter().any { behovSegment ->
+                kjede.periode.overlapper(behovSegment.periode)
+            }
         }
-        if (harUavklartOpphold) dto else null
-    }
+        .map { it.tilDto() }
 
     val vedtatteOpphold = vedtatteVurderingerDto
-        .mapNotNull { vurdering ->
-            vurdering.oppholdId?.let { oppholdId ->
-                oppholdInfo.segmenter().mapNotNull { segment ->
-                    val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-                    if (dto.oppholdId == oppholdId) dto else null
+        .mapNotNull { it.oppholdId }
+        .distinct()
+        .mapNotNull { oppholdId ->
+            alleKjeder.firstOrNull { kjede ->
+                kjede.segmenter.any { segment ->
+                    lagOppholdId(segment.verdi.navn, segment.periode.fom) == oppholdId
                 }
-            }
-        }.flatten()
+            }?.tilDto()
+        }
 
     return (behovOpphold + vedtatteOpphold).distinctBy { it.oppholdId }
+}
+
+private fun SammenhengendeOppholdGruppe.tilDto(): InstitusjonsoppholdDto {
+    val først = segmenter.first()
+    val sist = segmenter.last()
+    return InstitusjonsoppholdDto(
+        oppholdId = lagOppholdId(først.verdi.navn, først.periode.fom),
+        institusjonstype = først.verdi.type.beskrivelse,
+        oppholdstype = først.verdi.kategori.beskrivelse,
+        status = if (sist.periode.tom > LocalDate.now()) StatusDto.AKTIV.toString() else StatusDto.AVSLUTTET.toString(),
+        kildeinstitusjon = if (segmenter.size == 1) først.verdi.navn
+        else segmenter.joinToString(" → ") { it.verdi.navn },
+        oppholdFra = først.periode.fom,
+        avsluttetDato = sist.periode.tom,
+        tidligsteReduksjonsdato = null,
+        delperioder = segmenter.map {
+            InstitusjonsoppholdDelperiodeDto(it.verdi.navn, it.periode.fom, it.periode.tom)
+        }
+    )
 }
 
 // Public for testing
