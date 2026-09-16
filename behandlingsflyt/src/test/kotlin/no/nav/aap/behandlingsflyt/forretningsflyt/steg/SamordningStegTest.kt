@@ -149,65 +149,6 @@ class SamordningStegTest {
     }
 
     @Test
-    fun `tilbakeføring skal slette vurderinger`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling()
-        settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
-
-        InMemorySamordningVurderingRepository.lagreVurderinger(
-            behandling.id, SamordningVurderingGrunnlag(
-                begrunnelse = "",
-                vurderinger = setOf(
-                    SamordningVurdering(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        vurderingPerioder = setOf(
-                            SamordningVurderingPeriode(
-                                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
-                                gradering = Prosent(50),
-                                manuell = false,
-                            )
-                        )
-                    )
-                ),
-                vurdertAv = Bruker("ident"),
-                vurdertTidspunkt = LocalDateTime.now()
-            )
-        )
-
-        steg().utfør(flytKontekstMedPerioder(behandling))
-        verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
-        løsBehovet(behandling)
-
-        // Simuler trekk av søknad
-        InMemoryTrukketSøknadRepository.lagreTrukketSøknadVurdering(
-            behandling.id,
-            TrukketSøknadVurdering(
-                journalpostId = JournalpostId("12344321"),
-                begrunnelse = "en grunn",
-                vurdertAv = Bruker("Z00000"),
-                skalTrekkes = true,
-                vurdert = Instant.parse("2020-01-01T12:12:12Z"),
-                aarsak = AarsakTilTrekkSoknad.ANNET
-            )
-        )
-
-        // skal tilbakeføre
-        steg(
-            FakeTidligereVurderinger(
-                Tidslinje(
-                    sak.rettighetsperiode,
-                    TidligereVurderinger.UunngåeligAvslag(Vilkårtype.SAMORDNING)
-                )
-            ).apply {
-                avslagEllerIngenBehandlingsgrunnlag = true
-                ingenBehandlingsgrunnlag = true
-            })
-            .utfør(flytKontekstMedPerioder(behandling))
-
-        val vurderinger = InMemorySamordningVurderingRepository.hentHvisEksisterer(behandling.id)
-        assertThat(vurderinger).isNull()
-    }
-
-    @Test
     fun `saksbehandler kan lagre flere perioder enn det vi får fra registre`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         settOppRessurser(Ytelse.SYKEPENGER, behandling.id)

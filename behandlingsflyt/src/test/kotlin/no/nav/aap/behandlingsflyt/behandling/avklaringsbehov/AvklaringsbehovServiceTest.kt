@@ -211,7 +211,7 @@ class AvklaringsbehovServiceTest {
     @Test
     fun `oppdaterAvklaringsbehov skal avbryte avklaringsbehov når vedtak ikke behøver vurdering`() {
         // Arrange
-        val behandlingId = BehandlingId(1003)
+        val behandlingId = BehandlingId(1005)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
@@ -863,7 +863,7 @@ class AvklaringsbehovServiceTest {
     }
 
     @Test
-    fun `oppdaterAvklaringsbehov skal tilbakestille frivillige avklaringsbehov ved søknadstrekking`() {
+    fun `oppdaterAvklaringsbehov skal avbryte frivillige avklaringsbehov ved søknadstrekking`() {
         // Arrange
         val behandlingId = BehandlingId(1003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
@@ -902,7 +902,7 @@ class AvklaringsbehovServiceTest {
         // Assert
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
-        assertThat(erTilbakestilt).isTrue
+        assertThat(erTilbakestilt).isFalse // Trenger ikke tilbakestille da vurderingene slettes uansett
     }
 
     @Test

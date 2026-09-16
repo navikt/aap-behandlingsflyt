@@ -34,9 +34,9 @@ enum class BehandlingsflytFeature(
     // ------
     Avslag11_27,
     SkalViseAlleSykdomssteg,
-    MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     BosattStatsborgerskapGjennomslipp,
-    HoppOverBeslutterVedAvslagSykdom
+    HoppOverBeslutterVedAvslagSykdom,
+    KanVurdereRefusjonIRevurdering
     ;
 
     override fun key(): String = name

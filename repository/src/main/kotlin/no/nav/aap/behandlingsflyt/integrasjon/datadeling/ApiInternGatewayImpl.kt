@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerRequest
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.BarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
@@ -43,8 +45,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerRequest
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -330,6 +330,12 @@ internal fun Periode.tilDatadelingDTO() = PeriodeDTO(fom, tom)
 internal fun BarnMedBarnetillegg.tilDatadelingDTO() = BarnMedBarnetilleggDTO(
     ident = ident,
     perioderMedBarnetillegg = perioderMedBarnetillegg.map {
-        PeriodeMedBeløpDTO(fom = it.periode.fom, tom = it.periode.tom, beløp = it.beløp.verdi)
+        PeriodeMedBeløpDTO(
+            fom = it.periode.fom,
+            tom = it.periode.tom,
+            beløp = it.beløp.verdi,
+            sats = it.sats.verdi,
+            uredusertBeløp = it.uredusertBeløp.verdi
+        )
     }
 )

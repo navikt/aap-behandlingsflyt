@@ -57,15 +57,11 @@ class EtableringEgenVirksomhetSteg(
 
     private fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val relevantPeriode =
-            etableringEgenVirksomhetService.utledGyldighetsPeriode(
-                kontekst.behandlingId
-            ).somTidslinje { it }
 
-        if (Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET in kontekst.vurderingsbehovRelevanteForSteg) {
-            return Tidslinje(Periode(kontekst.rettighetsperiode.fom.plusDays(1), kontekst.rettighetsperiode.tom), true)
-        }
-
+        val relevantPeriode = etableringEgenVirksomhetService.utledGyldighetsPeriode(
+            kontekst.behandlingId
+        ).somTidslinje { it }
+      
         val grunnlag = etableringEgenVirksomhetRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return Tidslinje.map2(tidligereVurderingsutfall, relevantPeriode) { utfall, relevantPeriode ->
@@ -74,7 +70,7 @@ class EtableringEgenVirksomhetSteg(
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    return@map2 relevantPeriode != null && !grunnlag?.vurderinger.isNullOrEmpty()
+                    return@map2 relevantPeriode != null && (!grunnlag?.vurderinger.isNullOrEmpty() || (Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET in kontekst.vurderingsbehovRelevanteForSteg))
                 }
             }
         }
