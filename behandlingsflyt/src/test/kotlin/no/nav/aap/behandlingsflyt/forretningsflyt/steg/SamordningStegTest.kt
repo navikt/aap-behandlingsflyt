@@ -486,6 +486,7 @@ class SamordningStegTest {
             samordningService = SamordningService(inMemoryRepositoryProvider),
             samordningRepository = inMemoryRepositoryProvider.provide(),
             tidligereVurderinger = tidligereVurderinger,
+            avklaringsbehovRepository = inMemoryRepositoryProvider.provide(),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
             sykepengerOgFerieOppgittISøknadRepository = inMemoryRepositoryProvider.provide()
         )
