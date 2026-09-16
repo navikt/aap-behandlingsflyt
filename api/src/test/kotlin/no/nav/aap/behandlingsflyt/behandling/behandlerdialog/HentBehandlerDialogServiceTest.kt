@@ -62,6 +62,7 @@ class HentBehandlerDialogServiceTest {
 
         val dialogmeldingerForSakResponse = listOf(
             FellesDialogmeldingDto(
+                dialogmeldingReferanse = null,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = navnSaksbehandler,
                 opprettetTidspunkt = LocalDateTime.now().minusDays(31),
@@ -71,6 +72,7 @@ class HentBehandlerDialogServiceTest {
                 journalpostId = journalpostIdSendtMelding1
             ),
             FellesDialogmeldingDto(
+                dialogmeldingReferanse = null,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = navnSaksbehandler,
                 opprettetTidspunkt = LocalDateTime.now().minusDays(10),
