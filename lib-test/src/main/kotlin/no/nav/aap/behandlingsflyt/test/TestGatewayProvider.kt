@@ -62,6 +62,7 @@ fun testGatewayProvider(
         register<DokumentinnhentingGatewayImpl>()
         register<MedlemskapGateway>()
         register<FakeApiInternGateway>()
+        register<FakeArenaOppslagGateway>()
         register<UtbetalingGatewayImpl>()
         register<AARegisterGateway>()
         register<EREGGateway>()
