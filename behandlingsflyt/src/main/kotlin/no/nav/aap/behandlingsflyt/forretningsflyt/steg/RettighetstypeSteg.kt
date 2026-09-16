@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.Endret
 import no.nav.aap.behandlingsflyt.utils.LagtTil
 import no.nav.aap.behandlingsflyt.utils.Uendret
 import no.nav.aap.behandlingsflyt.utils.diffMap
@@ -177,7 +178,10 @@ class RettighetstypeSteg(
                             /* Gammel stans/opphør ble regnet ut da vi brukte MANGLENDE_DOKUMENTASJON, som betyr at
                              * de ikke fikk med seg disse opphørene. Godtar derfor at opphør dukker opp, siden det nå brukes
                              * riktig avslagsårsak. */
-                            (diff is LagtTil<StansEllerOpphør> && diff.lagtTil.årsaker == setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE))
+                            (diff is LagtTil<StansEllerOpphør> && diff.lagtTil.årsaker == setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE)) ||
+                            (diff is Endret<StansEllerOpphør>
+                                    && Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE in diff.til.årsaker
+                                    && diff.til.årsaker - Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE == diff.fra.årsaker)
                 }
                 if (!uendret) {
                     log.warn(
