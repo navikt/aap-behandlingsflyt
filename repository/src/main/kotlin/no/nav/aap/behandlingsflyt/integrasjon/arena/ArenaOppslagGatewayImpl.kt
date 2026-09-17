@@ -38,7 +38,6 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
 
     private val uri = URI.create(requiredConfigForKey("INTEGRASJON_ARENAOPPSLAG_URL"))
     private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_ARENAOPPSLAG_SCOPE"))
-
     private val restClient = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = AzureM2MTokenProvider,

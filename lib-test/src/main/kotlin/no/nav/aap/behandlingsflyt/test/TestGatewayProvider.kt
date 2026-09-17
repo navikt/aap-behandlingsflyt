@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.test
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arena.ArenaOppslagGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
@@ -62,7 +63,7 @@ fun testGatewayProvider(
         register<DokumentinnhentingGatewayImpl>()
         register<MedlemskapGateway>()
         register<FakeApiInternGateway>()
-        register<FakeArenaOppslagGateway>()
+        register<ArenaOppslagGatewayImpl>()
         register<UtbetalingGatewayImpl>()
         register<AARegisterGateway>()
         register<EREGGateway>()
