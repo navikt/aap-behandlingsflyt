@@ -181,8 +181,12 @@ class AvklarHelseinstitusjonLøser(
             }
 
         // Henter forhåndsberegnet tidligste reduksjonsdato per kjede (bruker kjedens første segment som representant)
+        // Alle representant-segmentene sendes inn samlet slik at 3-måneders-regelen mot forrige kjede beregnes riktig.
+        val representantSegmentPerKjede = kjeder.associateWith { it.elementer.first() }
+        val tidligsteReduksjonsdatoPerRepresentant =
+            beregnTidligsteReduksjonsdatoPerOpphold(representantSegmentPerKjede.values.toList())
         val tidligsteReduksjonsdatoPerKjede = kjeder.associateWith { kjede ->
-            beregnTidligsteReduksjonsdatoPerOpphold(listOf(kjede.elementer.first()))[kjede.elementer.first()]
+            tidligsteReduksjonsdatoPerRepresentant[representantSegmentPerKjede[kjede]]
         }
 
         vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
