@@ -60,6 +60,7 @@ spec:
           - "azp_name"
         groups:
           - id: ee2a0374-97a6-462e-9a05-3cb7be3d8fc5 #NAIS_TEAM_AAP
+          - id: 8e5bc6be-a934-41f0-8a92-e974ea7b80d3 # 0000-GA-AAP_DRIFT_LES
   envFrom:
     - secret: kelvin-unleash-api-token
   accessPolicy:
@@ -145,7 +146,7 @@ spec:
         - application: tiltakspenger-datadeling
           namespace: tpts
         - application: saksbehandling-pdfgen
-        - application: pdfgenerator
+        - application: pdfgenerator-saksbehandling
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -280,9 +281,11 @@ spec:
       value: http://saksbehandling-pdfgen
     - name: INTEGRASJON_PDFGEN_SCOPE
       value: api://dev-gcp.aap.saksbehandling-pdfgen/.default
-    - name: INTEGRASJON_PDFGENERATOR_URL
-      value: http://pdfgenerator
-    - name: INTEGRASJON_PDFGENERATOR_SCOPE
-      value: api://dev-gcp.aap.pdfgenerator/.default
+    - name: INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_URL
+      value: http://pdfgenerator-saksbehandling
+    - name: INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_SCOPE
+      value: api://dev-gcp.aap.pdfgenerator-saksbehandling/.default
     - name: NAIS_TEAM_AAP
       value: ee2a0374-97a6-462e-9a05-3cb7be3d8fc5
+    - name: AAP_DRIFT_LES
+      value: 8e5bc6be-a934-41f0-8a92-e974ea7b80d3

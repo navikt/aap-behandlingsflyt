@@ -195,7 +195,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     )
                 ) { params ->
                     val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
-                    respond(service.hentDialogForSak(params.saksnummer))
+                    respond(service.hentDialogForSak(params.saksnummer, token()))
                 }
             }
         }

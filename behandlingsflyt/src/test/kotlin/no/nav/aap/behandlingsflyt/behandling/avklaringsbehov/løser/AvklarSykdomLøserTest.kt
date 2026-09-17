@@ -51,7 +51,6 @@ class AvklarSykdomLøserTest {
         }
 
         every { yrkesskadeMock.hentHvisEksisterer(any()) } returns null
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.SkalViseAlleSykdomssteg) } returns false
         every { sykdomMock.hentHvisEksisterer(any()) } returns
                 SykdomGrunnlag(
                     yrkesskadevurdering = null, sykdomsvurderinger = listOf(

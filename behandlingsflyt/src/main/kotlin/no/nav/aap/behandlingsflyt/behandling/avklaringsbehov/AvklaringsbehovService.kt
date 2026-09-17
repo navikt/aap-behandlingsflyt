@@ -227,17 +227,25 @@ class AvklaringsbehovService(
                 SENDT_TILBAKE_FRA_BESLUTTER,
                 KVALITETSSIKRET,
                 SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
-                    val erFrivilligAvklaringsbehov = avklaringsbehov.definisjon.erFrivillig()
+                    val erSøknadTrukket = trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
+                    val erRevurderingAvbrutt = avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)
 
-                    val søknadErIkkeTrukket = !trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
-                    if (erFrivilligAvklaringsbehov && søknadErIkkeTrukket) {
-                        return
+                    when {
+                        erSøknadTrukket || erRevurderingAvbrutt -> {
+                            avklaringsbehovene.avbryt(definisjon)
+                        }
+
+                        avklaringsbehov.definisjon.erFrivillig() -> {
+                            // Skal ikke avbryte og tilbakestille frivillige behov
+                            return
+                        }
+
+                        else -> {
+                            avklaringsbehovene.avbryt(definisjon)
+                            tilbakestillGrunnlag()
+                        }
                     }
 
-                    avklaringsbehovene.avbryt(definisjon)
-                    if (!avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)) {
-                        tilbakestillGrunnlag()
-                    }
                 }
             }
         }

@@ -107,8 +107,6 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.ytelseoppslag.foreldrepengeperioderApi
 import no.nav.aap.behandlingsflyt.ytelseoppslag.sykepengeperioderApi
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -124,6 +122,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.tilgang.DriftLes
 import no.nav.aap.tilgang.TeamAap
 import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
@@ -272,6 +271,7 @@ internal fun Application.server(
     }
     verifiserTidssone(fellesDataSource)
     val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
+    val motorLeseRoller=  if (Miljø.erProd()) listOf(DriftLes.id) else emptyList()
 
     routing {
         authenticate(IdentityProvider.ENTRA_ID.value) {
@@ -315,7 +315,7 @@ internal fun Application.server(
                 aldersGrunnlagApi(fellesDataSource, repositoryRegistry)
                 avslag11_27GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                motorApi(fellesDataSource, påkrevdeRollerMotor)
+                motorApi(fellesDataSource, påkrevdeRollerMotor, motorLeseRoller)
                 behandlingsflytPipApi(pipDataSource, repositoryRegistry)
                 auditlogApi(fellesDataSource, repositoryRegistry)
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -380,7 +380,7 @@ private fun Application.verifiserTidssone(dataSource: HikariDataSource) {
         }
     }
 
-    log.info("Tidssone for jvm: ${tidssoneForJvm} database: $tidssoneForDatabase")
+    log.info("Tidssone for jvm: $tidssoneForJvm database: $tidssoneForDatabase")
 
     check(tidssoneForJvm == Tid.norskTidssone) {
         "Tidssone for JVM er satt til ${tidssoneForJvm}. Forventer verdi ${Tid.norskTidssone}."
