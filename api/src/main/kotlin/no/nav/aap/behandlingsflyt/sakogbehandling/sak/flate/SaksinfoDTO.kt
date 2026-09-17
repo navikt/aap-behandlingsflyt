@@ -15,5 +15,6 @@ data class SaksInfoTilPostmottak(
     val saksnummer: String,
     val periode: Periode,
     val resultat: ResultatKode?,
-    val finnesÅpenBehandling: Boolean
+    val finnesÅpenBehandling: Boolean,
+    val harRettNåEllerIFramtiden: Boolean?
 )
