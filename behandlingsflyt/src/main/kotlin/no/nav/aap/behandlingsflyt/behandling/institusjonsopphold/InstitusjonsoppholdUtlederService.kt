@@ -511,44 +511,20 @@ class InstitusjonsoppholdUtlederService(
     }
 }
 
+private val SEGMENT_ER_SAMMENHENGENDE: (Periode, LocalDate) -> Boolean =
+        { periode, nesteFom -> !nesteFom.isAfter(periode.tom.plusDays(1)) }
+
 fun finnRelevanteOppholdSegmenter(
-    segmenter: List<Segment<Institusjon>>,
-    periode: Periode
-): List<Segment<Institusjon>> {
-    return grupperSammenhengendeOppholdSegmenter(segmenter)
-        .filter { it.periode.overlapper(periode) }
-        .flatMap { it.segmenter }
-}
+        segmenter: List<Segment<Institusjon>>,
+        periode: Periode
+    ): List<Segment<Institusjon>> {
+        return finnRelevanteInnenforPeriode(
+                segmenter, periode, { it.periode.fom }, { it.periode.tom }, SEGMENT_ER_SAMMENHENGENDE
+                    )
+    }
 
 fun grupperSammenhengendeOppholdSegmenter(
-    segmenter: List<Segment<Institusjon>>
-): List<SammenhengendeOppholdGruppe> {
-    return segmenter
-        .sortedBy { it.periode.fom }
-        .fold(mutableListOf<SammenhengendeOppholdGruppe>()) { grupper, segment ->
-            val siste = grupper.lastOrNull()
-            if (siste != null && !segment.periode.fom.isAfter(siste.periode.tom.plusDays(1))) {
-                grupper[grupper.lastIndex] = siste.utvidMed(segment)
-            } else {
-                grupper += SammenhengendeOppholdGruppe.nyGruppe(segment)
-            }
-            grupper
-        }
-}
-
-data class SammenhengendeOppholdGruppe(
-    val segmenter: List<Segment<Institusjon>>,
-    val periode: Periode
-) {
-    fun utvidMed(segment: Segment<Institusjon>): SammenhengendeOppholdGruppe {
-        return SammenhengendeOppholdGruppe(
-            segmenter = segmenter + segment,
-            periode = Periode(periode.fom, maxOf(periode.tom, segment.periode.tom))
-        )
+        segmenter: List<Segment<Institusjon>>
+    ): List<SammenhengendeGruppe<Segment<Institusjon>>> {
+        return grupperSammenhengende(segmenter, { it.periode.fom }, { it.periode.tom }, SEGMENT_ER_SAMMENHENGENDE)
     }
-
-    companion object {
-        fun nyGruppe(segment: Segment<Institusjon>) =
-            SammenhengendeOppholdGruppe(listOf(segment), segment.periode)
-    }
-}

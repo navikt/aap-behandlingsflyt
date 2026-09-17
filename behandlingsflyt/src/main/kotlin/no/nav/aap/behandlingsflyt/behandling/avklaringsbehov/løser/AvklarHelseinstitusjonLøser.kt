@@ -2,11 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.SammenhengendeOppholdGruppe
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligsteReduksjonsdatoPerOpphold
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.grupperSammenhengendeOppholdSegmenter
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
@@ -184,7 +182,7 @@ class AvklarHelseinstitusjonLøser(
 
         // Henter forhåndsberegnet tidligste reduksjonsdato per kjede (bruker kjedens første segment som representant)
         val tidligsteReduksjonsdatoPerKjede = kjeder.associateWith { kjede ->
-            beregnTidligsteReduksjonsdatoPerOpphold(listOf(kjede.segmenter.first()))[kjede.segmenter.first()]
+            beregnTidligsteReduksjonsdatoPerOpphold(listOf(kjede.elementer.first()))[kjede.elementer.first()]
         }
 
         vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->

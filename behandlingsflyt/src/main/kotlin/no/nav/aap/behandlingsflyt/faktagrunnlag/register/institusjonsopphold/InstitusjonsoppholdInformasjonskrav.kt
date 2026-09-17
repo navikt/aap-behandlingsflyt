@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.finnRelevanteInnenforPeriode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -142,39 +143,16 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
             return eksisterendeGrunnlag == null || eksisterendeGrunnlag.oppholdene != oppholdeneFraRegister
         }
 
-        private data class SammenhengendeOpphold(val opphold: List<Institusjonsopphold>, val periode: Periode)
-
         fun finnRelevanteOpphold(
             alleOpphold: List<Institusjonsopphold>,
             rettighetsperiode: Periode
         ): List<Institusjonsopphold> {
-            return utledGrupperMedSammenhengendeOpphold(alleOpphold)
-                .filter { it.periode.overlapper(rettighetsperiode) }
-                .flatMap { it.opphold }
-        }
-
-        private fun utledGrupperMedSammenhengendeOpphold(
-            alleOpphold: List<Institusjonsopphold>
-        ): List<SammenhengendeOpphold> {
-            return alleOpphold
-                .sortedBy { it.startdato }
-                .fold(mutableListOf()) { grupper, opphold ->
-                    val sluttdato = opphold.sluttdato ?: Tid.MAKS
-                    val siste = grupper.lastOrNull()
-
-                    when {
-                        siste != null && !opphold.startdato.isAfter(siste.periode.tom) ->
-                            grupper[grupper.lastIndex] = SammenhengendeOpphold(
-                                opphold = siste.opphold + opphold,
-                                periode = Periode(siste.periode.fom, maxOf(siste.periode.tom, sluttdato))
-                            )
-
-                        else ->
-                            grupper += SammenhengendeOpphold(listOf(opphold), Periode(opphold.startdato, sluttdato))
-                    }
-
-                    grupper
-                }
+            return finnRelevanteInnenforPeriode(
+                alleOpphold,
+                rettighetsperiode,
+                { it.startdato },
+                { it.sluttdato ?: Tid.MAKS }
+            ) { periode, nesteFom -> !nesteFom.isAfter(periode.tom) }
         }
     }
 }

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.tilDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -247,13 +248,13 @@ fun mapVurderingerToDto(
     return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
         val kjede = alleKjeder.firstOrNull { it.periode.overlapper(vurderingPeriode) }
             ?: return@flatMap emptyList()
-        val først = kjede.segmenter.first()
+        val først = kjede.elementer.first()
 
         listOf(
             HelseoppholdDto(
                 periode = vurderingPeriode,
                 oppholdId = lagOppholdId(først.verdi.navn, først.periode.fom),
-                delperioder = kjede.segmenter.map {
+                delperioder = kjede.elementer.map {
                     InstitusjonsoppholdDelperiodeDto(it.verdi.navn, it.periode.fom, it.periode.tom)
                 },
                 vurderinger = vurderingerForPeriode.map { vurdering ->
@@ -301,7 +302,7 @@ fun hentOppholdSomSkalVurderes(
         .distinct()
         .mapNotNull { oppholdId ->
             alleKjeder.firstOrNull { kjede ->
-                kjede.segmenter.any { segment ->
+                kjede.elementer.any { segment ->
                     lagOppholdId(segment.verdi.navn, segment.periode.fom) == oppholdId
                 }
             }?.tilDto()
@@ -311,19 +312,19 @@ fun hentOppholdSomSkalVurderes(
 }
 
 private fun SammenhengendeOppholdGruppe.tilDto(): InstitusjonsoppholdDto {
-    val først = segmenter.first()
-    val sist = segmenter.last()
+    val først = elementer.first()
+    val sist = elementer.last()
     return InstitusjonsoppholdDto(
         oppholdId = lagOppholdId(først.verdi.navn, først.periode.fom),
         institusjonstype = først.verdi.type.beskrivelse,
         oppholdstype = først.verdi.kategori.beskrivelse,
         status = if (sist.periode.tom > LocalDate.now()) StatusDto.AKTIV.toString() else StatusDto.AVSLUTTET.toString(),
-        kildeinstitusjon = if (segmenter.size == 1) først.verdi.navn
-        else segmenter.joinToString(" → ") { it.verdi.navn },
+        kildeinstitusjon = if (elementer.size == 1) først.verdi.navn
+        else elementer.joinToString(" → ") { it.verdi.navn },
         oppholdFra = først.periode.fom,
         avsluttetDato = sist.periode.tom,
         tidligsteReduksjonsdato = null,
-        delperioder = segmenter.map {
+        delperioder = elementer.map {
             InstitusjonsoppholdDelperiodeDto(it.verdi.navn, it.periode.fom, it.periode.tom)
         }
     )
