@@ -34,16 +34,11 @@ class SignaturService(
         avklaringsbehovRepository = repositoryProvider.provide()
     )
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlag> {
         require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
-        if (Miljø.erDev()) {
-            log.info("Brevbestilling har " + brevbestilling.referanse + "  med typebrev" + brevbestilling.typeBrev + " og signatur/ikke-signatur " + brevbestilling.typeBrev.skalIkkeHaSignatur())
-        }
-        return if (brevbestilling.typeBrev.skalIkkeHaSignatur()) {
+        return if (brevbestilling.typeBrev.erAutomatiskBrev()) {
             emptyList()
         } else if (brevbestilling.typeBrev.erVedtak()) {
             utledSignaturerForVedtak(brevbestilling, innloggetBruker)
