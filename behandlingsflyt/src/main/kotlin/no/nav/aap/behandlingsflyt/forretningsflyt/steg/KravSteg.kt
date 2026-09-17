@@ -186,15 +186,8 @@ class KravSteg(
 
         val søknaderMottattIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
-
-        // Legeerklæring kan i noen tilfeller være første dokument på en første behandlingen.
-        val legeerklæringerMottattIBehandling = if (kontekst.forrigeBehandlingId == null) {
-            mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.LEGEERKLÆRING)
-        } else {
-            emptyList()
-        }
-
-        val alleDokumenter = (søknaderMottattIBehandling + legeerklæringerMottattIBehandling)
+        
+        val alleDokumenter = (søknaderMottattIBehandling)
             .sortedBy { it.mottattTidspunkt }
 
         // Dersom saksbehandler har overstyrt muligRettFra i denne behandlingen, bevarer vi overstyringen
@@ -228,8 +221,7 @@ class KravSteg(
                 || (gjeldendeKravFraForrige == null && index == 0)
             when {
                 erNyttKrav -> nyttKrav(kontekst.behandlingId, dokument, gjeldendeOverstyring)
-                dokument.type == InnsendingType.SØKNAD -> tilleggsopplysning(kontekst.behandlingId, dokument)
-                else -> null // Legeerklæring som ikke er eldste dokument – ingen separat vurdering
+                else -> tilleggsopplysning(kontekst.behandlingId, dokument)
             }
         }
 
