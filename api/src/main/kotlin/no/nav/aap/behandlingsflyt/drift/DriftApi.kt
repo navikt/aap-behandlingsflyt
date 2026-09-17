@@ -18,6 +18,8 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseServic
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
@@ -113,6 +115,37 @@ fun NormalOpenAPIRoute.driftApi(
                 }
 
                 respond(PersonSøkDriftsinfoDto(saker))
+            }
+        }
+
+        route("/sak/{saksnummer}/tjenestepensjon-ytelser") {
+            authorizedPost<SaksnummerParameter, SakTjenestePensjonYtelserDto, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFT_LES,
+                ),
+            ) { params, _ ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+
+                    val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
+                        ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
+
+                    val gjeldendeBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+
+                    val tpForhold = gjeldendeBehandling?.let {
+                        tjenestePensjonRepository.hentHvisEksisterer(it.behandlingId).orEmpty()
+                            .map { forhold -> TjenestePensjonForholdDto.fra(forhold) }
+                    }.orEmpty()
+
+                    SakTjenestePensjonYtelserDto(sak.saksnummer.toString(), tpForhold)
+                }
+
+                respond(response)
             }
         }
 
@@ -249,7 +282,7 @@ fun NormalOpenAPIRoute.driftApi(
                     operasjon = Operasjon.DRIFT_LES
                 )
             ) { params, _ ->
-                val tilkjentYtelseDto= dataSource.transaction(readOnly = true) { connection ->
+                val tilkjentYtelseDto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
                     TilkjentYtelseService(repositoryProvider)
@@ -577,6 +610,25 @@ private data class SaksnummerOgRettighetsperiode(
     val saksnummer: String,
     val rettighetsperiode: Periode
 )
+
+private data class SakTjenestePensjonYtelserDto(
+    val saksnummer: String,
+    val forhold: List<TjenestePensjonForholdDto>
+)
+
+private data class TjenestePensjonForholdDto(
+    val navn: String,
+    val tpNr: String,
+    val orgNr: String,
+) {
+    companion object {
+        fun fra(forhold: TjenestePensjonForhold) = TjenestePensjonForholdDto(
+            navn = forhold.ordning.navn,
+            tpNr = forhold.ordning.tpNr,
+            orgNr = forhold.ordning.orgNr,
+        )
+    }
+}
 
 private data class SakDriftsinfoDTO(
     val saksnummer: String,
