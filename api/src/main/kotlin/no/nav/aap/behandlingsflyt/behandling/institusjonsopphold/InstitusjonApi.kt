@@ -253,6 +253,9 @@ fun mapVurderingerToDto(
             HelseoppholdDto(
                 periode = vurderingPeriode,
                 oppholdId = lagOppholdId(først.verdi.navn, først.periode.fom),
+                delperioder = kjede.segmenter.map {
+                    InstitusjonsoppholdDelperiodeDto(it.verdi.navn, it.periode.fom, it.periode.tom)
+                },
                 vurderinger = vurderingerForPeriode.map { vurdering ->
                     HelseinstitusjonVurderingDto(
                         oppholdId = lagOppholdId(først.verdi.navn, først.periode.fom),
@@ -265,7 +268,7 @@ fun mapVurderingerToDto(
                             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
                             behandlingId = vurdering.vurdertIBehandling,
                             vurdertAv = vurdertAvService.medNavnOgEnhet(
-                                ident = vurdering.vurdertAv ?: Bruker("ukjent"),
+                                ident = vurdering.vurdertAv ?: Bruker("ukjent") /* hacky, burdeikke kalle PDL med ukjent som ident */,
                                 dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
                             ),
                         )

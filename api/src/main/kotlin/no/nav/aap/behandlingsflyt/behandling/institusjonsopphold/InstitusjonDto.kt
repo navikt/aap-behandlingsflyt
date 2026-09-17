@@ -58,7 +58,8 @@ data class HelseoppholdDto(
     val periode: Periode,
     val oppholdId: String?,
     val vurderinger: List<HelseinstitusjonVurderingDto>?,
-    val status: OppholdVurderingDto
+    val status: OppholdVurderingDto,
+    val delperioder: List<InstitusjonsoppholdDelperiodeDto> = emptyList()
 )
 
 data class HelseinstitusjonVurderingDto(
