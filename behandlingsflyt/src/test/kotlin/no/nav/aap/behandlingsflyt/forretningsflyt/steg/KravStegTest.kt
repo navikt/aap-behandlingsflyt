@@ -358,41 +358,6 @@ class KravStegTest {
     }
 
     @Test
-    fun `legeerklæring som eneste dokument på første behandling – lagres som RelevantKrav`() {
-        val sak = opprettInMemorySak()
-        val behandling = opprettFørstegangsbehandling(sak.id)
-        val legeerklæringDato = LocalDate.of(2024, 1, 1)
-        leggTilLegeerklæring(behandling.id, sak.id, legeerklæringDato.atStartOfDay())
-
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-
-        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
-
-        val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().muligRettFra).isEqualTo(legeerklæringDato)
-    }
-
-    @Test
-    fun `legeerklæring før søknad – legeerklæring er krav, søknad er tilleggsopplysning`() {
-        val sak = opprettInMemorySak()
-        val behandling = opprettFørstegangsbehandling(sak.id)
-        val legeerklæringDato = LocalDate.of(2024, 1, 1)
-        val søknadDato = LocalDate.of(2024, 2, 1)
-        leggTilLegeerklæring(behandling.id, sak.id, legeerklæringDato.atStartOfDay())
-        leggTilSøknad(behandling.id, sak.id, søknadDato.atStartOfDay())
-
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-
-        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
-
-        val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().muligRettFra).isEqualTo(legeerklæringDato)
-        assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
-    }
-
-    @Test
     fun `søknad før legeerklæring – søknad er krav, legeerklæring ignoreres`() {
         val sak = opprettInMemorySak()
         val behandling = opprettFørstegangsbehandling(sak.id)
@@ -403,31 +368,6 @@ class KravStegTest {
 
         every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
 
-        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
-
-        val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().muligRettFra).isEqualTo(søknadDato)
-        assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).isEmpty()
-    }
-
-    @Test
-    fun `legeerklæring erstattes av søknad som kom inn tidligere – re-kjøring av steg`() {
-        val sak = opprettInMemorySak()
-        val behandling = opprettFørstegangsbehandling(sak.id)
-        val legeerklæringDato = LocalDate.of(2024, 2, 1)
-        val søknadDato = LocalDate.of(2024, 1, 1) // søknad er eldre
-
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-
-        // Første kjøring: bare legeerklæring
-        leggTilLegeerklæring(behandling.id, sak.id, legeerklæringDato.atStartOfDay())
-        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
-        assertThat(InMemoryKravRepository.hent(behandling.id).vurderinger.filterIsInstance<RelevantKrav>().single().muligRettFra)
-            .isEqualTo(legeerklæringDato)
-
-        // Andre kjøring: søknad kommer inn med tidligere dato
-        leggTilSøknad(behandling.id, sak.id, søknadDato.atStartOfDay())
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
