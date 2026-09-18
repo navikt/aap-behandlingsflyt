@@ -21,7 +21,6 @@ dependencies {
 
     testImplementation(libs.httpklient)
     testImplementation(libs.dbtest)
-    testImplementation(libs.bundles.junit)
     testImplementation(libs.ktorServerTestHost)
     constraints {
         implementation("commons-codec:commons-codec:1.22.1")
