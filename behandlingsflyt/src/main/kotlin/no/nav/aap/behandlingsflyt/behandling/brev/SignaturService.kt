@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhet
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -35,10 +36,13 @@ class SignaturService(
     )
 
     fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlag> {
-        require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
+        require(
+            brevbestilling.status == Status.FORHÅNDSVISNING_KLAR ||
+                    brevbestilling.typeBrev == TypeBrev.VEDTAK_AVSLAG_11_5
+        ) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
-        return if (brevbestilling.typeBrev.erAutomatiskBrev()) {
+        return if (brevbestilling.typeBrev.skalIkkeHaSignatur()) {
             emptyList()
         } else if (brevbestilling.typeBrev.erVedtak()) {
             utledSignaturerForVedtak(brevbestilling, innloggetBruker)
