@@ -300,6 +300,14 @@ class BehandlingService(
             "Mottok klage, men det finnes ingen eksisterende behandling"
         }
 
+        val åpenKlagebehandling = behandlingRepository
+            .hentAlleFor(sisteYtelsesbehandling.sakId, listOf(TypeBehandling.Klage))
+            .find { it.status().erÅpen() }
+
+        if (åpenKlagebehandling != null) {
+            return åpenKlagebehandling
+        }
+
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,
             typeBehandling = TypeBehandling.Klage,
