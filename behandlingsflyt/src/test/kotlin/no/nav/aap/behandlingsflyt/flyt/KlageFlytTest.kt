@@ -58,6 +58,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KRAV
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -682,6 +684,39 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
         assertThat(steghistorikk)
             .anySatisfy { assertThat(it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER).isTrue }
 
+    }
+
+    @Test
+    fun `Mottak av flere klager på en åpen klagebehandling skal ikke opprette en ny klagebehandling`() {
+        val person = TestPersoner.PERSON_FOR_UNG()
+        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
+
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            søknad = SøknadV0(
+                student = SøknadStudentDto(StudentStatus.Nei),
+                yrkesskade = "NEI",
+                oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            ), person = person, mottattTidspunkt = periode.fom.atStartOfDay()
+        ).second
+
+        val sak = hentSak(avslåttFørstegang)
+        val førsteKlagebehandling = sak.sendInnKlage(
+            mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+            klage = KlageV0(kravMottatt = LocalDate.now().minusMonths(1))
+        )
+
+        val andreKlagebehandling = sak.sendInnKlage(
+            mottattTidspunkt = LocalDateTime.now().minusMonths(2),
+            klage = KlageV0(kravMottatt = LocalDate.now().minusDays(15))
+        )
+
+        assertThat(andreKlagebehandling.referanse).isEqualTo(førsteKlagebehandling.referanse)
+
+        val klagebehandlinger: List<Behandling> = dataSource.transaction(readOnly = true) { connection ->
+            BehandlingRepositoryImpl(connection).hentAlleFor(sak.id, listOf(TypeBehandling.Klage))
+        }
+        assertThat(klagebehandlinger).hasSize(1)
     }
 
     @Test
