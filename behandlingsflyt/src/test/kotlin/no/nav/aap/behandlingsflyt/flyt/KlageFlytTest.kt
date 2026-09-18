@@ -64,6 +64,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -1570,4 +1571,6 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
 
 }
 
-object KlageFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(emptyList())
+object KlageFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    listOf(BehandlingsflytFeature.KunEnAktivKlagebehandling)
+)

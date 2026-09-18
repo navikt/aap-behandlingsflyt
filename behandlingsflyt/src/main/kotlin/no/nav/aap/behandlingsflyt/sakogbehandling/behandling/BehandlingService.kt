@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -28,6 +30,7 @@ class BehandlingService(
     private val trukketSøknadService: TrukketSøknadService,
     private val underveisService: UnderveisService,
     private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
+    private val unleashGateway: UnleashGateway,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -39,6 +42,7 @@ class BehandlingService(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     fun finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId: SakId): Behandling? {
@@ -300,12 +304,14 @@ class BehandlingService(
             "Mottok klage, men det finnes ingen eksisterende behandling"
         }
 
-        val åpenKlagebehandling = behandlingRepository
-            .hentAlleFor(sisteYtelsesbehandling.sakId, listOf(TypeBehandling.Klage))
-            .find { it.status().erÅpen() }
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KunEnAktivKlagebehandling)) {
+            val åpenKlagebehandling = behandlingRepository
+                .hentAlleFor(sisteYtelsesbehandling.sakId, listOf(TypeBehandling.Klage))
+                .find { it.status().erÅpen() }
 
-        if (åpenKlagebehandling != null) {
-            return åpenKlagebehandling
+            if (åpenKlagebehandling != null) {
+                return åpenKlagebehandling
+            }
         }
 
         return behandlingRepository.opprettBehandling(
