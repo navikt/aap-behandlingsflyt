@@ -26,8 +26,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
@@ -53,7 +51,6 @@ class IverksettVedtakStegTest {
     private val mellomlagretVurderingRepository = mockk<MellomlagretVurderingRepository>(relaxed = true)
     private val resultatUtleder = mockk<ResultatUtleder>(relaxed = true)
     private val stansOpphørService = mockk<StansOpphørService>(relaxed = true)
-    private val unleashGateway = mockk<UnleashGateway>()
 
     private fun kontekst(
         behandlingType: TypeBehandling,
@@ -87,9 +84,6 @@ class IverksettVedtakStegTest {
         every {
             utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         } returns null
-        every {
-            unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF)
-        } returns true
         every { flytJobbRepository.leggTil(capture(jobber)) } just runs
         if (stans) {
             every { stansOpphørService.vedtattStansOpphør(kontekst.behandlingId) } returns listOf(
@@ -113,8 +107,7 @@ class IverksettVedtakStegTest {
             gosysService = gosysService,
             flytJobbRepository = flytJobbRepository,
             mellomlagretVurderingRepository = mellomlagretVurderingRepository,
-            resultatUtleder = resultatUtleder,
-            unleashGateway = unleashGateway,
+            resultatUtleder = resultatUtleder
         ).utfør(kontekst)
 
         return jobber.map { it.type() }
