@@ -13,6 +13,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
 
@@ -21,7 +22,7 @@ class HentBehandlerDialogService(
     private val dokumentinnhentingGateway: DokumentinnhentingGateway,
     private val repositoryRegistry: RepositoryRegistry,
 ) {
-    fun hentDialogForSak(saksnummer: String): List<MeldingMedDokumenterDto> {
+    fun hentDialogForSak(saksnummer: String, token: OidcToken): List<MeldingMedDokumenterDto> {
         val dialogmeldinger = hentDialogmeldingerFraDokumentinnhenting(saksnummer)
         val legeerklæringer = hentLegeerklæringerForSakFraDatabase(saksnummer)
 
@@ -30,6 +31,7 @@ class HentBehandlerDialogService(
 
         val journalposter = hentBegrensetJournalposterFraDokumentinnhenting(
             journalpostIDerForDialogmeldinger + journalpostIDerForHelsedokumenter,
+            token
         )
 
         val dialogmeldingerMedDokumentoversikt = lagMeldingMedDokumentoversiktForDialogmeldinger(dialogmeldinger, journalposter)
@@ -59,12 +61,12 @@ class HentBehandlerDialogService(
     }
 
     private fun hentBegrensetJournalposterFraDokumentinnhenting(
-        journalpostIDer: List<String>
+        journalpostIDer: List<String>,
+        token: OidcToken,
     ) : Map<String, BegrensetJournalpostDto> {
         val journalposter = dokumentinnhentingGateway.hentDokumentoversiktForJournalpostListe(
-            HentDokumentoversiktJournalpostListeParams(
-                journalpostIDer
-            )
+            HentDokumentoversiktJournalpostListeParams(journalpostIDer),
+            token
         )
 
         val dokumentoversiktMap = HashMap<String, BegrensetJournalpostDto>()

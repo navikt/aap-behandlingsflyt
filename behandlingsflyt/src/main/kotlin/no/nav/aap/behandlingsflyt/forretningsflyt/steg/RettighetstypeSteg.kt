@@ -17,7 +17,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -31,6 +33,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.Endret
 import no.nav.aap.behandlingsflyt.utils.LagtTil
 import no.nav.aap.behandlingsflyt.utils.Uendret
 import no.nav.aap.behandlingsflyt.utils.diffMap
@@ -177,7 +180,16 @@ class RettighetstypeSteg(
                             /* Gammel stans/opphør ble regnet ut da vi brukte MANGLENDE_DOKUMENTASJON, som betyr at
                              * de ikke fikk med seg disse opphørene. Godtar derfor at opphør dukker opp, siden det nå brukes
                              * riktig avslagsårsak. */
-                            (diff is LagtTil<StansEllerOpphør> && diff.lagtTil.årsaker == setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE))
+                            (diff is LagtTil<StansEllerOpphør> &&
+                                    diff.lagtTil == Opphør(setOf(IKKE_NOK_REDUSERT_ARBEIDSEVNE))) ||
+                            (diff is LagtTil<StansEllerOpphør> &&
+                                    diff.lagtTil == Opphør(setOf(IKKE_SYKDOM_SKADE_LYTE))) ||
+                            (diff is Endret<StansEllerOpphør> &&
+                                    diff.fra == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING)) &&
+                                    diff.til == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING, IKKE_SYKDOM_SKADE_LYTE))) ||
+                            (diff is Endret<StansEllerOpphør> &&
+                                    diff.fra == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING)) &&
+                                    diff.til == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING, IKKE_NOK_REDUSERT_ARBEIDSEVNE)))
                 }
                 if (!uendret) {
                     log.warn(

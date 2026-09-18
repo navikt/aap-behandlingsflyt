@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.behandlerdialog
 
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
@@ -13,7 +14,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.AzureTokenGen
+import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.fakes.TestToken
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository.opprettBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
@@ -27,12 +31,22 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostLis
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.InnkommendeUtgående
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
+import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.net.URI
 import java.time.LocalDateTime
 
-class HentBehandlerDialogServiceTest {
+@Fakes
+class HentBehandlerDialogServiceTest : BaseApiTest() {
 
     private val dokumentinnhentingGateway = mockk<DokumentinnhentingGateway>()
     private val dataSource = MockDataSource()
@@ -55,6 +69,7 @@ class HentBehandlerDialogServiceTest {
         val journalpostIdMottattMelding = "789"
         val navnSaksbehandler = "Saksbehandler hos NAV"
         val tekstFørsteMelding = "Hei, kan dere sende over legeerklæring for pasienten?"
+        val token = getToken()
 
         InMemoryMottattDokumentRepository.lagre(
             lagLegeerklæring(journalpostIdMottattMelding, sak, behandling)
@@ -62,6 +77,7 @@ class HentBehandlerDialogServiceTest {
 
         val dialogmeldingerForSakResponse = listOf(
             FellesDialogmeldingDto(
+                dialogmeldingReferanse = null,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = navnSaksbehandler,
                 opprettetTidspunkt = LocalDateTime.now().minusDays(31),
@@ -71,6 +87,7 @@ class HentBehandlerDialogServiceTest {
                 journalpostId = journalpostIdSendtMelding1
             ),
             FellesDialogmeldingDto(
+                dialogmeldingReferanse = null,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = navnSaksbehandler,
                 opprettetTidspunkt = LocalDateTime.now().minusDays(10),
@@ -95,12 +112,13 @@ class HentBehandlerDialogServiceTest {
             dokumentinnhentingGateway.hentDokumentoversiktForJournalpostListe(
                 request = HentDokumentoversiktJournalpostListeParams(listOf(
                     journalpostIdSendtMelding1, journalpostIdSendtMelding2, journalpostIdMottattMelding)
-                )
+                ),
+                currentToken = token
             )
         } returns hentDokumentlisteResponse
 
         // act
-        val result = service.hentDialogForSak(saksnummer)
+        val result = service.hentDialogForSak(saksnummer, token)
 
         // assert
         assertThat(result.size).isEqualTo(3)

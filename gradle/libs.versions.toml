@@ -1,12 +1,12 @@
 [versions]
 ktor = "3.5.2"
-komponenter = "2.0.165"
+komponenter = "2.0.167"
 tilgang = "1.0.240"
 utbetaling = "0.0.136"
 brev = "0.0.283"
 meldekort = "0.0.237"
-apiIntern = "0.0.108"
-dokumentinnhenting = "0.0.6"
+apiIntern = "0.0.109"
+dokumentinnhenting = "0.0.7"
 junit = "6.1.3"
 testcontainers = "2.0.5"
 

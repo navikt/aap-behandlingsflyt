@@ -40,7 +40,9 @@ class BackfillKrav(
 
                         if (forrigeFraTil != fraTil) {
                             try {
-                                backfillKravLoop(fraTil[0], fraTil[1])
+                                val fra = fraTil[0]
+                                val til = if (fraTil.size == 1) fra else fraTil[1]
+                                backfillKravLoop(fra, til)
                                 forrigeFraTil = fraTil
                             } catch (e: Exception) {
                                 log.warn("BackfillKrav: uncaughtException {}, se secure / team log", e.javaClass.name)

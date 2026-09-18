@@ -65,15 +65,11 @@ class BackfillKravService(
         val søknader = mottattDokumentRepository
             .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
             .sortedBy { it.mottattTidspunkt }
-
-        val legeerklæringer = mottattDokumentRepository
-            .hentDokumenterAvType(behandling.id, InnsendingType.LEGEERKLÆRING)
-            .sortedBy { it.mottattTidspunkt }
-
+        
         val forrigeKrav = behandling.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }
 
         val nyeVurderinger: Set<KravVurdering> =
-            utledNyeVurderinger(behandling.id, søknader, legeerklæringer, forrigeKrav)
+            utledNyeVurderinger(behandling.id, søknader, forrigeKrav)
 
         val alleVurderinger = (forrigeKrav?.vurderinger.orEmpty()) + nyeVurderinger
 
@@ -92,17 +88,14 @@ class BackfillKravService(
     private fun utledNyeVurderinger(
         behandlingId: BehandlingId,
         søknader: List<MottattDokument>,
-        legeerklæringer: List<MottattDokument>,
         forrigeKrav: KravGrunnlag?,
     ): Set<KravVurdering> {
-        // Kombiner søknader og eldste legeerklæring, sorter på mottattTidspunkt.
-        // Legeerklæring kan ha kommet inn før søknad og etablerer da muligRettFra.
-        val alleDokumenter = (søknader + legeerklæringer).sortedBy { it.mottattTidspunkt }
+        val alleDokumenter = søknader.sortedBy { it.mottattTidspunkt }
 
         if (alleDokumenter.isEmpty()) {
             if (forrigeKrav != null) return emptySet() // revurdering uten nye dokumenter – arver fra forrige
             throw IllegalStateException(
-                "Ingen søknad eller legeerklæring for behandling ${behandlingId.toLong()}"
+                "Ingen søknad for behandling ${behandlingId.toLong()}"
             )
         }
 
@@ -148,7 +141,7 @@ class BackfillKravService(
                     ).min(),
                 )
 
-                dokument.type == InnsendingType.SØKNAD -> Tilleggsopplysning(
+                else -> Tilleggsopplysning(
                     referanse = Kravreferanse.ny(),
                     journalpostId = dokument.referanse.asJournalpostId,
                     vurdertAv = SYSTEMBRUKER,
@@ -156,8 +149,6 @@ class BackfillKravService(
                     vurdertIBehandling = behandlingId,
                     opprettet = Instant.now(),
                 )
-
-                else -> null // Legeerklæring som ikke er eldste dokument – ingen separat vurdering
             }
         }.toSet()
 
