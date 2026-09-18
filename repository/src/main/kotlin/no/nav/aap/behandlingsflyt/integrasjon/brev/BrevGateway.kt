@@ -599,8 +599,8 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakBeregningstidspunkt.SYKEMELDINGSDATO -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SYKEMELDINGSDATO
             ÅrsakBeregningstidspunkt.KRAVDATO -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.KRAVDATO
             ÅrsakBeregningstidspunkt.DATO_PAA_LEGEERKLÆRING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.DATO_PAA_LEGEERKLAERING
-            ÅrsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING,
-            ÅrsakBeregningstidspunkt.SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SEKSTEN_AAR_SOM_BEREGNINGSTIDSPUNKT,
+            ÅrsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING
+            ÅrsakBeregningstidspunkt.SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SEKSTEN_AAR_SOM_BEREGNINGSTIDSPUNKT
             ÅrsakBeregningstidspunkt.ANNET,  ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT,  null -> null
         }
 
