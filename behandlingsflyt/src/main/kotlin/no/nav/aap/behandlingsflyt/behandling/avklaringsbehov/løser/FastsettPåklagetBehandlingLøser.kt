@@ -2,7 +2,11 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettPåklagetBehandlingLøsning
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.erAvsluttet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -14,19 +18,28 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class FastsettPåklagetBehandlingLøser(
     private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
     private val behandlingRepository: BehandlingRepository,
+    private val tilbakekrevingRepository: TilbakekrevingRepository,
 ) :
     AvklaringsbehovsLøser<FastsettPåklagetBehandlingLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         påklagetBehandlingRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide()
+        behandlingRepository = repositoryProvider.provide(),
+        tilbakekrevingRepository = repositoryProvider.provide()
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettPåklagetBehandlingLøsning): LøsningsResultat {
-        val påklagetBehandling = løsning.påklagetBehandlingVurdering.påklagetBehandling?.let {
-            behandlingRepository.hent(BehandlingReferanse(løsning.påklagetBehandlingVurdering.påklagetBehandling)).valider()
+        val referanse = løsning.påklagetBehandlingVurdering.påklagetBehandling
+        if (referanse != null && løsning.påklagetBehandlingVurdering.påklagetVedtakType == PåklagetVedtakType.TILBAKEKREVING) {
+            tilbakekrevingRepository.hent(referanse).valider()
+            return LøsningsResultat(begrunnelse = "Vurdert påklaget behandling")
         }
 
+        val påklagetBehandling = løsning.påklagetBehandlingVurdering.påklagetBehandling?.let {
+            behandlingRepository.hent(BehandlingReferanse(referanse)).valider()
+        }
+
+        // TODO : Hva med tilbakekreving skal vi ikke persistere påklagetBehandlingVurdering her ?
         påklagetBehandlingRepository.lagre(
             behandlingId = kontekst.kontekst.behandlingId,
             påklagetBehandlingVurdering = løsning.påklagetBehandlingVurdering.tilVurdering(
@@ -34,6 +47,7 @@ class FastsettPåklagetBehandlingLøser(
                 påklagetBehandling?.id
             )
         )
+
         return LøsningsResultat(begrunnelse = "Vurdert påklaget behandling")
     }
 
@@ -49,6 +63,13 @@ class FastsettPåklagetBehandlingLøser(
 
         if (!this.status().erAvsluttet()) {
             throw UgyldigForespørselException("Kan ikke klage på åpen behandling ${this.status()}")
+        }
+        return this
+    }
+
+    private fun Tilbakekrevingsbehandling.valider(): Tilbakekrevingsbehandling {
+        if (!this.behandlingsstatus.erAvsluttet()) {
+            throw UgyldigForespørselException("Kan ikke klage på åpen behandling ${this.behandlingsstatus}")
         }
         return this
     }

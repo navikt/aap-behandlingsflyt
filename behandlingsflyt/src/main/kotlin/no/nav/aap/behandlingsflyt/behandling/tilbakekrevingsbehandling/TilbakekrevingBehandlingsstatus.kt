@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus as KontraktTilbakekrevingBehandlingsstatus
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+
 enum class TilbakekrevingBehandlingsstatus {
     OPPRETTET,
     TIL_FORHÅNDSVARSEL,
@@ -10,15 +13,31 @@ enum class TilbakekrevingBehandlingsstatus {
     AVSLUTTET,
 }
 
-fun TilbakekrevingBehandlingsstatus.tilKontrakt(): no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus {
+fun TilbakekrevingBehandlingsstatus.tilKontrakt(): KontraktTilbakekrevingBehandlingsstatus {
     return when(this){
-        TilbakekrevingBehandlingsstatus.AVSLUTTET -> no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus.AVSLUTTET
-        TilbakekrevingBehandlingsstatus.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus.OPPRETTET
-        TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER
-        TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus.TIL_BEHANDLING
-        TilbakekrevingBehandlingsstatus.TIL_GODKJENNING -> no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus.TIL_GODKJENNING
-        TilbakekrevingBehandlingsstatus.TIL_FORHÅNDSVARSEL -> no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus.TIL_FORHÅNDSVARSEL
-        TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus.TIL_BESLUTTER
+        TilbakekrevingBehandlingsstatus.AVSLUTTET -> KontraktTilbakekrevingBehandlingsstatus.AVSLUTTET
+        TilbakekrevingBehandlingsstatus.OPPRETTET -> KontraktTilbakekrevingBehandlingsstatus.OPPRETTET
+        TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> KontraktTilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER
+        TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> KontraktTilbakekrevingBehandlingsstatus.TIL_BEHANDLING
+        TilbakekrevingBehandlingsstatus.TIL_GODKJENNING -> KontraktTilbakekrevingBehandlingsstatus.TIL_GODKJENNING
+        TilbakekrevingBehandlingsstatus.TIL_FORHÅNDSVARSEL -> KontraktTilbakekrevingBehandlingsstatus.TIL_FORHÅNDSVARSEL
+        TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> KontraktTilbakekrevingBehandlingsstatus.TIL_BESLUTTER
     }
+}
+
+fun TilbakekrevingBehandlingsstatus.tilBehandlingStatus(): Status {
+    return when(this){
+        TilbakekrevingBehandlingsstatus.OPPRETTET -> Status.OPPRETTET
+        TilbakekrevingBehandlingsstatus.TIL_FORHÅNDSVARSEL -> Status.UTREDES
+        TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> Status.UTREDES
+        TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> Status.UTREDES
+        TilbakekrevingBehandlingsstatus.TIL_GODKJENNING -> Status.UTREDES
+        TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> Status.UTREDES
+        TilbakekrevingBehandlingsstatus.AVSLUTTET -> Status.AVSLUTTET
+    }
+}
+
+fun TilbakekrevingBehandlingsstatus.erAvsluttet(): Boolean {
+    return this == TilbakekrevingBehandlingsstatus.AVSLUTTET
 }
 

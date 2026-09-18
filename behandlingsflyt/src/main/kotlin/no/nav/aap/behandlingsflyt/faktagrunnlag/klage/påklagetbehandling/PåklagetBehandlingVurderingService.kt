@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -12,7 +14,8 @@ import java.time.LocalDate
 class PåklagetBehandlingVurderingService(
     val behandlingRepository: BehandlingRepository,
     val påklagetBehandlingRepository: PåklagetBehandlingRepository,
-    val vedtakService: VedtakService
+    val vedtakService: VedtakService,
+    val tilbakekrevingRepository: TilbakekrevingRepository
 ) {
     fun hentGjeldendeVurderingMedReferanse(behandlingsreferanse: BehandlingReferanse): PåklagetBehandlingVurderingMedReferanse? {
         return påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandlingsreferanse)
@@ -32,6 +35,10 @@ class PåklagetBehandlingVurderingService(
                 )
             }
         }
+    }
+
+    fun hentAlleAvsluttaTilbakekrevingsbehandlingerForPerson(personId: PersonId): List<Tilbakekrevingsbehandling> {
+        return tilbakekrevingRepository.hentAlleAvsluttaTilbakekrevingsBehandlinger(personId)
     }
 }
 
