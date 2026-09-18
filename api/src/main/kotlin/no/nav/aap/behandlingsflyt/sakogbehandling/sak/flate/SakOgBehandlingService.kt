@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
@@ -18,6 +19,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
+import java.time.LocalDate
 
 class SakOgBehandlingService(
     private val resultatUtleder: ResultatUtleder,
@@ -26,6 +30,7 @@ class SakOgBehandlingService(
     private val tilbakekrevingRepository: TilbakekrevingRepository,
     private val behandlingService: BehandlingService,
     private val personRepository: PersonRepository,
+    private val rettighetstypeService: RettighetstypeService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
@@ -34,6 +39,7 @@ class SakOgBehandlingService(
         tilbakekrevingRepository = repositoryProvider.provide(),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         personRepository = repositoryProvider.provide(),
+        rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
     )
 
     fun finnsSaksInfoTilPostmottak(ident: Ident): List<SaksInfoTilPostmottak> {
@@ -41,12 +47,20 @@ class SakOgBehandlingService(
 
         return sakRepository.finnSakerFor(person.id).map { sak ->
             val finnesÅpenBehandling = behandlingService.finnÅpenYtelsesbehandling(sak.id) !== null
+            val gjeldendeBehandling = behandlingService.finnGjeldendeYtelsesbehandling(sak.id)
+
+            val harRettNåEllerIFramtiden= gjeldendeBehandling?.let {
+                rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(it.id)
+                    .begrensetTil(Periode(LocalDate.now(), Tid.MAKS))
+                    .isNotEmpty()
+            }
 
             SaksInfoTilPostmottak(
                 saksnummer = sak.saksnummer.toString(),
                 finnesÅpenBehandling = finnesÅpenBehandling,
                 periode = sak.rettighetsperiode,
-                resultat = utledResultatKode(sak)
+                resultat = utledResultatKode(sak),
+                harRettNåEllerIFramtiden = harRettNåEllerIFramtiden
             )
         }
     }

@@ -77,6 +77,7 @@ enum class TypeBrev {
 
         private val UTEN_SIGNATUR: Set<TypeBrev> =
             AUTOMATISK_BREV - VEDTAK_AVSLAG_11_5
+
     }
 
     fun erAutomatiskBrev(): Boolean = AUTOMATISK_BREV.contains(this)

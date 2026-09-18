@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.test
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.test.fakes.AaregFake
 import no.nav.aap.behandlingsflyt.test.fakes.AinntektFake
+import no.nav.aap.behandlingsflyt.test.fakes.ArenaoppslagFake
 import no.nav.aap.behandlingsflyt.test.fakes.BrevFake
 import no.nav.aap.behandlingsflyt.test.fakes.DagpengerFake
 import no.nav.aap.behandlingsflyt.test.fakes.DatadelingFake
@@ -62,6 +63,7 @@ object FakeServers : AutoCloseable {
     private val aareg = AaregFake()
     private val ereg = EregFake()
     private val datadeling = DatadelingFake()
+    private val arenaoppslag = ArenaoppslagFake()
     private val utbetal = UtbetalFake()
     private val meldekort = MeldekortFake()
     private val nom = NomFake()
@@ -88,7 +90,8 @@ object FakeServers : AutoCloseable {
     private val allFakes: List<FakeServer> = listOf(
         texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
-        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen, pdfGenerator
+        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen, pdfGenerator,
+        arenaoppslag
     )
 
     private lateinit var fakePersoner: TestPersonService
@@ -198,6 +201,10 @@ object FakeServers : AutoCloseable {
         // Datadeling
         System.setProperty("INTEGRASJON_DATADELING_URL", "http://localhost:${datadeling.port()}")
         System.setProperty("INTEGRASJON_DATADELING_SCOPE", "scope")
+
+        // Arenaoppslag
+        System.setProperty("INTEGRASJON_ARENAOPPSLAG_URL", "http://localhost:${arenaoppslag.port()}")
+        System.setProperty("INTEGRASJON_ARENAOPPSLAG_SCOPE", "scope")
 
         // Utbetal
         System.setProperty("INTEGRASJON_UTBETAL_URL", "http://localhost:${utbetal.port()}")

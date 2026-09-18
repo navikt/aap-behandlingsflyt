@@ -207,7 +207,7 @@ class MeldingOmVedtakBrevSteg(
             "B156492",
             "S154973"
         )
-        val brevtyperSomSkalBrukeBrevbygger = listOf(TypeBrev.VEDTAK_INNVILGELSE, TypeBrev.VEDTAK_AVSLAG_11_5)
+        val brevtyperSomSkalBrukeBrevbygger = listOf(TypeBrev.VEDTAK_INNVILGELSE)
         return typeBrev in brevtyperSomSkalBrukeBrevbygger && (bruker.ident in brukereSomSkalBrukeBrevbygger || Miljø.erDev())
     }
 

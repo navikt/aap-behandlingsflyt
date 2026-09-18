@@ -18,6 +18,8 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseServic
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
@@ -30,6 +32,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -70,6 +80,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -113,6 +124,37 @@ fun NormalOpenAPIRoute.driftApi(
                 }
 
                 respond(PersonSøkDriftsinfoDto(saker))
+            }
+        }
+
+        route("/sak/{saksnummer}/tjenestepensjon-ytelser") {
+            authorizedPost<SaksnummerParameter, SakTjenestePensjonYtelserDto, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFT_LES,
+                ),
+            ) { params, _ ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+
+                    val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
+                        ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
+
+                    val gjeldendeBehandling = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)
+
+                    val tpForhold = gjeldendeBehandling?.let {
+                        tjenestePensjonRepository.hentHvisEksisterer(it.behandlingId).orEmpty()
+                            .map { forhold -> TjenestePensjonForholdDto.fra(forhold) }
+                    }.orEmpty()
+
+                    SakTjenestePensjonYtelserDto(sak.saksnummer.toString(), tpForhold)
+                }
+
+                respond(response)
             }
         }
 
@@ -201,6 +243,82 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/behandling/{referanse}/krav") {
+            authorizedPost<BehandlingReferanse, KravOgStønadsperiodeDto, Unit>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    operasjon = Operasjon.DRIFT_LES
+                )
+            ) { params, _ ->
+                val res = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val behandling = behandlingRepository.hent(BehandlingReferanse(params.referanse))
+
+                    val krav = repositoryProvider.provide<KravRepository>()
+                        .hentHvisEksisterer(behandling.id)
+                        ?.vurderinger?.map { krav ->
+                            KravDto(
+                                referanse = krav.referanse.verdi.toString(),
+                                type = when (krav) {
+                                    is RelevantKrav -> KravType.RELEVANT_KRAV
+                                    is Tilleggsopplysning -> KravType.TILLEGGSOPPLYSNING
+                                    is TrukketSøknad -> KravType.TRUKKET_SØKNAD
+                                    is MigrertKrav -> KravType.MIGRERT_KRAV
+                                    is Klage -> KravType.KLAGE
+                                },
+                                journalpostId = krav.journalpostId?.identifikator,
+                                opprettet = krav.opprettet,
+                                vurdertAv = krav.vurdertAv.ident,
+                                søknadsdato = when {
+                                    krav is RelevantKrav -> krav.søknadsdato.dato
+                                    else -> null
+                                },
+                                søknadsdatoÅrsak = when (krav) {
+                                    is RelevantKrav -> krav.søknadsdato.årsak.toString()
+                                    else -> null
+                                },
+                                muligRettFra = when {
+                                    krav is RelevantKrav -> krav.muligRettFra
+                                    else -> null
+                                },
+                                overstyrMuligRettFra = when (krav) {
+                                    is RelevantKrav -> krav.overstyrMuligRettFra?.dato
+                                    else -> null
+                                },
+                                overstyrMuligRettFraÅrsak = when (krav) {
+                                    is RelevantKrav -> krav.overstyrMuligRettFra?.årsak?.toString()
+                                    else -> null
+                                },
+                                erNy = krav.vurdertIBehandling == behandling.id
+                            )
+                        }
+                    val stønadsperioder = repositoryProvider.provide<StønadsperiodeRepository>()
+                        .hentHvisEksisterer(behandling.id)
+                        ?.vurderinger?.map { stønadsperiodeVurdering ->
+                            StønadsperiodeDto(
+                                kravReferanse = stønadsperiodeVurdering.referanse.verdi.toString(),
+                                vurdertAv = stønadsperiodeVurdering.vurdertAv.ident,
+                                opprettet = stønadsperiodeVurdering.opprettet,
+                                erNy = stønadsperiodeVurdering.vurdertIBehandling == behandling.id,
+                                startdato = stønadsperiodeVurdering.startDato,
+                                harHattOrdinærSiste52Uker = stønadsperiodeVurdering.harHattOrdinærSiste52Uker,
+                                harGjenværendeKvote = stønadsperiodeVurdering.harGjenværendeKvote,
+                                type = stønadsperiodeVurdering.relevantKravType.toString()
+                                
+                            )
+                        }
+
+                    KravOgStønadsperiodeDto(
+                        krav = krav.orEmpty(), stønadsperioder = stønadsperioder.orEmpty()
+                    )
+                }
+
+                krevDtoErUtenFødselsnummer(res)
+                respond(res)
+            }
+        }
+
         route("/behandling/{referanse}/vilkår") {
             authorizedPost<BehandlingReferanse, List<VilkårDriftsinfoDTO>, Unit>(
                 AuthorizationParamPathConfig(
@@ -249,7 +367,7 @@ fun NormalOpenAPIRoute.driftApi(
                     operasjon = Operasjon.DRIFT_LES
                 )
             ) { params, _ ->
-                val tilkjentYtelseDto= dataSource.transaction(readOnly = true) { connection ->
+                val tilkjentYtelseDto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
                     TilkjentYtelseService(repositoryProvider)
@@ -578,6 +696,25 @@ private data class SaksnummerOgRettighetsperiode(
     val rettighetsperiode: Periode
 )
 
+private data class SakTjenestePensjonYtelserDto(
+    val saksnummer: String,
+    val forhold: List<TjenestePensjonForholdDto>
+)
+
+private data class TjenestePensjonForholdDto(
+    val navn: String,
+    val tpNr: String,
+    val orgNr: String,
+) {
+    companion object {
+        fun fra(forhold: TjenestePensjonForhold) = TjenestePensjonForholdDto(
+            navn = forhold.ordning.navn,
+            tpNr = forhold.ordning.tpNr,
+            orgNr = forhold.ordning.orgNr,
+        )
+    }
+}
+
 private data class SakDriftsinfoDTO(
     val saksnummer: String,
     val person: PersonDriftsinfo,
@@ -634,6 +771,37 @@ private data class VilkårDriftsinfoDTO(
     val perioder: List<ForenkletVilkårsperiode>,
     val vurdertTidspunkt: LocalDateTime?,
 )
+
+private data class KravOgStønadsperiodeDto(
+    val krav: List<KravDto>,
+    val stønadsperioder: List<StønadsperiodeDto>,
+)
+
+private data class KravDto(
+    val referanse: String,
+    val journalpostId: String?,
+    val vurdertAv: String,
+    val erNy: Boolean,
+    val opprettet: Instant,
+    val type: KravType,
+    val søknadsdato: LocalDate?,
+    val søknadsdatoÅrsak: String?,
+    val muligRettFra: LocalDate?,
+    val overstyrMuligRettFra: LocalDate?,
+    val overstyrMuligRettFraÅrsak: String?
+)
+
+private data class StønadsperiodeDto(
+    val kravReferanse: String,
+    val opprettet: Instant,
+    val erNy: Boolean,
+    val vurdertAv: String,
+    val harHattOrdinærSiste52Uker: Boolean,
+    val harGjenværendeKvote: Boolean,
+    val startdato: LocalDate,
+    val type: String
+)
+
 
 private data class ForenkletVilkårsperiode(
     val periode: Periode,
