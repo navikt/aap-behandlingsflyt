@@ -5,9 +5,9 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.aap.behandlingsflyt.arena.HarHistorikkResponse
-import no.nav.aap.behandlingsflyt.arena.SakOppsummering
-import no.nav.aap.behandlingsflyt.arena.SakerResponse
+import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
+import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
 import java.time.LocalDate
 
 class ArenaoppslagFake : FakeServer() {
@@ -19,13 +19,13 @@ class ArenaoppslagFake : FakeServer() {
         installerStatusPages("ARENAOPPSLAG")
         routing {
             post("/api/v1/person/historikk") {
-                call.respond(HarHistorikkResponse(harHistorikk = false))
+                call.respond(HarArenaHistorikkResponse(harHistorikk = false))
             }
             post("/api/v1/person/saker") {
                 call.respond(
-                    SakerResponse(
+                    ArenaSakerResponse(
                         saker = listOf(
-                            SakOppsummering(
+                            ArenaSakOppsummering(
                                 sakId = "2016-123456",
                                 lopenummer = 123456,
                                 aar = 2016,

@@ -3,11 +3,12 @@ package no.nav.aap.behandlingsflyt.integrasjon.arena
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
-import no.nav.aap.behandlingsflyt.arena.HarHistorikkRequest
-import no.nav.aap.behandlingsflyt.arena.HarHistorikkResponse
-import no.nav.aap.behandlingsflyt.arena.SakerRequest
-import no.nav.aap.behandlingsflyt.arena.SakerResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaSakerRequest
+import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
+import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkRequest
+import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -29,7 +30,7 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             .expireAfterWrite(Duration.ofHours(2))
             .maximumSize(10_000)
             .recordStats()
-            .build<String, HarHistorikkResponse>()
+            .build<String, HarArenaHistorikkResponse>()
 
         init {
             CaffeineCacheMetrics.monitor(prometheus, harArenaHistorikkCache, "arenaoppslag_historikk")
@@ -44,11 +45,11 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
         prometheus = prometheus
     )
 
-    override fun hentHarHistorikk(personidentifikator: String): HarHistorikkResponse {
-       return harArenaHistorikkCache.get(personidentifikator) {
-            val response: HarHistorikkResponse? = restClient.post(
+    override fun hentHarHistorikk(ident: Ident): HarArenaHistorikkResponse {
+       return harArenaHistorikkCache.get(ident.identifikator) {
+            val response: HarArenaHistorikkResponse? = restClient.post(
                 uri.resolve("/api/v1/person/historikk"),
-                PostRequest(body = HarHistorikkRequest(personidentifikator)),
+                PostRequest(body = HarArenaHistorikkRequest(ident.identifikator)),
                 mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
             )
             requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/historikk" }
@@ -56,11 +57,11 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
         }
     }
 
-    override fun hentSakerForPerson(personidentifikator: String): SakerResponse {
-        val response: SakerResponse? = restClient.post(
+    override fun hentSakerForPerson(ident: Ident): ArenaSakerResponse {
+        val response: ArenaSakerResponse? = restClient.post(
             uri.resolve("/api/v1/person/saker"),
-            PostRequest(body = SakerRequest(personidentifikator)),
-            mapper = { body, _ -> DefaultJsonMapper.fromJson<SakerResponse>(body) }
+            PostRequest(body = ArenaSakerRequest(ident.identifikator)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson<ArenaSakerResponse>(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/saker" }
         return response

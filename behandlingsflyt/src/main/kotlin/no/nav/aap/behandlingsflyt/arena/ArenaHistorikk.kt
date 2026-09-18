@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.arena
 
-data class HarHistorikkRequest(
+data class HarArenaHistorikkRequest(
     val personidentifikator: String,
 )
 
-data class HarHistorikkResponse(
+data class HarArenaHistorikkResponse(
     val harHistorikk: Boolean,
 )
