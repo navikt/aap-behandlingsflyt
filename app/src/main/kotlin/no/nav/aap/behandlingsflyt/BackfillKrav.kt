@@ -89,6 +89,7 @@ class BackfillKrav(
                 }
 
                 try {
+                    log.info("Backfiller krav for sak ${sak.id} - ${sak.saksnummer}")
                     var sakenErFerdigBackfilled = false
                     for (behandling in behandlinger) {
                         if (sakenErFerdigBackfilled) break
