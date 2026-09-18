@@ -259,7 +259,7 @@ fun NormalOpenAPIRoute.driftApi(
                         .hentHvisEksisterer(behandling.id)
                         ?.vurderinger?.map { krav ->
                             KravDto(
-                                referanse = krav.referanse.toString(),
+                                referanse = krav.referanse.verdi.toString(),
                                 type = when (krav) {
                                     is RelevantKrav -> KravType.RELEVANT_KRAV
                                     is Tilleggsopplysning -> KravType.TILLEGGSOPPLYSNING
@@ -287,7 +287,7 @@ fun NormalOpenAPIRoute.driftApi(
                                     else -> null
                                 },
                                 overstyrMuligRettFraÅrsak = when (krav) {
-                                    is RelevantKrav -> krav.overstyrMuligRettFra?.årsak.toString()
+                                    is RelevantKrav -> krav.overstyrMuligRettFra?.årsak?.toString()
                                     else -> null
                                 },
                                 erNy = krav.vurdertIBehandling == behandling.id
