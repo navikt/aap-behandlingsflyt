@@ -1,9 +1,5 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
-import com.github.benmanes.caffeine.cache.Caffeine
-import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
-import no.nav.aap.api.intern.PersonEksistererIAAPArena
-import no.nav.aap.api.intern.SakerRequest
 import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
 import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
@@ -16,9 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerRequest
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.BarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
@@ -51,13 +44,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.net.URI
-import java.time.Duration
 import java.time.LocalDate
 
 class ApiInternGatewayImpl : ApiInternGateway {
@@ -65,16 +56,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
         override fun konstruer(): ApiInternGateway {
             return ApiInternGatewayImpl()
-        }
-
-        private val arenaStatusCache = Caffeine.newBuilder()
-            .expireAfterWrite(Duration.ofHours(2))
-            .maximumSize(10_000)
-            .recordStats()
-            .build<Set<String>, ArenaStatusResponse>()
-
-        init {
-            CaffeineCacheMetrics.monitor(prometheus, arenaStatusCache, "datadeling_arena_status")
         }
     }
 
@@ -267,38 +248,6 @@ class ApiInternGatewayImpl : ApiInternGateway {
             PostRequest(body = detaljertMeldekortListe),
             mapper = { _, _ -> }
         )
-    }
-
-    override fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse> {
-        return runCatching {
-            // Kalles ofte fra saksbehandling, så cache den
-            arenaStatusCache.get(personidentifikatorer) {
-                val sakerRequest = SakerRequest(personidentifikatorer = personidentifikatorer.toList())
-                doHentArenaStatus(sakerRequest)
-            }
-        }.onFailure {
-            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
-        }
-    }
-
-    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
-        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
-            uri.resolve("/arena/person/aap/eksisterer"),
-            PostRequest(body = sakerRequest),
-            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-        )
-        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
-        return ArenaStatusResponse(remoteResponse.eksisterer)
-    }
-
-    override fun hentSakerForPerson(personidentifikator: String): ArenaSakerResponse {
-        val response: ArenaSakerResponse? = restClient.post(
-            uri.resolve("/arena/person/saker"),
-            PostRequest(body = ArenaSakerRequest(personidentifikator)),
-            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-        )
-        requireNotNull(response) { "Fikk ikke gyldig svar fra /arena/person/saker" }
-        return response
     }
 
     override fun oppdaterIdenter(
