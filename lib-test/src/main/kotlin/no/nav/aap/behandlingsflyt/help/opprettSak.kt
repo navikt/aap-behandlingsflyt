@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
+import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
 import java.time.LocalDate
 
 fun opprettSak(connection: DBConnection, søknadsdato: LocalDate): Sak {
@@ -36,6 +37,7 @@ fun opprettSak(connection: DBConnection, ident: Ident, søknadsdato: LocalDate):
     return PersonOgSakService(
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
+        FakeArenaOppslagGateway.konstruer(),
         PersonRepositoryImpl(connection),
         SakRepositoryImpl(connection),
         ArenaMigreringRepositoryImpl(connection)
@@ -46,6 +48,7 @@ fun opprettInMemorySak(søknadsdato: LocalDate = LocalDate.now(), ident: Ident =
     return PersonOgSakService(
         FakePdlGateway,
         FakeApiInternGateway.konstruer(),
+        FakeArenaOppslagGateway.konstruer(),
         InMemoryPersonRepository,
         InMemorySakRepository,
         InMemoryArenaMigreringRepository

@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
-import no.nav.aap.behandlingsflyt.arena.SakOppsummering
-import no.nav.aap.behandlingsflyt.arena.HarHistorikkResponse
-import no.nav.aap.behandlingsflyt.arena.SakerResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
+import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
+import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Factory
 import java.time.LocalDate
 
@@ -14,14 +15,14 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
         }
     }
 
-    override fun hentHarHistorikk(personidentifikator: String): HarHistorikkResponse {
-        return HarHistorikkResponse(harHistorikk = false)
+    override fun hentHarHistorikk(ident: Ident): HarArenaHistorikkResponse {
+        return HarArenaHistorikkResponse(harHistorikk = false)
     }
 
-    override fun hentSakerForPerson(personidentifikator: String): SakerResponse {
-        return SakerResponse(
+    override fun hentSakerForPerson(ident: Ident): ArenaSakerResponse {
+        return ArenaSakerResponse(
             saker = listOf(
-                SakOppsummering(
+                ArenaSakOppsummering(
                     sakId = "2016-123456",
                     lopenummer = 123456,
                     aar = 2016,

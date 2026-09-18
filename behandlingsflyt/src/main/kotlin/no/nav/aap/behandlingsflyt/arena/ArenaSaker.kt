@@ -2,15 +2,15 @@ package no.nav.aap.behandlingsflyt.arena
 
 import java.time.LocalDate
 
-data class SakerRequest(
+data class ArenaSakerRequest(
     val personidentifikator: String
 )
 
-data class SakerResponse(
-    val saker: List<SakOppsummering>
+data class ArenaSakerResponse(
+    val saker: List<ArenaSakOppsummering>
 )
 
-data class SakOppsummering(
+data class ArenaSakOppsummering(
     val sakId: String,
     val lopenummer: Int,
     val aar: Int,
