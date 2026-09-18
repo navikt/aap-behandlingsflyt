@@ -50,11 +50,6 @@ class KravSteg(
      * For "resten": Alle søknader er ikke et eget "krav". Opphør/stans og gjeninntreden kan trolig holdes unna for backfill
      */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.KravSteg)
-        ) {
-            return Fullført
-        }
-
         // Migreringssaker har egne krav, kunne vært i den normale switch-casen, men vi ønsker at disse alltid
         // skal gå gjennom selv om feature-toggelen under er skrudd av så lenge krav-steget er skrudd på
         // så midlertidig legges koden fort sette her for å være utenfor feature-toggelen.

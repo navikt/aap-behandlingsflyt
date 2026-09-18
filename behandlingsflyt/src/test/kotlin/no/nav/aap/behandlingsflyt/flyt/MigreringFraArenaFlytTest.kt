@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarVedtakslengdeLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKravLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
@@ -18,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.verdityper.dokument.Kanal
@@ -43,6 +47,20 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(behandling.vurderingsbehov().map { it.type })
                     .contains(no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRERING_FRA_ARENA)
             }
+            .løsAvklaringsBehov(
+                VurderKravLøsning(
+                    kravVurderinger = setOf(
+                        MigrertKravLøsningDto(
+                            begrunnelse = "Migrert fra Arena",
+                            virkningstidspunktArena = startDato.minusYears(1),
+                            muligRettFra = startDato,
+                            arenaSaksnummer = "ARENA-1",
+                            rettighetstype = MigrertRettighetstype.ORDINÆR,
+                            resterendeKvoteOrdinær = 500,
+                        ),
+                    )
+                )
+            )
             .løsLovvalg(startDato)
             .løsSykdom(startDato, erOppfylt = true)
             .løsBistand(startDato, erOppfylt = true)
