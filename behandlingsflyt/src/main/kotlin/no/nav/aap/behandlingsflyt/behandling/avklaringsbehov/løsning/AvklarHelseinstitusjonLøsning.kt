@@ -29,6 +29,6 @@ class AvklarHelseinstitusjonLøsning(
 // For helseinstitusjon vurderes perioder ut fra tidligste reduksjonsdato, eller perioden saksbehandler har angitt.
     EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return AvklarHelseinstitusjonLøser(repositoryProvider).løs(kontekst, this)
+        return AvklarHelseinstitusjonLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

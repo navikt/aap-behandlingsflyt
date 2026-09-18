@@ -27,10 +27,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.november
@@ -800,6 +802,121 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             }
     }
 
+    @Test
+    fun `sammenhengende institusjonsopphold hos to institusjoner behandles som ett opphold ved reduksjon`() {
+        val oppholdFom1 = 1 januar 2025
+        val oppholdTom1 = 30 juni 2025
+        val oppholdFom2 = 1 juli 2025 // dagen etter opphold1 slutter -> sammenhengende
+        val oppholdTom2 = 31 desember 2025
+        val tidligsteReduksjonsdato = oppholdFom1.withDayOfMonth(1).plusMonths(4)
+
+        val person = TestPersoner.STANDARD_PERSON()
+            .medInstitusjonsopphold(
+                listOf(
+                    hsOpphold(startdato = oppholdFom1, sluttdato = oppholdTom1),
+                    hsOpphold(startdato = oppholdFom2, sluttdato = oppholdTom2),
+                )
+            )
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = oppholdFom1.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(oppholdFom1)
+            .løsBistand(oppholdFom1)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(oppholdFom1)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+            }
+            // Én vurdering som dekker hele den sammenhengende kjeden (begge institusjonene)
+            .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(oppholdFom1, oppholdTom2))
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+            .medKontekst {
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
+                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+                assertThat(tidslinje.isNotEmpty()).isTrue()
+
+                val periodeUtenReduksjon = Periode(oppholdFom1, tidligsteReduksjonsdato.minusDays(1))
+                val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom2)
+
+                assertTidslinje(
+                    tidslinje.begrensetTil(periodeUtenReduksjon),
+                    periodeUtenReduksjon to {
+                        assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
+                    }
+                )
+                assertTidslinje(
+                    tidslinje.begrensetTil(periodeMedReduksjon),
+                    periodeMedReduksjon to {
+                        assertThat(it.graderingGrunnlag.institusjonGradering)
+                            .`as`("Reduksjon skal gjelde over hele den sammenhengende kjeden, uavhengig av institusjonsbytte")
+                            .isEqualTo(Prosent.`50_PROSENT`)
+                    }
+                )
+            }
+    }
+
+    @Test
+    fun `to institusjonsopphold etter hverandre med kort mellomrom (innen 3 måneder) gir reduksjon fra og med måned etter på andre delen av kjeden`() {
+        val oppholdFom1 = 1 januar 2025
+        val oppholdTom1 = 1 august 2025
+        val oppholdFom2 = 1 oktober 2025 // 2 mnd gap fra opphold1 slutt -> innen 3-måneders-vinduet
+        val oppholdTom2 = 1 juli 2026
+
+        val tidligsteReduksjonsdato2 = oppholdFom2.withDayOfMonth(1).plusMonths(1)
+
+        val person = TestPersoner.STANDARD_PERSON()
+            .medInstitusjonsopphold(
+                listOf(
+                    hsOpphold(startdato = oppholdFom1, sluttdato = oppholdTom1),
+                    hsOpphold(startdato = oppholdFom2, sluttdato = oppholdTom2),
+                )
+            )
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = oppholdFom1.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(oppholdFom1)
+            .løsBistand(oppholdFom1)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(oppholdFom1)
+            .løsAvklaringsBehov(løsToHelseinstitusjonMedReduksjon(oppholdFom1, oppholdTom1, oppholdFom2, oppholdTom2))
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+            .medKontekst {
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
+                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+                // Andre opphold er innen 3 måneder etter at første opphold sluttet -> umiddelbar reduksjon fra oppholdFom2
+                val periodeMedUmiddelbarReduksjon = Periode(tidligsteReduksjonsdato2, oppholdTom2)
+                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedUmiddelbarReduksjon)
+                tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
+                    assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
+                        .`as`("Reduksjon kan starte umiddelbart siden opphold 2 er innen 3 måneder fra opphold 1")
+                        .isEqualTo(Prosent.`50_PROSENT`)
+                }
+            }
+    }
 
 
     // -------------------------------------------------------------------------
