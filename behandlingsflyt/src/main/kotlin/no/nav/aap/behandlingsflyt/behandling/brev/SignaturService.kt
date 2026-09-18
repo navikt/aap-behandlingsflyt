@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhet
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -34,14 +35,12 @@ class SignaturService(
         avklaringsbehovRepository = repositoryProvider.provide()
     )
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlag> {
-        require(brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
+        require(
+            brevbestilling.status == Status.FORHÅNDSVISNING_KLAR ||
+                    brevbestilling.typeBrev == TypeBrev.VEDTAK_AVSLAG_11_5
+        ) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
-        }
-        if (Miljø.erDev()) {
-            log.info("Brevbestilling har " + brevbestilling.referanse + "  med typebrev" + brevbestilling.typeBrev + " og signatur/ikke-signatur " + brevbestilling.typeBrev.skalIkkeHaSignatur())
         }
         return if (brevbestilling.typeBrev.skalIkkeHaSignatur()) {
             emptyList()
