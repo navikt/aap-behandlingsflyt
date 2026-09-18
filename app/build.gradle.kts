@@ -56,6 +56,7 @@ tasks.register<JavaExec>("runTestAppMotOppgave") {
     environment("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME", "postgres")
     environment("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD", "")
     environment("INTEGRASJON_OPPGAVESTYRING_URL", "http://localhost:8084")
+    environment("INTEGRASJON_BREV_URL", "http://localhost:8082")
 }
 
 tasks.register<JavaExec>("genererOpenApiJson") {

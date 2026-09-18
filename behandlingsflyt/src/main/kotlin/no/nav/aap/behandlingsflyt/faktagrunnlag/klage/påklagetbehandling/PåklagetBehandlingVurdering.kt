@@ -26,6 +26,7 @@ data class PåklagetBehandlingVurderingMedReferanse(
     val opprettet: Instant
 ) {
     init {
+        // TODO: krever vi at påklagetBehandling også er satt for TILBAKEKREVING ?
         require(!(påklagetVedtakType == PåklagetVedtakType.KELVIN_BEHANDLING && påklagetBehandling == null)) {
             "Påklaget behandling må være utfylt dersom det klages på et Kelvin-vedtak"
         }
@@ -34,5 +35,6 @@ data class PåklagetBehandlingVurderingMedReferanse(
 
 enum class PåklagetVedtakType {
     KELVIN_BEHANDLING,
-    ARENA_VEDTAK
+    ARENA_VEDTAK,
+    TILBAKEKREVING
 }

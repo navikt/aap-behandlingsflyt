@@ -89,6 +89,7 @@ class HåndterTilbakekrevingHendelseService(
                 tom = this.tilbakekreving.fullstendigPeriode.tom
             ),
             versjon = this.versjon,
+            vedtaksdato = this.tilbakekreving.vedtaksdato,
         )
     }
 

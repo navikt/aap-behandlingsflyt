@@ -1,23 +1,24 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling
 
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.tilBehandlingStatus
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.KlagebehandlingMedVedtaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.pip.BehandlingDTO
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 data class PåklagetBehandlingGrunnlagDto(
     val behandlinger: List<BehandlingMedVedtakDto>,
     val vedtatteKlagebehandlinger: List<KlagebehandlingDto>,
+    val tilbakekrevingsbehandlinger: List<TilbakekrevingsbehandlingDto>,
     val gjeldendeVurdering: PåklagetBehandlingVurderingDto?,
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurderingerMeta: VurderingerMetaResponse,
@@ -38,7 +39,23 @@ data class BehandlingMedVedtakDto(
     val virkningstidspunkt: LocalDate?,
     val vurderingsbehov: Set<Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?
-)
+) {
+    companion object {
+        fun fraDomene(behandlingMedVedtak: BehandlingMedVedtak): BehandlingMedVedtakDto {
+            return BehandlingMedVedtakDto(
+                saksnummer = behandlingMedVedtak.saksnummer.toString(),
+                referanse = behandlingMedVedtak.referanse.referanse,
+                typeBehandling = behandlingMedVedtak.typeBehandling,
+                status = behandlingMedVedtak.status,
+                opprettetTidspunkt = behandlingMedVedtak.opprettetTidspunkt,
+                vedtakstidspunkt = behandlingMedVedtak.vedtakstidspunkt,
+                virkningstidspunkt = behandlingMedVedtak.virkningstidspunkt,
+                vurderingsbehov = behandlingMedVedtak.vurderingsbehov,
+                årsakTilOpprettelse = behandlingMedVedtak.årsakTilOpprettelse
+            )
+        }
+    }
+}
 
 data class KlagebehandlingDto(
     val saksnummer: String,
@@ -56,16 +73,27 @@ data class KlagebehandlingDto(
     }
 }
 
-internal fun BehandlingMedVedtak.tilBehandlingMedVedtakDto() =
-    BehandlingMedVedtakDto(
-        saksnummer = saksnummer.toString(),
-        referanse = referanse.referanse,
-        typeBehandling = typeBehandling,
-        status = status,
-        opprettetTidspunkt = opprettetTidspunkt,
-        vedtakstidspunkt = vedtakstidspunkt,
-        virkningstidspunkt = virkningstidspunkt,
-        vurderingsbehov = vurderingsbehov,
-        årsakTilOpprettelse = årsakTilOpprettelse
-    )
+data class TilbakekrevingsbehandlingDto(
+    val saksnummer: String,
+    val referanse: String,
+    val typeBehandling: TypeBehandling,
+    val status: Status,
+    val opprettetTidspunkt: LocalDateTime,
+    val vedtaksdato: LocalDate?,
+    val eksternSaksbehandlingUrl: String? = null
+) {
+    companion object {
+        fun fraDomene(tilbakekrevingsbehandling: Tilbakekrevingsbehandling): TilbakekrevingsbehandlingDto {
+            return TilbakekrevingsbehandlingDto(
+                saksnummer = tilbakekrevingsbehandling.eksternFagsakId,
+                referanse = tilbakekrevingsbehandling.tilbakekrevingBehandlingId.toString(),
+                typeBehandling = TypeBehandling.Tilbakekreving,
+                status = tilbakekrevingsbehandling.behandlingsstatus.tilBehandlingStatus(),
+                opprettetTidspunkt = tilbakekrevingsbehandling.sakOpprettet,
+                vedtaksdato = tilbakekrevingsbehandling.vedtaksdato,
+                eksternSaksbehandlingUrl = tilbakekrevingsbehandling.saksbehandlingURL?.toString()
+            )
+        }
+    }
+}
 

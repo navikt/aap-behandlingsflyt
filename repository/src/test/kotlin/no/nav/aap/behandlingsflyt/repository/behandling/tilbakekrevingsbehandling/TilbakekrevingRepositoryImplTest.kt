@@ -56,7 +56,8 @@ class TilbakekrevingRepositoryImplTest {
                 totaltFeilutbetaltBeløp = Beløp(1000),
                 tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
                 fullstendigPeriode = periode,
-                versjon = 1
+                versjon = 1,
+                vedtaksdato = nå.toLocalDate(),
             )
 
             val repo = TilbakekrevingRepositoryImpl(connection)
@@ -102,7 +103,8 @@ class TilbakekrevingRepositoryImplTest {
                 totaltFeilutbetaltBeløp = Beløp(1000),
                 tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
                 fullstendigPeriode = periode,
-                versjon = 1
+                versjon = 1,
+                vedtaksdato = nå.toLocalDate(),
             )
 
             val repo = TilbakekrevingRepositoryImpl(connection)
@@ -140,7 +142,8 @@ class TilbakekrevingRepositoryImplTest {
                 totaltFeilutbetaltBeløp = Beløp(1000),
                 tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
                 fullstendigPeriode = periode,
-                versjon = 1
+                versjon = 1,
+                vedtaksdato = nå.toLocalDate(),
             )
 
             val repo = TilbakekrevingRepositoryImpl(connection)

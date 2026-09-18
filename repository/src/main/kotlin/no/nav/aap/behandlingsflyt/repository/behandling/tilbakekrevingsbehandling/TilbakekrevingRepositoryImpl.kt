@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -30,8 +31,9 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 TOTALT_FEILUTBETALT_BELOP,
                 TILBAKEKREVING_SAKSBEHANDLING_URL,
                 FULLSTENDIG_PERIODE,
-                VERSJON
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange, ?)
+                VERSJON,
+                VEDTAKSDATO
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?)
         """.trimIndent()
 
         connection.execute(insertHendelse) {
@@ -50,6 +52,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 setString(12, tilbakekrevingshendelse.tilbakekrevingSaksbehandlingUrl.toString())
                 setPeriode(13, tilbakekrevingshendelse.fullstendigPeriode)
                 setInt(14, tilbakekrevingshendelse.versjon)
+                setLocalDate(15, tilbakekrevingshendelse.vedtaksdato)
             }
         }
 
@@ -71,8 +74,9 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP,
                 TILBAKEKREVING_SAKSBEHANDLING_URL,
-                FULLSTENDIG_PERIODE
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange)
+                FULLSTENDIG_PERIODE,
+                VEDTAKSDATO
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange, ?)
             ON CONFLICT(TILBAKEKREVING_BEHANDLING_ID) DO UPDATE SET 
                 HENDELSE_OPPRETTET = EXCLUDED.HENDELSE_OPPRETTET,
                 EKSTERN_BEHANDLING_ID = EXCLUDED.EKSTERN_BEHANDLING_ID,
@@ -82,7 +86,8 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 BEHANDLINGSSTATUS = EXCLUDED.BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP = EXCLUDED.TOTALT_FEILUTBETALT_BELOP,
                 TILBAKEKREVING_SAKSBEHANDLING_URL = EXCLUDED.TILBAKEKREVING_SAKSBEHANDLING_URL,
-                FULLSTENDIG_PERIODE = EXCLUDED.FULLSTENDIG_PERIODE
+                FULLSTENDIG_PERIODE = EXCLUDED.FULLSTENDIG_PERIODE,
+                VEDTAKSDATO = EXCLUDED.VEDTAKSDATO
         """.trimIndent()
 
         connection.execute(upsertBehandling) {
@@ -100,6 +105,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 setBigDecimal(11, tilbakekrevingshendelse.totaltFeilutbetaltBeløp.verdi)
                 setString(12, tilbakekrevingshendelse.tilbakekrevingSaksbehandlingUrl.toString())
                 setPeriode(13, tilbakekrevingshendelse.fullstendigPeriode)
+                setLocalDate(14, tilbakekrevingshendelse.vedtaksdato)
             }
         }
     }
@@ -118,7 +124,8 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP,
                 TILBAKEKREVING_SAKSBEHANDLING_URL,
-                FULLSTENDIG_PERIODE
+                FULLSTENDIG_PERIODE,
+                VEDTAKSDATO
             FROM TILBAKEKREVINGSBEHANDLING
             WHERE SAK_ID = ? AND AKTIV = TRUE
         """.trimIndent()
@@ -145,7 +152,8 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP,
                 TILBAKEKREVING_SAKSBEHANDLING_URL,
-                FULLSTENDIG_PERIODE
+                FULLSTENDIG_PERIODE,
+                VEDTAKSDATO
             FROM TILBAKEKREVINGSBEHANDLING
             WHERE TILBAKEKREVING_BEHANDLING_ID = ? AND AKTIV = TRUE
         """.trimIndent()
@@ -153,6 +161,45 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
         return connection.queryFirst(sql) {
             setParams {
                 setUUID(1, tilbakekrevingsBehandlingId)
+            }
+            setRowMapper { mapToTilbakekrevingsbehandling(it) }
+        }
+    }
+
+    /** Vedtaksdato i kafka-hendelser fra tilbake-løsningen til kelvin ble innført i 2026. Dvs. vi har persistert
+     *  tilbakekrevingsbehandlinger fra tilbake i kelvin-db som er både uten og med vedtaksdato avhengig av
+     *  opprettelsetidspunkt. For visningen av vedtaksdato i klage-flyten i saksbehandling faller vi tilbake til
+     *  hendelse_opprettet dato for de behandlingene som mangler vedtaksdato.
+     */
+    override fun hentAlleAvsluttaTilbakekrevingsBehandlinger(personId: PersonId): List<Tilbakekrevingsbehandling> {
+        val sql = """
+            SELECT
+                TB.TILBAKEKREVING_BEHANDLING_ID,
+                TB.EKSTERN_FAGSAK_ID,
+                TB.HENDELSE_OPPRETTET,
+                TB.EKSTERN_BEHANDLING_ID,
+                TB.SAK_OPPRETTET,
+                TB.VARSEL_SENDT,
+                TB.VENTE_GRUNN,
+                TB.GJENOPPTAS,
+                TB.BEHANDLINGSSTATUS,
+                TB.TOTALT_FEILUTBETALT_BELOP,
+                TB.TILBAKEKREVING_SAKSBEHANDLING_URL,
+                TB.FULLSTENDIG_PERIODE,
+                TB.VEDTAKSDATO
+            FROM 
+                SAK S
+                INNER JOIN TILBAKEKREVINGSBEHANDLING TB ON TB.SAK_ID = S.ID
+            WHERE 
+                S.PERSON_ID = ? AND
+                TB.BEHANDLINGSSTATUS = 'AVSLUTTET'
+            ORDER BY
+                TB.SAK_OPPRETTET DESC
+        """.trimIndent()
+
+        return connection.queryList(sql) {
+            setParams {
+                setLong(1, personId.id)
             }
             setRowMapper { mapToTilbakekrevingsbehandling(it) }
         }
@@ -171,7 +218,8 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
             behandlingsstatus = row.getEnum("BEHANDLINGSSTATUS"),
             totaltFeilutbetaltBeløp = Beløp(row.getBigDecimal("TOTALT_FEILUTBETALT_BELOP")),
             saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")),
-            fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
+            fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE"),
+            vedtaksdato = row.getLocalDateOrNull("VEDTAKSDATO")
         )
 
     override fun kopier(

@@ -76,7 +76,9 @@ class SignaturService(
         brevbestilling: Brevbestilling,
         innloggetBruker: Bruker
     ): List<SignaturGrunnlag> {
+        log.error("Brevbestilling gjort med behandlingId: ${brevbestilling.behandlingId}")
         val behandling = behandlingRepository.hent(brevbestilling.behandlingId)
+        log.error("Signatur utledning slår opp mot oppgave med: ${behandling.referanse}")
         val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
 
