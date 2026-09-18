@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
@@ -106,7 +107,8 @@ class BrevUtlederService(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val avslag11_27Repository: Avslag11_27Repository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -135,7 +137,8 @@ class BrevUtlederService(
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
+        avslag11_27Repository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -361,6 +364,7 @@ class BrevUtlederService(
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+            Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG
         )
         return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
@@ -443,6 +447,21 @@ class BrevUtlederService(
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
             ) {
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
+            }
+            if (Miljø.erDev() && avslagsårsak == Avslagsårsak.ANNEN_FULL_YTELSE_AVSLAG) {
+                val avslag1127 = avslag11_27Repository.hentHvisEksisterer(behandling.id)
+                    ?.gjeldendeVurderinger()
+                    ?.firstOrNull { it.vurdertIBehandling == behandling.id && it.skalAvslås1127 == true }
+                    ?: error("Mangler avslag 11-27-vurdering for behandling ${behandling.id}")
+
+                return AvslagBrev.AvslagAnnenYtelse(
+                    sykdomsvurdering = sykdomsvurdering,
+                    sykepengeGrunnlagOver2G = avslag1127.harSykepengegrunnlagOver2G == true,
+                    ytelsetype = checkNotNull(avslag1127.brukersYtelse) {
+                        "Mangler brukersYtelse for avslag 11-27 i behandling ${behandling.id}"
+                    }.name,
+                    sisteDagMedYtelse = underveisRepository.hent(behandling.id).sisteDagMedYtelse(),
+                )
             }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
