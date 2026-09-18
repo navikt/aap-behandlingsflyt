@@ -13,7 +13,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.Validation
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -28,12 +31,14 @@ import java.time.format.DateTimeFormatter
 
 class AvklarHelseinstitusjonLøser(
     private val behandlingRepository: BehandlingRepository,
-    private val helseinstitusjonRepository: InstitusjonsoppholdRepository
+    private val helseinstitusjonRepository: InstitusjonsoppholdRepository,
+    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
-        helseinstitusjonRepository = repositoryProvider.provide()
+        helseinstitusjonRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(
@@ -59,7 +64,8 @@ class AvklarHelseinstitusjonLøser(
 
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
-            oppdaterteVurderinger
+            oppdaterteVurderinger,
+            sammenhengendeOppholdEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)
         )
 
         return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.joinToString(" ") { it.begrunnelse })

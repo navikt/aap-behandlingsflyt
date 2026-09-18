@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.tilDto
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -19,12 +18,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -58,7 +58,8 @@ fun NormalOpenAPIRoute.institusjonApi(
                         InstitusjonsoppholdUtlederService(
                             barnetilleggRepository, institusjonsoppholdRepository,
                             sakRepository,
-                            behandlingRepository
+                            behandlingRepository,
+                            gatewayProvider.provide()
                         )
                     val behov = utlederService.utled(behandling.id)
 
@@ -130,7 +131,8 @@ fun NormalOpenAPIRoute.institusjonApi(
                         barnetilleggRepository,
                         institusjonsoppholdRepository,
                         sakRepository,
-                        behandlingRepository
+                        behandlingRepository,
+                        gatewayProvider.provide()
                     )
                     val behov = utlederService.utled(behandling.id)
 
@@ -157,7 +159,8 @@ fun NormalOpenAPIRoute.institusjonApi(
                         mapVurderingerToDto(
                             vedtatteVurderingerForOpphold,
                             oppholdInfo,
-                            vurdertAvService
+                            vurdertAvService,
+                            gatewayProvider.provide()
                         )
 
                     val vurderingerDto = if (nyeVurderingerForOpphold.isEmpty()) {
@@ -198,7 +201,8 @@ fun NormalOpenAPIRoute.institusjonApi(
                         mapVurderingerToDto(
                             nyeVurderingerForOpphold,
                             oppholdInfo,
-                            vurdertAvService
+                            vurdertAvService,
+                            gatewayProvider.provide()
                         ) + uavklarteDto
                     }
 
@@ -213,7 +217,8 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val oppholdMedReduksjonsdato = hentOppholdSomSkalVurderes(
                         oppholdInfo,
                         behov.perioderTilVurdering,
-                        vedtatteVurderingerDto
+                        vedtatteVurderingerDto,
+                        gatewayProvider.provide()
                     ).map { dto ->
                         val matchendeSegment = oppholdSegmenter.find { segment ->
                             lagOppholdId(segment.verdi.navn, segment.periode.fom) == dto.oppholdId
@@ -242,7 +247,42 @@ fun mapVurderingerToDto(
     vurderingerPerOpphold: Map<Periode, List<HelseinstitusjonVurdering>>,
     oppholdInfo: Tidslinje<Institusjon>,
     vurdertAvService: VurdertAvService,
+    unleashGateway: UnleashGateway,
 ): List<HelseoppholdDto> {
+    if (unleashGateway.isDisabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
+        return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
+            val oppholdSegment = oppholdInfo.filter { segment ->
+                segment.periode.fom <= vurderingPeriode.tom && segment.periode.tom >= vurderingPeriode.fom
+            }.segmenter().firstOrNull() ?: return@flatMap emptyList()
+
+            listOf(
+                HelseoppholdDto(
+                    periode = vurderingPeriode,
+                    oppholdId = lagOppholdId(oppholdSegment.verdi.navn, oppholdSegment.periode.fom),
+                    vurderinger = vurderingerForPeriode.map { vurdering ->
+                        HelseinstitusjonVurderingDto(
+                            oppholdId = lagOppholdId(oppholdSegment.verdi.navn, oppholdSegment.periode.fom),
+                            begrunnelse = vurdering.begrunnelse,
+                            faarFriKostOgLosji = vurdering.faarFriKostOgLosji,
+                            forsoergerEktefelle = vurdering.forsoergerEktefelle,
+                            harFasteUtgifter = vurdering.harFasteUtgifter,
+                            periode = vurdering.periode,
+                            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                                definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
+                                behandlingId = vurdering.vurdertIBehandling,
+                                vurdertAv = vurdertAvService.medNavnOgEnhet(
+                                    ident = vurdering.vurdertAv ?: Bruker("ukjent"),
+                                    dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
+                                ),
+                            )
+                        )
+                    },
+                    status = OppholdVurderingDto.UAVKLART
+                )
+            )
+        }
+    }
+
     val alleKjeder = grupperSammenhengendeOppholdSegmenter(oppholdInfo.segmenter().toList())
 
     return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
@@ -269,7 +309,8 @@ fun mapVurderingerToDto(
                             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
                             behandlingId = vurdering.vurdertIBehandling,
                             vurdertAv = vurdertAvService.medNavnOgEnhet(
-                                ident = vurdering.vurdertAv ?: Bruker("ukjent") /* hacky, burdeikke kalle PDL med ukjent som ident */,
+                                ident = vurdering.vurdertAv
+                                    ?: Bruker("ukjent"), /* hacky, burdeikke kalle PDL med ukjent som ident */
                                 dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
                             ),
                         )
@@ -285,8 +326,29 @@ fun mapVurderingerToDto(
 fun hentOppholdSomSkalVurderes(
     oppholdInfo: Tidslinje<Institusjon>,
     behovPerioder: Tidslinje<InstitusjonsoppholdVurdering>,
-    vedtatteVurderingerDto: List<HelseoppholdDto>
+    vedtatteVurderingerDto: List<HelseoppholdDto>,
+    unleashGateway: UnleashGateway,
 ): List<InstitusjonsoppholdDto> {
+    if (unleashGateway.isDisabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
+        val behovOpphold = oppholdInfo.segmenter().mapNotNull { segment ->
+            val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
+            val harUavklartOpphold = behovPerioder.segmenter().any { periode ->
+                dto.oppholdFra <= periode.periode.tom && dto.avsluttetDato >= periode.periode.fom
+            }
+            if (harUavklartOpphold) dto else null
+        }
+        val vedtatteOpphold = vedtatteVurderingerDto
+            .mapNotNull { vurdering ->
+                vurdering.oppholdId?.let { oppholdId ->
+                    oppholdInfo.segmenter().mapNotNull { segment ->
+                        val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
+                        if (dto.oppholdId == oppholdId) dto else null
+                    }
+                }
+            }.flatten()
+        return (behovOpphold + vedtatteOpphold).distinctBy { it.oppholdId }
+    }
+
     val alleKjeder = grupperSammenhengendeOppholdSegmenter(oppholdInfo.segmenter().toList())
 
     val behovOpphold = alleKjeder

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
@@ -24,6 +25,7 @@ import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -47,7 +49,11 @@ class AvklarHelseinstitusjonLøserTest {
         )
     )
     private val løser: AvklarHelseinstitusjonLøser by lazy {
-        AvklarHelseinstitusjonLøser(behandlingRepository, helseinstitusjonRepository)
+        AvklarHelseinstitusjonLøser(
+            behandlingRepository,
+            helseinstitusjonRepository,
+            FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
+        )
     }
 
     @Test

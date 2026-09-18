@@ -12,6 +12,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -28,13 +31,15 @@ class InstitusjonsoppholdUtlederService(
     private val barnetilleggRepository: BarnetilleggRepository,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val sakRepository: SakRepository,
-    private val behandlingRepository: BehandlingRepository
+    private val behandlingRepository: BehandlingRepository,
+    private val unleashGateway: UnleashGateway
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         barnetilleggRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide<UnleashGateway>()
     )
 
     fun utled(
@@ -401,7 +406,11 @@ class InstitusjonsoppholdUtlederService(
         val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
 
         val alleOpphold = grunnlag?.oppholdene?.opphold.orEmpty()
-        val opphold = finnRelevanteOppholdSegmenter(alleOpphold, rettighetsperiode)
+        val opphold = if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
+            finnRelevanteOppholdSegmenter(alleOpphold, rettighetsperiode)
+        } else {
+            alleOpphold.filter { it.periode.overlapper(rettighetsperiode) }
+        }
 
         val soningsvurderinger: Soningsvurderinger?
         val helsevurderinger: Helseoppholdvurderinger?
