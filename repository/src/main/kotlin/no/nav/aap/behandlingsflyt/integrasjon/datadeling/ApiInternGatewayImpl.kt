@@ -301,6 +301,10 @@ class ApiInternGatewayImpl : ApiInternGateway {
         return response
     }
 
+    override fun hentArenaMeldekortsyklus(ident: Ident): ApiInternGateway.Meldekortsyklus? {
+        TODO("Not yet implemented")
+    }
+
     override fun oppdaterIdenter(
         saksnummer: Saksnummer,
         identer: List<Ident>

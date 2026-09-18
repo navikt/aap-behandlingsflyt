@@ -22,6 +22,7 @@ enum class BehandlingsflytFeature(
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     GenererVilkarsvurderingOppsummeringPDF,
+    SynkroniserArenaMeldeperiodesyklus,
 
     // --- Krav ---
     BackfillKrav,
