@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMigreringRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
@@ -36,7 +35,6 @@ fun opprettSak(connection: DBConnection, søknadsdato: LocalDate): Sak {
 fun opprettSak(connection: DBConnection, ident: Ident, søknadsdato: LocalDate): Sak {
     return PersonOgSakService(
         FakePdlGateway,
-        FakeApiInternGateway.konstruer(),
         FakeArenaOppslagGateway.konstruer(),
         PersonRepositoryImpl(connection),
         SakRepositoryImpl(connection),
@@ -47,7 +45,6 @@ fun opprettSak(connection: DBConnection, ident: Ident, søknadsdato: LocalDate):
 fun opprettInMemorySak(søknadsdato: LocalDate = LocalDate.now(), ident: Ident = ident()): Sak {
     return PersonOgSakService(
         FakePdlGateway,
-        FakeApiInternGateway.konstruer(),
         FakeArenaOppslagGateway.konstruer(),
         InMemoryPersonRepository,
         InMemorySakRepository,
