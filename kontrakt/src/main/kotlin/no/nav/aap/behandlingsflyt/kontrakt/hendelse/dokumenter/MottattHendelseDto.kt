@@ -146,6 +146,12 @@ public class Innsending(
                 requireNotNull(melding) { "Melding for migrering fra Arena kan ikke være null" }
                 require(melding is MigreringFraArenaV0)
             }
+
+            InnsendingType.KORRIGER_SØKNADSDATO -> {
+                require(referanse.type == InnsendingReferanse.Type.MANUELL_OPPRETTELSE)
+                requireNotNull(melding) { "Melding for korriger søknadsdato kan ikke være null" }
+                require(melding is KorrigerSøknadsdato)
+            }
         }
     }
 }
