@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.Diff
 import no.nav.aap.behandlingsflyt.utils.Endret
 import no.nav.aap.behandlingsflyt.utils.LagtTil
 import no.nav.aap.behandlingsflyt.utils.Uendret
@@ -169,90 +170,94 @@ class RettighetstypeSteg(
             grunnlag: StansOpphørGrunnlag,
             rettighetstyper: Tidslinje<RettighetsType>,
         ): Boolean {
-            var ok = true
-            if (grunnlag.stansOpphørV2 != null) {
-                val stansOpphørV1 = justertStansOpphørV1(grunnlag)
-
-                val uendret = diffMap(stansOpphørV1, grunnlag.stansOpphørV2).all { (_, diff) ->
-                    diff is Uendret<*> ||
-                            /* Gammel stans/opphør ble regnet ut da vi brukte MANGLENDE_DOKUMENTASJON, som betyr at
-                             * de ikke fikk med seg disse opphørene. Godtar derfor at opphør dukker opp, siden det nå brukes
-                             * riktig avslagsårsak. */
-                            (diff is LagtTil<StansEllerOpphør> &&
-                                    diff.lagtTil == Opphør(setOf(IKKE_NOK_REDUSERT_ARBEIDSEVNE))) ||
-                            (diff is LagtTil<StansEllerOpphør> &&
-                                    diff.lagtTil == Opphør(setOf(IKKE_SYKDOM_SKADE_LYTE))) ||
-                            (diff is Endret<StansEllerOpphør> &&
-                                    diff.fra == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING)) &&
-                                    diff.til == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING, IKKE_SYKDOM_SKADE_LYTE))) ||
-                            (diff is Endret<StansEllerOpphør> &&
-                                    diff.fra == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING)) &&
-                                    diff.til == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING, IKKE_NOK_REDUSERT_ARBEIDSEVNE)))
-                }
-                if (!uendret) {
-                    log.warn(
-                        "stansOpphørV2 samsvarer ikke med gjeldendeStansOgOpphør() V1={} V2={}",
-                        stansOpphørV1,
-                        grunnlag.stansOpphørV2
-                    )
-                    ok = false
-                }
-
-                for (fom in grunnlag.stansOpphørV2.keys) {
-                    val rettighetstypePåStansOpphørDag = rettighetstyper.segment(fom)
-                    if (rettighetstypePåStansOpphørDag != null) {
-                        log.warn(
-                            "har rett {} til AAP på samme dag som stans/opphør {}",
-                            rettighetstypePåStansOpphørDag.verdi,
-                            fom
-                        )
-                        ok = false
-                    }
-
-                    val rettFørFom = rettighetstyper.segment(fom.minusDays(1))
-                    if (rettFørFom == null) {
-                        log.warn("har stans/opphør på {}, men har ikke rett dagen før heller", fom)
-                        ok = false
-                    }
-                }
+            if (grunnlag.stansOpphørV2 == null) {
+                return true
             }
-            return ok
+
+            return validerV1vsV2(grunnlag) { (_, diff) -> diff is Uendret<*> }
+                    && validerOvergangFraRettTilIkkeRett(grunnlag.stansOpphørV2, rettighetstyper)
         }
 
-        private fun justertStansOpphørV1(
-            grunnlag: StansOpphørGrunnlag
-        ): Map<LocalDate, StansEllerOpphør> {
-            val stansOpphørV1 = grunnlag.gjeldendeStansOgOpphør()
-                .map {
-                    it.fom to when (it.vurdering) {
-                        is Opphør -> Opphør(it.vurdering.årsaker)
-                        is Stans -> Stans(it.vurdering.årsaker)
-                    }
-                }.sortedBy { it.first }.toMutableList()
+        fun validerStansOpphørVedMigrering(
+            grunnlag: StansOpphørGrunnlag,
+            rettighetstyper: Tidslinje<RettighetsType>,
+        ): Boolean {
+            requireNotNull(grunnlag.stansOpphørV2) {
+                "stansOpphørV2 må være satt etter migrering"
+            }
 
-            /* Tidligere, så kjørte ikke effektuering av 11-7 vilkårsvurdering, så det mangler noen innslag i gamle
-              * behandlinger.*/
-            val aktivitetspliktstansopphør = grunnlag.stansOpphørV2.orEmpty().filter {
+            val harEffektueringAv11_7 = grunnlag.stansOpphørV2.any {
                 Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS in it.value.årsaker ||
                         Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR in it.value.årsaker
             }
 
-            return buildMap {
-                for ((aktivitetspliktStansOpphørFom, aktivitetspliktStansOpphør) in aktivitetspliktstansopphør) {
-                    while (true) {
-                        val (stansOpphørFom, stansOpphør) = stansOpphørV1.removeFirstOrNull() ?: return@buildMap
-                        if (stansOpphørFom < aktivitetspliktStansOpphørFom) {
-                            put(stansOpphørFom, stansOpphør)
-                        } else {
-                            put(aktivitetspliktStansOpphørFom, aktivitetspliktStansOpphør)
-                            break
-                        }
+            val endring = harEffektueringAv11_7 || validerV1vsV2(grunnlag) { (_, diff) ->
+                diff is Uendret<*> ||
+                        /* Gammel stans/opphør ble regnet ut da vi brukte MANGLENDE_DOKUMENTASJON, som betyr at
+                                     * de ikke fikk med seg disse opphørene. Godtar derfor at opphør dukker opp, siden det nå brukes
+                                     * riktig avslagsårsak. */
+                        (diff is LagtTil<StansEllerOpphør> &&
+                                diff.lagtTil == Opphør(setOf(IKKE_NOK_REDUSERT_ARBEIDSEVNE))) ||
+                        (diff is LagtTil<StansEllerOpphør> &&
+                                diff.lagtTil == Opphør(setOf(IKKE_SYKDOM_SKADE_LYTE))) ||
+                        (diff is Endret<StansEllerOpphør> &&
+                                diff.fra == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING)) &&
+                                diff.til == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING, IKKE_SYKDOM_SKADE_LYTE))) ||
+                        (diff is Endret<StansEllerOpphør> &&
+                                diff.fra == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING)) &&
+                                diff.til == Opphør(setOf(IKKE_BEHOV_FOR_OPPFOLGING, IKKE_NOK_REDUSERT_ARBEIDSEVNE)))
+            }
+
+            return endring && validerOvergangFraRettTilIkkeRett(grunnlag.stansOpphørV2, rettighetstyper)
+        }
+
+        private fun validerV1vsV2(
+            grunnlag: StansOpphørGrunnlag,
+            anseSomUendret: (Map.Entry<LocalDate, Diff<StansEllerOpphør>>) -> Boolean
+        ): Boolean {
+            val stansOpphørV1 = grunnlag.gjeldendeStansOgOpphør()
+                .associate {
+                    it.fom to when (it.vurdering) {
+                        is Opphør -> Opphør(it.vurdering.årsaker)
+                        is Stans -> Stans(it.vurdering.årsaker)
                     }
                 }
-                for (gjenstående in stansOpphørV1) {
-                    put(gjenstående.first, gjenstående.second)
+
+
+            val uendret = diffMap(stansOpphørV1, grunnlag.stansOpphørV2.orEmpty()).all(anseSomUendret)
+            if (!uendret) {
+                log.warn(
+                    "stansOpphørV2 samsvarer ikke med gjeldendeStansOgOpphør() V1={} V2={}",
+                    stansOpphørV1,
+                    grunnlag.stansOpphørV2
+                )
+            }
+            return uendret
+        }
+
+        private fun validerOvergangFraRettTilIkkeRett(
+            stansOpphørV2: Map<LocalDate, StansEllerOpphør>,
+            rettighetstyper: Tidslinje<RettighetsType>
+        ): Boolean {
+            var ok = true
+            for (fom in stansOpphørV2.keys) {
+                val rettighetstypePåStansOpphørDag = rettighetstyper.segment(fom)
+                if (rettighetstypePåStansOpphørDag != null) {
+                    ok = false
+                    log.warn(
+                        "har rett {} til AAP på samme dag som stans/opphør {}",
+                        rettighetstypePåStansOpphørDag.verdi,
+                        fom
+                    )
+                }
+
+                val rettFørFom = rettighetstyper.segment(fom.minusDays(1))
+                if (rettFørFom == null) {
+                    ok = false
+                    log.warn("har stans/opphør på {}, men har ikke rett dagen før heller", fom)
                 }
             }
+            return ok
         }
     }
 }
