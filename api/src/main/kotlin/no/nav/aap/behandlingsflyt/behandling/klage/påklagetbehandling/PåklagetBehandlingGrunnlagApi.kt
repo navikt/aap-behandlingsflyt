@@ -131,8 +131,6 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
             }
         )
     )
-    // TODO: REMOVE, eksponerer unødvendig i logg etter utvikling
-    log.debug("/api/klage/../grunnlag/påklaget-behandling respons: $respons")
     return respons
 }
         
