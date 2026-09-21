@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
+import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
+import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -14,6 +15,7 @@ import java.time.LocalDateTime
 class PersonOgSakService(
     private val pdlGateway: IdentGateway,
     private val apiInternGateway: ApiInternGateway,
+    private val arenaOppslagGateway: ArenaOppslagGateway,
     private val personRepository: PersonRepository,
     private val sakRepository: SakRepository,
     private val arenaMigreringRepository: ArenaMigreringRepository,
@@ -24,6 +26,7 @@ class PersonOgSakService(
     ) : this(
         gatewayProvider.provide<IdentGateway>(),
         gatewayProvider.provide<ApiInternGateway>(),
+        gatewayProvider.provide<ArenaOppslagGateway>(),
         repositoryProvider.provide<PersonRepository>(),
         repositoryProvider.provide<SakRepository>(),
         repositoryProvider.provide<ArenaMigreringRepository>()
@@ -66,7 +69,7 @@ class PersonOgSakService(
     }
 
     fun finnArenasakForBruker(ident: Ident, saksnummerArena: String): ArenaSakOppsummering? {
-        val saker = apiInternGateway.hentSakerForPerson(ident.identifikator).saker
+        val saker = arenaOppslagGateway.hentSakerForPerson(ident).saker
         return saker.find { "${it.aar}-${it.lopenummer}" == saksnummerArena }
     }
 

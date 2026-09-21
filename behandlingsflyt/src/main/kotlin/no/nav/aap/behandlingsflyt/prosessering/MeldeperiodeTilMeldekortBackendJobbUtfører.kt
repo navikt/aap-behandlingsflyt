@@ -60,11 +60,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 opplysningerVedTrukketSøknad(sak)
 
             behandling.status().erAvsluttet() -> {
-                val gjeldendeYtelsesbehandling = if (unleashGateway.isEnabled(BehandlingsflytFeature.MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling)) {
-                    behandlingService.finnGjeldendeYtelsesbehandling(sakId) ?: behandling
-                } else {
-                    behandling
-                }
+                val gjeldendeYtelsesbehandling = behandlingService.finnGjeldendeYtelsesbehandling(sakId) ?: behandling
 
                 if (gjeldendeYtelsesbehandling.id != behandling.id) {
                     log.warn(

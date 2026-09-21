@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KorrigerSøknadsdatoV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.LegeerklæringV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArenaV0
@@ -127,6 +128,7 @@ object MottattHendelseUtleder {
         is AnnetRelevantDokument -> melding.begrunnelse
         is MigreringFraArenaV0 -> melding.beskrivelse
         is KorrigerSøknadsdatoV0 -> melding.begrunnelse
+        is LegeerklæringV0 -> melding.beskrivelse
         else -> null
     }
 

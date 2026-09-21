@@ -64,7 +64,7 @@ private fun AvbrytAktivitetspliktbehandlingVurdering.tilDto(
             behandlingId = behandlingId,
             vurdertAv = vurdertAvService.medNavnOgEnhet(
                 this.vurdertAv,
-                requireNotNull(this.opprettetTidspunkt?.toLocalDate()) {
+                requireNotNull(this.opprettetTidspunkt.toLocalDate()) {
                     "Opprettet tidspunkt for vurdering kan ikke være null"
                 })
         )

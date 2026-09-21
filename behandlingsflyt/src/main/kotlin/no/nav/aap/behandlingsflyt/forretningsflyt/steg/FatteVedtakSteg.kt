@@ -14,8 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitets
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somSykdomsvurderingTidslinje
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -29,7 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -153,18 +150,9 @@ class FatteVedtakSteg(
     private fun skalHoppeOverBeslutterPåGrunnAvAvslagSykdom(kontekst: FlytKontekstMedPerioder): Boolean {
         val sykdomsGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId) ?: return false
         // OBS: sjekken gjøres på hele rettighetsperioden. Må endres til stønadsperiode når krav er på plass
-        return avslagSykdomForHelePerioden(sykdomsGrunnlag.sykdomsvurderinger, kontekst.rettighetsperiode)
+        return sykdomsGrunnlag.avslagSykdomForHelePerioden(kontekst.rettighetsperiode)
     }
 
-    private fun avslagSykdomForHelePerioden(
-        sykdomsvurderinger: List<Sykdomsvurdering>,
-        rettighetsperiode: Periode
-    ): Boolean {
-        val sykdomsvurderingTidslinje = sykdomsvurderinger.somSykdomsvurderingTidslinje()
-        return sykdomsvurderinger.isNotEmpty() && sykdomsvurderingTidslinje.all { it.erIkkeOppfylt() }
-                && sykdomsvurderingTidslinje.helePerioden() == rettighetsperiode
-                && sykdomsvurderingTidslinje.erSammenhengende()
-    }
 
     companion object : FlytSteg {
         override fun konstruer(

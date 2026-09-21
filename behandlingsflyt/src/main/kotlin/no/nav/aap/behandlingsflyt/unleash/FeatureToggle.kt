@@ -12,7 +12,6 @@ enum class BehandlingsflytFeature(
 ): FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
-    NyBrevbyggerV3,
     BrevtyperTilNyBrevbygger,
     Under18,
     VisIkkeRelevantPeriode,
@@ -34,10 +33,11 @@ enum class BehandlingsflytFeature(
 
     // ------
     Avslag11_27,
-    SkalViseAlleSykdomssteg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     BosattStatsborgerskapGjennomslipp,
-    HoppOverBeslutterVedAvslagSykdom
+    HoppOverBeslutterVedAvslagSykdom,
+    KanVurdereRefusjonIRevurdering,
+    KunEnAktivKlagebehandling
     ;
 
     override fun key(): String = name

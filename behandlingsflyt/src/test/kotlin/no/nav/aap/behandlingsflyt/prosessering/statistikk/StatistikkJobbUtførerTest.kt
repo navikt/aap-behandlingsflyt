@@ -78,6 +78,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeApiInternGateway
+import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -117,6 +118,7 @@ class StatistikkJobbUtførerTest {
     private val gatewayProvider = minimalGatewayProvider {
         register<FakePdlGateway>()
         register<FakeApiInternGateway>()
+        register<FakeArenaOppslagGateway>()
     }
 
     companion object {

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.integrasjon
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
+import no.nav.aap.behandlingsflyt.integrasjon.arena.ArenaOppslagGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.brev.BrevGateway
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.ApiInternGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.datadeling.SamGatewayImpl
@@ -55,6 +56,7 @@ fun defaultGatewayProvider(utvidelser: GatewayRegistry.() -> Unit = {}) = create
     register<DokumentinnhentingGatewayImpl>()
     register<MedlemskapGateway>()
     register<ApiInternGatewayImpl>()
+    register<ArenaOppslagGatewayImpl>()
     register<UtbetalingGatewayImpl>()
     register<AARegisterGateway>()
     register<EREGGateway>()

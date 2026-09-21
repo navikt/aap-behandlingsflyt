@@ -25,11 +25,6 @@ class AvklarStønadsperiodeSteg(
     private val stønadsperiodeRepository: StønadsperiodeRepository,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.KravSteg)
-        ) {
-            return Fullført
-        }
-
         when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                 if(kontekst.erMigreringFraArena()) {

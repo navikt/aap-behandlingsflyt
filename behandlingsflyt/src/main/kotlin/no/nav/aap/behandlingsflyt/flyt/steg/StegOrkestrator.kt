@@ -108,6 +108,8 @@ class StegOrkestrator(
                         statusSpan.end()
                     }
                 }
+                @Suppress("UNREACHABLE_CODE")
+                throw IllegalStateException("Skal ikke komme hit.")
             }
         } finally {
             stegSpan.end()
