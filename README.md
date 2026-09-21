@@ -73,11 +73,11 @@ Alternativt, for å unngå å starte IntelliJ, gå i rotmappen og kjør:
 ./gradlew runTestApp
 ```
 
-Alternativt, for å kjøre med integrasjoner (testcontainere og url/port til andre lokale apper):
+Alternativt, for å kjøre mot oppgave:
 
 ```shell
 docker-compose up -d
-./gradlew runTestAppIntegrated 
+./gradlew runTestAppMotOppgave 
 ```
 
 
