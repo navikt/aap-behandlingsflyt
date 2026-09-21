@@ -18,12 +18,12 @@ object StudentVilkår : Vilkårsvurderer<StudentFaktagrunnlag> {
 
     override fun vurder(faktagrunnlag: StudentFaktagrunnlag): Tidslinje<Vilkårsvurdering> {
         val studentTidslinje =
-            faktagrunnlag.studentGrunnlag?.somStudenttidslinje(faktagrunnlag.rettighetsperiode.tom).orEmpty()
+            faktagrunnlag.studentGrunnlag?.somStudenttidslinje().orEmpty()
 
         // Varighet er utelukkende bestemt av datoen studiet ble avbrutt + 6 måneder
         // Overlappende varighetsperioder vil dermed kunne gi en sammenhengende varighet på mer enn 6 måneder
         val varighetsTidslinje =
-            faktagrunnlag.studentGrunnlag?.gjeldendeStudentvurderinger(faktagrunnlag.rettighetsperiode.tom).orEmpty()
+            faktagrunnlag.studentGrunnlag?.gjeldendeStudentvurderinger().orEmpty()
                 .filter { it.avbruttStudieDato != null }.sortedBy { it.avbruttStudieDato }
                 .somTidslinje { Periode(it.avbruttStudieDato!!, utledVarighetSluttdato(it.avbruttStudieDato)) }
                 .mapValue { true }
