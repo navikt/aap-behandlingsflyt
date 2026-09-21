@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhet
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -35,19 +36,73 @@ class SignaturService(
         avklaringsbehovRepository = repositoryProvider.provide()
     )
 
-    fun finnSignaturGrunnlag(brevbestilling: Brevbestilling, innloggetBruker: Bruker): List<SignaturGrunnlag> {
+    fun finnSignaturGrunnlag(
+        brevbestilling: Brevbestilling,
+        innloggetBruker: Bruker,
+    ): List<SignaturGrunnlag> {
         require(
             brevbestilling.status == Status.FORHÅNDSVISNING_KLAR ||
                     brevbestilling.typeBrev == TypeBrev.VEDTAK_AVSLAG_11_5
         ) {
             "Kan ikke utlede signaturer på brev i status ${brevbestilling.status}"
         }
-        return if (brevbestilling.typeBrev.skalIkkeHaSignatur()) {
-            emptyList()
-        } else if (brevbestilling.typeBrev.erVedtak()) {
-            utledSignaturerForVedtak(brevbestilling, innloggetBruker)
+
+        if (brevbestilling.typeBrev.skalIkkeHaSignatur()) {
+            return emptyList()
+        }
+
+        val behandlingId = brevbestilling.behandlingId
+
+        return if (brevbestilling.typeBrev.erVedtak()) {
+            val behandling = behandlingRepository.hent(behandlingId)
+            val oppgaveEnhetListe =
+                oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
+            val avklaringsbehovene =
+                avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+
+            utledSignaturerForVedtak(
+                avklaringsbehovene = avklaringsbehovene,
+                oppgaveEnhetListe = oppgaveEnhetListe,
+                innloggetBruker = innloggetBruker,
+            )
         } else {
-            listOf(utledSignaturMedInnloggetBruker(brevbestilling, innloggetBruker))
+            listOf(
+                utledSignaturMedInnloggetBruker(
+                    behandlingId = behandlingId,
+                    innloggetBruker = innloggetBruker,
+                )
+            )
+        }
+    }
+
+    fun finnSignaturGrunnlagForBestilling(
+        behandlingId: BehandlingId,
+        typeBrev: TypeBrev,
+        innloggetBruker: Bruker,
+    ): List<SignaturGrunnlag> {
+        return when {
+            typeBrev.skalIkkeHaSignatur() -> emptyList()
+            typeBrev.erVedtak() -> {
+                val behandling = behandlingRepository.hent(behandlingId)
+                val oppgaveEnhetListe =
+                    oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
+                val avklaringsbehovene =
+                    avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+
+                utledSignaturerForVedtak(
+                    avklaringsbehovene = avklaringsbehovene,
+                    oppgaveEnhetListe = oppgaveEnhetListe,
+                    innloggetBruker = innloggetBruker,
+                )
+            }
+            else -> {
+                listOf(
+                    utledSignaturMedInnloggetBruker(
+                        behandlingId = behandlingId,
+                        innloggetBruker = innloggetBruker,
+                    )
+                )
+            }
         }
     }
 
@@ -73,13 +128,10 @@ class SignaturService(
     }
 
     private fun utledSignaturerForVedtak(
-        brevbestilling: Brevbestilling,
+        avklaringsbehovene: Avklaringsbehovene,
+        oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): List<SignaturGrunnlag> {
-        val behandling = behandlingRepository.hent(brevbestilling.behandlingId)
-        val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
-
         return listOfNotNull(
             utledSignatur(Rolle.BESLUTTER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
             utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
@@ -103,11 +155,11 @@ class SignaturService(
     }
 
     private fun utledSignaturMedInnloggetBruker(
-        brevbestilling: Brevbestilling,
-        innloggetBruker: Bruker
+        behandlingId: BehandlingId,
+        innloggetBruker: Bruker,
     ): SignaturGrunnlag {
-        val behandling = behandlingRepository.hent(brevbestilling.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
+        val behandling = behandlingRepository.hent(behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         val avklaringsbehov = avklaringsbehovene.åpne().sistEndret()
         val enhet = if (avklaringsbehov != null) {
             val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver

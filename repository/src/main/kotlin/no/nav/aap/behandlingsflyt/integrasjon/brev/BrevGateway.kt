@@ -94,6 +94,7 @@ class BrevGateway : BrevbestillingGateway {
         brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
         ferdigstillAutomatisk: Boolean,
+        signaturer: List<SignaturGrunnlag>,
         brukApiV3: Boolean,
     ): BrevbestillingReferanse {
         val request = BestillBrevV2Request(
@@ -105,6 +106,7 @@ class BrevGateway : BrevbestillingGateway {
             sprak = Språk.NB, // TODO språk
             faktagrunnlag = mapFaktagrunnlag(brevBehov),
             ferdigstillAutomatisk = ferdigstillAutomatisk,
+            //signaturer = signaturer,
             vedlegg = vedlegg?.let { setOf(it) }.orEmpty()
         )
         val httpRequest = PostRequest(

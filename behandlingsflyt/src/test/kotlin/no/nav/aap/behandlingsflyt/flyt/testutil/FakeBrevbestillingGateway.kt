@@ -35,6 +35,7 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
         ferdigstillAutomatisk: Boolean,
+        signaturer: List<SignaturGrunnlag>,
         brukApiV3: Boolean,
     ): BrevbestillingReferanse {
         return BrevbestillingReferanse(UUID.randomUUID())
