@@ -70,10 +70,9 @@ class BrevbestillingService(
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val signaturer = if (ferdigstillAutomatisk) {
-            signaturService.finnSignaturGrunnlagForBestilling(
+            signaturService.finnSignaturGrunnlagForAutomatiskBestilling(
                 behandlingId = behandlingId,
                 typeBrev = brevBehov.typeBrev,
-                innloggetBruker = SYSTEMBRUKER,
             )
         } else {
             emptyList()

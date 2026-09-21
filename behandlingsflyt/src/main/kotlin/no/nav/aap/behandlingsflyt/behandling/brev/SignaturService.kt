@@ -95,6 +95,7 @@ class SignaturService(
                     innloggetBruker = innloggetBruker,
                 )
             }
+
             else -> {
                 listOf(
                     utledSignaturMedInnloggetBruker(
@@ -104,6 +105,45 @@ class SignaturService(
                 )
             }
         }
+    }
+
+    fun finnSignaturGrunnlagForAutomatiskBestilling(
+        behandlingId: BehandlingId,
+        typeBrev: TypeBrev,
+    ): List<SignaturGrunnlag> {
+        if (typeBrev.skalIkkeHaSignatur()) {
+            return emptyList()
+        }
+
+        val behandling = behandlingRepository.hent(behandlingId)
+        val oppgaveEnhetListe =
+            oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
+        val avklaringsbehovene =
+            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+
+        val saksbehandler = avklaringsbehovene.alle()
+            .flatMap { it.historikk }
+            .filter { it.endretAv.erNavIdent() }
+            .maxByOrNull { it.tidsstempel }
+            ?: return emptyList()
+
+        val enhet = avklaringsbehovene.alle()
+            .flatMap { behov ->
+                behov.historikk
+                    .filter { it.endretAv == saksbehandler.endretAv }
+                    .map { behov.definisjon }
+            }
+            .firstNotNullOfOrNull { definisjon ->
+                enhetForDefinisjon(definisjon, oppgaveEnhetListe)
+            }
+
+        return listOf(
+            SignaturGrunnlag(
+                navIdent = saksbehandler.endretAv.ident,
+                rolle = null,
+                enhet = enhet,
+            )
+        )
     }
 
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
