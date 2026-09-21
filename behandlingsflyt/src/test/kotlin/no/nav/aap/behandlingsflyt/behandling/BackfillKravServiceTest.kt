@@ -38,7 +38,7 @@ class BackfillKravServiceTest {
 
     @Test
     fun `behandling uten krav gir NullKrav og ingen stønadsperiode`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 10 januar 2024)
+        val (_, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 10 januar 2024)
 
         val resultat = service.backfillBehandling(behandling)
 
@@ -68,7 +68,7 @@ class BackfillKravServiceTest {
     @Test
     fun `backfill av stønadsperiode er idempotent`() {
         val søknadsdato = 10 januar 2024
-        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = søknadsdato)
+        val (_, behandling) = opprettInMemorySakOgBehandling(søknadsdato = søknadsdato)
         val krav = lagRelevantKrav(behandling.id, muligRettFra = søknadsdato)
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
 
@@ -78,7 +78,8 @@ class BackfillKravServiceTest {
         service.backfillBehandling(behandling)
         val vurderingerAndre = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger
 
-        assertThat(vurderingerAndre).isEqualTo(vurderingerFørst)
+        val nå = Instant.now()
+        assertThat(vurderingerAndre.map{it.copy(opprettet = nå)}).isEqualTo(vurderingerFørst.map{it.copy(opprettet = nå)})
     }
 
     private fun lagRelevantKrav(
