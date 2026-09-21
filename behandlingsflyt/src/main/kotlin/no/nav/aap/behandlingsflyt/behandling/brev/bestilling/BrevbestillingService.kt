@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -72,7 +73,7 @@ class BrevbestillingService(
             signaturService.finnSignaturGrunnlagForBestilling(
                 behandlingId = behandlingId,
                 typeBrev = brevBehov.typeBrev,
-                innloggetBruker = TODO(),
+                innloggetBruker = SYSTEMBRUKER,
             )
         } else {
             emptyList()
@@ -86,6 +87,7 @@ class BrevbestillingService(
             brevBehov = brevBehov,
             vedlegg = vedlegg,
             ferdigstillAutomatisk = ferdigstillAutomatisk,
+            signaturer = signaturer,
             brukApiV3 = brukApiV3,
         )
         val alleredeLagretBestilling = brevbestillingRepository.hent(bestillingReferanse)
