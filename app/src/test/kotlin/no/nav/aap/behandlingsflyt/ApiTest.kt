@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemM
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.flyt.ArenaStatusDTO
 import no.nav.aap.behandlingsflyt.flyt.VilkårDTO
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -216,6 +217,22 @@ class ApiTest {
 
         assertThat(medlemskapGrunnlag).isNotNull
         assertThat(medlemskapGrunnlag?.kanVurderes).isNotEmpty
+    }
+
+    @Test
+    fun `hente arena-status fra sak-endepunkt`() {
+        val sak = dataSource.transaction { connection ->
+            opprettSak(connection, LocalDate.now())
+        }
+
+        val arenaStatus: ArenaStatusDTO? = client.get(
+            URI.create("http://localhost:$port/")
+                .resolve("api/sak/${sak.saksnummer}/arena-status"),
+            GetRequest(currentToken = getToken())
+        )
+
+        assertThat(arenaStatus).isNotNull
+        assertThat(arenaStatus?.harArenaHistorikk).isFalse()
     }
 
     @Test
