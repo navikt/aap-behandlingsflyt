@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokument
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.LegeerklæringV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArenaV0
@@ -122,6 +123,7 @@ object MottattHendelseUtleder {
         is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
         is AnnetRelevantDokument -> melding.begrunnelse
         is MigreringFraArenaV0 -> melding.beskrivelse
+        is LegeerklæringV0 -> melding.beskrivelse
         else -> null
     }
 
