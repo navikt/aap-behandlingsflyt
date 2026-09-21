@@ -91,7 +91,6 @@ class BackfillKrav(
                         if (sakenErFerdigBackfilled) break
                         taSkriveLåsRepository.withLåstBehandling(behandling.id) {
                             val resultat = backfillService.backfillBehandling(
-                                sak,
                                 behandling,
                             )
                             when (resultat) {

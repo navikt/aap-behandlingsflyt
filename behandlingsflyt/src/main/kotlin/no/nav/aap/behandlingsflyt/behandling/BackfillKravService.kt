@@ -33,7 +33,7 @@ class BackfillKravService(
      * Returnerer [BackfillBehandlingResultat.NullKrav] dersom behandlingen allerede hadde krav –
      * løkken i runner skal da bryte ut av saken, da resten er nyere og allerede har sine vurderinger.
      */
-    fun backfillBehandling(sak: Sak, behandling: Behandling): BackfillBehandlingResultat {
+    fun backfillBehandling(behandling: Behandling): BackfillBehandlingResultat {
         val eksisterendeKrav =
             kravRepository.hentHvisEksisterer(behandling.id) ?: return BackfillBehandlingResultat.NullKrav
         backfillStønadsperiode(behandling.id, eksisterendeKrav, behandling.forrigeBehandlingId)

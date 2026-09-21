@@ -40,7 +40,7 @@ class BackfillKravServiceTest {
     fun `behandling uten krav gir NullKrav og ingen stønadsperiode`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 10 januar 2024)
 
-        val resultat = service.backfillBehandling(sak, behandling)
+        val resultat = service.backfillBehandling(behandling)
 
         assertThat(resultat).isEqualTo(BackfillBehandlingResultat.NullKrav)
         assertThat(InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)).isNull()
@@ -53,7 +53,7 @@ class BackfillKravServiceTest {
         val krav = lagRelevantKrav(behandling.id, muligRettFra = søknadsdato)
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
 
-        val resultat = service.backfillBehandling(sak, behandling)
+        val resultat = service.backfillBehandling(behandling)
 
         assertThat(resultat).isEqualTo(BackfillBehandlingResultat.Backfilled)
         val vurderinger = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger
@@ -72,10 +72,10 @@ class BackfillKravServiceTest {
         val krav = lagRelevantKrav(behandling.id, muligRettFra = søknadsdato)
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
 
-        service.backfillBehandling(sak, behandling)
+        service.backfillBehandling(behandling)
         val vurderingerFørst = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger
 
-        service.backfillBehandling(sak, behandling)
+        service.backfillBehandling(behandling)
         val vurderingerAndre = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger
 
         assertThat(vurderingerAndre).isEqualTo(vurderingerFørst)
