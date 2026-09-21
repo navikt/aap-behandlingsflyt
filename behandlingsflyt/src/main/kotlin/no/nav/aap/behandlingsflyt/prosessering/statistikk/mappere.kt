@@ -125,5 +125,6 @@ fun ÅrsakTilOpprettelse?.tilKontrakt(): no.nav.aap.behandlingsflyt.kontrakt.beh
         ÅrsakTilOpprettelse.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.G_REGULERING
         ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
         ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
+        ÅrsakTilOpprettelse.KORRIGER_SØKNADSDATO -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.KORRIGER_SØKNADSDATO
         null -> no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.UDEFINERT
     }

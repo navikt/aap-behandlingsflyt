@@ -246,7 +246,8 @@ class HendelseMottattHåndteringJobbUtfører(
                 InnsendingType.MANUELL_REVURDERING,
                 InnsendingType.OMGJØRING_KLAGE_REVURDERING,
                 InnsendingType.ANNET_RELEVANT_DOKUMENT,
-                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> Prioritet.NORMAL
+                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
+                InnsendingType.KORRIGER_SØKNADSDATO -> Prioritet.NORMAL
 
                 InnsendingType.AKTIVITETSKORT,
                 InnsendingType.MELDEKORT,

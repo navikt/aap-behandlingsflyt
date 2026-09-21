@@ -89,6 +89,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true,
         BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom to true,
         BehandlingsflytFeature.KanVurdereRefusjonIRevurdering to false,
+        BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
         BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
     )
 ) {

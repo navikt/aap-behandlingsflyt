@@ -37,6 +37,7 @@ enum class BehandlingsflytFeature(
     BosattStatsborgerskapGjennomslipp,
     HoppOverBeslutterVedAvslagSykdom,
     KanVurdereRefusjonIRevurdering,
+    KunEnAktivKlagebehandling,
     SammenhengendeInstitusjonsopphold
     ;
 

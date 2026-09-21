@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
@@ -15,7 +16,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -52,15 +52,24 @@ fun NormalOpenAPIRoute.behandlingApi(
     gatewayProvider: GatewayProvider,
 ) {
     fun hentArenaStatus(sakId: SakId): ArenaStatusDTO? {
+        val arenaOppslagGateway = gatewayProvider.provide(ArenaOppslagGateway::class)
+
         val identer = dataSource.transaction(readOnly = true) { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val sakRepository = repositoryProvider.provide<SakRepository>()
             sakRepository.hent(sakId).person.identer()
-        }.map { it.identifikator }.toSet()
-        val apiInternGateway = gatewayProvider.provide(ApiInternGateway::class)
+        }
 
-        val arenaStatus = apiInternGateway.hentArenaStatus(identer)
-            .getOrNull()?.let { ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk) }
+        val harArenaHistorikk = runCatching {
+            arenaOppslagGateway.hentHarHistorikk(identer.first { it.aktivIdent }).harHistorikk
+        }.onFailure {
+            log.warn("Kall mot ArenaOppslag for å hente historikk i Arena feilet", it)
+        }
+
+        val arenaStatus = harArenaHistorikk
+            .getOrNull()
+            ?.let { ArenaStatusDTO(harArenaHistorikk = it ) }
+
         return arenaStatus
     }
 
