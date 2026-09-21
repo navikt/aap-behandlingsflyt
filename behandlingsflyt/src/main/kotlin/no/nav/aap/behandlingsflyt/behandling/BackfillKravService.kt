@@ -1,49 +1,26 @@
 package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.time.LocalDate
-
-private val log = LoggerFactory.getLogger(BackfillKravService::class.java)
 
 class BackfillKravService(
     private val kravRepository: KravRepository,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
-    private val mottattDokumentRepository: MottattDokumentRepository,
-    private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
     private val trukketSøknadService: TrukketSøknadService,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         kravRepository = repositoryProvider.provide(),
         stønadsperiodeRepository = repositoryProvider.provide(),
-        mottattDokumentRepository = repositoryProvider.provide(),
-        rettighetsperiodeRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
     )
 
@@ -53,216 +30,15 @@ class BackfillKravService(
     /**
      * Backfiller krav og stønadsperiode for én behandling.
      *
-     * Returnerer [BackfillBehandlingResultat.AlleredeBackfilled] dersom behandlingen allerede hadde krav –
+     * Returnerer [BackfillBehandlingResultat.NullKrav] dersom behandlingen allerede hadde krav –
      * løkken i runner skal da bryte ut av saken, da resten er nyere og allerede har sine vurderinger.
      */
-    fun backfillBehandling(sak: Sak, behandlinger: List<Behandling>, behandling: Behandling, erNyesteBehandling: Boolean): BackfillBehandlingResultat {
-        val eksisterendeKrav = kravRepository.hentHvisEksisterer(behandling.id)
-        if (eksisterendeKrav != null) {
-            return BackfillBehandlingResultat.AlleredeBackfilled
-        }
-
-        val søknader = mottattDokumentRepository
-            .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
-            .sortedBy { it.mottattTidspunkt }
-        
-        val forrigeKrav = behandling.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }
-
-        val nyeVurderinger: Set<KravVurdering> =
-            utledNyeVurderinger(behandling.id, søknader, forrigeKrav)
-
-        val alleVurderinger = (forrigeKrav?.vurderinger.orEmpty()) + nyeVurderinger
-
-        val grunnlag = KravGrunnlag(alleVurderinger.toSet())
-        val oppdatertGrunnlag =
-            håndterRettighetsperiodevurdering(behandling.id, behandling.forrigeBehandlingId, grunnlag)
-        
-        verifiserMotRettighetsperiode(sak, behandlinger, oppdatertGrunnlag, erNyesteBehandling)
-
-        kravRepository.lagre(behandling.id, oppdatertGrunnlag.vurderinger)
-        backfillStønadsperiode(behandling.id, oppdatertGrunnlag, behandling.forrigeBehandlingId)
+    fun backfillBehandling(sak: Sak, behandling: Behandling): BackfillBehandlingResultat {
+        val eksisterendeKrav =
+            kravRepository.hentHvisEksisterer(behandling.id) ?: return BackfillBehandlingResultat.NullKrav
+        backfillStønadsperiode(behandling.id, eksisterendeKrav, behandling.forrigeBehandlingId)
 
         return BackfillBehandlingResultat.Backfilled
-    }
-
-    private fun utledNyeVurderinger(
-        behandlingId: BehandlingId,
-        søknader: List<MottattDokument>,
-        forrigeKrav: KravGrunnlag?,
-    ): Set<KravVurdering> {
-        val alleDokumenter = søknader.sortedBy { it.mottattTidspunkt }
-
-        if (alleDokumenter.isEmpty()) {
-            if (forrigeKrav != null) return emptySet() // revurdering uten nye dokumenter – arver fra forrige
-            throw IllegalStateException(
-                "Ingen søknad for behandling ${behandlingId.toLong()}"
-            )
-        }
-
-        val gjeldendeFørsteKrav = forrigeKrav?.gjeldendeRelevanteKrav()?.minByOrNull { it.muligRettFra }
-        val harForrigeRelevantKrav = gjeldendeFørsteKrav != null
-
-        if (forrigeKrav?.kravtidslinje().orEmpty().segmenter().toList().size > 1) {
-            throw IllegalStateException("Forrige krav for behandling ${behandlingId.toLong()} har flere enn ett relevant krav i tidslinjen – dette er uventet")
-        }
-
-        val nyttDokumentSomSkalOvertaForEksisterendeKrav =
-            when {
-                harForrigeRelevantKrav -> alleDokumenter.firstOrNull { dokument ->
-                    dokument.mottattTidspunkt.toLocalDate().isBefore(gjeldendeFørsteKrav.søknadsdato.dato)
-                }
-
-                else -> null
-            }
-
-        val overstyringFraGammeltKrav = nyttDokumentSomSkalOvertaForEksisterendeKrav
-            ?.let { gjeldendeFørsteKrav?.overstyrMuligRettFra }
-
-        val nyeVurderinger = alleDokumenter.mapIndexedNotNull { index, dokument ->
-            val erFørsteOgSkalOvertaSomKrav =
-                index == 0 && (!harForrigeRelevantKrav || nyttDokumentSomSkalOvertaForEksisterendeKrav?.referanse == dokument.referanse)
-            when {
-                erFørsteOgSkalOvertaSomKrav -> RelevantKrav(
-                    referanse = Kravreferanse.ny(),
-                    journalpostId = dokument.referanse.asJournalpostId,
-                    vurdertAv = SYSTEMBRUKER,
-                    begrunnelse = "Automatisk vurdering",
-                    vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(),
-                    søknadsdato = Søknadsdato(
-                        dokument.mottattTidspunkt.toLocalDate(),
-                        SøknadsdatoÅrsak.SøknadMottatt,
-                        begrunnelse = ""
-                    ),
-                    overstyrMuligRettFra = overstyringFraGammeltKrav,
-                    muligRettFra = listOfNotNull(
-                        dokument.mottattTidspunkt.toLocalDate(),
-                        overstyringFraGammeltKrav?.dato,
-                    ).min(),
-                )
-
-                else -> Tilleggsopplysning(
-                    referanse = Kravreferanse.ny(),
-                    journalpostId = dokument.referanse.asJournalpostId,
-                    vurdertAv = SYSTEMBRUKER,
-                    begrunnelse = "Automatisk vurdering",
-                    vurdertIBehandling = behandlingId,
-                    opprettet = Instant.now(),
-                )
-            }
-        }.toSet()
-
-        val skalNedgraderEksisterendeKravTilTilleggsopplysning = nyttDokumentSomSkalOvertaForEksisterendeKrav != null
-
-        return if (skalNedgraderEksisterendeKravTilTilleggsopplysning && gjeldendeFørsteKrav != null) {
-            nyeVurderinger + Tilleggsopplysning(
-                referanse = gjeldendeFørsteKrav.referanse,
-                begrunnelse = "Automatisk vurdering",
-                journalpostId = gjeldendeFørsteKrav.journalpostId,
-                vurdertAv = SYSTEMBRUKER,
-                vurdertIBehandling = behandlingId,
-                opprettet = Instant.now(),
-            ) // Nedgraderer det tidligere relevante kravet til tilleggsopplysning dersom det nye kravet har en tidligere muligRettFra
-        } else {
-            nyeVurderinger
-        }
-    }
-
-    /**
-     * Dersom det finnes en ny rettighetsperiodevurdering med overstyring, oppdateres relevante krav:
-     * - [OverstyrMuligRettFra] settes med dato og årsak
-     * - [RelevantKrav.muligRettFra] settes til det tidligste av mottattdato og overstyrt dato
-     */
-    private fun håndterRettighetsperiodevurdering(
-        behandlingId: BehandlingId,
-        forrigeBehandlingId: BehandlingId?,
-        grunnlag: KravGrunnlag,
-    ): KravGrunnlag {
-        val forrigeVurdering = forrigeBehandlingId?.let { rettighetsperiodeRepository.hentVurdering(it) }
-        val vurdering = rettighetsperiodeRepository.hentVurdering(behandlingId) ?: return grunnlag
-
-        // vurdertDato ble satt i database, som gjorde at vi tidligere fikk nytt timestamp i kopiert vurdering. Ignorerer derfor dette feltet ved sammenligning
-        if (forrigeVurdering?.copy(vurdertDato = vurdering.vurdertDato) == vurdering) return grunnlag
-
-        val (nyeRelevanteKrav, nyeIkkeRelevanteKrav) = grunnlag.vurderinger.filter { it.vurdertIBehandling == behandlingId }
-            .partition { it is RelevantKrav }
-        val nyeRelevanteKravOppdatertMedRettighetsperiodeVurdering =
-            nyeRelevanteKrav.filterIsInstance<RelevantKrav>().map { krav: RelevantKrav ->
-                krav.medRettighetsperiodeOverstyring(vurdering, behandlingId)
-            }.toSet()
-
-        val vedtatte = grunnlag.vurderinger.filter { it.vurdertIBehandling != behandlingId }.toSet()
-
-        // Vi ønsker kun å overskrive vedtatte relevante krav dersom de er gjeldende
-        val gjeldendeVedtatteRelevanteKravOppdatertMedRettighetsperiodeVurdering =
-            grunnlag.gjeldendeRelevanteKrav().filter { it.vurdertIBehandling != behandlingId }
-                .map { krav: RelevantKrav ->
-                    krav.medRettighetsperiodeOverstyring(vurdering, behandlingId)
-                }.toSet()
-
-        return grunnlag.copy(vurderinger = vedtatte + nyeRelevanteKravOppdatertMedRettighetsperiodeVurdering + nyeIkkeRelevanteKrav + gjeldendeVedtatteRelevanteKravOppdatertMedRettighetsperiodeVurdering)
-    }
-
-    private fun RelevantKrav.medRettighetsperiodeOverstyring(
-        vurdering: RettighetsperiodeVurdering,
-        behandlingId: BehandlingId,
-    ): RelevantKrav {
-        return when {
-            // "Revertere" rettighetsperiodvurderingen / "Nei"
-            (!vurdering.harRettUtoverSøknadsdato.harOverstyrt() || vurdering.startDato == null) -> copy(
-                opprettet = Instant.now(),
-                vurdertIBehandling = behandlingId,
-                overstyrMuligRettFra = null,
-                muligRettFra = søknadsdato.dato
-            )
-
-            else -> copy(
-                opprettet = Instant.now(),
-                vurdertIBehandling = behandlingId,
-                overstyrMuligRettFra = OverstyrMuligRettFra(
-                    dato = vurdering.startDato,
-                    årsak = vurdering.harRettUtoverSøknadsdato.tilOverstyrMuligRettFraÅrsak(),
-                    begrunnelse = vurdering.begrunnelse,
-                ),
-                muligRettFra = minOf(vurdering.startDato, søknadsdato.dato)
-            )
-        }
-    }
-
-    /**
-     * Verifiserer at saken sin rettighetsperiode.fom stemmer med gjeldende krav sin muligRettFra.
-     * Kræsjer dersom de ikke er like – dette indikerer en datakonsistensfeil.
-     */
-    private fun verifiserMotRettighetsperiode(sak: Sak, behandlinger: List<Behandling>, grunnlag: KravGrunnlag, erNyesteBehandling: Boolean) {
-        if (!erNyesteBehandling) return
-
-        if (Miljø.erDev() && behandlinger.any { behandling ->
-                /**
-                 * Her vet vi ikke 100 % at rettighetsperioden er oppdatert og at revurderingen er avbrutt (man kan ha svart "nei" i vurderingene), 
-                 * men det er ikke så viktig siden vi kun gjør denne sjekken i dev.
-                 * Det er en eksisterende bug der rettighetsperioden ikke blir tilbakestilt dersom revurderingen avbrytes, 
-                 * noe som gjør at backfilling vil feile på rettighetsperiodesjekken.
-                 * I produksjon ønsker vi at det skal feile slik at vi kan håndtere disse sakene, da de har feil rettighetsperiode.
-                 * **/
-                behandling.vurderingsbehov().map { it.type }.containsAll(
-                    listOf(
-                        Vurderingsbehov.REVURDERING_AVBRUTT,
-                        Vurderingsbehov.VURDER_RETTIGHETSPERIODE
-                    )
-                )
-            }) {
-            log.info("Hopper over verifisering av rettighetsperiode for ${sak.id.toLong()} – har behandling med REVURDERING_AVBRUTT og VURDER_RETTIGHETSPERIODE")
-            return
-        }
-        
-        val gjeldendeKrav = grunnlag.gjeldendeRelevanteKrav()
-        if (gjeldendeKrav.isEmpty()) throw IllegalStateException("Forventet ett relevant krav for nyeste behandling på sak ${sak.id}")
-
-        val gjeldendeMuligRettFra: LocalDate = gjeldendeKrav.minOf { it.muligRettFra }
-        check(sak.rettighetsperiode.fom == gjeldendeMuligRettFra) {
-            "rettighetsperiode.fom (${sak.rettighetsperiode.fom}) stemmer ikke med gjeldende krav muligRettFra " +
-                    "($gjeldendeMuligRettFra) for sak ${sak.id.toLong()}"
-        }
     }
 
     /**
@@ -286,8 +62,6 @@ class BackfillKravService(
         check(referanser.size <= 1) {
             "Fant flere distinkte kravreferanser blant relevante krav for behandling $behandlingId – forventet maks én"
         }
-
-        if (stønadsperiodeRepository.hentHvisEksisterer(behandlingId) != null) return
 
         val vedtatteStønadsperiodeVurderinger = forrigeBehandlingId
             ?.let { stønadsperiodeRepository.hentHvisEksisterer(it)?.gjeldendeVurderinger() }
@@ -321,8 +95,7 @@ class BackfillKravService(
 }
 
 enum class BackfillBehandlingResultat {
-    /** Behandlingen hadde allerede krav. Resten av saken kan hoppes over. */
-    AlleredeBackfilled,
+    NullKrav,
 
     /** Krav ble backfilled (eller det var ingenting å gjøre). */
     Backfilled,

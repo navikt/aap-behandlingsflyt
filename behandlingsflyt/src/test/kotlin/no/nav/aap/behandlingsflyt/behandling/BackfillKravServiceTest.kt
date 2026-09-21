@@ -125,7 +125,7 @@ class BackfillKravServiceTest {
 
         val resultat = service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
-        assertThat(resultat).isEqualTo(BackfillBehandlingResultat.AlleredeBackfilled)
+        assertThat(resultat).isEqualTo(BackfillBehandlingResultat.NullKrav)
     }
 
     @Test
