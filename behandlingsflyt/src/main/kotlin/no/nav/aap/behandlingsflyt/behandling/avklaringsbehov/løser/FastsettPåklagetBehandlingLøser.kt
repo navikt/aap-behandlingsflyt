@@ -30,22 +30,28 @@ class FastsettPåklagetBehandlingLøser(
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettPåklagetBehandlingLøsning): LøsningsResultat {
         val referanse = løsning.påklagetBehandlingVurdering.påklagetBehandling
-        if (referanse != null && løsning.påklagetBehandlingVurdering.påklagetVedtakType == PåklagetVedtakType.TILBAKEKREVING) {
+
+        val vurdering = if (løsning.påklagetBehandlingVurdering.påklagetVedtakType == PåklagetVedtakType.TILBAKEKREVING) {
+            requireNotNull(referanse) { "Påklaget tilbakekrevingsbehandling må være utfylt" }
             tilbakekrevingRepository.hent(referanse).valider()
-            return LøsningsResultat(begrunnelse = "Vurdert påklaget behandling")
+            løsning.påklagetBehandlingVurdering.tilVurdering(
+                bruker = kontekst.bruker,
+                behandlingId = null,
+                tilbakekrevingsbehandling = referanse
+            )
+        } else {
+            val påklagetBehandling = referanse?.let {
+                behandlingRepository.hent(BehandlingReferanse(it)).valider()
+            }
+            løsning.påklagetBehandlingVurdering.tilVurdering(
+                bruker = kontekst.bruker,
+                behandlingId = påklagetBehandling?.id
+            )
         }
 
-        val påklagetBehandling = løsning.påklagetBehandlingVurdering.påklagetBehandling?.let {
-            behandlingRepository.hent(BehandlingReferanse(referanse)).valider()
-        }
-
-        // TODO : Hva med tilbakekreving skal vi ikke persistere påklagetBehandlingVurdering her ?
         påklagetBehandlingRepository.lagre(
             behandlingId = kontekst.kontekst.behandlingId,
-            påklagetBehandlingVurdering = løsning.påklagetBehandlingVurdering.tilVurdering(
-                kontekst.bruker,
-                påklagetBehandling?.id
-            )
+            påklagetBehandlingVurdering = vurdering
         )
 
         return LøsningsResultat(begrunnelse = "Vurdert påklaget behandling")

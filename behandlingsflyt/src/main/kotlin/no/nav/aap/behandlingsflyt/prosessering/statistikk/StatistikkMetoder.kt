@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -118,11 +119,7 @@ class StatistikkMetoder(
                 val påklagetBehandling =
                     påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandling.referanse)
 
-                check(påklagetBehandling == null || påklagetBehandling.påklagetVedtakType == PåklagetVedtakType.KELVIN_BEHANDLING) {
-                    "Hvis det klages på en behandling utenfor Kelvin, må dette være synlig i statistikk med referanse til eksternt system."
-                }
-
-                påklagetBehandling?.referanse?.referanse
+                relatertBehandlingReferanseForKlage(påklagetBehandling)
             }
 
             TypeBehandling.SvarFraAndreinstans -> {
@@ -174,5 +171,21 @@ class StatistikkMetoder(
             InnsendingType.entries
         )
         return hentDokumenterAvType
+    }
+}
+
+/**
+ * For KELVIN_BEHANDLING brukes den interne behandlingsreferansen. For TILBAKEKREVING finnes
+ * ingen intern behandling i Kelvin, så den eksterne tilbakekrevingsbehandling-referansen brukes
+ * i stedet. For ARENA_VEDTAK finnes ingen referanse å vise til i statistikken.
+ */
+internal fun relatertBehandlingReferanseForKlage(
+    påklagetBehandling: PåklagetBehandlingVurderingMedReferanse?
+): UUID? {
+    return when (påklagetBehandling?.påklagetVedtakType) {
+        null -> null
+        PåklagetVedtakType.KELVIN_BEHANDLING -> påklagetBehandling.referanse?.referanse
+        PåklagetVedtakType.TILBAKEKREVING -> påklagetBehandling.påklagetTilbakekrevingsbehandling
+        PåklagetVedtakType.ARENA_VEDTAK -> null
     }
 }

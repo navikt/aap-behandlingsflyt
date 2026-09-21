@@ -20,6 +20,7 @@ object InMemoryPåklagetBehandlingRepository : PåklagetBehandlingRepository {
             PåklagetBehandlingVurderingMedReferanse(
                 påklagetVedtakType = it.påklagetVedtakType,
                 påklagetBehandling = it.påklagetBehandling,
+                påklagetTilbakekrevingsbehandling = it.påklagetTilbakekrevingsbehandling,
                 referanse = behandlingReferanse,
                 vurdertAv = it.vurdertAv,
                 opprettet = it.opprettet
@@ -31,7 +32,7 @@ object InMemoryPåklagetBehandlingRepository : PåklagetBehandlingRepository {
         behandlingId: BehandlingId,
         påklagetBehandlingVurdering: PåklagetBehandlingVurdering
     ) {
-        TODO("Not yet implemented")
+        memory[behandlingId] = PåklagetBehandlingGrunnlag(vurdering = påklagetBehandlingVurdering)
     }
 
     override fun kopier(

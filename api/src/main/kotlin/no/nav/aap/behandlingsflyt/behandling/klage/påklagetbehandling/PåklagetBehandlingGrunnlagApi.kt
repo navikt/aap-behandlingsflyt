@@ -116,7 +116,8 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
             .sortedByDescending { it.vedtaksdato?.atStartOfDay() ?: it.opprettetTidspunkt },
         gjeldendeVurdering = påklagetBehandlingVurderingMedReferanse?.let {
             PåklagetBehandlingVurderingDto(
-                påklagetBehandling = påklagetBehandlingVurderingMedReferanse.referanse?.referanse,
+                påklagetBehandling = påklagetBehandlingVurderingMedReferanse.referanse?.referanse
+                    ?: påklagetBehandlingVurderingMedReferanse.påklagetTilbakekrevingsbehandling,
                 påklagetVedtakType = påklagetBehandlingVurderingMedReferanse.påklagetVedtakType
             )
         },

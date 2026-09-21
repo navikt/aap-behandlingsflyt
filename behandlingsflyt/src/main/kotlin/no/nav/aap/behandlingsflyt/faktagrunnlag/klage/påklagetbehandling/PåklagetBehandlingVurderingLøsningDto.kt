@@ -8,8 +8,13 @@ data class PåklagetBehandlingVurderingLøsningDto(
     val påklagetBehandling: UUID?,
     val påklagetVedtakType: PåklagetVedtakType
 ) {
-    fun tilVurdering(bruker: Bruker, behandlingId: BehandlingId?) = PåklagetBehandlingVurdering(
+    fun tilVurdering(
+        bruker: Bruker,
+        behandlingId: BehandlingId?,
+        tilbakekrevingsbehandling: UUID? = null
+    ) = PåklagetBehandlingVurdering(
         påklagetBehandling = behandlingId,
+        påklagetTilbakekrevingsbehandling = tilbakekrevingsbehandling,
         påklagetVedtakType = påklagetVedtakType,
         vurdertAv = bruker,
         opprettet = java.time.Instant.now()
