@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
@@ -21,9 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopply
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.utils.Diff
 import no.nav.aap.behandlingsflyt.utils.Endret
 import no.nav.aap.behandlingsflyt.utils.Fjernet
@@ -34,23 +33,25 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode as DomenePeriode
 
-internal fun vilkårsvurderingOppsummeringTittel(
-    saksnummer: Saksnummer,
-    vedtaksdato: String,
-) = "Oppsummering av vilkårsvurderinger for sak $saksnummer – $vedtaksdato"
 
 internal object VedtakDokumentRenderer {
-    fun render(grunnlag: VedtakDokumentGrunnlag): PdfDokument = grunnlag.tilDokument()
-
-    private fun VedtakDokumentGrunnlag.tilDokument(): PdfDokument {
+    fun render(grunnlag: VedtakDokumentGrunnlag): PdfDokument {
         val kontekst = RenderKontekst(
-            gjeldendeBehandlingId = behandling.id,
-            vedtak = behandlinger,
+            gjeldendeBehandlingId = grunnlag.behandling.id,
+            vedtak = grunnlag.behandlinger,
         )
-        val vedtaksdato = formaterVedtaksdato(behandling.id, kontekst)
         return PdfDokument(
-            tittel = vilkårsvurderingOppsummeringTittel(saksnummer, vedtaksdato),
-            body = tilSeksjon().render(kontekst),
+            tittel = vilkårsvurderingOppsummeringTittel(grunnlag).render(kontekst),
+            body = grunnlag.tilSeksjon().render(kontekst),
+        )
+    }
+
+    internal fun vilkårsvurderingOppsummeringTittel(
+        grunnlag: VedtakDokumentGrunnlag,
+    ): LøpendeTekst {
+        return Span(
+            Tekst("Oppsummering av vilkårsvurderinger for sak ${grunnlag.saksnummer} – "),
+            Vedtakstidspunkt(grunnlag.behandling.id)
         )
     }
 
@@ -279,153 +280,35 @@ internal object VedtakDokumentRenderer {
         )
 
     private fun VedtakDokumentGrunnlag.sykdomsvurderingerSub(): Seksjon? {
-        val tidslinje = sykdomGrunnlag?.somSykdomsvurderingstidslinje() ?: return null
-        if (tidslinje.isEmpty()) return null
-        return tidslinje.tilSeksjon()
+        return periodiserteVurderinger("Vurderinger av § 11-5", sykdomGrunnlag?.sykdomsvurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.bistandsvurderingerSub(): Seksjon? {
-        val grunnlag = bistandGrunnlag ?: return null
-        val tidslinje = grunnlag.somBistandsvurderingstidslinje()
-        if (tidslinje.isEmpty()) return Seksjon(
-            tittel = Tekst("Bistandsbehov (§ 11-6)"),
-            Avsnitt(Tekst("Ingen bistandsvurderinger registrert."))
-        )
-        return Seksjon(
-            tittel = Tekst("Bistandsbehov (§ 11-6)"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                    Dict(
-                        "Behov for aktiv behandling" to JaNeiValg(v.erBehovForAktivBehandling),
-                        "Behov for arbeidsrettet tiltak" to JaNeiValg(v.erBehovForArbeidsrettetTiltak),
-                        "Behov for annen oppfølging" to JaNeiValg(v.erBehovForAnnenOppfølging),
-                        "Har bistandsbehov" to JaNeiValg(v.erBehovForBistand()),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Bistandsbehov (§ 11-6)", bistandGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.studentvurderingerSub(): Seksjon? {
-        val grunnlag = studentGrunnlag ?: return null
-        val tidslinje = grunnlag.somStudenttidslinje()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Student (§ 11-14)"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Dict(
-                        "Avbrutt studie" to JaNeiValg(v.harAvbruttStudie),
-                        "Dato for avbrutt studie" to (v.avbruttStudieDato?.let { Dato(it) } ?: Tekst("Ikke satt")),
-                        "Godkjent av Lånekassen" to JaNeiValg(v.godkjentStudieAvLånekassen),
-                        "Avbrutt pga sykdom/skade" to JaNeiValg(v.avbruttPgaSykdomEllerSkade),
-                        "Avbrudd mer enn 6 måneder" to JaNeiValg(v.avbruddMerEnn6Måneder),
-                        "Behov for behandling" to JaNeiValg(v.harBehovForBehandling),
-                    ),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                )
-            }
-        )
+        return periodiserteVurderinger("Student (§ 11-14)", studentGrunnlag?.vurderinger?.toList())
     }
 
     private fun VedtakDokumentGrunnlag.overgangUføreSub(): Seksjon? {
-        val grunnlag = overgangUføreGrunnlag ?: return null
-        val tidslinje = grunnlag.somOvergangUforevurderingstidslinje()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Overgang til uføretrygd (§ 11-18)"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                    Dict(
-                        "Har søkt om uføretrygd" to JaNeiValg(v.brukerHarSøktOmUføretrygd),
-                        "Fått vedtak om uføretrygd" to PrettyEnum(v.brukerHarFåttVedtakOmUføretrygd),
-                        "Har rett på AAP" to JaNeiValg(v.brukerRettPåAAP),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Overgang til uføretrygd (§ 11-18)", overgangUføreGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.etableringEgenVirksomhetSub(): Seksjon? {
-        val grunnlag = etableringEgenVirksomhetGrunnlag ?: return null
-        val tidslinje = grunnlag.gjeldendeVurderingerSomTidslinje()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Etablering av egen virksomhet"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                    Dict(
-                        "Virksomhetsnavn" to Tekst(v.virksomhetNavn),
-                        "Org.nr." to Tekst(v.orgNr ?: "—"),
-                        "Foreligger faglig vurdering" to JaNeiValg(v.foreliggerFagligVurdering),
-                        "Virksomhet er ny" to JaNeiValg(v.virksomhetErNy),
-                        "Kan føre til selvforsørging" to JaNeiValg(v.kanFøreTilSelvforsørget),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Etablering av egen virksomhet", etableringEgenVirksomhetGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.arbeidsevnevurderingerSub(): Seksjon? {
-        val grunnlag = arbeidsevneGrunnlag ?: return null
-        val tidslinje = grunnlag.gjeldendeVurderinger()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Arbeidsevne"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                    Dict(
-                        "Restarbeidsevne" to Prosent(v.arbeidsevne),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Arbeidsevne", arbeidsevneGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.arbeidsopptrappingSub(): Seksjon? {
-        val grunnlag = arbeidsopptrappingGrunnlag ?: return null
-        val tidslinje = grunnlag.gjeldendeVurderinger()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Arbeidsopptrapping"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                    Dict(
-                        "Rett på AAP i opptrapping" to JaNeiValg(v.rettPaaAAPIOpptrapping),
-                        "Reell mulighet til opptrapping" to JaNeiValg(v.reellMulighetTilOpptrapping),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Arbeidsopptrapping", arbeidsopptrappingGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.overgangArbeidSub(): Seksjon? {
-        val grunnlag = overgangArbeidGrunnlag ?: return null
-        val tidslinje = grunnlag.gjeldendeVurderinger()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Overgang til arbeid (§ 11-17)"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                    Dict(
-                        "Rett på AAP" to JaNeiValg(v.brukerRettPåAAP),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Overgang til arbeid (§ 11-17)", overgangArbeidGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.vedtakslengdeSub(): Seksjon? {
@@ -442,18 +325,7 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun VedtakDokumentGrunnlag.fritakSub(): Seksjon? {
-        val grunnlag = meldepliktGrunnlag ?: return null
-        val tidslinje = grunnlag.tilTidslinje()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Fritak fra meldeplikt"),
-            Tabell.ofTidslinje(
-                kolonner = listOf(Tekst("Har fritak"), Tekst("Begrunnelse")),
-                tidslinje = tidslinje.map {
-                    listOf(JaNeiValg(it.harFritak), Tekst(it.begrunnelse))
-                }
-            )
-        )
+        return periodiserteVurderinger("Fritak fra meldeplikt", meldepliktGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.aktivitetsplikt11_7Sub(): Seksjon? {
@@ -549,7 +421,7 @@ internal object VedtakDokumentRenderer {
 
         return Seksjon(
             tittel = Tekst("Barnetillegg"),
-            blokker = listOfNotNull(
+            blokker = Div(
                 perioder.takeIf { it.isNotEmpty() }?.let {
                     Tabell.ofTidslinje(
                         kolonner = listOf(Tekst("Antall barn med rett til barnetillegg")),
@@ -611,24 +483,7 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun VedtakDokumentGrunnlag.sykepengererstatningSub(): Seksjon? {
-        val grunnlag = sykepengerErstatningGrunnlag ?: return null
-        val tidslinje = grunnlag.vurderinger.gjeldendeVurderinger()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Sykepengererstatning (§ 11-13)"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                    Dict(
-                        "Har rett på sykepengererstatning" to JaNeiValg(v.harRettPå),
-                        "Grunn" to PrettyEnum(v.grunn),
-                        "Gjelder fra" to Dato(v.fom),
-                        "Gjelder til" to (v.tom?.let { Dato(it) } ?: Tekst("Ikke satt")),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Sykepengererstatning (§ 11-13)", sykepengerErstatningGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.refusjonkravSub(): Seksjon? {
@@ -770,7 +625,7 @@ internal object VedtakDokumentRenderer {
         val vurdering = barnepensjonGrunnlag?.vurdering ?: return null
         return Seksjon(
             tittel = Tekst("Samordning med barnepensjon (§ 11-27)"),
-            blokker = listOf(Fritekstfelt("Begrunnelse", vurdering.begrunnelse)),
+            blokker = Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
             subseksjoner = vurdering.perioder
                 .sortedBy { it.fom }
                 .map { periode ->
@@ -932,65 +787,38 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun VedtakDokumentGrunnlag.forutgåendeMedlemskapSub(): Seksjon? {
-        val grunnlag = forutgåendeMedlemskapGrunnlag ?: return null
-        val tidslinje = grunnlag.gjeldendeVurderinger()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Forutgående medlemskap"),
-            subseksjoner = tidslinje.segmenter().map { (periode, v) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(v.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", v.begrunnelse),
-                    Dict(
-                        "Har forutgående medlemskap" to JaNeiValg(v.harForutgåendeMedlemskap),
-                        "Var medlem med nedsatt arbeidsevne" to JaNeiValg(v.varMedlemMedNedsattArbeidsevne),
-                        "Unntak fra maks 5 år" to JaNeiValg(v.medlemMedUnntakAvMaksFemAar),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Forutgående medlemskap", forutgåendeMedlemskapGrunnlag?.vurderinger)
     }
 
     private fun VedtakDokumentGrunnlag.lovvalgMedlemskapSub(): Seksjon? {
-        val grunnlag = lovvalgMedlemskapGrunnlag ?: return null
-        val tidslinje = grunnlag.gjeldendeVurderinger()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Lovvalg og medlemskap"),
-            subseksjoner = tidslinje.segmenter().map { (periode, vurdering) ->
+        return periodiserteVurderinger("Lovvalg og medlemskap", lovvalgMedlemskapGrunnlag?.vurderinger)
+    }
+
+    private fun <T : PeriodisertVurdering> periodiserteVurderinger(tittel: String, vurderinger: List<T>?): Seksjon? {
+        val gjeldendeVurderinger = vurderinger.orEmpty()
+            .gjeldendeVurderinger()
+            .segmenter().map { (periode, vurdering) ->
                 Seksjon(
                     tittel = vurderingsoverskrift(vurdering.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse for lovvalg", vurdering.lovvalg.begrunnelse),
-                    Dict(
-                        "Lovvalgsland" to Tekst(vurdering.lovvalg.lovvalgsEØSLandEllerLandMedAvtale.name),
-                        "Medlem i folketrygden" to JaNeiValg(vurdering.medlemskap?.varMedlemIFolketrygd),
-                        "Overstyrt" to JaNeiValg(vurdering.overstyrt),
-                    ),
-                    vurdering.medlemskap?.let {
-                        Fritekstfelt("Begrunnelse for medlemskap", it.begrunnelse)
-                    },
+                    vurdering.genererDokumentasjon()
                 )
             }
-        )
+
+        return if (gjeldendeVurderinger.isEmpty()) {
+            Seksjon(
+                tittel = Tekst(tittel),
+                blokker = Avsnitt(Tekst("Ingen vurderinger"))
+            )
+        } else {
+            Seksjon(
+                tittel = Tekst(tittel),
+                subseksjoner = gjeldendeVurderinger,
+            )
+        }
     }
 
     private fun VedtakDokumentGrunnlag.oppholdskravSub(): Seksjon? {
-        val grunnlag = oppholdskravGrunnlag ?: return null
-        val tidslinje = grunnlag.somPeriodiserteVurderinger().gjeldendeVurderinger()
-        if (tidslinje.isEmpty()) return null
-        return Seksjon(
-            tittel = Tekst("Oppholdskrav"),
-            subseksjoner = tidslinje.segmenter().map { (periode, vurdering) ->
-                Seksjon(
-                    tittel = vurderingsoverskrift(vurdering.vurdertIBehandling, periode),
-                    Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
-                    Dict(
-                        "Land" to Tekst(vurdering.land ?: "—"),
-                        "Oppfylt" to JaNeiValg(vurdering.oppfylt),
-                    )
-                )
-            }
-        )
+        return periodiserteVurderinger("Oppholdskrav", oppholdskravGrunnlag?.somPeriodiserteVurderinger())
     }
 
     private fun VedtakDokumentGrunnlag.manuellInntektSub(): Seksjon? {
@@ -1260,22 +1088,20 @@ internal object VedtakDokumentRenderer {
 
     private fun VedtakDokumentGrunnlag.opplysningerOmBehandlingenSub(): Seksjon = Seksjon(
         tittel = Tekst("Opplysninger om behandlingen"),
-        blokker = listOf(
-            Dict(
-                "Referanse" to Tekst(behandling.referanse.toString()),
-                "Opprettet" to Tidspunkt(behandling.opprettetTidspunkt),
-                "Årsak til opprettelse" to PrettyEnum(behandling.årsakTilOpprettelse),
-                "Vurderingsbehov" to
-                        behandling.vurderingsbehov().join(separator = " ") {
-                            Span(
-                                PrettyEnum(it.type),
-                                Tekst(", sist oppdatert "),
-                                Tidspunkt(it.oppdatertTid),
-                                Tekst("."),
-                            )
-                        },
-                "Vedtakstidspunkt" to Tidspunkt(behandlinger.single { it.id == behandling.id }.vedtakstidspunkt),
-            )
+        blokker = Dict(
+            "Referanse" to Tekst(behandling.referanse.toString()),
+            "Opprettet" to Tidspunkt(behandling.opprettetTidspunkt),
+            "Årsak til opprettelse" to PrettyEnum(behandling.årsakTilOpprettelse),
+            "Vurderingsbehov" to
+                    behandling.vurderingsbehov().join(separator = " ") {
+                        Span(
+                            PrettyEnum(it.type),
+                            Tekst(", sist oppdatert "),
+                            Tidspunkt(it.oppdatertTid),
+                            Tekst("."),
+                        )
+                    },
+            "Vedtakstidspunkt" to Tidspunkt(behandlinger.single { it.id == behandling.id }.vedtakstidspunkt),
         ),
     )
 
@@ -1364,29 +1190,4 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun Tidslinje<Sykdomsvurdering>.tilSeksjon() = Seksjon(
-        tittel = Tekst("Vurderinger av § 11-5"),
-        subseksjoner = this.segmenter().map { it.verdi.tilSeksjon(it.periode) }.toList(),
-    )
-
-    private fun Sykdomsvurdering.tilSeksjon(bruktForPeriode: DomenePeriode): Seksjon = Seksjon(
-        vurderingsoverskrift(this.vurdertIBehandling, bruktForPeriode),
-        Fritekstfelt("Begrunnelse", this.begrunnelse),
-        Dict(
-            "Har skade, sykdom eller lyte" to JaNeiValg(this.harSkadeSykdomEllerLyte),
-            "Skade, sykdom, eller lyte er vesentlig del" to JaNeiValg(this.erSkadeSykdomEllerLyteVesentligdel),
-            "Nedsettelse i arbeidsevne er mer enn halvparten" to JaNeiValg(this.erNedsettelseIArbeidsevneMerEnnHalvparten),
-            "Er nedsettelse i arbeidsevne mer enn yrkesskadegrense" to JaNeiValg(this.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense),
-            "Hoveddiagnose" to if (diagnose?.hoveddiagnose == null)
-                Tekst("Ikke valgt")
-            else
-                Tekst("${diagnose.hoveddiagnose} (${diagnose.kodeverk})"),
-            "Bidiagnoser" to if (diagnose?.bidiagnoser.isNullOrEmpty())
-                Tekst("Ikke valgt")
-            else
-                Tekst("${diagnose.bidiagnoser.joinToString(", ")} (${diagnose.kodeverk})"),
-            "Nedsatt arbeidsevne" to PrettyEnum(harNedsattArbeidsevne),
-        ),
-        yrkesskadeBegrunnelse?.let { Fritekstfelt("Begrunnelse for vurdering av yrkesskade", it) }
-    )
 }

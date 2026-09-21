@@ -1,5 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
+import no.nav.aap.behandlingsflyt.dokumentasjon.PrettyEnum
+import no.nav.aap.behandlingsflyt.dokumentasjon.Tekst
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
@@ -103,11 +109,30 @@ data class Sykdomsvurdering(
                 && !this.potensieltOppfyltStudent()
     }
 
+    override fun genererDokumentasjon() = Div(
+        Fritekstfelt("Begrunnelse", this.begrunnelse),
+        Dict(
+            "Har skade, sykdom eller lyte" to JaNeiValg(this.harSkadeSykdomEllerLyte),
+            "Skade, sykdom, eller lyte er vesentlig del" to JaNeiValg(this.erSkadeSykdomEllerLyteVesentligdel),
+            "Nedsettelse i arbeidsevne er mer enn halvparten" to JaNeiValg(this.erNedsettelseIArbeidsevneMerEnnHalvparten),
+            "Er nedsettelse i arbeidsevne mer enn yrkesskadegrense" to JaNeiValg(this.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense),
+            "Hoveddiagnose" to if (diagnose?.hoveddiagnose == null)
+                Tekst("Ikke valgt")
+            else
+                Tekst("${diagnose.hoveddiagnose} (${diagnose.kodeverk})"),
+            "Bidiagnoser" to if (diagnose?.bidiagnoser.isNullOrEmpty())
+                Tekst("Ikke valgt")
+            else
+                Tekst("${diagnose.bidiagnoser.joinToString(", ")} (${diagnose.kodeverk})"),
+            "Nedsatt arbeidsevne" to PrettyEnum(harNedsattArbeidsevne),
+        ),
+        yrkesskadeBegrunnelse?.let { Fritekstfelt("Begrunnelse for vurdering av yrkesskade", it) }
+    )
+
     companion object {
         fun erFørsteVurdering(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
             return periodenVurderingenGjelderFor.inneholder(kravdato)
         }
-
     }
 }
 

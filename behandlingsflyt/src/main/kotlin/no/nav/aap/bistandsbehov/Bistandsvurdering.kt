@@ -1,5 +1,9 @@
 package no.nav.aap.bistandsbehov
 
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -18,10 +22,20 @@ data class Bistandsvurdering(
     override val tom: LocalDate?,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId
-): PeriodisertVurdering {
+) : PeriodisertVurdering {
     fun erBehovForBistand(): Boolean {
         return (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)
     }
+
+    override fun genererDokumentasjon() = Div(
+        Fritekstfelt("Begrunnelse", begrunnelse),
+        Dict(
+            "Behov for aktiv behandling" to JaNeiValg(erBehovForAktivBehandling),
+            "Behov for arbeidsrettet tiltak" to JaNeiValg(erBehovForArbeidsrettetTiltak),
+            "Behov for annen oppfølging" to JaNeiValg(erBehovForAnnenOppfølging),
+            "Har bistandsbehov" to JaNeiValg(erBehovForBistand()),
+        ),
+    )
 }
 
 fun List<Bistandsvurdering>.erFunksjoneltLik(annen: List<Bistandsvurdering>): Boolean {

@@ -1,5 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 
+import no.nav.aap.behandlingsflyt.dokumentasjon.Blokker
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -15,7 +20,17 @@ data class ArbeidsopptrappingVurdering(
     override val vurdertAv: Bruker,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
-) : PeriodisertVurdering
+) : PeriodisertVurdering {
+    override fun genererDokumentasjon(): Blokker {
+        return Div(
+            Fritekstfelt("Begrunnelse", begrunnelse),
+            Dict(
+                "Rett på AAP i opptrapping" to JaNeiValg(rettPaaAAPIOpptrapping),
+                "Reell mulighet til opptrapping" to JaNeiValg(reellMulighetTilOpptrapping),
+            )
+        )
+    }
+}
 
 fun List<ArbeidsopptrappingVurdering>.erFunksjoneltLik(other: List<ArbeidsopptrappingVurdering>): Boolean {
     if (this.size != other.size) return false

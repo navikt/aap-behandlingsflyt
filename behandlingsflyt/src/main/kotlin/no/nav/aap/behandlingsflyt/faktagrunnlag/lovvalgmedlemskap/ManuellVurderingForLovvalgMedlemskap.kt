@@ -3,6 +3,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.dokumentasjon.Blokker
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
+import no.nav.aap.behandlingsflyt.dokumentasjon.Tekst
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -23,6 +29,24 @@ data class ManuellVurderingForLovvalgMedlemskap(
     override val vurdertIBehandling: BehandlingId,
 ) : PeriodisertVurdering {
     override val opprettet: Instant = vurdertDato.atZone(ZoneId.of("Europe/Oslo")).toInstant()
+
+    override fun genererDokumentasjon(): Blokker {
+        return Div(
+            Fritekstfelt("Begrunnelse for lovvalg", lovvalg.begrunnelse),
+            Dict(
+                "Lovvalgsland" to Tekst(lovvalg.lovvalgsEØSLandEllerLandMedAvtale.name),
+                "Overstyrt" to JaNeiValg(overstyrt),
+            ),
+            medlemskap?.let {
+                Div(
+                    Fritekstfelt("Begrunnelse for medlemskap", it.begrunnelse),
+                    Dict(
+                        "Medlem i folketrygden" to JaNeiValg(it.varMedlemIFolketrygd),
+                    )
+                )
+            },
+        )
+    }
 
     fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
         val lovvalgsLand = lovvalg.lovvalgsEØSLandEllerLandMedAvtale

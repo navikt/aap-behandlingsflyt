@@ -1,5 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore
 
+import no.nav.aap.behandlingsflyt.dokumentasjon.Blokker
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
+import no.nav.aap.behandlingsflyt.dokumentasjon.PrettyEnum
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -16,11 +22,22 @@ data class OvergangUføreVurdering(
     override val vurdertAv: Bruker,
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
-): PeriodisertVurdering {
+) : PeriodisertVurdering {
     fun harRettPåAAPMedOvergangUføre(): Boolean {
         return brukerHarSøktOmUføretrygd
                 && brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtakResultat.NEI
                 && brukerRettPåAAP == true
+    }
+
+    override fun genererDokumentasjon(): Blokker {
+        return Div(
+            Fritekstfelt("Begrunnelse", begrunnelse),
+            Dict(
+                "Har søkt om uføretrygd" to JaNeiValg(brukerHarSøktOmUføretrygd),
+                "Fått vedtak om uføretrygd" to PrettyEnum(brukerHarFåttVedtakOmUføretrygd),
+                "Har rett på AAP" to JaNeiValg(brukerRettPåAAP),
+            )
+        )
     }
 }
 
