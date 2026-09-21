@@ -46,7 +46,7 @@ public class Innsending(
             }
 
             InnsendingType.LEGEERKLÆRING -> {
-                require(melding == null) { "Legeerklæring har ikke payload." }
+                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
             }
 
             InnsendingType.LEGEERKLÆRING_AVVIST -> {
