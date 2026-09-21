@@ -49,7 +49,10 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
        return harArenaHistorikkCache.get(ident.identifikator) {
             val response: HarArenaHistorikkResponse? = restClient.post(
                 uri.resolve("/api/v1/person/historikk"),
-                PostRequest(body = HarArenaHistorikkRequest(ident.identifikator)),
+                PostRequest(
+                    body = HarArenaHistorikkRequest(ident.identifikator),
+                    timeout = Duration.ofSeconds(5)
+                ),
                 mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
             )
             requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/historikk" }
@@ -60,7 +63,10 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
     override fun hentSakerForPerson(ident: Ident): ArenaSakerResponse {
         val response: ArenaSakerResponse? = restClient.post(
             uri.resolve("/api/v1/person/saker"),
-            PostRequest(body = ArenaSakerRequest(ident.identifikator)),
+            PostRequest(
+                body = ArenaSakerRequest(ident.identifikator),
+                timeout = Duration.ofSeconds(5)
+            ),
             mapper = { body, _ -> DefaultJsonMapper.fromJson<ArenaSakerResponse>(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/saker" }
