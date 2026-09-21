@@ -13,12 +13,13 @@ import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -40,6 +41,16 @@ class FastsettPåklagetBehandlingLøserTest {
         påklagetBehandlingRepository = InMemoryPåklagetBehandlingRepository,
         behandlingRepository = InMemoryBehandlingRepository,
         tilbakekrevingRepository = tilbakekrevingRepositoryMock,
+        unleashGateway = FakeUnleashBaseWithDefaultDisabled(
+            enabledFlags = listOf(BehandlingsflytFeature.KlagePaaTilbakekreving)
+        ),
+    )
+
+    private val løserUtenTilbakekrevingstoggle = FastsettPåklagetBehandlingLøser(
+        påklagetBehandlingRepository = InMemoryPåklagetBehandlingRepository,
+        behandlingRepository = InMemoryBehandlingRepository,
+        tilbakekrevingRepository = tilbakekrevingRepositoryMock,
+        unleashGateway = FakeUnleashBaseWithDefaultDisabled(enabledFlags = emptyList()),
     )
 
     @AfterEach
@@ -102,6 +113,24 @@ class FastsettPåklagetBehandlingLøserTest {
 
         assertThrows<UgyldigForespørselException> {
             løser.løs(
+                kontekst = avklaringsbehovKontekst { behandling = klageBehandling },
+                løsning = løsning(
+                    påklagetBehandling = tilbakekrevingsReferanse,
+                    påklagetVedtakType = PåklagetVedtakType.TILBAKEKREVING
+                )
+            )
+        }
+
+        assertThat(InMemoryPåklagetBehandlingRepository.hentHvisEksisterer(klageBehandling.id)).isNull()
+    }
+
+    @Test
+    fun `TILBAKEKREVING kaster exception når KlagePaaTilbakekreving-toggle er avskrudd`() {
+        val tilbakekrevingsReferanse = UUID.randomUUID()
+        val klageBehandling = opprettBehandling(TypeBehandling.Klage, Status.OPPRETTET)
+
+        assertThrows<IllegalStateException> {
+            løserUtenTilbakekrevingstoggle.løs(
                 kontekst = avklaringsbehovKontekst { behandling = klageBehandling },
                 løsning = løsning(
                     påklagetBehandling = tilbakekrevingsReferanse,
