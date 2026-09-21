@@ -287,8 +287,6 @@ class BackfillKravService(
             "Fant flere distinkte kravreferanser blant relevante krav for behandling $behandlingId – forventet maks én"
         }
 
-        if (stønadsperiodeRepository.hentHvisEksisterer(behandlingId) != null) return
-
         val vedtatteStønadsperiodeVurderinger = forrigeBehandlingId
             ?.let { stønadsperiodeRepository.hentHvisEksisterer(it)?.gjeldendeVurderinger() }
             .orEmpty()
