@@ -140,6 +140,10 @@ class SignaturService(
         oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): List<SignaturGrunnlag> {
+        val behandling = behandlingRepository.hent(brevbestilling.behandlingId)
+        val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
+
         return listOfNotNull(
             utledSignatur(Rolle.BESLUTTER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
             utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
