@@ -19,8 +19,15 @@ data class EtableringEgenVirksomhetLøsningDto(
     val virksomhetErNy: Boolean? = null,
     val brukerEierVirksomheten: EierVirksomhet? = null,
     val kanFøreTilSelvforsørget: Boolean? = null,
-    val utviklingsPerioder: List<Periode>,
-    val oppstartsPerioder: List<Periode>
+
+    val fase: EtableringFase? = null,
+    val erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
+
+    //midlertid legacy, bare for overgang
+    @Deprecated("Bruk fase + fom. Fjernes etter frontend mignering")
+    val utviklingsPerioder: List<Periode>? = null,
+    @Deprecated("Bruk fase + fom. Fjernes etter frontend mignering")
+    val oppstartsPerioder: List<Periode>? = null
 ) : LøsningForPeriode {
     fun toEtableringEgenVirksomhetVurdering(avklaringsbehovKontekst: AvklaringsbehovKontekst) =
         toEtableringEgenVirksomhetVurdering(
@@ -28,21 +35,46 @@ data class EtableringEgenVirksomhetLøsningDto(
             vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
         )
 
-    fun toEtableringEgenVirksomhetVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId) =
-        EtableringEgenVirksomhetVurdering(
+    fun toEtableringEgenVirksomhetVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): EtableringEgenVirksomhetVurdering {
+        val avklartFase = fase ?: when {
+            oppstartsPerioder?.isNotEmpty() == true -> EtableringFase.OPPSTART
+            utviklingsPerioder?.isNotEmpty() == true -> EtableringFase.UTVIKLING
+            else -> null
+        }
+
+        // Legacy-innsending: gammel frontend kjenner ikke til dette feltet, men oppstart
+        // ble alltid registrert i offentlige register i det gamle flytet.
+        val avklartErRegistrert = erRegistrertINødvendigeOffentligeRegister
+            ?: if (fase == null && avklartFase == EtableringFase.OPPSTART) true else erRegistrertINødvendigeOffentligeRegister
+
+        val avklartFom = when (avklartFase){
+            EtableringFase.UTVIKLING -> utviklingsPerioder?.firstOrNull()?.fom ?: this.fom
+            EtableringFase.OPPSTART -> oppstartsPerioder?.firstOrNull()?.fom ?: this.fom
+            null -> this.fom
+        }
+
+        val avklartTom = when (avklartFase){
+            EtableringFase.UTVIKLING -> utviklingsPerioder?.firstOrNull()?.tom ?: this.tom
+            EtableringFase.OPPSTART -> oppstartsPerioder?.firstOrNull()?.tom ?: this.tom
+            null -> this.tom
+        }
+
+        return EtableringEgenVirksomhetVurdering(
             begrunnelse = begrunnelse,
             foreliggerFagligVurdering = foreliggerFagligVurdering,
             virksomhetErNy = virksomhetErNy,
             brukerEierVirksomheten = brukerEierVirksomheten,
             kanFøreTilSelvforsørget = kanFøreTilSelvforsørget,
-            utviklingsPerioder = utviklingsPerioder,
-            oppstartsPerioder = oppstartsPerioder,
+            fase = avklartFase,
+            erRegistrertINødvendigeOffentligeRegister = avklartErRegistrert,
             vurdertAv = bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling,
-            fom = fom,
-            tom = tom,
+            fom = avklartFom,
+            tom = avklartTom,
             virksomhetNavn = virksomhetNavn,
             orgNr = orgNr
         )
+    }
+
 }

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Etablering
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringIkkeGyldig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.justerEtableringPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -27,8 +28,9 @@ class EtableringEgenVirksomhetLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val nyeVurderinger = løsning.løsningerForPerioder.map { it.toEtableringEgenVirksomhetVurdering(kontekst) }
+        val justerteNyeVurderinger = justerEtableringPerioder(nyeVurderinger)
 
-        when (val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, nyeVurderinger)) {
+        when (val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, justerteNyeVurderinger)) {
             is VirksomhetEtableringIkkeGyldig -> throw UgyldigForespørselException(evaluering.feilmelding)
             else -> {}
         }
@@ -38,7 +40,7 @@ class EtableringEgenVirksomhetLøser(
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = gamleVurderinger + nyeVurderinger
+            etableringEgenvirksomhetVurderinger = gamleVurderinger + justerteNyeVurderinger
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }

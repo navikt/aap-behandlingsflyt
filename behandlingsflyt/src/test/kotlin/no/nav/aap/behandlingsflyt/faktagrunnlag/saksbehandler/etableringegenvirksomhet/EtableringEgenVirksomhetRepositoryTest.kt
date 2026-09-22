@@ -41,7 +41,7 @@ class EtableringEgenVirksomhetRepositoryTest {
                 EtableringEgenVirksomhetVurdering(
                     begrunnelse = "test",
                     fom = LocalDate.now(),
-                    tom = null,
+                    tom = LocalDate.now().plusMonths(3),
                     vurdertAv = Bruker("1234"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = behandling.id,
@@ -51,8 +51,8 @@ class EtableringEgenVirksomhetRepositoryTest {
                     virksomhetErNy = true,
                     brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                     kanFøreTilSelvforsørget = true,
-                    utviklingsPerioder = emptyList(),
-                    oppstartsPerioder = emptyList(),
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    fase = EtableringFase.OPPSTART,
                 )
 
             repository.lagre(behandling.id, listOf(vurdering))
@@ -78,7 +78,7 @@ class EtableringEgenVirksomhetRepositoryTest {
                     EtableringEgenVirksomhetVurdering(
                         begrunnelse = "test",
                         fom = LocalDate.now(),
-                        tom = null,
+                tom = LocalDate.now().plusMonths(3),
                         vurdertAv = Bruker("1234"),
                         opprettet = Instant.now(),
                         vurdertIBehandling = behandling.id,
@@ -88,8 +88,8 @@ class EtableringEgenVirksomhetRepositoryTest {
                         virksomhetErNy = true,
                         brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                         kanFøreTilSelvforsørget = true,
-                        utviklingsPerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusMonths(5))),
-                        oppstartsPerioder = listOf(Periode(LocalDate.now().plusMonths(6), LocalDate.now().plusMonths(9))),
+                erRegistrertINødvendigeOffentligeRegister = true,
+                fase = EtableringFase.OPPSTART,
                     )
                 )
             )

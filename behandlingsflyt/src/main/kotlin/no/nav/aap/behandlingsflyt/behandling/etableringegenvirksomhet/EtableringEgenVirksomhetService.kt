@@ -6,6 +6,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.justerEtableringPerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -16,13 +19,18 @@ import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
+
 
 class EtableringEgenVirksomhetService(
     private val etableringEgenVirksomhetRepository: EtableringEgenVirksomhetRepository,
     private val behandlingRepository: BehandlingRepository,
     private val bistandRepository: BistandRepository,
     private val sykdomRepository: SykdomRepository,
+
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     constructor(repositoryProvider: RepositoryProvider) : this(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
@@ -33,15 +41,60 @@ class EtableringEgenVirksomhetService(
     private val maksUtviklingsdager = 131
     private val maksOppstartsdager = 66
 
+    fun validerFaseOgPeriode(
+        vurdering: EtableringEgenVirksomhetVurdering,
+        historikk: List<EtableringEgenVirksomhetVurdering>
+    ) {
+        val fase = vurdering.fase ?: return
+
+        if (fase == EtableringFase.OPPSTART) {
+            require(vurdering.erRegistrertINødvendigeOffentligeRegister == true) {
+                "Må ha satt om virksomheten er registrert i nødvendige offentlige register for oppstartsfasen"
+            }
+
+            val sisteUtviklingsVurdering = historikk.filter { it.fase == EtableringFase.UTVIKLING }.maxByOrNull { it.fom }
+            if (sisteUtviklingsVurdering != null) {
+                val sisteUtviklingTom = sisteUtviklingsVurdering.tom
+                require(sisteUtviklingTom == null || vurdering.fom.isAfter(sisteUtviklingTom)) {
+                    "Oppstartsperioden kan ikke være før utviklingsfase"
+                }
+            }
+        }
+
+        require(vurdering.tom != null) {
+            "Må ha gyldig periode"
+        }
+    }
+
     fun erVurderingerGyldig(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
+        val justerteVurderinger = justerEtableringPerioder(nyeVurderinger)
 
         val gamleVurderinger =
-            behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-        val gjeldendeVurderinger = (gamleVurderinger + nyeVurderinger)
+            justerEtableringPerioder(
+                behandling.forrigeBehandlingId
+                    ?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }
+                    ?.vurderinger
+                    .orEmpty())
+
+        val beregnedeVurderinger = justerteVurderinger.map { vurdering ->
+            vurdering.takeIf { it.tom != null }
+                ?: vurdering.copy(
+                    tom = beregnTomForSistePeriode(
+                        vurderinger = gamleVurderinger + justerteVurderinger,
+                        sisteVurdering = vurdering
+                    )
+                )
+        }
+
+        log.info("Gamle vurderinger: {}", gamleVurderinger)
+        log.info("Justerte vurderinger: {}", justerteVurderinger)
+        log.info("Beregnede vurderinger: {}", beregnedeVurderinger)
+
+        val gjeldendeVurderinger = (gamleVurderinger + beregnedeVurderinger)
             .gjeldendeVurderinger()
             .verdier().toSet()
 
@@ -52,7 +105,7 @@ class EtableringEgenVirksomhetService(
             )
         }
 
-        if (nyeVurderinger.any { vurdering ->
+        if (beregnedeVurderinger.any { vurdering ->
                 gyldighetPeriode.none { gyldighetPeriode -> gyldighetPeriode.inneholder(vurdering.fom) }
             }
         ) {
@@ -63,31 +116,53 @@ class EtableringEgenVirksomhetService(
 
         val førsteMuligeDato = gyldighetPeriode.first().fom
 
-        if (nyeVurderinger.any { evaluerVirksomhetVurdering(it) && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
-            return VirksomhetEtableringIkkeGyldig(
-                "Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode"
-            )
-        }
-
         if (gjeldendeVurderinger.isNotEmpty() && gjeldendeVurderinger.none { it.fom.isAfter(førsteMuligeDato) }) {
             return VirksomhetEtableringIkkeGyldig(
                 "Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP"
             )
         }
 
-        val alleUtviklingsPerioder = gjeldendeVurderinger.flatMap { it.utviklingsPerioder }
-        val alleOppstartsPerioder = gjeldendeVurderinger.flatMap { it.oppstartsPerioder }
+        beregnedeVurderinger.forEach { vurdering ->
+            val historikk = (gamleVurderinger + beregnedeVurderinger)
+                .filter { it != vurdering }
+
+            try {
+                validerFaseOgPeriode(vurdering, historikk)
+            } catch (e: IllegalArgumentException) {
+                return VirksomhetEtableringIkkeGyldig(
+                    e.message ?: "Ugyldig fase-/periode-konfigurasjon"
+                )
+            }
+        }
+
+        val alleUtviklingsPerioder = gjeldendeVurderinger.flatMap {
+            if (it.tom != null && it.fase == EtableringFase.UTVIKLING) {
+                listOf(Periode(it.fom, it.tom))
+            } else {
+                emptyList()
+            }
+        }
+
+        val alleOppstartsPerioder = gjeldendeVurderinger.flatMap {
+            if (it.tom != null && it.fase == EtableringFase.OPPSTART) {
+                listOf(Periode(it.fom, it.tom))
+            } else {
+                emptyList()
+            }
+        }
 
         val sisteUtviklingsPeriodeTom = alleUtviklingsPerioder.maxOfOrNull { it.tom }
         if (sisteUtviklingsPeriodeTom != null && alleOppstartsPerioder.any { it.fom.isBefore(sisteUtviklingsPeriodeTom) }) {
-            return VirksomhetEtableringIkkeGyldig("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
+            return VirksomhetEtableringIkkeGyldig(
+                "Oppstartsperiode kan ikke ligge før en utviklingsperiode"
+            )
         }
 
         val bruktUtviklingsDager =
-            gjeldendeVurderinger.flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
+            alleUtviklingsPerioder.somTidslinje { it }.komprimer().segmenter()
                 .sumOf { it.periode.antallHverdager().asInt }
         val bruktOppstartsdager =
-            gjeldendeVurderinger.flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
+            alleOppstartsPerioder.somTidslinje { it }.komprimer().segmenter()
                 .sumOf { it.periode.antallHverdager().asInt }
 
         if (bruktUtviklingsDager > maksUtviklingsdager) {
@@ -104,7 +179,7 @@ class EtableringEgenVirksomhetService(
     }
 
     fun evaluerVirksomhetVurdering(vurdering: EtableringEgenVirksomhetVurdering): Boolean {
-        return vurdering.virksomhetErNy == true && vurdering.kanFøreTilSelvforsørget == true && vurdering.foreliggerFagligVurdering && vurdering.brukerEierVirksomheten in listOf(
+        return vurdering.fase != null && vurdering.virksomhetErNy == true && vurdering.kanFøreTilSelvforsørget == true && vurdering.foreliggerFagligVurdering && vurdering.brukerEierVirksomheten in listOf(
             EierVirksomhet.EIER_MINST_50_PROSENT,
             EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
         )
