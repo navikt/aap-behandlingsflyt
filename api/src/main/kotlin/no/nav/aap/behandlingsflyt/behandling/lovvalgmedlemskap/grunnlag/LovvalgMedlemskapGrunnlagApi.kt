@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                         val gjeldendeVedtatteVurderinger =
                             grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }
                                 ?.gjeldendeVurderinger()
-                                ?: Tidslinje()
+                                ?.orEmpty()
 
                         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val behøverVurderinger =
