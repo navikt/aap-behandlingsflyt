@@ -75,37 +75,6 @@ class SignaturService(
         }
     }
 
-    fun finnSignaturGrunnlagForBestilling(
-        behandlingId: BehandlingId,
-        typeBrev: TypeBrev,
-        innloggetBruker: Bruker,
-    ): List<SignaturGrunnlag> {
-        return when {
-            typeBrev.skalIkkeHaSignatur() -> emptyList()
-            typeBrev.erVedtak() -> {
-                val behandling = behandlingRepository.hent(behandlingId)
-                val oppgaveEnhetListe =
-                    oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
-                val avklaringsbehovene =
-                    avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-
-                utledSignaturerForVedtak(
-                    avklaringsbehovene = avklaringsbehovene,
-                    oppgaveEnhetListe = oppgaveEnhetListe,
-                    innloggetBruker = innloggetBruker,
-                )
-            }
-
-            else -> {
-                listOf(
-                    utledSignaturMedInnloggetBruker(
-                        behandlingId = behandlingId,
-                        innloggetBruker = innloggetBruker,
-                    )
-                )
-            }
-        }
-    }
 
     fun finnSignaturGrunnlagForAutomatiskBestilling(
         behandlingId: BehandlingId,

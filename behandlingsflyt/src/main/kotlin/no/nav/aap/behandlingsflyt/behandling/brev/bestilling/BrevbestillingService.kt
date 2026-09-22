@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
