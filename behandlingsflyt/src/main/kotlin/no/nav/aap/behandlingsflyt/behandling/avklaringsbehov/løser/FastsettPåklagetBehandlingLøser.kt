@@ -41,7 +41,7 @@ class FastsettPåklagetBehandlingLøser(
                 "KlagePaaTilbakekreving-toggle er avskrudd, men løsningen ble kalt. Behandling: ${kontekst.behandlingId()}"
             }
             requireNotNull(referanse) { "Påklaget tilbakekrevingsbehandling må være utfylt" }
-            tilbakekrevingRepository.hent(referanse).valider()
+            tilbakekrevingRepository.hent(referanse).validerAtKanPåklages()
             løsning.påklagetBehandlingVurdering.tilVurdering(
                 bruker = kontekst.bruker,
                 behandlingId = null,
@@ -49,7 +49,7 @@ class FastsettPåklagetBehandlingLøser(
             )
         } else {
             val påklagetBehandling = referanse?.let {
-                behandlingRepository.hent(BehandlingReferanse(it)).valider()
+                behandlingRepository.hent(BehandlingReferanse(it)).validerAtKanPåklages()
             }
             løsning.påklagetBehandlingVurdering.tilVurdering(
                 bruker = kontekst.bruker,
@@ -69,7 +69,7 @@ class FastsettPåklagetBehandlingLøser(
         return Definisjon.FASTSETT_PÅKLAGET_BEHANDLING
     }
 
-    private fun Behandling.valider(): Behandling {
+    private fun Behandling.validerAtKanPåklages(): Behandling {
         if (!this.typeBehandling().erYtelsesbehandling() && this.typeBehandling() != TypeBehandling.Klage) {
             throw UgyldigForespørselException("Kan ikke klage på type ${this.typeBehandling()}")
         }
@@ -81,7 +81,7 @@ class FastsettPåklagetBehandlingLøser(
         return this
     }
 
-    private fun Tilbakekrevingsbehandling.valider(): Tilbakekrevingsbehandling {
+    private fun Tilbakekrevingsbehandling.validerAtKanPåklages(): Tilbakekrevingsbehandling {
         if (!this.behandlingsstatus.erAvsluttet()) {
             throw UgyldigForespørselException("Kan ikke klage på åpen behandling ${this.behandlingsstatus}")
         }

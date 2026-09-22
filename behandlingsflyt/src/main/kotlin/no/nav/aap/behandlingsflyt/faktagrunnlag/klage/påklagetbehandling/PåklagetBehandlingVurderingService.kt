@@ -37,8 +37,8 @@ class PåklagetBehandlingVurderingService(
         }
     }
 
-    fun hentAlleAvsluttaTilbakekrevingsbehandlingerForPerson(personId: PersonId): List<Tilbakekrevingsbehandling> {
-        return tilbakekrevingRepository.hentAlleAvsluttaTilbakekrevingsBehandlinger(personId)
+    fun hentAvsluttaTilbakekrevingsbehandlinger(sakId: SakId): List<Tilbakekrevingsbehandling> {
+        return tilbakekrevingRepository.hentAvsluttaTilbakekrevingsBehandlinger(sakId)
     }
 }
 

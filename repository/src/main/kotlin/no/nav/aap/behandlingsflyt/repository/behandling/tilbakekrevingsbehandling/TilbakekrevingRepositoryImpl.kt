@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -170,8 +169,11 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
      *  tilbakekrevingsbehandlinger fra tilbake i kelvin-db som er både uten og med vedtaksdato avhengig av
      *  opprettelsetidspunkt. For visningen av vedtaksdato i klage-flyten i saksbehandling faller vi tilbake til
      *  hendelse_opprettet dato for de behandlingene som mangler vedtaksdato.
+     *
+     *  TODO: Hva med AKTIV = TRUE, skal vi filtrere bort avslutta som ikke er aktive eller burde disse uansett dukke
+     *  opp i lista til saksbehandler for tilbakekrevinger det skal kunne klages på (slik det er nå) ??
      */
-    override fun hentAlleAvsluttaTilbakekrevingsBehandlinger(personId: PersonId): List<Tilbakekrevingsbehandling> {
+    override fun hentAvsluttaTilbakekrevingsBehandlinger(sakId: SakId): List<Tilbakekrevingsbehandling> {
         val sql = """
             SELECT
                 TB.TILBAKEKREVING_BEHANDLING_ID,
@@ -188,10 +190,9 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 TB.FULLSTENDIG_PERIODE,
                 TB.VEDTAKSDATO
             FROM 
-                SAK S
-                INNER JOIN TILBAKEKREVINGSBEHANDLING TB ON TB.SAK_ID = S.ID
+                TILBAKEKREVINGSBEHANDLING TB 
             WHERE 
-                S.PERSON_ID = ? AND
+                TB.SAK_ID = ? AND
                 TB.BEHANDLINGSSTATUS = 'AVSLUTTET'
             ORDER BY
                 TB.SAK_OPPRETTET DESC
@@ -199,7 +200,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
 
         return connection.queryList(sql) {
             setParams {
-                setLong(1, personId.id)
+                setLong(1, sakId.id)
             }
             setRowMapper { mapToTilbakekrevingsbehandling(it) }
         }

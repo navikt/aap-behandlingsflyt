@@ -25,18 +25,6 @@ fun TilbakekrevingBehandlingsstatus.tilKontrakt(): KontraktTilbakekrevingBehandl
     }
 }
 
-fun TilbakekrevingBehandlingsstatus.tilBehandlingStatus(): Status {
-    return when(this){
-        TilbakekrevingBehandlingsstatus.OPPRETTET -> Status.OPPRETTET
-        TilbakekrevingBehandlingsstatus.TIL_FORHÅNDSVARSEL -> Status.UTREDES
-        TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> Status.UTREDES
-        TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> Status.UTREDES
-        TilbakekrevingBehandlingsstatus.TIL_GODKJENNING -> Status.UTREDES
-        TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> Status.UTREDES
-        TilbakekrevingBehandlingsstatus.AVSLUTTET -> Status.AVSLUTTET
-    }
-}
-
 fun TilbakekrevingBehandlingsstatus.erAvsluttet(): Boolean {
     return this == TilbakekrevingBehandlingsstatus.AVSLUTTET
 }

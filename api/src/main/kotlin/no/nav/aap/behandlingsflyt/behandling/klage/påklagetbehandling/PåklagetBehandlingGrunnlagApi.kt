@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Klageb
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
@@ -73,9 +74,9 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
                     }
             val vedtatteKlagebehandlinger = påklagetBehandlingService.hentAlleKlagerMedVedaksdato(sak.id)
                 .filterNot { it.vedtaksdato.isAfter(behandling.opprettetTidspunkt.toLocalDate()) }
-            val tilbakekrevingsbehandlinger =
+            val avsluttaTilbakekrevingsbehandlinger =
                 if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.KlagePaaTilbakekreving)) {
-                    påklagetBehandlingService.hentAlleAvsluttaTilbakekrevingsbehandlingerForPerson(sak.person.id)
+                    påklagetBehandlingService.hentAvsluttaTilbakekrevingsbehandlinger(sak.id)
                 } else {
                     emptyList()
                 }
@@ -85,7 +86,7 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
                 behandlingerMedVedtak = behandlingerMedVedtak,
                 harTilgangTilÅSaksbehandle = kanSaksbehandle,
                 vedtatteKlagebehandlinger,
-                tilbakekrevingsbehandlinger,
+                avsluttaTilbakekrevingsbehandlinger,
                 ansattInfoService = ansattInfoService,
                 sak
             )
@@ -109,7 +110,7 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
     behandlingerMedVedtak: List<BehandlingMedVedtak>,
     harTilgangTilÅSaksbehandle: Boolean,
     vedtatteKlagebehandlinger: List<KlagebehandlingMedVedtaksdato>,
-    tilbakekrevingsbehandlinger: List<Tilbakekrevingsbehandling>,
+    avsluttaTilbakekrevingsbehandlinger: List<Tilbakekrevingsbehandling>,
     ansattInfoService: AnsattInfoService,
     sak: Sak
 ): PåklagetBehandlingGrunnlagDto {
@@ -119,12 +120,20 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
             .sortedByDescending { it.vedtakstidspunkt },
         vedtatteKlagebehandlinger = vedtatteKlagebehandlinger.map { KlagebehandlingDto.fraDomene(it, sak.saksnummer) }
             .sortedByDescending { it.vedtaksdato },
-        tilbakekrevingsbehandlinger = tilbakekrevingsbehandlinger.map { TilbakekrevingsbehandlingDto.fraDomene(it) }
+        avsluttaTilbakekrevingsbehandlinger = avsluttaTilbakekrevingsbehandlinger.map { AvsluttaTilbakekrevingsbehandlingDto.fraDomene(it) }
             .sortedByDescending { it.vedtaksdato?.atStartOfDay() ?: it.opprettetTidspunkt },
         gjeldendeVurdering = påklagetBehandlingVurderingMedReferanse?.let {
             PåklagetBehandlingVurderingDto(
-                påklagetBehandling = påklagetBehandlingVurderingMedReferanse.referanse?.referanse
-                    ?: påklagetBehandlingVurderingMedReferanse.påklagetTilbakekrevingsbehandling,
+                påklagetBehandling = when (påklagetBehandlingVurderingMedReferanse.påklagetVedtakType) {
+                    PåklagetVedtakType.KELVIN_BEHANDLING ->
+                        påklagetBehandlingVurderingMedReferanse.referanse?.referanse
+
+                    PåklagetVedtakType.TILBAKEKREVING ->
+                        påklagetBehandlingVurderingMedReferanse.påklagetTilbakekrevingsbehandling
+
+                    PåklagetVedtakType.ARENA_VEDTAK ->
+                        null
+                },
                 påklagetVedtakType = påklagetBehandlingVurderingMedReferanse.påklagetVedtakType
             )
         },

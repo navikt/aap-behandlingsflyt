@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling
 
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
-import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.tilBehandlingStatus
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.KlagebehandlingMedVedtaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
@@ -18,7 +17,7 @@ import java.util.*
 data class PåklagetBehandlingGrunnlagDto(
     val behandlinger: List<BehandlingMedVedtakDto>,
     val vedtatteKlagebehandlinger: List<KlagebehandlingDto>,
-    val tilbakekrevingsbehandlinger: List<TilbakekrevingsbehandlingDto>,
+    val avsluttaTilbakekrevingsbehandlinger: List<AvsluttaTilbakekrevingsbehandlingDto>,
     val gjeldendeVurdering: PåklagetBehandlingVurderingDto?,
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurderingerMeta: VurderingerMetaResponse,
@@ -73,22 +72,20 @@ data class KlagebehandlingDto(
     }
 }
 
-data class TilbakekrevingsbehandlingDto(
+data class AvsluttaTilbakekrevingsbehandlingDto(
     val saksnummer: String,
     val referanse: String,
     val typeBehandling: TypeBehandling,
-    val status: Status,
     val opprettetTidspunkt: LocalDateTime,
     val vedtaksdato: LocalDate?,
     val eksternSaksbehandlingUrl: String? = null
 ) {
     companion object {
-        fun fraDomene(tilbakekrevingsbehandling: Tilbakekrevingsbehandling): TilbakekrevingsbehandlingDto {
-            return TilbakekrevingsbehandlingDto(
+        fun fraDomene(tilbakekrevingsbehandling: Tilbakekrevingsbehandling): AvsluttaTilbakekrevingsbehandlingDto {
+            return AvsluttaTilbakekrevingsbehandlingDto(
                 saksnummer = tilbakekrevingsbehandling.eksternFagsakId,
                 referanse = tilbakekrevingsbehandling.tilbakekrevingBehandlingId.toString(),
                 typeBehandling = TypeBehandling.Tilbakekreving,
-                status = tilbakekrevingsbehandling.behandlingsstatus.tilBehandlingStatus(),
                 opprettetTidspunkt = tilbakekrevingsbehandling.sakOpprettet,
                 vedtaksdato = tilbakekrevingsbehandling.vedtaksdato,
                 eksternSaksbehandlingUrl = tilbakekrevingsbehandling.saksbehandlingURL?.toString()
