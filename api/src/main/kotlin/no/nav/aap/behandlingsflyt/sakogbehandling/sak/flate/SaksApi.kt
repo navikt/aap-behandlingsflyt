@@ -432,13 +432,14 @@ fun NormalOpenAPIRoute.saksApi(
             ) { req ->
                 val saksnummer = req.saksnummer
 
-                val identer = dataSource.transaction(readOnly = true) { connection ->
+                val ident = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    repositoryProvider.provide<SakRepository>().hent(saksnummer = Saksnummer(saksnummer)).person.identer()
+                    val saksRepository = repositoryProvider.provide<SakRepository>()
+                    saksRepository.hent(saksnummer = Saksnummer(saksnummer)).person.aktivIdent()
                 }
 
                 val arenaOppslagGateway = gatewayProvider.provide(ArenaOppslagGateway::class)
-                val harArenaHistorikk = arenaOppslagGateway.hentHarHistorikk(identer.first { it.aktivIdent }).harHistorikk
+                val harArenaHistorikk = arenaOppslagGateway.hentHarHistorikk(ident).harHistorikk
 
                 respond(ArenaStatusDTO(harArenaHistorikk = harArenaHistorikk))
             }
