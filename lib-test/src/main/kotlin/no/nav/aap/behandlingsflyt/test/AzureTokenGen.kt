@@ -49,6 +49,7 @@ class AzureTokenGen(private val audience: String) {
                         "medlemskaplovvalg-api",
                         "oppdater-behandlingsflyt-oppgaver",
                         "oppdater-postmottak-oppgaver",
+                        "hent-oppgave-enhet",
                         "syfo-api",
                         "dialogmelding-api",
                     )
