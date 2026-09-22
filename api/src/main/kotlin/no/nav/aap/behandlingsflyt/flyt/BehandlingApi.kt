@@ -8,7 +8,6 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
@@ -29,7 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -51,28 +49,6 @@ fun NormalOpenAPIRoute.behandlingApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    fun hentArenaStatus(sakId: SakId): ArenaStatusDTO? {
-        val arenaOppslagGateway = gatewayProvider.provide(ArenaOppslagGateway::class)
-
-        val identer = dataSource.transaction(readOnly = true) { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            sakRepository.hent(sakId).person.identer()
-        }
-
-        val harArenaHistorikk = runCatching {
-            arenaOppslagGateway.hentHarHistorikk(identer.first { it.aktivIdent }).harHistorikk
-        }.onFailure {
-            log.warn("Kall mot ArenaOppslag for å hente historikk i Arena feilet", it)
-        }
-
-        val arenaStatus = harArenaHistorikk
-            .getOrNull()
-            ?.let { ArenaStatusDTO(harArenaHistorikk = it ) }
-
-        return arenaStatus
-    }
-
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}") {
             authorizedGet<BehandlingReferanse, DetaljertBehandlingDTO>(
@@ -160,7 +136,6 @@ fun NormalOpenAPIRoute.behandlingApi(
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
                         vedtaksdato = VedtakService(repositoryProvider, gatewayProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
                         vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker,
-                        arenaStatus = hentArenaStatus(behandling.sakId)
                     )
                 }
                 respond(dto)
@@ -244,7 +219,7 @@ private fun vilkårResultat(
 }
 
 private fun finnKravMottatt(
-    repositoryProvider: RepositoryProvider,
+    repositoryProvider: RepositoryProvider, 
     behandling: Behandling
 ): LocalDate? {
     if (behandling.typeBehandling() != TypeBehandling.Klage) return null
