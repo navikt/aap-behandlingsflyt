@@ -5,12 +5,13 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingerResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -195,7 +196,21 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     )
                 ) { params ->
                     val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
-                    respond(service.hentDialogForSak(params.saksnummer, token()))
+                    respond(service.hentDialogForSak(params.saksnummer, token()).meldinger)
+                }
+            }
+
+            route("/dialogmeldinger/{saksnummer}/v2") {
+                authorizedGet<HentStatusLegeerklæring, MeldingerResponse>(
+                    AuthorizationParamPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        applicationsOnly = false,
+                        sakPathParam = SakPathParam("saksnummer")
+                    )
+                ) { params ->
+                    val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
+                    val meldinger = service.hentDialogForSak(params.saksnummer, token())
+                    respond(meldinger)
                 }
             }
         }

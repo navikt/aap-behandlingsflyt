@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.behandlerdialog
 
-import no.nav.aap.behandlingsflyt.behandling.krav.tilSøknadUtenKravDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
@@ -22,22 +21,61 @@ class HentBehandlerDialogService(
     private val dokumentinnhentingGateway: DokumentinnhentingGateway,
     private val repositoryRegistry: RepositoryRegistry,
 ) {
-    fun hentDialogForSak(saksnummer: String, token: OidcToken): List<MeldingMedDokumenterDto> {
+    fun hentDialogForSak(saksnummer: String, token: OidcToken): MeldingerResponse {
         val dialogmeldinger = hentDialogmeldingerFraDokumentinnhenting(saksnummer)
         val legeerklæringer = hentLegeerklæringerForSakFraDatabase(saksnummer)
 
         val journalpostIDerForDialogmeldinger = dialogmeldinger.mapNotNull { it.journalpostId }
-        val journalpostIDerForHelsedokumenter = legeerklæringer.map { it.tilSøknadUtenKravDto().journalpostId.identifikator }
+        val journalpostIDerForHelsedokumenter =
+            legeerklæringer.map { it.referanse.asJournalpostId.identifikator }
 
         val journalposter = hentBegrensetJournalposterFraDokumentinnhenting(
             journalpostIDerForDialogmeldinger + journalpostIDerForHelsedokumenter,
             token
         )
 
-        val dialogmeldingerMedDokumentoversikt = lagMeldingMedDokumentoversiktForDialogmeldinger(dialogmeldinger, journalposter)
-        val legeerklæringerMedDokumentoversikt = lagMeldingMedDokumentoversiktForLegeerklæringer(legeerklæringer, journalposter)
+        val dialogmeldingerMedDokumentoversikt =
+            lagMeldingMedDokumentoversiktForDialogmeldinger(dialogmeldinger, journalposter)
+        val legeerklæringerMedDokumentoversikt =
+            lagMeldingMedDokumentoversiktForLegeerklæringer(legeerklæringer, journalposter)
 
-        return dialogmeldingerMedDokumentoversikt + legeerklæringerMedDokumentoversikt
+        return MeldingerResponse(
+            meldinger = dialogmeldingerMedDokumentoversikt + legeerklæringerMedDokumentoversikt,
+            kommendeMeldinger = utledKommendeMeldingerForSak(
+                dialogmeldinger = dialogmeldingerMedDokumentoversikt,
+                legeerklæringer = legeerklæringer
+            )
+        )
+    }
+
+    private fun utledKommendeMeldingerForSak(
+        dialogmeldinger: List<MeldingMedDokumenterDto>,
+        legeerklæringer: Set<MottattDokument>
+    ): List<KommendeMeldingDto> {
+        val kandidaterForPåminnelse =
+            dialogmeldinger.filter {
+                it.melding.dokumentasjonsType == no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40
+                        && it.melding.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
+                        && it.melding.dialogmeldingId != null && it.melding.påminnelseAvbrutt != true
+                        && it.melding.opprettetTidspunkt.toLocalDate().plusDays(22) > java.time.LocalDate.now()
+            }
+
+        val forespørslerSomIkkeErBesvart = kandidaterForPåminnelse.filter { melding ->
+            val finnesLegeerklæringSomKomInnEtterBestilling = legeerklæringer.any { legeerklæring ->
+                legeerklæring.mottattTidspunkt > melding.melding.opprettetTidspunkt
+            }
+            !finnesLegeerklæringSomKomInnEtterBestilling
+        }
+
+        return forespørslerSomIkkeErBesvart.map { melding ->
+            KommendeMeldingDto(
+                bestillingId = requireNotNull(melding.melding.dialogmeldingId) {
+                    "Kan ikke sende påminnelse når bestillingId ikke finnes"
+                },
+                påminnelseErAvbrutt = melding.melding.påminnelseAvbrutt ?: false,
+                påminnelseDato = melding.melding.opprettetTidspunkt.toLocalDate().plusDays(22)
+            )
+        }
     }
 
     private fun hentDialogmeldingerFraDokumentinnhenting(saksnummer: String): List<no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto> {
@@ -63,7 +101,7 @@ class HentBehandlerDialogService(
     private fun hentBegrensetJournalposterFraDokumentinnhenting(
         journalpostIDer: List<String>,
         token: OidcToken,
-    ) : Map<String, BegrensetJournalpostDto> {
+    ): Map<String, BegrensetJournalpostDto> {
         val journalposter = dokumentinnhentingGateway.hentDokumentoversiktForJournalpostListe(
             HentDokumentoversiktJournalpostListeParams(journalpostIDer),
             token
@@ -87,6 +125,7 @@ class HentBehandlerDialogService(
 
             MeldingMedDokumenterDto(
                 melding = MeldingDto(
+                    dialogmeldingId = dialogmelding.dialogmeldingReferanse,
                     innkommendeUtgående = dialogmelding.innkommendeUtgående.tilResponseType(),
                     meldingFraNavn = dialogmelding.meldingFraNavn,
                     opprettetTidspunkt = dialogmelding.opprettetTidspunkt,
@@ -105,7 +144,7 @@ class HentBehandlerDialogService(
         journalposter: Map<String, BegrensetJournalpostDto>
     ): List<MeldingMedDokumenterDto> {
         return legeerklæringer.map { helsedokument ->
-            val journalpostId = helsedokument.tilSøknadUtenKravDto().journalpostId.identifikator
+            val journalpostId = helsedokument.referanse.asJournalpostId.identifikator
             val journalpost = journalposter[journalpostId]
 
             MeldingMedDokumenterDto(
