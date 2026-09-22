@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
@@ -158,10 +160,11 @@ internal object VedtakDokumentRenderer {
                             "Årsak til søknadsdato" to Tekst(vurdering.søknadsdato.årsak.visningsnavn()),
                             "Mulig rett fra" to Dato(vurdering.muligRettFra),
                             "Overstyrt mulig rett fra" to
-                                (overstyring?.dato?.let(::Dato) ?: Tekst("Ikke overstyrt")),
+                                    (overstyring?.dato?.let(::Dato) ?: Tekst("Ikke overstyrt")),
                             "Årsak til overstyring" to
-                                (overstyring?.årsak?.visningsnavn()?.let(::Tekst) ?: Tekst("Ikke overstyrt")),
+                                    (overstyring?.årsak?.visningsnavn()?.let(::Tekst) ?: Tekst("Ikke overstyrt")),
                         )
+
                         is MigrertKrav,
                         is Klage,
                         is Tilleggsopplysning,
@@ -870,27 +873,36 @@ internal object VedtakDokumentRenderer {
 
     private fun VedtakDokumentGrunnlag.institusjonsoppholdSub(): Seksjon? {
         val grunnlag = institusjonsoppholdGrunnlag ?: return null
-        val harData =
-            grunnlag.oppholdene != null || grunnlag.soningsVurderinger != null || grunnlag.helseoppholdvurderinger != null
+        val oppholdene = grunnlag.oppholdene
+        val harData = oppholdene != null || grunnlag.soningsVurderinger != null || grunnlag.helseoppholdvurderinger != null
         if (!harData) return null
+
+        val soningsOpphold = oppholdene?.opphold?.filter { segment -> segment.verdi.type == Institusjonstype.FO } ?: emptyList()
+        val helseopphold = oppholdene?.opphold?.filter { segment -> segment.verdi.type == Institusjonstype.HS } ?: emptyList()
+        val oppholdKolonner = listOf(Tekst("Type"), Tekst("Kategori"), Tekst("Navn"), Tekst("Org.nr."))
 
         return Seksjon(
             tittel = Tekst("Institusjonsopphold"),
             subseksjoner = listOfNotNull(
-                grunnlag.oppholdene?.takeIf { it.opphold.isNotEmpty() }?.let { oppholdene ->
+                oppholdene?.takeIf { it.opphold.isNotEmpty() }?.let {
                     Seksjon(
                         tittel = Tekst("Registrerte opphold"),
-                        Tabell.ofTidslinje(
-                            kolonner = listOf(Tekst("Type"), Tekst("Kategori"), Tekst("Navn"), Tekst("Org.nr.")),
-                            tidslinje = no.nav.aap.komponenter.tidslinje.Tidslinje(oppholdene.opphold).map { inst ->
-                                listOf(
-                                    Tekst(inst.type.beskrivelse),
-                                    Tekst(inst.kategori.beskrivelse),
-                                    Tekst(inst.navn),
-                                    Tekst(inst.orgnr),
-                                )
-                            }
-                        )
+                        soningsOpphold.takeIf { it.isNotEmpty() }?.let {
+                            Tabell.ofTidslinje(
+                                kolonner = oppholdKolonner,
+                                tidslinje = no.nav.aap.komponenter.tidslinje.Tidslinje(soningsOpphold).map { inst ->
+                                    inst.tilTekst()
+                                }
+                            )
+                        },
+                        helseopphold.takeIf { it.isNotEmpty() }?.let {
+                            Tabell.ofTidslinje(
+                                kolonner = oppholdKolonner,
+                                tidslinje = no.nav.aap.komponenter.tidslinje.Tidslinje(helseopphold).map { inst ->
+                                    inst.tilTekst()
+                                }
+                            )
+                        }
                     )
                 },
                 grunnlag.soningsVurderinger?.tilTidslinje()?.takeIf { !it.isEmpty() }?.let { tidslinje ->
@@ -1361,6 +1373,15 @@ internal object VedtakDokumentRenderer {
         tittel = Tekst("Vurderinger av § 11-5"),
         subseksjoner = this.segmenter().map { it.verdi.tilSeksjon(it.periode) }.toList(),
     )
+
+    private fun Institusjon.tilTekst() :List<Tekst> =
+        listOf(
+            Tekst(type.beskrivelse),
+            Tekst(kategori.beskrivelse),
+            Tekst(navn),
+            Tekst(orgnr),
+        )
+
 
     private fun Sykdomsvurdering.tilSeksjon(bruktForPeriode: DomenePeriode): Seksjon = Seksjon(
         vurderingsoverskrift(this.vurdertIBehandling, bruktForPeriode),
