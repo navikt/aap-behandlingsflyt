@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                         val gjeldendeVedtatteVurderinger =
                             grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }
                                 ?.gjeldendeVurderinger()
-                                ?.orEmpty()
+                                .orEmpty()
 
                         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val behøverVurderinger =
