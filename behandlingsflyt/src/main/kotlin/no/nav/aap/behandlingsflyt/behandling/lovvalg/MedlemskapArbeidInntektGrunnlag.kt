@@ -6,11 +6,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertMan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class MedlemskapLovvalgGrunnlag(
@@ -26,8 +25,8 @@ data class MedlemskapArbeidInntektGrunnlag(
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
 ) {
-    fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
-        return vurderinger.tilTidslinje(maksDato)
+    fun gjeldendeVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
+        return vurderinger.gjeldendeVurderinger()
     }
 }
 
@@ -114,11 +113,6 @@ enum class InntektTyper {
     SYKEPENGERTILJORDOGSKOGBRUKERE,
     FERIEPENGERSYKEPENGERTILFISKERSOMBAREHARHYRE,
 }
-
-fun List<ManuellVurderingForLovvalgMedlemskap>.tilTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForLovvalgMedlemskap> =
-    sortedBy { it.vurdertDato }.somTidslinje { Periode(it.fom, it.tom ?: Tid.MAKS) }
-        .komprimer()
-        .begrensetTil(Periode(Tid.MIN, maksDato))
 
 fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<ManuellVurderingForLovvalgMedlemskap>> {
     val periodeForVurdering = helePerioden()
