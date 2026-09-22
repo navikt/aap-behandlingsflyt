@@ -7,9 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.oppholdskrav.Oppholdskravvi
 import no.nav.aap.behandlingsflyt.behandling.vilkår.oppholdskrav.OppholdskravvilkårGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.februar
@@ -101,11 +99,9 @@ class OppholdskravRegelTest {
     }
 
     private fun vurder(grunnlag: OppholdskravGrunnlag, vurderFra: LocalDate): Tidslinje<Vilkårsvurdering> {
-        val vilkårsresultat = Vilkårsresultat()
-        Oppholdskravvilkår(vilkårsresultat).vurder(OppholdskravvilkårGrunnlag(
+        return Oppholdskravvilkår.vurder(OppholdskravvilkårGrunnlag(
             oppholdskravGrunnlag = grunnlag,
             vurderFra = vurderFra
         ))
-        return vilkårsresultat.finnVilkår(Vilkårtype.OPPHOLDSKRAV).tidslinje()
     }
 }
