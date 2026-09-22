@@ -31,6 +31,9 @@ enum class BehandlingsflytFeature(
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
 
+    // --- Migrering ---
+    MigererSykdomFraArenaAutomatisk,
+
     // ------
     Avslag11_27,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,

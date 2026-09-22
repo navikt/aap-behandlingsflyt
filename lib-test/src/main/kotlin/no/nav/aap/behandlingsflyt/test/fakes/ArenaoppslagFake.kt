@@ -5,9 +5,11 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
 import java.time.LocalDate
 
 class ArenaoppslagFake : FakeServer() {
@@ -36,6 +38,18 @@ class ArenaoppslagFake : FakeServer() {
                                 regDato = LocalDate.of(2016, 1, 1),
                                 avsluttetDato = null,
                             )
+                        )
+                    )
+                )
+            }
+            post("/api/v1/migrering/sykdom") {
+                call.respond(
+                    ArenaSykdomsvurderingResponse(
+                        begrunnelse = "Oppfyller vilkårene for 11-5",
+                        ordinærAAP = true,
+                        diagnose = ArenaDiagnose(
+                            kodeverk = "ICD10",
+                            hoveddiagnose = listOf("M797")
                         )
                     )
                 )

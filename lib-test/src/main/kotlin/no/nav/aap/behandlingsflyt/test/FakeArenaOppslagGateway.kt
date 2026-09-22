@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.test
 
+import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Factory
@@ -33,6 +35,17 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                     regDato = LocalDate.of(2016, 1, 1),
                     avsluttetDato = null,
                 )
+            )
+        )
+    }
+
+    override fun hentSykdomsvurdering(saksnummerArena: String): ArenaSykdomsvurderingResponse {
+        return ArenaSykdomsvurderingResponse(
+            begrunnelse = "Oppfyller vilkårene for 11-5",
+            ordinærAAP = true,
+            diagnose = ArenaDiagnose(
+                kodeverk = "ICD10",
+                hoveddiagnose = listOf("M797")
             )
         )
     }

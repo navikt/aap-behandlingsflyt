@@ -5,6 +5,8 @@ import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerRequest
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingRequest
+import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkRequest
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
 import no.nav.aap.behandlingsflyt.prometheus
@@ -70,6 +72,19 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             mapper = { body, _ -> DefaultJsonMapper.fromJson<ArenaSakerResponse>(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/saker" }
+        return response
+    }
+
+    override fun hentSykdomsvurdering(saksnummerArena: String): ArenaSykdomsvurderingResponse {
+        val response: ArenaSykdomsvurderingResponse? = restClient.post(
+            uri.resolve("/api/v1/migrering/sykdom"),
+            PostRequest(
+                body = ArenaSykdomsvurderingRequest(saksnummerArena),
+                timeout = Duration.ofSeconds(5)
+            ),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/migrering/sykdom" }
         return response
     }
 }

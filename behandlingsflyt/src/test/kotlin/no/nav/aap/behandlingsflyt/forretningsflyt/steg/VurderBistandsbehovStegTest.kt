@@ -101,6 +101,7 @@ class VurderBistandsbehovStegTest {
             overgangUføreRepository = InMemoryOvergangUføreRepository,
             tidligereVurderinger = FakeTidligereVurderinger(),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
+            arenaMigreringService = mockk(relaxed = true)
         )
 
         opprettOgLøsBistandsbehov(behandling)
