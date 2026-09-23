@@ -48,7 +48,7 @@ class KlagebehandlingKontorGrunnlagApiTest : BaseApiTest() {
 
         val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
 
-        assertThat(respons.at("/vurdering/påklagetVedtakType").asText())
+        assertThat(respons.at("/påklagetVedtakType").asText())
             .isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING.name)
     }
 
@@ -68,7 +68,7 @@ class KlagebehandlingKontorGrunnlagApiTest : BaseApiTest() {
 
         val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
 
-        assertThat(respons.at("/vurdering/påklagetVedtakType").asText())
+        assertThat(respons.at("/påklagetVedtakType").asText())
             .isEqualTo(PåklagetVedtakType.TILBAKEKREVING.name)
     }
 

@@ -49,7 +49,7 @@ fun NormalOpenAPIRoute.klagebehandlingKontorGrunnlagApi(
                     behandling.id,
                     påklagetVedtakType
                 )
-                    ?: KlagebehandlingKontorGrunnlagDto(harTilgangTilÅSaksbehandle = kanSaksbehandle())
+                    ?: KlagebehandlingKontorGrunnlagDto(harTilgangTilÅSaksbehandle = kanSaksbehandle(), påklagetVedtakType = påklagetVedtakType)
             }
             respond(respons)
         }
