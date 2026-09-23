@@ -25,9 +25,13 @@ class ArenaMigreringService(
     fun hentSykdomsvurdering(sakId: SakId): ArenaSykdomsvurderingResponse {
         val saksnummerArena = hentSaksnummerArena(sakId)
         val sykdomsvurderingFraArena = arenaOppslagGateway.hentSykdomsvurdering(saksnummerArena)
+
         requireNotNull(sykdomsvurderingFraArena) {
             "Kan ikke migrere sykdomsvurdering fra Arena for sak $sakId fordi det ikke finnes en vurdering for ordinær AAP"
         }
+
+        // TODO lagre ned
+
         return sykdomsvurderingFraArena
     }
 }
