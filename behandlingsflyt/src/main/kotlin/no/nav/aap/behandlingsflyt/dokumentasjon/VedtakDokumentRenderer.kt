@@ -1053,10 +1053,10 @@ internal object VedtakDokumentRenderer {
 
     private fun VedtakDokumentGrunnlag.vilkårSub(): Seksjon = Seksjon(
         tittel = Tekst("Vilkårsvurderinger"),
-        subseksjoner = vilkårsresultat.alle().mapNotNull { vilkår(it, forrigeVilkårsresultat.optionalVilkår(it.type)) }
+        subseksjoner = vilkårsresultat.alle().map { vilkår(it, forrigeVilkårsresultat.optionalVilkår(it.type)) }
     )
 
-    private fun vilkår(vilkår: Vilkår, forrigeVilkår: Vilkår?): Seksjon? {
+    private fun vilkår(vilkår: Vilkår, forrigeVilkår: Vilkår?): Seksjon {
         val tittel = Span(PrettyEnum(vilkår.type), Tekst(" (${vilkår.type.hjemmel})"))
         if (vilkår.tidslinje().isEmpty()) {
             return Seksjon(tittel, Avsnitt(Tekst("Ingen vurderinger.")))
@@ -1327,7 +1327,7 @@ internal object VedtakDokumentRenderer {
                 }
             }
             val rader = dokumenter.map { mottattDokument ->
-                buildList<LøpendeTekst> {
+                buildList {
                     add(referanse(mottattDokument))
                     add(PrettyEnum(mottattDokument.type))
                     add(Tidspunkt(mottattDokument.mottattTidspunkt, kompakt = true))

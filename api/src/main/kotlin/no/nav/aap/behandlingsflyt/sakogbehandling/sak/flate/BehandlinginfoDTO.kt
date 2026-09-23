@@ -14,5 +14,6 @@ data class BehandlinginfoDTO(
     val vurderingsbehov: List<Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
     val opprettet: LocalDateTime,
+    val erGjeldende: Boolean = false,
     val eksternSaksbehandlingsløsningUrl: String?,
 )

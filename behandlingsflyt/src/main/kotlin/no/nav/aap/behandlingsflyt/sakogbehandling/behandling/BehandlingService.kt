@@ -96,6 +96,7 @@ class BehandlingService(
             TypeBehandling.Revurdering -> underveisService.harRett(
                 requireNotNull(behandling.forrigeBehandlingId) { "Revurdering skal alltid ha forrigeBehandling" }
             )
+
             else -> return behandling.typeBehandling()
         }
         return utledTypeForRevurdering(behandling, harRett)
@@ -116,6 +117,7 @@ class BehandlingService(
                     }
                     utledTypeForRevurdering(behandling, harRettMap[forrigeBehandlingId] ?: false)
                 }
+
                 else -> behandling.typeBehandling()
             }
             behandling.id to type
@@ -217,7 +219,7 @@ class BehandlingService(
             sisteYtelsesbehandling.status().erÅpen() ->
                 if (fasttrackkandidat && sisteYtelsesbehandling.typeBehandling() != TypeBehandling.Førstegangsbehandling)
                     MåBehandlesAtomært(
-                        opprettRevurderingForranÅpenBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak),
+                        opprettRevurderingForanÅpenBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak),
                         sisteYtelsesbehandling
                     )
                 else
@@ -388,7 +390,7 @@ class BehandlingService(
         }
     }
 
-    private fun opprettRevurderingForranÅpenBehandling(
+    private fun opprettRevurderingForanÅpenBehandling(
         åpenRevurdering: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {
