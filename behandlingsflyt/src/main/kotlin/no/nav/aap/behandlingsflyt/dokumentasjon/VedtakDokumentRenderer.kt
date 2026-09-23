@@ -158,10 +158,11 @@ internal object VedtakDokumentRenderer {
                             "Årsak til søknadsdato" to Tekst(vurdering.søknadsdato.årsak.visningsnavn()),
                             "Mulig rett fra" to Dato(vurdering.muligRettFra),
                             "Overstyrt mulig rett fra" to
-                                (overstyring?.dato?.let(::Dato) ?: Tekst("Ikke overstyrt")),
+                                    (overstyring?.dato?.let(::Dato) ?: Tekst("Ikke overstyrt")),
                             "Årsak til overstyring" to
-                                (overstyring?.årsak?.visningsnavn()?.let(::Tekst) ?: Tekst("Ikke overstyrt")),
+                                    (overstyring?.årsak?.visningsnavn()?.let(::Tekst) ?: Tekst("Ikke overstyrt")),
                         )
+
                         is MigrertKrav,
                         is Klage,
                         is Tilleggsopplysning,
@@ -873,24 +874,30 @@ internal object VedtakDokumentRenderer {
         val harData =
             grunnlag.oppholdene != null || grunnlag.soningsVurderinger != null || grunnlag.helseoppholdvurderinger != null
         if (!harData) return null
-
         return Seksjon(
             tittel = Tekst("Institusjonsopphold"),
             subseksjoner = listOfNotNull(
                 grunnlag.oppholdene?.takeIf { it.opphold.isNotEmpty() }?.let { oppholdene ->
                     Seksjon(
                         tittel = Tekst("Registrerte opphold"),
-                        Tabell.ofTidslinje(
-                            kolonner = listOf(Tekst("Type"), Tekst("Kategori"), Tekst("Navn"), Tekst("Org.nr.")),
-                            tidslinje = no.nav.aap.komponenter.tidslinje.Tidslinje(oppholdene.opphold).map { inst ->
+                        Tabell(
+                            kolonner = listOf(
+                                Tekst("Periode (fom – tom)"),
+                                Tekst("Type"),
+                                Tekst("Kategori"),
+                                Tekst("Navn"),
+                                Tekst("Org.nr.")
+                            ),
+                            rader = oppholdene.opphold.map { inst ->
                                 listOf(
-                                    Tekst(inst.type.beskrivelse),
-                                    Tekst(inst.kategori.beskrivelse),
-                                    Tekst(inst.navn),
-                                    Tekst(inst.orgnr),
+                                    Periode(inst.periode, kompakt = true),
+                                    Tekst(inst.verdi.type.beskrivelse),
+                                    Tekst(inst.verdi.kategori.beskrivelse),
+                                    Tekst(inst.verdi.navn),
+                                    Tekst(inst.verdi.orgnr),
                                 )
                             }
-                        )
+                        ),
                     )
                 },
                 grunnlag.soningsVurderinger?.tilTidslinje()?.takeIf { !it.isEmpty() }?.let { tidslinje ->
