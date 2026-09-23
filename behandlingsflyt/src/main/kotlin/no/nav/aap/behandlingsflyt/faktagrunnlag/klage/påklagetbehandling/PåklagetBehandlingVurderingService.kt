@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDate
 
@@ -19,8 +18,8 @@ class PåklagetBehandlingVurderingService(
         return påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandlingsreferanse)
     }
 
-    fun hentAlleBehandlingerMedVedtakForPerson(personId: PersonId): List<BehandlingMedVedtak> {
-        return behandlingRepository.hentAlleMedVedtakFor(personId, TypeBehandling.entries)
+    fun hentAlleBehandlingerMedVedtakForPerson(sakId: SakId): List<BehandlingMedVedtak> {
+        return behandlingRepository.hentAlleMedVedtakFor(sakId, TypeBehandling.entries)
     }
 
     fun hentAlleKlagerMedVedaksdato(sakId: SakId): List<KlagebehandlingMedVedtaksdato> {

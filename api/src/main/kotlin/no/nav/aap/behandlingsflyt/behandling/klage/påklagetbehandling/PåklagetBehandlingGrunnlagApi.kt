@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
                 val gjeldendeVurdering =
                     påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
                 val behandlingerMedVedtak =
-                    påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.person.id)
+                    påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.id)
                         .filterNot {
                             it.vedtakstidspunkt.toLocalDate().isAfter(behandling.opprettetTidspunkt.toLocalDate())
                         }
