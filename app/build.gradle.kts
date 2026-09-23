@@ -48,7 +48,7 @@ tasks.register<JavaExec>("runTestApp") {
 
 tasks.register<JavaExec>("runTestAppMotOppgave") {
     group = "application"
-    description = "Kjør TestApp mot Oppgave, Brev osv. Forventer at db kjører på port 5438, og oppgave-app på port 8084."
+    description = "Kjør TestApp mot Oppgave, Brev osv. Forventer at db kjører på port 5438, og apper på respektive porter."
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
     environment("NAIS_CLUSTER_NAME", "LOCAL")
@@ -56,6 +56,7 @@ tasks.register<JavaExec>("runTestAppMotOppgave") {
     environment("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME", "postgres")
     environment("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD", "")
     environment("INTEGRASJON_OPPGAVESTYRING_URL", "http://localhost:8084")
+    environment("INTEGRASJON_BREV_URL", "http://localhost:8082")
 }
 
 tasks.register<JavaExec>("runTestAppMotOppgaveOgPostmottak") {
