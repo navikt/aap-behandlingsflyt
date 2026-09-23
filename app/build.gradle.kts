@@ -46,7 +46,7 @@ tasks.register<JavaExec>("runTestApp") {
     mainClass.set("no.nav.aap.behandlingsflyt.TestAppKt")
 }
 
-tasks.register<JavaExec>("runTestAppMotOppgave") {
+tasks.register<JavaExec>("runTestAppIntegrated") {
     group = "application"
     description = "Kjør TestApp mot Oppgave, Brev osv. Forventer at db kjører på port 5438, og apper på respektive porter."
     classpath = sourceSets.test.get().runtimeClasspath
