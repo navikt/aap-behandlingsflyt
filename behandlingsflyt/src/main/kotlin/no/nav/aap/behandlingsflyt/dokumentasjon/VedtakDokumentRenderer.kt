@@ -10,8 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
@@ -876,33 +874,25 @@ internal object VedtakDokumentRenderer {
         val oppholdene = grunnlag.oppholdene
         val harData = oppholdene != null || grunnlag.soningsVurderinger != null || grunnlag.helseoppholdvurderinger != null
         if (!harData) return null
-
-        val soningsOpphold = oppholdene?.opphold?.filter { segment -> segment.verdi.type == Institusjonstype.FO } ?: emptyList()
-        val helseopphold = oppholdene?.opphold?.filter { segment -> segment.verdi.type == Institusjonstype.HS } ?: emptyList()
-        val oppholdKolonner = listOf(Tekst("Type"), Tekst("Kategori"), Tekst("Navn"), Tekst("Org.nr."))
-
         return Seksjon(
             tittel = Tekst("Institusjonsopphold"),
             subseksjoner = listOfNotNull(
-                oppholdene?.takeIf { it.opphold.isNotEmpty() }?.let {
+                oppholdene?.takeIf { it.opphold.isNotEmpty() }?.let {oppholdene ->
                     Seksjon(
                         tittel = Tekst("Registrerte opphold"),
-                        soningsOpphold.takeIf { it.isNotEmpty() }?.let {
-                            Tabell.ofTidslinje(
-                                kolonner = oppholdKolonner,
-                                tidslinje = no.nav.aap.komponenter.tidslinje.Tidslinje(soningsOpphold).map { inst ->
-                                    inst.tilTekst()
-                                }
-                            )
-                        },
-                        helseopphold.takeIf { it.isNotEmpty() }?.let {
-                            Tabell.ofTidslinje(
-                                kolonner = oppholdKolonner,
-                                tidslinje = no.nav.aap.komponenter.tidslinje.Tidslinje(helseopphold).map { inst ->
-                                    inst.tilTekst()
-                                }
-                            )
-                        }
+                        Tabell(
+                            kolonner = listOf(Tekst("Periode (fom – tom)"), Tekst("Type"), Tekst("Kategori"), Tekst("Navn"), Tekst("Org.nr.")),
+                            rader = oppholdene.opphold.map { inst ->
+                                listOf(
+                                    Periode(inst.periode, kompakt = true),
+                                    Tekst(inst.verdi.type.beskrivelse),
+                                    Tekst(inst.verdi.kategori.beskrivelse),
+                                    Tekst(inst.verdi.navn),
+                                    Tekst(inst.verdi.orgnr),
+                                )
+                            }
+                        )
+                        ,
                     )
                 },
                 grunnlag.soningsVurderinger?.tilTidslinje()?.takeIf { !it.isEmpty() }?.let { tidslinje ->
@@ -1373,15 +1363,6 @@ internal object VedtakDokumentRenderer {
         tittel = Tekst("Vurderinger av § 11-5"),
         subseksjoner = this.segmenter().map { it.verdi.tilSeksjon(it.periode) }.toList(),
     )
-
-    private fun Institusjon.tilTekst() :List<Tekst> =
-        listOf(
-            Tekst(type.beskrivelse),
-            Tekst(kategori.beskrivelse),
-            Tekst(navn),
-            Tekst(orgnr),
-        )
-
 
     private fun Sykdomsvurdering.tilSeksjon(bruktForPeriode: DomenePeriode): Seksjon = Seksjon(
         vurderingsoverskrift(this.vurdertIBehandling, bruktForPeriode),
