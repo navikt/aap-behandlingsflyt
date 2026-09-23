@@ -26,9 +26,8 @@ fun ArenaSykdomsvurderingResponse.erOrdinærAap(): Boolean {
 
 object ArenaMigreringMapper {
     /**
-     * Vurderingen antas alltid å gjelde ordinær AAP — det er forutsatt av kalleren
-     * (se `require(sykdomsvurderingFraArena.ordinærAAP)` i steget) at dette kun
-     * kalles for migreringsgruppe 1.
+     * Vurderingen antas alltid å gjelde ordinær AAP. Kalleren må ha sjekket
+     * [erOrdinærAap] først (migreringsgruppe 1).
      */
     fun mapSykdomsvurdering(
         fraArena: ArenaSykdomsvurderingResponse,
@@ -36,7 +35,9 @@ object ArenaMigreringMapper {
         vurderingenGjelderFra: LocalDate,
     ): Sykdomsvurdering {
         // TODO denne mappingen er ikke landet
-        val hoveddiagnose = fraArena.diagnoser.sortedBy { it.opprettet }.last { it.type == ArenaDiagnoseType.HOVEDDIAGNOSE }
+        val hoveddiagnose = requireNotNull(
+            fraArena.diagnoser.sortedBy { it.opprettet }.lastOrNull { it.type == ArenaDiagnoseType.HOVEDDIAGNOSE }
+        ) { "Fant ingen hoveddiagnose i sykdomsvurdering fra Arena" }
         val bidiagnoser = fraArena.diagnoser.filter { it.type == ArenaDiagnoseType.BIDIAGNOSE }
 
         return Sykdomsvurdering(

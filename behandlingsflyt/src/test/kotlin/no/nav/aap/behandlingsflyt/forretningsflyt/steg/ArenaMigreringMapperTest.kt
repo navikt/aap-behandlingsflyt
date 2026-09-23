@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -62,6 +63,20 @@ class ArenaMigreringMapperTest {
         assertThat(vurdering.yrkesskadeBegrunnelse).isNull()
         assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER)
         assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
+        assertThat(vurdering.erOppfyltOrdinærMedUtlededeFelter()).isTrue()
+    }
+
+    @Test
+    fun `mapSykdomsvurdering feiler med tydelig melding når Arena mangler hoveddiagnose`() {
+        val utenHoveddiagnose = fraArena.copy(
+            diagnoser = fraArena.diagnoser.filter { it.type == ArenaDiagnoseType.BIDIAGNOSE }
+        )
+
+        assertThatThrownBy {
+            ArenaMigreringMapper.mapSykdomsvurdering(utenHoveddiagnose, behandlingId, fom)
+        }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("hoveddiagnose")
     }
 
     @Test
