@@ -871,17 +871,23 @@ internal object VedtakDokumentRenderer {
 
     private fun VedtakDokumentGrunnlag.institusjonsoppholdSub(): Seksjon? {
         val grunnlag = institusjonsoppholdGrunnlag ?: return null
-        val oppholdene = grunnlag.oppholdene
-        val harData = oppholdene != null || grunnlag.soningsVurderinger != null || grunnlag.helseoppholdvurderinger != null
+        val harData =
+            grunnlag.oppholdene != null || grunnlag.soningsVurderinger != null || grunnlag.helseoppholdvurderinger != null
         if (!harData) return null
         return Seksjon(
             tittel = Tekst("Institusjonsopphold"),
             subseksjoner = listOfNotNull(
-                oppholdene?.takeIf { it.opphold.isNotEmpty() }?.let {oppholdene ->
+                grunnlag.oppholdene?.takeIf { it.opphold.isNotEmpty() }?.let { oppholdene ->
                     Seksjon(
                         tittel = Tekst("Registrerte opphold"),
                         Tabell(
-                            kolonner = listOf(Tekst("Periode (fom – tom)"), Tekst("Type"), Tekst("Kategori"), Tekst("Navn"), Tekst("Org.nr.")),
+                            kolonner = listOf(
+                                Tekst("Periode (fom – tom)"),
+                                Tekst("Type"),
+                                Tekst("Kategori"),
+                                Tekst("Navn"),
+                                Tekst("Org.nr.")
+                            ),
                             rader = oppholdene.opphold.map { inst ->
                                 listOf(
                                     Periode(inst.periode, kompakt = true),
@@ -891,8 +897,7 @@ internal object VedtakDokumentRenderer {
                                     Tekst(inst.verdi.orgnr),
                                 )
                             }
-                        )
-                        ,
+                        ),
                     )
                 },
                 grunnlag.soningsVurderinger?.tilTidslinje()?.takeIf { !it.isEmpty() }?.let { tidslinje ->
