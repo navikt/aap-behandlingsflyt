@@ -36,6 +36,8 @@ class SignaturService(
         avklaringsbehovRepository = repositoryProvider.provide()
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     fun finnSignaturGrunnlag(
         brevbestilling: Brevbestilling,
         innloggetBruker: Bruker,
@@ -89,6 +91,17 @@ class SignaturService(
             oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+
+        if (Miljø.erDev()) {
+            val endringer = avklaringsbehovene.alle()
+                .flatMap { it.historikk }
+
+            log.info(
+                "Signaturkandidater: {}",
+                endringer.map { "${it.endretAv.ident}:${it.status}:${it.endretAv.erNavIdent()}" }
+            )
+        }
+
 
         val saksbehandler = avklaringsbehovene.alle()
             .flatMap { it.historikk }
