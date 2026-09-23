@@ -67,6 +67,9 @@ internal class PåklagetBehandlingRepositoryImplTest {
             assertThat(grunnlag.vurdering.påklagetTilbakekrevingsbehandling).isNull()
             assertThat(grunnlag.vurdering.vurdertAv).isEqualTo(Bruker("ident"))
             assertNotNull(grunnlag.vurdering.opprettet)
+
+            val påklagetVedtaksType = påklagetBehandlingRepository.hentPåklagetVedtakstype(klageBehandling.id)
+            assertThat(påklagetVedtaksType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
         }
     }
 
@@ -95,11 +98,48 @@ internal class PåklagetBehandlingRepositoryImplTest {
             assertThat(grunnlag.vurdering.vurdertAv).isEqualTo(Bruker("ident"))
             assertNotNull(grunnlag.vurdering.opprettet)
 
+            val påklagetVedtaksType = påklagetBehandlingRepository.hentPåklagetVedtakstype(klageBehandling.id)
+            assertThat(påklagetVedtaksType).isEqualTo(PåklagetVedtakType.TILBAKEKREVING)
+
             val vurderingMedReferanse =
                 påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(klageBehandling.referanse)!!
             assertThat(vurderingMedReferanse.påklagetVedtakType).isEqualTo(PåklagetVedtakType.TILBAKEKREVING)
             assertThat(vurderingMedReferanse.påklagetBehandling).isNull()
             assertThat(vurderingMedReferanse.påklagetTilbakekrevingsbehandling).isEqualTo(tilbakekrevingsReferanse)
+        }
+    }
+
+    @Test
+    fun `Henter vedtakstype fra aktiv vurdering`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection, søknadsdato)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+            val repository = PåklagetBehandlingRepositoryImpl(connection)
+
+            repository.lagre(
+                klageBehandling.id,
+                PåklagetBehandlingVurdering(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = behandling.id,
+                    påklagetTilbakekrevingsbehandling = null,
+                    vurdertAv = Bruker("ident"),
+                    opprettet = Instant.now(),
+                ),
+            )
+            repository.lagre(
+                klageBehandling.id,
+                PåklagetBehandlingVurdering(
+                    påklagetVedtakType = PåklagetVedtakType.TILBAKEKREVING,
+                    påklagetBehandling = null,
+                    påklagetTilbakekrevingsbehandling = lagreTilbakekrevingsbehandling(connection, sak),
+                    vurdertAv = Bruker("ident"),
+                    opprettet = Instant.now(),
+                ),
+            )
+
+            assertThat(repository.hentPåklagetVedtakstype(klageBehandling.id))
+                .isEqualTo(PåklagetVedtakType.TILBAKEKREVING)
         }
     }
 

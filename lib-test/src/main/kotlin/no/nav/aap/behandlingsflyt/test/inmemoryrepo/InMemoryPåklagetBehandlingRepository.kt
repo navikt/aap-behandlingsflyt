@@ -9,9 +9,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryPåklagetBehandlingRepository : PåklagetBehandlingRepository {
     private val memory = HashMap<BehandlingId, PåklagetBehandlingGrunnlag>()
+
     override fun hentHvisEksisterer(behandlingId: BehandlingId): PåklagetBehandlingGrunnlag? {
         return memory[behandlingId]
     }
+
+    override fun hentPåklagetVedtakstype(behandlingId: BehandlingId) =
+        requireNotNull(memory[behandlingId]).vurdering.påklagetVedtakType
 
     override fun hentGjeldendeVurderingMedReferanse(behandlingReferanse: BehandlingReferanse): PåklagetBehandlingVurderingMedReferanse? {
         val behandling = InMemoryBehandlingRepository.hent(behandlingReferanse)
