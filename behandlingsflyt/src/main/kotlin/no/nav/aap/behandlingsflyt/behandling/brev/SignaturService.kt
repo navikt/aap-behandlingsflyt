@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
@@ -35,8 +34,6 @@ class SignaturService(
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide()
     )
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     fun finnSignaturGrunnlag(
         brevbestilling: Brevbestilling,
@@ -91,17 +88,6 @@ class SignaturService(
             oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-
-        if (Miljø.erDev()) {
-            val endringer = avklaringsbehovene.alle()
-                .flatMap { it.historikk }
-
-            log.info(
-                "Signaturkandidater: {}",
-                endringer.map { "${it.endretAv.ident}:${it.status}:${it.endretAv.erNavIdent()}" }
-            )
-        }
-
 
         val saksbehandler = avklaringsbehovene.alle()
             .flatMap { it.historikk }
