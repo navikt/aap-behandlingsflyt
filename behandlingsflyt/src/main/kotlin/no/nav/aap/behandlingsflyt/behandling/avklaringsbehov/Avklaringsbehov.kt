@@ -14,7 +14,6 @@ import java.time.LocalDateTime
 class Avklaringsbehov(
     val id: Long,
     val definisjon: Definisjon,
-    val behov: GradBehov?,
     historikk: List<Endring> = emptyList(),
     val funnetISteg: StegType,
     private var kreverToTrinn: Boolean?
@@ -116,6 +115,7 @@ class Avklaringsbehov(
         bruker: Bruker = SYSTEMBRUKER,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        gradBehov: GradBehov? = null
     ) {
         require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
         if (definisjon.erVentebehov()) {
@@ -129,7 +129,8 @@ class Avklaringsbehov(
             frist = frist,
             endretAv = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            gradBehov = gradBehov
         )
     }
 
@@ -225,6 +226,10 @@ class Avklaringsbehov(
 
     fun status(): Status {
         return historikk.maxOf { it }.status
+    }
+
+    fun gradBehov(): GradBehov? {
+        return historikk.maxOf { it }.gradBehov
     }
 
     fun begrunnelse(): String = historikk.maxOf { it }.begrunnelse

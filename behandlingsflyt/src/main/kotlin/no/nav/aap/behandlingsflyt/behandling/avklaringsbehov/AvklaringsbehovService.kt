@@ -208,7 +208,8 @@ class AvklaringsbehovService(
                             definisjon,
                             definisjon.løsesISteg,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                            gradBehov = null,
                         )
                     }
                 }

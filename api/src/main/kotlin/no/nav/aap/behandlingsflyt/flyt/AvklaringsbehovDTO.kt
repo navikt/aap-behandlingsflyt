@@ -25,9 +25,10 @@ data class AvklaringsbehovDTO(
         gradBehov = when (avklaringsbehov.definisjon.type) {
             Definisjon.BehovType.MANUELT_PÅKREVD ->
                 GradBehovDTO.PÅKREVD
+
             Definisjon.BehovType.MANUELT_FRIVILLIG
-                    if avklaringsbehov.definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
-                -> GradBehovDTO.FRIVILLIG
+                if avklaringsbehov.definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
+                -> avklaringsbehov.gradBehov()?.let { GradBehovDTO.fraDomene(it) }
 
             Definisjon.BehovType.MANUELT_FRIVILLIG,
             Definisjon.BehovType.OVERSTYR,
@@ -61,7 +62,14 @@ data class AvklaringsbehovDTO(
 
 enum class GradBehovDTO {
     PÅKREVD,
-    FRIVILLIG,
+    FRIVILLIG;
+
+    companion object {
+        fun fraDomene(gradBehov: GradBehov): GradBehovDTO = when (gradBehov) {
+            GradBehov.PÅKREVD -> PÅKREVD
+            GradBehov.FRIVILLIG -> FRIVILLIG
+        }
+    }
 }
 
 data class AvklaringsbehovPeriodeDTO(

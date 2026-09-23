@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -25,6 +26,7 @@ data class Endring(
      * eller fordi vurderingen av andre årsaker ikke er god nok
      */
     val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
+    val gradBehov: GradBehov? = null
 ) : Comparable<Endring> {
 
     override fun compareTo(other: Endring): Int {

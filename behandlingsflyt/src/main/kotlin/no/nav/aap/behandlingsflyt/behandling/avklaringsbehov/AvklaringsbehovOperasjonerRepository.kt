@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
@@ -26,6 +27,7 @@ interface AvklaringsbehovOperasjonerRepository : Repository {
         endretAv: Bruker = SYSTEMBRUKER,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
         perioderVedtaketBehøverVurdering: Set<Periode>? = null,
+        gradBehov: GradBehov? = null,
     )
 
     fun kreverToTrinn(avklaringsbehovId: Long, kreverToTrinn: Boolean)

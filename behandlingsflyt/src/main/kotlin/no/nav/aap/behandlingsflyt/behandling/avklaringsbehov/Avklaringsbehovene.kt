@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -80,7 +81,8 @@ class Avklaringsbehovene(
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
-        bruker: Bruker = SYSTEMBRUKER
+        bruker: Bruker = SYSTEMBRUKER,
+        gradBehov: GradBehov? = null
     ) {
         log.info("Legger til avklaringsbehov :: {} - {}", definisjon, funnetISteg)
         val avklaringsbehov = hentBehovForDefinisjon(definisjon)
@@ -92,7 +94,8 @@ class Avklaringsbehovene(
                     venteårsak = grunn,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                    gradBehov = gradBehov
                 )
                 if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
                     // TODO: Vurdere om funnet steg bør ligge på endringen...
@@ -113,7 +116,8 @@ class Avklaringsbehovene(
                 grunn = grunn,
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                endretAv = bruker
+                endretAv = bruker,
+                gradBehov = gradBehov
             )
         }
 
@@ -179,7 +183,7 @@ class Avklaringsbehovene(
             frist = frist,
             venteårsak = avklaringsbehov.venteårsak(),
             perioderSomIkkeErTilstrekkeligVurdert = null, // Kan ikke si noe om dette
-            perioderVedtaketBehøverVurdering = avklaringsbehov.perioderVedtaketBehøverVurdering()
+            perioderVedtaketBehøverVurdering = avklaringsbehov.perioderVedtaketBehøverVurdering(),
         )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
@@ -348,7 +352,6 @@ class Avklaringsbehovene(
                     ),
                     funnetISteg = definisjon.løsesISteg,
                     kreverToTrinn = null,
-                    behov = null,
                 )
             }.toMutableList()
         list.addAll(eksisterendeBehov)
