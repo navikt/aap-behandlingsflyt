@@ -155,7 +155,19 @@ class Avklaringsbehov(
     }
 
     fun skalStoppeHer(stegType: StegType): Boolean {
-        return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent()
+        return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent() &&
+                when (definisjon.type) {
+                    Definisjon.BehovType.MANUELT_FRIVILLIG if definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov ->
+                        false
+
+                    Definisjon.BehovType.MANUELT_FRIVILLIG,
+                    Definisjon.BehovType.MANUELT_PÅKREVD,
+                    Definisjon.BehovType.VENTEPUNKT,
+                    Definisjon.BehovType.OVERSTYR,
+                    Definisjon.BehovType.BREV,
+                    Definisjon.BehovType.BREV_VENTEPUNKT,
+                        -> true
+                }
     }
 
     internal fun løs(begrunnelse: String, endretAv: Bruker) {

@@ -39,7 +39,7 @@ class Avklaringsbehovene(
     }
 
     fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker) {
-        if (definisjon.erFrivillig()) {
+        if (definisjon.erFrivillig() && definisjon in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
                 leggTil(

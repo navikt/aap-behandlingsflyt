@@ -91,6 +91,10 @@ subprojects {
             input.from(reports.sarif.outputLocation)
         }
     }
+    tasks.withType<JavaExec>().configureEach {
+        val appName = "${rootProject.name}-${project.name}"
+        jvmArgs("-Dapp.name=$appName")
+    }
 }
 
 
