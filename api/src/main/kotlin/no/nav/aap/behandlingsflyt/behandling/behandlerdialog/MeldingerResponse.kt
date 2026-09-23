@@ -15,6 +15,7 @@ data class MeldingMedDokumenterDto(
 
 data class KommendeMeldingDto(
     val bestillingId: UUID,
+    val behandlerNavn: String,
     val påminnelseErAvbrutt: Boolean,
     val påminnelseDato: LocalDate
 )
