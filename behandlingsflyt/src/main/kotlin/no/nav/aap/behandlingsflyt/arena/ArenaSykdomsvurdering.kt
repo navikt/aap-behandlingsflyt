@@ -1,17 +1,27 @@
 package no.nav.aap.behandlingsflyt.arena
 
-data class ArenaSykdomsvurderingRequest(
-    val saksnummerArena: String,
-)
+import java.time.LocalDate
+
 
 data class ArenaSykdomsvurderingResponse(
     val begrunnelse: String,
-    val ordinærAAP: Boolean,
-    val diagnose: ArenaDiagnose,
+    val vilkar: List<ArenaVilkar>,
+    val diagnoser: List<ArenaDiagnose>,
 )
 
 data class ArenaDiagnose(
     val kodeverk: String,
-    val hoveddiagnose: List<String>,
-    val bidiagnose: List<String> = emptyList(),
+    val kode: String,
+    val type: ArenaDiagnoseType,
+    val opprettet: LocalDate
+)
+
+enum class ArenaDiagnoseType {
+    HOVEDDIAGNOSE,
+    BIDIAGNOSE
+}
+
+data class ArenaVilkar(
+    val kode: String,
+    val oppfylt: Boolean,
 )

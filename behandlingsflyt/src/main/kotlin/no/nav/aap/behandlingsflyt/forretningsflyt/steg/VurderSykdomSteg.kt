@@ -1,16 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -24,11 +20,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.Instant
 
 class VurderSykdomSteg(
     private val sykdomRepository: SykdomRepository,
@@ -114,42 +108,30 @@ class VurderSykdomSteg(
     }
 
     override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
-        require(kontekst.erMigreringFraArena() && !Miljø.erProd()) {
-            "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi det ikke er migrering"
+        require(kontekst.erMigreringFraArena()) {
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
         }
 
         val sykdomsvurderingFraArena =
             arenaMigreringService.hentSykdomsvurdering(kontekst.sakId)
 
         /**
-         * Kun ordinær AAP støttes for migreringsgruppe 1.
+         * Kun ordinær AAP støttes for migreringsgruppe 1. Dette vil utvides når andre saker skal migreres
+         * på senere tidspunkt.
          */
-        require(sykdomsvurderingFraArena.ordinærAAP) {
-            "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi den ikke er ordinær AAP"
+        require(sykdomsvurderingFraArena.erOrdinærAap()) {
+            "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi ikke alle vilkår for ordinær AAP er oppfylt"
         }
 
-        /**
-         * Skal vurderes som ordinær AAP
-         */
-        val vurdering = Sykdomsvurdering(
-            begrunnelse = sykdomsvurderingFraArena.begrunnelse,
+        val vurdering = ArenaMigreringMapper.mapSykdomsvurdering(
+            fraArena = sykdomsvurderingFraArena,
+            behandlingId = kontekst.behandlingId,
             vurderingenGjelderFra = kontekst.rettighetsperiode.fom,
-            vurderingenGjelderTil = null,
-            diagnose = Diagnose(
-                kodeverk = sykdomsvurderingFraArena.diagnose.kodeverk,
-                // TODO avklar hva som er riktig for hoveddiagnose
-                hoveddiagnose = sykdomsvurderingFraArena.diagnose.hoveddiagnose.first(),
-            ),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-            yrkesskadeBegrunnelse = null,
-            vurdertAv = SYSTEMBRUKER,
-            vurdertIBehandling = kontekst.behandlingId,
-            opprettet = Instant.now(),
         )
+
+        require(vurdering.erOppfyltOrdinærMedUtlededeFelter()) {
+            "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi vurderingen ikke er oppfylt for ordinær AAP"
+        }
 
         sykdomRepository.lagre(kontekst.behandlingId, listOf(vurdering))
     }

@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
+import no.nav.aap.behandlingsflyt.arena.ArenaDiagnoseType
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaVilkar
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Factory
@@ -42,10 +44,33 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
     override fun hentSykdomsvurdering(saksnummerArena: String): ArenaSykdomsvurderingResponse {
         return ArenaSykdomsvurderingResponse(
             begrunnelse = "Oppfyller vilkårene for 11-5",
-            ordinærAAP = true,
-            diagnose = ArenaDiagnose(
-                kodeverk = "ICD10",
-                hoveddiagnose = listOf("M797")
+            vilkar = listOf(
+                ArenaVilkar(
+                    kode = "INNTNEDS",
+                    oppfylt = true
+                ),
+                ArenaVilkar(
+                    kode = "SYKSKADLYT",
+                    oppfylt = true
+                ),
+                ArenaVilkar(
+                    kode = "AAARBEVNE",
+                    oppfylt = true
+                ),
+            ),
+            diagnoser = listOf(
+                ArenaDiagnose(
+                    kodeverk = "ICD10",
+                    kode = "M797",
+                    type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                    opprettet = LocalDate.of(2016, 1, 1),
+                ),
+                ArenaDiagnose(
+                    kodeverk = "ICD10",
+                    kode = "M797",
+                    type = ArenaDiagnoseType.BIDIAGNOSE,
+                    opprettet = LocalDate.of(2016, 1, 1),
+                )
             )
         )
     }

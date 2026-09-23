@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -10,12 +9,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -30,12 +25,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.Instant
-import kotlin.Boolean
 
 class VurderBistandsbehovSteg(
     private val bistandRepository: BistandRepository,
@@ -165,37 +157,28 @@ class VurderBistandsbehovSteg(
 
     override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
         require(kontekst.erMigreringFraArena()) {
-            "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi det ikke er migrering"
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
         }
 
         val sykdomsvurderingFraArena =
             arenaMigreringService.hentSykdomsvurdering(kontekst.sakId)
 
         /**
-         * Kun ordinær AAP støttes for migreringsgruppe 1.
+         * Kun ordinær AAP støttes for migreringsgruppe 1. Dette vil utvides når andre saker skal migreres
+         * på senere tidspunkt.
          */
-        require(sykdomsvurderingFraArena.ordinærAAP) {
-            "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi den ikke er ordinær AAP"
+        require(sykdomsvurderingFraArena.erOrdinærAap()) {
+            "Kan ikke opprette bistandsvurdering for sak ${kontekst.sakId} fra Arena fordi ikke alle vilkår for ordinær AAP er oppfylt"
         }
 
-        /**
-         * Vurderingen av bistandsbehov finnes ikke i Arena. Ved ordinær AAP skal dette vilkåret være oppfylt.
-         * I migrering gjør vi antagelse om at det oppfylles ved bokstav a (behov for aktiv behandling) og
-         * b (behov for arbeidsrettet tiltak).
-         */
-        val vurdering = Bistandsvurdering(
-            begrunnelse = sykdomsvurderingFraArena.begrunnelse,
+        val vurdering = ArenaMigreringMapper.mapBistandsvurdering(
+            behandlingId = kontekst.behandlingId,
             fom = kontekst.rettighetsperiode.fom,
-            tom = null,
-            erBehovForAktivBehandling = true,
-            erBehovForArbeidsrettetTiltak = true,
-            erBehovForAnnenOppfølging = null,
-            overgangBegrunnelse = null,
-            skalVurdereAapIOvergangTilArbeid = null,
-            vurdertAv = SYSTEMBRUKER,
-            vurdertIBehandling = kontekst.behandlingId,
-            opprettet = Instant.now(),
         )
+
+        require(vurdering.erBehovForBistand()) {
+            "Kan ikke opprette bistandsvurdering for sak ${kontekst.sakId} fra Arena fordi vurderingen ikke er oppfylt"
+        }
 
         bistandRepository.lagre(kontekst.behandlingId, listOf(vurdering))
     }
