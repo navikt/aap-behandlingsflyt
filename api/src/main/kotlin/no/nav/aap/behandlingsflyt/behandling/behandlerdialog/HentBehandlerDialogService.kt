@@ -39,8 +39,11 @@ class HentBehandlerDialogService(
         val legeerklæringerMedDokumentoversikt =
             lagMeldingMedDokumentoversiktForLegeerklæringer(legeerklæringer, journalposter)
 
+        val sorterteMeldinger = (dialogmeldingerMedDokumentoversikt + legeerklæringerMedDokumentoversikt)
+            .sortedBy { it.melding.opprettetTidspunkt }
+
         return MeldingerResponse(
-            meldinger = dialogmeldingerMedDokumentoversikt + legeerklæringerMedDokumentoversikt,
+            meldinger = sorterteMeldinger,
             kommendeMeldinger = utledKommendeMeldingerForSak(
                 dialogmeldinger = dialogmeldingerMedDokumentoversikt,
                 legeerklæringer = legeerklæringer
@@ -67,7 +70,7 @@ class HentBehandlerDialogService(
             !finnesLegeerklæringSomKomInnEtterBestilling
         }
 
-        return forespørslerSomIkkeErBesvart.map { melding ->
+        return forespørslerSomIkkeErBesvart.sortedBy { it.melding.opprettetTidspunkt }.map { melding ->
             KommendeMeldingDto(
                 bestillingId = requireNotNull(melding.melding.dialogmeldingId) {
                     "Kan ikke sende påminnelse når bestillingId ikke finnes"
