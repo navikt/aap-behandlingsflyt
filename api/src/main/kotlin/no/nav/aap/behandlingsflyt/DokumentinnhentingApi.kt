@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
@@ -244,6 +246,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 ) { _, req ->
                     val request = PåminnelseDto(req.dialogmeldingPurringUUID)
                     dokumentinnhentingGateway.avbrytAutomatiskPåminnelseForBestilling(request)
+                    respondWithStatus(HttpStatusCode.OK)
                 }
             }
 
@@ -259,6 +262,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 ) { _, req ->
                     val request = PåminnelseDto(req.dialogmeldingPurringUUID)
                     dokumentinnhentingGateway.gjenopptaAutomatiskPåminnelseForBestilling(request)
+                    respondWithStatus(HttpStatusCode.OK)
                 }
             }
 
