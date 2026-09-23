@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="TestApp (mot oppgave)" type="KtorApplicationConfigurationType" factoryName="Ktor">
+  <configuration default="false" name="TestApp (mot oppgave og postmottak)" type="KtorApplicationConfigurationType" factoryName="Ktor">
     <envs>
       <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
       <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL" value="jdbc:postgresql://localhost:5438/postgres" />
