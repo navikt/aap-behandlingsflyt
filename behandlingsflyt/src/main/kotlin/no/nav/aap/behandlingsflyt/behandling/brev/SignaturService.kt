@@ -14,11 +14,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
-import org.slf4j.LoggerFactory
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
 
@@ -92,7 +90,7 @@ class SignaturService(
 
         val saksbehandler = avklaringsbehovene.alle()
             .flatMap { it.historikk }
-            .filter { it.endretAv.erNavIdent() && it.status == AvklaringsbehovStatus.AVSLUTTET }
+            .filter { it.endretAv.erNavIdent() }
             .maxByOrNull { it.tidsstempel }
             ?: return emptyList()
 
