@@ -21,8 +21,7 @@ class KandidatForPåminnelseRepositoryImpl(
      * En kandidat for påminnelse er en behandling som:
      * - er åpen
      * - har en OPPRETTET-endring på BESTILL_LEGEERKLÆRING-avklaringsbehovet som har opprettetTid lik @param[bestillingOpprettetDato], tre uker og en dag siden i prod
-     * - ikke har vurderingsbehov [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_DIALOGMELDING]
-     *   eller [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_LEGEERKLÆRING] som er nyere enn tre uker og en dag gammelt.
+     * - ikke har vurderingsbehov [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_LEGEERKLÆRING] som er nyere enn tre uker og en dag gammelt.
      */
     override fun finnKandidaterForPåminnelse(bestillingOpprettetDato: LocalDate): List<BehandlingReferanse> {
         val query = """
@@ -42,7 +41,7 @@ class KandidatForPåminnelseRepositoryImpl(
                 SELECT 1
                 FROM VURDERINGSBEHOV v
                 WHERE v.behandling_id = b.id
-                AND v.aarsak IN ('${Vurderingsbehov.MOTTATT_DIALOGMELDING.name}', '${Vurderingsbehov.MOTTATT_LEGEERKLÆRING.name}')
+                AND v.aarsak = '${Vurderingsbehov.MOTTATT_LEGEERKLÆRING.name}'
                 AND v.opprettet_tid::date >= ?
             )
         """.trimIndent()
