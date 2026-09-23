@@ -106,7 +106,7 @@ class BrevGateway : BrevbestillingGateway {
             sprak = Språk.NB, // TODO språk
             faktagrunnlag = mapFaktagrunnlag(brevBehov),
             ferdigstillAutomatisk = ferdigstillAutomatisk,
-            //signaturer = signaturer,
+            signaturer = signaturer,
             vedlegg = vedlegg?.let { setOf(it) }.orEmpty()
         )
         val httpRequest = PostRequest(
