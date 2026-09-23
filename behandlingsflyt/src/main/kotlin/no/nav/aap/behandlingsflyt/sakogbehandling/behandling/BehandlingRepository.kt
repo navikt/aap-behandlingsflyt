@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
 import org.jetbrains.annotations.TestOnly
@@ -33,7 +32,7 @@ interface BehandlingRepository : Repository {
     fun hentAlleIkkeAvbrutteYtelsesbehandlinger(sakId: SakId): List<Behandling>
 
     fun hentAlleMedVedtakFor(
-        personId: PersonId,
+        sakId: SakId,
         behandlingstypeFilter: List<TypeBehandling> = TypeBehandling.entries
     ): List<BehandlingMedVedtak>
 
