@@ -59,7 +59,7 @@ class HentBehandlerDialogService(
             dialogmeldinger.filter {
                 it.melding.dokumentasjonsType == no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40
                         && it.melding.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
-                        && it.melding.dialogmeldingId != null && it.melding.påminnelseAvbrutt != true
+                        && it.melding.dialogmeldingId != null
                         && it.melding.opprettetTidspunkt.toLocalDate().plusDays(22) > java.time.LocalDate.now()
             }
 
@@ -136,6 +136,7 @@ class HentBehandlerDialogService(
                     tekst = dialogmelding.tekst,
                     meldingStatus = dialogmelding.meldingStatus?.tilResponseDto(),
                     journalpostId = dialogmelding.journalpostId,
+                    påminnelseAvbrutt = dialogmelding.automatiskPåminnelse?.let { !it }
                 ),
                 dokumentIdListe = dokumentoversikt?.dokumenter?.map { it.tilResponseDto() }.orEmpty()
             )
