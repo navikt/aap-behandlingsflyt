@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.test.fakes.YrkesskadeFake
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import org.slf4j.LoggerFactory
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -231,7 +232,13 @@ object FakeServers : AutoCloseable {
         System.setProperty("INTEGRASJON_TILGANG_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_BREV_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_POSTMOTTAK_AZP", java.util.UUID.randomUUID().toString())
+
+        // Også hardkodet i aap-postmottak-backend
+        System.setProperty(
+            "INTEGRASJON_POSTMOTTAK_AZP",
+            UUID.fromString("c62cff74-505a-4858-ac15-16061c2e8290").toString()
+        )
+
         System.setProperty("INTEGRASJON_SAKSBEHANDLING_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP", java.util.UUID.randomUUID().toString())
 
