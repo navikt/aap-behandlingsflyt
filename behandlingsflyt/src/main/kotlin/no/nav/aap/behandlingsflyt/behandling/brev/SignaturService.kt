@@ -92,7 +92,7 @@ class SignaturService(
 
         val saksbehandler = avklaringsbehovene.alle()
             .flatMap { it.historikk }
-            .filter { it.endretAv.erNavIdent() }
+            .filter { it.endretAv.erNavIdent() && it.status == AvklaringsbehovStatus.AVSLUTTET }
             .maxByOrNull { it.tidsstempel }
             ?: return emptyList()
 
