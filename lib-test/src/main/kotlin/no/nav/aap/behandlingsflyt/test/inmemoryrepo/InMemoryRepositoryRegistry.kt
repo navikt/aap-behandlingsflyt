@@ -29,6 +29,7 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemoryTrekkKlageRepository>()
     register<InMemorySakRepository>()
     register<InMemoryArenaMigreringRepository>()
+    register<InMemoryArenaMigreringsdataRepository>()
     register<InMemorySamordningRepository>()
     register<InMemorySamordningVurderingRepository>()
     register<InMemorySamordningYtelseRepository>()

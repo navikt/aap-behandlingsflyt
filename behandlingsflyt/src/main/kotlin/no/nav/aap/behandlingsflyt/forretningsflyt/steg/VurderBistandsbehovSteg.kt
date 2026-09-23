@@ -21,7 +21,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringService
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
+import no.nav.aap.behandlingsflyt.arena.erOrdinærAap
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -161,7 +163,7 @@ class VurderBistandsbehovSteg(
         }
 
         val sykdomsvurderingFraArena =
-            arenaMigreringService.hentSykdomsvurdering(kontekst.sakId)
+            arenaMigreringService.hentSykdomsvurdering(kontekst.sakId, kontekst.behandlingId, stegType)
 
         /**
          * Kun ordinær AAP støttes for migreringsgruppe 1. Dette vil utvides når andre saker skal migreres

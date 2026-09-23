@@ -1,10 +1,6 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
-import no.nav.aap.behandlingsflyt.arena.ArenaDiagnoseType
-import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
-import no.nav.aap.behandlingsflyt.arena.ArenaVilkar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
