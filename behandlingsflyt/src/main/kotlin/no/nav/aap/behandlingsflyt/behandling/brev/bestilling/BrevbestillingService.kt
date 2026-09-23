@@ -13,6 +13,7 @@ import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -75,6 +76,18 @@ class BrevbestillingService(
             )
         } else {
             emptyList()
+        }
+
+        if (Miljø.erDev())
+        {
+            log.info(
+                "Automatisk signaturgrunnlag for behandling {}: {} : {} : {}",
+                behandlingId,
+                signaturer,
+                ferdigstillAutomatisk,
+                brevBehov.typeBrev
+            )
+
         }
 
         val bestillingReferanse = brevbestillingGateway.bestillBrev(
