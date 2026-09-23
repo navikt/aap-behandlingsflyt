@@ -147,8 +147,9 @@ class AvklaringsbehovService(
         if (vedtakBehøverVurdering()) {
             if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT || vurderingsbehovErNyere) {
                 /* ønsket tilstand: OPPRETTET */
-                when {
-                    avklaringsbehov?.status()?.erÅpent() == true -> {
+                when (avklaringsbehov?.status()) {
+                    OPPRETTET, SENDT_TILBAKE_FRA_BESLUTTER,
+                    SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
                         /* ønsket tilstand er OPPRETTET */
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
@@ -157,12 +158,18 @@ class AvklaringsbehovService(
                         )
                     }
 
-                    else -> avklaringsbehovene.leggTil(
+                    null -> avklaringsbehovene.opprett(
                         definisjon,
                         definisjon.løsesISteg,
                         perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                         perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                     )
+                    AVSLUTTET -> avklaringsbehov.reåpne(...)repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+                    
+                    AVBRUTT, 
+                    KVALITETSSIKRET,
+                    TOTRINNS_VURDERT -> // Gjør ingenting 
+
                 }
             } else if (erTilstrekkeligVurdertBakoverkompatibel()) {
                 /* ønsket tilstand: ... */

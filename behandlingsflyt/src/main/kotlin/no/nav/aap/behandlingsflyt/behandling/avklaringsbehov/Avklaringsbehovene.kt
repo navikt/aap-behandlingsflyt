@@ -67,6 +67,29 @@ class Avklaringsbehovene(
         }
     }
 
+    fun opprett(
+        definisjon: Definisjon,
+        funnetISteg: StegType,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        frist: LocalDate? = null,
+        begrunnelse: String = "",
+        grunn: ÅrsakTilSettPåVent? = null,
+        bruker: Bruker = SYSTEMBRUKER
+    ) {
+        repository.opprett(
+            behandlingId = behandlingId,
+            definisjon = definisjon,
+            funnetISteg = funnetISteg,
+            frist = utledFrist(definisjon, frist),
+            begrunnelse = begrunnelse,
+            grunn = grunn,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            endretAv = bruker
+        )
+    }
+
     /**
      * Legger til nye avklaringsbehov.
      *
@@ -182,6 +205,30 @@ class Avklaringsbehovene(
             perioderVedtaketBehøverVurdering = avklaringsbehov.perioderVedtaketBehøverVurdering()
         )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+    }
+
+    fun reåpne2(
+        avklaringsbehov: Avklaringsbehov,
+        funnetISteg: StegType,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        begrunnelse: String = "",
+        grunn: ÅrsakTilSettPåVent? = null,
+        bruker: Bruker = SYSTEMBRUKER
+    ) {
+        avklaringsbehov.reåpne(
+            begrunnelse = begrunnelse,
+            venteårsak = grunn,
+            bruker = bruker,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+        )
+        if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
+            // TODO: Vurdere om funnet steg bør ligge på endringen...
+            repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
+        } else {
+            repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+        }
     }
 
     internal fun oppdaterPerioder(
