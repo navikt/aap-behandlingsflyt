@@ -4,8 +4,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
@@ -59,6 +61,27 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
                 setUUID(1, behandlingReferanse.referanse)
             }
             setRowMapper(::mapPåklagetBehandlingVurderingMedReferanse)
+        }
+    }
+
+    override fun hentPåklagetVedtakstype(behandlingId: BehandlingId) : PåklagetVedtakType {
+        val query = """
+            SELECT
+                PBV.TYPE_VEDTAK
+            FROM 
+                PAAKLAGET_BEHANDLING_VURDERING PBV
+            JOIN 
+                PAAKLAGET_BEHANDLING_GRUNNLAG PBG ON PBG.vurdering_id = PBV.id
+            WHERE
+                PBG.behandling_id = ?;
+        """.trimIndent()
+        return connection.queryFirst(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper{ row ->
+                row.getEnum<PåklagetVedtakType>("PBV.TYPE_VEDTAK")
+            }
         }
     }
 

@@ -9,4 +9,5 @@ interface PåklagetBehandlingRepository: Repository {
     fun hentGjeldendeVurderingMedReferanse(behandlingReferanse: BehandlingReferanse): PåklagetBehandlingVurderingMedReferanse?
     fun lagre(behandlingId: BehandlingId, påklagetBehandlingVurdering: PåklagetBehandlingVurdering)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+    fun hentPåklagetVedtakstype(id: BehandlingId): PåklagetVedtakType
 }

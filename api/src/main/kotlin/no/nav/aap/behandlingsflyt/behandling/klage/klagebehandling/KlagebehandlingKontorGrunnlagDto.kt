@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
@@ -20,9 +21,14 @@ data class KlagevurderingKontorDto(
     val vilkårSomOpprettholdes: List<Hjemmel>,
     val vilkårSomOmgjøres: List<Hjemmel>,
     val vurderingerMeta: VurderingerMetaResponse,
+    val påklagetVedtakType: PåklagetVedtakType
 )
 
-internal fun KlagevurderingKontor.tilDto(vurdertAvService: VurdertAvService, behandlingId: BehandlingId) =
+internal fun KlagevurderingKontor.tilDto(
+    vurdertAvService: VurdertAvService,
+    behandlingId: BehandlingId,
+    påklagetVedtakType: PåklagetVedtakType
+) =
     KlagevurderingKontorDto(
         begrunnelse = begrunnelse,
         notat = notat,
@@ -36,14 +42,16 @@ internal fun KlagevurderingKontor.tilDto(vurdertAvService: VurdertAvService, beh
                 "Opprettet-tidspunkt kan ikke være null"
             }),
         ),
+        påklagetVedtakType = påklagetVedtakType
     )
 
 internal fun KlagebehandlingKontorGrunnlag.tilDto(
     harTilgangTilÅSaksbehandle: Boolean,
     vurdertAvService: VurdertAvService,
-    behandlingId: BehandlingId
+    behandlingId: BehandlingId,
+    påklagetVedtakType: PåklagetVedtakType
 ) =
     KlagebehandlingKontorGrunnlagDto(
-        vurdering = vurdering.tilDto(vurdertAvService, behandlingId),
+        vurdering = vurdering.tilDto(vurdertAvService, behandlingId, påklagetVedtakType),
         harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
     )
