@@ -75,6 +75,9 @@ class HentBehandlerDialogService(
                 bestillingId = requireNotNull(melding.melding.dialogmeldingId) {
                     "Kan ikke sende påminnelse når bestillingId ikke finnes"
                 },
+                behandlerNavn = requireNotNull(melding.melding.meldingFraNavn) {
+                    "Navn på behandler må være satt for utgående dialogmelding"
+                },
                 påminnelseErAvbrutt = melding.melding.påminnelseAvbrutt ?: false,
                 påminnelseDato = melding.melding.opprettetTidspunkt.toLocalDate().plusDays(22)
             )
