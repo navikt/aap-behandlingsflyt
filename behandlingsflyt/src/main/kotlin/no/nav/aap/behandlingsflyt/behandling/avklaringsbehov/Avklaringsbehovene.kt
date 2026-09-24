@@ -81,7 +81,7 @@ class Avklaringsbehovene(
         bruker: Bruker = SYSTEMBRUKER
     ) {
         val avklaringsbehov = hentBehovForDefinisjon(definisjon)
-        if (avklaringsbehov != null) throw IllegalArgumentException("Forsøkte å opprette et avklaringsbehov som allerede eksisterte: $avklaringsbehov")
+        require(avklaringsbehov == null) { "Forsøkte å opprette et avklaringsbehov som allerede eksisterte: $avklaringsbehov" }
 
         repository.opprett(
             behandlingId = behandlingId,
