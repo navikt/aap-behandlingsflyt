@@ -40,6 +40,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -635,6 +636,122 @@ class AvklaringsbehovServiceTest {
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+    }
+
+    @Test
+    fun `skal oppdatere perioder når avklaringsbehovet er løftet fra før, men fortsatt ikke tilstrekkelig vurdert`() {
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(2010)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.AVKLAR_SYKDOM
+
+        val startDato = LocalDate.of(2024, 7, 1)
+        val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
+        val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        // Behovet er allerede løftet (OPPRETTET), men kun periode1 var opprinnelig utilstrekkelig vurdert.
+        avklaringsbehovene.leggTil(
+            definisjon,
+            definisjon.løsesISteg,
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1),
+            perioderVedtaketBehøverVurdering = null
+        )
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje(
+                listOf(
+                    Segment(periode1, true),
+                    Segment(periode2, true)
+                )
+            )
+        }
+        // Nå er også periode2 utilstrekkelig vurdert, i tillegg til periode1 fra før.
+        val perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1, periode2)
+
+        val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+        }
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        // Avklaringsbehovet forblir OPPRETTET - det skal ikke reåpnes eller avsluttes.
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+        // Men periodene som ikke er tilstrekkelig vurdert skal være oppdatert til den nye, utvidede mengden.
+        assertThat(avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert())
+            .isEqualTo(perioderSomIkkeErTilstrekkeligVurdert)
+    }
+
+    @Disabled("Denne skal kjøre grønt når TODO i denne commiten er fullført")
+    @Test
+    fun `skal oppdatere perioder når avklaringsbehovet er sendt tilbake, men ikke tilstrekkelig vurdert`() {
+        /**
+         * Dette kan skje dersom et tidligere behov påvirker tilstrekkelig vurdert
+         * eller vedtak behøver vurdering for dette returnerte avklaringsbehovet
+         */
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(2010)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.AVKLAR_SYKDOM
+
+        val startDato = LocalDate.of(2024, 7, 1)
+        val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
+        val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        avklaringsbehovene.opprett(
+            definisjon,
+            definisjon.løsesISteg,
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1),
+            perioderVedtaketBehøverVurdering = null
+        )
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Løsning", Bruker("veileder"), false)
+        
+        // Behovet er returnert (SENDT_TILBAKE_FRA_KVALITETSSIKRER), men kun periode1 var opprinnelig utilstrekkelig vurdert.
+        avklaringsbehovene.vurderKvalitet(definisjon, false, "retur", Bruker("Kvalitetssikrer"))
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje(
+                listOf(
+                    Segment(periode1, true),
+                    Segment(periode2, true)
+                )
+            )
+        }
+        // Nå er også periode2 utilstrekkelig vurdert, i tillegg til periode1 fra før.
+        val perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1, periode2)
+
+        val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+        }
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        // Avklaringsbehovet forblir TILBAKESENDT
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER)
+        // Men periodene som ikke er tilstrekkelig vurdert skal være oppdatert til den nye, utvidede mengden.
+        assertThat(avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert())
+            .isEqualTo(perioderSomIkkeErTilstrekkeligVurdert)
     }
 
     @Test

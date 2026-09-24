@@ -147,9 +147,17 @@ class AvklaringsbehovService(
         if (vedtakBehøverVurdering()) {
             if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT || vurderingsbehovErNyere) {
                 /* ønsket tilstand: OPPRETTET */
-                when {
-                    avklaringsbehov?.status()?.erÅpent() == true -> {
-                        /* ønsket tilstand er OPPRETTET */
+                when (avklaringsbehov?.status()) {
+                    null -> avklaringsbehovene.opprett(
+                        definisjon,
+                        definisjon.løsesISteg,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                    )
+
+                    OPPRETTET,
+                    SENDT_TILBAKE_FRA_BESLUTTER,
+                    SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
@@ -157,9 +165,11 @@ class AvklaringsbehovService(
                         )
                     }
 
-                    else -> avklaringsbehovene.leggTil(
-                        definisjon,
-                        definisjon.løsesISteg,
+                    AVSLUTTET,
+                    AVBRUTT,
+                    KVALITETSSIKRET,
+                    TOTRINNS_VURDERT -> avklaringsbehovene.reåpneAvklaringsbehov(
+                        avklaringsbehov,
                         perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                         perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                     )
@@ -198,18 +208,19 @@ class AvklaringsbehovService(
 
                     }
 
+                    AVBRUTT,
                     AVSLUTTET,
                     TOTRINNS_VURDERT,
+                    KVALITETSSIKRET -> avklaringsbehovene.reåpneAvklaringsbehov(
+                        avklaringsbehov,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                    )
+
                     SENDT_TILBAKE_FRA_BESLUTTER,
-                    KVALITETSSIKRET,
-                    SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    AVBRUTT -> {
-                        avklaringsbehovene.leggTil(
-                            definisjon,
-                            definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                        )
+                    SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
+                        // TODO: Her ønsker vi nok å oppdatere perioder
+                        log.info("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
                     }
                 }
             }
