@@ -47,7 +47,7 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     @Test
     fun `skal opprette behandling når grunnbeløpet er endret for gjeldende behandling`() {
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
+        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns null
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { gReguleringService.erGrunnbeløpEndretForBehandling(behandlingId) } returns true
         every {
@@ -77,7 +77,7 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette behandling når grunnbeløpet ikke er endret for gjeldende behandling`() {
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
+        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns null
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { gReguleringService.erGrunnbeløpEndretForBehandling(behandlingId) } returns false
 
@@ -89,7 +89,7 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette behandling når det ikke finnes gjeldende behandling`() {
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns null
+        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns null
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
         opprettUtfører().utfør(jobbInput)
@@ -100,7 +100,7 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette behandling når saken har en åpen førstegangsbehandling`() {
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(
+        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns behandling(
             status = Status.OPPRETTET,
             typeBehandling = TypeBehandling.Førstegangsbehandling,
         )
@@ -114,7 +114,7 @@ class OpprettBehandlingGReguleringJobbUtførerTest {
 
     @Test
     fun `skal opprette behandling når saken har en åpen revurdering og grunnbeløpet er endret`() {
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(
+        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns behandling(
             status = Status.UTREDES,
             typeBehandling = TypeBehandling.Revurdering,
         )
