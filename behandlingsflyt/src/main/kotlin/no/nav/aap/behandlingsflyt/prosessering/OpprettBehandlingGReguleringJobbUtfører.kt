@@ -28,7 +28,7 @@ class OpprettBehandlingGReguleringJobbUtfører(
         val sakId = SakId(input.sakId())
 
         // Åpne førstegangsbehandlinger trenger ikke egen g-regulering. Disse oppdateres evnt med informasjonskrav.
-        val sisteYtelsesbehandling = behandlingService.finnGjeldendeYtelsesbehandling(sakId)
+        val sisteYtelsesbehandling = behandlingService.finnÅpenYtelsesbehandling(sakId)
         if (sisteYtelsesbehandling != null && erÅpenFørstegangsbehandling(sisteYtelsesbehandling)) {
             log.info("Sak med id $sakId har en åpen førstegangsbehandling (${sisteYtelsesbehandling.id}), oppretter ikke G-regulering")
             return
