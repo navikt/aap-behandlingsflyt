@@ -12,11 +12,12 @@ import java.time.LocalDate
 class ArenaMigreringMapperTest {
 
     private val fraArena = ArenaSykdomsvurderingResponse(
-        begrunnelse = "Ikke vurdert i Arena, men oppfylles ved at bruker har ordinær AAP i Arena på migreringstidspunktet",
+        vedtakId = 1,
+        begrunnelse = "Bruker oppfyller vilkåret for 11-5",
         vilkar = listOf(
-            ArenaVilkar(kode = "INNTNEDS", oppfylt = true),
-            ArenaVilkar(kode = "SYKSKADLYT", oppfylt = true),
-            ArenaVilkar(kode = "AAARBEVNE", oppfylt = true),
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
         ),
         diagnoser = listOf(
             ArenaDiagnose(
@@ -45,7 +46,7 @@ class ArenaMigreringMapperTest {
             vurderingenGjelderFra = fom,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo(fraArena.begrunnelse)
+        assertThat(vurdering.begrunnelse).isEqualTo("Automatisk migrert fra Arena\n\n${fraArena.begrunnelse}")
         assertThat(vurdering.vurderingenGjelderFra).isEqualTo(fom)
         assertThat(vurdering.vurderingenGjelderTil).isNull()
         assertThat(vurdering.diagnose?.kodeverk).isEqualTo("ICD10")
@@ -82,7 +83,7 @@ class ArenaMigreringMapperTest {
             fom = fom,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo(fraArena.begrunnelse)
+        assertThat(vurdering.begrunnelse).isEqualTo("Ikke vurdert i Arena, men oppfylles automatisk ved at bruker har ordinær AAP i Arena på migreringstidspunktet")
         assertThat(vurdering.fom).isEqualTo(fom)
         assertThat(vurdering.tom).isNull()
         assertThat(vurdering.erBehovForAktivBehandling).isTrue()

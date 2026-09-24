@@ -4,7 +4,8 @@ import java.time.LocalDate
 
 
 data class ArenaSykdomsvurderingResponse(
-    val begrunnelse: String,
+    val vedtakId: Int,
+    val begrunnelse: String?,
     val vilkar: List<ArenaVilkar>,
     val diagnoser: List<ArenaDiagnose>,
 )
@@ -22,6 +23,8 @@ enum class ArenaDiagnoseType {
 }
 
 data class ArenaVilkar(
+    val id: Long,
     val kode: String,
-    val oppfylt: Boolean,
+    val status: String,
+    val begrunnelse: String?,
 )

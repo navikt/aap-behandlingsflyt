@@ -7,6 +7,7 @@ import java.time.LocalDate
 class ArenaMigreringMapperErOrdinærAapTest {
 
     private fun response(vararg vilkar: ArenaVilkar) = ArenaSykdomsvurderingResponse(
+        vedtakId = 1,
         begrunnelse = "Begrunnelse",
         vilkar = vilkar.toList(),
         diagnoser = listOf(
@@ -22,9 +23,9 @@ class ArenaMigreringMapperErOrdinærAapTest {
     @Test
     fun `erOrdinærAap er true når alle påkrevde vilkår er oppfylt`() {
         val fraArena = response(
-            ArenaVilkar(kode = "INNTNEDS", oppfylt = true),
-            ArenaVilkar(kode = "SYKSKADLYT", oppfylt = true),
-            ArenaVilkar(kode = "AAARBEVNE", oppfylt = true),
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
         )
 
         assertThat(fraArena.erOrdinærAap()).isTrue()
@@ -33,8 +34,8 @@ class ArenaMigreringMapperErOrdinærAapTest {
     @Test
     fun `erOrdinærAap er false når ett påkrevd vilkår mangler`() {
         val fraArena = response(
-            ArenaVilkar(kode = "INNTNEDS", oppfylt = true),
-            ArenaVilkar(kode = "SYKSKADLYT", oppfylt = true),
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
         )
 
         assertThat(fraArena.erOrdinærAap()).isFalse()
@@ -43,9 +44,9 @@ class ArenaMigreringMapperErOrdinærAapTest {
     @Test
     fun `erOrdinærAap er false når ett påkrevd vilkår er tilstede men ikke oppfylt`() {
         val fraArena = response(
-            ArenaVilkar(kode = "INNTNEDS", oppfylt = true),
-            ArenaVilkar(kode = "SYKSKADLYT", oppfylt = true),
-            ArenaVilkar(kode = "AAARBEVNE", oppfylt = false),
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "N", begrunnelse = null),
         )
 
         assertThat(fraArena.erOrdinærAap()).isFalse()
@@ -54,10 +55,10 @@ class ArenaMigreringMapperErOrdinærAapTest {
     @Test
     fun `erOrdinærAap ignorerer vilkår som ikke er relevante for ordinær AAP`() {
         val fraArena = response(
-            ArenaVilkar(kode = "INNTNEDS", oppfylt = true),
-            ArenaVilkar(kode = "SYKSKADLYT", oppfylt = true),
-            ArenaVilkar(kode = "AAARBEVNE", oppfylt = true),
-            ArenaVilkar(kode = "ANNET_VILKÅR", oppfylt = false),
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 4, kode = "ANNETVILKAAR", status = "N", begrunnelse = null),
         )
 
         assertThat(fraArena.erOrdinærAap()).isTrue()

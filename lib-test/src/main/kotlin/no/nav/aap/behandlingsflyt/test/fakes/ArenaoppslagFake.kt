@@ -47,19 +47,26 @@ class ArenaoppslagFake : FakeServer() {
             get("/api/migrering/{saksnummerArena}/sykdom") {
                 call.respond(
                     ArenaSykdomsvurderingResponse(
+                        vedtakId = 1,
                         begrunnelse = "Oppfyller vilkårene for 11-5",
                         vilkar = listOf(
                             ArenaVilkar(
+                                id = 1,
                                 kode = "INNTNEDS",
-                                oppfylt = true
+                                status = "J",
+                                begrunnelse = null
                             ),
                             ArenaVilkar(
+                                id = 2,
                                 kode = "SYKSKADLYT",
-                                oppfylt = true
+                                status = "J",
+                                begrunnelse = null
                             ),
                             ArenaVilkar(
+                                id = 3,
                                 kode = "AAARBEVNE",
-                                oppfylt = true
+                                status = "J",
+                                begrunnelse = null
                             ),
                         ),
                         diagnoser = listOf(

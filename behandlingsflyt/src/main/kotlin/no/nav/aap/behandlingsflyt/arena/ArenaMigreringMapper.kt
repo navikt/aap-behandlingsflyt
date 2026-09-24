@@ -18,7 +18,7 @@ private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf("INNTNEDS", "SYKSKADLYT",
  */
 fun ArenaSykdomsvurderingResponse.erOrdinærAap(): Boolean {
     return PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP.all { påkrevdKode ->
-        vilkar.any { it.kode == påkrevdKode && it.oppfylt }
+        vilkar.any { it.kode == påkrevdKode && it.status == "J" }
     }
 }
 
@@ -38,8 +38,10 @@ object ArenaMigreringMapper {
         ) { "Fant ingen hoveddiagnose i sykdomsvurdering fra Arena" }
         val bidiagnoser = fraArena.diagnoser.filter { it.type == ArenaDiagnoseType.BIDIAGNOSE }
 
+        val begrunnelse = "Automatisk migrert fra Arena\n\n${fraArena.begrunnelse}"
+
         return Sykdomsvurdering(
-            begrunnelse = fraArena.begrunnelse,
+            begrunnelse = begrunnelse,
             vurderingenGjelderFra = vurderingenGjelderFra,
             vurderingenGjelderTil = null,
             diagnose = Diagnose(
@@ -68,8 +70,10 @@ object ArenaMigreringMapper {
         behandlingId: BehandlingId,
         fom: LocalDate,
     ): Bistandsvurdering {
+        val begrunnelse = "Ikke vurdert i Arena, men oppfylles automatisk ved at bruker har ordinær AAP i Arena på migreringstidspunktet"
+
         return Bistandsvurdering(
-            begrunnelse = "Ikke vurdert i Arena, men oppfylles ved at bruker har ordinær AAP i Arena på migreringstidspunktet",
+            begrunnelse = begrunnelse,
             fom = fom,
             tom = null,
             erBehovForAktivBehandling = true,
