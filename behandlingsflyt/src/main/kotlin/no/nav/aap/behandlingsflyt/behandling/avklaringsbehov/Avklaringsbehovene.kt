@@ -67,7 +67,9 @@ class Avklaringsbehovene(
         }
     }
 
-    // Oppretter nytt avklaringsbehov. Skal ikke kalles hvis det allerede finnes et behov for samme definisjon
+    /**
+     *  Oppretter nytt avklaringsbehov. Skal ikke kalles hvis det allerede finnes et behov for samme definisjon
+     */
     fun opprett(
         definisjon: Definisjon,
         funnetISteg: StegType,
@@ -78,6 +80,9 @@ class Avklaringsbehovene(
         grunn: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER
     ) {
+        val avklaringsbehov = hentBehovForDefinisjon(definisjon)
+        if (avklaringsbehov != null) throw IllegalArgumentException("Forsøkte å opprette et avklaringsbehov som allerede eksisterte: $avklaringsbehov")
+
         repository.opprett(
             behandlingId = behandlingId,
             definisjon = definisjon,
