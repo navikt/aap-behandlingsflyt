@@ -199,9 +199,10 @@ class Avklaringsbehovene(
     fun reåpneVentebehov(
         definisjon: Definisjon
     ) {
-        if (!definisjon.erVentebehov()) {
-            throw IllegalArgumentException("Prøvde å reåpne ventebehov for definisjon $definisjon som ikke er et ventebehov")
+        require(definisjon.erVentebehov()) {
+            "Prøvde å reåpne ventebehov for definisjon $definisjon som ikke er et ventebehov"
         }
+        
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne(
             frist = avklaringsbehov.frist(),
