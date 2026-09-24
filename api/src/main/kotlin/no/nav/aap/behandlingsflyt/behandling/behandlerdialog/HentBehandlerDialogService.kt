@@ -13,8 +13,12 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostLis
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
+
+
+val DAGER_TIL_PÅMINNELSE = if (Miljø.erProd()) 22L else 1L
 
 class HentBehandlerDialogService(
     private val dataSource: DataSource,
@@ -60,7 +64,7 @@ class HentBehandlerDialogService(
                 it.melding.dokumentasjonsType == no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40
                         && it.melding.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
                         && it.melding.dialogmeldingId != null
-                        && it.melding.opprettetTidspunkt.toLocalDate().plusDays(22) > java.time.LocalDate.now()
+                        && it.melding.opprettetTidspunkt.toLocalDate().plusDays(DAGER_TIL_PÅMINNELSE) > java.time.LocalDate.now()
             }
 
         val forespørslerSomIkkeErBesvart = kandidaterForPåminnelse.filter { melding ->
@@ -79,7 +83,7 @@ class HentBehandlerDialogService(
                     "Navn på behandler må være satt for utgående dialogmelding"
                 },
                 påminnelseErAvbrutt = melding.melding.påminnelseAvbrutt ?: false,
-                påminnelseDato = melding.melding.opprettetTidspunkt.toLocalDate().plusDays(22)
+                påminnelseDato = melding.melding.opprettetTidspunkt.toLocalDate().plusDays(DAGER_TIL_PÅMINNELSE)
             )
         }
     }

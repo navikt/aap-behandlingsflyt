@@ -172,23 +172,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 }
             }
 
-            // TODO: Slett når frontend er over på /paaminnelse/send
-            route("/purring") {
-                authorizedPost<Unit, String, PurringLegeerklæringRequest>(
-                    AuthorizationBodyPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
-                            repositoryRegistry,
-                            dataSource
-                        ),
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                    )
-                ) { _, req ->
-                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
-                    val bestillingUUID = dokumentinnhentingGateway.sendPåminnelseForBestilling(request)
-                    respond(bestillingUUID)
-                }
-            }
-
             route("/dialogmeldinger/{saksnummer}") {
                 authorizedGet<HentStatusLegeerklæring, List<MeldingMedDokumenterDto>>(
                     AuthorizationParamPathConfig(
