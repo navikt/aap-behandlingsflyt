@@ -155,6 +155,22 @@ class SamordningAnnenFullYtelseVilkårTest {
 
 
     @Test
+    fun `ferie i sykepengeperioden med 0 prosent gradering - gir IKKE_OPPFYLT som ved 100 prosent sykepenger`() {
+        val resultat = vurder(
+            grunnlag(
+                samordningGrunnlag = samordningGrunnlag(
+                    ytelseType = Ytelse.FERIE_I_SYKEPENGEPERIODE,
+                    prosent = Prosent.`0_PROSENT`
+                )
+            )
+        )
+        val segmenter = resultat.segmenter()
+        assertThat(segmenter).hasSize(1)
+        assertThat(segmenter.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(segmenter.first().verdi.avslagsårsak).isEqualTo(Avslagsårsak.ANNEN_FULL_YTELSE)
+    }
+
+    @Test
     fun `uføre 100 prosent uten avslag11_27 - gir IKKE_OPPFYLT`() {
         val resultat = vurder(grunnlag(uføreGrunnlag = uføre100Prosent()))
         val segmenter = resultat.segmenter()
@@ -359,13 +375,17 @@ class SamordningAnnenFullYtelseVilkårTest {
         )
     )
 
-    private fun samordningGrunnlag(periode: Periode = rettighetsperiode, prosent: Prosent) =
+    private fun samordningGrunnlag(
+        periode: Periode = rettighetsperiode,
+        prosent: Prosent,
+        ytelseType: Ytelse = Ytelse.FORELDREPENGER,
+    ) =
         SamordningYtelseVurderingGrunnlag(
             SamordningYtelseGrunnlag(
                 grunnlagId = 1L,
                 ytelser = setOf(
                     SamordningYtelse(
-                        ytelseType = Ytelse.FORELDREPENGER,
+                        ytelseType = ytelseType,
                         ytelsePerioder = setOf(SamordningYtelsePeriode(periode, gradering = prosent)),
                         kilde = "..."
                     )
@@ -375,7 +395,7 @@ class SamordningAnnenFullYtelseVilkårTest {
                 begrunnelse = "...",
                 vurderinger = setOf(
                     SamordningVurdering(
-                        ytelseType = Ytelse.FORELDREPENGER,
+                        ytelseType = ytelseType,
                         vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
                                 periode,

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenfullytelse
 
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
@@ -35,7 +36,7 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
                         .map { it.ytelse.toString() to it.gradering }
                 val samordningUføre = listOfNotNull(samordningUføreGradering?.let { "UFØRE" to it })
                 val samordninger = (samordningerYtelser + samordningUføre)
-                    .filter { (_, prosent) -> prosent == `100_PROSENT` }
+                    .filter { (navn, prosent) -> prosent == `100_PROSENT` || navn == Ytelse.FERIE_I_SYKEPENGEPERIODE.toString() }
 
                 if (samordninger.isEmpty())
                     Vilkårsvurdering(
