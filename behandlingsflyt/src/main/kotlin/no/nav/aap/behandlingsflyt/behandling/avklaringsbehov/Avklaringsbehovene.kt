@@ -67,6 +67,7 @@ class Avklaringsbehovene(
         }
     }
 
+    // Oppretter nytt avklaringsbehov. Skal ikke kalles hvis det allerede finnes et behov for samme definisjon
     fun opprett(
         definisjon: Definisjon,
         funnetISteg: StegType,
@@ -95,6 +96,7 @@ class Avklaringsbehovene(
      *
      * NB! Dersom avklaringsbehovet finnes fra før og er åpent så ignorerer vi det nye behovet, mens dersom det er avsluttet eller avbrutt så reåpner vi det.
      */
+    @Deprecated("Bruk mer spesifikke metoder")
     fun leggTil(
         definisjon: Definisjon,
         funnetISteg: StegType,
@@ -207,7 +209,7 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun reåpne2(
+    fun reåpne(
         avklaringsbehov: Avklaringsbehov,
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,

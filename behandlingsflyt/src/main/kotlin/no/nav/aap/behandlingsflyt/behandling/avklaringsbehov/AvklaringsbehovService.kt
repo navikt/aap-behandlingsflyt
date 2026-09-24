@@ -148,7 +148,15 @@ class AvklaringsbehovService(
             if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT || vurderingsbehovErNyere) {
                 /* ønsket tilstand: OPPRETTET */
                 when (avklaringsbehov?.status()) {
-                    OPPRETTET, SENDT_TILBAKE_FRA_BESLUTTER,
+                    null -> avklaringsbehovene.opprett(
+                        definisjon,
+                        definisjon.løsesISteg,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                    )
+
+                    OPPRETTET,
+                    SENDT_TILBAKE_FRA_BESLUTTER,
                     SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
                         /* ønsket tilstand er OPPRETTET */
                         avklaringsbehovene.oppdaterPerioder(
@@ -158,18 +166,15 @@ class AvklaringsbehovService(
                         )
                     }
 
-                    null -> avklaringsbehovene.opprett(
-                        definisjon,
+                    AVSLUTTET,
+                    AVBRUTT,
+                    KVALITETSSIKRET,
+                    TOTRINNS_VURDERT -> avklaringsbehovene.reåpne(
+                        avklaringsbehov,
                         definisjon.løsesISteg,
                         perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                         perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                     )
-                    AVSLUTTET -> avklaringsbehov.reåpne(...)repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-                    
-                    AVBRUTT, 
-                    KVALITETSSIKRET,
-                    TOTRINNS_VURDERT -> // Gjør ingenting 
-
                 }
             } else if (erTilstrekkeligVurdertBakoverkompatibel()) {
                 /* ønsket tilstand: ... */
@@ -205,18 +210,21 @@ class AvklaringsbehovService(
 
                     }
 
+                    AVBRUTT,
                     AVSLUTTET,
                     TOTRINNS_VURDERT,
+                    KVALITETSSIKRET
+                        -> avklaringsbehovene.reåpne(
+                        avklaringsbehov,
+                        definisjon.løsesISteg,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                    )
+
                     SENDT_TILBAKE_FRA_BESLUTTER,
-                    KVALITETSSIKRET,
-                    SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    AVBRUTT -> {
-                        avklaringsbehovene.leggTil(
-                            definisjon,
-                            definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                        )
+                    SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
+                        // TODO: Her ønsker vi nok å oppdatere perioder
+                        log.info("Forsøkte å legge til et avklaringsbehov som allerede eksisterte")
                     }
                 }
             }
