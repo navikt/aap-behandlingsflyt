@@ -40,7 +40,6 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -641,7 +640,7 @@ class AvklaringsbehovServiceTest {
     @Test
     fun `skal oppdatere perioder når avklaringsbehovet er løftet fra før, men fortsatt ikke tilstrekkelig vurdert`() {
         val sak = opprettInMemorySak()
-        val behandlingId = BehandlingId(2010)
+        val behandlingId = BehandlingId(2011)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SYKDOM
 
@@ -692,7 +691,6 @@ class AvklaringsbehovServiceTest {
             .isEqualTo(perioderSomIkkeErTilstrekkeligVurdert)
     }
 
-    @Disabled("Denne skal kjøre grønt når TODO i denne commiten er fullført")
     @Test
     fun `skal oppdatere perioder når avklaringsbehovet er sendt tilbake, men ikke tilstrekkelig vurdert`() {
         /**
