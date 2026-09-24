@@ -158,7 +158,6 @@ class AvklaringsbehovService(
                     OPPRETTET,
                     SENDT_TILBAKE_FRA_BESLUTTER,
                     SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
-                        /* ønsket tilstand er OPPRETTET */
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
