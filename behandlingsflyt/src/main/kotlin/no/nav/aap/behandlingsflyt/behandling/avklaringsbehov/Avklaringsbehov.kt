@@ -112,8 +112,8 @@ class Avklaringsbehov(
         begrunnelse: String = "",
         venteårsak: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER,
-        perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>? = null,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
     ) {
         require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
         if (definisjon.erVentebehov()) {

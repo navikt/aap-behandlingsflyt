@@ -191,46 +191,35 @@ class Avklaringsbehovene(
     }
 
 
-    fun reåpne(
+    fun reåpneVentebehov(
         definisjon: Definisjon
     ) {
-        val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        val frist = if (definisjon.erVentebehov()) {
-            avklaringsbehov.frist()
-        } else {
-            null
+        if (!definisjon.erVentebehov()) {
+            throw IllegalArgumentException("Prøvde å reåpne ventebehov for definisjon $definisjon som ikke er et ventebehov")
         }
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne(
-            frist = frist,
+            frist = avklaringsbehov.frist(),
             venteårsak = avklaringsbehov.venteårsak(),
-            perioderSomIkkeErTilstrekkeligVurdert = null, // Kan ikke si noe om dette
-            perioderVedtaketBehøverVurdering = avklaringsbehov.perioderVedtaketBehøverVurdering()
         )
+        // TODO: Bør denne egentlig kalle endreVentepunkt?
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun reåpne(
+    fun reåpneAvklaringsbehov(
         avklaringsbehov: Avklaringsbehov,
-        funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
-        begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER
     ) {
         avklaringsbehov.reåpne(
-            begrunnelse = begrunnelse,
             venteårsak = grunn,
             bruker = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
         )
-        if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
-            // TODO: Vurdere om funnet steg bør ligge på endringen...
-            repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
-        } else {
-            repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-        }
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
     internal fun oppdaterPerioder(

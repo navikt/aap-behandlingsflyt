@@ -169,9 +169,8 @@ class AvklaringsbehovService(
                     AVSLUTTET,
                     AVBRUTT,
                     KVALITETSSIKRET,
-                    TOTRINNS_VURDERT -> avklaringsbehovene.reåpne(
+                    TOTRINNS_VURDERT -> avklaringsbehovene.reåpneAvklaringsbehov(
                         avklaringsbehov,
-                        definisjon.løsesISteg,
                         perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                         perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                     )
@@ -213,10 +212,8 @@ class AvklaringsbehovService(
                     AVBRUTT,
                     AVSLUTTET,
                     TOTRINNS_VURDERT,
-                    KVALITETSSIKRET
-                        -> avklaringsbehovene.reåpne(
+                    KVALITETSSIKRET -> avklaringsbehovene.reåpneAvklaringsbehov(
                         avklaringsbehov,
-                        definisjon.løsesISteg,
                         perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                         perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                     )
