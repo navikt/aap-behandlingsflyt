@@ -139,7 +139,7 @@ class AvklaringsbehovService(
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
 
         val harLøsning =
-            avklaringsbehov != null && avklaringsbehov.harLøsning() && avklaringsbehov.status() != AVBRUTT
+            avklaringsbehov != null && avklaringsbehov.harLøsning()
         val måLøsesPåNytt by lazy {
             vurderingsbehovetErNyereEnnAvklaringsbehovet(
                 kontekst,
