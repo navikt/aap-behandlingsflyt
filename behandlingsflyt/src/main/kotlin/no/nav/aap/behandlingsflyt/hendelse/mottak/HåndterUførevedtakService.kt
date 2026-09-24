@@ -61,7 +61,7 @@ class HåndterUførevedtakService(
         uførevedtak: UførevedtakV0,
         mottattTidspunkt: LocalDateTime
     ) {
-        val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
+        val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
             ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
         var behandlingSomHarHåndtertDokument = sisteYtelsesBehandling.id
         if (trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)) {

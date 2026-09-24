@@ -494,7 +494,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             val vedtakslengdeRepository = VedtakslengdeRepositoryImpl(connection)
             val behandling = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
-                defaultGatewayProvider { }).finnSisteYtelsesbehandlingFor(sak.id)
+                defaultGatewayProvider { }).finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling!!.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
             assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(
@@ -802,7 +802,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             )
 
             val behandlingMedSisteFattedeVedtak = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)!!
-            val manuellRevurdering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)!!
+            val manuellRevurdering = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)!!
 
             assertThat(behandlingMedSisteFattedeVedtak.id).isNotEqualTo(manuellRevurdering.id)
 
@@ -1281,7 +1281,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             val behandling = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
-            ).finnSisteYtelsesbehandlingFor(sak.id)!!
+            ).finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)!!
 
             assertThat(behandling.vurderingsbehov().map { it.type })
                 .containsExactly(no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.VEDTAKSLENGDE_MANUELT)

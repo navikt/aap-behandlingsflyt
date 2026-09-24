@@ -403,7 +403,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         val (underveisGrunnlagFørEndring, tilkjentYtelseFørEndring) = dataSource.transaction {
             val repositoryProvider = postgresRepositoryRegistry.provider(it)
             val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
-            val behandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: error("Fant ikke behandling")
+            val behandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id) ?: error("Fant ikke behandling")
             val underveisGrunnlag = UnderveisRepositoryImpl(it).hent(behandling.id)
             val tilkjentYtelse =
                 TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) ?: error("Fant ikke tilkjent ytelse")

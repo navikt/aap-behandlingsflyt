@@ -66,7 +66,7 @@ class ForeldrepengevedtakKafkaKonsument(
             if (person != null) {
                 val saker = sakRepository.finnSakerFor(person.id)
                 for (saken in saker) {
-                    val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)
+                    val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(saken.id)
                     if (sisteYtelsesBehandling == null) {
                         log.info("Det finnes ingen behandling - oppretter ikke mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
                         continue

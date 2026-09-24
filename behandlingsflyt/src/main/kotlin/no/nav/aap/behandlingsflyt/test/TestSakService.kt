@@ -56,7 +56,7 @@ class TestSakService(
         validerIdent(ident)
 
         personOgSakService.finnSakerFor(ident).firstOrNull()?.let { eksisterendeSak ->
-            val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(eksisterendeSak.id)
+            val sisteBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(eksisterendeSak.id)
             if (sisteBehandling != null && sisteBehandling.status() == Status.AVSLUTTET) {
                 val nySøknad = lagSøknad(erStudent, harYrkesskade, harMedlemskap, andreUtbetalinger)
                 val forrigeSøknad = mottattDokumentRepository
