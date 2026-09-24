@@ -170,8 +170,11 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
      *  opprettelsetidspunkt. For visningen av vedtaksdato i klage-flyten i saksbehandling faller vi tilbake til
      *  hendelse_opprettet dato for de behandlingene som mangler vedtaksdato.
      *
-     *  TODO: Hva med AKTIV = TRUE, skal vi filtrere bort avslutta som ikke er aktive eller burde disse uansett dukke
-     *  opp i lista til saksbehandler for tilbakekrevinger det skal kunne klages på (slik det er nå) ??
+     *  Filtrerer på AKTIV = TRUE for å være konsistent med hent(UUID), som kun finner aktive behandlinger.
+     *  Uten dette kunne en logisk slettet (arkivert) tilbakekrevingsbehandling dukke opp som valgbar i
+     *  klage-flyten, men feile når den senere skal hentes via hent(UUID).
+     *
+     *  TODO: Men skal vi kunne lage på tilbakekrevingssaker hvor aktiv = FALSE ?
      */
     override fun hentAvsluttaTilbakekrevingsBehandlinger(sakId: SakId): List<Tilbakekrevingsbehandling> {
         val sql = """
@@ -193,7 +196,8 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 TILBAKEKREVINGSBEHANDLING TB 
             WHERE 
                 TB.SAK_ID = ? AND
-                TB.BEHANDLINGSSTATUS = 'AVSLUTTET'
+                TB.BEHANDLINGSSTATUS = 'AVSLUTTET' AND
+                TB.AKTIV = TRUE
             ORDER BY
                 TB.SAK_OPPRETTET DESC
         """.trimIndent()

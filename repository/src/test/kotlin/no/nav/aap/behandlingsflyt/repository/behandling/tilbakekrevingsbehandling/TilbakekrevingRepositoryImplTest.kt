@@ -161,6 +161,42 @@ class TilbakekrevingRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `hentAvsluttaTilbakekrevingsBehandlinger skal ikke returnere behandlinger som er markert med aktiv = false`() {
+        dataSource.transaction { connection ->
+            val sak = opprettSak(connection, LocalDate.now())
+            val nå = LocalDateTime.now()
+            val hendelse = Tilbakekrevingshendelse(
+                tilbakekrevingBehandlingId = UUID.randomUUID(),
+                eksternFagsakId = "123",
+                hendelseOpprettet = nå,
+                eksternBehandlingId = UUID.randomUUID().toString(),
+                sakOpprettet = nå,
+                varselSendt = nå.toLocalDate(),
+                venteGrunn = null,
+                gjenopptas = null,
+                behandlingsstatus = TilbakekrevingBehandlingsstatus.AVSLUTTET,
+                totaltFeilutbetaltBeløp = Beløp(1000),
+                tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
+                fullstendigPeriode = periode,
+                versjon = 1,
+                vedtaksdato = nå.toLocalDate(),
+            )
+
+            val repo = TilbakekrevingRepositoryImpl(connection)
+
+            repo.lagre(sak.id, hendelse)
+
+            val behandlingerFørArkivering = repo.hentAvsluttaTilbakekrevingsBehandlinger(sak.id)
+            assertThat(behandlingerFørArkivering).hasSize(1)
+
+            slettTilbakekrevingsbehandling(connection, hendelse.tilbakekrevingBehandlingId)
+
+            val behandlingerEtterArkivering = repo.hentAvsluttaTilbakekrevingsBehandlinger(sak.id)
+            assertThat(behandlingerEtterArkivering).isEmpty()
+        }
+    }
+
     private fun slettTilbakekrevingsbehandling(connection: DBConnection, tilbakekrevingsbehandlingId: UUID) {
         connection.execute("UPDATE TILBAKEKREVINGSBEHANDLING SET AKTIV = FALSE WHERE TILBAKEKREVING_BEHANDLING_ID = ?") {
             setParams {
