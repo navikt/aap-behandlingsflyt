@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekr
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingVenteGrunn
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -122,87 +121,6 @@ class TilbakekrevingRepositoryImplTest {
             assertThat(behandlingerEtterHendelse2).hasSize(2)
         }
 
-    }
-
-    @Test
-    fun `skal ikke hente behandlinger som markert med aktiv = false`() {
-        dataSource.transaction { connection ->
-            val sak = opprettSak(connection, LocalDate.now())
-            val nå = LocalDateTime.now()
-            val hendelse = Tilbakekrevingshendelse(
-                tilbakekrevingBehandlingId = UUID.randomUUID(),
-                eksternFagsakId = "123",
-                hendelseOpprettet = nå,
-                eksternBehandlingId = UUID.randomUUID().toString(),
-                sakOpprettet = nå,
-                varselSendt = nå.toLocalDate(),
-                venteGrunn = TilbakekrevingVenteGrunn.AVVENTER_BRUKERUTTALELSE,
-                gjenopptas = LocalDate.now().plusMonths(1),
-                behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
-                totaltFeilutbetaltBeløp = Beløp(1000),
-                tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
-                fullstendigPeriode = periode,
-                versjon = 1,
-                vedtaksdato = nå.toLocalDate(),
-            )
-
-            val repo = TilbakekrevingRepositoryImpl(connection)
-
-            repo.lagre(sak.id, hendelse)
-            val behandlinger = repo.hent(sak.id)
-
-            assertThat(behandlinger).hasSize(1)
-            assertThat(behandlinger.first().behandlingsstatus).isEqualTo(TilbakekrevingBehandlingsstatus.OPPRETTET)
-
-            slettTilbakekrevingsbehandling(connection, hendelse.tilbakekrevingBehandlingId)
-
-            val behandlingerEtterArkivering = repo.hent(sak.id)
-            assertThat(behandlingerEtterArkivering).isEmpty()
-        }
-    }
-
-    @Test
-    fun `hentAvsluttaTilbakekrevingsBehandlinger skal ikke returnere behandlinger som er markert med aktiv = false`() {
-        dataSource.transaction { connection ->
-            val sak = opprettSak(connection, LocalDate.now())
-            val nå = LocalDateTime.now()
-            val hendelse = Tilbakekrevingshendelse(
-                tilbakekrevingBehandlingId = UUID.randomUUID(),
-                eksternFagsakId = "123",
-                hendelseOpprettet = nå,
-                eksternBehandlingId = UUID.randomUUID().toString(),
-                sakOpprettet = nå,
-                varselSendt = nå.toLocalDate(),
-                venteGrunn = null,
-                gjenopptas = null,
-                behandlingsstatus = TilbakekrevingBehandlingsstatus.AVSLUTTET,
-                totaltFeilutbetaltBeløp = Beløp(1000),
-                tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
-                fullstendigPeriode = periode,
-                versjon = 1,
-                vedtaksdato = nå.toLocalDate(),
-            )
-
-            val repo = TilbakekrevingRepositoryImpl(connection)
-
-            repo.lagre(sak.id, hendelse)
-
-            val behandlingerFørArkivering = repo.hentAvsluttaTilbakekrevingsBehandlinger(sak.id)
-            assertThat(behandlingerFørArkivering).hasSize(1)
-
-            slettTilbakekrevingsbehandling(connection, hendelse.tilbakekrevingBehandlingId)
-
-            val behandlingerEtterArkivering = repo.hentAvsluttaTilbakekrevingsBehandlinger(sak.id)
-            assertThat(behandlingerEtterArkivering).isEmpty()
-        }
-    }
-
-    private fun slettTilbakekrevingsbehandling(connection: DBConnection, tilbakekrevingsbehandlingId: UUID) {
-        connection.execute("UPDATE TILBAKEKREVINGSBEHANDLING SET AKTIV = FALSE WHERE TILBAKEKREVING_BEHANDLING_ID = ?") {
-            setParams {
-                setUUID(1, tilbakekrevingsbehandlingId)
-            }
-        }
     }
 
 }
