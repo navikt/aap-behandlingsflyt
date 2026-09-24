@@ -139,8 +139,8 @@ class AvklaringsbehovService(
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
 
         val harLøsning =
-            avklaringsbehov != null && avklaringsbehov.harAvsluttetStatusIHistorikken() && avklaringsbehov.status() != AVBRUTT
-        val måLøsesPåNytt = {
+            avklaringsbehov != null && avklaringsbehov.harLøsning() && avklaringsbehov.status() != AVBRUTT
+        val måLøsesPåNytt by lazy {
             vurderingsbehovetErNyereEnnAvklaringsbehovet(
                 kontekst,
                 avklaringsbehov
@@ -156,9 +156,7 @@ class AvklaringsbehovService(
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                 )
-            } else if (
-                harLøsning && !måLøsesPåNytt()
-            ) {
+            } else if (harLøsning && !måLøsesPåNytt) {
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
                     OPPRETTET ->
