@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -27,6 +30,27 @@ fun ArenaSykdomsvurderingResponse.erOrdinærAap(): Boolean {
  * https://confluence.adeo.no/spaces/PAAP/pages/837399601/Avklaringer+og+veivalg+i+migrering
  */
 object ArenaMigreringMapper {
+    /**
+     * Kun ordinær AAP støttes for migreringsgruppe 1.
+     */
+    fun mapMigrertKrav(
+        fraArena: ArenaKrav,
+        behandlingId: BehandlingId,
+    ): MigrertKrav {
+        return MigrertKrav(
+            referanse = Kravreferanse.ny(),
+            vurdertAv = SYSTEMBRUKER,
+            begrunnelse = "Migrering av sak ${fraArena.arenaSaksnummer} fra Arena",
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            virkningstidspunktArena = fraArena.søknadsdato,
+            muligRettFra = fraArena.migreringsdato,
+            arenaSaksnummer = fraArena.arenaSaksnummer,
+            rettighetstype = MigrertRettighetstype.ORDINÆR,
+            resterendeKvoteOrdinær = fraArena.gjenståendeKvoteOrdinær ?: 0,
+        )
+    }
+
     /**
      * Vurderingen antas alltid å gjelde ordinær AAP. Kalleren må ha sjekket
      * [erOrdinærAap] først (migreringsgruppe 1).

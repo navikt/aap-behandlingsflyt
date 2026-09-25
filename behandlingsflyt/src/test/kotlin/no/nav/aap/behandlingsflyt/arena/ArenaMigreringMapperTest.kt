@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
@@ -93,5 +94,39 @@ class ArenaMigreringMapperTest {
         assertThat(vurdering.skalVurdereAapIOvergangTilArbeid).isNull()
         assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER)
         assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
+    }
+
+    @Test
+    fun `ArenaMigreringMapper mapper ArenaKrav til MigrertKrav`() {
+        val behandlingId = BehandlingId(1)
+        val fraArena = ArenaKrav(
+            arenaSaksnummer = "2016-123456",
+            søknadsdato = LocalDate.of(2025, 1, 15),
+            migreringsdato = LocalDate.of(2025, 12, 1),
+            gjenståendeKvoteOrdinær = 150,
+        )
+
+        val krav = ArenaMigreringMapper.mapMigrertKrav(fraArena, behandlingId)
+
+        assertThat(krav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 1, 15))
+        assertThat(krav.muligRettFra).isEqualTo(LocalDate.of(2025, 12, 1))
+        assertThat(krav.arenaSaksnummer).isEqualTo("2016-123456")
+        assertThat(krav.rettighetstype).isEqualTo(MigrertRettighetstype.ORDINÆR)
+        assertThat(krav.resterendeKvoteOrdinær).isEqualTo(150)
+        assertThat(krav.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(krav.vurdertIBehandling).isEqualTo(behandlingId)
+        assertThat(krav.begrunnelse).isEqualTo("Migrering av sak 2016-123456 fra Arena")
+    }
+
+    @Test
+    fun `ArenaMigreringMapper mapper manglende ordinær kvote til 0`() {
+        val fraArena = ArenaKrav(
+            arenaSaksnummer = "2016-123456",
+            søknadsdato = LocalDate.of(2025, 1, 15),
+            migreringsdato = LocalDate.of(2025, 12, 1),
+            gjenståendeKvoteOrdinær = null,
+        )
+
+        assertThat(ArenaMigreringMapper.mapMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)
     }
 }

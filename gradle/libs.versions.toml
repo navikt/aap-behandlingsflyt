@@ -9,6 +9,7 @@ apiIntern = "0.0.109"
 dokumentinnhenting = "0.0.7"
 junit = "6.1.3"
 testcontainers = "2.0.5"
+arenaoppslag = "0.7.1"
 
 [libraries]
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -40,6 +41,7 @@ brevKontrakt = { module = "no.nav.aap.brev:kontrakt", version.ref = "brev" }
 meldekortKontrakt = { module = "no.nav.aap.meldekort:kontrakt", version.ref = "meldekort" }
 apiInternKontrakt = { module = "no.nav.aap.api.intern:kontrakt", version.ref = "apiIntern"}
 dokumentinnhentingKontrakt = { module = "no.nav.aap.dokumentinnhenting:kontrakt", version.ref = "dokumentinnhenting" }
+arenaoppslag-kontrakt = { module = "no.nav.aap.arenaoppslag:kontrakt", version.ref = "arenaoppslag" }
 
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
 jacksonAnnotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }

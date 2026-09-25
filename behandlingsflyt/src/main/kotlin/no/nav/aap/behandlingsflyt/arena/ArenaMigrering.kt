@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.arena
 
 import java.time.LocalDate
 
-
 data class ArenaSykdomsvurderingResponse(
     val vedtakId: Int,
     val begrunnelse: String?,

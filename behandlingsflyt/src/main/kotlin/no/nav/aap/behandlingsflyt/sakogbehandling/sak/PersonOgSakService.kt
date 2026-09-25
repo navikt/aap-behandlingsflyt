@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
-import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
+import no.nav.aap.behandlingsflyt.arena.ArenaSak
+import no.nav.aap.behandlingsflyt.arena.tilDomene
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -56,7 +57,7 @@ class PersonOgSakService(
     private fun rapporterHvisOppretterPersonSomFinnesIArena(identliste: List<Ident>) {
         val personFinnesIKelvin = personRepository.finn(identliste) != null
         val harArenaHistorikk = runCatching {
-            arenaOppslagGateway.hentHarHistorikk(identliste.first { it.aktivIdent }).harHistorikk
+            arenaOppslagGateway.hentHarHistorikk(identliste.first { it.aktivIdent }).tilDomene().harHistorikk
         }.onFailure {
             log.warn("Kall mot ArenaOppslag for å hente historikk i Arena feilet", it)
         }
@@ -67,9 +68,9 @@ class PersonOgSakService(
         }
     }
 
-    fun finnArenasakForBruker(ident: Ident, saksnummerArena: String): ArenaSakOppsummering? {
-        val saker = arenaOppslagGateway.hentSakerForPerson(ident).saker
-        return saker.find { "${it.aar}-${it.lopenummer}" == saksnummerArena }
+    fun finnArenasakForBruker(ident: Ident, saksnummerArena: String): ArenaSak? {
+        val saker = arenaOppslagGateway.hentSakerForPerson(ident).saker.map { it.tilDomene() }
+        return saker.find { it.saksnummer == saksnummerArena }
     }
 
     fun finnSakerFor(ident: Ident): List<Sak> {

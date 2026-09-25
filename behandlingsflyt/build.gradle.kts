@@ -62,6 +62,7 @@ dependencies {
     api(libs.gateway)
     api(libs.utbetalKontrakt)
     api(libs.dokumentinnhentingKontrakt)
+    api(libs.arenaoppslag.kontrakt)
     implementation(libs.dbconnect)
     // TODO: fjern denne avhengigheten når alle RestClient-instanser er i repository-modulen
     implementation(libs.httpklient)
