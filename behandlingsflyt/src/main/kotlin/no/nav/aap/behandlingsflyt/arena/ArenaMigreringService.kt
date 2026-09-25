@@ -42,6 +42,12 @@ class ArenaMigreringService(
         return sykdomsvurderingFraArena
     }
 
+    fun hentKravDataForSak(sakId: SakId): KravFraArenaResponse? {
+        return arenaMigreringRepository.hentForSakHvisEksisterer(sakId)?.let {
+            arenaOppslagGateway.hentKravDataForSak(it.saksnummerArena)
+        }
+    }
+
     fun lagreMigreringsdataForSporing(behandlingId: BehandlingId, steg: StegType, data: Any) {
         logger.info("Lagrer migreringsdata for behandling $behandlingId, steg $steg.")
         arenaMigreringsdataRepository.lagre(

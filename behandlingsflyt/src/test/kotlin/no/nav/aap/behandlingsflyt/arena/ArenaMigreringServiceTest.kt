@@ -49,6 +49,13 @@ class ArenaMigreringServiceTest {
     }
 
     @Test
+    fun `hentKravDataForSak returnerer svaret fra Arena`() {
+        val respons = service.hentKravDataForSak(sakId)
+        assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentKravDataForSak("2018-123456"))
+    }
+
+
+    @Test
     fun `lagreMigreringsdataForSporing lagrer data for behandling og steg`() {
         val respons = service.hentSykdomsvurdering(sakId)
 

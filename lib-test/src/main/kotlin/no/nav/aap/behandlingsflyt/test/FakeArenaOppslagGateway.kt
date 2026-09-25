@@ -7,10 +7,14 @@ import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaVilkar
+import no.nav.aap.behandlingsflyt.arena.GjenstaaendeKvote
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
+import no.nav.aap.behandlingsflyt.arena.KravFraArenaResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Factory
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 class FakeArenaOppslagGateway : ArenaOppslagGateway {
     companion object : Factory<ArenaOppslagGateway> {
@@ -37,6 +41,19 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                     regDato = LocalDate.of(2016, 1, 1),
                     avsluttetDato = null,
                 )
+            )
+        )
+    }
+
+
+    override fun hentKravDataForSak(arenasaksnummer: String): KravFraArenaResponse {
+        return KravFraArenaResponse(
+            lopenr = 123456,
+            aar = 2016,
+            soknadsdato = LocalDate.now().minusYears(1),
+            migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)),
+            gjenstaaendeKvote = GjenstaaendeKvote(
+                ordinaer = 150
             )
         )
     }
