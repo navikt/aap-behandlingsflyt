@@ -138,36 +138,28 @@ class AvklaringsbehovService(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
 
-        // TODO: Fjern denne når alle kall tar i bruk perioderSomIkkeErTilstrekkeligVurdert
-        val erTilstrekkeligVurdertBakoverkompatibel =
-            { erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true }
-
-        val vurderingsbehovErNyere = vurderingsbehovetErNyereEnnAvklaringsbehovet(kontekst, avklaringsbehov)
+        val harLøsning =
+            avklaringsbehov != null && avklaringsbehov.harLøsning()
+        val måLøsesPåNytt by lazy {
+            vurderingsbehovetErNyereEnnAvklaringsbehovet(
+                kontekst,
+                avklaringsbehov
+            ) || !(erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true)
+        }
 
         if (vedtakBehøverVurdering()) {
-            if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT || vurderingsbehovErNyere) {
+            if (avklaringsbehov == null) {
                 /* ønsket tilstand: OPPRETTET */
-                when {
-                    avklaringsbehov?.status()?.erÅpent() == true -> {
-                        /* ønsket tilstand er OPPRETTET */
-                        avklaringsbehovene.oppdaterPerioder(
-                            avklaringsbehov.definisjon,
-                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                        )
-                    }
-
-                    else -> avklaringsbehovene.leggTil(
-                        definisjon,
-                        definisjon.løsesISteg,
-                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                    )
-                }
-            } else if (erTilstrekkeligVurdertBakoverkompatibel()) {
+                avklaringsbehovene.opprett(
+                    definisjon,
+                    definisjon.løsesISteg,
+                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                    perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                )
+            } else if (harLøsning && !måLøsesPåNytt) {
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
-                    OPPRETTET, AVBRUTT ->
+                    OPPRETTET ->
                         avklaringsbehovene.avslutt(definisjon, "Behovet var åpent, men er nå tilstrekkelig vurdert.")
 
                     SENDT_TILBAKE_FRA_BESLUTTER,
@@ -184,11 +176,16 @@ class AvklaringsbehovService(
                     TOTRINNS_VURDERT -> {
                         /* uendret status */
                     }
+
+                    AVBRUTT -> {
+                        throw IllegalStateException("Forventet løsning, men fant avbrutt behov: $definisjon")
+                    }
                 }
             } else {
                 /* ønsket tilstand: OPPRETTET */
                 when (avklaringsbehov.status()) {
-                    OPPRETTET -> {
+                    OPPRETTET, SENDT_TILBAKE_FRA_BESLUTTER,
+                    SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
                         /* forbli OPPRETTET */
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
@@ -198,20 +195,15 @@ class AvklaringsbehovService(
 
                     }
 
+                    AVBRUTT,
                     AVSLUTTET,
                     TOTRINNS_VURDERT,
-                    SENDT_TILBAKE_FRA_BESLUTTER,
-                    KVALITETSSIKRET,
-                    SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    AVBRUTT -> {
-                        avklaringsbehovene.leggTil(
-                            definisjon,
-                            definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
-                            gradBehov = null,
-                        )
-                    }
+                    KVALITETSSIKRET -> avklaringsbehovene.reåpneAvklaringsbehov(
+                        avklaringsbehov,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                        gradBehov = null
+                    )
                 }
             }
         } else /* vedtaket behøver ikke vurdering */ {

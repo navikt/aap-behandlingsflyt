@@ -169,7 +169,7 @@ class VedtakDokumentGenerator(
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val behandlinger = behandlingRepository.hentAlleMedVedtakFor(
-            sak.person.id,
+            sak.id,
             TypeBehandling.ytelseBehandlingstyper()
         ).filter { it.vedtakstidspunkt <= vedtakstidspunkt.plusSeconds(1) }
 

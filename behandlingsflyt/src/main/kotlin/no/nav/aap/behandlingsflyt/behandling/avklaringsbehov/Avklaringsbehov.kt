@@ -113,8 +113,8 @@ class Avklaringsbehov(
         begrunnelse: String = "",
         venteårsak: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER,
-        perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>? = null,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
         gradBehov: GradBehov? = null
     ) {
         require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
@@ -214,6 +214,10 @@ class Avklaringsbehov(
 
     fun harAvsluttetStatusIHistorikken(): Boolean {
         return historikk.any { it.status == Status.AVSLUTTET }
+    }
+
+    fun harLøsning(): Boolean {
+        return aktivHistorikk.any { it.status == Status.AVSLUTTET }
     }
 
     fun sistAvsluttet(): LocalDateTime {
