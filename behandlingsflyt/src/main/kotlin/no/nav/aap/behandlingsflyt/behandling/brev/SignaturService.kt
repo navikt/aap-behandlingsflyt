@@ -105,13 +105,27 @@ class SignaturService(
                 enhetForDefinisjon(definisjon, oppgaveEnhetListe)
             }
 
-        return listOf(
-            SignaturGrunnlag(
-                navIdent = saksbehandler.endretAv.ident,
-                rolle = null,
-                enhet = enhet,
-            )
+        val signaturer = listOfNotNull(
+            signaturFraLøstAvklaringsbehov(
+                avklaringsbehovene,
+                Rolle.SAKSBEHANDLER_OPPFOLGING,
+                oppgaveEnhetListe,
+            ),
+            signaturFraLøstAvklaringsbehov(
+                avklaringsbehovene,
+                Rolle.KVALITETSSIKRER,
+                oppgaveEnhetListe,
+            ),
         )
+            .distinctBy { it.navIdent.ident }
+
+        return signaturer.map {
+            SignaturGrunnlag(
+                navIdent = it.navIdent.ident,
+                rolle = null,
+                enhet = it.enhet,
+            )
+        }
     }
 
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
@@ -150,6 +164,27 @@ class SignaturService(
             .reduce { _, s1, s2 -> if (s1.harLøstAvklaringsbehov) s1 else s2 }
             .map { it.value.tilGrunnlag() }
             .sortedWith(signaturComparator)
+    }
+
+    private fun signaturForDefinisjon(
+        avklaringsbehovene: Avklaringsbehovene,
+        definisjon: Definisjon,
+        oppgaveEnhetListe: List<OppgaveEnhet>,
+    ): SignaturGrunnlag? {
+        val endring = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+            ?.historikk
+            ?.filter {
+                it.endretAv.erNavIdent() &&
+                        it.status == AvklaringsbehovStatus.AVSLUTTET
+            }
+            ?.maxOrNull()
+            ?: return null
+
+        return SignaturGrunnlag(
+            navIdent = endring.endretAv.ident,
+            rolle = null,
+            enhet = enhetForDefinisjon(definisjon, oppgaveEnhetListe),
+        )
     }
 
     private val signaturComparator: Comparator<SignaturGrunnlag> by lazy {
