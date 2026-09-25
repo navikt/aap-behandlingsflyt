@@ -9,16 +9,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockConnection
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -38,7 +40,8 @@ class InstitusjonRegelTest {
         BarnetilleggRepositoryImpl(mockConnection),
         InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
-        BehandlingRepositoryImpl(mockConnection)
+        BehandlingRepositoryImpl(mockConnection),
+        FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
     )
 
     val regel = InstitusjonRegel()
@@ -160,7 +163,10 @@ class InstitusjonRegelTest {
             !it.periode.fom.isBefore(innleggelseStart) && it.periode.tom.isBefore(reduksjonStart)
         }
         assertEquals(Prosent.`100_PROSENT`, mellomInnleggelseOgReduksjon.verdi.institusjonVurdering?.grad)
-        assertEquals(Årsak.FORSØRGER_ELLER_HAR_FASTEKOSTNADER, mellomInnleggelseOgReduksjon.verdi.institusjonVurdering?.årsak)
+        assertEquals(
+            Årsak.FORSØRGER_ELLER_HAR_FASTEKOSTNADER,
+            mellomInnleggelseOgReduksjon.verdi.institusjonVurdering?.årsak
+        )
 
         // Perioden etter reduksjon starter skal ha 50% og KOST_OG_LOSJI
         val medReduksjon = resultat.segmenter().first { !it.periode.fom.isBefore(reduksjonStart) }

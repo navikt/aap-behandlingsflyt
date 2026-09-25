@@ -33,7 +33,7 @@ class InstitusjonsoppholdSteg(
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         institusjonsoppholdRepository = repositoryProvider.provide(),
-        institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
+        institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         vilkårService = VilkårService(repositoryProvider)

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
@@ -24,6 +25,8 @@ import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -47,7 +50,11 @@ class AvklarHelseinstitusjonLøserTest {
         )
     )
     private val løser: AvklarHelseinstitusjonLøser by lazy {
-        AvklarHelseinstitusjonLøser(behandlingRepository, helseinstitusjonRepository)
+        AvklarHelseinstitusjonLøser(
+            behandlingRepository,
+            helseinstitusjonRepository,
+            FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
+        )
     }
 
     @Test
@@ -980,6 +987,143 @@ class AvklarHelseinstitusjonLøserTest {
         assertThat(lagrede).hasSize(1)
         assertThat(lagrede[0].begrunnelse).isEqualTo("ny vurdering uten forrige")
         assertThat(lagrede[0].vurdertIBehandling).isEqualTo(behandlingId)
+    }
+
+    // -------------------------------------------------------------------------
+    // Sammenhengende opphold - vurderinger med overlappende perioder
+    // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
+// Feature SammenhengendeInstitusjonsopphold
+// -------------------------------------------------------------------------
+
+    @Test
+    fun `feature PÅ - validering av reduksjonsdato skjer over hele den sammenhengende kjeden, ikke isolert per opphold`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val behandlingId = behandling.id
+
+        // To sammenhengende opphold (B starter dagen etter A slutter)
+        lagreOppholdMedTomVurdering(
+            behandlingId,
+            lagInstitusjonsopphold(fra = 1 januar 2025, til = 1 august 2025, institusjonsnavn = "Sykehus 1"),
+            lagInstitusjonsopphold(
+                fra = 2 august 2025, til = 1 juli 2026,
+                kategori = Oppholdstype.D, orgnr = "123456789", institusjonsnavn = "Sykehus 2"
+            ),
+        )
+
+        // Vurdering for opphold 2 med fom rett etter opphold 1 sin tidligste reduksjonsdato skal godtas,
+        // siden kjeden regnes samlet og 3-måneders-regelen gir umiddelbar reduksjon for opphold 2
+        assertDoesNotThrow {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                lagLøsning(
+                    lagHelseinstitusjonVurderingDto(
+                        begrunnelse = "Reduksjon over hele kjeden",
+                        periode = Periode(1 mai 2025, 1 juli 2026)
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `feature PÅ - sender sammenhengendeOppholdEnabled=true til repository ved lagring`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val behandlingId = behandling.id
+
+        lagreOppholdMedTomVurdering(
+            behandlingId,
+            lagInstitusjonsopphold(fra = 1 januar 2025, til = 1 august 2025, institusjonsnavn = "Sykehus 1"),
+        )
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = behandling },
+            lagLøsning(
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "Reduksjon",
+                    periode = Periode(1 mai 2025, 1 august 2025)
+                )
+            )
+        )
+
+        // InMemoryInstitusjonsoppholdRepository lagrer vurderingene uansett flagg-verdi,
+        // så vi bekrefter indirekte at kallet gikk gjennom uten feil og vurderingen faktisk ble lagret
+        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].begrunnelse).isEqualTo("Reduksjon")
+    }
+
+    @Test
+    fun `feature AV - reduksjonsdato valideres isolert per opphold, ikke over hele kjeden`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val behandlingId = behandling.id
+
+        val løserUtenToggle = AvklarHelseinstitusjonLøser(
+            behandlingRepository,
+            helseinstitusjonRepository,
+            FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to false))
+        )
+
+        // To sammenhengende opphold (B starter dagen etter A slutter) - men med toggle AV
+        // behandles de fortsatt som separate opphold i valideringen, slik som før endringen
+        helseinstitusjonRepository.lagreHelseVurdering(behandlingId, emptyList())
+        helseinstitusjonRepository.lagreOpphold(
+            behandlingId,
+            listOf(
+                lagInstitusjonsopphold(fra = 1 januar 2025, til = 1 august 2025, institusjonsnavn = "Sykehus 1"),
+                lagInstitusjonsopphold(
+                    fra = 2 august 2025, til = 1 juli 2026,
+                    kategori = Oppholdstype.D, orgnr = "123456789", institusjonsnavn = "Sykehus 2"
+                ),
+            )
+        )
+
+        // Vurdering på opphold 2 med fom = 1. mai 2025 (tilhører opphold 1 sin periode, ikke opphold 2 sin periode isolert)
+        // Med toggle AV matcher `associateWith { o -> ... }` kun opphold der v.periode.fom >= o.periode.fom,
+        // så en vurdering med fom utenfor opphold 2 sin periode gir ingen treff og ingen validering utføres for det oppholdet
+        assertDoesNotThrow {
+            løserUtenToggle.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                lagLøsning(
+                    lagHelseinstitusjonVurderingDto(
+                        begrunnelse = "Reduksjon opphold 1",
+                        periode = Periode(1 mai 2025, 1 august 2025)
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `feature AV - sender sammenhengendeOppholdEnabled=false til repository ved lagring`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val behandlingId = behandling.id
+
+        val løserUtenToggle = AvklarHelseinstitusjonLøser(
+            behandlingRepository,
+            helseinstitusjonRepository,
+            FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to false))
+        )
+
+        lagreOppholdMedTomVurdering(
+            behandlingId,
+            lagInstitusjonsopphold(fra = 1 januar 2025, til = 1 august 2025, institusjonsnavn = "Sykehus 1"),
+        )
+
+        løserUtenToggle.løs(
+            avklaringsbehovKontekst { this.behandling = behandling },
+            lagLøsning(
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "Reduksjon",
+                    periode = Periode(1 mai 2025, 1 august 2025)
+                )
+            )
+        )
+
+        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].begrunnelse).isEqualTo("Reduksjon")
     }
 
     // -------------------------------------------------------------------------

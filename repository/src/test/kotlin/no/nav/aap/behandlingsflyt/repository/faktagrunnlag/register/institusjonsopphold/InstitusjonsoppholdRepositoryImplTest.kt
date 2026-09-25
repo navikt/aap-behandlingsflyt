@@ -15,11 +15,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -391,6 +395,155 @@ class InstitusjonsoppholdRepositoryImplTest {
                 .containsExactlyInAnyOrder("B1", "B2", "B3")
         }
 
+    }
+
+    // -------------------------------------------------------------------------
+    // lagreHelseVurdering — sammenhengende kjede av opphold
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `lagreHelseVurdering - vurdering som dekker hele en sammenhengende kjede av opphold lagres uten feil`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            // Tre opphold rett etter hverandre (sammenhengende kjede): jan-mai, mai-aug, aug-des 2026
+            repo.lagreOpphold(
+                behandling.id,
+                listOf(
+                    hsOpphold(1 januar 2026, 30 april 2026),
+                    hsOpphold(1 mai 2026, 31 juli 2026),
+                    hsOpphold(1 august 2026, 31 desember 2026),
+                )
+            )
+
+            // Vurderingen strekker seg over hele kjeden, ikke bare ett enkelt segment
+            repo.lagreHelseVurdering(
+                behandling.id,
+                listOf(vurdering(Periode(1 mai 2026, 31 desember 2026), behandling.id))
+            )
+
+            val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
+            assertThat(grunnlag.helseoppholdvurderinger?.vurderinger).hasSize(1)
+            assertThat(grunnlag.helseoppholdvurderinger?.vurderinger?.first()?.periode)
+                .isEqualTo(Periode(1 mai 2026, 31 desember 2026))
+        }
+    }
+
+    @Test
+    fun `lagreHelseVurdering - vurdering som dekker to sammenhengende opphold der neste starter dagen etter forrige slutter`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            // Opphold 2 starter dagen etter opphold 1 slutter -> sammenhengende
+            repo.lagreOpphold(
+                behandling.id,
+                listOf(
+                    hsOpphold(1 januar 2026, 30 juni 2026),
+                    hsOpphold(1 juli 2026, 31 desember 2026),
+                )
+            )
+
+            repo.lagreHelseVurdering(
+                behandling.id,
+                listOf(vurdering(Periode(1 mai 2026, 1 september 2026), behandling.id))
+            )
+
+            val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
+            assertThat(grunnlag.helseoppholdvurderinger?.vurderinger).hasSize(1)
+            assertThat(grunnlag.helseoppholdvurderinger?.vurderinger?.first()?.periode)
+                .isEqualTo(Periode(1 mai 2026, 1 september 2026))
+        }
+    }
+
+    @Test
+    fun `lagreHelseVurdering - vurdering som dekker periode med reelt gap mellom opphold feiler fortsatt`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            // Reelt gap (flere dager) mellom oppholdene -> IKKE sammenhengende
+            repo.lagreOpphold(
+                behandling.id,
+                listOf(
+                    hsOpphold(1 januar 2026, 30 juni 2026),
+                    hsOpphold(1 oktober 2026, 31 desember 2026),
+                )
+            )
+
+            // To opphold med reelt gap + én vurdering som dekker begge/hullet → feiler fortsatt (korrekt validering)
+            // Vurderingsperioden dekker "hullet" mellom oppholdene (juli-september), som ikke finnes noe opphold for
+            assertThrows<IllegalArgumentException> {
+                repo.lagreHelseVurdering(
+                    behandling.id,
+                    listOf(vurdering(Periode(1 mai 2026, 1 november 2026), behandling.id))
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `lagreHelseVurdering - flere vurderinger innenfor samme sammenhengende kjede lagres alle`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            repo.lagreOpphold(
+                behandling.id,
+                listOf(
+                    hsOpphold(1 januar 2026, 30 juni 2026),
+                    hsOpphold(1 juli 2026, 31 desember 2026),
+                )
+            )
+
+            val vurderinger = listOf(
+                vurdering(Periode(1 mai 2026, 15 juni 2026), behandling.id, begrunnelse = "Første del"),
+                vurdering(Periode(1 august 2026, 31 desember 2026), behandling.id, begrunnelse = "Andre del"),
+            )
+
+            repo.lagreHelseVurdering(behandling.id, vurderinger)
+
+            val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
+            assertThat(grunnlag.helseoppholdvurderinger?.vurderinger).hasSize(2)
+            assertThat(grunnlag.helseoppholdvurderinger?.vurderinger?.map { it.begrunnelse })
+                .containsExactlyInAnyOrder("Første del", "Andre del")
+        }
+    }
+
+    @Test
+    fun `lagreHelseVurdering - vurdering som dekker periode med reelt gap mellom opphold feiler med riktig feilmelding`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            // Reelt gap (flere måneder) mellom oppholdene -> IKKE sammenhengende
+            repo.lagreOpphold(
+                behandling.id,
+                listOf(
+                    hsOpphold(1 januar 2026, 30 juni 2026),
+                    hsOpphold(1 oktober 2026, 31 desember 2026),
+                )
+            )
+
+            // Vurderingsperioden dekker "hullet" mellom oppholdene (juli-september), som ikke finnes noe opphold for
+            val vurderingsperiode = Periode(1 mai 2026, 1 november 2026)
+
+            val exception = assertThrows<IllegalArgumentException> {
+                repo.lagreHelseVurdering(
+                    behandling.id,
+                    listOf(vurdering(vurderingsperiode, behandling.id))
+                )
+            }
+
+            assertThat(exception.message)
+                .contains("Ingen helseinstitusjon-opphold funnet for periode ${vurderingsperiode.fom} - ${vurderingsperiode.tom}")
+        }
     }
 
     private fun finnEllerOpprettRevurdering(

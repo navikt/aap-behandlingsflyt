@@ -2,8 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.SammenhengendeOppholdGruppe
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligsteReduksjonsdatoPerOpphold
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.grupperSammenhengendeOppholdSegmenter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
@@ -12,7 +13,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.Validation
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -27,12 +31,14 @@ import java.time.format.DateTimeFormatter
 
 class AvklarHelseinstitusjonLøser(
     private val behandlingRepository: BehandlingRepository,
-    private val helseinstitusjonRepository: InstitusjonsoppholdRepository
+    private val helseinstitusjonRepository: InstitusjonsoppholdRepository,
+    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
-        helseinstitusjonRepository = repositoryProvider.provide()
+        helseinstitusjonRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(
@@ -58,7 +64,8 @@ class AvklarHelseinstitusjonLøser(
 
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
-            oppdaterteVurderinger
+            oppdaterteVurderinger,
+            sammenhengendeOppholdEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)
         )
 
         return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.joinToString(" ") { it.begrunnelse })
@@ -169,20 +176,27 @@ class AvklarHelseinstitusjonLøser(
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
         if (opphold.isEmpty() || nyeVurderinger.isEmpty()) return Validation.Valid(nyeVurderinger)
 
+        val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
+
         // Håndterer når vedtatte vurderinger finnes. Dette skjer i revurdering
-        val vurderingerPerOpphold: Map<Segment<Institusjon>, List<HelseinstitusjonVurderingDto>> =
-            // Finn vurderinger per opphold ved å matche oppholdets periode med vurderingenes periode.
-            opphold.associateWith { o ->
+        val vurderingerPerKjede: Map<SammenhengendeOppholdGruppe, List<HelseinstitusjonVurderingDto>> =
+            kjeder.associateWith { kjede ->
                 nyeVurderinger
-                    .filter { v -> v.periode.fom >= o.periode.fom && v.periode.tom <= o.periode.tom }
+                    .filter { v -> v.periode.fom >= kjede.periode.fom && v.periode.tom <= kjede.periode.tom }
                     .sortedBy { it.periode }
             }
 
-        // Henter forhåndsberegnet tidligste reduksjonsdato per opphold fra util
-        val tidligsteReduksjonsdatoPerOpphold = beregnTidligsteReduksjonsdatoPerOpphold(opphold)
+        // Henter forhåndsberegnet tidligste reduksjonsdato per kjede (bruker kjedens periode, ikke enkeltsegmentets periode)
+        val kjedeSegmentPar = kjeder.map { kjede -> kjede to Segment(kjede.periode, kjede.elementer.first().verdi) }
+        val oppholdKjede = kjedeSegmentPar.map { (_, segment) -> segment }
 
-        vurderingerPerOpphold.entries.forEach { (oppholdSegment, vurderinger) ->
-            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerOpphold[oppholdSegment] ?: return@forEach
+        val tidligsteReduksjonsdatoPerRepresentant = beregnTidligsteReduksjonsdatoPerOpphold(oppholdKjede)
+        val tidligsteReduksjonsdatoPerKjede = kjedeSegmentPar.associate { (kjede, segment) ->
+            kjede to tidligsteReduksjonsdatoPerRepresentant[segment]
+        }
+
+        vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
+            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach
             val første = førsteReduksjonsvurdering(vurderinger)
             val resultat = validerReduksjonsdato(
                 vurderinger,
@@ -200,6 +214,7 @@ class AvklarHelseinstitusjonLøser(
             it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false
         }
     }
+
 
     private fun validerReduksjonsdato(
         vurderinger: List<HelseinstitusjonVurderingDto>,
