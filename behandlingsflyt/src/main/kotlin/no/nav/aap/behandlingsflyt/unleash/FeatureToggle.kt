@@ -38,7 +38,8 @@ enum class BehandlingsflytFeature(
     HoppOverBeslutterVedAvslagSykdom,
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
-    KlagePaaTilbakekreving
+    KlagePaaTilbakekreving,
+    NySoknadTilApiIntern
     ;
 
     override fun key(): String = name
