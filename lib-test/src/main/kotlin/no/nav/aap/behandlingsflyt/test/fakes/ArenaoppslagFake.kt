@@ -5,9 +5,13 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
+import no.nav.aap.behandlingsflyt.arena.ArenaDiagnoseType
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaVilkar
 import java.time.LocalDate
 
 class ArenaoppslagFake : FakeServer() {
@@ -35,6 +39,48 @@ class ArenaoppslagFake : FakeServer() {
                                 sakstype = null,
                                 regDato = LocalDate.of(2016, 1, 1),
                                 avsluttetDato = null,
+                            )
+                        )
+                    )
+                )
+            }
+            get("/api/migrering/{saksnummerArena}/sykdom") {
+                call.respond(
+                    ArenaSykdomsvurderingResponse(
+                        vedtakId = 1,
+                        begrunnelse = "Oppfyller vilkårene for 11-5",
+                        vilkar = listOf(
+                            ArenaVilkar(
+                                id = 1,
+                                kode = "INNTNEDS",
+                                status = "J",
+                                begrunnelse = null
+                            ),
+                            ArenaVilkar(
+                                id = 2,
+                                kode = "SYKSKADLYT",
+                                status = "J",
+                                begrunnelse = null
+                            ),
+                            ArenaVilkar(
+                                id = 3,
+                                kode = "AAARBEVNE",
+                                status = "J",
+                                begrunnelse = null
+                            ),
+                        ),
+                        diagnoser = listOf(
+                            ArenaDiagnose(
+                                kodeverk = "ICD10",
+                                kode = "M797",
+                                type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                                opprettet = LocalDate.of(2016, 1, 1),
+                            ),
+                            ArenaDiagnose(
+                                kodeverk = "ICD10",
+                                kode = "M797",
+                                type = ArenaDiagnoseType.BIDIAGNOSE,
+                                opprettet = LocalDate.of(2016, 1, 1),
                             )
                         )
                     )

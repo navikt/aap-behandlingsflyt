@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
+import no.nav.aap.behandlingsflyt.arena.erOrdinærAap
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -10,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.MigrerVurderingFraArena
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -27,17 +31,26 @@ class VurderSykdomSteg(
     private val overgangArbeidRepository: OvergangArbeidRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val arenaMigreringService: ArenaMigreringService,
     private val unleashGateway: UnleashGateway
-) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder, MigrerVurderingFraArena {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
         overgangArbeidRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.erMigreringFraArena() && unleashGateway.isEnabled(BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk)) {
+            val harRelevantePerioderForMigrering = nårVurderingErRelevant(kontekst).any { it }
+            if (harRelevantePerioderForMigrering) {
+                migrerVurderingFraArena(kontekst)
+            }
+        }
+
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.AVKLAR_SYKDOM,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov(kontekst),
@@ -99,7 +112,42 @@ class VurderSykdomSteg(
         }
     }
 
-    fun tilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+    override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
+        require(kontekst.erMigreringFraArena()) {
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
+        }
+
+        val sykdomsvurderingFraArena =
+            arenaMigreringService.hentSykdomsvurdering(kontekst.sakId)
+
+        /**
+         * Kun ordinær AAP støttes for migreringsgruppe 1. Dette vil utvides når andre saker skal migreres
+         * på senere tidspunkt.
+         */
+        require(sykdomsvurderingFraArena.erOrdinærAap()) {
+            "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi ikke alle vilkår for ordinær AAP er oppfylt"
+        }
+
+        /**
+         * Lagrer sporing av migreringsdata for sykdomsvurdering fra Arena. Dette er nyttig for å kunne spore
+         * hva som var utgangspunktet for vurderingen som opprettes i Kelvin.
+         */
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, sykdomsvurderingFraArena)
+
+        val vurdering = ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(
+            fraArena = sykdomsvurderingFraArena,
+            behandlingId = kontekst.behandlingId,
+            vurderingenGjelderFra = kontekst.rettighetsperiode.fom,
+        )
+
+        require(vurdering.erOppfyltOrdinærMedUtlededeFelter()) {
+            "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi vurderingen ikke er oppfylt for ordinær AAP"
+        }
+
+        sykdomRepository.lagre(kontekst.behandlingId, listOf(vurdering))
+    }
+
+    private fun tilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
