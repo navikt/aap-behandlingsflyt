@@ -78,7 +78,7 @@ class SignaturServiceTest {
             SignaturGrunnlag(kvalitetssikrerIdent, rolle = null, enhet = "5678"),
         )
     }
-    
+
     @Test
     fun `den som står i signatur for en gitt rolle er den som utførte siste avklaringsbehovet for rollen (status AVSLUTTET)`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()

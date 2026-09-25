@@ -106,19 +106,26 @@ class SignaturService(
             }
 
         val signaturer = listOfNotNull(
-            signaturForDefinisjon(
-                avklaringsbehovene = avklaringsbehovene,
-                definisjon = Definisjon.AVKLAR_SYKDOM,
-                oppgaveEnhetListe = oppgaveEnhetListe,
+            signaturFraLøstAvklaringsbehov(
+                avklaringsbehovene,
+                Rolle.SAKSBEHANDLER_OPPFOLGING,
+                oppgaveEnhetListe,
             ),
-            signaturForDefinisjon(
-                avklaringsbehovene = avklaringsbehovene,
-                definisjon = Definisjon.KVALITETSSIKRING,
-                oppgaveEnhetListe = oppgaveEnhetListe,
+            signaturFraLøstAvklaringsbehov(
+                avklaringsbehovene,
+                Rolle.KVALITETSSIKRER,
+                oppgaveEnhetListe,
             ),
         )
-        return signaturer
-            .distinctBy { it.navIdent }
+            .distinctBy { it.navIdent.ident }
+
+        return signaturer.map {
+            SignaturGrunnlag(
+                navIdent = it.navIdent.ident,
+                rolle = null,
+                enhet = it.enhet,
+            )
+        }
     }
 
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
