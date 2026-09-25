@@ -38,5 +38,5 @@ data class Endring(
     }
 
     val frivilligePerioder: List<Periode>?
-        get() = perioderKanVurderes?.subtract(perioderSomIkkeErTilstrekkeligVurdert ?: emptySet())?.sorted()
+        get() = perioderKanVurderes?.subtract(perioderVedtaketBehøverVurdering ?: emptySet())?.sorted()
 }
