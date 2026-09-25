@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
+import no.nav.aap.api.intern.behandlingsflyt.NySøknadDto
 import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
 import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
@@ -97,6 +98,14 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     )
                 )
             ),
+            mapper = { _, _ ->
+            })
+    }
+
+    override fun varsleNySøknadForPerson(ident: String) {
+        restClient.post(
+            uri = uri.resolve("/api/insert/ny-soknad"),
+            request = PostRequest(body = NySøknadDto(personident = ident)),
             mapper = { _, _ ->
             })
     }

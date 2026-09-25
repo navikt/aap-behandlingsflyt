@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
-import java.time.LocalDateTime
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -13,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehand
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingNySøknadJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -21,9 +21,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class HåndterMottattDokumentService(
     private val sakService: SakService,
@@ -32,6 +36,8 @@ class HåndterMottattDokumentService(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
     private val behandlingRepository: BehandlingRepository,
+    private val flytJobbRepository: FlytJobbRepository,
+    private val unleashGateway: UnleashGateway
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -43,6 +49,8 @@ class HåndterMottattDokumentService(
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+        flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
+        unleashGateway = gatewayProvider.provide<UnleashGateway>()
     )
 
     fun håndterMottatteDokumenter(
@@ -53,6 +61,14 @@ class HåndterMottattDokumentService(
         melding: Melding?,
     ) {
         log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
+        if (brevkategori === InnsendingType.SØKNAD && unleashGateway.isEnabled(BehandlingsflytFeature.NySoknadTilApiIntern)) {
+            flytJobbRepository.leggTil(
+                DatadelingNySøknadJobbUtfører.nyJobb(
+                    sakService.hent(sakId).person.aktivIdent(),
+                    sakId.id
+                )
+            )
+        }
         val sak = sakService.hent(sakId)
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(brevkategori, melding)
