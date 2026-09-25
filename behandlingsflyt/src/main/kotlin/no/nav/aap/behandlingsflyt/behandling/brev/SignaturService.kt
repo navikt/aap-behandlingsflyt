@@ -89,22 +89,6 @@ class SignaturService(
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        val saksbehandler = avklaringsbehovene.alle()
-            .flatMap { it.historikk }
-            .filter { it.endretAv.erNavIdent() }
-            .maxByOrNull { it.tidsstempel }
-            ?: return emptyList()
-
-        val enhet = avklaringsbehovene.alle()
-            .flatMap { behov ->
-                behov.historikk
-                    .filter { it.endretAv == saksbehandler.endretAv }
-                    .map { behov.definisjon }
-            }
-            .firstNotNullOfOrNull { definisjon ->
-                enhetForDefinisjon(definisjon, oppgaveEnhetListe)
-            }
-
         val signaturer = listOfNotNull(
             signaturFraLøstAvklaringsbehov(
                 avklaringsbehovene,
@@ -165,27 +149,6 @@ class SignaturService(
             .reduce { _, s1, s2 -> if (s1.harLøstAvklaringsbehov) s1 else s2 }
             .map { it.value.tilGrunnlag() }
             .sortedWith(signaturComparator)
-    }
-
-    private fun signaturForDefinisjon(
-        avklaringsbehovene: Avklaringsbehovene,
-        definisjon: Definisjon,
-        oppgaveEnhetListe: List<OppgaveEnhet>,
-    ): SignaturGrunnlag? {
-        val endring = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
-            ?.historikk
-            ?.filter {
-                it.endretAv.erNavIdent() &&
-                        it.status == AvklaringsbehovStatus.AVSLUTTET
-            }
-            ?.maxOrNull()
-            ?: return null
-
-        return SignaturGrunnlag(
-            navIdent = endring.endretAv.ident,
-            rolle = null,
-            enhet = enhetForDefinisjon(definisjon, oppgaveEnhetListe),
-        )
     }
 
     private val signaturComparator: Comparator<SignaturGrunnlag> by lazy {
