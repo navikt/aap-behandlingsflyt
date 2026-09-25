@@ -54,7 +54,8 @@ class VurderBistandsbehovSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.erMigreringFraArena() && unleashGateway.isEnabled(BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk)) {
-            if (nårVurderingErRelevant(kontekst).isNotEmpty()) {
+            val harRelevantePerioderForMigrering = nårVurderingErRelevant(kontekst).any { it }
+            if (harRelevantePerioderForMigrering) {
                 migrerVurderingFraArena(kontekst)
             }
         }
