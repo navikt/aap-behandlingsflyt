@@ -36,7 +36,7 @@ object SamordningAnnenFullYtelseVilkår : Vilkårsvurderer<SamordningAnnenFullYt
                         .map { it.ytelse.toString() to it.gradering }
                 val samordningUføre = listOfNotNull(samordningUføreGradering?.let { "UFØRE" to it })
                 val samordninger = (samordningerYtelser + samordningUføre)
-                    .filter { (navn, prosent) -> prosent == `100_PROSENT` || navn == Ytelse.FERIE_I_SYKEPENGEPERIODE.toString() }
+                    .filter { (navn, prosent) -> prosent == `100_PROSENT` || navn == Ytelse.FERIE_I_SYKEPENGEPERIODE.name }
 
                 if (samordninger.isEmpty())
                     Vilkårsvurdering(
