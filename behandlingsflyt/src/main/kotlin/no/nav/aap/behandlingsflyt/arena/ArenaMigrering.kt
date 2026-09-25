@@ -2,6 +2,17 @@ package no.nav.aap.behandlingsflyt.arena
 
 import java.time.LocalDate
 
+data class KravFraArenaResponse(
+    val lopenr: Int,
+    val aar: Int,
+    val soknadsdato: LocalDate,
+    val migreringsdato: LocalDate,
+    val gjenstaaendeKvote: GjenstaaendeKvote,
+)
+
+data class GjenstaaendeKvote(
+    val ordinaer: Int?,
+)
 
 data class ArenaSykdomsvurderingResponse(
     val vedtakId: Int,

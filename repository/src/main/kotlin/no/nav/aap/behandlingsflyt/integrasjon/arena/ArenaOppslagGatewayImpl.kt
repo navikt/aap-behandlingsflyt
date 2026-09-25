@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkRequest
 import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
+import no.nav.aap.behandlingsflyt.arena.KravFraArenaResponse
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -72,6 +73,16 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             mapper = { body, _ -> DefaultJsonMapper.fromJson<ArenaSakerResponse>(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/saker" }
+        return response
+    }
+
+    override fun hentKravDataForSak(arenasaksnummer: String): KravFraArenaResponse {
+        val response: KravFraArenaResponse? = restClient.get(
+            uri.resolve("/api/migrering/$arenasaksnummer/krav"),
+            GetRequest(timeout = Duration.ofSeconds(5)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson<KravFraArenaResponse>(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$arenasaksnummer/krav" }
         return response
     }
 

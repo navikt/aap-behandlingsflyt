@@ -4,6 +4,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigrering
+import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMigreringsdataRepository
+import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
@@ -52,10 +60,21 @@ class KravStegTest {
 
     private lateinit var behandlingService: BehandlingService
     private lateinit var steg: KravSteg
+    private lateinit var arenaMigreringService: ArenaMigreringService
+    private var arenaMigreringForSak: ArenaMigrering? = null
 
     @BeforeEach
     fun setup() {
         behandlingService = mockk()
+        arenaMigreringForSak = null
+        InMemoryArenaMigreringsdataRepository.reset()
+        arenaMigreringService = ArenaMigreringService(
+            arenaMigreringRepository = mockk {
+                every { hentForSakHvisEksisterer(any()) } answers { arenaMigreringForSak }
+            },
+            arenaMigreringsdataRepository = InMemoryArenaMigreringsdataRepository,
+            arenaOppslagGateway = FakeArenaOppslagGateway(),
+        )
         steg = KravSteg(
             unleashGateway = KravAutomatiskVurderingUnleash,
             kravRepository = InMemoryKravRepository,
@@ -63,6 +82,7 @@ class KravStegTest {
             avklaringsbehovService = mockk(relaxed = true),
             sakRepository = InMemorySakRepository,
             behandlingService = behandlingService,
+            arenaMigreringService = arenaMigreringService,
         )
     }
 
@@ -75,6 +95,7 @@ class KravStegTest {
             avklaringsbehovService = mockk(relaxed = true),
             sakRepository = InMemorySakRepository,
             behandlingService = behandlingService,
+            arenaMigreringService = arenaMigreringService,
         )
         val sak = opprettInMemorySak()
         val behandling = opprettFørstegangsbehandling(sak.id)
@@ -94,6 +115,7 @@ class KravStegTest {
             avklaringsbehovService = mockk(relaxed = true),
             sakRepository = InMemorySakRepository,
             behandlingService = behandlingService,
+            arenaMigreringService = arenaMigreringService,
         )
         val sak = opprettInMemorySak()
         val behandling = opprettFørstegangsbehandling(sak.id)
@@ -108,18 +130,47 @@ class KravStegTest {
     }
 
     @Test
-    fun `migrering fra Arena - vedtakBehøverVurdering og erTilstrekkeligVurdert reflekterer krav-grunnlaget`() {
-        val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
-        val stegMedManuellVurdering = KravSteg(
-            unleashGateway = KravManuellVurderingUnleash,
-            kravRepository = InMemoryKravRepository,
-            mottattDokumentRepository = InMemoryMottattDokumentRepository,
-            avklaringsbehovService = avklaringsbehovService,
-            sakRepository = InMemorySakRepository,
-            behandlingService = behandlingService,
-        )
+    fun `migrering fra Arena med automatisk migrering - lagrer MigrertKrav basert på data fra Arena`() {
+        val stegMedAutomatiskMigrering = stegMedAutomatiskMigrering()
         val sak = opprettInMemorySak()
         val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+
+        val resultat = stegMedAutomatiskMigrering.utfør(migreringKontekst(behandling))
+
+        assertThat(resultat).isEqualTo(Fullført)
+        val fraArena = FakeArenaOppslagGateway().hentKravDataForSak("2016-123456")
+        val krav = InMemoryKravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as MigrertKrav
+        assertThat(krav.virkningstidspunktArena).isEqualTo(fraArena.soknadsdato)
+        assertThat(krav.muligRettFra).isEqualTo(fraArena.migreringsdato)
+        assertThat(krav.arenaSaksnummer).isEqualTo("${fraArena.aar}-${fraArena.lopenr}")
+        assertThat(krav.rettighetstype).isEqualTo(MigrertRettighetstype.ORDINÆR)
+        assertThat(krav.resterendeKvoteOrdinær).isEqualTo(fraArena.gjenstaaendeKvote.ordinaer)
+        assertThat(krav.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(krav.vurdertIBehandling).isEqualTo(behandling.id)
+    }
+
+    @Test
+    fun `migrering fra Arena med automatisk migrering - lagrer migreringsdata for sporing`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+
+        stegMedAutomatiskMigrering().utfør(migreringKontekst(behandling))
+
+        val lagret = InMemoryArenaMigreringsdataRepository.hentAktivHvisEksisterer(behandling.id, StegType.KRAV)
+        assertThat(lagret).isNotNull
+        assertThat(lagret!!.data)
+            .isEqualTo(DefaultJsonMapper.toJson(FakeArenaOppslagGateway().hentKravDataForSak("2016-123456")))
+    }
+
+    @Test
+    fun `migrering fra Arena med automatisk migrering - vedtaket behøver ikke manuell vurdering av krav`() {
+        val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
+        val steg = stegMedAutomatiskMigrering(avklaringsbehovService)
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
 
         val vedtakBehøverVurdering = slot<() -> Boolean>()
         val erTilstrekkeligVurdert = slot<() -> Boolean>()
@@ -133,32 +184,44 @@ class KravStegTest {
             )
         } returns Unit
 
-        val kontekst = flytKontekstMedPerioder {
-            this.behandling = behandling
-            this.vurderingType = VurderingType.MIGERING_FRA_ARENA
-        }
+        steg.utfør(migreringKontekst(behandling))
 
-        stegMedManuellVurdering.utfør(kontekst)
-        assertThat(vedtakBehøverVurdering.captured()).isTrue()
-        assertThat(erTilstrekkeligVurdert.captured()).isFalse()
-
-        val migrertKrav = MigrertKrav(
-            referanse = Kravreferanse.ny(),
-            vurdertAv = SYSTEMBRUKER,
-            begrunnelse = "Migrert fra Arena",
-            vurdertIBehandling = behandling.id,
-            opprettet = Instant.now(),
-            virkningstidspunktArena = LocalDate.of(2020, 1, 1),
-            muligRettFra = LocalDate.of(2020, 1, 1),
-            arenaSaksnummer = "ARENA-1",
-            rettighetstype = MigrertRettighetstype.ORDINÆR,
-            resterendeKvoteOrdinær = 0,
-        )
-        InMemoryKravRepository.lagre(behandling.id, setOf(migrertKrav))
-
-        stegMedManuellVurdering.utfør(kontekst)
+        assertThat(vedtakBehøverVurdering.captured()).isFalse()
         assertThat(erTilstrekkeligVurdert.captured()).isTrue()
     }
+
+    @Test
+    fun `migrering fra Arena med automatisk migrering - feiler når sak ikke finnes i Arena`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+
+        assertThatThrownBy { stegMedAutomatiskMigrering().utfør(migreringKontekst(behandling)) }
+            .isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    private fun stegMedAutomatiskMigrering(
+        avklaringsbehovService: AvklaringsbehovService = mockk(relaxed = true),
+    ) = KravSteg(
+        unleashGateway = KravMigreringAutomatiskUnleash,
+        kravRepository = InMemoryKravRepository,
+        mottattDokumentRepository = InMemoryMottattDokumentRepository,
+        avklaringsbehovService = avklaringsbehovService,
+        sakRepository = InMemorySakRepository,
+        behandlingService = behandlingService,
+        arenaMigreringService = arenaMigreringService,
+    )
+
+    private fun migreringKontekst(behandling: Behandling) = flytKontekstMedPerioder {
+        this.behandling = behandling
+        this.vurderingType = VurderingType.MIGERING_FRA_ARENA
+    }
+
+    private fun arenaMigrering(sakId: SakId) = ArenaMigrering(
+        sakId = sakId,
+        saksnummerArena = "2016-123456",
+        ident = "12345678910",
+        migrertTidspunkt = LocalDateTime.now(),
+    )
 
     @Test
     fun `førstegangsbehandling med én søknad - lagrer ett NyttKrav med riktig dato`() {
@@ -520,6 +583,10 @@ class KravStegTest {
     )
 
     private object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(emptyList())
+
+    private object KravMigreringAutomatiskUnleash : FakeUnleashBaseWithDefaultDisabled(
+        listOf(BehandlingsflytFeature.KravSteg, BehandlingsflytFeature.MigrererKravFraArenaAutomatisk)
+    )
 
     /**
      * Unleash-fake som simulerer at manuell vurdering av krav er skrudd på for alle saker,

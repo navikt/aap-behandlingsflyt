@@ -2,7 +2,11 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKravLøsningDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -132,6 +136,31 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
             }
     }
 
+    @Test
+    fun `skal automatisk legge inn krav basert på kravdata fra Arena i behandlingen`() {
+        unleash = MigreringFraArenaMedAutomatiskKravFlytTestUnleash::class
+
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+        val fraArena = FakeArenaOppslagGateway().hentKravDataForSak("2016-123456")
+
+        migreringsbehandling
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.VURDER_KRAV)
+
+                val kravRepository: KravRepository = repositoryProvider.provide()
+                val krav = kravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as MigrertKrav
+                assertThat(krav.muligRettFra).isEqualTo(fraArena.migreringsdato)
+                assertThat(krav.virkningstidspunktArena).isEqualTo(fraArena.soknadsdato)
+                assertThat(krav.arenaSaksnummer).isEqualTo("${fraArena.aar}-${fraArena.lopenr}")
+                assertThat(krav.resterendeKvoteOrdinær).isEqualTo(fraArena.gjenstaaendeKvote.ordinaer)
+            }
+            .løsLovvalg(startDato, medlem = true)
+            .medKontekst {
+                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
+            }
+    }
+
     private fun migrerFraArena(
         person: TestPerson = TestPersoner.STANDARD_PERSON(),
         mottattTidspunkt: LocalDateTime = LocalDateTime.now(clock),
@@ -167,5 +196,11 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 object MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk,
+    )
+)
+
+object MigreringFraArenaMedAutomatiskKravFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.MigrererKravFraArenaAutomatisk,
     )
 )
