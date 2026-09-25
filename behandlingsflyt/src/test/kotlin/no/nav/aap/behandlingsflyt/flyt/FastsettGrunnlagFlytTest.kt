@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -52,7 +53,7 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
                     .extracting<Definisjon> { it.definisjon }
                     .containsOnly(Definisjon.FASTSETT_MANUELL_INNTEKT)
 
@@ -85,7 +86,7 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
                     .extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.FASTSETT_MANUELL_INNTEKT)
             }
@@ -120,7 +121,8 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                     iTilleggArbeidUtenforNorge = null,
                     utenlandsOpphold = null
                 )
-            ), person = TestPersoner.STANDARD_PERSON(), mottattTidspunkt = periode.fom.atStartOfDay(),
+            ),
+            person = TestPersoner.STANDARD_PERSON(), mottattTidspunkt = periode.fom.atStartOfDay(),
         ).second
             .løsFramTilGrunnlag(periode.fom)
             .løsAvklaringsBehov(
@@ -134,7 +136,7 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).noneMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
             }
     }
 

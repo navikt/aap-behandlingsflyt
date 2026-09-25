@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -43,7 +44,7 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
 
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
@@ -62,13 +63,14 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
         behandling.løsFramTilGrunnlag(sak.rettighetsperiode.fom)
             .løsBeregningstidspunkt()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).noneMatch { it == Definisjon.VURDER_INNTEKTSBORTFALL }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).noneMatch { it == Definisjon.VURDER_INNTEKTSBORTFALL }
             }
     }
 
@@ -85,14 +87,15 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
             .løsBeregningstidspunkt()
             .løsFastsettManuellInntekt(0)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
             }
             .løsVurderInntektsbortfall(rettTilUttakAvAldersPensjon = true)
             .medKontekst {
@@ -105,7 +108,10 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
             .løsForeslåVedtak()
             .medKontekst {
-                val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
+                val resultat =
+                    ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                        behandling.id
+                    )
                 assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
     }

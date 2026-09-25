@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.Vurderi
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -70,7 +71,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsSykdom(søknadsdato)
@@ -84,7 +85,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             .løsOppholdskrav(søknadsdato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
             }
             .løsAvklaringsBehov(
                 AvklarSamordningGraderingLøsning(
@@ -101,7 +102,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
 
                 // Vilkår skal ikke være oppfylt med 100% gradert samordning
                 val vilkår = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
@@ -219,7 +220,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
         )
 
         val åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 
     @Test
@@ -249,15 +250,15 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             .isEqualTo(StegType.AVKLAR_SYKDOM)
 
         var åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
+        assertThat(åpneAvklaringsbehovPåNyBehandling.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.filter { it.erVentepunkt() }).isEmpty()
 
-        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Sykdom skal være åpent avklaringsbehov.")
+        assertThat(åpneAvklaringsbehovPåNyBehandling.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).describedAs("Sykdom skal være åpent avklaringsbehov.")
             .extracting(Avklaringsbehov::definisjon).contains(tuple(Definisjon.AVKLAR_SYKDOM))
 
         // Prøve å løse sykdomsvilkåret på nytt
         revurdering = revurdering.løsSykdom(sak.rettighetsperiode.fom)
         åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
+        assertThat(åpneAvklaringsbehovPåNyBehandling.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
         assertThat(
             åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_BISTANDSBEHOV)
     }
@@ -302,7 +303,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             .medKontekst {
                 // Behandlingen tilbakeføres til EtAnnetStedSteg
                 assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
             }
     }
 
@@ -325,7 +326,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
         ).second
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsSykdom(søknadsdato)
@@ -355,7 +356,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             )
             .løsOppholdskrav(søknadsdato)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
             }
             .løsAvklaringsBehov(
                 AvklarSamordningGraderingLøsning(
@@ -372,7 +373,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER)
             }
             .løsAvklaringsBehov(
                 AvklarSamordningAndreStatligeYtelserLøsning(

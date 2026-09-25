@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.fla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.april
@@ -72,11 +73,11 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .kvalitetssikre()
             .medKontekst {
                 if (toggleForHoppOverBeslutter()) {
-                    assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                    assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
                         .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
                     assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
                 } else {
-                    assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                    assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
                     assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
                 }
             }
@@ -112,7 +113,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
 
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).isEmpty()
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
         }
     }
 
@@ -153,13 +154,13 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs(
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).describedAs(
                     "Viss varighet false skal gi avklaringsbehov for sykepengeerstatning"
                 ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsSykepengeerstatning(søknadsdato to false)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -189,7 +190,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
 
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).isEmpty()
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
         }
     }
 
@@ -205,7 +206,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
         )
             .second
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .medKontekst {
@@ -248,7 +249,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                     )
                 )
             ).medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -275,7 +276,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                 assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
                     .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
 
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
             }
     }
 

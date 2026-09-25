@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import org.assertj.core.api.Assertions.assertThat
@@ -39,14 +40,14 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                 .mellomlagreSykdom()
                 .løsRefusjonskrav()
                 .medKontekst {
-                    assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy {
                         assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
                     }
                 }
                 .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
                 .medKontekst {
-                    assertThat(åpneAvklaringsbehov).anySatisfy {
+                    assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy {
                         assertThat(it.definisjon)
                             .describedAs { "Er ikke tilstrekkelig vurdert dersom det finnes mellomlagret sykdomsvurdering" }
                             .isEqualTo(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -94,8 +95,8 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .løsSykdom(fom)
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1)
-                assertThat(åpneAvklaringsbehov.first().definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon)
                     .describedAs { "Kvalitetssikring skal gjenåpnes etter ny løsning av underkjent behov" }
                     .isEqualTo(Definisjon.KVALITETSSIKRING)
             }
@@ -184,7 +185,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .bekreftVurderinger()
             .fattVedtak()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
                     .first().extracting("definisjon").isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
             }
     }
@@ -211,8 +212,8 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1)
-                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
             }
     }
 

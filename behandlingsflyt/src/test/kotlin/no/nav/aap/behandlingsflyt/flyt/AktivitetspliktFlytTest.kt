@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -95,7 +96,7 @@ class AktivitetspliktFlytTest :
             .medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
                     .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_7)
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.VURDER_BRUDD_11_7)
 
             }.løsAvklaringsBehov(
@@ -109,7 +110,7 @@ class AktivitetspliktFlytTest :
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
 
                 val aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
@@ -126,7 +127,8 @@ class AktivitetspliktFlytTest :
                 )
             }
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first()
+                    .extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
             }
             .løsAvklaringsBehov(avklaringsBehovLøsning = VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning())
@@ -142,7 +144,7 @@ class AktivitetspliktFlytTest :
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
                 val grunnlagIAktivitetspliktBehandling = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
                     .hentHvisEksisterer(aktivitetspliktBehandling.id)
@@ -200,7 +202,7 @@ class AktivitetspliktFlytTest :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 
@@ -227,13 +229,13 @@ class AktivitetspliktFlytTest :
 
         åpenBehandling = åpenBehandling.løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 
@@ -362,7 +364,7 @@ class AktivitetspliktFlytTest :
                     )
                 )
             ).medKontekst {
-                assertThat(this.åpneAvklaringsbehov).isEmpty()
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
             }
 
         val behandlingFraRepo = hentBehandling(aktivitetspliktBehandling.referanse)
@@ -400,7 +402,7 @@ class AktivitetspliktFlytTest :
                     )
                 )
             ).medKontekst {
-                assertThat(this.åpneAvklaringsbehov).isEmpty()
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
             }
 
         val behandlingFraRepo = hentBehandling(aktivitetspliktBehandling.referanse)
@@ -435,13 +437,13 @@ class AktivitetspliktFlytTest :
             revurdering
                 .løsBistand(sak.rettighetsperiode.fom)
                 .medKontekst {
-                    assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
                 }
                 .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
                 .medKontekst {
-                    assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
                 }
 

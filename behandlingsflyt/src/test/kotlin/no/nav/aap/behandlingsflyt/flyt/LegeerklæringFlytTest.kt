@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.flyt.TestPersoner.PERSON_62
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -22,14 +23,15 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         val (_, behandling) = sendInnFørsteSøknad()
         behandling.medKontekst {
             // Validér avklaring
-            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
         }
 
         // Oppretter bestilling av legeerklæring
         behandling
             .bestillLegeerklæring()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .all { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING })
             }
 
         // Send inn avvist legeerklæring
@@ -66,12 +68,13 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         // Validér avklaring
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
         } // Oppretter bestilling av legeerklæring
             .bestillLegeerklæring()
             .medKontekst {
                 // Både ventebehovet og avklaringsbehovet er åpent
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).contains(
                     Definisjon.BESTILL_LEGEERKLÆRING,
                     Definisjon.AVKLAR_SYKDOM
                 )
@@ -119,12 +122,13 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         behandling
             .løsLovvalg(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
             } // Oppretter bestilling av legeerklæring
             .bestillLegeerklæring()
             .medKontekst {
                 // Både ventebehovet og avklaringsbehovet er åpent
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).contains(
                     Definisjon.BESTILL_LEGEERKLÆRING,
                     Definisjon.AVKLAR_SYKDOM
                 )
@@ -132,7 +136,8 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             .løsLovvalg(sak.rettighetsperiode.fom, false)
             .medKontekst {
                 // Ønsker å dra rett til foreslå vedtak!
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).contains(
                     Definisjon.BESTILL_LEGEERKLÆRING,
                 )
             }
@@ -145,12 +150,12 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         // Validér avklaring
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
         }
             // Oppretter bestilling av legeerklæring
             .bestillLegeerklæring()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.BESTILL_LEGEERKLÆRING) }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.BESTILL_LEGEERKLÆRING) }
 
             }
 
