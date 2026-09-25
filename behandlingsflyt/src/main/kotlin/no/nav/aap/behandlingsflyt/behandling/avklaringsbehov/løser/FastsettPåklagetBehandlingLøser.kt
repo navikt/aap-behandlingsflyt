@@ -12,9 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -22,24 +19,19 @@ class FastsettPåklagetBehandlingLøser(
     private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
     private val behandlingRepository: BehandlingRepository,
     private val tilbakekrevingRepository: TilbakekrevingRepository,
-    private val unleashGateway: UnleashGateway,
 ) :
     AvklaringsbehovsLøser<FastsettPåklagetBehandlingLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         påklagetBehandlingRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         tilbakekrevingRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: FastsettPåklagetBehandlingLøsning): LøsningsResultat {
         val referanse = løsning.påklagetBehandlingVurdering.påklagetBehandling
 
         val vurdering = if (løsning.påklagetBehandlingVurdering.påklagetVedtakType == PåklagetVedtakType.TILBAKEKREVING) {
-            check(unleashGateway.isEnabled(BehandlingsflytFeature.KlagePaaTilbakekreving)) {
-                "KlagePaaTilbakekreving-toggle er avskrudd, men løsningen ble kalt. Behandling: ${kontekst.behandlingId()}"
-            }
             requireNotNull(referanse) { "Påklaget tilbakekrevingsbehandling må være utfylt" }
             tilbakekrevingRepository.hent(referanse).validerAtKanPåklages()
             løsning.påklagetBehandlingVurdering.tilVurdering(

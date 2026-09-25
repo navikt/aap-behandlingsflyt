@@ -94,7 +94,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom to true,
         BehandlingsflytFeature.KanVurdereRefusjonIRevurdering to false,
         BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
-        BehandlingsflytFeature.KlagePaaTilbakekreving to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

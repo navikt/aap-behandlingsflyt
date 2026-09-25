@@ -22,8 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -75,11 +73,7 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
             val vedtatteKlagebehandlinger = påklagetBehandlingService.hentAlleKlagerMedVedaksdato(sak.id)
                 .filterNot { it.vedtaksdato.isAfter(behandling.opprettetTidspunkt.toLocalDate()) }
             val avsluttaTilbakekrevingsbehandlinger =
-                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.KlagePaaTilbakekreving)) {
-                    påklagetBehandlingService.hentAvsluttaTilbakekrevingsbehandlinger(sak.id)
-                } else {
-                    emptyList()
-                }
+                påklagetBehandlingService.hentAvsluttaTilbakekrevingsbehandlinger(sak.id)
 
             mapTilPåklagetBehandlingGrunnlagDto(
                 påklagetBehandlingVurderingMedReferanse = gjeldendeVurdering,
