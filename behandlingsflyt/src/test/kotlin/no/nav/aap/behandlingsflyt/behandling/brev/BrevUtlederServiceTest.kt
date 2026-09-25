@@ -52,7 +52,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
@@ -62,7 +61,6 @@ import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -98,9 +96,7 @@ import kotlin.test.assertNotNull
 @ReadsSystemProperty
 class BrevUtlederServiceTest {
     val repositoryProvider = inMemoryRepositoryProvider
-    val gatewayProvider = createGatewayProvider {
-        register<BrevUtlederServiceTestUnleash>()
-    }
+    val gatewayProvider = createGatewayProvider {}
 
     val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
     val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
@@ -112,7 +108,6 @@ class BrevUtlederServiceTest {
     val sykdomsvurderingForBrevRepository = repositoryProvider.provide<SykdomsvurderingForBrevRepository>()
     val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
     val overgangUføreRepository = repositoryProvider.provide<OvergangUføreRepository>()
-    val unleashGateway = BrevUtlederServiceTestUnleash
     val stansOpphørRepository = repositoryProvider.provide<StansOpphørRepository>()
     val tpRefusjonskravRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
 
@@ -1636,9 +1631,3 @@ class BrevUtlederServiceTest {
         )
     }
 }
-
-object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(
-        BehandlingsflytFeature.SamordningFaktagrunnlagBrev
-    )
-)
