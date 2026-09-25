@@ -115,6 +115,7 @@ class Avklaringsbehov(
         bruker: Bruker = SYSTEMBRUKER,
         perioderVedtaketBehøverVurdering: Set<Periode>? = null,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
+        perioderKanVurderes: Set<Periode>? = null,
         gradBehov: GradBehov? = null
     ) {
         require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
@@ -130,22 +131,31 @@ class Avklaringsbehov(
             endretAv = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-            gradBehov = gradBehov
+            perioderKanVurderes = perioderKanVurderes,
+            gradBehov = gradBehov,
         )
     }
 
-    internal fun oppdaterPerioder(
+    internal fun oppdater(
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
-        perioderVedtaketBehøverVurdering: Set<Periode>?
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
+        gradBehov: GradBehov?,
     ): Boolean {
         val siste = historikk.last()
         require(siste.status.erÅpent()) {
             "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
         }
-        if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering) {
+        if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert
+            || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering
+            || perioderKanVurderes != siste.perioderKanVurderes 
+            || gradBehov != siste.gradBehov
+        ) {
             historikk += siste.copy(
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                perioderKanVurderes = perioderKanVurderes,
+                gradBehov = gradBehov,
                 tidsstempel = LocalDateTime.now()
             )
             return true

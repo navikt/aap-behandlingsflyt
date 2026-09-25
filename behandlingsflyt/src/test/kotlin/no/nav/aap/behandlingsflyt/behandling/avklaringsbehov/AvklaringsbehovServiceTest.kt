@@ -247,7 +247,7 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(1002)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = AVKLAR_SYKDOM
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { true }
@@ -277,7 +277,7 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(1005)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = AVKLAR_SYKDOM
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null, null, null)
 
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
@@ -433,7 +433,7 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(2003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = AVKLAR_SYKDOM
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null, null, null)
 
         val startDato = LocalDate.of(2024, 2, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(2).minusDays(1))
@@ -575,7 +575,7 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(2007)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = AVKLAR_SYKDOM
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val startDato = LocalDate.of(2024, 6, 1)
@@ -658,7 +658,7 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(20099)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = AVKLAR_SYKDOM
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val startDato = LocalDate.of(2024, 6, 1)
@@ -717,7 +717,9 @@ class AvklaringsbehovServiceTest {
             definisjon,
             definisjon.løsesISteg,
             perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1),
-            perioderVedtaketBehøverVurdering = null
+            perioderVedtaketBehøverVurdering = null,
+            perioderKanVurderes = null,
+            gradBehov = null
         )
 
         val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
@@ -774,7 +776,9 @@ class AvklaringsbehovServiceTest {
             definisjon,
             definisjon.løsesISteg,
             perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1),
-            perioderVedtaketBehøverVurdering = null
+            perioderVedtaketBehøverVurdering = null,
+            perioderKanVurderes = null,
+            gradBehov = null
         )
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Løsning", Bruker("veileder"), false)
 
@@ -1016,7 +1020,7 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(1003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { false }
@@ -1046,7 +1050,7 @@ class AvklaringsbehovServiceTest {
         val behandlingId = BehandlingId(1003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
         val definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
         val vedtakBehøverVurdering = { false }
@@ -1258,7 +1262,7 @@ class AvklaringsbehovServiceTest {
         val sak = opprettInMemorySak()
         val definisjon = AVKLAR_SYKDOM
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null, null, null)
 
         val rettighetsperiode = Periode(LocalDate.of(2024, 2, 1), LocalDate.of(2024, 7, 1))
         var erTilbakestilt = false

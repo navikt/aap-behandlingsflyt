@@ -48,7 +48,9 @@ class Avklaringsbehovene(
                     funnetISteg = definisjon.løsesISteg,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
-                    perioderSomIkkeErTilstrekkeligVurdert = null
+                    perioderSomIkkeErTilstrekkeligVurdert = null,
+                    perioderKanVurderes = null,
+                    gradBehov = null
                 )
             }
         }
@@ -62,7 +64,9 @@ class Avklaringsbehovene(
                     funnetISteg = definisjon.løsesISteg,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
-                    perioderSomIkkeErTilstrekkeligVurdert = null
+                    perioderSomIkkeErTilstrekkeligVurdert = null,
+                    perioderKanVurderes = null,
+                    gradBehov = null,
                 )
             }
         }
@@ -76,6 +80,7 @@ class Avklaringsbehovene(
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
@@ -94,6 +99,7 @@ class Avklaringsbehovene(
             grunn = grunn,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            perioderKanVurderes = perioderKanVurderes,
             endretAv = bruker,
             gradBehov = gradBehov
         )
@@ -110,6 +116,7 @@ class Avklaringsbehovene(
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
@@ -127,6 +134,7 @@ class Avklaringsbehovene(
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                    perioderKanVurderes = perioderKanVurderes,
                     gradBehov = gradBehov
                 )
                 if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
@@ -208,7 +216,7 @@ class Avklaringsbehovene(
         require(definisjon.erVentebehov()) {
             "Prøvde å reåpne ventebehov for definisjon $definisjon som ikke er et ventebehov"
         }
-        
+
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne(
             frist = avklaringsbehov.frist(),
@@ -236,16 +244,19 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    // TODO: Oppdater gradbehov
     internal fun oppdaterPerioder(
         definisjon: Definisjon,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
-        perioderVedtaketBehøverVurdering: Set<Periode>?
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
+        gradBehov: GradBehov?
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        val harEndring = avklaringsbehov.oppdaterPerioder(
+        val harEndring = avklaringsbehov.oppdater(
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            perioderKanVurderes = perioderKanVurderes,
+            gradBehov = gradBehov
         )
         if (harEndring) {
             repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())

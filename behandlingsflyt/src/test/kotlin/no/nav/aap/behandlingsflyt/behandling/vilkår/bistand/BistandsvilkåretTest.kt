@@ -189,7 +189,7 @@ class BistandsvilkåretTest {
         dataSource.transaction { connection ->
             val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(revurdering.id)
             avklaringsbehovene.leggTil(
-                definisjon = Definisjon.AVKLAR_BISTANDSBEHOV, funnetISteg = AVKLAR_SYKDOM, null, null
+                definisjon = Definisjon.AVKLAR_BISTANDSBEHOV, funnetISteg = AVKLAR_SYKDOM, null, null, null
             )
             avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", Bruker(""), false)
 

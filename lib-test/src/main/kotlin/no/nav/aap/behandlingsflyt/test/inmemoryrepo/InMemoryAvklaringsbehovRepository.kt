@@ -51,6 +51,7 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         endretAv: Bruker,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
         gradBehov: GradBehov?
     ) {
         synchronized(lock) {
@@ -67,6 +68,7 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                     frist = frist,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                    perioderKanVurderes = perioderKanVurderes,
                     gradBehov = gradBehov
                 )
             )

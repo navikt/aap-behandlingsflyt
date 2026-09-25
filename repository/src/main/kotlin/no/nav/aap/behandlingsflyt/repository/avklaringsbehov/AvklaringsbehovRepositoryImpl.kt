@@ -62,6 +62,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         endretAv: Bruker,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
         gradBehov: GradBehov?,
     ) {
         val avklaringsbehovId = finnEllerOpprettAvklaringsbehov(
@@ -80,6 +81,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 frist = frist,
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                perioderKanVurderes = perioderKanVurderes,
                 gradBehov = gradBehov,
             )
         )
@@ -157,8 +159,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         endring: Endring
     ) {
         val query = """
-            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid, venteaarsak, perioder_ugyldig_vurdering, perioder_krever_vurdering, grad_behov) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid, venteaarsak, perioder_ugyldig_vurdering, perioder_krever_vurdering, perioder_kan_vurderes, grad_behov) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val opprettetAv = endring.endretAv
@@ -174,7 +176,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setEnumName(7, endring.grunn)
                 setPeriodeArray(8, endring.perioderSomIkkeErTilstrekkeligVurdert?.toList())
                 setPeriodeArray(9, endring.perioderVedtaketBehøverVurdering?.toList())
-                setEnumName(10, endring.gradBehov)
+                setPeriodeArray(10, endring.perioderKanVurderes?.toList())
+                setEnumName(11, endring.gradBehov)
             }
         }
         val queryPeriode = """
@@ -210,6 +213,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 ae.venteaarsak AS endring_venteaarsak,
                 ae.perioder_ugyldig_vurdering AS endring_perioder_ugyldig_vurdering,
                 ae.perioder_krever_vurdering AS endring_perioder_krever_vurdering,
+                ae.perioder_kan_vurderes as endring_perioder_kan_vurderes,
                 ae.grad_behov as endring_grad_behov,
                 aea.endring_id AS retur_endring_id,
                 aea.aarsak_til_retur AS retur_aarsak,
@@ -255,6 +259,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 ae.venteaarsak AS endring_venteaarsak,
                 ae.perioder_ugyldig_vurdering AS endring_perioder_ugyldig_vurdering,
                 ae.perioder_krever_vurdering AS endring_perioder_krever_vurdering,
+                ae.perioder_kan_vurderes AS endring_perioder_kan_vurderes,
                 ae.grad_behov AS endring_grad_behov,
                 aea.endring_id AS retur_endring_id,
                 aea.aarsak_til_retur AS retur_aarsak,
@@ -339,6 +344,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                     ?.toSet(),
                 perioderVedtaketBehøverVurdering = row.getPeriodeArrayOrNull("endring_perioder_krever_vurdering")
                     ?.toSet(),
+                perioderKanVurderes = row.getPeriodeArrayOrNull("endring_perioder_kan_vurderes")
+                    ?.toSet(),
                 gradBehov = row.getEnumOrNull<GradBehov>("endring_grad_behov")
             )
         }
@@ -399,6 +406,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         val grunn: ÅrsakTilSettPåVent?,
         val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         val perioderVedtaketBehøverVurdering: Set<Periode>?,
+        val perioderKanVurderes: Set<Periode>?,
         val gradBehov: GradBehov?
     )
 

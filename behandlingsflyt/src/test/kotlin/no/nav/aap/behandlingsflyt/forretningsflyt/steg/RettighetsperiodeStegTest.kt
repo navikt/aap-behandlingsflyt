@@ -222,6 +222,7 @@ class RettighetsperiodeStegTest {
             Definisjon.VURDER_RETTIGHETSPERIODE,
             StegType.VURDER_RETTIGHETSPERIODE,
             null,
+            null,
             null
         )
 
@@ -238,6 +239,7 @@ class RettighetsperiodeStegTest {
         avklaringsbehovene.leggTil(
             Definisjon.VURDER_RETTIGHETSPERIODE,
             StegType.VURDER_RETTIGHETSPERIODE,
+            null,
             null,
             null
         )

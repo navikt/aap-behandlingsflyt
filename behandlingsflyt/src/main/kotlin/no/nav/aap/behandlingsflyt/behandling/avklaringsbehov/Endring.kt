@@ -26,10 +26,17 @@ data class Endring(
      * eller fordi vurderingen av andre årsaker ikke er god nok
      */
     val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
+    /**
+     * Perioder som det er mulig å vurdere
+     */
+    val perioderKanVurderes: Set<Periode>? = null,
     val gradBehov: GradBehov? = null
 ) : Comparable<Endring> {
 
     override fun compareTo(other: Endring): Int {
         return tidsstempel.compareTo(other.tidsstempel)
     }
+
+    val frivilligePerioder: List<Periode>?
+        get() = perioderKanVurderes?.subtract(perioderSomIkkeErTilstrekkeligVurdert ?: emptySet())?.sorted()
 }

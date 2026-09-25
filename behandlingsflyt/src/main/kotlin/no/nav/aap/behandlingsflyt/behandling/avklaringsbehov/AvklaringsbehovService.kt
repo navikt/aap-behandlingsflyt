@@ -156,7 +156,8 @@ class AvklaringsbehovService(
                     definisjon.løsesISteg,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
-                    gradBehov = null // TODO
+                    perioderKanVurderes = null, // TODO
+                    gradBehov = null 
                 )
             } else if (harLøsning && !måLøsesPåNytt) {
                 /* ønsket tilstand: ... */
@@ -170,7 +171,9 @@ class AvklaringsbehovService(
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                            perioderKanVurderes = null, // TODO
+                            gradBehov = null
                         )
 
                     KVALITETSSIKRET,
@@ -192,7 +195,9 @@ class AvklaringsbehovService(
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                            perioderKanVurderes = null, // TODO
+                            gradBehov = null
                         )
 
                     }

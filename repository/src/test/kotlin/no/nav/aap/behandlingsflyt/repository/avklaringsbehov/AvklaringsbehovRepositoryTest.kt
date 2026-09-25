@@ -49,6 +49,7 @@ class AvklaringsbehovRepositoryTest {
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
+                perioderKanVurderes = null,
                 gradBehov = null
             )
 
@@ -73,7 +74,8 @@ class AvklaringsbehovRepositoryTest {
                 begrunnelse = "",
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
-                perioderSomIkkeErTilstrekkeligVurdert = null
+                perioderSomIkkeErTilstrekkeligVurdert = null,
+                perioderKanVurderes = null
             )
 
             val avklaringsbehov = repository.hentAvklaringsbehovene(behandling.id)
@@ -108,7 +110,8 @@ class AvklaringsbehovRepositoryTest {
                 begrunnelse = "Første behov",
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
-                perioderSomIkkeErTilstrekkeligVurdert = null
+                perioderSomIkkeErTilstrekkeligVurdert = null,
+                perioderKanVurderes = null
             )
 
             val resultat = repository.hentAlleAvklaringsbehovForSak(listOf(behandling1.id, behandling2.id))

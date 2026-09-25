@@ -25,6 +25,8 @@ class TestSteg(
             Definisjon.AVKLAR_SYKDOM, funnetISteg = StegType.AVKLAR_SYKDOM,
             perioderSomIkkeErTilstrekkeligVurdert = null,
             perioderVedtaketBehøverVurdering = null,
+            perioderKanVurderes = null,
+            gradBehov = null,
         )
         return Fullført
     }
