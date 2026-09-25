@@ -46,7 +46,7 @@ class HåndterUbehandletDokumentJobbUtfører(
     private fun håndterUbehandletMeldekort(dokument: MottattDokument) {
         val skrivelås = taSkrivelåsRepository.låsSak(dokument.sakId)
 
-        val nyesteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(dokument.sakId)
+        val nyesteBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(dokument.sakId)
         requireNotNull(nyesteBehandling) {
             "Fant meldekort men ingen behandling for sak ${dokument.sakId}"
         }

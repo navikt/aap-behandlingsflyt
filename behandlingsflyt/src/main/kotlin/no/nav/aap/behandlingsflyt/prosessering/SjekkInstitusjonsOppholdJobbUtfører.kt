@@ -49,7 +49,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
             val resultat = sakerMedInstitusjonsOpphold
                 .map { sak ->
 
-                    val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                    val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
 
                     if (sisteYtelsesBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
