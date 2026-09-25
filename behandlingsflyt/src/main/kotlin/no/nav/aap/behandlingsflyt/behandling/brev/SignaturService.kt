@@ -89,12 +89,6 @@ class SignaturService(
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        val saksbehandler = avklaringsbehovene.alle()
-            .flatMap { it.historikk }
-            .filter { it.endretAv.erNavIdent() }
-            .maxByOrNull { it.tidsstempel }
-            ?: return emptyList()
-
         val signaturer = listOfNotNull(
             signaturFraLøstAvklaringsbehov(
                 avklaringsbehovene,
