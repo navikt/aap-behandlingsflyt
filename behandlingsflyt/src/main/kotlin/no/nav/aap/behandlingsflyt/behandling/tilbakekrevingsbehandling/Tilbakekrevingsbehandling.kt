@@ -45,4 +45,8 @@ data class Tilbakekrevingsbehandling(
      */
     val saksbehandlingURL: URI,
     val fullstendigPeriode: Periode,
+    /**
+     * Når vedtaket om tilbakekreving ble fattet.
+     */
+    val vedtaksdato: LocalDate?,
 )

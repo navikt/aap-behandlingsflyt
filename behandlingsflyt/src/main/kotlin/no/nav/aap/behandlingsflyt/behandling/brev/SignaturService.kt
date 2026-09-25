@@ -154,6 +154,7 @@ class SignaturService(
         oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): List<SignaturGrunnlag> {
+
         return listOfNotNull(
             utledSignatur(Rolle.BESLUTTER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
             utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),

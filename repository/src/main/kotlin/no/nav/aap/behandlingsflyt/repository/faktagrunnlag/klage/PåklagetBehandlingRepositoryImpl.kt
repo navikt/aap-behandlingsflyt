@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -42,6 +43,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
             SELECT
                 PAAKLAGET_BEHANDLING_VURDERING.type_vedtak as TYPE_VEDTAK,
                 PAAKLAGET_BEHANDLING_VURDERING.paaklaget_behandling_id as PAAKLAGET_BEHANDLING_ID,
+                PAAKLAGET_BEHANDLING_VURDERING.paaklaget_tilbakekreving_uuid as PAAKLAGET_TILBAKEKREVING_UUID,
                 PAAKLAGET_BEHANDLING_VURDERING.vurdert_av as VURDERT_AV,
                 PAAKLAGET_BEHANDLING_VURDERING.opprettet_tid as OPPRETTET_TID,
                 BEHANDLING.referanse as REFERANSE
@@ -58,6 +60,28 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
                 setUUID(1, behandlingReferanse.referanse)
             }
             setRowMapper(::mapPåklagetBehandlingVurderingMedReferanse)
+        }
+    }
+
+    override fun hentPåklagetVedtakstype(behandlingId: BehandlingId) : PåklagetVedtakType {
+        val query = """
+            SELECT
+                PBV.TYPE_VEDTAK AS TYPE_VEDTAK
+            FROM 
+                PAAKLAGET_BEHANDLING_VURDERING PBV
+            JOIN 
+                PAAKLAGET_BEHANDLING_GRUNNLAG PBG ON PBG.vurdering_id = PBV.id
+            WHERE
+                PBG.behandling_id = ?
+                AND PBG.AKTIV = TRUE;
+        """.trimIndent()
+        return connection.queryFirst(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper{ row ->
+                row.getEnum<PåklagetVedtakType>("TYPE_VEDTAK")
+            }
         }
     }
 
@@ -91,16 +115,17 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
     private fun lagreVurdering(vurdering: PåklagetBehandlingVurdering): Long {
         val query = """
             INSERT INTO PAAKLAGET_BEHANDLING_VURDERING 
-            (TYPE_VEDTAK, PAAKLAGET_BEHANDLING_ID, VURDERT_AV, OPPRETTET_TID) 
-            VALUES (?, ?, ?, ?)
+            (TYPE_VEDTAK, PAAKLAGET_BEHANDLING_ID, PAAKLAGET_TILBAKEKREVING_UUID, VURDERT_AV, OPPRETTET_TID) 
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         return connection.executeReturnKey(query) {
             setParams {
                 setEnumName(1, vurdering.påklagetVedtakType)
                 setLong(2, vurdering.påklagetBehandling?.id)
-                setBruker(3, vurdering.vurdertAv)
-                setInstant(4, vurdering.opprettet)
+                setUUID(3, vurdering.påklagetTilbakekrevingsbehandling)
+                setBruker(4, vurdering.vurdertAv)
+                setInstant(5, vurdering.opprettet)
             }
             setResultValidator { rowsUpdated ->
                 require(rowsUpdated == 1)
@@ -159,6 +184,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
         return PåklagetBehandlingVurdering(
             påklagetVedtakType = row.getEnum("type_vedtak"),
             påklagetBehandling = row.getLongOrNull("PAAKLAGET_BEHANDLING_ID")?.let { BehandlingId(it) },
+            påklagetTilbakekrevingsbehandling = row.getUUIDOrNull("PAAKLAGET_TILBAKEKREVING_UUID"),
             vurdertAv = row.getBruker("VURDERT_AV"),
             opprettet = row.getInstant(
                 "OPPRETTET_TID"
@@ -170,6 +196,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
         return PåklagetBehandlingVurderingMedReferanse(
             påklagetVedtakType = row.getEnum("TYPE_VEDTAK"),
             påklagetBehandling = row.getLongOrNull("PAAKLAGET_BEHANDLING_ID")?.let { BehandlingId(it) },
+            påklagetTilbakekrevingsbehandling = row.getUUIDOrNull("PAAKLAGET_TILBAKEKREVING_UUID"),
             vurdertAv = row.getBruker("VURDERT_AV"),
             referanse = row.getUUIDOrNull("REFERANSE")?.let { BehandlingReferanse(it) },
             opprettet = row.getInstant(

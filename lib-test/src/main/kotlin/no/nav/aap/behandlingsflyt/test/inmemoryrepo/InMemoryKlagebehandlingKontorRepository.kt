@@ -6,15 +6,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.Kla
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryKlagebehandlingKontorRepository : KlagebehandlingKontorRepository {
+    private val memory = HashMap<BehandlingId, KlagebehandlingKontorGrunnlag>()
+
     override fun hentHvisEksisterer(behandlingId: BehandlingId): KlagebehandlingKontorGrunnlag? {
-        TODO("Not yet implemented")
+        return memory[behandlingId]
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
         klagevurderingKontor: KlagevurderingKontor
     ) {
-        TODO("Not yet implemented")
+        memory[behandlingId] = KlagebehandlingKontorGrunnlag(klagevurderingKontor)
     }
 
     override fun deaktiverEksisterende(behandlingId: BehandlingId) {

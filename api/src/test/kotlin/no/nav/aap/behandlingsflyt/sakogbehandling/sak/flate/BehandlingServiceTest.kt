@@ -100,7 +100,8 @@ class BehandlingServiceTest {
             totaltFeilutbetaltBeløp = Beløp(1000),
             tilbakekrevingSaksbehandlingUrl = URI.create("https://localhost"),
             fullstendigPeriode = periode,
-            versjon = 1
+            versjon = 1,
+            vedtaksdato = LocalDate.now()
         ))
     }
 
