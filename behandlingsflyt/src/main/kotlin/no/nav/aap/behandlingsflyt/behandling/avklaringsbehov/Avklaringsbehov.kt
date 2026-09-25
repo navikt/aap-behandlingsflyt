@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.type.Periode
@@ -114,6 +115,8 @@ class Avklaringsbehov(
         bruker: Bruker = SYSTEMBRUKER,
         perioderVedtaketBehøverVurdering: Set<Periode>? = null,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
+        perioderKanVurderes: Set<Periode>? = null,
+        gradBehov: GradBehov? = null
     ) {
         require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
         if (definisjon.erVentebehov()) {
@@ -127,22 +130,32 @@ class Avklaringsbehov(
             frist = frist,
             endretAv = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            perioderKanVurderes = perioderKanVurderes,
+            gradBehov = gradBehov,
         )
     }
 
-    internal fun oppdaterPerioder(
+    internal fun oppdater(
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
-        perioderVedtaketBehøverVurdering: Set<Periode>?
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
+        gradBehov: GradBehov?,
     ): Boolean {
         val siste = historikk.last()
         require(siste.status.erÅpent()) {
             "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
         }
-        if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering) {
+        if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert
+            || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering
+            || perioderKanVurderes != siste.perioderKanVurderes 
+            || gradBehov != siste.gradBehov
+        ) {
             historikk += siste.copy(
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                perioderKanVurderes = perioderKanVurderes,
+                gradBehov = gradBehov,
                 tidsstempel = LocalDateTime.now()
             )
             return true
@@ -227,6 +240,10 @@ class Avklaringsbehov(
 
     fun status(): Status {
         return historikk.maxOf { it }.status
+    }
+
+    fun gradBehov(): GradBehov? {
+        return historikk.maxOf { it }.gradBehov
     }
 
     fun begrunnelse(): String = historikk.maxOf { it }.begrunnelse

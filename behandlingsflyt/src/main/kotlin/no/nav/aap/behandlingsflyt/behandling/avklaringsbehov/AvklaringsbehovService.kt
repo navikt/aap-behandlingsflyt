@@ -57,6 +57,7 @@ class AvklaringsbehovService(
         avklaringsbehovValidering = AvklaringsbehovValidering(repositoryProvider, gatewayProvider),
     )
 
+    // TODO: Håndter frivillige. Må ta inn gradBehov
     fun oppdaterAvklaringsbehov(
         definisjon: Definisjon,
         vedtakBehøverVurdering: () -> Boolean,
@@ -154,7 +155,9 @@ class AvklaringsbehovService(
                     definisjon,
                     definisjon.løsesISteg,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                    perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                    perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                    perioderKanVurderes = null, // TODO
+                    gradBehov = null 
                 )
             } else if (harLøsning && !måLøsesPåNytt) {
                 /* ønsket tilstand: ... */
@@ -168,7 +171,9 @@ class AvklaringsbehovService(
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                            perioderKanVurderes = null, // TODO
+                            gradBehov = null
                         )
 
                     KVALITETSSIKRET,
@@ -190,7 +195,9 @@ class AvklaringsbehovService(
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                            perioderKanVurderes = null, // TODO
+                            gradBehov = null
                         )
 
                     }
@@ -201,7 +208,8 @@ class AvklaringsbehovService(
                     KVALITETSSIKRET -> avklaringsbehovene.reåpneAvklaringsbehov(
                         avklaringsbehov,
                         perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                        gradBehov = null
                     )
                 }
             }
@@ -276,7 +284,7 @@ class AvklaringsbehovService(
         Definisjon.SAMORDNING_BARNEPENSJON,
         Definisjon.SAMORDNING_REFUSJONS_KRAV,
     )
-
+    
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
@@ -413,6 +421,7 @@ class AvklaringsbehovService(
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
+        // TODO: Håndter frivillige. Må ta inn nårKanVurderes
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
@@ -452,6 +461,7 @@ class AvklaringsbehovService(
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
+        // TODO: Håndter frivillige. Må ta inn nårKanVurderes
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,

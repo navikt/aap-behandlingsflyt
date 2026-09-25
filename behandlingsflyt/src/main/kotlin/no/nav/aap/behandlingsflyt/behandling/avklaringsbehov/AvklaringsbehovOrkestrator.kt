@@ -92,7 +92,9 @@ class AvklaringsbehovOrkestrator(
             grunn = hendelse.grunn,
             bruker = hendelse.bruker,
             perioderVedtaketBehøverVurdering = null,
-            perioderSomIkkeErTilstrekkeligVurdert = null
+            perioderSomIkkeErTilstrekkeligVurdert = null,
+            perioderKanVurderes = null,
+            gradBehov = null
         )
 
         avklaringsbehovene.validerTilstand(behandling = behandling)
@@ -113,7 +115,9 @@ class AvklaringsbehovOrkestrator(
             bruker = bruker,
             frist = LocalDate.now() + Period.ofWeeks(4),
             perioderVedtaketBehøverVurdering = null,
-            perioderSomIkkeErTilstrekkeligVurdert = null
+            perioderSomIkkeErTilstrekkeligVurdert = null,
+            perioderKanVurderes = null,
+            gradBehov = null
         )
         avklaringsbehovene.validerTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)

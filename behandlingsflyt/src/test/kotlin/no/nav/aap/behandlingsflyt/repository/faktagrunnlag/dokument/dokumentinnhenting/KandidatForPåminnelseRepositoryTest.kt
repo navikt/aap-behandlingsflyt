@@ -57,6 +57,7 @@ internal class KandidatForPåminnelseRepositoryTest {
                 StegType.AVKLAR_SYKDOM,
                 null,
                 null,
+                null,
                 frist = LocalDate.now(clockTreUkerOgEnDagFremITid).plusDays(14)
             )
 
@@ -98,6 +99,7 @@ internal class KandidatForPåminnelseRepositoryTest {
                 StegType.AVKLAR_SYKDOM,
                 null,
                 null,
+                null,
                 frist = LocalDate.now(clockTreUkerOgEnDagFremITid).plusDays(14)
             )
             avklaringsbehov1.løsAvklaringsbehov(
@@ -129,6 +131,7 @@ internal class KandidatForPåminnelseRepositoryTest {
             avklaringsbehov1.leggTil(
                 Definisjon.BESTILL_LEGEERKLÆRING,
                 StegType.AVKLAR_SYKDOM,
+                null,
                 null,
                 null,
                 frist = LocalDate.now(clockTreUkerOgEnDagFremITid).plusDays(14)

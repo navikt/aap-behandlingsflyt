@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -49,7 +50,9 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         grunn: ÅrsakTilSettPåVent?,
         endretAv: Bruker,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
-        perioderVedtaketBehøverVurdering: Set<Periode>?
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
+        gradBehov: GradBehov?
     ) {
         synchronized(lock) {
             ensureDefault(behandlingId)
@@ -64,7 +67,9 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                     endretAv = endretAv,
                     frist = frist,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-                    perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+                    perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                    perioderKanVurderes = perioderKanVurderes,
+                    gradBehov = gradBehov
                 )
             )
             if (eksisterendeBehov == null) {

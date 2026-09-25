@@ -68,6 +68,7 @@ class Avslag11_27VisningUtlederTest {
             funnetISteg = StegType.VURDER_AVSLAG_11_27,
             perioderSomIkkeErTilstrekkeligVurdert = null,
             perioderVedtaketBehøverVurdering = null,
+            perioderKanVurderes = null,
         )
 
         assertThat(utleder().skalVises(behandling.id)).isTrue()
@@ -83,6 +84,7 @@ class Avslag11_27VisningUtlederTest {
             funnetISteg = StegType.VURDER_AVSLAG_11_27,
             perioderSomIkkeErTilstrekkeligVurdert = null,
             perioderVedtaketBehøverVurdering = null,
+            perioderKanVurderes = null,
         )
         behovene.avbryt(Definisjon.VURDER_AVSLAG_11_27)
 
