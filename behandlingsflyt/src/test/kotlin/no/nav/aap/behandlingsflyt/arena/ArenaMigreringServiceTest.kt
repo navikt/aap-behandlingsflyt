@@ -36,8 +36,23 @@ class ArenaMigreringServiceTest {
     fun reset() = InMemoryArenaMigreringsdataRepository.reset()
 
     @Test
-    fun `hentSykdomsvurdering lagrer responsen for behandling og steg`() {
-        val respons = service.hentSykdomsvurdering(sakId, behandlingId, StegType.AVKLAR_SYKDOM)
+    fun `hentSykdomsvurdering returnerer svaret fra Arena`() {
+        val respons = service.hentSykdomsvurdering(sakId)
+
+        assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentSykdomsvurdering("2018-123456"))
+        assertThat(
+            InMemoryArenaMigreringsdataRepository.hentAktivHvisEksisterer(behandlingId, StegType.AVKLAR_SYKDOM)
+        ).isNull()
+        assertThat(
+            InMemoryArenaMigreringsdataRepository.hentAktivHvisEksisterer(behandlingId, StegType.VURDER_BISTANDSBEHOV)
+        ).isNull()
+    }
+
+    @Test
+    fun `lagreMigreringsdataForSporing lagrer data for behandling og steg`() {
+        val respons = service.hentSykdomsvurdering(sakId)
+
+        service.lagreMigreringsdataForSporing(behandlingId, StegType.AVKLAR_SYKDOM, respons)
 
         val lagret = InMemoryArenaMigreringsdataRepository
             .hentAktivHvisEksisterer(behandlingId, StegType.AVKLAR_SYKDOM)
@@ -47,18 +62,5 @@ class ArenaMigreringServiceTest {
         assertThat(
             InMemoryArenaMigreringsdataRepository.hentAktivHvisEksisterer(behandlingId, StegType.VURDER_BISTANDSBEHOV)
         ).isNull()
-    }
-
-    @Test
-    fun `ny henting med lik respons beholder første hentet_tidspunkt`() {
-        service.hentSykdomsvurdering(sakId, behandlingId, StegType.AVKLAR_SYKDOM)
-        val første = InMemoryArenaMigreringsdataRepository
-            .hentAktivHvisEksisterer(behandlingId, StegType.AVKLAR_SYKDOM)!!
-
-        service.hentSykdomsvurdering(sakId, behandlingId, StegType.AVKLAR_SYKDOM)
-        val andre = InMemoryArenaMigreringsdataRepository
-            .hentAktivHvisEksisterer(behandlingId, StegType.AVKLAR_SYKDOM)!!
-
-        assertThat(andre.hentetTidspunkt).isEqualTo(første.hentetTidspunkt)
     }
 }

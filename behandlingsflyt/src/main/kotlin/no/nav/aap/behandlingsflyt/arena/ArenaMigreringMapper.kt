@@ -22,12 +22,16 @@ fun ArenaSykdomsvurderingResponse.erOrdinærAap(): Boolean {
     }
 }
 
+/**
+ * Valgene som gjøres her er dokumentert på confluence:
+ * https://confluence.adeo.no/spaces/PAAP/pages/837399601/Avklaringer+og+veivalg+i+migrering
+ */
 object ArenaMigreringMapper {
     /**
      * Vurderingen antas alltid å gjelde ordinær AAP. Kalleren må ha sjekket
      * [erOrdinærAap] først (migreringsgruppe 1).
      */
-    fun mapSykdomsvurdering(
+    fun mapOppfyltOrdinærSykdomsvurdering(
         fraArena: ArenaSykdomsvurderingResponse,
         behandlingId: BehandlingId,
         vurderingenGjelderFra: LocalDate,
@@ -66,7 +70,7 @@ object ArenaMigreringMapper {
      * vilkåret være oppfylt. I migrering gjør vi antagelse om at det oppfylles ved
      * bokstav a (behov for aktiv behandling) og b (behov for arbeidsrettet tiltak).
      */
-    fun mapBistandsvurdering(
+    fun mapOppfyltBistandsvurdering(
         behandlingId: BehandlingId,
         fom: LocalDate,
     ): Bistandsvurdering {

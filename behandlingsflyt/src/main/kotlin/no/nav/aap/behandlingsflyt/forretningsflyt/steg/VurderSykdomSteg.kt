@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
+import no.nav.aap.behandlingsflyt.arena.erOrdinærAap
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -16,9 +19,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
-import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
-import no.nav.aap.behandlingsflyt.arena.erOrdinærAap
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -45,7 +45,9 @@ class VurderSykdomSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.erMigreringFraArena() && unleashGateway.isEnabled(BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk)) {
-            migrerVurderingFraArena(kontekst)
+            if (nårVurderingErRelevant(kontekst).isNotEmpty()) {
+                migrerVurderingFraArena(kontekst)
+            }
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
@@ -115,7 +117,7 @@ class VurderSykdomSteg(
         }
 
         val sykdomsvurderingFraArena =
-            arenaMigreringService.hentSykdomsvurdering(kontekst.sakId, kontekst.behandlingId, stegType)
+            arenaMigreringService.hentSykdomsvurdering(kontekst.sakId)
 
         /**
          * Kun ordinær AAP støttes for migreringsgruppe 1. Dette vil utvides når andre saker skal migreres
@@ -125,7 +127,13 @@ class VurderSykdomSteg(
             "Kan ikke migrere sykdomsvurdering fra Arena for sak ${kontekst.sakId} fordi ikke alle vilkår for ordinær AAP er oppfylt"
         }
 
-        val vurdering = ArenaMigreringMapper.mapSykdomsvurdering(
+        /**
+         * Lagrer sporing av migreringsdata for sykdomsvurdering fra Arena. Dette er nyttig for å kunne spore
+         * hva som var utgangspunktet for vurderingen som opprettes i Kelvin.
+         */
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, sykdomsvurderingFraArena)
+
+        val vurdering = ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(
             fraArena = sykdomsvurderingFraArena,
             behandlingId = kontekst.behandlingId,
             vurderingenGjelderFra = kontekst.rettighetsperiode.fom,

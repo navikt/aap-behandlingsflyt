@@ -40,7 +40,7 @@ class ArenaMigreringMapperTest {
 
     @Test
     fun `ArenaMigreringMapper mapper alle felter korrekt til Sykdomsvurdering fra Arena-respons`() {
-        val vurdering = ArenaMigreringMapper.mapSykdomsvurdering(
+        val vurdering = ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(
             fraArena = fraArena,
             behandlingId = behandlingId,
             vurderingenGjelderFra = fom,
@@ -70,7 +70,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.mapSykdomsvurdering(utenHoveddiagnose, behandlingId, fom)
+            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(utenHoveddiagnose, behandlingId, fom)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("hoveddiagnose")
@@ -78,7 +78,7 @@ class ArenaMigreringMapperTest {
 
     @Test
     fun `ArenaMigreringMapper mapper alle felter korrekt til Bistandsvurdering fra Arena-respons`() {
-        val vurdering = ArenaMigreringMapper.mapBistandsvurdering(
+        val vurdering = ArenaMigreringMapper.mapOppfyltBistandsvurdering(
             behandlingId = behandlingId,
             fom = fom,
         )
