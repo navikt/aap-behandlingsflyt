@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertMan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -106,7 +107,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             )
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
             }
 
         // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
@@ -149,8 +150,8 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.size).isEqualTo(1)
-                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.size).isEqualTo(1)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK)
             }
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.UTREDES)
@@ -508,7 +509,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         ).second
             // Validér avklaring
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
             }
 
         // Trigger manuell vurdering
@@ -528,7 +529,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             )
             .medKontekst {
                 // Validér riktig resultat
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).noneMatch { it == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).noneMatch { it == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
                 val vilkårsResultat =
                     hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
                 assertTrue(vilkårsResultat.none { it.erOppfylt() })
@@ -570,7 +571,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
         // Validér avklaring
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov.none())
+        assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.none())
 
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
@@ -592,7 +593,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         ).second
             .løsLovvalgOverstyrt(søknadsdato, false)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.MANUELL_OVERSTYRING_LOVVALG)
 
 
@@ -656,7 +657,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
         // Lovvalg krever manuell avklaring (ingen automatiske I_NORGE-kriterier er oppfylt)
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                 .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
 
@@ -745,7 +746,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
         // Lovvalg krever manuell avklaring pga. oppgitt utenlandsopphold i søknaden
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                 .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
 

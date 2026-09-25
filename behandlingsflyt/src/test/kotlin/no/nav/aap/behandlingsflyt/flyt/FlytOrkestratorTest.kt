@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
@@ -14,7 +15,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.JobbInput
-import no.nav.aap.motor.JobbRepository
 import no.nav.aap.motor.JobbStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -41,7 +41,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).describedAs {
                     "Revurdering av sykdom skal gå rett til beslutter når ingen avklaringsbehov trenger å løses av NAY"
                 }.containsExactly(Definisjon.FATTE_VEDTAK)
             }
@@ -60,7 +61,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .bekreftVurderinger()
             .løsSykepengeerstatning(sak.rettighetsperiode.fom to true)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).describedAs {
                     "Revurdering av sykdom skal innom foreslå vedtak-steg når vurdering av sykepengeerstatning er gjort av NAY"
                 }.containsExactly(Definisjon.FORESLÅ_VEDTAK)
             }
@@ -72,7 +74,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val (_, behandling) = sendInnFørsteSøknad()
 
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov)
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG})
                 .extracting<Definisjon> { it.definisjon }
                 .containsOnly(Definisjon.AVKLAR_SYKDOM)
         }
@@ -111,7 +113,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val (sak, behandling) = sendInnFørsteSøknad()
 
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov)
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG})
                 .extracting<Definisjon> { it.definisjon }
                 .containsOnly(Definisjon.AVKLAR_SYKDOM)
         }
@@ -119,7 +121,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Kø opp prosesser behandling og sett status til feilet, slik at den ikke plukkes umiddelbart
         val jobbHistorikkFørHendelse = dataSource.transaction { connection ->
             val flytJobbRepo = FlytJobbRepositoryImpl(connection)
-            
+
             val jobbHistorikkFør = flytJobbRepo.hentJobberMedHistorikkForSak(sak.id.toLong())
             val jobbInput = JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
                 sak.id.toLong(), behandling.id.toLong()
@@ -153,7 +155,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         // Assert at tilbakeføringen har skjedd
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov)
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG})
                 .extracting<Definisjon> { it.definisjon }
                 .containsExactly(Definisjon.AVKLAR_SYKDOM, Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }

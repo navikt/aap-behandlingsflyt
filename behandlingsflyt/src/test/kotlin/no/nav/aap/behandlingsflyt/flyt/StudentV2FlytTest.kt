@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
@@ -59,7 +60,7 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
 
         behandling = behandling
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .describedAs { "AVKLAR_STUDENT (V1) skal ikke opprettes når StudentV2 er påskrudd" }
                     .doesNotContain(Definisjon.AVKLAR_STUDENT)
             }
@@ -69,7 +70,7 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .describedAs { "AVKLAR_STUDENT_V2 skal opprettes etter sykdom er løst med NEI_MEN_STUDENT og kvalitetssikring er gjort" }
                     .contains(Definisjon.AVKLAR_STUDENT_V2)
             }
@@ -175,7 +176,7 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                 AvklarStudentLøsningV2(løsningerForPerioder = emptyList())
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.AVKLAR_STUDENT_V2)
             }
     }
@@ -306,7 +307,8 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                     StegType.VURDER_SYKEPENGEERSTATNING
                 )
 
-                val utfall = tidligereVurderinger.behandlingsutfall(kontekstMedPerioder, StegType.VURDER_SYKEPENGEERSTATNING)
+                val utfall =
+                    tidligereVurderinger.behandlingsutfall(kontekstMedPerioder, StegType.VURDER_SYKEPENGEERSTATNING)
 
                 assertThat(utfall.segmenter()).anySatisfy {
                     assertThat(it.verdi).isInstanceOf(TidligereVurderinger.UunngåeligAvslag::class.java)

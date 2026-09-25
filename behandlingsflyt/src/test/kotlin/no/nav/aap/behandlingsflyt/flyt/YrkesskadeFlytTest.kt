@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -333,7 +334,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsAndreStatligeYtelser()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov ->
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { avklaringsbehov ->
                     assertThat(avklaringsbehov.definisjon).isEqualTo(
                         Definisjon.FORESLÅ_VEDTAK
                     )
@@ -343,7 +344,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
@@ -354,7 +355,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 assertThat(brevBestilling.status).isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
 
                 // Venter på at brevet skal fullføres
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
 
                 val vilkårsresultat = repositoryProvider.provide<VilkårsresultatRepository>().hent(behandling.id)
                     .finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).tidslinje().komprimer()
@@ -456,14 +457,14 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
                 // Venter på at brevet skal fullføres
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV) }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV) }
             }
             .løsVedtaksbrev()
             .medKontekst {
@@ -505,7 +506,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
@@ -553,7 +554,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsAndreStatligeYtelser()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK) }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -565,7 +566,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
@@ -590,7 +591,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         behandling = behandling.medKontekst {
             // Venter på at brevet skal fullføres
-            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV) }
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV) }
         }
             .løsVedtaksbrev()
             .medKontekst {
@@ -627,7 +628,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).isEmpty()
+        assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
 
         sak.sendInnSøknad(
             søknad = TestSøknader.STANDARD_SØKNAD,
@@ -656,7 +657,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 ),
             )
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
+                assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
     }
@@ -674,7 +675,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         )
 
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).isNotEmpty()
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsAvklaringsBehov(
@@ -700,7 +701,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .kvalitetssikre()
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
@@ -744,7 +745,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG})
                     .extracting<Definisjon> { it.definisjon }
                     .doesNotContainAnyElementsOf(
                         listOf(
@@ -756,7 +757,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .kvalitetssikre()
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()

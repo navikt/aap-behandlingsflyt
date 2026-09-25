@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -129,7 +130,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 )
             }
             .medKontekst {
-                assertThat(åpneAvklaringsbehov)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG})
                     .describedAs("Krever 11-18-løsning for perioder med 11-5 ja, 11-6 nei")
                     .anySatisfy {
                         assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_OVERGANG_UFORE)
@@ -166,13 +167,13 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsOppholdskrav(søknadstidspunkt)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
@@ -319,15 +320,15 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 brukerHarRettPåAap = false
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1)
-                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.AVKLAR_OVERGANG_ARBEID)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.AVKLAR_OVERGANG_ARBEID)
             }
             .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = ikkeLengerSykDato)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1)
-                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
             }
     }
 
@@ -450,7 +451,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
         manuellRevurdering
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
                     .contains(Definisjon.AVKLAR_OVERGANG_UFORE)
             }
             .løsOvergangUføre(
@@ -460,7 +461,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 brukerHarRettPåAap = true
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
                     .doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE)
                 val vurdering = repositoryProvider.provide<OvergangUføreRepository>()
                     .hentHvisEksisterer(manuellRevurdering.id)
@@ -698,7 +699,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         }
 
         revurdering.medKontekst {
-            assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE)
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OVERGANG_UFORE)
         }
 
         if (hentAlleAvklaringsbehov(revurdering).any { it.definisjon == Definisjon.AVKLAR_OVERGANG_ARBEID }) {

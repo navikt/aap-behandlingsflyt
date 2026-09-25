@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -113,7 +114,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt).isTrue
 
                 // Behovet skal ikke løftes på nytt når vurderingen er lagret
-                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
                     .doesNotContain(Definisjon.AVKLAR_VEDTAKSLENGDE)
                 assertThat(behandling.aktivtSteg()).isNotEqualTo(StegType.FASTSETT_VEDTAKSLENGDE)
             }

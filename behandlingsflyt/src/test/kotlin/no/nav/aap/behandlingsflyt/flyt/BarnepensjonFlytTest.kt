@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnepensjon.Barne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -43,7 +44,7 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
         // Sender inn en søknad
         val søknadsdato = periode.fom
         val (sak, behandling) = sendInnFørsteSøknad(
-             mottattTidspunkt = søknadsdato.atStartOfDay(),
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
@@ -59,7 +60,7 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsSykdom(søknadsdato)
@@ -135,12 +136,16 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
             Periode(1 januar 2025, 30 april 2025) to {
                 val (dagsats, redusertDagsats, barnepensjonDagsats) = it
                 assertThat(barnepensjonDagsats.verdi()).isEqualByComparingTo(BigDecimal(477))
-                assertThat(redusertDagsats.verdi()).isEqualByComparingTo(dagsats.minus(barnepensjonDagsats).heltallverdi())
+                assertThat(redusertDagsats.verdi()).isEqualByComparingTo(
+                    dagsats.minus(barnepensjonDagsats).heltallverdi()
+                )
             },
             Periode(1 mai 2025, 31 oktober 2025) to {
                 val (dagsats, redusertDagsats, barnepensjonDagsats) = it
                 assertThat(barnepensjonDagsats.verdi()).isEqualByComparingTo(BigDecimal(501))
-                assertThat(redusertDagsats.verdi()).isEqualByComparingTo(dagsats.minus(barnepensjonDagsats).heltallverdi())
+                assertThat(redusertDagsats.verdi()).isEqualByComparingTo(
+                    dagsats.minus(barnepensjonDagsats).heltallverdi()
+                )
             },
             Periode(1 november 2025, 31 desember 2025) to {
                 val (dagsats, redusertDagsats, barnepensjonDagsats) = it

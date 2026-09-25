@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvbrytRevu
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -22,7 +23,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class TrekkOgAvbrytFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
         val fom = LocalDate.now()
@@ -41,18 +42,23 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             // Løs lovvalg
             .løsLovvalg(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactly(Definisjon.AVKLAR_SYKDOM)
             }
             // Trekk søknad
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
             }
-            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden", aarsak = AarsakTilTrekkSoknadDto.ANNET))
+            .løsAvklaringsBehov(
+                TrekkSøknadLøsning(
+                    begrunnelse = "trekker søknaden",
+                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+                )
+            )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
                 dataSource.transaction {
                     assertThat(VedtakRepositoryImpl(it).hent(this.behandling.id)).isNull()
@@ -77,7 +83,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             // Løs fram til forutgående
             .løsFramTilForutgåendeMedlemskap(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
                     .extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
@@ -87,13 +93,18 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             // Trekk søknad
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
                     .extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
             }
-            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden", aarsak = AarsakTilTrekkSoknadDto.ANNET))
+            .løsAvklaringsBehov(
+                TrekkSøknadLøsning(
+                    begrunnelse = "trekker søknaden",
+                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+                )
+            )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
     }
@@ -106,13 +117,18 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
         behandling.løsSykdom(sak.rettighetsperiode.fom)
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
                     .extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
             }
-            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden", aarsak = AarsakTilTrekkSoknadDto.ANNET))
+            .løsAvklaringsBehov(
+                TrekkSøknadLøsning(
+                    begrunnelse = "trekker søknaden",
+                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+                )
+            )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
@@ -137,7 +153,10 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
 
         // Revurdering 1 - skal bli avbrutt
         val revurdering1 = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD)
+            listOf(
+                no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD
+            )
         )
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
@@ -152,7 +171,7 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
         revurdering1.leggTilVurderingsbehov(
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
         ).medKontekst {
-            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                 .contains(Definisjon.AVBRYT_REVURDERING)
         }
             .løsAvklaringsBehov(
@@ -165,13 +184,21 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cl
             )
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
 
                 val avklaringsbehovene: List<Avklaringsbehov> = hentAlleAvklaringsbehov(revurdering1)
-                assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVBRYT_REVURDERING, AvklaringsbehovStatus.AVSLUTTET)
+                assertStatusForDefinisjon(
+                    avklaringsbehovene,
+                    Definisjon.AVBRYT_REVURDERING,
+                    AvklaringsbehovStatus.AVSLUTTET
+                )
                 assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
-                assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_BISTANDSBEHOV, AvklaringsbehovStatus.AVBRUTT)
-                
+                assertStatusForDefinisjon(
+                    avklaringsbehovene,
+                    Definisjon.AVKLAR_BISTANDSBEHOV,
+                    AvklaringsbehovStatus.AVBRUTT
+                )
+
                 assertThat(hentVedtakHvisEksisterer())
                     .describedAs("Skal ikke lagre vedtak for avbrutt revurdering")
                     .isNull()

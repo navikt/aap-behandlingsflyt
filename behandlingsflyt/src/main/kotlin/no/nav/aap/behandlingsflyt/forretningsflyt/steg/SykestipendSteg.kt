@@ -39,18 +39,34 @@ class SykestipendSteg private constructor(
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         val sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        avklaringsbehovService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehovMedGrad(
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
-            vedtakBehøverVurdering = {
+            behov = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA ->
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                                && (studentGrunnlag.skalVurdereStudent() || studentGrunnlag?.gjeldendeStudentvurderinger()
-                            ?.any { it.erOppfylt() } == true)
+                        if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())) {
+                            if (studentGrunnlag.skalVurdereStudent() || studentGrunnlag?.gjeldendeStudentvurderinger()
+                                    ?.any { it.erOppfylt() } == true) {
+                                AvklaringsbehovService.Behov.PÅKREVD
+                            } else {
+                                AvklaringsbehovService.Behov.FRIVILLIG
+                            }
+                        } else {
+                            AvklaringsbehovService.Behov.NEI
+                        }
+                                
 
                     VurderingType.REVURDERING ->
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                                && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+                        if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())) {
+                            if (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()) {
+                                AvklaringsbehovService.Behov.PÅKREVD
+                            } else {
+                                AvklaringsbehovService.Behov.FRIVILLIG
+                            }
+                        } else {
+                            AvklaringsbehovService.Behov.NEI
+                        }
+                                
 
                     VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MIGRER_RETTIGHETSPERIODE,
@@ -61,7 +77,7 @@ class SykestipendSteg private constructor(
                     VurderingType.G_REGULERING,
                     VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT ->
-                        false
+                        AvklaringsbehovService.Behov.NEI
                 }
             },
             erTilstrekkeligVurdert = {

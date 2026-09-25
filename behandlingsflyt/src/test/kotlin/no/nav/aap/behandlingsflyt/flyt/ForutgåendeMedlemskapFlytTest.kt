@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
@@ -34,7 +35,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
@@ -59,7 +60,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
             .løsBeregningstidspunkt()
             .løsYrkesskadeInntekt(person.yrkesskade)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
@@ -90,7 +91,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
             .løsBeregningstidspunkt()
             .løsFastsettManuellInntekt()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
@@ -108,11 +109,11 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
@@ -129,7 +130,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).noneMatch { it.definisjon == Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP }
             }
             .løsAvklaringsBehov(
                 AvklarPeriodisertOverstyrtForutgåendeMedlemskapLøsning(
@@ -168,11 +169,11 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
             .løsLovvalg(sak.rettighetsperiode.fom)
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom, medlem = false)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsForeslåVedtak()
             .fattVedtak()
@@ -192,7 +193,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                     .containsExactly(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsAvklaringsBehov(
@@ -234,7 +235,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(vurderingerGjelderFra = sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                     .containsExactly(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsAvklaringsBehov(
@@ -260,7 +261,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsOppholdskrav(sak.rettighetsperiode.fom) // TODO burde kunne sette datoMedlemskapOppfylt her
             .løsAndreStatligeYtelser()
@@ -288,12 +289,12 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                     .containsExactly(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
@@ -306,11 +307,11 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         val revurdering = sak
             .opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP))
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).noneMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
             .løsForeslåVedtak()
             .fattVedtak()
@@ -333,7 +334,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         // Saksbehandler frem til forutgående medlemskap (løser bl.a. lovvalg manuelt på veien)
         behandling.løsFramTilForutgåendeMedlemskap(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                     .containsExactly(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
 
@@ -414,7 +415,7 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         val førstegangsbehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)

@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
@@ -326,7 +327,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
             }
             .løsAvklaringsBehov(
                 AvklarBarnetilleggLøsning(
@@ -351,7 +353,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                     .describedAs("Vi avklarte bare ett barn, behovet skal fortsatt være åpent")
                     .containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
 
@@ -393,7 +395,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
             .løsAndreStatligeYtelser()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
 
                 val tilkjentYtelse =
                     repositoryProvider.provide<TilkjentYtelseRepository>().hentHvisEksisterer(behandling.id)
@@ -651,14 +654,15 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
             .løsVedtaksbrev()
             .medKontekst {
                 val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
             }
 
         val sak: Sak = sakOgBehandlingPar.first
@@ -1164,7 +1168,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
         behandling = behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).isNotEmpty()
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(fraDato)

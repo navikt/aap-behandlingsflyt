@@ -100,6 +100,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -261,7 +262,7 @@ open class AbstraktFlytOrkestratorTest(
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
         behandling = behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov).isNotEmpty()
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(sak.rettighetsperiode.fom)
@@ -349,7 +350,7 @@ open class AbstraktFlytOrkestratorTest(
 
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).isEmpty()
+        assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
 
         return hentSak(behandling)
     }

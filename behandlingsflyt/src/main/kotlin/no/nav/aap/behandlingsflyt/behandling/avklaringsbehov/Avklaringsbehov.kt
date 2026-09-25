@@ -171,8 +171,7 @@ class Avklaringsbehov(
         return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent() &&
                 when (definisjon.type) {
                     Definisjon.BehovType.MANUELT_FRIVILLIG if definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov ->
-                        false
-
+                        gradBehov() == GradBehov.PÅKREVD
                     Definisjon.BehovType.MANUELT_FRIVILLIG,
                     Definisjon.BehovType.MANUELT_PÅKREVD,
                     Definisjon.BehovType.VENTEPUNKT,

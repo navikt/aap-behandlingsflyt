@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.Etablering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
@@ -83,7 +84,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.ETABLERING_EGEN_VIRKSOMHET }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).noneMatch { it.definisjon == Definisjon.ETABLERING_EGEN_VIRKSOMHET }
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()

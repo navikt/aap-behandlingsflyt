@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.Oppfølgings
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
@@ -57,7 +58,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleA
             .løsAvklaringsBehov(VentPåOppfølgingNyLøsning())
             .medKontekst {
                 assertThat(ventebehov).isEmpty()
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)
+                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)
                     .describedAs {
                         "Oppfølgingsbehandling skal ha avklaringsbehov for NAY etter at ventebehov er løst"
                     }
@@ -82,7 +83,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleA
 
         opprettetBehandling.medKontekst {
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-            assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_SYKDOM)
+            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_SYKDOM)
         }
     }
 
