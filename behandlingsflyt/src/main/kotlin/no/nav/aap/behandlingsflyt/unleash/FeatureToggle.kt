@@ -16,7 +16,6 @@ enum class BehandlingsflytFeature(
     Under18,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
-    SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
