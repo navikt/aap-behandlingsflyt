@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdfgenerator
 
+import no.nav.aap.behandlingsflyt.behandling.meldekort.MeldekortPdfRequest
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfDokument
 import no.nav.aap.behandlingsflyt.prometheus
@@ -38,5 +39,21 @@ class PdfGeneratorGatewayImpl : PdfGeneratorGateway {
 
     companion object : Factory<PdfGeneratorGateway> {
         override fun konstruer(): PdfGeneratorGateway = PdfGeneratorGatewayImpl()
+    }
+
+    override fun genererMeldekortPdf(request: MeldekortPdfRequest): ByteArray {
+        val uri = baseUri.resolve("/api/v1/genpdf/saksbehandling/meldekort")
+        val httpRequest = PostRequest(
+            body = request,
+            additionalHeaders = listOf(
+                Header("Accept", "application/pdf")
+            )
+        )
+
+        val pdf = requireNotNull(
+            client.post(uri, httpRequest) { body, _ -> body.readBytes() }
+        )
+
+        return pdf
     }
 }

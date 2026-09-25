@@ -4,10 +4,13 @@ import no.nav.aap.behandlingsflyt.behandling.journalføring.journalposter.meldek
 import no.nav.aap.behandlingsflyt.behandling.journalføring.journalposter.vilkårsvurderingOppsummeringJournalpost
 import no.nav.aap.behandlingsflyt.behandling.meldekort.PdfgenGateway
 import no.nav.aap.behandlingsflyt.behandling.meldekort.tilPdfRequest
+import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfGeneratorGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.DokarkivGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dokarkiv.Journalpost
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -18,10 +21,14 @@ import java.time.LocalDate
 class JournalføringService(
     private val dokarkivGateway: DokarkivGateway,
     private val pdfgenGateway: PdfgenGateway,
+    private val pdfGeneratorGateway: PdfGeneratorGateway,
+    private val unleashGateway: UnleashGateway,
 ) {
     constructor(gatewayProvider: GatewayProvider) : this(
         dokarkivGateway = gatewayProvider.provide(),
         pdfgenGateway = gatewayProvider.provide(),
+        pdfGeneratorGateway = gatewayProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     fun journalførMeldekort(
@@ -34,16 +41,30 @@ class JournalføringService(
         meldeDato: LocalDate,
         korrigert: Boolean,
     ): JournalpostId {
-        val pdf = pdfgenGateway.genererMeldekortPdf(
-            meldekort.tilPdfRequest(
-                ident = sak.person.aktivIdent().identifikator,
-                meldeperiode = meldeperiode,
-                utførtAv = oppdatertAv.ident,
-                tidspunkt = tidspunkt,
-                meldeDato = meldeDato,
-                korrigert = korrigert,
+        val pdf = if(unleashGateway.isEnabled(BehandlingsflytFeature.SaksbehandlerMeldekortKvitteringNyPdfgenerator)){
+            pdfGeneratorGateway.genererMeldekortPdf(
+                meldekort.tilPdfRequest(
+                    ident = sak.person.aktivIdent().identifikator,
+                    meldeperiode = meldeperiode,
+                    utførtAv = oppdatertAv.ident,
+                    tidspunkt = tidspunkt,
+                    meldeDato = meldeDato,
+                    korrigert = korrigert,
+                )
             )
-        )
+        } else {
+
+            pdfgenGateway.genererMeldekortPdf(
+                meldekort.tilPdfRequest(
+                    ident = sak.person.aktivIdent().identifikator,
+                    meldeperiode = meldeperiode,
+                    utførtAv = oppdatertAv.ident,
+                    tidspunkt = tidspunkt,
+                    meldeDato = meldeDato,
+                    korrigert = korrigert,
+                )
+            )
+        }
 
         return journalfør(
             oppdatertAv = oppdatertAv,
