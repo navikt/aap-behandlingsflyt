@@ -67,6 +67,7 @@ class BehandlingService(
      *
      * Er du sikker på at du ikke bryr deg om behandlingen du får er siste vedtatte eller en åpen behandling?
      */
+    @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         """
         Navnet på denne metoden er ikke tydelig på hva du egentlig ser etter. Bytt ut metodekallet med en av følgende:

@@ -133,7 +133,7 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dialogmeldingReferanse = bestillingId1,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = "Saksbehandler hos NAV",
-                opprettetTidspunkt = LocalDateTime.now().minusDays(3),
+                opprettetTidspunkt = LocalDateTime.now(),
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan dere sende over legeerklæring for bruker?",
                 meldingStatus = MeldingStatusDto.LEVERT,
