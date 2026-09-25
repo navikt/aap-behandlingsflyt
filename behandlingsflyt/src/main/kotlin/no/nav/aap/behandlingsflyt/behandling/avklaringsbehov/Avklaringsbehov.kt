@@ -15,7 +15,7 @@ class Avklaringsbehov(
     val definisjon: Definisjon,
     historikk: List<Endring> = emptyList(),
     val funnetISteg: StegType,
-    private var kreverToTrinn: Boolean?
+    var kreverToTrinn: Boolean?
 ) {
 
     val historikk: List<Endring>
