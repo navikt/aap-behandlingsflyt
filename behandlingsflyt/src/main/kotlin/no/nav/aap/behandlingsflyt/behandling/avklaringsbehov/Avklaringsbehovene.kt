@@ -236,6 +236,7 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
+    // TODO: Oppdater gradbehov
     internal fun oppdaterPerioder(
         definisjon: Definisjon,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
