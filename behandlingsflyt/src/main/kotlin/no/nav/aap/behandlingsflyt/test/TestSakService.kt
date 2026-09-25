@@ -2,11 +2,10 @@ package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQueryException
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -56,8 +55,8 @@ class TestSakService(
         validerIdent(ident)
 
         personOgSakService.finnSakerFor(ident).firstOrNull()?.let { eksisterendeSak ->
-            val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(eksisterendeSak.id)
-            if (sisteBehandling != null && sisteBehandling.status() == Status.AVSLUTTET) {
+            val sisteBehandling = behandlingService.finnGjeldendeYtelsesbehandling(eksisterendeSak.id)
+            if (sisteBehandling != null) {
                 val nySøknad = lagSøknad(erStudent, harYrkesskade, harMedlemskap, andreUtbetalinger)
                 val forrigeSøknad = mottattDokumentRepository
                     .hentDokumenterAvType(sisteBehandling.id, InnsendingType.SØKNAD)
