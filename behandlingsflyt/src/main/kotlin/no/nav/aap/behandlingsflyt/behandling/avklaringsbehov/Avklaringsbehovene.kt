@@ -39,7 +39,7 @@ class Avklaringsbehovene(
     }
 
     fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker) {
-        if (definisjon.erFrivillig()) {
+        if (definisjon.erFrivillig() && definisjon in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
                 leggTil(
@@ -68,10 +68,40 @@ class Avklaringsbehovene(
     }
 
     /**
+     *  Oppretter nytt avklaringsbehov. Skal ikke kalles hvis det allerede finnes et behov for samme definisjon
+     */
+    fun opprett(
+        definisjon: Definisjon,
+        funnetISteg: StegType,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        frist: LocalDate? = null,
+        begrunnelse: String = "",
+        grunn: ÅrsakTilSettPåVent? = null,
+        bruker: Bruker = SYSTEMBRUKER
+    ) {
+        val avklaringsbehov = hentBehovForDefinisjon(definisjon)
+        require(avklaringsbehov == null) { "Forsøkte å opprette et avklaringsbehov som allerede eksisterte: $avklaringsbehov" }
+
+        repository.opprett(
+            behandlingId = behandlingId,
+            definisjon = definisjon,
+            funnetISteg = funnetISteg,
+            frist = utledFrist(definisjon, frist),
+            begrunnelse = begrunnelse,
+            grunn = grunn,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            endretAv = bruker
+        )
+    }
+
+    /**
      * Legger til nye avklaringsbehov.
      *
      * NB! Dersom avklaringsbehovet finnes fra før og er åpent så ignorerer vi det nye behovet, mens dersom det er avsluttet eller avbrutt så reåpner vi det.
      */
+    @Deprecated("Bruk mer spesifikke metoder")
     fun leggTil(
         definisjon: Definisjon,
         funnetISteg: StegType,
@@ -166,20 +196,34 @@ class Avklaringsbehovene(
     }
 
 
-    fun reåpne(
+    fun reåpneVentebehov(
         definisjon: Definisjon
     ) {
-        val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        val frist = if (definisjon.erVentebehov()) {
-            avklaringsbehov.frist()
-        } else {
-            null
+        require(definisjon.erVentebehov()) {
+            "Prøvde å reåpne ventebehov for definisjon $definisjon som ikke er et ventebehov"
         }
+        
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne(
-            frist = frist,
+            frist = avklaringsbehov.frist(),
             venteårsak = avklaringsbehov.venteårsak(),
-            perioderSomIkkeErTilstrekkeligVurdert = null, // Kan ikke si noe om dette
-            perioderVedtaketBehøverVurdering = avklaringsbehov.perioderVedtaketBehøverVurdering()
+        )
+        // TODO: Bør denne egentlig kalle endreVentepunkt?
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+    }
+
+    fun reåpneAvklaringsbehov(
+        avklaringsbehov: Avklaringsbehov,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        grunn: ÅrsakTilSettPåVent? = null,
+        bruker: Bruker = SYSTEMBRUKER
+    ) {
+        avklaringsbehov.reåpne(
+            venteårsak = grunn,
+            bruker = bruker,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
         )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }

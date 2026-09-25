@@ -14,10 +14,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.AzureTokenGen
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.fakes.TestToken
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository.opprettBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
@@ -31,19 +29,11 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostLis
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.InnkommendeUtgående
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
-import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
-import no.nav.aap.komponenter.httpklient.httpclient.post
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.net.URI
 import java.time.LocalDateTime
+import java.util.*
 
 @Fakes
 class HentBehandlerDialogServiceTest : BaseApiTest() {
@@ -110,8 +100,10 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
         } returns dialogmeldingerForSakResponse
         every {
             dokumentinnhentingGateway.hentDokumentoversiktForJournalpostListe(
-                request = HentDokumentoversiktJournalpostListeParams(listOf(
-                    journalpostIdSendtMelding1, journalpostIdSendtMelding2, journalpostIdMottattMelding)
+                request = HentDokumentoversiktJournalpostListeParams(
+                    listOf(
+                        journalpostIdSendtMelding1, journalpostIdSendtMelding2, journalpostIdMottattMelding
+                    )
                 ),
                 currentToken = token
             )
@@ -121,13 +113,60 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
         val result = service.hentDialogForSak(saksnummer, token)
 
         // assert
-        assertThat(result.size).isEqualTo(3)
-        assertThat(result[0].melding.journalpostId).isEqualTo(journalpostIdSendtMelding1)
-        assertThat(result[1].melding.journalpostId).isEqualTo(journalpostIdSendtMelding2)
-        assertThat(result[2].melding.journalpostId).isEqualTo(journalpostIdMottattMelding)
-        assertThat(result[0].melding.tekst).isEqualTo(tekstFørsteMelding)
-        assertThat(result[2].dokumentIdListe.size).isEqualTo(1)
-        assertThat(result[2].dokumentIdListe[0].tittel).isEqualTo("Legeerklæring")
+        assertThat(result.meldinger.size).isEqualTo(3)
+        assertThat(result.meldinger[0].melding.journalpostId).isEqualTo(journalpostIdSendtMelding1)
+        assertThat(result.meldinger[1].melding.journalpostId).isEqualTo(journalpostIdSendtMelding2)
+        assertThat(result.meldinger[2].melding.journalpostId).isEqualTo(journalpostIdMottattMelding)
+        assertThat(result.meldinger[0].melding.tekst).isEqualTo(tekstFørsteMelding)
+        assertThat(result.meldinger[2].dokumentIdListe.size).isEqualTo(1)
+        assertThat(result.meldinger[2].dokumentIdListe[0].tittel).isEqualTo("Legeerklæring")
+    }
+
+    @Test
+    fun `utled kommende meldinger riktig`() {
+        val sak = opprettInMemorySak()
+
+        val bestillingId1 = UUID.randomUUID()
+        val bestillingId2 = UUID.randomUUID()
+        val dialogmeldingerForSakResponse = listOf(
+            FellesDialogmeldingDto(
+                dialogmeldingReferanse = bestillingId1,
+                innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
+                meldingFraNavn = "Saksbehandler hos NAV",
+                opprettetTidspunkt = LocalDateTime.now(),
+                dokumentasjonsType = DokumentasjonType.L40,
+                tekst = "Hei, kan dere sende over legeerklæring for bruker?",
+                meldingStatus = MeldingStatusDto.LEVERT,
+                journalpostId = "123"
+            ),
+            FellesDialogmeldingDto(
+                dialogmeldingReferanse = bestillingId2,
+                innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
+                meldingFraNavn = "Saksbehandler hos NAV",
+                opprettetTidspunkt = LocalDateTime.now().minusDays(23),
+                dokumentasjonsType = DokumentasjonType.L40,
+                tekst = "Hei, kan dere sende over legeerklæring for bruker igjen?",
+                meldingStatus = MeldingStatusDto.LEVERT,
+                journalpostId = "123"
+            )
+        )
+        val token = getToken()
+        every { dokumentinnhentingGateway.hentDialogmeldingerForSak(any()) } returns dialogmeldingerForSakResponse
+        every {
+            dokumentinnhentingGateway.hentDokumentoversiktForJournalpostListe(
+                any(), token
+            )
+        } returns HentDokumentoversiktJournalpostListeResponse(
+            journalposter = listOf(
+                lagBegrensetJournalpostDto("123")
+            )
+        )
+
+
+
+        val kommendeMeldinger = service.hentDialogForSak(sak.saksnummer.toString(), token).kommendeMeldinger
+        assertThat(kommendeMeldinger.size).isEqualTo(1)
+        assertThat(kommendeMeldinger[0].bestillingId).isEqualTo(bestillingId1)
     }
 
     private fun lagLegeerklæring(journalpostId: String, sak: Sak, behandling: Behandling): MottattDokument {
@@ -155,10 +194,12 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
     ): BegrensetJournalpostDto {
         return BegrensetJournalpostDto(
             journalpostId = journalpostId,
-            dokumenter = listOf(BegrensetDokumentInfoDto(
-                dokumentInfoId = "99999",
-                tittel = tittel,
-            )),
+            dokumenter = listOf(
+                BegrensetDokumentInfoDto(
+                    dokumentInfoId = "99999",
+                    tittel = tittel,
+                )
+            ),
             avsenderMottakerDto = AvsenderMottakerDto(
                 id = "123456",
                 type = null,

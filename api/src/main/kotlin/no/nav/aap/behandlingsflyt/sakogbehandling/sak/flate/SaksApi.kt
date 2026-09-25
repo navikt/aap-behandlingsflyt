@@ -8,10 +8,12 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.flyt.ArenaStatusDTO
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -53,7 +55,7 @@ import no.nav.aap.tilgang.authorizedPost
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("api.sak")
@@ -418,6 +420,28 @@ fun NormalOpenAPIRoute.saksApi(
                         dødsdato = personinfo.dødsdato,
                     )
                 )
+            }
+        }
+
+        route("/{saksnummer}/arena-status") {
+            authorizedGet<HentSakDTO, ArenaStatusDTO>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer"),
+                )
+            ) { req ->
+                val saksnummer = req.saksnummer
+
+                val ident = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val saksRepository = repositoryProvider.provide<SakRepository>()
+                    saksRepository.hent(saksnummer = Saksnummer(saksnummer)).person.aktivIdent()
+                }
+
+                val arenaOppslagGateway = gatewayProvider.provide(ArenaOppslagGateway::class)
+                val harArenaHistorikk = arenaOppslagGateway.hentHarHistorikk(ident).harHistorikk
+
+                respond(ArenaStatusDTO(harArenaHistorikk = harArenaHistorikk))
             }
         }
 

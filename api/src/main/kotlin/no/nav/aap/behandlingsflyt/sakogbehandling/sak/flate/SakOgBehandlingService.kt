@@ -49,7 +49,7 @@ class SakOgBehandlingService(
             val finnesÅpenBehandling = behandlingService.finnÅpenYtelsesbehandling(sak.id) !== null
             val gjeldendeBehandling = behandlingService.finnGjeldendeYtelsesbehandling(sak.id)
 
-            val harRettNåEllerIFramtiden= gjeldendeBehandling?.let {
+            val harRettNåEllerIFramtiden = gjeldendeBehandling?.let {
                 rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(it.id)
                     .begrensetTil(Periode(LocalDate.now(), Tid.MAKS))
                     .isNotEmpty()
@@ -110,6 +110,9 @@ class SakOgBehandlingService(
         val alleBehandlinger = behandlingRepository.hentAlleFor(sak.id)
         val behandlingstyper = behandlingService.utledFaktiskBehandlingstyper(alleBehandlinger)
 
+        val gjeldendeYtelsesBehandling =
+            behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
+
         val behandlinger = alleBehandlinger.map { behandling ->
             if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
                 søknadErTrukket =
@@ -123,6 +126,7 @@ class SakOgBehandlingService(
                 vurderingsbehov = vurderingsbehov,
                 årsakTilOpprettelse = behandling.årsakTilOpprettelse,
                 opprettet = behandling.opprettetTidspunkt,
+                erGjeldende = behandling.id == gjeldendeYtelsesBehandling?.id,
                 eksternSaksbehandlingsløsningUrl = null,
             )
         }
@@ -151,7 +155,6 @@ class SakOgBehandlingService(
             sak = sak,
             behandlinger = (behandlinger + tilbakekrevingsbehandlinger).sortedByDescending { it.opprettet },
             søknadErTrukket = søknadErTrukket
-
         )
     }
 

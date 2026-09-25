@@ -22,4 +22,5 @@ data class Tilbakekrevingshendelse(
     val tilbakekrevingSaksbehandlingUrl: URI,
     val fullstendigPeriode: Periode,
     val versjon: Int,
+    val vedtaksdato: LocalDate?,
 )

@@ -22,6 +22,7 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemoryPersonopplysningRepository>()
     register<InMemoryPersonRepository>()
     register<InMemoryPipRepository>()
+    register<InMemoryPåklagetBehandlingRepository>()
     register<InMemoryRefusjonKravRepository>()
     register<InMemorySykdomRepository>()
     register<InMemoryBistandRepository>()

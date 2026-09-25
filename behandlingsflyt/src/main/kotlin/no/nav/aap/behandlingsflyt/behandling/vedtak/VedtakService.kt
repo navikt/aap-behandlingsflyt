@@ -30,8 +30,7 @@ class VedtakService(
 
     fun vedtakstidspunktFørsteInnvilgelse(sak: Sak): LocalDateTime? {
         /* Denne  koden er ikke laget for å håndtere tilfeller der man omgjør en innvilgelse til avslag, og så senere innvilger igjen. */
-        return behandlingRepository.hentAlleMedVedtakFor(sak.person.id, TypeBehandling.ytelseBehandlingstyper())
-            .filter { it.saksnummer == sak.saksnummer }
+        return behandlingRepository.hentAlleMedVedtakFor(sak.id, TypeBehandling.ytelseBehandlingstyper())
             .sortedBy { it.vedtakstidspunkt }
             .firstOrNull { underveisRepository.hentHvisEksisterer(it.id)?.harRett() == true }
             ?.vedtakstidspunkt

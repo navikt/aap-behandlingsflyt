@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.util.*
+import kotlin.collections.emptyList
 
 class BrevbestillingService(
     private val signaturService: SignaturService,
@@ -67,6 +68,15 @@ class BrevbestillingService(
     ): UUID {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
+        val signaturer = if (ferdigstillAutomatisk) {
+            signaturService.finnSignaturGrunnlagForAutomatiskBestilling(
+                behandlingId = behandlingId,
+                typeBrev = brevBehov.typeBrev,
+            )
+        } else {
+            emptyList()
+        }
+
         val bestillingReferanse = brevbestillingGateway.bestillBrev(
             saksnummer = sak.saksnummer,
             brukerIdent = sak.person.aktivIdent(),
@@ -75,6 +85,7 @@ class BrevbestillingService(
             brevBehov = brevBehov,
             vedlegg = vedlegg,
             ferdigstillAutomatisk = ferdigstillAutomatisk,
+            signaturer = signaturer,
             brukApiV3 = brukApiV3,
         )
         val alleredeLagretBestilling = brevbestillingRepository.hent(bestillingReferanse)

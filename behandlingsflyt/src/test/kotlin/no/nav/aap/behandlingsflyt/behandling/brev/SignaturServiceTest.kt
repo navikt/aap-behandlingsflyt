@@ -48,6 +48,38 @@ class SignaturServiceTest {
     }
 
     @Test
+    fun `automatisk avslag 11-5 har både veileder og kvalitetssikrers signatur`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val veilederIdent = "v000000"
+        val kvalitetssikrerIdent = "k000000"
+
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.AVKLAR_SYKDOM,
+            endretAv = veilederIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "1234",
+        )
+        leggTilEndring(
+            behandling = behandling,
+            definisjon = Definisjon.KVALITETSSIKRING,
+            endretAv = kvalitetssikrerIdent,
+            status = AvklaringsbehovStatus.AVSLUTTET,
+            oppgaveEnhet = "5678",
+        )
+
+        val signaturer = signaturService.finnSignaturGrunnlagForAutomatiskBestilling(
+            behandlingId = behandling.id,
+            typeBrev = TypeBrev.VEDTAK_AVSLAG_11_5,
+        )
+
+        assertThat(signaturer).containsExactlyInAnyOrder(
+            SignaturGrunnlag(veilederIdent, rolle = null, enhet = "1234"),
+            SignaturGrunnlag(kvalitetssikrerIdent, rolle = null, enhet = "5678"),
+        )
+    }
+
+    @Test
     fun `den som står i signatur for en gitt rolle er den som utførte siste avklaringsbehovet for rollen (status AVSLUTTET)`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         val brevbestilling = Brevbestilling(

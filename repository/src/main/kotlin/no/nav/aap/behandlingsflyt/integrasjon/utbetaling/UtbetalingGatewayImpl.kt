@@ -12,6 +12,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.utbetal.simulering.SimuleringDto
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.trekk.TrekkResponsDto
@@ -41,6 +42,13 @@ object UtbetalingGatewayImpl : UtbetalingGateway {
     override fun simulering(tilkjentYtelseDto: TilkjentYtelseDto): List<UtbetalingOgSimuleringDto> {
         return client.post(
             uri = baseUri.resolve("/simulering"),
+            request = PostRequest(body = tilkjentYtelseDto)
+        )!!
+    }
+
+    override fun simuleringV2(tilkjentYtelseDto: TilkjentYtelseDto): SimuleringDto {
+        return client.post(
+            uri = baseUri.resolve("/simulering/v2"),
             request = PostRequest(body = tilkjentYtelseDto)
         )!!
     }

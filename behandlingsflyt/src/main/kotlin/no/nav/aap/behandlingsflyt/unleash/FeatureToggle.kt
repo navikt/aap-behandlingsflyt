@@ -40,7 +40,8 @@ enum class BehandlingsflytFeature(
     BosattStatsborgerskapGjennomslipp,
     HoppOverBeslutterVedAvslagSykdom,
     KanVurdereRefusjonIRevurdering,
-    KunEnAktivKlagebehandling
+    KunEnAktivKlagebehandling,
+    KlagePaaTilbakekreving
     ;
 
     override fun key(): String = name

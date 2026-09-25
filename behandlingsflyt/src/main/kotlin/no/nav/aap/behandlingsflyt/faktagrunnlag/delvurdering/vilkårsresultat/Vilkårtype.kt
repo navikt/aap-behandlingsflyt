@@ -33,7 +33,7 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_MEDLEM,
             Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT
         ),
-        hjemmel = "§ 2",
+        hjemmel = "Lovvalg / Medlemskap",
         kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.LOVVALG,
     ),
     SYKDOMSVILKÅRET(
