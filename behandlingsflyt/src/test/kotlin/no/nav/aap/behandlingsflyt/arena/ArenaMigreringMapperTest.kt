@@ -46,7 +46,7 @@ class ArenaMigreringMapperTest {
             vurderingenGjelderFra = fom,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo("Automatisk migrert fra Arena\n\n${fraArena.begrunnelse}")
+        assertThat(vurdering.begrunnelse).isEqualTo(fraArena.begrunnelse)
         assertThat(vurdering.vurderingenGjelderFra).isEqualTo(fom)
         assertThat(vurdering.vurderingenGjelderTil).isNull()
         assertThat(vurdering.diagnose?.kodeverk).isEqualTo("ICD10")

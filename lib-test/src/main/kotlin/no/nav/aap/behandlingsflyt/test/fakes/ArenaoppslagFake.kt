@@ -70,13 +70,13 @@ class ArenaoppslagFake : FakeServer() {
                         ),
                         diagnoser = listOf(
                             ArenaDiagnose(
-                                kodeverk = "ICD10",
+                                kodeverk = "ICD-10",
                                 kode = "M797",
                                 type = "HOVED",
                                 opprettet = LocalDate.of(2016, 1, 1),
                             ),
                             ArenaDiagnose(
-                                kodeverk = "ICD10",
+                                kodeverk = "ICD-10",
                                 kode = "M797",
                                 type = "BI",
                                 opprettet = LocalDate.of(2016, 1, 1),

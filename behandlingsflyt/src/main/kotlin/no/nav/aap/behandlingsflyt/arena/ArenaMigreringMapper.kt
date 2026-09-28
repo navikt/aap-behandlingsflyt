@@ -42,14 +42,17 @@ object ArenaMigreringMapper {
         ) { "Fant ingen hoveddiagnose i sykdomsvurdering fra Arena" }
         val bidiagnoser = fraArena.diagnoser.filter { it.type == "BI" }
 
-        val begrunnelse = "Automatisk migrert fra Arena\n\n${fraArena.begrunnelse}"
+        // Kodeverk i Kelvin har ikke bindestrek, men Arena har det. F.eks. "ICPC-2" vs "ICPC2"
+        val kodeverk = hoveddiagnose.kodeverk.replace("-", "")
+
+        val begrunnelse = fraArena.begrunnelse ?: "Automatisk migrert fra Arena"
 
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
             vurderingenGjelderFra = vurderingenGjelderFra,
             vurderingenGjelderTil = null,
             diagnose = Diagnose(
-                kodeverk = hoveddiagnose.kodeverk,
+                kodeverk = kodeverk,
                 hoveddiagnose = hoveddiagnose.kode,
                 bidiagnoser = bidiagnoser.map { it.kode }
             ),
