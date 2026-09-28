@@ -23,13 +23,13 @@ class ArenaMigreringMapperTest {
             ArenaDiagnose(
                 kodeverk = "ICD10",
                 kode = "M797",
-                type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                type = "HOVED",
                 opprettet = LocalDate.of(2016, 1, 1),
             ),
             ArenaDiagnose(
                 kodeverk = "ICD10",
                 kode = "M80",
-                type = ArenaDiagnoseType.BIDIAGNOSE,
+                type = "BI",
                 opprettet = LocalDate.of(2016, 1, 1),
             )
         )
@@ -66,7 +66,7 @@ class ArenaMigreringMapperTest {
     @Test
     fun `mapSykdomsvurdering feiler med tydelig melding når Arena mangler hoveddiagnose`() {
         val utenHoveddiagnose = fraArena.copy(
-            diagnoser = fraArena.diagnoser.filter { it.type == ArenaDiagnoseType.BIDIAGNOSE }
+            diagnoser = fraArena.diagnoser.filter { it.type == "BI" }
         )
 
         assertThatThrownBy {

@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
-import no.nav.aap.behandlingsflyt.arena.ArenaDiagnoseType
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
@@ -69,13 +68,13 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 ArenaDiagnose(
                     kodeverk = "ICD10",
                     kode = "M797",
-                    type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                    type = "HOVED",
                     opprettet = LocalDate.of(2016, 1, 1),
                 ),
                 ArenaDiagnose(
                     kodeverk = "ICD10",
                     kode = "M797",
-                    type = ArenaDiagnoseType.BIDIAGNOSE,
+                    type = "BI",
                     opprettet = LocalDate.of(2016, 1, 1),
                 )
             )

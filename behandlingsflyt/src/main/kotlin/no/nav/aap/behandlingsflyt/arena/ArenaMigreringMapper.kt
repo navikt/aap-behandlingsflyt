@@ -38,9 +38,9 @@ object ArenaMigreringMapper {
     ): Sykdomsvurdering {
         // TODO denne mappingen er ikke landet
         val hoveddiagnose = requireNotNull(
-            fraArena.diagnoser.sortedBy { it.opprettet }.lastOrNull { it.type == ArenaDiagnoseType.HOVEDDIAGNOSE }
+            fraArena.diagnoser.sortedBy { it.opprettet }.lastOrNull { it.type == "HOVED" }
         ) { "Fant ingen hoveddiagnose i sykdomsvurdering fra Arena" }
-        val bidiagnoser = fraArena.diagnoser.filter { it.type == ArenaDiagnoseType.BIDIAGNOSE }
+        val bidiagnoser = fraArena.diagnoser.filter { it.type == "BI" }
 
         val begrunnelse = "Automatisk migrert fra Arena\n\n${fraArena.begrunnelse}"
 

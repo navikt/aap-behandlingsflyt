@@ -6,12 +6,11 @@ import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
-import no.nav.aap.behandlingsflyt.arena.ArenaDiagnoseType
-import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.arena.ArenaVilkar
+import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
 import java.time.LocalDate
 
 class ArenaoppslagFake : FakeServer() {
@@ -73,13 +72,13 @@ class ArenaoppslagFake : FakeServer() {
                             ArenaDiagnose(
                                 kodeverk = "ICD10",
                                 kode = "M797",
-                                type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                                type = "HOVED",
                                 opprettet = LocalDate.of(2016, 1, 1),
                             ),
                             ArenaDiagnose(
                                 kodeverk = "ICD10",
                                 kode = "M797",
-                                type = ArenaDiagnoseType.BIDIAGNOSE,
+                                type = "BI",
                                 opprettet = LocalDate.of(2016, 1, 1),
                             )
                         )
