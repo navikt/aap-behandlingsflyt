@@ -37,13 +37,16 @@ class YrkesskadeInformasjonskrav internal constructor(
 ) : Informasjonskrav<YrkesskadeInformasjonskrav.YrkesskadeInput, YrkesskadeRegisterdata> {
     override val navn = Companion.navn
 
+    // Yrkesskade er et faktum som kan endre et tidligere (foreløpig) avslag,
+    // derfor skal innhenting av registerdata ALDRI sperres av at saken
+    // foreløpig peker mot avslag/mangler behandlingsgrunnlag (jf.
+    // TidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag).
     override fun erRelevant(
         kontekst: FlytKontekstMedPerioder,
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
-                && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
                 && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
