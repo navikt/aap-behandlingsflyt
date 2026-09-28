@@ -43,8 +43,7 @@ enum class BehandlingsflytFeature(
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
-    NySoknadTilApiIntern
-    KunEnAktivKlagebehandling,
+    NySoknadTilApiIntern,
     SammenhengendeInstitusjonsopphold
     ;
 
