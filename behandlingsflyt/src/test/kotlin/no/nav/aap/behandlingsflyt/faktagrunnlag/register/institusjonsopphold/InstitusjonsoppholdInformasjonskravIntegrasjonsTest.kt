@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.flyt.InstitusjonFlytTest
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -28,7 +29,7 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
         }
     }
 
-    private val gatewayProvider = minimalGatewayProvider {
+    private val gatewayProvider = minimalGatewayProvider(InstitusjonFlytTest.SammenhengendeInstitusjonsoppholdUnleash::class) {
         register<FakeInstitusjonsoppholdGateway>()
     }
 
