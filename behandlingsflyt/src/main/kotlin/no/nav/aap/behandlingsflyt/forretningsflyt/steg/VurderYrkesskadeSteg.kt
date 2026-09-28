@@ -63,13 +63,28 @@ class VurderYrkesskadeSteg private constructor(
     ): Boolean {
         val harUvurdertYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
                 && sykdomsgrunnlag?.yrkesskadevurdering == null
-        return when (flytKontekstMedPerioder.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGERING_FRA_ARENA -> {
+        val kanYrkesskadeEndreAvslag = harUvurdertYrkesskade &&
+                sykdomsgrunnlag?.somSykdomsvurderingstidslinje()
+                    ?.begrensetTil(flytKontekstMedPerioder.rettighetsperiode)
+                    ?.segmenter()
+                    ?.any {
+                        it.verdi.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()
+                    } == true
 
-                (harUvurdertYrkesskade || !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                    flytKontekstMedPerioder, type()
-                )) && flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() && yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+        val tidligereAvslag =
+            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(flytKontekstMedPerioder, type())
+        val behovForYrkesskadevurdering =
+            !tidligereAvslag || kanYrkesskadeEndreAvslag
+        return when (flytKontekstMedPerioder.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA -> {
+                (!tidligereAvslag || kanYrkesskadeEndreAvslag) &&
+                        flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() &&
+                        yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
             }
+
+            // Keep the existing other branches returning false.
 
             VurderingType.MELDEKORT,
             VurderingType.UTVID_VEDTAKSLENGDE,
