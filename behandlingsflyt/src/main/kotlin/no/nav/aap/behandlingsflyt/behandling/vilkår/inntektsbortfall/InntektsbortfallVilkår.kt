@@ -1,45 +1,56 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall
 
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 
-class InntektsbortfallVilkår(
-    vilkårsresultat: Vilkårsresultat,
-    private val rettighetsPeriode: Periode
-) : Vilkårsvurderer<InntektsbortfallGrunnlag> {
-    private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.INNTEKTSBORTFALL)
+object InntektsbortfallVilkår : Vilkårsvurderer<InntektsbortfallGrunnlag> {
+    override val vilkårtype: Vilkårtype = Vilkårtype.INNTEKTSBORTFALL
 
-    override fun vurder(grunnlag: InntektsbortfallGrunnlag) {
-        val vurdering = if (grunnlag.inntektsbortfallKanBehandlesAutomatisk.kanBehandlesAutomatisk) {
+    override fun vurder(faktagrunnlag: InntektsbortfallGrunnlag): Tidslinje<Vilkårsvurdering> {
+        val rettighetsPeriode = faktagrunnlag.rettighetsPeriode
+        if (faktagrunnlag.inntektsbortfallKanBehandlesAutomatisk == null) {
+            return listOf(
+                Vilkårsperiode(
+                    periode = rettighetsPeriode,
+                    utfall = Utfall.IKKE_VURDERT,
+                    manuellVurdering = false,
+                    begrunnelse = null,
+                    innvilgelsesårsak = null
+                )
+            ).somTidslinje({ it.periode }, { Vilkårsvurdering(it) })
+        }
+
+        val vurdering = if (faktagrunnlag.inntektsbortfallKanBehandlesAutomatisk.kanBehandlesAutomatisk) {
             Vilkårsperiode(
                 periode = rettighetsPeriode,
                 utfall = Utfall.OPPFYLT,
                 manuellVurdering = false,
                 begrunnelse = "Bruker under 62 år, eller har hatt inntekt siste år over 1G, eller har hatt inntekt over 3G siste tre år.",
-                faktagrunnlag = grunnlag
+                faktagrunnlag = faktagrunnlag
             )
-        } else if (grunnlag.manuellVurdering == null) {
+        } else if (faktagrunnlag.manuellVurdering == null) {
             Vilkårsperiode(
                 periode = rettighetsPeriode,
                 utfall = Utfall.IKKE_VURDERT,
                 manuellVurdering = false,
                 begrunnelse = null,
-                faktagrunnlag = grunnlag
+                faktagrunnlag = faktagrunnlag
             )
-        } else if (grunnlag.manuellVurdering.rettTilUttak) {
+        } else if (faktagrunnlag.manuellVurdering.rettTilUttak) {
             Vilkårsperiode(
                 periode = rettighetsPeriode,
                 utfall = Utfall.IKKE_OPPFYLT,
                 manuellVurdering = true,
                 begrunnelse = "Bruker har rett på fullt uttak av alderspensjon.",
-                faktagrunnlag = grunnlag,
+                faktagrunnlag = faktagrunnlag,
                 avslagsårsak = Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
             )
         } else {
@@ -48,22 +59,10 @@ class InntektsbortfallVilkår(
                 utfall = Utfall.OPPFYLT,
                 manuellVurdering = true,
                 begrunnelse = "Bruker har ikke rett på fullt uttak av alderspensjon.",
-                faktagrunnlag = grunnlag
+                faktagrunnlag = faktagrunnlag
             )
         }
 
-        vilkår.leggTilVurdering(vurdering)
-    }
-
-    fun settTilIkkeVurdert() {
-        vilkår.leggTilVurdering(
-            Vilkårsperiode(
-                periode = rettighetsPeriode,
-                utfall = Utfall.IKKE_VURDERT,
-                manuellVurdering = false,
-                begrunnelse = null,
-                innvilgelsesårsak = null
-            )
-        )
+        return tidslinjeOf(vurdering.periode to Vilkårsvurdering(vurdering))
     }
 }

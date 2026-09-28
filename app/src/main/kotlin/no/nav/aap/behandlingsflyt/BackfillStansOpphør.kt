@@ -182,7 +182,7 @@ class BackfillStansOpphør(
                 .copy(stansOpphørV2 = stansOpphør)
 
             check(
-                RettighetstypeSteg.validerStansOpphør(
+                RettighetstypeSteg.validerStansOpphørVedMigrering(
                     nyttGrunnlag,
                     rettighetstyper = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandling.id)
                 )

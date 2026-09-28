@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -22,9 +23,11 @@ fun NormalOpenAPIRoute.tilkjentYtelseApi(dataSource: DataSource, repositoryRegis
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { behandlingreferanse ->
-                val tilkjentYtelseDto =
-                    TilkjentYtelseService(dataSource, repositoryRegistry)
+                val tilkjentYtelseDto = dataSource.transaction(readOnly = true) {
+                    val repositoryProvider = repositoryRegistry.provider(it)
+                    TilkjentYtelseService(repositoryProvider)
                         .hentTilkjentYtelse(behandlingreferanse)
+                }
 
                 respond(tilkjentYtelseDto)
             }
@@ -38,9 +41,10 @@ fun NormalOpenAPIRoute.tilkjentYtelseApi(dataSource: DataSource, repositoryRegis
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { behandlingreferanse ->
-                val tilkjentYtelseDto =
-                    TilkjentYtelseService(dataSource, repositoryRegistry)
+                val tilkjentYtelseDto = dataSource.transaction(readOnly = true) {
+                    TilkjentYtelseService(repositoryRegistry.provider(it))
                         .hentTilkjentYtelseMedDiff(behandlingreferanse)
+                }
 
                 respond(tilkjentYtelseDto)
             }

@@ -47,9 +47,11 @@ class AzureTokenGen(private val audience: String) {
                         "brev",
                         "pip-api",
                         "medlemskaplovvalg-api",
+                        "hent-oppgave-enhet",
                         "oppdater-behandlingsflyt-oppgaver",
                         "oppdater-postmottak-oppgaver",
-                        "syfo-api"
+                        "syfo-api",
+                        "dialogmelding-api",
                     )
                 )
                 // Lokalt er NAIS_TEAM_AAP satt til strengen "NAIS_TEAM_AAP".

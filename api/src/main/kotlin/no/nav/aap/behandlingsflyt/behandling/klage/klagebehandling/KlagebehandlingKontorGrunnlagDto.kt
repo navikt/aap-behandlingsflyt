@@ -5,12 +5,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 data class KlagebehandlingKontorGrunnlagDto(
     val vurdering: KlagevurderingKontorDto? = null,
-    val harTilgangTilÅSaksbehandle: Boolean
+    val harTilgangTilÅSaksbehandle: Boolean,
+    val påklagetVedtakType: PåklagetVedtakType
 )
 
 data class KlagevurderingKontorDto(
@@ -19,10 +21,13 @@ data class KlagevurderingKontorDto(
     val innstilling: KlageInnstilling,
     val vilkårSomOpprettholdes: List<Hjemmel>,
     val vilkårSomOmgjøres: List<Hjemmel>,
-    val vurderingerMeta: VurderingerMetaResponse,
+    val vurderingerMeta: VurderingerMetaResponse
 )
 
-internal fun KlagevurderingKontor.tilDto(vurdertAvService: VurdertAvService, behandlingId: BehandlingId) =
+internal fun KlagevurderingKontor.tilDto(
+    vurdertAvService: VurdertAvService,
+    behandlingId: BehandlingId,
+) =
     KlagevurderingKontorDto(
         begrunnelse = begrunnelse,
         notat = notat,
@@ -35,15 +40,17 @@ internal fun KlagevurderingKontor.tilDto(vurdertAvService: VurdertAvService, beh
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, requireNotNull(opprettet) {
                 "Opprettet-tidspunkt kan ikke være null"
             }),
-        ),
+        )
     )
 
 internal fun KlagebehandlingKontorGrunnlag.tilDto(
     harTilgangTilÅSaksbehandle: Boolean,
     vurdertAvService: VurdertAvService,
-    behandlingId: BehandlingId
+    behandlingId: BehandlingId,
+    påklagetVedtakType: PåklagetVedtakType
 ) =
     KlagebehandlingKontorGrunnlagDto(
         vurdering = vurdering.tilDto(vurdertAvService, behandlingId),
-        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+        påklagetVedtakType = påklagetVedtakType
     )

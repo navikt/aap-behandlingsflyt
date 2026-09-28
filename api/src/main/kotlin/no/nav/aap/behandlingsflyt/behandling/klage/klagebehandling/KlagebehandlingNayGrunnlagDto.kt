@@ -7,10 +7,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 
 data class KlagebehandlingNayGrunnlagDto(
     val vurdering: KlagevurderingNayDto? = null,
-    val harTilgangTilÅSaksbehandle: Boolean
+    val harTilgangTilÅSaksbehandle: Boolean,
+    val påklagetVedtakType: PåklagetVedtakType,
 )
 
 data class KlagevurderingNayDto(
@@ -37,8 +39,10 @@ internal fun KlagevurderingNay.tilDto(ansattInfoService: AnsattInfoService) =
 internal fun KlagebehandlingNayGrunnlag.tilDto(
     harTilgangTilÅSaksbehandle: Boolean,
     ansattInfoService: AnsattInfoService,
+    påklagetVedtakType: PåklagetVedtakType,
 ) =
     KlagebehandlingNayGrunnlagDto(
         vurdering = vurdering.tilDto(ansattInfoService),
-        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle
+        harTilgangTilÅSaksbehandle = harTilgangTilÅSaksbehandle,
+        påklagetVedtakType = påklagetVedtakType,
     )

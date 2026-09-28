@@ -50,8 +50,17 @@ class KravSteg(
      * For "resten": Alle søknader er ikke et eget "krav". Opphør/stans og gjeninntreden kan trolig holdes unna for backfill
      */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.KravSteg)
-        ) {
+        // Migreringssaker har egne krav, kunne vært i den normale switch-casen, men vi ønsker at disse alltid
+        // skal gå gjennom selv om feature-toggelen under er skrudd av så lenge krav-steget er skrudd på
+        // så midlertidig legges koden fort sette her for å være utenfor feature-toggelen.
+        if(kontekst.erMigreringFraArena()) {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon = Definisjon.VURDER_KRAV,
+                vedtakBehøverVurdering = { vedtakBehøverVurderingForMigrering(kontekst) },
+                erTilstrekkeligVurdert = { erTilstrekkeligVurdertForMigrering(kontekst) },
+                tilbakestillGrunnlag = { },
+                kontekst = kontekst
+            )
             return Fullført
         }
 
@@ -70,15 +79,6 @@ class KravSteg(
             when (kontekst.behandlingType) {
                 TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                     when (kontekst.vurderingType) {
-                        VurderingType.MIGERING_FRA_ARENA -> {
-                            avklaringsbehovService.oppdaterAvklaringsbehov(
-                                definisjon = Definisjon.VURDER_KRAV,
-                                vedtakBehøverVurdering = { vedtakBehøverVurderingForMigrering(kontekst) },
-                                erTilstrekkeligVurdert = { erTilstrekkeligVurdertForMigrering(kontekst) },
-                                tilbakestillGrunnlag = { },
-                                kontekst = kontekst
-                            )
-                        }
                         VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                             vurderAutomatiskHvisMulig(kontekst)
 
@@ -91,6 +91,7 @@ class KravSteg(
                             )
                         }
 
+                        VurderingType.MIGERING_FRA_ARENA,
                         VurderingType.OVERGANG_UFORE_STANS,
                         VurderingType.MELDEKORT,
                         VurderingType.UTVID_VEDTAKSLENGDE,
@@ -180,15 +181,8 @@ class KravSteg(
 
         val søknaderMottattIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
-
-        // Legeerklæring kan i noen tilfeller være første dokument på en første behandlingen.
-        val legeerklæringerMottattIBehandling = if (kontekst.forrigeBehandlingId == null) {
-            mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.LEGEERKLÆRING)
-        } else {
-            emptyList()
-        }
-
-        val alleDokumenter = (søknaderMottattIBehandling + legeerklæringerMottattIBehandling)
+        
+        val alleDokumenter = (søknaderMottattIBehandling)
             .sortedBy { it.mottattTidspunkt }
 
         // Dersom saksbehandler har overstyrt muligRettFra i denne behandlingen, bevarer vi overstyringen
@@ -222,8 +216,7 @@ class KravSteg(
                 || (gjeldendeKravFraForrige == null && index == 0)
             when {
                 erNyttKrav -> nyttKrav(kontekst.behandlingId, dokument, gjeldendeOverstyring)
-                dokument.type == InnsendingType.SØKNAD -> tilleggsopplysning(kontekst.behandlingId, dokument)
-                else -> null // Legeerklæring som ikke er eldste dokument – ingen separat vurdering
+                else -> tilleggsopplysning(kontekst.behandlingId, dokument)
             }
         }
 

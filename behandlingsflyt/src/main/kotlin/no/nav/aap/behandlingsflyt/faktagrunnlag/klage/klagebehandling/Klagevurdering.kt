@@ -1,7 +1,21 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+
+internal fun validerInnstillingForPåklagetVedtak(
+    innstilling: KlageInnstilling,
+    påklagetVedtakType: PåklagetVedtakType,
+) {
+    if (påklagetVedtakType == PåklagetVedtakType.TILBAKEKREVING &&
+        innstilling in setOf(KlageInnstilling.OMGJØR, KlageInnstilling.DELVIS_OMGJØR)
+    ) {
+        throw UgyldigForespørselException(
+            "Omgjøring støttes ikke for tilbakekreving. Opprett manuell sak i Porten."
+        )
+    }
+}
 
 interface Klagevurdering {
     val innstilling: KlageInnstilling

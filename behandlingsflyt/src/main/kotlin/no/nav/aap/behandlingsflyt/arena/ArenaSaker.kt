@@ -1,6 +1,14 @@
-package no.nav.aap.behandlingsflyt.hendelse.datadeling
+package no.nav.aap.behandlingsflyt.arena
 
 import java.time.LocalDate
+
+data class ArenaSakerRequest(
+    val personidentifikator: String
+)
+
+data class ArenaSakerResponse(
+    val saker: List<ArenaSakOppsummering>
+)
 
 data class ArenaSakOppsummering(
     val sakId: String,
@@ -12,12 +20,4 @@ data class ArenaSakOppsummering(
     val sakstype: String?,
     val regDato: LocalDate,
     val avsluttetDato: LocalDate?,
-)
-
-data class ArenaSakerRequest(
-    val personidentifikator: String,
-)
-
-data class ArenaSakerResponse(
-    val saker: List<ArenaSakOppsummering>,
 )

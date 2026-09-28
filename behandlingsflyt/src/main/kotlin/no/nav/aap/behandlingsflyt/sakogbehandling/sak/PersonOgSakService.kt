@@ -1,8 +1,7 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakOppsummering
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
+import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -13,7 +12,7 @@ import java.time.LocalDateTime
 
 class PersonOgSakService(
     private val pdlGateway: IdentGateway,
-    private val apiInternGateway: ApiInternGateway,
+    private val arenaOppslagGateway: ArenaOppslagGateway,
     private val personRepository: PersonRepository,
     private val sakRepository: SakRepository,
     private val arenaMigreringRepository: ArenaMigreringRepository,
@@ -23,7 +22,7 @@ class PersonOgSakService(
         repositoryProvider: RepositoryProvider
     ) : this(
         gatewayProvider.provide<IdentGateway>(),
-        gatewayProvider.provide<ApiInternGateway>(),
+        gatewayProvider.provide<ArenaOppslagGateway>(),
         repositoryProvider.provide<PersonRepository>(),
         repositoryProvider.provide<SakRepository>(),
         repositoryProvider.provide<ArenaMigreringRepository>()
@@ -56,17 +55,20 @@ class PersonOgSakService(
 
     private fun rapporterHvisOppretterPersonSomFinnesIArena(identliste: List<Ident>) {
         val personFinnesIKelvin = personRepository.finn(identliste) != null
-        val arenaStatus: ArenaStatusResponse? = apiInternGateway.hentArenaStatus(
-            identliste.map { it.identifikator }.toSet()
-        ).getOrNull()
-        val personFinnesIArena = arenaStatus?.harArenaHistorikk == true
+        val harArenaHistorikk = runCatching {
+            arenaOppslagGateway.hentHarHistorikk(identliste.first { it.aktivIdent }).harHistorikk
+        }.onFailure {
+            log.warn("Kall mot ArenaOppslag for å hente historikk i Arena feilet", it)
+        }
+
+        val personFinnesIArena = harArenaHistorikk.getOrNull() == true
         if (!personFinnesIKelvin && personFinnesIArena) {
             log.info("Oppretter person som har historikk i AAP-Arena i Kelvin")
         }
     }
 
     fun finnArenasakForBruker(ident: Ident, saksnummerArena: String): ArenaSakOppsummering? {
-        val saker = apiInternGateway.hentSakerForPerson(ident.identifikator).saker
+        val saker = arenaOppslagGateway.hentSakerForPerson(ident).saker
         return saker.find { "${it.aar}-${it.lopenummer}" == saksnummerArena }
     }
 

@@ -28,8 +28,9 @@ class BarnMedBarnetilleggTest {
     @Test
     fun `barn med ident får riktig gradert beløp for hele perioden når periodene er like`() {
         val periode = Periode(1 januar 2024, 31 januar 2024)
+        val sats = Beløp(38)
         val tilkjentYtelse = listOf(
-            TilkjentYtelsePeriode(periode, tilkjent(gradering = Prosent.`50_PROSENT`, barnetilleggsats = Beløp(38)))
+            TilkjentYtelsePeriode(periode, tilkjent(gradering = Prosent.`50_PROSENT`, barnetilleggsats = sats))
         )
         val grunnlag = BarnetilleggGrunnlag(listOf(BarnetilleggPeriode(periode, setOf(barnMedIdent))))
 
@@ -42,7 +43,12 @@ class BarnMedBarnetilleggTest {
                     BarnMedBarnetillegg(
                         ident = "12345678901",
                         perioderMedBarnetillegg = listOf(
-                            PeriodeMedBeløp(periode, Beløp(38).multiplisert(Prosent.`50_PROSENT`))
+                            PeriodeMedBeløp(
+                                periode,
+                                sats.multiplisert(Prosent.`50_PROSENT`),
+                                sats = sats,
+                                uredusertBeløp = sats
+                            )
                         )
                     )
                 )
@@ -65,6 +71,7 @@ class BarnMedBarnetilleggTest {
 
         val resultat = utledBarnMedBarnetillegg(tilkjentYtelse, grunnlag)
 
+        val sats = Beløp(38)
         assertThat(resultat)
             .usingRecursiveComparison()
             .ignoringCollectionOrder()
@@ -73,12 +80,23 @@ class BarnMedBarnetilleggTest {
                     BarnMedBarnetillegg(
                         ident = "12345678901",
                         perioderMedBarnetillegg = listOf(
-                            PeriodeMedBeløp(januarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`)),
-                            PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`50_PROSENT`)),
-                        )
+                            PeriodeMedBeløp(
+                                januarPeriode,
+                                sats,
+                                sats = sats,
+                                uredusertBeløp = sats
+                            ),
+                            PeriodeMedBeløp(
+                                februarPeriode,
+                                sats.multiplisert(Prosent.`50_PROSENT`),
+                                sats = sats,
+                                uredusertBeløp = sats,
+                            ),
+                        ),
                     )
                 )
             )
+
     }
 
     @Test
@@ -105,20 +123,73 @@ class BarnMedBarnetilleggTest {
             .ignoringCollectionOrder()
             .isEqualTo(
                 listOf(
-                    PeriodeMedBeløp(januarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`)),
-                    PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`)),
+                    PeriodeMedBeløp(
+                        januarPeriode,
+                        Beløp(38).multiplisert(Prosent.`100_PROSENT`),
+                        sats = Beløp(38),
+                        uredusertBeløp = Beløp(38)
+                    ),
+                    PeriodeMedBeløp(
+                        februarPeriode,
+                        Beløp(38).multiplisert(Prosent.`100_PROSENT`),
+                        sats = Beløp(38),
+                        uredusertBeløp = Beløp(38)
+                    ),
                 )
             )
 
         val utenIdent = resultat.single { it.ident == null }
         assertThat(utenIdent.perioderMedBarnetillegg)
             .usingRecursiveComparison()
-            .isEqualTo(listOf(PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`))))
+            .isEqualTo(
+                listOf(
+                    PeriodeMedBeløp(
+                        februarPeriode,
+                        Beløp(38).multiplisert(Prosent.`100_PROSENT`),
+                        sats = Beløp(38),
+                        uredusertBeløp = Beløp(38)
+                    )
+                )
+            )
+    }
+
+    @Test
+    fun `periode uten utbetaling fra tilkjent ytelse gir ikke barnetilleggperiode`() {
+        val januarPeriode = Periode(1 januar 2024, 31 januar 2024)
+        val februarPeriode = Periode(1 februar 2024, 29 februar 2024)
+        val heleRettighetsperioden = Periode(1 januar 2024, 29 februar 2024)
+
+        val tilkjentYtelse = listOf(
+            TilkjentYtelsePeriode(januarPeriode, tilkjent(redusertDagsats = Beløp(0))),
+            TilkjentYtelsePeriode(februarPeriode, tilkjent(redusertDagsats = Beløp(100))),
+        )
+        val grunnlag = BarnetilleggGrunnlag(listOf(BarnetilleggPeriode(heleRettighetsperioden, setOf(barnMedIdent))))
+
+        val resultat = utledBarnMedBarnetillegg(tilkjentYtelse, grunnlag)
+
+        assertThat(resultat)
+            .usingRecursiveComparison()
+            .isEqualTo(
+                listOf(
+                    BarnMedBarnetillegg(
+                        ident = "12345678901",
+                        perioderMedBarnetillegg = listOf(
+                            PeriodeMedBeløp(
+                                februarPeriode,
+                                Beløp(38).multiplisert(Prosent.`100_PROSENT`),
+                                sats = Beløp(38),
+                                uredusertBeløp = Beløp(38)
+                            )
+                        )
+                    )
+                )
+            )
     }
 
     private fun tilkjent(
         gradering: Prosent = Prosent.`100_PROSENT`,
         barnetilleggsats: Beløp = Beløp(38),
+        redusertDagsats: Beløp = Beløp(100),
     ) = Tilkjent(
         dagsats = Beløp(100),
         gradering = gradering,
@@ -138,7 +209,7 @@ class BarnMedBarnetilleggTest {
         barnetillegg = barnetilleggsats,
         utbetalingsdato = 1 januar 2024,
         minsteSats = Minstesats.IKKE_MINSTESATS,
-        redusertDagsats = Beløp(100)
+        redusertDagsats = redusertDagsats
     )
 }
 

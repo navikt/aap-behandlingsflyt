@@ -117,7 +117,7 @@ class SykdomsInformasjonskravTest {
     }
 
     @Test
-    fun `er konsistent hvis ikke ssl og ssl ikke vesentlig del`() {
+    fun `er konsistent hvis ikke sykdom, skade, lyte og sykdom, skade, lyte ikke vesentlig del`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
             harSkadeSykdomEllerLyte = false,
@@ -138,7 +138,7 @@ class SykdomsInformasjonskravTest {
     }
 
     @Test
-    fun `er konsistent hvis ssl og ssl ikke vesentlig del`() {
+    fun `er konsistent hvis sykdom, skade, lyte og sykdom, skade, lyte ikke vesentlig del`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
             harSkadeSykdomEllerLyte = true,
@@ -159,7 +159,7 @@ class SykdomsInformasjonskravTest {
     }
 
     @Test
-    fun `er konsistent hvis ssl og ssl vesentlig del`() {
+    fun `er konsistent hvis sykdom, skade, lyte og sykdom, skade, lyte vesentlig del`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
             harSkadeSykdomEllerLyte = true,
@@ -180,7 +180,7 @@ class SykdomsInformasjonskravTest {
     }
 
     @Test
-    fun `er ikke konsistend hvis ikke ssl og ssl vesentlig del`() {
+    fun `er konsistens hvis ikke sykdom, skade, lyte og sykdom, skade, lyte vesentlig del`() {
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
             harSkadeSykdomEllerLyte = false,
@@ -197,6 +197,6 @@ class SykdomsInformasjonskravTest {
             diagnose = null
         )
 
-        assertThat(vurdering.erKonsistentForSykdom(false)).isFalse
+        assertThat(vurdering.erKonsistentForSykdom(false)).isTrue
     }
 }

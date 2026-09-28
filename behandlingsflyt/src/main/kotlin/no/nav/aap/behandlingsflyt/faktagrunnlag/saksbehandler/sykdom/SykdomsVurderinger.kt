@@ -5,8 +5,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
-import org.slf4j.LoggerFactory
-
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -28,34 +26,8 @@ data class Sykdomsvurdering(
 ) : PeriodisertVurdering {
     override val fom: LocalDate = vurderingenGjelderFra
     override val tom: LocalDate? = vurderingenGjelderTil
-    private val log = LoggerFactory.getLogger(javaClass)
 
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
-        if (!harSkadeSykdomEllerLyte && erSkadeSykdomEllerLyteVesentligdel == true) {
-            return false
-        }
-
-        if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
-            return false
-        }
-
-        if (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI
-            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
-        ) {
-            return false
-        }
-
-        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
-            && !erNedsettelseIArbeidsevneMerEnnHalvparten
-            && harYrkesskadeRegistrert
-            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
-        ) {
-            return false
-        }
-        return true
-    }
-
-    fun erKonsistentForSykdomVisAlleSykdomssteg(harYrkesskadeRegistrert: Boolean): Boolean {
 
         if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
             return false
@@ -117,6 +89,13 @@ data class Sykdomsvurdering(
                 && harNedsattArbeidsevne == ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && (erNedsettelseIArbeidsevneMerEnnHalvparten == true || (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
+    }
+
+    fun erIkkeOppfylt(): Boolean {
+        return !this.erOppfyltOrdinærMedUtlededeFelter()
+                && !this.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()
+                && !this.skalVurderesForSykepengeerstatning()
+                && !this.potensieltOppfyltStudent()
     }
 
     companion object {

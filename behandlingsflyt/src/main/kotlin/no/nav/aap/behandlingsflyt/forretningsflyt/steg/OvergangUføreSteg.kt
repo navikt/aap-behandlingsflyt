@@ -117,6 +117,8 @@ class OvergangUføreSteg private constructor(
     }
 
     private fun erAutomatiskOpphør11_18(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (kontekst.vurderingType != VurderingType.OVERGANG_UFORE_STANS) return false
+
         val uførevedtak = hentUførevedtak(kontekst.sakId) ?: return false
         return uførevedtak.resultat == UførevedtakResultat.INNV &&
                 uførevedtak.virkningsdato.isAfter(LocalDate.now())
@@ -203,7 +205,8 @@ class OvergangUføreSteg private constructor(
             sykdomsvurderinger
         ) { _, utfall, sykdomsvurering ->
             when (utfall) {
-                TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
+                TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     utfall.rettighetstype == null && sykdomsvurering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
                 }

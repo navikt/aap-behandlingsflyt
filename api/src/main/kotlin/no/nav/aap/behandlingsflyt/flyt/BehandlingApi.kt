@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -29,7 +28,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -51,19 +49,6 @@ fun NormalOpenAPIRoute.behandlingApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    fun hentArenaStatus(sakId: SakId): ArenaStatusDTO? {
-        val identer = dataSource.transaction(readOnly = true) { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            sakRepository.hent(sakId).person.identer()
-        }.map { it.identifikator }.toSet()
-        val apiInternGateway = gatewayProvider.provide(ApiInternGateway::class)
-
-        val arenaStatus = apiInternGateway.hentArenaStatus(identer)
-            .getOrNull()?.let { ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk) }
-        return arenaStatus
-    }
-
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}") {
             authorizedGet<BehandlingReferanse, DetaljertBehandlingDTO>(
@@ -151,7 +136,6 @@ fun NormalOpenAPIRoute.behandlingApi(
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
                         vedtaksdato = VedtakService(repositoryProvider, gatewayProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
                         vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker,
-                        arenaStatus = hentArenaStatus(behandling.sakId)
                     )
                 }
                 respond(dto)
@@ -235,7 +219,7 @@ private fun vilkårResultat(
 }
 
 private fun finnKravMottatt(
-    repositoryProvider: RepositoryProvider,
+    repositoryProvider: RepositoryProvider, 
     behandling: Behandling
 ): LocalDate? {
     if (behandling.typeBehandling() != TypeBehandling.Klage) return null

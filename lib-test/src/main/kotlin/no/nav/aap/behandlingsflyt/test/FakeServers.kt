@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.test
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.test.fakes.AaregFake
 import no.nav.aap.behandlingsflyt.test.fakes.AinntektFake
+import no.nav.aap.behandlingsflyt.test.fakes.ArenaoppslagFake
 import no.nav.aap.behandlingsflyt.test.fakes.BrevFake
 import no.nav.aap.behandlingsflyt.test.fakes.DagpengerFake
 import no.nav.aap.behandlingsflyt.test.fakes.DatadelingFake
@@ -38,6 +39,7 @@ import no.nav.aap.behandlingsflyt.test.fakes.YrkesskadeFake
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import org.slf4j.LoggerFactory
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -62,6 +64,7 @@ object FakeServers : AutoCloseable {
     private val aareg = AaregFake()
     private val ereg = EregFake()
     private val datadeling = DatadelingFake()
+    private val arenaoppslag = ArenaoppslagFake()
     private val utbetal = UtbetalFake()
     private val meldekort = MeldekortFake()
     private val nom = NomFake()
@@ -88,7 +91,8 @@ object FakeServers : AutoCloseable {
     private val allFakes: List<FakeServer> = listOf(
         texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
-        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen, pdfGenerator
+        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen, pdfGenerator,
+        arenaoppslag
     )
 
     private lateinit var fakePersoner: TestPersonService
@@ -199,6 +203,10 @@ object FakeServers : AutoCloseable {
         System.setProperty("INTEGRASJON_DATADELING_URL", "http://localhost:${datadeling.port()}")
         System.setProperty("INTEGRASJON_DATADELING_SCOPE", "scope")
 
+        // Arenaoppslag
+        System.setProperty("INTEGRASJON_ARENAOPPSLAG_URL", "http://localhost:${arenaoppslag.port()}")
+        System.setProperty("INTEGRASJON_ARENAOPPSLAG_SCOPE", "scope")
+
         // Utbetal
         System.setProperty("INTEGRASJON_UTBETAL_URL", "http://localhost:${utbetal.port()}")
         System.setProperty("INTEGRASJON_UTBETAL_SCOPE", "utbetal")
@@ -224,7 +232,13 @@ object FakeServers : AutoCloseable {
         System.setProperty("INTEGRASJON_TILGANG_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_BREV_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_POSTMOTTAK_AZP", java.util.UUID.randomUUID().toString())
+
+        // Også hardkodet i aap-postmottak-backend
+        System.setProperty(
+            "INTEGRASJON_POSTMOTTAK_AZP",
+            UUID.fromString("c62cff74-505a-4858-ac15-16061c2e8290").toString()
+        )
+
         System.setProperty("INTEGRASJON_SAKSBEHANDLING_AZP", java.util.UUID.randomUUID().toString())
         System.setProperty("INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP", java.util.UUID.randomUUID().toString())
 

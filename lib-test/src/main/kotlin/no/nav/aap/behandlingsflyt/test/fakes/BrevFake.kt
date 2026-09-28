@@ -173,11 +173,17 @@ class BrevFake : FakeServer() {
                     get {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
 
-                        call.respond(
-                            synchronized(mutex) {
-                                brevStore.values.find { it.referanse == ref }!!
-                            }
-                        )
+                        val brevbestilling = synchronized(mutex) {
+                            brevStore.values.find { it.referanse == ref }
+                        }
+                        if (brevbestilling == null) {
+                            // brevStore er in-memory og tømmes ved restart av appen lokalt. Har man en
+                            // behandling/sak fra før siste restart kan referansen i databasen peke på en
+                            // bestilling som ikke lenger finnes her. Svar 404 i stedet for å kaste NPE.
+                            call.respond(HttpStatusCode.NotFound)
+                        } else {
+                            call.respond(brevbestilling)
+                        }
                     }
                     post("/forhandsvis") {
                         call.respond(

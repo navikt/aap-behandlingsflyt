@@ -57,7 +57,7 @@ class RettighetstypeStegTest {
 
         val forventetStartDatoOrdinær = rettighetsperiode.fom
         val forventetSluttdatoOrdinær =
-            forventetStartDatoOrdinær.plusHverdager(kvoteService.gjeldendeKvoter().ordinærkvote).minusDays(1)
+            forventetStartDatoOrdinær.plusHverdager(kvoteService.gjeldendeKvoter(behandlingId).ordinærkvote).minusDays(1)
 
         assertTidslinje(
             rettighetstypeRepository.hent(behandlingId).rettighetstypeTidslinje,

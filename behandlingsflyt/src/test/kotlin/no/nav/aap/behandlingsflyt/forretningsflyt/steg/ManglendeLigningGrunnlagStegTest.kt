@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
@@ -128,7 +129,7 @@ class ManglendeLigningGrunnlagStegTest {
             FakeTidligereVurderinger(
                 Tidslinje(
                     sak.rettighetsperiode,
-                    TidligereVurderinger.UunngåeligAvslag
+                    TidligereVurderinger.UunngåeligAvslag(Vilkårtype.GRUNNLAGET)
                 )
             ).apply { avslagEllerIngenBehandlingsgrunnlag = true }
         ).utfør(flytKontekst)

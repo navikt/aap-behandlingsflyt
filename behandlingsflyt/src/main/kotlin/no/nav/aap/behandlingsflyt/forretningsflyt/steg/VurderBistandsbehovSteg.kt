@@ -1,25 +1,30 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
+import no.nav.aap.behandlingsflyt.arena.erOrdinærAap
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.MigrerVurderingFraArena
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -29,23 +34,32 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderBistandsbehovSteg(
     private val bistandRepository: BistandRepository,
     private val sykdomsRepository: SykdomRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårService: VilkårService,
     private val overgangUføreRepository: OvergangUføreRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val arenaMigreringService: ArenaMigreringService,
     private val unleashGateway: UnleashGateway
-) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder, MigrerVurderingFraArena {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         bistandRepository = repositoryProvider.provide(),
         sykdomsRepository = repositoryProvider.provide(),
-        vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
         overgangUføreRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.erMigreringFraArena() && unleashGateway.isEnabled(BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk)) {
+            val harRelevantePerioderForMigrering = nårVurderingErRelevant(kontekst).any { it }
+            if (harRelevantePerioderForMigrering) {
+                migrerVurderingFraArena(kontekst)
+            }
+        }
+
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov(kontekst),
@@ -70,6 +84,7 @@ class VurderBistandsbehovSteg(
                     bistandRepository.lagre(kontekst.behandlingId, forrigeVurderinger)
                 }
             },
+            gjeldendeVurderinger = { hentGjeldendeVurderinger(kontekst) },
             kontekst = kontekst
         )
 
@@ -93,6 +108,11 @@ class VurderBistandsbehovSteg(
         return Fullført
     }
 
+    private fun hentGjeldendeVurderinger(kontekst: FlytKontekstMedPerioder): Tidslinje<PeriodisertVurdering> {
+        return bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje()
+            ?.mapValue { it as PeriodisertVurdering }.orEmpty()
+    }
+
     private fun tvingerAvklaringsbehov(kontekst: FlytKontekstMedPerioder): Set<Vurderingsbehov> {
         val forrigeOvergangUføreGrunnlag = kontekst.forrigeBehandlingId?.let {
             overgangUføreRepository.hentHvisEksisterer(it)
@@ -108,15 +128,12 @@ class VurderBistandsbehovSteg(
 
     private fun vurderBistandsvilkår(kontekst: FlytKontekstMedPerioder) {
         /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
 
         val grunnlag = BistandFaktagrunnlag(
             kontekst.rettighetsperiode.tom,
             bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
         )
-        Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        vilkårService.vurderVilkår(kontekst.behandlingId, grunnlag, Bistandsvilkåret)
     }
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
@@ -132,7 +149,7 @@ class VurderBistandsbehovSteg(
             when (behandlingsutfall) {
                 null -> false
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     when (behandlingsutfall.rettighetstype) {
                         null -> sykdomsvurdering?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
@@ -143,6 +160,39 @@ class VurderBistandsbehovSteg(
         }
     }
 
+    override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
+        require(kontekst.erMigreringFraArena()) {
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
+        }
+
+        val sykdomsvurderingFraArena =
+            arenaMigreringService.hentSykdomsvurdering(kontekst.sakId)
+
+        /**
+         * Kun ordinær AAP støttes for migreringsgruppe 1. Dette vil utvides når andre saker skal migreres
+         * på senere tidspunkt.
+         */
+        require(sykdomsvurderingFraArena.erOrdinærAap()) {
+            "Kan ikke opprette bistandsvurdering for sak ${kontekst.sakId} fra Arena fordi ikke alle vilkår for ordinær AAP er oppfylt"
+        }
+
+        /**
+         * Lagrer sporing av migreringsdata for sykdomsvurdering fra Arena. Dette er nyttig for å kunne spore
+         * hva som var utgangspunktet for vurderingen som opprettes i Kelvin.
+         */
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, sykdomsvurderingFraArena)
+
+        val vurdering = ArenaMigreringMapper.mapOppfyltBistandsvurdering(
+            behandlingId = kontekst.behandlingId,
+            fom = kontekst.rettighetsperiode.fom,
+        )
+
+        require(vurdering.erBehovForBistand()) {
+            "Kan ikke opprette bistandsvurdering for sak ${kontekst.sakId} fra Arena fordi vurderingen ikke er oppfylt"
+        }
+
+        bistandRepository.lagre(kontekst.behandlingId, listOf(vurdering))
+    }
 
     override val stegType = type()
 

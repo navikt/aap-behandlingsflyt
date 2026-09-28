@@ -31,6 +31,6 @@ data class VurderingerForSamordning(
 data class SamordningVurderingData(
     val ytelseType: Ytelse,
     val periode: Periode,
-    val gradering: Int?,
+    val gradering: Int,
     val manuell: Boolean? = null
 )

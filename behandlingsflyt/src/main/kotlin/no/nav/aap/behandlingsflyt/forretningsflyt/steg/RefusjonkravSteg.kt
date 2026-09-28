@@ -14,6 +14,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -23,6 +25,7 @@ class RefusjonkravSteg private constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val behandlingRepository: BehandlingRepository,
     private val behandlingService: BehandlingService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         refusjonkravRepository = repositoryProvider.provide(),
@@ -30,6 +33,7 @@ class RefusjonkravSteg private constructor(
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -42,15 +46,24 @@ class RefusjonkravSteg private constructor(
             vedtakBehøverVurdering = {
                 when (behandlingstype) {
                     TypeBehandling.Førstegangsbehandling -> {
-                       when {
-                           tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                           kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
-                           else -> {
-                               kontekst.forrigeBehandlingId?.let {
-                                   refusjonkravRepository.hentHvisEksisterer(it).isNullOrEmpty()
-                               } ?: true
-                           }
-                       }
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
+                            else -> {
+                                kontekst.forrigeBehandlingId?.let {
+                                    refusjonkravRepository.hentHvisEksisterer(it).isNullOrEmpty()
+                                } ?: true
+                            }
+                        }
+                    }
+
+                    TypeBehandling.Revurdering -> {
+                        when {
+                            !unleashGateway.isEnabled(BehandlingsflytFeature.KanVurdereRefusjonIRevurdering) -> false
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
+                            else -> false
+                        }
                     }
 
                     else -> false

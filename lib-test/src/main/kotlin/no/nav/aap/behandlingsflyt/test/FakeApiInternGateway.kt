@@ -1,14 +1,11 @@
 package no.nav.aap.behandlingsflyt.test
 
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakOppsummering
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.BarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
@@ -24,7 +21,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.Collections
+import java.util.*
 
 class FakeApiInternGateway : ApiInternGateway {
     companion object : Factory<ApiInternGateway> {
@@ -72,33 +69,11 @@ class FakeApiInternGateway : ApiInternGateway {
         // No-op
     }
 
-    override fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse> {
-        return Result.success(ArenaStatusResponse(false))
-    }
-
     override fun oppdaterIdenter(
         saksnummer: Saksnummer,
         identer: List<Ident>
     ) {
         // No-op
-    }
-
-    override fun hentSakerForPerson(personidentifikator: String): ArenaSakerResponse {
-        return ArenaSakerResponse(
-            saker = listOf(
-                ArenaSakOppsummering(
-                    sakId = "2016-123456",
-                    lopenummer = 123456,
-                    aar = 2016,
-                    antallVedtak = 1,
-                    statuskode = "AKTIV",
-                    statusnavn = "Aktiv",
-                    sakstype = null,
-                    regDato = LocalDate.of(2016, 1, 1),
-                    avsluttetDato = null,
-                )
-            )
-        )
     }
 
 }

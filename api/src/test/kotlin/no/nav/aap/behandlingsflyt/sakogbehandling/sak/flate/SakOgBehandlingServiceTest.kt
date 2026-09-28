@@ -13,11 +13,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
-import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -30,7 +28,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class FinnSaksinfoTest {
+class SakOgBehandlingServiceTest {
 
     @Test
     fun `person finnes ikke - returnerer tom liste`() {

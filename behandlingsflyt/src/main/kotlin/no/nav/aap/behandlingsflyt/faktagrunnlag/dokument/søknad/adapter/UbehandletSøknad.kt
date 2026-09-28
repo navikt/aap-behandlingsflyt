@@ -76,7 +76,7 @@ data class UbehandletSøknad(
             val erPeriode = ferie?.ferieType == FerieType.PERIODE && ferie.fraDato != null && ferie.tilDato != null
             return SykepengerOgFerieSøknad(
                 mottarSykepenger = sykepenger == JaNei.Ja,
-                feriePerioder = if (erPeriode) listOf(Periode(ferie!!.fraDato!!, ferie.tilDato!!)) else emptyList(),
+                feriePerioder = if (erPeriode) listOf(Periode(ferie.fraDato!!, ferie.tilDato!!)) else emptyList(),
                 ferieDager = if (!erPeriode) ferie?.antallDager?.toIntOrNull() else null
             )
         }

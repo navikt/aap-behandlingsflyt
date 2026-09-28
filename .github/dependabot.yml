@@ -11,7 +11,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     commit-message:
-      prefix: "AAP-2194"
+      prefix: "AAP-BAU"
     groups:
         codeql:
           patterns:
@@ -22,7 +22,7 @@ updates:
   - package-ecosystem: gradle
     directory: /
     commit-message:
-      prefix: "AAP-2194"
+      prefix: "AAP-BAU"
     schedule:
       interval: "cron"
       cronjob: "0 6 1,15 * *" # 1 og 15 hver måned
@@ -49,7 +49,7 @@ updates:
   - package-ecosystem: docker
     directory: /
     commit-message:
-      prefix: "AAP-2194"
+      prefix: "AAP-BAU"
     schedule:
       interval: "cron"
       cronjob: "0 6 1,15 * *" # 1 og 15 hver måned

@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.Inntektsbo
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVurderingService
 import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -31,7 +31,7 @@ class InntektsbortfallSteg private constructor(
     private val personopplysningRepository: PersonopplysningRepository,
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vilkårService: VilkårService,
     private val inntektsbortfallRepository: InntektsbortfallRepository,
     private val beregningService: BeregningService
 ) : BehandlingSteg {
@@ -107,21 +107,13 @@ class InntektsbortfallSteg private constructor(
         val manuellVurdering = inntektsbortfallRepository.hentHvisEksisterer(kontekst.behandlingId)
         val kanBehandlesAutomatisk = kanBehandlesAutomatisk(kontekst)
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val faktagrunnlag = InntektsbortfallGrunnlag(
+            kanBehandlesAutomatisk,
+            manuellVurdering,
+            kontekst.rettighetsperiode
+        )
 
-        InntektsbortfallVilkår(vilkårsresultat, kontekst.rettighetsperiode).apply {
-            if (kanBehandlesAutomatisk == null) {
-                settTilIkkeVurdert()
-            } else {
-                vurder(
-                    InntektsbortfallGrunnlag(
-                        kanBehandlesAutomatisk,
-                        manuellVurdering
-                    )
-                )
-            }
-        }
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        vilkårService.vurderVilkår(kontekst.behandlingId, faktagrunnlag, InntektsbortfallVilkår)
     }
 
 
@@ -136,7 +128,7 @@ class InntektsbortfallSteg private constructor(
                 personopplysningRepository = repositoryProvider.provide(),
                 manuellInntektGrunnlagRepository = repositoryProvider.provide(),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
-                vilkårsresultatRepository = repositoryProvider.provide(),
+                vilkårService = VilkårService(repositoryProvider),
                 inntektsbortfallRepository = repositoryProvider.provide(),
                 beregningService = BeregningService(repositoryProvider),
             )

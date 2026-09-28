@@ -41,6 +41,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -71,7 +72,7 @@ class BackfillKravServiceTest {
         val søknadsdato = 10 januar 2024
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
         val krav = InMemoryKravRepository.hent(behandling.id)
         val relevantKrav = assertHarNøyaktigEttRelevantKrav(krav.vurderinger)
@@ -84,7 +85,7 @@ class BackfillKravServiceTest {
     fun `påfølgende søknader gir Tilleggsopplysning`() {
         val (sak, behandling) = opprettSakMedToSøknader()
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).gjeldendeVurderinger()
         assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
@@ -98,8 +99,18 @@ class BackfillKravServiceTest {
 
         leggTilSøknad(førstegangsbehandling, søknadsdato)
 
-        service.backfillBehandling(sak, førstegangsbehandling, erNyesteBehandling = false)
-        service.backfillBehandling(sak, revurdering, erNyesteBehandling = true)
+        service.backfillBehandling(
+            sak,
+            listOf(førstegangsbehandling, revurdering),
+            førstegangsbehandling,
+            erNyesteBehandling = false
+        )
+        service.backfillBehandling(
+            sak,
+            listOf(førstegangsbehandling, revurdering),
+            revurdering,
+            erNyesteBehandling = true
+        )
 
         val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
         assertHarNøyaktigEttRelevantKrav(kravRevurdering.vurderinger)
@@ -110,9 +121,9 @@ class BackfillKravServiceTest {
         val søknadsdato = 10 januar 2024
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
-        val resultat = service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        val resultat = service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
         assertThat(resultat).isEqualTo(BackfillBehandlingResultat.AlleredeBackfilled)
     }
@@ -122,18 +133,14 @@ class BackfillKravServiceTest {
         val søknadsdato = 10 januar 2024
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
         val kravFørst = InMemoryKravRepository.hent(behandling.id).gjeldendeVurderinger()
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
         val kravAndre = InMemoryKravRepository.hent(behandling.id).gjeldendeVurderinger()
 
         assertThat(kravFørst.map { it.referanse }).containsExactlyInAnyOrderElementsOf(kravAndre.map { it.referanse })
     }
-
-    // -------------------------------------------------------------------------
-    // Trukket søknad
-    // -------------------------------------------------------------------------
 
     @Test
     fun `trukket-søknad-sak hoppes over`() {
@@ -151,10 +158,6 @@ class BackfillKravServiceTest {
         assertThat(erTrukket).isTrue()
     }
 
-    // -------------------------------------------------------------------------
-    // Rettighetsperiodevurdering
-    // -------------------------------------------------------------------------
-
     @Test
     fun `rettighetsperiodevurdering med overstyring setter OverstyrMuligRettFra`() {
         val søknadsdato = 10 januar 2024
@@ -162,12 +165,12 @@ class BackfillKravServiceTest {
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato, rettighetsperiodeFom = overstyrtDato)
 
         every { rettighetsperiodeRepository.hentVurdering(behandling.id) } returns
-            lagRettighetsperiodeVurdering(
-                harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
-                startDato = overstyrtDato,
-            )
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
+                    startDato = overstyrtDato,
+                )
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
         val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
         assertThat(krav.overstyrMuligRettFra).isNotNull
@@ -181,12 +184,12 @@ class BackfillKravServiceTest {
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato, rettighetsperiodeFom = overstyrtDato)
 
         every { rettighetsperiodeRepository.hentVurdering(behandling.id) } returns
-            lagRettighetsperiodeVurdering(
-                harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
-                startDato = overstyrtDato,
-            )
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
+                    startDato = overstyrtDato,
+                )
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
         val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
         assertThat(krav.muligRettFra).isEqualTo(overstyrtDato)
@@ -201,18 +204,179 @@ class BackfillKravServiceTest {
             rettighetsperiodeFom = feilRettighetsperiodeFom
         )
 
-        assertThatThrownBy { service.backfillBehandling(sak, behandling, erNyesteBehandling = true) }
+        assertThatThrownBy {
+            service.backfillBehandling(
+                sak,
+                listOf(behandling),
+                behandling,
+                erNyesteBehandling = true
+            )
+        }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("rettighetsperiode.fom")
     }
-    
-    
+
+    @Test
+    fun `rettighetsperiodevurdering på åpen revurdering oppdaterer gjeldende krav fra vedtatt behandling`() {
+        val søknadsdato = 10 januar 2024
+        val overstyrtDato = 1 mars 2023 // tidligere enn søknad – blir ny muligRettFra
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(søknadsdato = søknadsdato)
+
+        leggTilSøknad(førstegangsbehandling, søknadsdato)
+        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, overstyrtDato)
+
+        // Ny åpen revurdering får en rettighetsperiodevurdering med overstyring – ingen ny søknad er mottatt
+        every { rettighetsperiodeRepository.hentVurdering(revurdering.id) } returns
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
+                    startDato = overstyrtDato,
+                )
+
+        // Vedtatt behandling backfilles først – etablerer det opprinnelige relevante kravet
+        service.backfillBehandling(
+            sakMedRettighetsperiode,
+            listOf(førstegangsbehandling, revurdering),
+            førstegangsbehandling,
+            erNyesteBehandling = false
+        )
+        val opprinneligKrav =
+            assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(førstegangsbehandling.id).vurderinger)
+        assertThat(opprinneligKrav.muligRettFra).isEqualTo(søknadsdato)
+
+
+        service.backfillBehandling(
+            sakMedRettighetsperiode,
+            listOf(førstegangsbehandling, revurdering),
+            revurdering,
+            erNyesteBehandling = true
+        )
+
+        val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
+
+        // To krav i grunnlaget – det opprinnelige (vedtatte) og det nye, oppdaterte innslaget med samme referanse
+        assertThat(kravRevurdering.vurderinger).hasSize(2)
+        assertThat(kravRevurdering.vurderinger.map { it.referanse }.toSet())
+            .containsExactly(opprinneligKrav.referanse)
+
+        val vedtatt = kravRevurdering.vurderinger.single { it.vurdertIBehandling == førstegangsbehandling.id }
+        val nytt = kravRevurdering.vurderinger.single { it.vurdertIBehandling == revurdering.id }
+
+        assertThat(vedtatt).isEqualTo(opprinneligKrav)
+
+        val gjeldendeKrav = kravRevurdering.gjeldendeRelevanteKrav().single()
+        assertThat(gjeldendeKrav).isEqualTo(nytt)
+        // OverstyrMuligRettFra skal matche rettighetsperiodevurderingen
+        assertThat(gjeldendeKrav.overstyrMuligRettFra).isNotNull
+        assertThat(gjeldendeKrav.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
+
+        // behandlingId skal være lik den i rettighetsperiodevurderingen (nåværende/åpne behandling)
+        assertThat(gjeldendeKrav.vurdertIBehandling).isEqualTo(revurdering.id)
+    }
+
+    @Test
+    fun `revertert rettighetsperiodevurdering på åpen revurdering oppdaterer gjeldende krav fra vedtatt behandling`() {
+        val søknadsdato = 10 januar 2024
+        val overstyrtDato = 1 mars 2023 // tidligere enn søknad – blir ny muligRettFra
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(søknadsdato = søknadsdato)
+
+        leggTilSøknad(førstegangsbehandling, søknadsdato)
+        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, overstyrtDato)
+
+        // Rettighetsperiodevurdering med overstyring
+        every { rettighetsperiodeRepository.hentVurdering(førstegangsbehandling.id) } returns
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
+                    startDato = overstyrtDato,
+                )
+
+        // Vedtatt behandling backfilles først – etablerer det opprinnelige relevante kravet
+        service.backfillBehandling(
+            sakMedRettighetsperiode,
+            listOf(førstegangsbehandling, revurdering),
+            førstegangsbehandling,
+            erNyesteBehandling = false
+        )
+        val opprinneligKrav =
+            assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(førstegangsbehandling.id).vurderinger)
+        assertThat(opprinneligKrav.muligRettFra).isEqualTo(overstyrtDato)
+
+
+        // Fjerne overstyringen
+        every { rettighetsperiodeRepository.hentVurdering(revurdering.id) } returns
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.Nei,
+                    startDato = null,
+                )
+
+        service.backfillBehandling(
+            lagSakMedRettighetsperiode(sak, søknadsdato),
+            listOf(førstegangsbehandling, revurdering),
+            revurdering,
+            erNyesteBehandling = true
+        )
+
+        assertThat(InMemoryKravRepository.hent(revurdering.id).vurderinger).hasSize(2)
+        assertThat(
+            InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single().overstyrMuligRettFra
+        ).isNull()
+        assertThat(
+            InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single().muligRettFra
+        ).isEqualTo(søknadsdato)
+    }
+
+    @Test
+    fun `uendret rettighetsperiodevurdering mellom behandlinger oppretter ikke ny kravvurdering`() {
+        val søknadsdato = 10 januar 2024
+        val overstyrtDato = 1 mars 2023
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(søknadsdato = søknadsdato)
+
+        leggTilSøknad(førstegangsbehandling, søknadsdato)
+        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, overstyrtDato)
+
+        // Samme rettighetsperiodevurdering (strukturelt lik – data class equals) for begge behandlinger
+        every { rettighetsperiodeRepository.hentVurdering(førstegangsbehandling.id) } returns
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
+                    startDato = overstyrtDato,
+                )
+        every { rettighetsperiodeRepository.hentVurdering(revurdering.id) } returns
+                lagRettighetsperiodeVurdering(
+                    harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
+                    startDato = overstyrtDato,
+                )
+
+        // Vedtatt behandling backfilles først – etablerer det opprinnelige relevante kravet
+        service.backfillBehandling(
+            sakMedRettighetsperiode,
+            listOf(førstegangsbehandling, revurdering),
+            førstegangsbehandling,
+            erNyesteBehandling = false
+        )
+        val opprinneligKrav =
+            assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(førstegangsbehandling.id).vurderinger)
+
+        service.backfillBehandling(
+            sakMedRettighetsperiode,
+            listOf(førstegangsbehandling, revurdering),
+            revurdering,
+            erNyesteBehandling = true
+        )
+
+        val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
+
+        // Rettighetsperiodevurderingen er uendret fra forrige behandling – ingen ny kravvurdering skal opprettes
+        assertThat(kravRevurdering.vurderinger).hasSize(1)
+        val gjeldendeKrav = kravRevurdering.gjeldendeRelevanteKrav().single()
+        assertThat(gjeldendeKrav).isEqualTo(opprinneligKrav)
+        assertThat(gjeldendeKrav.vurdertIBehandling).isEqualTo(førstegangsbehandling.id)
+    }
+
     @Test
     fun `stønadsperiode opprettes for hvert relevant krav`() {
         val søknadsdato = 10 januar 2024
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
         val stønadsperiode = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)
         assertThat(stønadsperiode).isNotNull
@@ -227,10 +391,15 @@ class BackfillKravServiceTest {
         val søknadsdato = 10 januar 2024
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
         val antallFørst = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.size
 
-        service.backfillBehandling(sak, behandling, erNyesteBehandling = true) // second call → AlleredeBackfilled, no change
+        service.backfillBehandling(
+            sak,
+            listOf(behandling),
+            behandling,
+            erNyesteBehandling = true
+        ) // second call → AlleredeBackfilled, no change
 
         val antallAndre = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.size
         assertThat(antallFørst).isEqualTo(antallAndre)
@@ -242,20 +411,33 @@ class BackfillKravServiceTest {
         val tidligereSøknadsdato = 5 januar 2024
         val (sak, førstegangsbehandling, revurdering) =
             opprettInMemorySakOgRevurdering(søknadsdato = senereSøknadsdato)
-        
+
         leggTilSøknad(førstegangsbehandling, senereSøknadsdato)
         leggTilSøknad(revurdering, tidligereSøknadsdato)
-        
-        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(tidligereSøknadsdato, Tid.MAKS)) // Rettighetsperiode ligger på saksnivå
-        
-        service.backfillBehandling(sak, førstegangsbehandling, erNyesteBehandling = false)
-        service.backfillBehandling(sak, revurdering, erNyesteBehandling = true)
+
+        InMemorySakRepository.oppdaterRettighetsperiode(
+            sak.id,
+            Periode(tidligereSøknadsdato, Tid.MAKS)
+        ) // Rettighetsperiode ligger på saksnivå
+
+        service.backfillBehandling(
+            sak,
+            listOf(førstegangsbehandling, revurdering),
+            førstegangsbehandling,
+            erNyesteBehandling = false
+        )
+        service.backfillBehandling(
+            sak,
+            listOf(førstegangsbehandling, revurdering),
+            revurdering,
+            erNyesteBehandling = true
+        )
 
         val kravFørstegangsbehandling = InMemoryKravRepository.hent(førstegangsbehandling.id)
         assertThat(kravFørstegangsbehandling.gjeldendeRelevanteKrav()).hasSize(1)
         val relevantKravFørstegangsbehandling = kravFørstegangsbehandling.gjeldendeRelevanteKrav().single()
         assertThat(relevantKravFørstegangsbehandling.muligRettFra).isEqualTo(senereSøknadsdato)
-        
+
         val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
         val gjeldendeVurderinger = kravRevurdering.gjeldendeVurderinger()
 
@@ -264,48 +446,26 @@ class BackfillKravServiceTest {
 
         assertThat(relevanteKrav).hasSize(1)
         assertThat(relevanteKrav.single().muligRettFra).isEqualTo(tidligereSøknadsdato)
-        assertThat(relevanteKrav.single().referanse).isNotEqualTo(relevantKravFørstegangsbehandling.referanse) 
+        assertThat(relevanteKrav.single().referanse).isNotEqualTo(relevantKravFørstegangsbehandling.referanse)
         assertThat(tilleggsopplysninger).hasSize(1)
         assertThat(tilleggsopplysninger.single().referanse).isEqualTo(relevantKravFørstegangsbehandling.referanse)
     }
-    
+
     @Test
-    fun `behandling uten søknad men med legeerklæring bruker legeerklæringen som krav`() {
+    fun `behandling uten søknad skal kaste feil`() {
         val legeerklæringDato = 15 januar 2024
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = legeerklæringDato)
         leggTilLegeerklæring(behandling, legeerklæringDato)
 
         val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, legeerklæringDato)
-        service.backfillBehandling(sakMedRettighetsperiode, behandling, erNyesteBehandling = true)
-
-        val krav = InMemoryKravRepository.hent(behandling.id)
-        val relevantKrav = assertHarNøyaktigEttRelevantKrav(krav.vurderinger)
-        assertThat(relevantKrav.muligRettFra).isEqualTo(legeerklæringDato)
-    }
-
-    @Test
-    fun `behandling uten søknad og uten legeerklæring kaster feil`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 10 januar 2024)
-
-        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, 10 januar 2024)
-        assertThatThrownBy { service.backfillBehandling(sakMedRettighetsperiode, behandling, erNyesteBehandling = true) }
-            .isInstanceOf(IllegalStateException::class.java)
-            .hasMessageContaining("Ingen søknad eller legeerklæring")
-    }
-
-    @Test
-    fun `legeerklæring mottatt før søknad gir muligRettFra basert på legeerklæring`() {
-        val legeerklæringDato = 1 januar 2024
-        val søknadsdato = 10 januar 2024
-        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = legeerklæringDato)
-        leggTilLegeerklæring(behandling, legeerklæringDato)
-        leggTilSøknad(behandling, søknadsdato)
-
-        val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, legeerklæringDato)
-        service.backfillBehandling(sakMedRettighetsperiode, behandling, erNyesteBehandling = true)
-
-        val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
-        assertThat(krav.muligRettFra).isEqualTo(legeerklæringDato)
+        assertThrows<IllegalStateException> {
+            service.backfillBehandling(
+                sakMedRettighetsperiode,
+                listOf(behandling),
+                behandling,
+                erNyesteBehandling = true
+            )
+        }
     }
 
     @Test
@@ -317,7 +477,7 @@ class BackfillKravServiceTest {
         leggTilLegeerklæring(behandling, legeerklæringDato)
 
         val sakMedRettighetsperiode = lagSakMedRettighetsperiode(sak, søknadsdato)
-        service.backfillBehandling(sakMedRettighetsperiode, behandling, erNyesteBehandling = true)
+        service.backfillBehandling(sakMedRettighetsperiode, listOf(behandling), behandling, erNyesteBehandling = true)
 
         val krav = assertHarNøyaktigEttRelevantKrav(InMemoryKravRepository.hent(behandling.id).vurderinger)
         assertThat(krav.muligRettFra).isEqualTo(søknadsdato)
@@ -337,6 +497,7 @@ class BackfillKravServiceTest {
         leggTilSøknad(førstegangsbehandling, gammeltSøknadsdato)
         service.backfillBehandling(
             lagSakMedRettighetsperiode(sak, overstyrtDato),
+            listOf(førstegangsbehandling, revurdering),
             førstegangsbehandling,
             erNyesteBehandling = false,
         )
@@ -344,16 +505,23 @@ class BackfillKravServiceTest {
         val gammeltKrav = InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
         InMemoryKravRepository.lagre(
             førstegangsbehandling.id,
-            setOf(gammeltKrav.copy(
-                overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere, begrunnelse = ""),
-                muligRettFra = overstyrtDato,
-            ))
+            setOf(
+                gammeltKrav.copy(
+                    overstyrMuligRettFra = OverstyrMuligRettFra(
+                        overstyrtDato,
+                        OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
+                        begrunnelse = ""
+                    ),
+                    muligRettFra = overstyrtDato,
+                )
+            )
         )
 
         leggTilSøknad(revurdering, nySøknadsdato)
 
         service.backfillBehandling(
             lagSakMedRettighetsperiode(sak, overstyrtDato),
+            listOf(førstegangsbehandling, revurdering),
             revurdering,
             erNyesteBehandling = true,
         )
@@ -378,16 +546,23 @@ class BackfillKravServiceTest {
         leggTilSøknad(førstegangsbehandling, gammeltSøknadsdato)
         service.backfillBehandling(
             lagSakMedRettighetsperiode(sak, gammeltSøknadsdato),
+            listOf(førstegangsbehandling, revurdering),
             førstegangsbehandling,
             erNyesteBehandling = false,
         )
         val gammeltKrav = InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
         InMemoryKravRepository.lagre(
             førstegangsbehandling.id,
-            setOf(gammeltKrav.copy(
-                overstyrMuligRettFra = OverstyrMuligRettFra(overstyrtDato, OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere, ""),
-                muligRettFra = overstyrtDato,
-            ))
+            setOf(
+                gammeltKrav.copy(
+                    overstyrMuligRettFra = OverstyrMuligRettFra(
+                        overstyrtDato,
+                        OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
+                        ""
+                    ),
+                    muligRettFra = overstyrtDato,
+                )
+            )
         )
 
         leggTilSøknad(revurdering, nySøknadsdato)
@@ -395,6 +570,7 @@ class BackfillKravServiceTest {
 
         service.backfillBehandling(
             lagSakMedRettighetsperiode(sak, overstyrtDato),
+            listOf(førstegangsbehandling, revurdering),
             revurdering,
             erNyesteBehandling = true,
         )
@@ -412,11 +588,21 @@ class BackfillKravServiceTest {
 
         leggTilSøknad(førstegangsbehandling, søknadsdato)
 
-        service.backfillBehandling(sak, førstegangsbehandling, erNyesteBehandling = false)
+        service.backfillBehandling(
+            sak,
+            listOf(førstegangsbehandling, revurdering),
+            førstegangsbehandling,
+            erNyesteBehandling = false
+        )
         val vurderingFørstegangsbehandling =
             InMemoryStønadsperiodeRepository.hentHvisEksisterer(førstegangsbehandling.id)!!.vurderinger.single()
 
-        service.backfillBehandling(sak, revurdering, erNyesteBehandling = true)
+        service.backfillBehandling(
+            sak,
+            listOf(førstegangsbehandling, revurdering),
+            revurdering,
+            erNyesteBehandling = true
+        )
         val vurderingerRevurdering =
             InMemoryStønadsperiodeRepository.hentHvisEksisterer(revurdering.id)!!.vurderinger
 
@@ -440,12 +626,18 @@ class BackfillKravServiceTest {
 
         InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(tidligereSøknadsdato, Tid.MAKS))
 
-        service.backfillBehandling(sak, førstegangsbehandling, erNyesteBehandling = false)
+        service.backfillBehandling(
+            sak,
+            listOf(førstegangsbehandling, revurdering),
+            førstegangsbehandling,
+            erNyesteBehandling = false
+        )
         val relevantKravFørstegangsbehandling =
             InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
 
         service.backfillBehandling(
             lagSakMedRettighetsperiode(sak, tidligereSøknadsdato),
+            listOf(førstegangsbehandling, revurdering),
             revurdering,
             erNyesteBehandling = true,
         )

@@ -101,11 +101,23 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                if (toggleForHoppOverBeslutter()) {
+                    assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                        .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                } else {
+                    assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
             }
-            .fattVedtak()
+
+        val behandlingMedFattetVedtak =
+            if (toggleForHoppOverBeslutter()) {
+                behandling
+            } else {
+                behandling.fattVedtak()
+            }
+        behandlingMedFattetVedtak
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
@@ -134,6 +146,11 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
                 // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
                 assertThat(åpneAvklaringsbehov).isEmpty()
             }
+    }
+
+    private fun toggleForHoppOverBeslutter(): Boolean {
+        return gatewayProvider.provide<UnleashGateway>()
+            .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
     }
 
     @Test

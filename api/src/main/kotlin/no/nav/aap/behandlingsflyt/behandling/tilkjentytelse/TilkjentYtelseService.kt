@@ -10,17 +10,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.utils.diff.somDto
 import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
-import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import javax.sql.DataSource
+import no.nav.aap.lookup.repository.RepositoryProvider
 
 class TilkjentYtelseService(
-    private val dataSource: DataSource,
-    private val repositoryRegistry: RepositoryRegistry
+    private val repositoryProvider: RepositoryProvider
 ) {
     fun hentTilkjentYtelse(behandlingReferanse: BehandlingReferanse): TilkjentYtelse2Dto {
         val behandling = hentBehandling(behandlingReferanse)
@@ -38,64 +35,57 @@ class TilkjentYtelseService(
             nå = gjeldendeTilkjentYtelse.tilTidslinje()
         ).mapValue { it.somDto() }
 
-        return TilkjentYtelse2MedDiffDto( diff.verdier().toList())
+        return TilkjentYtelse2MedDiffDto(diff.verdier().toList())
     }
 
     private fun hentTilkjentYtelseForBehandling(behandlingId: BehandlingId): TilkjentYtelse2Dto {
-        return dataSource.transaction(readOnly = true) { connection ->
-            val repositoryFactory = repositoryRegistry.provider(connection)
-            val tilkjentYtelseRepository: TilkjentYtelseRepository =
-                repositoryFactory.provide<TilkjentYtelseRepository>()
-            val meldekortRepository = repositoryFactory.provide<MeldekortRepository>()
-            val meldeperiodeRepository = repositoryFactory.provide<MeldeperiodeRepository>()
-            val underveisRepository = repositoryFactory.provide<UnderveisRepository>()
+        val tilkjentYtelseRepository: TilkjentYtelseRepository =
+            repositoryProvider.provide<TilkjentYtelseRepository>()
+        val meldekortRepository = repositoryProvider.provide<MeldekortRepository>()
+        val meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>()
+        val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
 
-            val meldekortene =
-                meldekortRepository.hentHvisEksisterer(behandlingId)
-                    ?.meldekort()
-                    .orEmpty()
+        val meldekortene =
+            meldekortRepository.hentHvisEksisterer(behandlingId)
+                ?.meldekort()
+                .orEmpty()
 
-            val tilkjentYtelseTidslinje =
-                tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
-                    ?.tilTidslinje()
-                    .orEmpty()
+        val tilkjentYtelseTidslinje =
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
+                ?.tilTidslinje()
+                .orEmpty()
 
-            val underveisTidslinje: Tidslinje<UnderveisFelter> =
-                underveisRepository.hentHvisEksisterer(behandlingId)
-                    ?.somTidslinje()
-                    ?.mapValue {
-                        UnderveisFelter(
-                            andelArbeid = it.arbeidsgradering.andelArbeid,
-                            grenseverdi = it.grenseverdi,
-                        )
-                    }
-                    ?: Tidslinje()
+        val underveisTidslinje: Tidslinje<UnderveisFelter> =
+            underveisRepository.hentHvisEksisterer(behandlingId)
+                ?.somTidslinje()
+                ?.mapValue {
+                    UnderveisFelter(
+                        andelArbeid = it.arbeidsgradering.andelArbeid,
+                        grenseverdi = it.grenseverdi,
+                    )
+                }
+                ?: Tidslinje()
 
-            val meldeperioder = if (tilkjentYtelseTidslinje.isNotEmpty()) {
-                meldeperiodeRepository.hentMeldeperioder(behandlingId, tilkjentYtelseTidslinje.helePerioden())
-            } else {
-                emptyList()
-            }
-
-            TilkjentYtelse2Dto(
-                perioder = mapTilkjentYtelsePerioder(
-                    meldeperioder,
-                    tilkjentYtelseTidslinje,
-                    underveisTidslinje,
-                    meldekortene,
-                )
-            )
+        val meldeperioder = if (tilkjentYtelseTidslinje.isNotEmpty()) {
+            meldeperiodeRepository.hentMeldeperioder(behandlingId, tilkjentYtelseTidslinje.helePerioden())
+        } else {
+            emptyList()
         }
+
+        return TilkjentYtelse2Dto(
+            perioder = mapTilkjentYtelsePerioder(
+                meldeperioder,
+                tilkjentYtelseTidslinje,
+                underveisTidslinje,
+                meldekortene,
+            )
+        )
 
     }
 
     private fun hentBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
-        val behandling = dataSource.transaction(readOnly = true) { connection ->
-            val repositoryFactory = repositoryRegistry.provider(connection)
-            val behandlingRepository = repositoryFactory.provide<BehandlingRepository>()
-            behandlingRepository.hent(behandlingReferanse)
-        }
-        return behandling
+        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+        return behandlingRepository.hent(behandlingReferanse)
     }
 
     private fun mapTilkjentYtelsePerioder(
@@ -106,9 +96,9 @@ class TilkjentYtelseService(
     ): List<TilkjentYtelsePeriode2Dto> = meldeperioder.map { meldeperiode ->
         val begrensetTil = tilkjentYtelseTidslinje
             .begrensetTil(meldeperiode)
-            .leftJoin(underveisTidslinje, { tilkjent, underveisFelter ->
+            .leftJoin(underveisTidslinje) { tilkjent, underveisFelter ->
                 TilkjentMedUnderveisFelter(tilkjent, underveisFelter)
-            })
+            }
 
         val førsteAktuelleMeldekort =
             meldekortene.firstOrNull { arbeidIPeriode ->

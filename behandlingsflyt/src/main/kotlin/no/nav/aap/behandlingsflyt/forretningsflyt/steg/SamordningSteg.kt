@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -25,6 +26,7 @@ class SamordningSteg(
     private val samordningRepository: SamordningRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val sykepengerOgFerieOppgittISøknadRepository: SykepengerOgFerieOppgittISøknadRepository
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -32,11 +34,17 @@ class SamordningSteg(
         samordningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
         sykepengerOgFerieOppgittISøknadRepository = repositoryProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
+        val samordningYtelseVurderingGrunnlag =
+            samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
+        
+        val perioderMedNullGradering = samordningYtelseVurderingGrunnlag.vurderingGrunnlag?.vurderinger.orEmpty()
+            .flatMap { it.vurderingPerioder }.filter { it.gradering == null }.map { it.periode }.toSet()
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
@@ -47,13 +55,22 @@ class SamordningSteg(
             ),
             nårVurderingErRelevant = ::perioderMedVurderingsbehov,
             kontekst = kontekst,
-            perioderSomIkkeErTilstrekkeligVurdert = { emptySet() },
+            perioderSomIkkeErTilstrekkeligVurdert = {
+                perioderMedNullGradering
+            },
             tilbakestillGrunnlag = {
                 samordningService.tilbakestillVurderinger(kontekst.behandlingId, kontekst.forrigeBehandlingId)
             }
         )
 
-        val samordningYtelseVurderingGrunnlag = samordningService.samordningGrunnlag(behandlingId = kontekst.behandlingId)
+
+        if (perioderMedNullGradering.isNotEmpty()) {
+            if (!avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId).erÅpent(Definisjon.AVKLAR_SAMORDNING_GRADERING)) {
+                throw IllegalStateException("Fant samordning med nullgradering, men avklaringsbehovet er ikke åpent")
+            }
+            return Fullført
+        }
+
         val samordningTidslinje = samordningYtelseVurderingGrunnlag.vurder()
 
         samordningRepository.lagre(
@@ -72,7 +89,8 @@ class SamordningSteg(
     }
 
     private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        val skalRevurdereSamordning = Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER in kontekst.vurderingsbehovRelevanteForSteg
+        val skalRevurdereSamordning =
+            Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER in kontekst.vurderingsbehovRelevanteForSteg
 
         val mottarSykepengerOppgittISøknad = sykepengerOgFerieOppgittISøknadRepository
             .hentHvisEksisterer(kontekst.behandlingId)
@@ -93,7 +111,7 @@ class SamordningSteg(
         ) { utfall, samordningYtelser, vurdering ->
             when (utfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                TidligereVurderinger.UunngåeligAvslag -> false
+                is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
                     // Bruker kan ha oppgitt i søknaden at hen mottar sykepenger. Krev da vurdering
                     // av samordning selv om vi ennå ikke har mottatt vedtak om sykepenger fra registeret.

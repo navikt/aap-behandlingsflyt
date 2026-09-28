@@ -107,7 +107,7 @@ class PdlHendelseService(
             // Håndterer D-nummer og Fnr
             if (person != null || saksbehandlersOppgitteBarn != null) {
                 funnetIdent = ident
-                secureLogger.info("Håndterer hendelse for ident ${funnetIdent.identifikator} og navn ${personHendelse.navn?.etternavn} ")
+                secureLogger.info("Håndterer dødsfall-hendelse for ident ${funnetIdent.identifikator} og navn ${personHendelse.navn?.etternavn} ")
                 break
             }
         }

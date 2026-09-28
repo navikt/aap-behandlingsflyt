@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVKLAR_BISTANDSBEHOV
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -51,6 +53,8 @@ class AvklaringsbehovServiceTest {
     private lateinit var avklaringsbehovService: AvklaringsbehovService
     private lateinit var avklaringsbehovServiceMedKrav: AvklaringsbehovService
 
+    private val EN_BRUKER = Bruker("Z00000")
+
     @BeforeEach
     fun setup() {
         avklaringsbehovService = AvklaringsbehovService(
@@ -61,6 +65,66 @@ class AvklaringsbehovServiceTest {
             inMemoryRepositoryProvider,
             createGatewayProvider { register<LokalUnleash>() }
         )
+    }
+
+    @Test
+    fun `ikke gjenbruk løsning som er slettet pga at avklaringsbehov er avbrutt`() {
+        val (_, _, revurdering) = opprettInMemorySakOgRevurdering()
+        val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, revurdering.id)
+
+        var løsning = false
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = AVKLAR_SYKDOM,
+            vedtakBehøverVurdering = { true },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = { løsning = false },
+            kontekst = flytKontekstMedPerioder { this.behandling = revurdering },
+        )
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(AVKLAR_SYKDOM)!!.status())
+            .isEqualTo(Status.OPPRETTET)
+
+        /* bruker sender inn løsning */
+        løsning = true
+        avklaringsbehovene.løsAvklaringsbehov(AVKLAR_SYKDOM, "en løsning", EN_BRUKER)
+
+        /* noe skjer i et tidligere steg, så behovet er ikke lenger nødvendig */
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = AVKLAR_SYKDOM,
+            vedtakBehøverVurdering = { false },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = { løsning = false },
+            kontekst = flytKontekstMedPerioder { this.behandling = revurdering },
+        )
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(AVKLAR_SYKDOM)!!.status())
+            .isEqualTo(Status.AVBRUTT)
+        assertThat(løsning).isFalse
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = AVKLAR_SYKDOM,
+            vedtakBehøverVurdering = { true },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = { løsning = false },
+            kontekst = flytKontekstMedPerioder {
+                this.behandling = revurdering
+                this.vurderingsbehovRelevanteForSteg = emptySet()
+            },
+        )
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = AVKLAR_SYKDOM,
+            vedtakBehøverVurdering = { true },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = { løsning = false },
+            kontekst = flytKontekstMedPerioder {
+                this.behandling = revurdering
+                this.vurderingsbehovRelevanteForSteg = emptySet()
+            },
+        )
+
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(AVKLAR_SYKDOM)?.status())
+            .isEqualTo(Status.OPPRETTET)
+        assertThat(løsning).isFalse
     }
 
     @Test
@@ -153,7 +217,7 @@ class AvklaringsbehovServiceTest {
         // Arrange
         val behandlingId = BehandlingId(1001)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         val vedtakBehøverVurdering = { true }
         val erTilstrekkeligVurdert = { false }
         val kontekst = flytKontekstMedPerioder {
@@ -182,7 +246,7 @@ class AvklaringsbehovServiceTest {
         // Arrange
         val behandlingId = BehandlingId(1002)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
@@ -210,9 +274,9 @@ class AvklaringsbehovServiceTest {
     @Test
     fun `oppdaterAvklaringsbehov skal avbryte avklaringsbehov når vedtak ikke behøver vurdering`() {
         // Arrange
-        val behandlingId = BehandlingId(1003)
+        val behandlingId = BehandlingId(1005)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
 
         val vedtakBehøverVurdering = { false }
@@ -243,7 +307,7 @@ class AvklaringsbehovServiceTest {
         // Arrange
         val behandlingId = BehandlingId(1004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         val vedtakBehøverVurdering = { false }
         val erTilstrekkeligVurdert = { false }
         val kontekst = flytKontekstMedPerioder {
@@ -270,7 +334,7 @@ class AvklaringsbehovServiceTest {
         val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2001)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         val startDato = LocalDate.of(2024, 1, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(2).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(2), startDato.plusMonths(4).minusDays(1))
@@ -320,7 +384,7 @@ class AvklaringsbehovServiceTest {
         val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2002)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         val startDato = LocalDate.of(2024, 1, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(3))
@@ -368,7 +432,7 @@ class AvklaringsbehovServiceTest {
 
         val behandlingId = BehandlingId(2003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
 
         val startDato = LocalDate.of(2024, 2, 1)
@@ -419,7 +483,7 @@ class AvklaringsbehovServiceTest {
         val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2004)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         val startDato = LocalDate.of(2024, 3, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
@@ -469,7 +533,7 @@ class AvklaringsbehovServiceTest {
         val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2006)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         val startDato = LocalDate.of(2024, 5, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
         val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
@@ -510,7 +574,7 @@ class AvklaringsbehovServiceTest {
         val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2007)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
@@ -553,7 +617,7 @@ class AvklaringsbehovServiceTest {
         val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(2008)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
 
         val startDato = LocalDate.of(2024, 6, 1)
         val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
@@ -593,7 +657,7 @@ class AvklaringsbehovServiceTest {
         val sak = opprettInMemorySak()
         val behandlingId = BehandlingId(20099)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
         avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = Bruker("Tester"))
 
@@ -637,10 +701,125 @@ class AvklaringsbehovServiceTest {
     }
 
     @Test
+    fun `skal oppdatere perioder når avklaringsbehovet er løftet fra før, men fortsatt ikke tilstrekkelig vurdert`() {
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(2011)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = AVKLAR_SYKDOM
+
+        val startDato = LocalDate.of(2024, 7, 1)
+        val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
+        val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        // Behovet er allerede løftet (OPPRETTET), men kun periode1 var opprinnelig utilstrekkelig vurdert.
+        avklaringsbehovene.leggTil(
+            definisjon,
+            definisjon.løsesISteg,
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1),
+            perioderVedtaketBehøverVurdering = null
+        )
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje(
+                listOf(
+                    Segment(periode1, true),
+                    Segment(periode2, true)
+                )
+            )
+        }
+        // Nå er også periode2 utilstrekkelig vurdert, i tillegg til periode1 fra før.
+        val perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1, periode2)
+
+        val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+        }
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        // Avklaringsbehovet forblir OPPRETTET - det skal ikke reåpnes eller avsluttes.
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+        // Men periodene som ikke er tilstrekkelig vurdert skal være oppdatert til den nye, utvidede mengden.
+        assertThat(avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert())
+            .isEqualTo(perioderSomIkkeErTilstrekkeligVurdert)
+    }
+
+    @Test
+    fun `skal oppdatere perioder når avklaringsbehovet er sendt tilbake, men ikke tilstrekkelig vurdert`() {
+        /**
+         * Dette kan skje dersom et tidligere behov påvirker tilstrekkelig vurdert
+         * eller vedtak behøver vurdering for dette returnerte avklaringsbehovet
+         */
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(2010)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = AVKLAR_SYKDOM
+
+        val startDato = LocalDate.of(2024, 7, 1)
+        val periode1 = Periode(startDato, startDato.plusMonths(1).minusDays(1))
+        val periode2 = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
+        val helePeriode = Periode(startDato, startDato.plusMonths(2))
+
+        avklaringsbehovene.opprett(
+            definisjon,
+            definisjon.løsesISteg,
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1),
+            perioderVedtaketBehøverVurdering = null
+        )
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Løsning", Bruker("veileder"), false)
+
+        // Behovet er returnert (SENDT_TILBAKE_FRA_KVALITETSSIKRER), men kun periode1 var opprinnelig utilstrekkelig vurdert.
+        avklaringsbehovene.vurderKvalitet(definisjon, false, "retur", Bruker("Kvalitetssikrer"))
+
+        val nårVurderingErRelevant: (FlytKontekstMedPerioder) -> Tidslinje<Boolean> = {
+            Tidslinje(
+                listOf(
+                    Segment(periode1, true),
+                    Segment(periode2, true)
+                )
+            )
+        }
+        // Nå er også periode2 utilstrekkelig vurdert, i tillegg til periode1 fra før.
+        val perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1, periode2)
+
+        val kontekst = flytKontekstMedPerioder {
+            this.sakId = sak.id
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = helePeriode
+        }
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = nårVurderingErRelevant,
+            kontekst = kontekst,
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        // Avklaringsbehovet forblir TILBAKESENDT
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER)
+        // Men periodene som ikke er tilstrekkelig vurdert skal være oppdatert til den nye, utvidede mengden.
+        assertThat(avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert())
+            .isEqualTo(perioderSomIkkeErTilstrekkeligVurdert)
+    }
+
+    @Test
     fun `skal opprette avklaringsbehov i behandling med nytt krav, selv om alle relevante perioder er vurdert tidligere`() {
         val behandlingId = BehandlingId(20100)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
-        val definisjon = Definisjon.AVKLAR_SYKDOM
+        val definisjon = AVKLAR_SYKDOM
 
         val sak = opprettInMemorySak()
         val forrigeBehandling = InMemoryBehandlingRepository.opprettBehandling(
@@ -703,6 +882,135 @@ class AvklaringsbehovServiceTest {
     }
 
     @Test
+    fun `trekker fra perioder som allerede er vurdert automatisk i denne behandlingen`() {
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(20200)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = AVKLAR_SYKDOM
+
+        val startDato = LocalDate.of(2024, 8, 1)
+        val helePerioden = Periode(startDato, startDato.plusMonths(3).minusDays(1))
+        val automatiskVurdertPeriode = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = { tidslinjeOf(helePerioden to true) },
+            nårVurderingErGyldig = { tidslinjeOf(helePerioden to false) },
+            kontekst = flytKontekstMedPerioder {
+                this.sakId = sak.id
+                this.behandlingId = behandlingId
+                this.rettighetsperiode = helePerioden
+            },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    automatiskVurdertPeriode to periodisertVurdering(
+                        automatiskVurdertPeriode,
+                        behandlingId,
+                        SYSTEMBRUKER
+                    )
+                )
+            }
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+        assertThat(avklaringsbehov?.perioderVedtaketBehøverVurdering).containsExactlyInAnyOrder(
+            Periode(helePerioden.fom, automatiskVurdertPeriode.fom.minusDays(1)),
+            Periode(automatiskVurdertPeriode.tom.plusDays(1), helePerioden.tom)
+        )
+    }
+
+    @Test
+    fun `trekker ikke fra perioder som er vurdert manuelt i denne behandlingen`() {
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(20201)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = AVKLAR_SYKDOM
+
+        val startDato = LocalDate.of(2024, 9, 1)
+        val helePerioden = Periode(startDato, startDato.plusMonths(3).minusDays(1))
+        val manueltVurdertPeriode = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = { tidslinjeOf(helePerioden to true) },
+            nårVurderingErGyldig = { tidslinjeOf(helePerioden to false) },
+            kontekst = flytKontekstMedPerioder {
+                this.sakId = sak.id
+                this.behandlingId = behandlingId
+                this.rettighetsperiode = helePerioden
+            },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    manueltVurdertPeriode to periodisertVurdering(
+                        manueltVurdertPeriode,
+                        behandlingId,
+                        Bruker("Z000")
+                    )
+                )
+            }
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+        assertThat(avklaringsbehov?.perioderVedtaketBehøverVurdering).containsExactlyInAnyOrder(helePerioden)
+    }
+
+    @Test
+    fun `trekker ikke fra perioder som er vurdert automatisk i en annen behandling`() {
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(20202)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = AVKLAR_SYKDOM
+
+        val startDato = LocalDate.of(2024, 10, 1)
+        val helePerioden = Periode(startDato, startDato.plusMonths(3).minusDays(1))
+        val automatiskVurdertPeriode = Periode(startDato.plusMonths(1), startDato.plusMonths(2).minusDays(1))
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = { tidslinjeOf(helePerioden to true) },
+            nårVurderingErGyldig = { tidslinjeOf(helePerioden to false) },
+            kontekst = flytKontekstMedPerioder {
+                this.sakId = sak.id
+                this.behandlingId = behandlingId
+                this.rettighetsperiode = helePerioden
+            },
+            tilbakestillGrunnlag = { error("skal ikke tilbakestilles") },
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    automatiskVurdertPeriode to periodisertVurdering(
+                        automatiskVurdertPeriode,
+                        BehandlingId(20299),
+                        SYSTEMBRUKER
+                    )
+                )
+            }
+        )
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.OPPRETTET)
+        assertThat(avklaringsbehov?.perioderVedtaketBehøverVurdering).containsExactlyInAnyOrder(helePerioden)
+    }
+
+    private fun periodisertVurdering(
+        periode: Periode,
+        vurdertIBehandling: BehandlingId,
+        bruker: Bruker
+    ): PeriodisertVurdering = object : PeriodisertVurdering {
+        override val fom = periode.fom
+        override val tom = periode.tom
+        override val vurdertIBehandling = vurdertIBehandling
+        override val opprettet: Instant = Instant.now()
+        override val vurdertAv = bruker
+    }
+
+    @Test
     fun `oppdaterAvklaringsbehov skal ikke default tilbakestille frivillige avklaringsbehov`() {
         // Arrange
         val behandlingId = BehandlingId(1003)
@@ -733,7 +1041,7 @@ class AvklaringsbehovServiceTest {
     }
 
     @Test
-    fun `oppdaterAvklaringsbehov skal tilbakestille frivillige avklaringsbehov ved søknadstrekking`() {
+    fun `oppdaterAvklaringsbehov skal avbryte frivillige avklaringsbehov ved søknadstrekking`() {
         // Arrange
         val behandlingId = BehandlingId(1003)
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
@@ -772,7 +1080,7 @@ class AvklaringsbehovServiceTest {
         // Assert
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
-        assertThat(erTilbakestilt).isTrue
+        assertThat(erTilbakestilt).isFalse // Trenger ikke tilbakestille da vurderingene slettes uansett
     }
 
     @Test
@@ -839,6 +1147,150 @@ class AvklaringsbehovServiceTest {
         avklaringsbehovene.hentBehovForDefinisjon(AVKLAR_BISTANDSBEHOV).also {
             assertThat(it?.status()).isEqualTo(Status.OPPRETTET)
         }
+    }
+
+    @Test
+    fun `tilbakestiller grunnlag når behandlingen ikke har noen vurderinger`() {
+        val erTilbakestilt = kjørAvbrytOgReturnerOmGrunnlagBleTilbakestilt(
+            behandlingId = BehandlingId(2100),
+            gjeldendeVurderinger = { tidslinjeOf() }
+        )
+
+        assertThat(erTilbakestilt).isTrue
+    }
+
+    @Test
+    fun `tilbakestiller grunnlag når behandlingen kun har manuelle vurderinger`() {
+        val behandlingId = BehandlingId(2101)
+        val erTilbakestilt = kjørAvbrytOgReturnerOmGrunnlagBleTilbakestilt(
+            behandlingId = behandlingId,
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    Periode(LocalDate.of(2024, 2, 1), Tid.MAKS) to
+                            periodisertVurdering(behandlingId, Bruker("Z000"), LocalDate.of(2024, 2, 1))
+                )
+            }
+        )
+
+        assertThat(erTilbakestilt).isTrue
+    }
+
+    @Test
+    fun `tilbakestiller ikke grunnlag når behandlingen kun har automatiske vurderinger`() {
+        val behandlingId = BehandlingId(2102)
+        val erTilbakestilt = kjørAvbrytOgReturnerOmGrunnlagBleTilbakestilt(
+            behandlingId = behandlingId,
+            vilkåretErRelevant = true,
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    Periode(LocalDate.of(2024, 2, 1), Tid.MAKS) to
+                            periodisertVurdering(behandlingId, SYSTEMBRUKER, LocalDate.of(2024, 2, 1))
+                )
+            }
+        )
+
+        assertThat(erTilbakestilt).isFalse
+    }
+
+    @Test
+    fun `tilbakestiller grunnlag med automatiske vurderinger når vilkåret ikke lenger er relevant`() {
+        val behandlingId = BehandlingId(2106)
+        val erTilbakestilt = kjørAvbrytOgReturnerOmGrunnlagBleTilbakestilt(
+            behandlingId = behandlingId,
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    Periode(LocalDate.of(2024, 2, 1), Tid.MAKS) to
+                            periodisertVurdering(behandlingId, SYSTEMBRUKER, LocalDate.of(2024, 2, 1))
+                )
+            }
+        )
+
+        assertThat(erTilbakestilt).isTrue
+    }
+
+    @Test
+    fun `tilbakestiller grunnlag når behandlingen har både manuelle og automatiske vurderinger`() {
+        val behandlingId = BehandlingId(2103)
+        val førstePeriode = Periode(LocalDate.of(2024, 2, 1), LocalDate.of(2024, 3, 31))
+        val andrePeriode = Periode(LocalDate.of(2024, 4, 1), Tid.MAKS)
+        val erTilbakestilt = kjørAvbrytOgReturnerOmGrunnlagBleTilbakestilt(
+            behandlingId = behandlingId,
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    førstePeriode to periodisertVurdering(behandlingId, SYSTEMBRUKER, førstePeriode.fom),
+                    andrePeriode to periodisertVurdering(behandlingId, Bruker("Z000"), andrePeriode.fom)
+                )
+            }
+        )
+
+        assertThat(erTilbakestilt).isTrue
+    }
+
+    @Test
+    fun `tilbakestiller grunnlag når den automatiske vurderingen kommer fra en tidligere behandling`() {
+        val behandlingId = BehandlingId(2104)
+        val tidligereBehandlingId = BehandlingId(2105)
+        val erTilbakestilt = kjørAvbrytOgReturnerOmGrunnlagBleTilbakestilt(
+            behandlingId = behandlingId,
+            gjeldendeVurderinger = {
+                tidslinjeOf(
+                    Periode(LocalDate.of(2024, 2, 1), Tid.MAKS) to
+                            periodisertVurdering(tidligereBehandlingId, SYSTEMBRUKER, LocalDate.of(2024, 2, 1))
+                )
+            }
+        )
+
+        assertThat(erTilbakestilt).isTrue
+    }
+
+    /**
+     * Kjører steget slik at avklaringsbehovet avbrytes og tilbakestilling av grunnlaget vurderes.
+     *
+     * Med [vilkåretErRelevant] `false` avbrytes behovet fordi vilkåret ikke lenger er relevant. Med
+     * `true` avbrytes det fordi de automatiske vurderingene i behandlingen dekker alle periodene som
+     * ellers hadde behøvd manuell vurdering.
+     */
+    private fun kjørAvbrytOgReturnerOmGrunnlagBleTilbakestilt(
+        behandlingId: BehandlingId,
+        vilkåretErRelevant: Boolean = false,
+        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>
+    ): Boolean {
+        val sak = opprettInMemorySak()
+        val definisjon = AVKLAR_SYKDOM
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        avklaringsbehovene.leggTil(definisjon, definisjon.løsesISteg, null, null)
+
+        val rettighetsperiode = Periode(LocalDate.of(2024, 2, 1), LocalDate.of(2024, 7, 1))
+        var erTilbakestilt = false
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            definisjon = definisjon,
+            tvingerAvklaringsbehov = emptySet(),
+            nårVurderingErRelevant = { tidslinjeOf(rettighetsperiode to vilkåretErRelevant) },
+            nårVurderingErGyldig = { tidslinjeOf(rettighetsperiode to true) },
+            kontekst = flytKontekstMedPerioder {
+                this.sakId = sak.id
+                this.behandlingId = behandlingId
+                this.rettighetsperiode = rettighetsperiode
+            },
+            tilbakestillGrunnlag = { erTilbakestilt = true },
+            gjeldendeVurderinger = gjeldendeVurderinger
+        )
+
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(definisjon)?.status()).isEqualTo(Status.AVBRUTT)
+        return erTilbakestilt
+    }
+
+    private fun periodisertVurdering(
+        behandlingId: BehandlingId,
+        bruker: Bruker,
+        fom: LocalDate
+    ): PeriodisertVurdering = object : PeriodisertVurdering {
+        override val fom = fom
+        override val tom = null
+        override val vurdertIBehandling = behandlingId
+        override val opprettet: Instant = Instant.now()
+        override val vurdertAv = bruker
     }
 
     private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): RelevantKrav {

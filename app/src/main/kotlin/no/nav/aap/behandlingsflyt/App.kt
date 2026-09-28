@@ -82,7 +82,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -108,8 +107,6 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.ytelseoppslag.foreldrepengeperioderApi
 import no.nav.aap.behandlingsflyt.ytelseoppslag.sykepengeperioderApi
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -125,6 +122,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.tilgang.DriftLes
 import no.nav.aap.tilgang.TeamAap
 import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
@@ -233,16 +231,19 @@ internal fun Application.server(
         dbConfig,
         maximumPoolSize = AppConfig.hikariMaxPoolSize - dedicatedMotorConnections - AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
+        poolName = "felles",
     )
     val motorDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = dedicatedMotorConnections,
         prometheus = prometheus,
+        poolName = "motor",
     )
     val pipDataSource = initDatasource(
         dbConfig,
         maximumPoolSize = AppConfig.pipDataSourcePoolSize,
         prometheus = prometheus,
+        poolName = "pip",
     )
     Migrering.migrate(fellesDataSource)
 
@@ -270,6 +271,7 @@ internal fun Application.server(
     }
     verifiserTidssone(fellesDataSource)
     val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
+    val motorLeseRoller=  if (Miljø.erProd()) listOf(DriftLes.id) else emptyList()
 
     routing {
         authenticate(IdentityProvider.ENTRA_ID.value) {
@@ -303,7 +305,7 @@ internal fun Application.server(
                 institusjonApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseApi(fellesDataSource, repositoryRegistry)
-                foreslaaVedtakApi(fellesDataSource, repositoryRegistry)
+                foreslaaVedtakApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 foreslaaVedtakVedtakslengdeApi(fellesDataSource, repositoryRegistry)
                 trukketSøknadGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 avbrytRevurderingGrunnlagApi(fellesDataSource, repositoryRegistry)
@@ -313,7 +315,7 @@ internal fun Application.server(
                 aldersGrunnlagApi(fellesDataSource, repositoryRegistry)
                 avslag11_27GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 barnetilleggApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                motorApi(fellesDataSource, påkrevdeRollerMotor)
+                motorApi(fellesDataSource, påkrevdeRollerMotor, motorLeseRoller)
                 behandlingsflytPipApi(pipDataSource, repositoryRegistry)
                 auditlogApi(fellesDataSource, repositoryRegistry)
                 refusjonGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
@@ -378,7 +380,7 @@ private fun Application.verifiserTidssone(dataSource: HikariDataSource) {
         }
     }
 
-    log.info("Tidssone for jvm: ${tidssoneForJvm} database: $tidssoneForDatabase")
+    log.info("Tidssone for jvm: $tidssoneForJvm database: $tidssoneForDatabase")
 
     check(tidssoneForJvm == Tid.norskTidssone) {
         "Tidssone for JVM er satt til ${tidssoneForJvm}. Forventer verdi ${Tid.norskTidssone}."
@@ -560,6 +562,7 @@ fun initDatasource(
     dbConfig: DbConfig,
     maximumPoolSize: Int = AppConfig.hikariMaxPoolSize,
     prometheus: PrometheusMeterRegistry = no.nav.aap.behandlingsflyt.prometheus,
+    poolName: String? = null,
 ): HikariDataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
@@ -569,6 +572,14 @@ fun initDatasource(
     minimumIdle = 1
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus
+
+    /* Uten eksplisitt navn får poolene "HikariPool-1/2/3" etter opprettelsesrekkefølge, og
+     * `pool`-labelen i Prometheus blir umulig å tolke. Navnet gjør metrikkene entydige.
+     * Settes kun når det er oppgitt, slik at tester beholder autogenererte, unike navn.
+     */
+    if (poolName != null) {
+        this.poolName = poolName
+    }
 })
 
 class JsonDeserializerInstitusjonsOppholdHendelse : Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {

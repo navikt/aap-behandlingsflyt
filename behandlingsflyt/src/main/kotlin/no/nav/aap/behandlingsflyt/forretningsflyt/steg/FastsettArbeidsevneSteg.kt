@@ -51,8 +51,8 @@ class FastsettArbeidsevneSteg private constructor(
         kontekst: FlytKontekstMedPerioder
     ): Tidslinje<Boolean> = tidligereVurderinger.behandlingsutfall(kontekst, type()).map { utfall ->
         when (utfall) {
-            TidligereVurderinger.IkkeBehandlingsgrunnlag, TidligereVurderinger.UunngåeligAvslag -> false
-
+            TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
+            is TidligereVurderinger.UunngåeligAvslag -> false
             is TidligereVurderinger.PotensieltOppfylt -> true
         }
     }
