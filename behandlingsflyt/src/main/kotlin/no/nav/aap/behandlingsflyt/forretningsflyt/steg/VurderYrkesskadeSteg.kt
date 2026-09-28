@@ -73,8 +73,6 @@ class VurderYrkesskadeSteg private constructor(
 
         val tidligereAvslag =
             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(flytKontekstMedPerioder, type())
-        val behovForYrkesskadevurdering =
-            !tidligereAvslag || kanYrkesskadeEndreAvslag
         return when (flytKontekstMedPerioder.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING,
@@ -83,8 +81,6 @@ class VurderYrkesskadeSteg private constructor(
                         flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() &&
                         yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
             }
-
-            // Keep the existing other branches returning false.
 
             VurderingType.MELDEKORT,
             VurderingType.UTVID_VEDTAKSLENGDE,
