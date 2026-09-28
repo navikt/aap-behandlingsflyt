@@ -421,7 +421,8 @@ class InstitusjonsoppholdRepositoryImplTest {
             // Vurderingen strekker seg over hele kjeden, ikke bare ett enkelt segment
             repo.lagreHelseVurdering(
                 behandling.id,
-                listOf(vurdering(Periode(1 mai 2026, 31 desember 2026), behandling.id))
+                listOf(vurdering(Periode(1 mai 2026, 31 desember 2026), behandling.id)),
+                true
             )
 
             val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
@@ -449,7 +450,8 @@ class InstitusjonsoppholdRepositoryImplTest {
 
             repo.lagreHelseVurdering(
                 behandling.id,
-                listOf(vurdering(Periode(1 mai 2026, 1 september 2026), behandling.id))
+                listOf(vurdering(Periode(1 mai 2026, 1 september 2026), behandling.id)),
+                true
             )
 
             val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
