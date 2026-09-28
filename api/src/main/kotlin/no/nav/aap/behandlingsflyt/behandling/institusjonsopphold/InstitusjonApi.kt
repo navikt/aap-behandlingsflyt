@@ -210,8 +210,9 @@ fun NormalOpenAPIRoute.institusjonApi(
                         ?.filter { it.verdi.type == Institusjonstype.HS }
                         ?: emptyList()
 
-                    // Beregn tidligste reduksjonsdato per opphold
-                    val tidligsteReduksjonsdatoPerOpphold = beregnTidligsteReduksjonsdatoPerOpphold(oppholdSegmenter)
+                    // Grupper i sammenhengende kjeder og beregn tidligste reduksjonsdato per kjede
+                    val kjeder = grupperSammenhengendeOppholdSegmenter(oppholdSegmenter)
+                    val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(oppholdSegmenter)
 
                     // Bygg opphold-liste med tidligsteReduksjonsdato
                     val oppholdMedReduksjonsdato = hentOppholdSomSkalVurderes(
@@ -220,13 +221,13 @@ fun NormalOpenAPIRoute.institusjonApi(
                         vedtatteVurderingerDto,
                         gatewayProvider.provide()
                     ).map { dto ->
-                        val matchendeSegment = oppholdSegmenter.find { segment ->
-                            lagOppholdId(segment.verdi.navn, segment.periode.fom) == dto.oppholdId
+                        val matchendeKjede = kjeder.find { kjede ->
+                            kjede.elementer.any { segment ->
+                                lagOppholdId(segment.verdi.navn, segment.periode.fom) == dto.oppholdId
+                            }
                         }
                         dto.copy(
-                            tidligsteReduksjonsdato = matchendeSegment?.let {
-                                tidligsteReduksjonsdatoPerOpphold[it]
-                            }
+                            tidligsteReduksjonsdato = matchendeKjede?.let { tidligsteReduksjonsdatoPerKjede[it] }
                         )
                     }
 
@@ -310,7 +311,8 @@ fun mapVurderingerToDto(
                             behandlingId = vurdering.vurdertIBehandling,
                             vurdertAv = vurdertAvService.medNavnOgEnhet(
                                 ident = vurdering.vurdertAv
-                                    ?: Bruker("ukjent"), /* hacky, burdeikke kalle PDL med ukjent som ident */
+                                    ?: Bruker("ukjent"),
+                                /* hacky, burdeikke kalle PDL med ukjent som ident */
                                 dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
                             ),
                         )

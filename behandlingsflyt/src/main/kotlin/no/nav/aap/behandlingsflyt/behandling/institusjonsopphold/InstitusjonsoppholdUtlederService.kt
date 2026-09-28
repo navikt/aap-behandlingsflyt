@@ -349,7 +349,22 @@ class InstitusjonsoppholdUtlederService(
         oppholdUtenBarnetillegg: Tidslinje<Boolean>,
         ignorerVarighetsBegrensning: Boolean? = false
     ): Tidslinje<Boolean> {
-        val segmenter = oppholdUtenBarnetillegg.segmenter()
+        val segmenter = oppholdUtenBarnetillegg.segmenter().sortedBy { it.periode.fom }
+
+        // Finn starten på den sammenhengende kjeden (opphold som følger hverandre med < 3 mnd mellomrom)
+        // som hvert segment inngår i, slik at varighet kan vurderes for hele kjeden - ikke bare siste segment.
+        val kjedeStart = mutableMapOf<Segment<Boolean>, LocalDate>()
+        segmenter.forEach { segment ->
+            val forrige = segmenter
+                .filter { it.periode.tom.isBefore(segment.periode.fom) }
+                .maxByOrNull { it.periode.tom }
+
+            kjedeStart[segment] = if (forrige != null && segment.periode.fom.isBefore(forrige.periode.tom.plusMonths(3))) {
+                kjedeStart[forrige] ?: forrige.periode.fom
+            } else {
+                segment.periode.fom
+            }
+        }
 
         return Tidslinje(
             segmenter.filter { segment ->
@@ -362,13 +377,17 @@ class InstitusjonsoppholdUtlederService(
 
                 if (ignorerVarighetsBegrensning == true) {
                     true
+                } else if (mindreEnnTreMånederFraForrige) {
+                    // Sammenhengende opphold: vurder varighet for hele kjeden, ikke bare dette segmentet
+                    val sammenhengendeFom = kjedeStart[segment] ?: segment.periode.fom
+                    val sammenhengendeSegment = Segment(Periode(sammenhengendeFom, segment.periode.tom), segment.verdi)
+                    harOppholdSomVarerMinstFireMånederOgIkkeErForKort(sammenhengendeSegment)
                 } else {
-                    mindreEnnTreMånederFraForrige ||
-                            (harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
-                                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
-                                        segment,
-                                        oppholdUtenBarnetillegg.minDato()
-                                    ))
+                    harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
+                            harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
+                                segment,
+                                oppholdUtenBarnetillegg.minDato()
+                            )
                 }
             })
     }

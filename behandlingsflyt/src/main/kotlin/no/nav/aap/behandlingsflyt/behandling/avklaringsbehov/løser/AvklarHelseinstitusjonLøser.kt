@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.SammenhengendeOppholdGruppe
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligsteReduksjonsdatoPerOpphold
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligsteReduksjonsdatoPerKjede
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.grupperSammenhengendeOppholdSegmenter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -186,14 +186,7 @@ class AvklarHelseinstitusjonLøser(
                     .sortedBy { it.periode }
             }
 
-        // Henter forhåndsberegnet tidligste reduksjonsdato per kjede (bruker kjedens periode, ikke enkeltsegmentets periode)
-        val kjedeSegmentPar = kjeder.map { kjede -> kjede to Segment(kjede.periode, kjede.elementer.first().verdi) }
-        val oppholdKjede = kjedeSegmentPar.map { (_, segment) -> segment }
-
-        val tidligsteReduksjonsdatoPerRepresentant = beregnTidligsteReduksjonsdatoPerOpphold(oppholdKjede)
-        val tidligsteReduksjonsdatoPerKjede = kjedeSegmentPar.associate { (kjede, segment) ->
-            kjede to tidligsteReduksjonsdatoPerRepresentant[segment]
-        }
+        val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(opphold)
 
         vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
             val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach
