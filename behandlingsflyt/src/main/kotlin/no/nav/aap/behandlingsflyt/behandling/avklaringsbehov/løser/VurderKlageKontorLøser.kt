@@ -3,20 +3,31 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKlageKontorLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.validerInnstillingForPåklagetVedtak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.behandlingsflyt.utils.Validation
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 
 class VurderKlageKontorLøser(
     private val klagebehandlingKontorRepository: KlagebehandlingKontorRepository,
+    private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
 ) : AvklaringsbehovsLøser<VurderKlageKontorLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         klagebehandlingKontorRepository = repositoryProvider.provide(),
+        påklagetBehandlingRepository = repositoryProvider.provide(),
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderKlageKontorLøsning): LøsningsResultat {
+        validerInnstillingForPåklagetVedtak(
+            innstilling = løsning.klagevurderingKontor.innstilling,
+            påklagetVedtakType = påklagetBehandlingRepository.hentPåklagetVedtakstype(
+                kontekst.kontekst.behandlingId
+            ),
+        )
+
         klagebehandlingKontorRepository.lagre(
             kontekst.kontekst.behandlingId,
             klagevurderingKontor = løsning.klagevurderingKontor.tilVurdering(kontekst.bruker)

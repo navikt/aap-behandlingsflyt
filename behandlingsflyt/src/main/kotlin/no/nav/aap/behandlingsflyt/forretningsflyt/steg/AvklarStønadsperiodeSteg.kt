@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -43,13 +42,13 @@ class AvklarStønadsperiodeSteg(
     private fun vurderAutomatisk(kontekst: FlytKontekstMedPerioder) {
         val gjeldendeRelevanteKrav =
             kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeRelevanteKrav().orEmpty()
-        val vedtatteStønadsperiodeVurderinger = kontekst.forrigeBehandlingId?.let {
-            stønadsperiodeRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId)?.gjeldendeVurderinger()
-        }.orEmpty()
-
+        val vedtatteStønadsperiodeGrunnlag = kontekst.forrigeBehandlingId?.let {
+            stønadsperiodeRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId)
+        }
+        
         val kravSomManglerVurdering =
             gjeldendeRelevanteKrav.filter { krav ->
-                val vedtatteStønadsperiodeForVurdering = vedtatteStønadsperiodeVurderinger.firstOrNull { it.referanse == krav.referanse }
+                val vedtatteStønadsperiodeForVurdering = vedtatteStønadsperiodeGrunnlag?.gjeldendeVurderinger()?.firstOrNull { it.referanse == krav.referanse }
                 vedtatteStønadsperiodeForVurdering == null || (
                         vedtatteStønadsperiodeForVurdering.vurdertAv == SYSTEMBRUKER &&
                                 vedtatteStønadsperiodeForVurdering.startDato != krav.muligRettFra
@@ -57,7 +56,7 @@ class AvklarStønadsperiodeSteg(
             }
         val nyeVurderinger = kravSomManglerVurdering.map { vurderStønadsperiode(it, kontekst) }
 
-        stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtatteStønadsperiodeVurderinger + nyeVurderinger)
+        stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtatteStønadsperiodeGrunnlag?.vurderinger.orEmpty() + nyeVurderinger)
     }
 
     private fun vurderMigrertKravAutomatisk(kontekst: FlytKontekstMedPerioder) {

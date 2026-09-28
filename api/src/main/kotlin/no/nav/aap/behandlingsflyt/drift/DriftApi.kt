@@ -558,7 +558,7 @@ fun NormalOpenAPIRoute.driftApi(
                         .filterNot { it.id == sak.id }
                         .map { it.saksnummer.toString() }
 
-                    val vedtak = behandlingRepository.hentAlleMedVedtakFor(sak.person.id)
+                    val vedtak = behandlingRepository.hentAlleMedVedtakFor(sak.id)
                     val behandlinger = behandlingRepository.hentAlleFor(sak.id)
                         .map { behandling ->
                             val avklaringsbehovene = avklaringsbehovRepository

@@ -22,6 +22,7 @@ enum class BehandlingsflytFeature(
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     GenererVilkarsvurderingOppsummeringPDF,
+    SaksbehandlerMeldekortKvitteringNyPdfgenerator,
 
     // --- Krav ---
     BackfillKrav,
@@ -31,12 +32,18 @@ enum class BehandlingsflytFeature(
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
 
+    // --- Migrering ---
+    MigererSykdomFraArenaAutomatisk,
+
     // ------
     Avslag11_27,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     BosattStatsborgerskapGjennomslipp,
     HoppOverBeslutterVedAvslagSykdom,
     KanVurdereRefusjonIRevurdering,
+    KunEnAktivKlagebehandling,
+    KlagePaaTilbakekreving,
+    NySoknadTilApiIntern
     KunEnAktivKlagebehandling,
     SammenhengendeInstitusjonsopphold
     ;

@@ -162,9 +162,10 @@ class BehandlingFlyt private constructor(
         val stegene = stegene()
         return Definisjon.entries
             .filter { def ->
-                stegene.contains(def.løsesISteg) && def.erFrivillig() && stegene.indexOf(aktivtSteg) >= stegene.indexOf(
-                    def.løsesISteg
-                )
+                stegene.contains(def.løsesISteg) &&
+                        def.erFrivillig() &&
+                        stegene.indexOf(aktivtSteg) >= stegene.indexOf(def.løsesISteg) &&
+                        def in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
             }
     }
 

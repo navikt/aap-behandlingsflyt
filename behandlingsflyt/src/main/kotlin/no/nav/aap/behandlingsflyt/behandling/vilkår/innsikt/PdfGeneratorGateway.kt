@@ -2,10 +2,12 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.behandling.meldekort.MeldekortPdfRequest
 import no.nav.aap.komponenter.gateway.Gateway
 
 interface PdfGeneratorGateway : Gateway {
     fun genererVurderingerOppsummeringPdfDokument(request: PdfDokument): ByteArray
+    fun genererMeldekortPdf(request: MeldekortPdfRequest): ByteArray
 }
 
 data class PdfDokument(

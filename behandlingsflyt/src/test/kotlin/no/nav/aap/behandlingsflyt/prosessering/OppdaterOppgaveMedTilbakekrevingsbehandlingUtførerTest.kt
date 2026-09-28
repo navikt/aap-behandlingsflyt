@@ -133,6 +133,7 @@ class OppdaterOppgaveMedTilbakekrevingsbehandlingUtførerTest {
             totaltFeilutbetaltBeløp = Beløp(BigDecimal("10000")),
             saksbehandlingURL = URI.create("https://nav.no/behandling/$behandlingId"),
             fullstendigPeriode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+            vedtaksdato = LocalDate.now(),
         )
     }
 

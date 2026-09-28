@@ -42,7 +42,7 @@ class VurderFormkravLøser(
         val ventebehov = avklaringsbehov.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
 
         if (ventebehov != null && !ventebehov.fristUtløpt() && vurdering.erIkkeOppfylt()) {
-            avklaringsbehov.reåpne(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
+            avklaringsbehov.reåpneVentebehov(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
         }
     }
 

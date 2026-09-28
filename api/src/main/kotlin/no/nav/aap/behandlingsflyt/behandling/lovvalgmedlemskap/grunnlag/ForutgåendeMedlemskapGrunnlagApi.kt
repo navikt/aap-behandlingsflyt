@@ -5,9 +5,9 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -55,7 +55,8 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
                     val grunnlag = medlemskapRepository.hentHvisEksisterer(behandling.id)
                     val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
                     val gjeldendeVedtatteVurderinger =
-                        grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
+                        grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.gjeldendeVurderinger()
+                            ?: Tidslinje()
 
                     val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val behøverVurderinger =

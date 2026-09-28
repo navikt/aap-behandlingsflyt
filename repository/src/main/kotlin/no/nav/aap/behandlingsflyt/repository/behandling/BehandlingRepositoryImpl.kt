@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Query
@@ -411,7 +410,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     }
 
     override fun hentAlleMedVedtakFor(
-        personId: PersonId,
+        sakId: SakId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> {
         val query = """
@@ -438,7 +437,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     WHERE behandling_id = B.ID
                 ) vb_agg ON true
             WHERE
-                S.PERSON_ID = ?
+                S.ID = ?
                 AND TYPE = ANY(?::TEXT[])
             ORDER BY
                 OPPRETTET_TID DESC
@@ -446,7 +445,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
         return connection.queryList(query) {
             setParams {
-                setLong(1, personId.id)
+                setLong(1, sakId.id)
                 setArray(2, behandlingstypeFilter.map { it.identifikator() })
             }
             setRowMapper {

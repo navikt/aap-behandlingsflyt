@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.oppholdskrav.Oppholdskravvilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.oppholdskrav.OppholdskravvilkårGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -27,14 +27,14 @@ class VurderOppholdskravSteg private constructor(
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårService: VilkårService,
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        vilkårsresultatRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -60,12 +60,14 @@ class VurderOppholdskravSteg private constructor(
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING,
             VurderingType.MIGERING_FRA_ARENA -> {
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                Oppholdskravvilkår(vilkårsresultat).vurder(OppholdskravvilkårGrunnlag(
-                    oppholdskravGrunnlag = oppholdskravGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId),
-                    vurderFra = kontekst.rettighetsperiode.fom,
-                ))
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                vilkårService.vurderVilkår(
+                    behandlingId = kontekst.behandlingId,
+                    faktagrunnlag = OppholdskravvilkårGrunnlag(
+                        oppholdskravGrunnlag = oppholdskravGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId),
+                        vurderFra = kontekst.rettighetsperiode.fom,
+                    ),
+                    vilkårsvurderer = Oppholdskravvilkår,
+                )
             }
 
             VurderingType.MELDEKORT,

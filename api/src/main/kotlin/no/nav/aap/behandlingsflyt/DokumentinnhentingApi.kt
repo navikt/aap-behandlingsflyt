@@ -2,15 +2,18 @@ package no.nav.aap.behandlingsflyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingerResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -169,23 +172,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 }
             }
 
-            // TODO: Slett når frontend er over på /paaminnelse/send
-            route("/purring") {
-                authorizedPost<Unit, String, PurringLegeerklæringRequest>(
-                    AuthorizationBodyPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
-                            repositoryRegistry,
-                            dataSource
-                        ),
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                    )
-                ) { _, req ->
-                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
-                    val bestillingUUID = dokumentinnhentingGateway.sendPåminnelseForBestilling(request)
-                    respond(bestillingUUID)
-                }
-            }
-
             route("/dialogmeldinger/{saksnummer}") {
                 authorizedGet<HentStatusLegeerklæring, List<MeldingMedDokumenterDto>>(
                     AuthorizationParamPathConfig(
@@ -195,7 +181,21 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     )
                 ) { params ->
                     val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
-                    respond(service.hentDialogForSak(params.saksnummer, token()))
+                    respond(service.hentDialogForSak(params.saksnummer, token()).meldinger)
+                }
+            }
+
+            route("/dialogmeldinger/{saksnummer}/v2") {
+                authorizedGet<HentStatusLegeerklæring, MeldingerResponse>(
+                    AuthorizationParamPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        applicationsOnly = false,
+                        sakPathParam = SakPathParam("saksnummer")
+                    )
+                ) { params ->
+                    val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
+                    val meldinger = service.hentDialogForSak(params.saksnummer, token())
+                    respond(meldinger)
                 }
             }
         }
@@ -229,6 +229,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 ) { _, req ->
                     val request = PåminnelseDto(req.dialogmeldingPurringUUID)
                     dokumentinnhentingGateway.avbrytAutomatiskPåminnelseForBestilling(request)
+                    respondWithStatus(HttpStatusCode.OK)
                 }
             }
 
@@ -244,6 +245,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 ) { _, req ->
                     val request = PåminnelseDto(req.dialogmeldingPurringUUID)
                     dokumentinnhentingGateway.gjenopptaAutomatiskPåminnelseForBestilling(request)
+                    respondWithStatus(HttpStatusCode.OK)
                 }
             }
 

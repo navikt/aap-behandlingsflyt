@@ -67,6 +67,7 @@ class BehandlingService(
      *
      * Er du sikker på at du ikke bryr deg om behandlingen du får er siste vedtatte eller en åpen behandling?
      */
+    @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         """
         Navnet på denne metoden er ikke tydelig på hva du egentlig ser etter. Bytt ut metodekallet med en av følgende:
@@ -82,7 +83,7 @@ class BehandlingService(
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
         val sak = sakRepository.hent(sakId)
         val alleBehandlingerMedVedtak =
-            behandlingRepository.hentAlleMedVedtakFor(sak.person.id, TypeBehandling.ytelseBehandlingstyper())
+            behandlingRepository.hentAlleMedVedtakFor(sak.id, TypeBehandling.ytelseBehandlingstyper())
         return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
     }
 
@@ -96,6 +97,7 @@ class BehandlingService(
             TypeBehandling.Revurdering -> underveisService.harRett(
                 requireNotNull(behandling.forrigeBehandlingId) { "Revurdering skal alltid ha forrigeBehandling" }
             )
+
             else -> return behandling.typeBehandling()
         }
         return utledTypeForRevurdering(behandling, harRett)
@@ -116,6 +118,7 @@ class BehandlingService(
                     }
                     utledTypeForRevurdering(behandling, harRettMap[forrigeBehandlingId] ?: false)
                 }
+
                 else -> behandling.typeBehandling()
             }
             behandling.id to type
@@ -217,7 +220,7 @@ class BehandlingService(
             sisteYtelsesbehandling.status().erÅpen() ->
                 if (fasttrackkandidat && sisteYtelsesbehandling.typeBehandling() != TypeBehandling.Førstegangsbehandling)
                     MåBehandlesAtomært(
-                        opprettRevurderingForranÅpenBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak),
+                        opprettRevurderingForanÅpenBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak),
                         sisteYtelsesbehandling
                     )
                 else
@@ -388,7 +391,7 @@ class BehandlingService(
         }
     }
 
-    private fun opprettRevurderingForranÅpenBehandling(
+    private fun opprettRevurderingForanÅpenBehandling(
         åpenRevurdering: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {

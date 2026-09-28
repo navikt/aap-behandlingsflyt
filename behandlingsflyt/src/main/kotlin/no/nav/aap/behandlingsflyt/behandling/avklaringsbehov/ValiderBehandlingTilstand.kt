@@ -34,7 +34,10 @@ internal object ValiderBehandlingTilstand {
     ) {
         val avklaringsbehovFinnesIBehandlingen = eksisterendeAvklaringsbehov.any { it.definisjon == avklaringsbehov }
 
-        if (!avklaringsbehovFinnesIBehandlingen && !avklaringsbehov.erFrivillig() && !avklaringsbehov.erOverstyring()) {
+        if (!avklaringsbehovFinnesIBehandlingen
+                    && !(avklaringsbehov.erFrivillig() && avklaringsbehov in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov)
+                    && !avklaringsbehov.erOverstyring()
+        ) {
             log.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har ${eksisterendeAvklaringsbehov.filter { it.erÅpent() }}")
 
             throw UgyldigForespørselException(

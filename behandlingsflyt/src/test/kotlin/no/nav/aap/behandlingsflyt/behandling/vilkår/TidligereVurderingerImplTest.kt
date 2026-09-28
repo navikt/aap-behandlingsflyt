@@ -67,8 +67,6 @@ class TidligereVurderingerImplTest {
     private val behandlingId = BehandlingId(1)
     private val sakId = SakId(1)
 
-    private lateinit var tidligereVurderinger: TidligereVurderingerImpl
-
     @BeforeEach
     fun setup() {
         every { unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27) } returns false

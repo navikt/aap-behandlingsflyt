@@ -112,8 +112,8 @@ class Avklaringsbehov(
         begrunnelse: String = "",
         venteårsak: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER,
-        perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>? = null,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
     ) {
         require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
         if (definisjon.erVentebehov()) {
@@ -155,7 +155,19 @@ class Avklaringsbehov(
     }
 
     fun skalStoppeHer(stegType: StegType): Boolean {
-        return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent()
+        return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent() &&
+                when (definisjon.type) {
+                    Definisjon.BehovType.MANUELT_FRIVILLIG if definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov ->
+                        false
+
+                    Definisjon.BehovType.MANUELT_FRIVILLIG,
+                    Definisjon.BehovType.MANUELT_PÅKREVD,
+                    Definisjon.BehovType.VENTEPUNKT,
+                    Definisjon.BehovType.OVERSTYR,
+                    Definisjon.BehovType.BREV,
+                    Definisjon.BehovType.BREV_VENTEPUNKT,
+                        -> true
+                }
     }
 
     internal fun løs(begrunnelse: String, endretAv: Bruker) {
@@ -199,6 +211,10 @@ class Avklaringsbehov(
 
     fun harAvsluttetStatusIHistorikken(): Boolean {
         return historikk.any { it.status == Status.AVSLUTTET }
+    }
+
+    fun harLøsning(): Boolean {
+        return aktivHistorikk.any { it.status == Status.AVSLUTTET }
     }
 
     fun sistAvsluttet(): LocalDateTime {
