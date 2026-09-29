@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class EtableringEgenVirksomhetService(
@@ -69,7 +70,7 @@ class EtableringEgenVirksomhetService(
             )
         }
 
-        if (gjeldendeVurderinger.isNotEmpty() && gjeldendeVurderinger.none { it.fom.isAfter(førsteMuligeDato) }) {
+        if (gjeldendeVurderinger.isNotEmpty() && gjeldendeVurderinger.any { it.fom.isBefore(førsteMuligeDato) }) {
             return VirksomhetEtableringIkkeGyldig(
                 "Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP"
             )
@@ -113,29 +114,31 @@ class EtableringEgenVirksomhetService(
     fun utledGyldighetsPeriode(
         behandlingId: BehandlingId
     ): List<Periode> {
-        val mapped = sykdomOgBistandTidslinje(behandlingId)
+        val førsteDagIOppfyltPeriode = sykdomOgBistandTidslinje(behandlingId)
+            .filter {
+                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
+            }.perioder().toList().firstOrNull()?.fom
+        if (førsteDagIOppfyltPeriode == null) return emptyList()
+        return sykdomOgBistandTidslinje(behandlingId)
             .filter {
                 it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
                         && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
-            }
-        return mapped.perioder().toList()
+            }.begrensetTil(Periode(førsteDagIOppfyltPeriode.plusDays(1), Tid.MAKS)).perioder().toList()
     }
 
     fun utledIkkeVurderbarePerioder(behandlingId: BehandlingId): List<Periode> {
         val førsteDagIOppfyltPeriode = sykdomOgBistandTidslinje(behandlingId)
             .filter {
-                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true || it.verdi.second?.erBehovForBistand() != true
+                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
             }.perioder().toList().firstOrNull()?.fom
 
         if (førsteDagIOppfyltPeriode == null) return emptyList()
 
-        val mapped = sykdomOgBistandTidslinje(behandlingId)
+       return sykdomOgBistandTidslinje(behandlingId)
             .filter {
                 it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true
                         || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
-            }
-
-        return mapped.perioder().plus(Periode(førsteDagIOppfyltPeriode, førsteDagIOppfyltPeriode)).toList()
+            }.perioder().plus(Periode(førsteDagIOppfyltPeriode, førsteDagIOppfyltPeriode)).toList()
     }
 
     private fun sykdomOgBistandTidslinje(behandlingId: BehandlingId): Tidslinje<Pair<Sykdomsvurdering?, Bistandsvurdering?>> {
