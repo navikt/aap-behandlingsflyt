@@ -674,6 +674,26 @@ open class AbstraktFlytOrkestratorTest(
         )
     }
 
+    protected fun Behandling.løsSamordningUføre(
+        fraDato: LocalDate,
+        gradering: Int = 100,
+        begrunnelse: String = "Samordning uføre",
+    ): Behandling {
+        return this.løsAvklaringsBehov(
+            AvklarSamordningUføreLøsning(
+                samordningUføreVurdering = SamordningUføreVurderingDto(
+                    begrunnelse = begrunnelse,
+                    vurderingPerioder = listOf(
+                        SamordningUføreVurderingPeriodeDto(
+                            virkningstidspunkt = fraDato,
+                            uføregradTilSamordning = gradering,
+                        )
+                    )
+                )
+            )
+        )
+    }
+
     protected fun Behandling.løsUtenSamordning(): Behandling {
         return this.løsAvklaringsBehov(
             AvklarSamordningGraderingLøsning(

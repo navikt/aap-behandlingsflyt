@@ -5,14 +5,17 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
-import no.nav.aap.behandlingsflyt.arena.ArenaDiagnoseType
-import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
-import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
-import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
-import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
-import no.nav.aap.behandlingsflyt.arena.ArenaVilkar
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
+import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
+import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 class ArenaoppslagFake : FakeServer() {
     override val server = embeddedServer(Netty, port = 0, module = module())
@@ -23,13 +26,13 @@ class ArenaoppslagFake : FakeServer() {
         installerStatusPages("ARENAOPPSLAG")
         routing {
             post("/api/v1/person/historikk") {
-                call.respond(HarArenaHistorikkResponse(harHistorikk = false))
+                call.respond(HarHistorikkResponse(harHistorikk = false))
             }
             post("/api/v1/person/saker") {
                 call.respond(
-                    ArenaSakerResponse(
+                    SakerResponse(
                         saker = listOf(
-                            ArenaSakOppsummering(
+                            ArenaSakOppsummeringKontrakt(
                                 sakId = "2016-123456",
                                 lopenummer = 123456,
                                 aar = 2016,
@@ -71,17 +74,30 @@ class ArenaoppslagFake : FakeServer() {
                         ),
                         diagnoser = listOf(
                             ArenaDiagnose(
-                                kodeverk = "ICD10",
+                                kodeverk = "ICD-10",
                                 kode = "M797",
-                                type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                                type = "HOVED",
                                 opprettet = LocalDate.of(2016, 1, 1),
                             ),
                             ArenaDiagnose(
-                                kodeverk = "ICD10",
+                                kodeverk = "ICD-10",
                                 kode = "M797",
-                                type = ArenaDiagnoseType.BIDIAGNOSE,
+                                type = "BI",
                                 opprettet = LocalDate.of(2016, 1, 1),
                             )
+                        )
+                    )
+                )
+            }
+            get("/api/migrering/{saksnummer}/krav") {
+                call.respond(
+                    KravResponse(
+                        lopenr = 123456,
+                        aar = 2016,
+                        soknadsdato = LocalDate.now().minusYears(1),
+                        migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)),
+                        gjenstaaendeKvote = GjenstaaendeKvote(
+                            ordinaer = 150
                         )
                     )
                 )
