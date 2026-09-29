@@ -78,8 +78,8 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
 
         connection.executeBatch(
             """
-            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_VURDERING (BEGRUNNELSE, FORELIGGER_FAGLIG_VURDERING, VIRKSOMHET_ER_NY, BRUKER_EIER_VIRKSOMHET, KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID, EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID, FASE, ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?, ?, ?, ?)
+            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_VURDERING (BEGRUNNELSE, FORELIGGER_FAGLIG_VURDERING, VIRKSOMHET_ER_NY, BRUKER_EIER_VIRKSOMHET, KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID, EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID, FASE, ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER, JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?, ?, ?, ?, ?)
         """.trimIndent(), etableringEgenvirksomhetVurderinger
         ) {
             setParams {
@@ -101,6 +101,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setInstant(15, it.opprettet)
                 setEnumName(16, it.fase)
                 setBoolean(17, it.erRegistrertINødvendigeOffentligeRegister)
+                setBoolean(18, it.jobberBrukerAktivMedVirksomheten)
             }
         }
 

@@ -40,6 +40,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val oppstartsPeriode: List<Periode>?,
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
+    val jobberBrukerAktivMedVirksomheten: Boolean?,
     val oppfylt: Boolean
 ) : VurderingDto {
     companion object {
@@ -90,6 +91,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
             kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
             fase = etableringEgenVirksomhetVurdering.fase,
             erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
+            jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten,
             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                 behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,

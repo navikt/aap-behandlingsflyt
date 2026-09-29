@@ -22,6 +22,7 @@ data class EtableringEgenVirksomhetLøsningDto(
 
     val fase: EtableringFase? = null,
     val erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
+    val jobberBrukerAktivMedVirksomheten: Boolean? = null,
 
     //midlertid legacy, bare for overgang
     @Deprecated("Bruk fase + fom. Fjernes etter frontend mignering")
@@ -47,6 +48,9 @@ data class EtableringEgenVirksomhetLøsningDto(
         val avklartErRegistrert = erRegistrertINødvendigeOffentligeRegister
             ?: if (fase == null && avklartFase == EtableringFase.OPPSTART) true else erRegistrertINødvendigeOffentligeRegister
 
+        val avklartAktivJobber = jobberBrukerAktivMedVirksomheten
+            ?: if (fase == null) true else jobberBrukerAktivMedVirksomheten
+
         val avklartFom = when (avklartFase){
             EtableringFase.UTVIKLING -> utviklingsPerioder?.firstOrNull()?.fom ?: this.fom
             EtableringFase.OPPSTART -> oppstartsPerioder?.firstOrNull()?.fom ?: this.fom
@@ -67,6 +71,7 @@ data class EtableringEgenVirksomhetLøsningDto(
             kanFøreTilSelvforsørget = kanFøreTilSelvforsørget,
             fase = avklartFase,
             erRegistrertINødvendigeOffentligeRegister = avklartErRegistrert,
+            jobberBrukerAktivMedVirksomheten = avklartAktivJobber,
             vurdertAv = bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling,

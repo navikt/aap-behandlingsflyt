@@ -5,8 +5,8 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-private const val MAKS_UTVIKLING_HVERDAGER = 131
-private const val MAKS_OPPSTART_HVERDAGER = 66
+internal const val MAKS_UTVIKLING_HVERDAGER = 131
+internal const val MAKS_OPPSTART_HVERDAGER = 66
 
 fun justerEtableringPerioder(
     vurderinger: List<EtableringEgenVirksomhetVurdering>

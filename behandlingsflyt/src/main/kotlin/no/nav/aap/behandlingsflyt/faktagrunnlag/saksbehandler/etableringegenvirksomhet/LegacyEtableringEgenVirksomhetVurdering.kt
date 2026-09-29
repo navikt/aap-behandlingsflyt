@@ -34,7 +34,6 @@ object EtablerEgenVirksomhetMapper {
             else -> null
         }
 
-        //spm her hvorfor first ?
         val startDato = when (fase) {
             EtableringFase.UTVIKLING -> legacy.utviklingsPerioder.first().fom
             EtableringFase.OPPSTART -> legacy.oppstartsPerioder.first().fom
@@ -53,6 +52,7 @@ object EtablerEgenVirksomhetMapper {
             null -> null
         }
 
+
         return EtableringEgenVirksomhetVurdering(
             begrunnelse = legacy.begrunnelse,
             virksomhetNavn = legacy.virksomhetNavn,
@@ -67,7 +67,8 @@ object EtablerEgenVirksomhetMapper {
             opprettet = legacy.opprettet,
             vurdertIBehandling = legacy.vurdertIBehandling,
             fom = startDato,
-            tom = sluttDato
+            tom = sluttDato,
+            jobberBrukerAktivMedVirksomheten = true
         )
     }
 
