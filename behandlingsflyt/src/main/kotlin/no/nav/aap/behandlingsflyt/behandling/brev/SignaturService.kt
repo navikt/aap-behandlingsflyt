@@ -89,29 +89,27 @@ class SignaturService(
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        val saksbehandler = avklaringsbehovene.alle()
-            .flatMap { it.historikk }
-            .filter { it.endretAv.erNavIdent() }
-            .maxByOrNull { it.tidsstempel }
-            ?: return emptyList()
-
-        val enhet = avklaringsbehovene.alle()
-            .flatMap { behov ->
-                behov.historikk
-                    .filter { it.endretAv == saksbehandler.endretAv }
-                    .map { behov.definisjon }
-            }
-            .firstNotNullOfOrNull { definisjon ->
-                enhetForDefinisjon(definisjon, oppgaveEnhetListe)
-            }
-
-        return listOf(
-            SignaturGrunnlag(
-                navIdent = saksbehandler.endretAv.ident,
-                rolle = null,
-                enhet = enhet,
-            )
+        val signaturer = listOfNotNull(
+            signaturFraLøstAvklaringsbehov(
+                avklaringsbehovene,
+                Rolle.SAKSBEHANDLER_OPPFOLGING,
+                oppgaveEnhetListe,
+            ),
+            signaturFraLøstAvklaringsbehov(
+                avklaringsbehovene,
+                Rolle.KVALITETSSIKRER,
+                oppgaveEnhetListe,
+            ),
         )
+            .distinctBy { it.navIdent.ident }
+
+        return signaturer.map {
+            SignaturGrunnlag(
+                navIdent = it.navIdent.ident,
+                rolle = null,
+                enhet = it.enhet,
+            )
+        }
     }
 
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
@@ -140,6 +138,7 @@ class SignaturService(
         oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): List<SignaturGrunnlag> {
+
         return listOfNotNull(
             utledSignatur(Rolle.BESLUTTER, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),
             utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene, oppgaveEnhetListe, innloggetBruker),

@@ -5,12 +5,15 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingsbehandling
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.KlagebehandlingMedVedtaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingMedReferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
@@ -19,12 +22,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+import kotlin.collections.map
+
+private val log = LoggerFactory.getLogger("PåklagetBehandlingGrunnlagApi")
 
 fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
     dataSource: DataSource,
@@ -32,52 +41,66 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
     gatewayProvider: GatewayProvider,
 ) {
     val ansattInfoService = AnsattInfoService(gatewayProvider)
+
+    fun hentPåklagetBehandlingGrunnlagDto(
+        behandlingReferanse: BehandlingReferanse,
+        kanSaksbehandle: Boolean,
+    ): PåklagetBehandlingGrunnlagDto {
+        return dataSource.transaction(readOnly = true) { connection ->
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val påklagetBehandlingRepository = repositoryProvider.provide<PåklagetBehandlingRepository>()
+            val tilbakekrevingRepository = repositoryProvider.provide<TilbakekrevingRepository>()
+            val vedtakService = VedtakService(repositoryProvider, gatewayProvider)
+
+            val behandling = behandlingRepository.hent(behandlingReferanse)
+            val sak = sakRepository.hent(behandling.sakId)
+
+            val påklagetBehandlingService = PåklagetBehandlingVurderingService(
+                behandlingRepository = behandlingRepository,
+                påklagetBehandlingRepository = påklagetBehandlingRepository,
+                vedtakService = vedtakService,
+                tilbakekrevingRepository = tilbakekrevingRepository
+            )
+
+            val gjeldendeVurdering =
+                påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
+
+            val behandlingerMedVedtak =
+                påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.id)
+                    .filterNot {
+                        it.vedtakstidspunkt.toLocalDate().isAfter(behandling.opprettetTidspunkt.toLocalDate())
+                    }
+            val vedtatteKlagebehandlinger = påklagetBehandlingService.hentAlleKlagerMedVedaksdato(sak.id)
+                .filterNot { it.vedtaksdato.isAfter(behandling.opprettetTidspunkt.toLocalDate()) }
+            val avsluttaTilbakekrevingsbehandlinger =
+                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.KlagePaaTilbakekreving)) {
+                    påklagetBehandlingService.hentAvsluttaTilbakekrevingsbehandlinger(sak.id)
+                } else {
+                    emptyList()
+                }
+
+            mapTilPåklagetBehandlingGrunnlagDto(
+                påklagetBehandlingVurderingMedReferanse = gjeldendeVurdering,
+                behandlingerMedVedtak = behandlingerMedVedtak,
+                harTilgangTilÅSaksbehandle = kanSaksbehandle,
+                vedtatteKlagebehandlinger,
+                avsluttaTilbakekrevingsbehandlinger,
+                ansattInfoService = ansattInfoService,
+                sak
+            )
+        }
+    }
+
     route("api/klage/{referanse}/grunnlag/påklaget-behandling") {
         getGrunnlag<BehandlingReferanse, PåklagetBehandlingGrunnlagDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             påkrevdRolle = Definisjon.FASTSETT_PÅKLAGET_BEHANDLING.løsesAv
-        ) { behandlingReferanse ->
-            val respons = dataSource.transaction(readOnly = true) { connection ->
-                val repositoryProvider = repositoryRegistry.provider(connection)
-                val sakRepository = repositoryProvider.provide<SakRepository>()
-                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                val påklagetBehandlingRepository = repositoryProvider.provide<PåklagetBehandlingRepository>()
-                val vedtakService = VedtakService(repositoryProvider, gatewayProvider)
-
-                val behandling = behandlingRepository.hent(behandlingReferanse)
-                val sak = sakRepository.hent(behandling.sakId)
-
-                val påklagetBehandlingService =
-                    PåklagetBehandlingVurderingService(
-                        behandlingRepository,
-                        påklagetBehandlingRepository,
-                        vedtakService
-                    )
-
-                val gjeldendeVurdering =
-                    påklagetBehandlingService.hentGjeldendeVurderingMedReferanse(behandlingReferanse)
-                val behandlingerMedVedtak =
-                    påklagetBehandlingService.hentAlleBehandlingerMedVedtakForPerson(sak.id)
-                        .filterNot {
-                            it.vedtakstidspunkt.toLocalDate().isAfter(behandling.opprettetTidspunkt.toLocalDate())
-                        }
-
-
-                val vedtatteKlagebehandlinger = påklagetBehandlingService.hentAlleKlagerMedVedaksdato(sak.id)
-                    .filterNot { it.vedtaksdato.isAfter(behandling.opprettetTidspunkt.toLocalDate()) }
-
-                mapTilPåklagetBehandlingGrunnlagDto(
-                    gjeldendeVurdering,
-                    behandlingerMedVedtak,
-                    vedtatteKlagebehandlinger,
-                    kanSaksbehandle(),
-                    ansattInfoService,
-                    sak
-                )
-            }
-
-            respond(respons)
+        ) { behandlingReferanse: BehandlingReferanse ->
+            val grunnlagDto = hentPåklagetBehandlingGrunnlagDto(behandlingReferanse, kanSaksbehandle())
+            respond(grunnlagDto)
         }
     }
 }
@@ -85,20 +108,32 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
 fun mapTilPåklagetBehandlingGrunnlagDto(
     påklagetBehandlingVurderingMedReferanse: PåklagetBehandlingVurderingMedReferanse?,
     behandlingerMedVedtak: List<BehandlingMedVedtak>,
-    vedtatteKlagebehandlinger: List<KlagebehandlingMedVedtaksdato>,
     harTilgangTilÅSaksbehandle: Boolean,
+    vedtatteKlagebehandlinger: List<KlagebehandlingMedVedtaksdato>,
+    avsluttaTilbakekrevingsbehandlinger: List<Tilbakekrevingsbehandling>,
     ansattInfoService: AnsattInfoService,
     sak: Sak
 ): PåklagetBehandlingGrunnlagDto {
-    return PåklagetBehandlingGrunnlagDto(
+    val respons = PåklagetBehandlingGrunnlagDto(
         behandlinger = behandlingerMedVedtak
-            .map { it.tilBehandlingMedVedtakDto() }
+            .map { BehandlingMedVedtakDto.fraDomene(it) }
             .sortedByDescending { it.vedtakstidspunkt },
         vedtatteKlagebehandlinger = vedtatteKlagebehandlinger.map { KlagebehandlingDto.fraDomene(it, sak.saksnummer) }
             .sortedByDescending { it.vedtaksdato },
+        avsluttaTilbakekrevingsbehandlinger = avsluttaTilbakekrevingsbehandlinger.map { AvsluttaTilbakekrevingsbehandlingDto.fraDomene(it) }
+            .sortedByDescending { it.vedtaksdato?.atStartOfDay() ?: it.opprettetTidspunkt },
         gjeldendeVurdering = påklagetBehandlingVurderingMedReferanse?.let {
             PåklagetBehandlingVurderingDto(
-                påklagetBehandling = påklagetBehandlingVurderingMedReferanse.referanse?.referanse,
+                påklagetBehandling = when (påklagetBehandlingVurderingMedReferanse.påklagetVedtakType) {
+                    PåklagetVedtakType.KELVIN_BEHANDLING ->
+                        påklagetBehandlingVurderingMedReferanse.referanse?.referanse
+
+                    PåklagetVedtakType.TILBAKEKREVING ->
+                        påklagetBehandlingVurderingMedReferanse.påklagetTilbakekrevingsbehandling
+
+                    PåklagetVedtakType.ARENA_VEDTAK ->
+                        null
+                },
                 påklagetVedtakType = påklagetBehandlingVurderingMedReferanse.påklagetVedtakType
             )
         },
@@ -113,6 +148,7 @@ fun mapTilPåklagetBehandlingGrunnlagDto(
             }
         )
     )
+    return respons
 }
         
             

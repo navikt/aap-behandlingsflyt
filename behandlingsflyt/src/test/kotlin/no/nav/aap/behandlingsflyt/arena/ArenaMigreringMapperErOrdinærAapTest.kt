@@ -1,0 +1,66 @@
+package no.nav.aap.behandlingsflyt.arena
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import java.time.LocalDate
+
+class ArenaMigreringMapperErOrdinærAapTest {
+
+    private fun response(vararg vilkar: ArenaVilkar) = ArenaSykdomsvurderingResponse(
+        vedtakId = 1,
+        begrunnelse = "Begrunnelse",
+        vilkar = vilkar.toList(),
+        diagnoser = listOf(
+            ArenaDiagnose(
+                kodeverk = "ICD10",
+                kode = "M797",
+                type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                opprettet = LocalDate.of(2016, 1, 1),
+            )
+        ),
+    )
+
+    @Test
+    fun `erOrdinærAap er true når alle påkrevde vilkår er oppfylt`() {
+        val fraArena = response(
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
+        )
+
+        assertThat(fraArena.erOrdinærAap()).isTrue()
+    }
+
+    @Test
+    fun `erOrdinærAap er false når ett påkrevd vilkår mangler`() {
+        val fraArena = response(
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+        )
+
+        assertThat(fraArena.erOrdinærAap()).isFalse()
+    }
+
+    @Test
+    fun `erOrdinærAap er false når ett påkrevd vilkår er tilstede men ikke oppfylt`() {
+        val fraArena = response(
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "N", begrunnelse = null),
+        )
+
+        assertThat(fraArena.erOrdinærAap()).isFalse()
+    }
+
+    @Test
+    fun `erOrdinærAap ignorerer vilkår som ikke er relevante for ordinær AAP`() {
+        val fraArena = response(
+            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
+            ArenaVilkar(id = 4, kode = "ANNETVILKAAR", status = "N", begrunnelse = null),
+        )
+
+        assertThat(fraArena.erOrdinærAap()).isTrue()
+    }
+}
