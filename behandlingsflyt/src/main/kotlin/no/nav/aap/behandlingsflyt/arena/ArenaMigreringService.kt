@@ -30,7 +30,7 @@ class ArenaMigreringService(
         return arenaMigrering.saksnummerArena
     }
 
-    fun hentSykdomsvurdering(sakId: SakId): ArenaSykdomsvurderingResponse {
+    fun hentSykdomsvurdering(sakId: SakId): ArenaSykdomsvurdering {
         logger.info("Henter sykdomsvurdering fra Arena for sak $sakId.")
         val saksnummerArena = hentSaksnummerArena(sakId)
         val sykdomsvurderingFraArena = arenaOppslagGateway.hentSykdomsvurdering(saksnummerArena)
@@ -39,7 +39,7 @@ class ArenaMigreringService(
             "Kan ikke migrere sykdomsvurdering fra Arena for sak $sakId fordi det ikke finnes en vurdering for ordinær AAP"
         }
 
-        return sykdomsvurderingFraArena
+        return sykdomsvurderingFraArena.tilDomene()
     }
 
     fun hentKravDataForSak(sakId: SakId): ArenaKrav? {

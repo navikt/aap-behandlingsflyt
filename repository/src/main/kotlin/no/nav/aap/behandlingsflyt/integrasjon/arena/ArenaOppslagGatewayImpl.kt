@@ -5,9 +5,9 @@ import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
-import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident

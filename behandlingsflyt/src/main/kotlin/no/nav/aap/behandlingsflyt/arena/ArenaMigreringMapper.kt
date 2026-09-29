@@ -19,7 +19,7 @@ private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf("INNTNEDS", "SYKSKADLYT",
  * vilkårene er oppfylt i Arena: INNTNEDS (inntekt/nedsatt), SYKSKADLYT (sykdom/
  * skade/lyte) og AAARBEVNE (nedsatt arbeidsevne).
  */
-fun ArenaSykdomsvurderingResponse.erOrdinærAap(): Boolean {
+fun ArenaSykdomsvurdering.erOrdinærAap(): Boolean {
     return PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP.all { påkrevdKode ->
         vilkar.any { it.kode == påkrevdKode && it.status == "J" }
     }
@@ -56,7 +56,7 @@ object ArenaMigreringMapper {
      * [erOrdinærAap] først (migreringsgruppe 1).
      */
     fun mapOppfyltOrdinærSykdomsvurdering(
-        fraArena: ArenaSykdomsvurderingResponse,
+        fraArena: ArenaSykdomsvurdering,
         behandlingId: BehandlingId,
         vurderingenGjelderFra: LocalDate,
     ): Sykdomsvurdering {

@@ -12,7 +12,7 @@ import java.time.LocalDate
 
 class ArenaMigreringMapperTest {
 
-    private val fraArena = ArenaSykdomsvurderingResponse(
+    private val fraArena = ArenaSykdomsvurdering(
         vedtakId = 1,
         begrunnelse = "Bruker oppfyller vilkåret for 11-5",
         vilkar = listOf(

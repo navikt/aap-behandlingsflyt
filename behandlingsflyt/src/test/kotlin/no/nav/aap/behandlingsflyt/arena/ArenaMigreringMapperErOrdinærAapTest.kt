@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 class ArenaMigreringMapperErOrdinærAapTest {
 
-    private fun response(vararg vilkar: ArenaVilkar) = ArenaSykdomsvurderingResponse(
+    private fun response(vararg vilkar: ArenaVilkar) = ArenaSykdomsvurdering(
         vedtakId = 1,
         begrunnelse = "Begrunnelse",
         vilkar = vilkar.toList(),

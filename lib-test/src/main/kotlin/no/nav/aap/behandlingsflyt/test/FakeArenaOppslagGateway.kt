@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.test
 
-import no.nav.aap.behandlingsflyt.arena.ArenaDiagnose
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
-import no.nav.aap.behandlingsflyt.arena.ArenaSykdomsvurderingResponse
-import no.nav.aap.behandlingsflyt.arena.ArenaVilkar
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar as ArenaVilkarKontrakt
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose as ArenaDiagnoseKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Factory
@@ -62,19 +62,19 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
             vedtakId = 1,
             begrunnelse = "Oppfyller vilkårene for 11-5",
             vilkar = listOf(
-                ArenaVilkar(
+                ArenaVilkarKontrakt(
                     id = 1,
                     kode = "INNTNEDS",
                     status = "J",
                     begrunnelse = null
                 ),
-                ArenaVilkar(
+                ArenaVilkarKontrakt(
                     id = 2,
                     kode = "SYKSKADLYT",
                     status = "J",
                     begrunnelse = null
                 ),
-                ArenaVilkar(
+                ArenaVilkarKontrakt(
                     id = 3,
                     kode = "AAARBEVNE",
                     status = "J",
@@ -82,13 +82,13 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 ),
             ),
             diagnoser = listOf(
-                ArenaDiagnose(
+                ArenaDiagnoseKontrakt(
                     kodeverk = "ICD-10",
                     kode = "M797",
                     type = "HOVED",
                     opprettet = LocalDate.of(2016, 1, 1),
                 ),
-                ArenaDiagnose(
+                ArenaDiagnoseKontrakt(
                     kodeverk = "ICD-10",
                     kode = "M797",
                     type = "BI",
