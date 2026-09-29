@@ -134,7 +134,7 @@ class ArenaMigreringMapperTest {
         assertThat(krav.arenaSaksnummer).isEqualTo("2016-123456")
         assertThat(krav.rettighetstype).isEqualTo(MigrertRettighetstype.ORDINÆR)
         assertThat(krav.resterendeKvoteOrdinær).isEqualTo(150)
-        assertThat(krav.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(krav.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
         assertThat(krav.vurdertIBehandling).isEqualTo(behandlingId)
         assertThat(krav.begrunnelse).isEqualTo("Migrering av sak 2016-123456 fra Arena")
     }

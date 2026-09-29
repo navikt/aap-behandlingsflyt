@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.arena.tilDomene
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
@@ -147,7 +148,7 @@ class KravStegTest {
         assertThat(krav.arenaSaksnummer).isEqualTo(fraArena.arenaSaksnummer)
         assertThat(krav.rettighetstype).isEqualTo(MigrertRettighetstype.ORDINÆR)
         assertThat(krav.resterendeKvoteOrdinær).isEqualTo(fraArena.gjenståendeKvoteOrdinær)
-        assertThat(krav.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(krav.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
         assertThat(krav.vurdertIBehandling).isEqualTo(behandling.id)
     }
 
