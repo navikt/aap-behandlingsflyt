@@ -42,6 +42,10 @@ object ArenaMigreringMapper {
         ) { "Fant ingen hoveddiagnose i sykdomsvurdering fra Arena" }
         val bidiagnoser = fraArena.diagnoser.filter { it.type == "BI" }
 
+        require(bidiagnoser.all { it.kodeverk == hoveddiagnose.kodeverk }) {
+            "Bidiagnoser har ikke samme kodeverk som hoveddiagnose i sykdomsvurdering fra Arena, dette er ikke støttet enda"
+        }
+
         // Kodeverk i Kelvin har ikke bindestrek, men Arena har det. F.eks. "ICPC-2" vs "ICPC2"
         val kodeverk = hoveddiagnose.kodeverk.replace("-", "")
 

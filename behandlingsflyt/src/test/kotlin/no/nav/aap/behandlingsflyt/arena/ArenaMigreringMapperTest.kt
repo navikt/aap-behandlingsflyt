@@ -77,6 +77,24 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
+    fun `mapSykdomsvurdering feiler når bidiagnose har annet kodeverk enn hoveddiagnose`() {
+        val medAvvikendeBidiagnose = fraArena.copy(
+            diagnoser = fraArena.diagnoser + ArenaDiagnose(
+                kodeverk = "ICPC2",
+                kode = "L84",
+                type = "BI",
+                opprettet = LocalDate.of(2016, 1, 1),
+            )
+        )
+
+        assertThatThrownBy {
+            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+        }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Bidiagnoser har ikke samme kodeverk")
+    }
+
+    @Test
     fun `ArenaMigreringMapper mapper alle felter korrekt til Bistandsvurdering fra Arena-respons`() {
         val vurdering = ArenaMigreringMapper.mapOppfyltBistandsvurdering(
             behandlingId = behandlingId,
