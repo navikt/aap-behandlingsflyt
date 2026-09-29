@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -60,7 +61,9 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         grunn: ÅrsakTilSettPåVent?,
         endretAv: Bruker,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
-        perioderVedtaketBehøverVurdering: Set<Periode>?
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
+        gradBehov: GradBehov?,
     ) {
         val avklaringsbehovId = finnEllerOpprettAvklaringsbehov(
             behandlingId,
@@ -77,7 +80,9 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 endretAv = endretAv,
                 frist = frist,
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                perioderKanVurderes = perioderKanVurderes,
+                gradBehov = gradBehov,
             )
         )
     }
@@ -154,8 +159,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         endring: Endring
     ) {
         val query = """
-            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid, venteaarsak, perioder_ugyldig_vurdering, perioder_krever_vurdering) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid, venteaarsak, perioder_ugyldig_vurdering, perioder_krever_vurdering, perioder_kan_vurderes, grad_behov) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val opprettetAv = endring.endretAv
@@ -171,6 +176,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setEnumName(7, endring.grunn)
                 setPeriodeArray(8, endring.perioderSomIkkeErTilstrekkeligVurdert?.toList())
                 setPeriodeArray(9, endring.perioderVedtaketBehøverVurdering?.toList())
+                setPeriodeArray(10, endring.perioderKanVurderes?.toList())
+                setEnumName(11, endring.gradBehov)
             }
         }
         val queryPeriode = """
@@ -206,6 +213,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 ae.venteaarsak AS endring_venteaarsak,
                 ae.perioder_ugyldig_vurdering AS endring_perioder_ugyldig_vurdering,
                 ae.perioder_krever_vurdering AS endring_perioder_krever_vurdering,
+                ae.perioder_kan_vurderes as endring_perioder_kan_vurderes,
+                ae.grad_behov as endring_grad_behov,
                 aea.endring_id AS retur_endring_id,
                 aea.aarsak_til_retur AS retur_aarsak,
                 aea.aarsak_til_retur_fritekst AS retur_aarsak_fritekst
@@ -250,6 +259,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 ae.venteaarsak AS endring_venteaarsak,
                 ae.perioder_ugyldig_vurdering AS endring_perioder_ugyldig_vurdering,
                 ae.perioder_krever_vurdering AS endring_perioder_krever_vurdering,
+                ae.perioder_kan_vurderes AS endring_perioder_kan_vurderes,
+                ae.grad_behov AS endring_grad_behov,
                 aea.endring_id AS retur_endring_id,
                 aea.aarsak_til_retur AS retur_aarsak,
                 aea.aarsak_til_retur_fritekst AS retur_aarsak_fritekst
@@ -332,7 +343,10 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 perioderSomIkkeErTilstrekkeligVurdert = row.getPeriodeArrayOrNull("endring_perioder_ugyldig_vurdering")
                     ?.toSet(),
                 perioderVedtaketBehøverVurdering = row.getPeriodeArrayOrNull("endring_perioder_krever_vurdering")
-                    ?.toSet()
+                    ?.toSet(),
+                perioderKanVurderes = row.getPeriodeArrayOrNull("endring_perioder_kan_vurderes")
+                    ?.toSet(),
+                gradBehov = row.getEnumOrNull<GradBehov>("endring_grad_behov")
             )
         }
 
@@ -368,7 +382,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             endretAv = endring.endretAv,
             årsakTilRetur = relevanteÅrsaker,
             perioderSomIkkeErTilstrekkeligVurdert = endring.perioderSomIkkeErTilstrekkeligVurdert,
-            perioderVedtaketBehøverVurdering = endring.perioderVedtaketBehøverVurdering
+            perioderVedtaketBehøverVurdering = endring.perioderVedtaketBehøverVurdering,
+            gradBehov = endring.gradBehov
         )
     }
 
@@ -390,7 +405,9 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         val frist: LocalDate?,
         val grunn: ÅrsakTilSettPåVent?,
         val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
-        val perioderVedtaketBehøverVurdering: Set<Periode>?
+        val perioderVedtaketBehøverVurdering: Set<Periode>?,
+        val perioderKanVurderes: Set<Periode>?,
+        val gradBehov: GradBehov?
     )
 
     internal data class ÅrsakInternal(val endringId: Long, val årsak: ÅrsakTilReturKode, val årsakFritekst: String?)

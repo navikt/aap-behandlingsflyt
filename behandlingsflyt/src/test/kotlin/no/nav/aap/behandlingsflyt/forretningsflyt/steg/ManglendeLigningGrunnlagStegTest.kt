@@ -193,7 +193,7 @@ class ManglendeLigningGrunnlagStegTest {
 
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(behandling: Behandling) {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
-        avklaringsbehovene.leggTil(Definisjon.FASTSETT_MANUELL_INNTEKT, StegType.MANGLENDE_LIGNING, null, null)
+        avklaringsbehovene.leggTil(Definisjon.FASTSETT_MANUELL_INNTEKT, StegType.MANGLENDE_LIGNING, null, null, null)
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", Bruker("saksbehandler"))
         avklaringsbehovene.løsAvklaringsbehov(
             Definisjon.FASTSETT_MANUELL_INNTEKT,

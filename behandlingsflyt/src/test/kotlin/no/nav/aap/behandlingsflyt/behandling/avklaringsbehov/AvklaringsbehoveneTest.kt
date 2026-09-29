@@ -26,7 +26,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null
+            avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null, null
         )
 
         assertThat(avklaringsbehovene.alle()).hasSize(1)
@@ -42,7 +42,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null
+            avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null, null
         )
         val avklaringsbehov1 = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_SYKDOM,
@@ -51,7 +51,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            avklaringsbehov1.definisjon, avklaringsbehov1.funnetISteg, null, null
+            avklaringsbehov1.definisjon, avklaringsbehov1.funnetISteg, null, null, null
         )
 
         assertThat(avklaringsbehovene.alle()).hasSize(1)
@@ -66,7 +66,7 @@ class AvklaringsbehoveneTest {
             id = 1L,
             kreverToTrinn = null
         )
-        avklaringsbehovene.leggTil(avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null)
+        avklaringsbehovene.leggTil(avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null, null)
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
@@ -84,7 +84,7 @@ class AvklaringsbehoveneTest {
             id = 1L,
             kreverToTrinn = null
         )
-        avklaringsbehovene.leggTil(avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null)
+        avklaringsbehovene.leggTil(avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null, null)
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
@@ -110,7 +110,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null
+            avklaringsbehov.definisjon, avklaringsbehov.funnetISteg, null, null, null
         )
         val avklaringsbehov1 = Avklaringsbehov(
             definisjon = Definisjon.FATTE_VEDTAK,
@@ -119,7 +119,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            avklaringsbehov1.definisjon, avklaringsbehov1.funnetISteg, null, null
+            avklaringsbehov1.definisjon, avklaringsbehov1.funnetISteg, null, null, null
         )
 
         assertThat(avklaringsbehovene.åpne()).hasSize(2)
@@ -146,6 +146,7 @@ class AvklaringsbehoveneTest {
             avklaringsbehov.funnetISteg,
             perioderSomIkkeErTilstrekkeligVurdert = gamlePerioder,
             perioderVedtaketBehøverVurdering = gamlePerioder,
+            perioderKanVurderes = gamlePerioder
         )
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
@@ -158,7 +159,7 @@ class AvklaringsbehoveneTest {
             Periode(1 januar 2021, 1 april 2022),
             Periode(10 april 2022, Tid.MAKS)
         )
-        avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder, nyePerioder)
+        avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder, nyePerioder, nyePerioder, null)
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
         assertThat(

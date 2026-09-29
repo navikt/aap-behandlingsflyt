@@ -252,7 +252,7 @@ class EnklereFlytOrkestratorTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null
+            definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null, null
         )
 
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
@@ -337,11 +337,11 @@ class EnklereFlytOrkestratorTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjon = Definisjon.AVKLAR_STUDENT, funnetISteg = AVKLAR_STUDENT, null, null
+            definisjon = Definisjon.AVKLAR_STUDENT, funnetISteg = AVKLAR_STUDENT, null, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", Bruker("TESTEN"))
         avklaringsbehovene.leggTil(
-            definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null
+            definisjon = Definisjon.AVKLAR_SYKDOM, funnetISteg = AVKLAR_SYKDOM, null, null, null
         )
 
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
@@ -770,14 +770,14 @@ class EnklereFlytOrkestratorTest {
 
         /* Plasser flyten i steget FASTSETT_ARBEIDSEVNE. */
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .leggTil(Definisjon.FASTSETT_ARBEIDSEVNE, Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg, null, null)
+            .leggTil(Definisjon.FASTSETT_ARBEIDSEVNE, Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg, null, null, null)
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
         behandlingRepository.hent(behandling.id).also {
             assertThat(it.aktivtSteg()).isEqualTo(Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg)
         }
 
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .leggTil(Definisjon.AVKLAR_BISTANDSBEHOV, Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg, null, null)
+            .leggTil(Definisjon.AVKLAR_BISTANDSBEHOV, Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg, null, null, null)
 
         flytOrkestrator.forberedOgProsesserBehandling(behandling)
 

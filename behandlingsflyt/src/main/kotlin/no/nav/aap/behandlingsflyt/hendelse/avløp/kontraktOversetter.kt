@@ -70,7 +70,9 @@ fun sortererteAvklaringsbehov(
                     begrunnelse = endring.begrunnelse,
                     årsakTilRetur = endring.årsakTilRetur.map {
                         ÅrsakTilRetur(it.oversettTilKontrakt())
-                    })
+                    },
+                    gradBehov = endring.gradBehov
+                )
             },
         )
     }
