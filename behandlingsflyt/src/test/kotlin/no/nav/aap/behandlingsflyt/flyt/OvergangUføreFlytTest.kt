@@ -10,12 +10,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
@@ -26,9 +28,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBruker
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
@@ -55,6 +63,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -246,16 +255,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                             fom = fom,
                             tom = null
                         ),
-                        BistandLøsningDto(
-                            begrunnelse = "Ikke oppfylt bistand",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = "Yep",
-                            fom = overgangUførDato,
-                            tom = null
-                        )
+                        ikkeOppfyltBistand(overgangUførDato)
                     ),
                 ),
             )
@@ -358,16 +358,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
                     løsningerForPerioder = listOf(
-                        BistandLøsningDto(
-                            begrunnelse = "Ikke oppfylt bistand",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = "Yep",
-                            fom = virkningsdato,
-                            tom = null
-                        )
+                        ikkeOppfyltBistand(virkningsdato)
                     ),
                 ),
             )
@@ -493,16 +484,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
                     løsningerForPerioder = listOf(
-                        BistandLøsningDto(
-                            begrunnelse = "Ikke oppfylt bistand",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = "Yep",
-                            fom = virkningsdato,
-                            tom = null
-                        )
+                        ikkeOppfyltBistand(virkningsdato)
                     ),
                 ),
             )
@@ -552,6 +534,88 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
     }
 
     @Test
+    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18, men bruker dør før dato`() {
+        val overgangUførDato = LocalDate.now().plusMonths(1)
+        val dødsdato = LocalDate.now().plusDays(5)
+        val virkningsdato = LocalDate.now()
+        val person = TestPersoner.STANDARD_PERSON()
+        val (sak, sisteBehandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = virkningsdato.atStartOfDay()
+        )
+
+        sisteBehandling
+            .løsSykdom(virkningsdato, erOppfylt = true)
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        ikkeOppfyltBistand(virkningsdato)
+                    ),
+                ),
+            )
+            .løsOvergangUføre(
+                fom = virkningsdato,
+                brukerHarSøktOmUføretrygd = true,
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                brukerHarRettPåAap = true
+            )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(virkningsdato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+
+        val (_, revurdering) = opprettUførevedtakshendelse(
+            sak = sak,
+            behandling = sisteBehandling,
+            virkningsdato = overgangUførDato,
+            resultat = UførevedtakResultat.INNV,
+            avslag12_5 = false,
+        )
+
+        assertThat(hentAlleAvklaringsbehov(revurdering).map { it.definisjon }).doesNotContain(Definisjon.KVALITETSSIKRING)
+
+        dataSource.transaction { connection ->
+            val automatiskVurdering = OvergangUføreRepositoryImpl(connection)
+                .hentHvisEksisterer(revurdering.id)
+                ?.vurderinger
+                ?.singleOrNull { it.erAutomatiskVurdert() && it.fom == overgangUførDato }
+
+            assertThat(automatiskVurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
+            assertThat(automatiskVurdering.fom).isEqualTo(overgangUførDato)
+        }
+
+        person.medDødsdato(dødsdato)
+        person.medUføre(Prosent.`50_PROSENT`, virkningsdato, virkningsdato.minusDays(1))
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.UFØRE, sak.id)
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.PERSONOPPLYSNING, sak.id)
+        val revurderingDødsfall = opprettDødshendelse(sak)
+
+        assertThat(revurderingDødsfall.status()).isEqualTo(Status.UTREDES)
+            revurderingDødsfall.løsSykdom(
+                vurderingGjelderFra = dødsdato,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                erOppfylt = false,
+                vissVarighet = false
+            )
+                .løsBistand(dødsdato, false)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .løsSamordningUføre(dødsdato)
+                .foreslåVedtak()
+                .fattVedtak()
+        dataSource.transaction { connection ->
+            val oppdatertRevurdering = BehandlingRepositoryImpl(connection).hent(revurderingDødsfall.id)
+            assertThat(oppdatertRevurdering.status().erAvsluttet()).isTrue()
+        }
+    }
+
+
+    @Test
     fun `UunngåeligAvslag for OVERGANG_UFORE inneholder riktig vilkårtype når vilkåret ikke er oppfylt`() {
         val fom = LocalDate.of(2026, 1, 1)
 
@@ -561,16 +625,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
                     løsningerForPerioder = listOf(
-                        BistandLøsningDto(
-                            begrunnelse = "Ikke oppfylt bistand",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = "Yep",
-                            fom = fom,
-                            tom = null
-                        )
+                        ikkeOppfyltBistand(fom)
                     ),
                 ),
             )
@@ -592,6 +647,17 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 }
             }
     }
+
+    private fun ikkeOppfyltBistand(virkningsdato: LocalDate): BistandLøsningDto = BistandLøsningDto(
+        begrunnelse = "Ikke oppfylt bistand",
+        erBehovForAktivBehandling = false,
+        erBehovForArbeidsrettetTiltak = false,
+        erBehovForAnnenOppfølging = false,
+        skalVurdereAapIOvergangTilArbeid = null,
+        overgangBegrunnelse = "Yep",
+        fom = virkningsdato,
+        tom = null
+    )
 
     @Suppress("FunctionParameterNaming")
     private fun opprettUførevedtakshendelse(
@@ -631,6 +697,44 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             revurdering = prosesserBehandling(revurdering)
         }
         return Pair(melding, revurdering)
+    }
+
+    private fun opprettDødshendelse(
+        sak: Sak,
+    ): Behandling {
+        val dokumentReferanse = UUID.randomUUID().toString()
+        val personidenter = listOf(sak.person.aktivIdent().identifikator)
+        val innsending = PdlPersonHendelse(
+            hendelseId = UUID.randomUUID().toString(),
+            personidenter = personidenter,
+            master = "FREG",
+            opprettet = Instant.now(),
+            opplysningstype = Opplysningstype.DOEDSFALL_V1,
+            endringstype = Endringstype.OPPRETTET,
+            ).tilInnsendingDødsfallBruker(sak.saksnummer, null, personidenter)
+        dataSource.transaction { connection ->
+            val flytJobbRepository = FlytJobbRepository(connection)
+            flytJobbRepository.leggTil(
+                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                    sakId = sak.id,
+                    dokumentReferanse = InnsendingReferanse(
+                        InnsendingReferanse.Type.PDL_HENDELSE_ID,
+                        dokumentReferanse
+                    ),
+                    brevkategori = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
+                    kanal = Kanal.DIGITAL,
+                    mottattTidspunkt = LocalDateTime.now(),
+                    melding = innsending.melding
+                )
+            )
+        }
+        motor.kjørJobber()
+
+        var revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
+        if (!revurdering.status().erAvsluttet()) {
+            revurdering = prosesserBehandling(revurdering)
+        }
+        return revurdering
     }
 
     @Test
