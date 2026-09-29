@@ -6,5 +6,5 @@ import no.nav.aap.komponenter.type.Periode
 
 data class OvergangArbeidFaktagrunnlag(
     val rettighetsperiode: Periode,
-    val overgangArbeidGrunnlag: OvergangArbeidGrunnlag,
+    val overgangArbeidGrunnlag: OvergangArbeidGrunnlag?,
 ) : Faktagrunnlag
