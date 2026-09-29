@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
@@ -30,8 +29,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
@@ -255,7 +252,17 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                             fom = fom,
                             tom = null
                         ),
-                        ikkeOppfyltBistand(overgangUførDato)
+                        BistandLøsningDto(
+                            begrunnelse = "Ikke oppfylt bistand",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Yep",
+                            fom = overgangUførDato,
+                            tom = null
+                        )
+
                     ),
                 ),
             )
@@ -355,13 +362,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
         sisteBehandling
             .løsSykdom(virkningsdato, erOppfylt = true)
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    løsningerForPerioder = listOf(
-                        ikkeOppfyltBistand(virkningsdato)
-                    ),
-                ),
-            )
+            .løsBistand(virkningsdato, erOppfylt = false)
             .løsOvergangUføre(
                 fom = virkningsdato,
                 brukerHarSøktOmUføretrygd = true,
@@ -481,13 +482,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
         sisteBehandling
             .løsSykdom(virkningsdato, erOppfylt = true)
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    løsningerForPerioder = listOf(
-                        ikkeOppfyltBistand(virkningsdato)
-                    ),
-                ),
-            )
+            .løsBistand(virkningsdato, erOppfylt = false)
             .løsOvergangUføre(
                 fom = virkningsdato,
                 brukerHarSøktOmUføretrygd = true,
@@ -546,13 +541,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
         sisteBehandling
             .løsSykdom(virkningsdato, erOppfylt = true)
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    løsningerForPerioder = listOf(
-                        ikkeOppfyltBistand(virkningsdato)
-                    ),
-                ),
-            )
+            .løsBistand(virkningsdato, erOppfylt = false)
             .løsOvergangUføre(
                 fom = virkningsdato,
                 brukerHarSøktOmUføretrygd = true,
@@ -622,13 +611,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
         behandling
             .løsSykdom(fom, erOppfylt = true)
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    løsningerForPerioder = listOf(
-                        ikkeOppfyltBistand(fom)
-                    ),
-                ),
-            )
+            .løsBistand(fom, erOppfylt = false)
             .medKontekst {
                 val tidligereVurderinger =
                     TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
@@ -647,17 +630,6 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 }
             }
     }
-
-    private fun ikkeOppfyltBistand(virkningsdato: LocalDate): BistandLøsningDto = BistandLøsningDto(
-        begrunnelse = "Ikke oppfylt bistand",
-        erBehovForAktivBehandling = false,
-        erBehovForArbeidsrettetTiltak = false,
-        erBehovForAnnenOppfølging = false,
-        skalVurdereAapIOvergangTilArbeid = null,
-        overgangBegrunnelse = "Yep",
-        fom = virkningsdato,
-        tom = null
-    )
 
     @Suppress("FunctionParameterNaming")
     private fun opprettUførevedtakshendelse(
