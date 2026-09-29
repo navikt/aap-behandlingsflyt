@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -16,7 +19,7 @@ private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf("INNTNEDS", "SYKSKADLYT",
  * vilkårene er oppfylt i Arena: INNTNEDS (inntekt/nedsatt), SYKSKADLYT (sykdom/
  * skade/lyte) og AAARBEVNE (nedsatt arbeidsevne).
  */
-fun ArenaSykdomsvurderingResponse.erOrdinærAap(): Boolean {
+fun ArenaSykdomsvurdering.erOrdinærAap(): Boolean {
     return PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP.all { påkrevdKode ->
         vilkar.any { it.kode == påkrevdKode && it.status == "J" }
     }
@@ -28,11 +31,32 @@ fun ArenaSykdomsvurderingResponse.erOrdinærAap(): Boolean {
  */
 object ArenaMigreringMapper {
     /**
+     * Kun ordinær AAP støttes for migreringsgruppe 1.
+     */
+    fun mapMigrertKrav(
+        fraArena: ArenaKrav,
+        behandlingId: BehandlingId,
+    ): MigrertKrav {
+        return MigrertKrav(
+            referanse = Kravreferanse.ny(),
+            vurdertAv = SYSTEMBRUKER,
+            begrunnelse = "Migrering av sak ${fraArena.arenaSaksnummer} fra Arena",
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            virkningstidspunktArena = fraArena.søknadsdato,
+            muligRettFra = fraArena.migreringsdato,
+            arenaSaksnummer = fraArena.arenaSaksnummer,
+            rettighetstype = MigrertRettighetstype.ORDINÆR,
+            resterendeKvoteOrdinær = fraArena.gjenståendeKvoteOrdinær ?: 0,
+        )
+    }
+
+    /**
      * Vurderingen antas alltid å gjelde ordinær AAP. Kalleren må ha sjekket
      * [erOrdinærAap] først (migreringsgruppe 1).
      */
     fun mapOppfyltOrdinærSykdomsvurdering(
-        fraArena: ArenaSykdomsvurderingResponse,
+        fraArena: ArenaSykdomsvurdering,
         behandlingId: BehandlingId,
         vurderingenGjelderFra: LocalDate,
     ): Sykdomsvurdering {
