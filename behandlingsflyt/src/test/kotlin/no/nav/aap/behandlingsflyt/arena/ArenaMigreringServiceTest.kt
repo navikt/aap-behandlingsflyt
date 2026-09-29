@@ -39,7 +39,7 @@ class ArenaMigreringServiceTest {
     fun `hentSykdomsvurdering returnerer svaret fra Arena`() {
         val respons = service.hentSykdomsvurdering(sakId)
 
-        assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentSykdomsvurdering("2018-123456"))
+        assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentSykdomsvurdering("2018-123456").tilDomene())
         assertThat(
             InMemoryArenaMigreringsdataRepository.hentAktivHvisEksisterer(behandlingId, StegType.AVKLAR_SYKDOM)
         ).isNull()
