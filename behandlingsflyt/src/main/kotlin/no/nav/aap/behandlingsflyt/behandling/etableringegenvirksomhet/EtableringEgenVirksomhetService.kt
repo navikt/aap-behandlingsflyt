@@ -53,8 +53,9 @@ class EtableringEgenVirksomhetService(
             )
         }
 
+        val perioderMedSykdomBistandOppfylt = tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList()
         if (nyeVurderinger.any { vurdering ->
-                gyldighetPeriode.none { gyldighetPeriode -> gyldighetPeriode.inneholder(vurdering.fom) }
+                perioderMedSykdomBistandOppfylt.none { oppfyltPeriode -> oppfyltPeriode.inneholder(vurdering.fom) }
             }
         ) {
             return VirksomhetEtableringIkkeGyldig(
@@ -114,27 +115,26 @@ class EtableringEgenVirksomhetService(
     fun utledGyldighetsPeriode(
         behandlingId: BehandlingId
     ): List<Periode> {
-        val førsteDagIOppfyltPeriode = sykdomOgBistandTidslinje(behandlingId)
-            .filter {
-                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
-            }.perioder().toList().firstOrNull()?.fom
-        if (førsteDagIOppfyltPeriode == null) return emptyList()
-        return sykdomOgBistandTidslinje(behandlingId)
-            .filter {
-                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
-                        && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
-            }.begrensetTil(Periode(førsteDagIOppfyltPeriode.plusDays(1), Tid.MAKS)).perioder().toList()
+        val førsteDagIOppfyltPeriode =
+            tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList().firstOrNull()?.fom ?: return emptyList()
+        return tidslinjeSykdomOgBistandOppfylt(behandlingId).begrensetTil(
+            Periode(
+                førsteDagIOppfyltPeriode.plusDays(1),
+                Tid.MAKS
+            )
+        ).perioder().toList()
     }
 
+    private fun tidslinjeSykdomOgBistandOppfylt(behandlingId: BehandlingId) = sykdomOgBistandTidslinje(behandlingId)
+        .filter {
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
+        }
+
     fun utledIkkeVurderbarePerioder(behandlingId: BehandlingId): List<Periode> {
-        val førsteDagIOppfyltPeriode = sykdomOgBistandTidslinje(behandlingId)
-            .filter {
-                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
-            }.perioder().toList().firstOrNull()?.fom
+        val førsteDagIOppfyltPeriode =
+            tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList().firstOrNull()?.fom ?: return emptyList()
 
-        if (førsteDagIOppfyltPeriode == null) return emptyList()
-
-       return sykdomOgBistandTidslinje(behandlingId)
+        return sykdomOgBistandTidslinje(behandlingId)
             .filter {
                 it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true
                         || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
