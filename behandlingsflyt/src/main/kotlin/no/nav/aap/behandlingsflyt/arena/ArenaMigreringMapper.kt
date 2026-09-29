@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.arena
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
@@ -59,7 +59,7 @@ object ArenaMigreringMapper {
             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             yrkesskadeBegrunnelse = null,
-            vurdertAv = SYSTEMBRUKER,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
         )
@@ -85,7 +85,7 @@ object ArenaMigreringMapper {
             erBehovForAnnenOppfølging = null,
             overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = null,
-            vurdertAv = SYSTEMBRUKER,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
         )

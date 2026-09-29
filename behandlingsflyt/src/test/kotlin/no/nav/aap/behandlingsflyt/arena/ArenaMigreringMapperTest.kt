@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.arena
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
@@ -58,7 +58,8 @@ class ArenaMigreringMapperTest {
         assertThat(vurdering.harNedsattArbeidsevne).isEqualTo(ArbeidsevneNedsattValg.JA)
         assertThat(vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense).isNull()
         assertThat(vurdering.yrkesskadeBegrunnelse).isNull()
-        assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+        assertThat(vurdering.erAutomatiskVurdert()).isTrue()
         assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
         assertThat(vurdering.erOppfyltOrdinærMedUtlededeFelter()).isTrue()
     }
@@ -91,7 +92,8 @@ class ArenaMigreringMapperTest {
         assertThat(vurdering.erBehovForAnnenOppfølging).isNull()
         assertThat(vurdering.overgangBegrunnelse).isNull()
         assertThat(vurdering.skalVurdereAapIOvergangTilArbeid).isNull()
-        assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+        assertThat(vurdering.erAutomatiskVurdert()).isTrue()
         assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
     }
 }
