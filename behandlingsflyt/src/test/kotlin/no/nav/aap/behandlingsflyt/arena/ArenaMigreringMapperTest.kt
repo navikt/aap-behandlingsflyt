@@ -24,13 +24,13 @@ class ArenaMigreringMapperTest {
             ArenaDiagnose(
                 kodeverk = "ICD10",
                 kode = "M797",
-                type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                type = "HOVED",
                 opprettet = LocalDate.of(2016, 1, 1),
             ),
             ArenaDiagnose(
                 kodeverk = "ICD10",
                 kode = "M80",
-                type = ArenaDiagnoseType.BIDIAGNOSE,
+                type = "BI",
                 opprettet = LocalDate.of(2016, 1, 1),
             )
         )
@@ -47,7 +47,7 @@ class ArenaMigreringMapperTest {
             vurderingenGjelderFra = fom,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo("Automatisk migrert fra Arena\n\n${fraArena.begrunnelse}")
+        assertThat(vurdering.begrunnelse).isEqualTo(fraArena.begrunnelse)
         assertThat(vurdering.vurderingenGjelderFra).isEqualTo(fom)
         assertThat(vurdering.vurderingenGjelderTil).isNull()
         assertThat(vurdering.diagnose?.kodeverk).isEqualTo("ICD10")
@@ -67,7 +67,7 @@ class ArenaMigreringMapperTest {
     @Test
     fun `mapSykdomsvurdering feiler med tydelig melding når Arena mangler hoveddiagnose`() {
         val utenHoveddiagnose = fraArena.copy(
-            diagnoser = fraArena.diagnoser.filter { it.type == ArenaDiagnoseType.BIDIAGNOSE }
+            diagnoser = fraArena.diagnoser.filter { it.type == "BI" }
         )
 
         assertThatThrownBy {
@@ -75,6 +75,24 @@ class ArenaMigreringMapperTest {
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("hoveddiagnose")
+    }
+
+    @Test
+    fun `mapSykdomsvurdering feiler når bidiagnose har annet kodeverk enn hoveddiagnose`() {
+        val medAvvikendeBidiagnose = fraArena.copy(
+            diagnoser = fraArena.diagnoser + ArenaDiagnose(
+                kodeverk = "ICPC2",
+                kode = "L84",
+                type = "BI",
+                opprettet = LocalDate.of(2016, 1, 1),
+            )
+        )
+
+        assertThatThrownBy {
+            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+        }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Bidiagnoser har ikke samme kodeverk")
     }
 
     @Test

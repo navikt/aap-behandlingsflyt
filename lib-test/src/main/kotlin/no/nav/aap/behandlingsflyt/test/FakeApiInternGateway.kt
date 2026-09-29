@@ -42,6 +42,10 @@ class FakeApiInternGateway : ApiInternGateway {
         sendteSakStatuser.add(ident to sakStatus)
     }
 
+    override fun varsleNySøknadForPerson(ident: String) {
+        // no-op
+    }
+
     override fun sendBehandling(
         sak: Sak,
         behandling: Behandling,

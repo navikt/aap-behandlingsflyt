@@ -2,8 +2,8 @@
   <configuration default="false" name="TestApp (mot pdfgenerator)" type="KtorApplicationConfigurationType" factoryName="Ktor">
     <envs>
       <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
-      <env name="INTEGRASJON_PDFGENERATOR_URL" value="http://localhost:8082" />
-      <env name="INTEGRASJON_PDFGENERATOR_SCOPE" value="scope" />
+      <env name="INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_URL" value="http://localhost:8082" />
+      <env name="INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_SCOPE" value="scope" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.TestAppKt" />
     <module name="behandlingsflyt.app.test" />
