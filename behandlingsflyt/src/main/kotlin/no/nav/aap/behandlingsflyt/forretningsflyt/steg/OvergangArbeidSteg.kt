@@ -1,15 +1,13 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbeidFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid.OvergangArbeidVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
@@ -19,7 +17,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -33,8 +30,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class OvergangArbeidSteg internal constructor(
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val vilkårService: VilkårService,
     private val overgangArbeidRepository: OvergangArbeidRepository,
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -42,8 +38,7 @@ class OvergangArbeidSteg internal constructor(
     private val uføreRepository: UføreRepository
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        vilkårsresultatRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
+        vilkårService = VilkårService(repositoryProvider),
         overgangArbeidRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
@@ -52,8 +47,6 @@ class OvergangArbeidSteg internal constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             tvingerAvklaringsbehov = setOf(
@@ -70,20 +63,11 @@ class OvergangArbeidSteg internal constructor(
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
         )
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val avklarOvergangArbeid = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)
-        if (avklarOvergangArbeid?.status() == Status.AVSLUTTET) {
-            val grunnlag = OvergangArbeidFaktagrunnlag(
-                rettighetsperiode = kontekst.rettighetsperiode,
-                overgangArbeidGrunnlag = requireNotNull(overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)) {
-                    "Grunnlag må eksistere når avklaringsbehov har status AVSLUTTET"
-                },
-            )
-            OvergangArbeidVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
-        } else {
-            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET)
-        }
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        val grunnlag = OvergangArbeidFaktagrunnlag(
+            rettighetsperiode = kontekst.rettighetsperiode,
+            overgangArbeidGrunnlag = overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId),
+        )
+        vilkårService.vurderVilkår(kontekst.behandlingId, grunnlag, OvergangArbeidVilkår)
 
         return Fullført
     }
@@ -157,20 +141,6 @@ class OvergangArbeidSteg internal constructor(
             .orEmpty()
         if (gjeldendeVurderinger.toSet() != vedtatteVurderinger.toSet()) {
             overgangArbeidRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
-        }
-
-        val forrigeVilkårsvurderinger =
-            kontekst.forrigeBehandlingId
-                ?.let { vilkårsresultatRepository.hent(it).optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET) }
-                ?.tidslinje()
-                .orEmpty()
-
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET)
-        if (vilkår != null) {
-            vilkår.nullstillTidslinje()
-            vilkår.leggTilVurderinger(forrigeVilkårsvurderinger)
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
     }
 

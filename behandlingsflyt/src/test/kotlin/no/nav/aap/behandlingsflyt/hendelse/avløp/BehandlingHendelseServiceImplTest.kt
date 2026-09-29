@@ -37,10 +37,11 @@ class BehandlingHendelseServiceImplTest {
             Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
             StegType.VURDER_MEDLEMSKAP,
             null,
+            null,
             null
         )
-        avklaringsbehovene.leggTil(Definisjon.AVKLAR_SYKDOM, StegType.AVKLAR_SYKDOM, null, null)
-        avklaringsbehovene.leggTil(Definisjon.AVKLAR_STUDENT_V2, StegType.AVKLAR_STUDENT_V2, null, null)
+        avklaringsbehovene.leggTil(Definisjon.AVKLAR_SYKDOM, StegType.AVKLAR_SYKDOM, null, null, null)
+        avklaringsbehovene.leggTil(Definisjon.AVKLAR_STUDENT_V2, StegType.AVKLAR_STUDENT_V2, null, null, null)
 
         behandlingHendelseSerice.stoppet(behandling, avklaringsbehovene)
 

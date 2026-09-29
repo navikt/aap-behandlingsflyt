@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -47,7 +48,9 @@ class Avklaringsbehovene(
                     funnetISteg = definisjon.løsesISteg,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
-                    perioderSomIkkeErTilstrekkeligVurdert = null
+                    perioderSomIkkeErTilstrekkeligVurdert = null,
+                    perioderKanVurderes = null,
+                    gradBehov = null
                 )
             }
         }
@@ -61,7 +64,9 @@ class Avklaringsbehovene(
                     funnetISteg = definisjon.løsesISteg,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
-                    perioderSomIkkeErTilstrekkeligVurdert = null
+                    perioderSomIkkeErTilstrekkeligVurdert = null,
+                    perioderKanVurderes = null,
+                    gradBehov = null,
                 )
             }
         }
@@ -75,10 +80,12 @@ class Avklaringsbehovene(
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
-        bruker: Bruker = SYSTEMBRUKER
+        bruker: Bruker = SYSTEMBRUKER,
+        gradBehov: GradBehov?
     ) {
         val avklaringsbehov = hentBehovForDefinisjon(definisjon)
         require(avklaringsbehov == null) { "Forsøkte å opprette et avklaringsbehov som allerede eksisterte: $avklaringsbehov" }
@@ -92,7 +99,9 @@ class Avklaringsbehovene(
             grunn = grunn,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-            endretAv = bruker
+            perioderKanVurderes = perioderKanVurderes,
+            endretAv = bruker,
+            gradBehov = gradBehov
         )
     }
 
@@ -107,10 +116,12 @@ class Avklaringsbehovene(
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
-        bruker: Bruker = SYSTEMBRUKER
+        bruker: Bruker = SYSTEMBRUKER,
+        gradBehov: GradBehov? = null
     ) {
         log.info("Legger til avklaringsbehov :: {} - {}", definisjon, funnetISteg)
         val avklaringsbehov = hentBehovForDefinisjon(definisjon)
@@ -122,7 +133,9 @@ class Avklaringsbehovene(
                     venteårsak = grunn,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                    perioderKanVurderes = perioderKanVurderes,
+                    gradBehov = gradBehov
                 )
                 if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
                     // TODO: Vurdere om funnet steg bør ligge på endringen...
@@ -143,7 +156,8 @@ class Avklaringsbehovene(
                 grunn = grunn,
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                endretAv = bruker
+                endretAv = bruker,
+                gradBehov = gradBehov
             )
         }
 
@@ -202,7 +216,7 @@ class Avklaringsbehovene(
         require(definisjon.erVentebehov()) {
             "Prøvde å reåpne ventebehov for definisjon $definisjon som ikke er et ventebehov"
         }
-        
+
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.reåpne(
             frist = avklaringsbehov.frist(),
@@ -217,13 +231,15 @@ class Avklaringsbehovene(
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
         grunn: ÅrsakTilSettPåVent? = null,
-        bruker: Bruker = SYSTEMBRUKER
+        bruker: Bruker = SYSTEMBRUKER,
+        gradBehov: GradBehov?
     ) {
         avklaringsbehov.reåpne(
             venteårsak = grunn,
             bruker = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            gradBehov = gradBehov
         )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
@@ -231,12 +247,16 @@ class Avklaringsbehovene(
     internal fun oppdaterPerioder(
         definisjon: Definisjon,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
-        perioderVedtaketBehøverVurdering: Set<Periode>?
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>?,
+        gradBehov: GradBehov?
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        val harEndring = avklaringsbehov.oppdaterPerioder(
+        val harEndring = avklaringsbehov.oppdater(
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            perioderKanVurderes = perioderKanVurderes,
+            gradBehov = gradBehov
         )
         if (harEndring) {
             repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
@@ -391,7 +411,7 @@ class Avklaringsbehovene(
                         )
                     ),
                     funnetISteg = definisjon.løsesISteg,
-                    kreverToTrinn = null
+                    kreverToTrinn = null,
                 )
             }.toMutableList()
         list.addAll(eksisterendeBehov)
