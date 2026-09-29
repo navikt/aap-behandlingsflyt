@@ -14,7 +14,7 @@ class ArenaMigreringMapperErOrdinærAapTest {
             ArenaDiagnose(
                 kodeverk = "ICD10",
                 kode = "M797",
-                type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                type = "HOVED",
                 opprettet = LocalDate.of(2016, 1, 1),
             )
         ),

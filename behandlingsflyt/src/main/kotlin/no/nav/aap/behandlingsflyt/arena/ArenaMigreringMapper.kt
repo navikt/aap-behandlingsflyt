@@ -38,18 +38,25 @@ object ArenaMigreringMapper {
     ): Sykdomsvurdering {
         // TODO denne mappingen er ikke landet
         val hoveddiagnose = requireNotNull(
-            fraArena.diagnoser.sortedBy { it.opprettet }.lastOrNull { it.type == ArenaDiagnoseType.HOVEDDIAGNOSE }
+            fraArena.diagnoser.sortedBy { it.opprettet }.lastOrNull { it.type == "HOVED" }
         ) { "Fant ingen hoveddiagnose i sykdomsvurdering fra Arena" }
-        val bidiagnoser = fraArena.diagnoser.filter { it.type == ArenaDiagnoseType.BIDIAGNOSE }
+        val bidiagnoser = fraArena.diagnoser.filter { it.type == "BI" }
 
-        val begrunnelse = "Automatisk migrert fra Arena\n\n${fraArena.begrunnelse}"
+        require(bidiagnoser.all { it.kodeverk == hoveddiagnose.kodeverk }) {
+            "Bidiagnoser har ikke samme kodeverk som hoveddiagnose i sykdomsvurdering fra Arena, dette er ikke støttet enda"
+        }
+
+        // Kodeverk i Kelvin har ikke bindestrek, men Arena har det. F.eks. "ICPC-2" vs "ICPC2"
+        val kodeverk = hoveddiagnose.kodeverk.replace("-", "")
+
+        val begrunnelse = fraArena.begrunnelse ?: "Automatisk migrert fra Arena"
 
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
             vurderingenGjelderFra = vurderingenGjelderFra,
             vurderingenGjelderTil = null,
             diagnose = Diagnose(
-                kodeverk = hoveddiagnose.kodeverk,
+                kodeverk = kodeverk,
                 hoveddiagnose = hoveddiagnose.kode,
                 bidiagnoser = bidiagnoser.map { it.kode }
             ),
