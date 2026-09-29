@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -26,7 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
@@ -64,8 +64,7 @@ class OvergangArbeidStegTest {
         }
 
         val steg = OvergangArbeidSteg(
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            vilkårService = VilkårService(inMemoryRepositoryProvider),
             overgangArbeidRepository = mockk<OvergangArbeidRepository> {
                 every { hentHvisEksisterer(any()) } returns null
             },
@@ -106,8 +105,7 @@ class OvergangArbeidStegTest {
         }
 
         val steg = OvergangArbeidSteg(
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            vilkårService = VilkårService(inMemoryRepositoryProvider),
             overgangArbeidRepository = mockk<OvergangArbeidRepository> {
                 every { hentHvisEksisterer(any()) } returns null
             },
@@ -160,8 +158,7 @@ class OvergangArbeidStegTest {
         }
 
         val steg = OvergangArbeidSteg(
-            vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            vilkårService = VilkårService(inMemoryRepositoryProvider),
             overgangArbeidRepository = mockk<OvergangArbeidRepository> {
                 every { hentHvisEksisterer(any()) } returns null
             },
