@@ -780,6 +780,46 @@ class MeldekortApiTest : BaseApiTest() {
     }
 
     @Test
+    fun `registrer-meldedato gir tittel Registrering av meldeplikt`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, Periode(dag1, dag2))),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+
+        val request = RegistrerMeldedatoRequest(
+            meldeDato = 20 januar 2025,
+            begrunnelse = "Registrering av meldedato",
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
+            }
+
+            val response = createClient().post("/api/meldekort/${sak.saksnummer}/registrer-meldedato") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            val journalpost = FakeDokarkivGateway.journalposter.values.single()
+            assertThat(journalpost.tittel).isEqualTo("Registrering av meldeplikt 20.01.2025")
+            assertThat(journalpost.dokumenter!!.single().tittel).isEqualTo("Registrering av meldeplikt 20.01.2025")
+        }
+    }
+
+    @Test
     fun `tittel blir Korrigert meldekort-prefiks når det finnes meldekort fra før på meldeperioden`() {
         val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)

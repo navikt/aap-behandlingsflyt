@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -196,6 +197,49 @@ class MeldekortServiceTest {
 
         assertThat(resultat.journalpostId).isEqualTo(JournalpostId("journalpost-3"))
     }
+
+    @Test
+    fun `registrer meldedato kaster feil når underveisgrunnlag mangler`() {
+        stubSakOgBehandling()
+        every { underveisRepository.hentHvisEksisterer(behandlingId) } returns null
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+
+        assertThatThrownBy { service().registrerMeldedato(registrerMeldedato(20 januar 2025)) }
+            .isInstanceOf(UgyldigForespørselException::class.java)
+            .hasMessageContaining("Fant ikke underveisgrunnlag for behandlingen")
+    }
+
+    @Test
+    fun `registrer meldedato kaster feil når meldedato er frem i tid`() {
+        stubSakOgBehandling()
+        stubUnderveisgrunnlag(underveisperiode(Utfall.OPPFYLT, meldeperiode))
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+
+        assertThatThrownBy { service().registrerMeldedato(registrerMeldedato(2 april 2025)) }
+            .isInstanceOf(UgyldigForespørselException::class.java)
+            .hasMessageContaining("kan ikke være frem i tid")
+    }
+
+    @Test
+    fun `registrer meldedato journalfører uten meldeperiode og returnerer journalpostId`() {
+        stubSakOgBehandling()
+        stubUnderveisgrunnlag(underveisperiode(Utfall.OPPFYLT, meldeperiode))
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+        every {
+            journalføringService.journalførMeldekort(any(), isNull(), any(), any(), any(), any(), any(), any())
+        } returns JournalpostId("journalpost-4")
+
+        val resultat = service().registrerMeldedato(registrerMeldedato(20 januar 2025))
+
+        assertThat(resultat.journalpostId).isEqualTo(JournalpostId("journalpost-4"))
+    }
+
+    private fun registrerMeldedato(meldedato: LocalDate) = RegistrerMeldedato(
+        saksnummer = saksnummer,
+        meldedato = meldedato,
+        begrunnelse = "Registrering av meldedato",
+        bruker = Bruker("saksbehandler"),
+    )
 
     private fun stubSakOgBehandling() {
         val sak = mockk<Sak>(relaxed = true)
