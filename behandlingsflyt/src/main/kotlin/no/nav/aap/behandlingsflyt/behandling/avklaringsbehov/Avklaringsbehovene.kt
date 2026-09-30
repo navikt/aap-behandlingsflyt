@@ -160,7 +160,59 @@ class Avklaringsbehovene(
                 gradBehov = gradBehov
             )
         }
+    }
 
+    fun leggTilVentebehovForBestillLegeerklæring(
+        funnetISteg: StegType,
+        bruker: Bruker = SYSTEMBRUKER,
+        frist: LocalDate? = null,
+    ) {
+        val bestillLegeerklæringBehov = hentBehovForDefinisjon(Definisjon.BESTILL_LEGEERKLÆRING)
+        if (bestillLegeerklæringBehov == null) {
+            repository.opprett(
+                behandlingId = behandlingId,
+                definisjon = Definisjon.BESTILL_LEGEERKLÆRING,
+                funnetISteg = funnetISteg,
+                frist = utledFrist(Definisjon.BESTILL_LEGEERKLÆRING, frist),
+                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+                endretAv = bruker,
+            )
+        } else {
+            oppdaterEksisterendeBestillLegeerklæringBehov(
+                bestillLegeerklæringBehov = bestillLegeerklæringBehov,
+                bruker = bruker,
+                funnetISteg = funnetISteg,
+                frist = frist
+            )
+        }
+
+    }
+
+    private fun oppdaterEksisterendeBestillLegeerklæringBehov(
+        bestillLegeerklæringBehov: Avklaringsbehov,
+        bruker: Bruker,
+        funnetISteg: StegType,
+        frist: LocalDate?
+    ) {
+        if (bestillLegeerklæringBehov.erAvsluttet()) {
+            bestillLegeerklæringBehov.reåpne(
+                frist = utledFrist(Definisjon.BESTILL_LEGEERKLÆRING, frist),
+                venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+                bruker = bruker,
+            )
+        } else {
+            bestillLegeerklæringBehov.oppdaterFristForVentebehov(
+                nyFrist = requireNotNull(utledFrist(Definisjon.BESTILL_LEGEERKLÆRING, frist)) {
+                    "Forsøkte å oppdatere ventebehov for bestill legeerklæring uten å angi frist"
+                },
+                bruker = bruker,
+            )
+        }
+        repository.endreVentepunkt(
+            bestillLegeerklæringBehov.id,
+            bestillLegeerklæringBehov.historikk.last(),
+            funnetISteg
+        )
     }
 
     private fun utledFrist(definisjon: Definisjon, frist: LocalDate?): LocalDate? {

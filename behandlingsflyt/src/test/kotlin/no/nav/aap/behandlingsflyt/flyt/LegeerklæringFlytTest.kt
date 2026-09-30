@@ -181,4 +181,32 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         }
     }
 
+    @Test
+    fun `Ny forespørsel om legeerklæring skal oppdatere ventefristen`() {
+        // Oppretter vanlig søknad
+        val (_, behandling) = sendInnFørsteSøknad()
+
+        behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+        }
+            // Oppretter bestilling av legeerklæring
+            .bestillLegeerklæring()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.BESTILL_LEGEERKLÆRING) }
+
+            }
+
+        assertThat {
+            val ventebehov = hentÅpneAvklaringsbehov(behandlingId = behandling.id).single { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
+            assertThat(ventebehov.frist()).isEqualTo(LocalDate.now().plusWeeks(4))
+        }
+
+        // Validér avklaring
+        behandling.medKontekst {
+            val legeerklæringBestillingVenteBehov =
+                åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
+            assertThat(legeerklæringBestillingVenteBehov).isEmpty()
+        }
+    }
+
 }

@@ -163,6 +163,26 @@ class Avklaringsbehov(
         return false
     }
 
+    internal fun oppdaterFristForVentebehov(
+        nyFrist: LocalDate,
+        bruker: Bruker,
+    ) {
+        require(definisjon.erVentebehov()) {
+            "Kan ikke oppdatere frist for et behov som ikke er ventebehov"
+        }
+        val siste = historikk.last()
+        require(siste.status.erÅpent()) {
+            "Prøvde å oppdatere et lukket ventebehov"
+        }
+        if (nyFrist != siste.frist) {
+            historikk += siste.copy(
+                frist = nyFrist,
+                endretAv = bruker,
+                tidsstempel = LocalDateTime.now()
+            )
+        }
+    }
+
     fun erÅpent(): Boolean {
         return status().erÅpent()
     }
