@@ -39,7 +39,7 @@ class RefusjonkravStegTest {
     }
 
     private val migreringUnleash = FakeUnleashBaseWithDefaultDisabled(
-        enabledFlags = listOf(BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk)
+        enabledFlags = listOf(BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk)
     )
 
     @Test
@@ -49,8 +49,10 @@ class RefusjonkravStegTest {
         val behandling = opprettBehandling(sak)
         val kontekst = migreringsKontekst(sak, behandling)
 
+        var lagret: List<RefusjonkravVurdering>? = null
         val refusjonkravRepository: RefusjonkravRepository = mockk(relaxed = true) {
-            every { hentHvisEksisterer(any()) } returns null
+            every { hentHvisEksisterer(any()) } answers { lagret }
+            every { lagre(any(), any(), any()) } answers { lagret = thirdArg() }
         }
 
         val steg = nyttSteg(refusjonkravRepository, migreringUnleash)
@@ -70,7 +72,7 @@ class RefusjonkravStegTest {
     }
 
     @Test
-    fun `migrering med eksisterende grunnlag lagrer ikke på nytt`() {
+    fun `migrering overskriver eksisterende grunnlag`() {
         val søknadsdato = 1 januar 2020
         val sak = opprettInMemorySak(søknadsdato)
         val behandling = opprettBehandling(sak)
@@ -90,7 +92,15 @@ class RefusjonkravStegTest {
 
         steg.utfør(kontekst)
 
-        verify(exactly = 0) { refusjonkravRepository.lagre(any(), any(), any()) }
+        verify(exactly = 1) {
+            refusjonkravRepository.lagre(
+                sak.id,
+                behandling.id,
+                match { vurderinger: List<RefusjonkravVurdering> ->
+                    vurderinger.size == 1 && !vurderinger[0].harKrav
+                }
+            )
+        }
         assertThat(hentRefusjonkravbehov(behandling)?.erÅpent() ?: false).isFalse
     }
 
