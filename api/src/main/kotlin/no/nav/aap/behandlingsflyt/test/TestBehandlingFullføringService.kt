@@ -224,7 +224,7 @@ class TestBehandlingFullføringService(
         }
 
         val åpentBehov = alleAvklaringsbehov
-            .firstOrNull { it.erÅpent() && !it.definisjon.erVentebehov() }
+            .firstOrNull { it.måLøses() && !it.definisjon.erVentebehov() }
 
         if (åpentBehov == null) {
             Thread.sleep(200)
