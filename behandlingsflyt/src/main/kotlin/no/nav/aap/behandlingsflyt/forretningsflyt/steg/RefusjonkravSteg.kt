@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -21,7 +22,6 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDateTime
 
 class RefusjonkravSteg(
     private val refusjonkravRepository: RefusjonkravRepository,
@@ -41,9 +41,7 @@ class RefusjonkravSteg(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val migreresAutomatiskFraArena = kontekst.erMigreringFraArena()
-                && unleashGateway.isEnabled(BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk)
-        if (migreresAutomatiskFraArena) {
+        if (kontekst.erMigreringFraArena() && unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk)) {
             val erRelevantForMigrering = !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())
             if (erRelevantForMigrering) {
                 migrerVurderingFraArena(kontekst)
@@ -58,14 +56,11 @@ class RefusjonkravSteg(
             definisjon = Definisjon.REFUSJON_KRAV,
             vedtakBehøverVurdering = {
                 when {
-                    // Migrering skjer aldri i en revurdering, så vurderingen skal aldri kunne trigge
-                    // et manuelt avklaringsbehov når den er automatisk satt av migreringen.
-                    migreresAutomatiskFraArena -> false
-
                     else -> when (behandlingstype) {
                         TypeBehandling.Førstegangsbehandling -> {
                             when {
                                 tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                                erVurdertAutomatisk(grunnlag.value) -> false
                                 kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
                                 else -> {
                                     kontekst.forrigeBehandlingId?.let {
@@ -79,6 +74,7 @@ class RefusjonkravSteg(
                             when {
                                 !unleashGateway.isEnabled(BehandlingsflytFeature.KanVurdereRefusjonIRevurdering) -> false
                                 tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                                erVurdertAutomatisk(grunnlag.value) -> false
                                 kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
                                 else -> false
                             }
@@ -104,16 +100,15 @@ class RefusjonkravSteg(
         return Fullført
     }
 
+    private fun erVurdertAutomatisk(grunnlag: List<RefusjonkravVurdering>?): Boolean {
+        return grunnlag?.all { it.vurdertAv == SYSTEMBRUKER } ?: false
+    }
+
     override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
+        // TODO trengs det å hente info fra Arena her for å lagre ned at det _ikke_ finnes refusjonskrav?
+        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering()
         refusjonkravRepository.lagre(
-            kontekst.sakId, kontekst.behandlingId, listOf(
-                RefusjonkravVurdering(
-                    harKrav = false,
-                    navKontor = null,
-                    vurdertAv = SYSTEMBRUKER,
-                    opprettetTid = LocalDateTime.now()
-                )
-            )
+            kontekst.sakId, kontekst.behandlingId, listOf(vurdering)
         )
     }
 

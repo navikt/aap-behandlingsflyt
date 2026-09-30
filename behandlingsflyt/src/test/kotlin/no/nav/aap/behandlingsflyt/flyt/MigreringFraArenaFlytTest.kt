@@ -98,7 +98,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 
     @Test
     fun `skal automatisk legge inn sykdom- og bistandsvurdering basert på sykdomsvurdering fra Arena i behandlingen`() {
-        unleash = MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash::class
+        unleash = MigreringFraArenaMedAutomatikSykdomFlytTestUnleash::class
 
         val (sak, migreringsbehandling) = migrerFraArena()
         val startDato = sak.rettighetsperiode.fom
@@ -124,6 +124,32 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 val vurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
 
                 assertThat(behandling.aktivtSteg()).isEqualTo(StegType.REFUSJON_KRAV)
+
+                assertThat(vurderinger).hasSize(1)
+                val vurdering = vurderinger!!.single()
+                assertThat(vurdering.erSkadeSykdomEllerLyteVesentligdel).isTrue
+                assertThat(vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten).isTrue
+                assertThat(vurdering.harSkadeSykdomEllerLyte).isTrue
+                assertThat(vurdering.harNedsattArbeidsevne).isEqualTo(ArbeidsevneNedsattValg.JA)
+                assertThat(vurdering.fom).isEqualTo(sak.rettighetsperiode.fom)
+                assertThat(vurdering.tom).isNull()
+            }
+    }
+
+    @Test
+    fun `skal automatisk legge inn vurderinger fra veileder i behandlingen`() {
+        unleash = MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash::class
+
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+
+        migreringsbehandling
+            .løsLovvalg(startDato, medlem = true)
+            .medKontekst {
+                val medlemskapArbeidInntektRepository: SykdomRepository = repositoryProvider.provide()
+                val vurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
+
+                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.FASTSETT_BEREGNINGSTIDSPUNKT)
 
                 assertThat(vurderinger).hasSize(1)
                 val vurdering = vurderinger!!.single()
@@ -193,9 +219,17 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 
 }
 
-object MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+object MigreringFraArenaMedAutomatikSykdomFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk,
+    )
+)
+
+object MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.MigrererKravFraArenaAutomatisk,
+        BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk,
+        BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk,
     )
 )
 
