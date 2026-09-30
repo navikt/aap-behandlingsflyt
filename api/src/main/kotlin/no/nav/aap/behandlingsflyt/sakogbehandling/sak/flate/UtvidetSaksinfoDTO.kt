@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class UtvidetSaksinfoDTO(
@@ -11,5 +12,6 @@ data class UtvidetSaksinfoDTO(
     val periode: Periode,
     val behandlinger: List<BehandlinginfoDTO>,
     val ident: String,
+    val virkningstidspunkt: LocalDate? = null,
     val søknadErTrukket: Boolean? = null
 )
