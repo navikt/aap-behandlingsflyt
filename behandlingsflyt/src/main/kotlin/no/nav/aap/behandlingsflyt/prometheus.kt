@@ -17,6 +17,20 @@ fun PrometheusMeterRegistry.dokumentHendelse(type: InnsendingType): Counter =
         listOf(Tag.of("hendelse", type.name))
     )
 
+fun PrometheusMeterRegistry.varsleVedtakSam(
+    varslet: Boolean,
+    førstegangsbehandling: Boolean,
+    endringIRettighetstype: Boolean
+): Counter =
+    this.counter(
+        "behandlingsflyt_varsle_vedtak_sam_total",
+        listOf(
+            Tag.of("varslet", varslet.toString()),
+            Tag.of("forstegangsbehandling", førstegangsbehandling.toString()),
+            Tag.of("endring_i_rettighetstype", endringIRettighetstype.toString())
+        )
+    )
+
 fun PrometheusMeterRegistry.forutgåendeMedlemskapMedGapUtfall(resultat: Boolean): Counter =
     this.counter("behandlingsflyt_forutgaaende_medlemskap_med_gap_total", listOf(Tag.of("utfall", resultat.toString())))
 

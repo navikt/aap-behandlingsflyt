@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.varsleVedtakSam
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -105,8 +107,10 @@ class VarsleVedtakJobbUtfører(
         if (relevantEndring.contains(true) && tpYtelser.isNotEmpty()) {
             log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}")
             samGateway.varsleVedtak(request)
+            prometheus.varsleVedtakSam(true, førstegangsbehandling, endringIRettighetsTypeTidslinje).increment()
         } else {
             log.info("Varsler ikke SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}, tpYtelser=${tpYtelser.size}")
+            prometheus.varsleVedtakSam(false, førstegangsbehandling, endringIRettighetsTypeTidslinje).increment()
         }
 
         // Trigger henting av samordnings-ID, som igjen trigger datadelingsjobb. Chainet, fordi datadelingsjobben trenger sam-id.
