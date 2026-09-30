@@ -247,11 +247,11 @@ internal class BehandlingRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val alleDefault = behandlingRepo.hentAlleMedVedtakFor(sak.person.id)
+            val alleDefault = behandlingRepo.hentAlleMedVedtakFor(sak.id)
             assertThat(alleDefault).hasSize(1)
 
             val alleFørstegang =
-                behandlingRepo.hentAlleMedVedtakFor(sak.person.id, listOf(TypeBehandling.Førstegangsbehandling))
+                behandlingRepo.hentAlleMedVedtakFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
             assertThat(alleFørstegang).hasSize(1)
             assertThat(alleFørstegang[0].saksnummer).isEqualTo(sak.saksnummer)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)

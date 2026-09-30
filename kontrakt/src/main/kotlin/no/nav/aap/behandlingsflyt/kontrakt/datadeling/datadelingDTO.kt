@@ -180,6 +180,8 @@ public data class PeriodeMedBeløpDTO(
     val fom: LocalDate,
     val tom: LocalDate,
     val beløp: BigDecimal,
+    val sats: BigDecimal,
+    val uredusertBeløp: BigDecimal
 )
 
 public data class DetaljertMeldekortDTO(

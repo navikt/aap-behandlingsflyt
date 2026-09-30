@@ -30,5 +30,6 @@ val InMemoryBehandlingService = BehandlingService(
     underveisService = UnderveisService(inMemoryRepositoryProvider, minimalGatewayProvider()),
     avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(
         InMemoryAvbrytAktivitetspliktbehandlingRepository
-    )
+    ),
+    unleashGateway = AlleAvskruddUnleash
 )

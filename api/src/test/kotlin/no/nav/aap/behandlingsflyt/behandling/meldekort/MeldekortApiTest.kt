@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeDokarkivGateway
+import no.nav.aap.behandlingsflyt.test.FakePdfGeneratorGateway
 import no.nav.aap.behandlingsflyt.test.FakePdfgenGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -78,6 +79,7 @@ class MeldekortApiTest : BaseApiTest() {
         register<AlleAvskruddUnleash>()
         register<FakeDokarkivGateway>()
         register<FakePdfgenGateway>()
+        register<FakePdfGeneratorGateway>()
     }
 
     @Test

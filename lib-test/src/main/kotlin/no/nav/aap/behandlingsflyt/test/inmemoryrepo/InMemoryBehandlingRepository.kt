@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import kotlin.collections.all
 
 object InMemoryBehandlingRepository : BehandlingRepository {
@@ -140,7 +139,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     }
 
     override fun hentAlleMedVedtakFor(
-        personId: PersonId,
+        sakId: SakId,
         behandlingstypeFilter: List<TypeBehandling>
     ): List<BehandlingMedVedtak> = synchronized(lock) {
         memory.values.mapNotNull { behandling ->
@@ -149,7 +148,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
             }
 
             val sak = InMemorySakRepository.hentHvisFinnes(behandling.sakId) ?: return@mapNotNull null
-            if (sak.person.id != personId) {
+            if (sak.id != sakId) {
                 return@mapNotNull null
             }
             val vedtak = InMemoryVedtakRepository.hent(behandling.id)

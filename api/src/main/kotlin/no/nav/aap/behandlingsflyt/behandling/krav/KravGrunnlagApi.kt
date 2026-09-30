@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -66,8 +67,10 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                 val erManuellVurderingPåskrudd = gatewayProvider.provide<UnleashGateway>().erPåskruddForSak(
                     BehandlingsflytFeature.KravManuellVurdering, "saksnummer", saksnummer)
 
+                val erMigreringsbehandling = behandling.årsakTilOpprettelse === ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
+
                 KravGrunnlagDto(
-                    harTilgangTilÅSaksbehandle = kanSaksbehandle() && erManuellVurderingPåskrudd,
+                    harTilgangTilÅSaksbehandle = kanSaksbehandle() && (erManuellVurderingPåskrudd || erMigreringsbehandling),
                     nyeVurderinger = nyeVurderinger,
                     vedtatteVurderinger = sisteVedtatte,
                     søknaderUtenKravvurdering = søknaderUtenKravvurdering,

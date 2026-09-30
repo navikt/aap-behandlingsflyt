@@ -1,22 +1,19 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.somTidslinje
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
-import java.time.LocalDate
 
 data class StudentGrunnlag(
     val vurderinger: Set<StudentVurdering>?,
     val oppgittStudent: OppgittStudent?
 ) {
-    fun somStudenttidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<StudentVurdering> {
-        return filtrertStudenttidslinje(maksDato) { true }
+    fun somStudenttidslinje(): Tidslinje<StudentVurdering> {
+        return filtrertStudenttidslinje { true }
     }
 
-    fun gjeldendeStudentvurderinger(maksDato: LocalDate = Tid.MAKS): List<StudentVurdering> {
-        return somStudenttidslinje(maksDato).segmenter().map { it.verdi }
+    fun gjeldendeStudentvurderinger(): List<StudentVurdering> {
+        return somStudenttidslinje().segmenter().map { it.verdi }
     }
 
     fun studentvurderingerVurdertIBehandling(behandlingId: BehandlingId): List<StudentVurdering> {
@@ -25,24 +22,16 @@ data class StudentGrunnlag(
 
     fun vedtattStudenttidslinje(
         behandlingId: BehandlingId,
-        maksDato: LocalDate = Tid.MAKS,
     ): Tidslinje<StudentVurdering> {
-        return filtrertStudenttidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
+        return filtrertStudenttidslinje { it.vurdertIBehandling != behandlingId }
     }
 
     private fun filtrertStudenttidslinje(
-        maksDato: LocalDate = Tid.MAKS,
         filter: (studentvurdering: StudentVurdering) -> Boolean
     ): Tidslinje<StudentVurdering> {
         return vurderinger.orEmpty()
             .filter(filter)
-            .groupBy { it.vurdertIBehandling }
-            .values
-            .sortedBy { it[0].vurdertTidspunkt }
-            .flatMap { it.sortedBy { it.fom } }
-            .somTidslinje { Periode(it.fom, it.tom ?: Tid.MAKS) }
-            .komprimer()
-            .begrensetTil(Periode(Tid.MIN, maksDato))
+            .gjeldendeVurderinger()
     }
 }
 

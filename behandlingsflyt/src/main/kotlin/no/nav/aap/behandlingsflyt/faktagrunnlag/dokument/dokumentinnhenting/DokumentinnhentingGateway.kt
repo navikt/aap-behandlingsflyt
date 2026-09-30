@@ -24,7 +24,7 @@ interface DokumentinnhentingGateway : Gateway {
     fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto>
     fun forhåndsvisDialogmelding(request: ForhåndsvisDialogmeldingDto): DialogmeldingForhåndsvisningDto
     fun hentDialogmeldingerForSak(request: HentDialogmeldingerForSakParams): List<FellesDialogmeldingDto>
-    fun hentDokumentoversiktForJournalpost(request: HentDokumentoversiktJournalpostParams): HentDokumentoversiktJournalpostResponse
-    fun hentDokumentoversiktForJournalpostListe(request: HentDokumentoversiktJournalpostListeParams): HentDokumentoversiktJournalpostListeResponse
+    fun hentDokumentoversiktForJournalpost(request: HentDokumentoversiktJournalpostParams, currentToken: OidcToken): HentDokumentoversiktJournalpostResponse
+    fun hentDokumentoversiktForJournalpostListe(request: HentDokumentoversiktJournalpostListeParams, currentToken: OidcToken): HentDokumentoversiktJournalpostListeResponse
     fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto
 }

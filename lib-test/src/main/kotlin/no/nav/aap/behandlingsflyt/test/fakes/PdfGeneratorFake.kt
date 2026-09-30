@@ -27,6 +27,13 @@ class PdfGeneratorFake : FakeServer() {
                     status = HttpStatusCode.OK,
                 )
             }
+            post("/api/v1/genpdf/saksbehandling/meldekort") {
+                call.respondBytes(
+                    bytes = FAKE_PDF_BYTES,
+                    contentType = ContentType.Application.Pdf,
+                    status = HttpStatusCode.OK,
+                )
+            }
         }
     }
 

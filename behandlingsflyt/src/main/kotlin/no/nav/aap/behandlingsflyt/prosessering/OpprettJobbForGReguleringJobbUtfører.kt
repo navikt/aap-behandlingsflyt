@@ -51,13 +51,13 @@ class OpprettJobbForGReguleringJobbUtfører(
         val gPeriodeÅr = gPeriodeÅr(LocalDate.now(clock))
         val aktuellGJustering = hentAktuellGJustering(gPeriodeÅr)
         if (aktuellGJustering == null || aktuellGJustering.dato.isBefore(LocalDate.of(2025, 5, 1))) {
-            log.info("Avslutter søk etter G-reguleringskandidater. Ingen post 2025 G-justering funnet for G-periode-år: ${gPeriodeÅr} i Gunnbeløp.kt")
+            log.info("Avslutter søk etter G-reguleringskandidater. Ingen post 2025 G-justering funnet for G-periode-år: $gPeriodeÅr i Gunnbeløp.kt")
             return
         }
 
         val saker = hentKandidaterForGRegulering(aktuellGJustering.dato)
 
-        log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering ${aktuellGJustering?.dato}")
+        log.info("Fant ${saker.size} kandidater for G-regulering for gitt G-justering ${aktuellGJustering.dato}")
         saker
             .filterNot { finnesAlleredeGReguleringJobbForSak(it) }
             .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidater for G-regulering. Antall = ${it.size}, Saker = $it") }

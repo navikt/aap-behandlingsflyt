@@ -43,6 +43,9 @@ public enum class ÅrsakTilOpprettelse {
     // Migrering fra Arena
     MIGRERING_FRA_ARENA,
 
+    // Korrigering av søknadsdato § 22-13 femte ledd
+    KORRIGER_SØKNADSDATO,
+
     // Udefinert
     UDEFINERT
 }

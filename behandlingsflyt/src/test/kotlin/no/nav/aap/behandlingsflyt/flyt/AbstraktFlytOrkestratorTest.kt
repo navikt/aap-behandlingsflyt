@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarVedtakslengdeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.BekreftVurderingerOppfølgingLøsning
@@ -35,6 +36,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevA
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevKlageLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderAvslag11_27Løsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderInntektsbortfallLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
@@ -43,6 +45,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
@@ -63,6 +66,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.avslag11_27.flate.Avslag11_27VurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.avslag11_27.flate.Avslag11_27VurderingerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
@@ -71,6 +76,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.PeriodisertFritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
@@ -78,12 +84,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -643,6 +652,48 @@ open class AbstraktFlytOrkestratorTest(
         )
     }
 
+    protected fun Behandling.løsSamordningMedGradering(
+        ytelseType: Ytelse = Ytelse.SYKEPENGER,
+        periode: Periode,
+        gradering: Int = 100,
+        begrunnelse: String = "Samordning gradering",
+    ): Behandling {
+        return this.løsAvklaringsBehov(
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning(
+                    begrunnelse = begrunnelse,
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = ytelseType,
+                            periode = periode,
+                            gradering = gradering,
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    protected fun Behandling.løsSamordningUføre(
+        fraDato: LocalDate,
+        gradering: Int = 100,
+        begrunnelse: String = "Samordning uføre",
+    ): Behandling {
+        return this.løsAvklaringsBehov(
+            AvklarSamordningUføreLøsning(
+                samordningUføreVurdering = SamordningUføreVurderingDto(
+                    begrunnelse = begrunnelse,
+                    vurderingPerioder = listOf(
+                        SamordningUføreVurderingPeriodeDto(
+                            virkningstidspunkt = fraDato,
+                            uføregradTilSamordning = gradering,
+                        )
+                    )
+                )
+            )
+        )
+    }
+
     protected fun Behandling.løsUtenSamordning(): Behandling {
         return this.løsAvklaringsBehov(
             AvklarSamordningGraderingLøsning(
@@ -656,6 +707,43 @@ open class AbstraktFlytOrkestratorTest(
             behandling = behandling,
             avklaringsBehovLøsning = SykdomsvurderingForBrevLøsning(
                 vurdering = "Denne vurderingen skal vises i brev"
+            )
+        )
+    }
+
+    protected fun Behandling.løsAvslag11_27(
+        skalAvslås1127: Boolean = false,
+        brukersYtelse: Ytelse? = null,
+        brukersYtelseTom: LocalDate? = null,
+        harSykepengegrunnlagOver2G: Boolean? = null,
+        harArbeidsgiverSykepengerUtbetaling: Boolean? = null,
+        begrunnelse: String = "Vurdering av Avslag § 11-27",
+    ): Behandling {
+        val kravreferanser = dataSource.transaction(readOnly = true) { connection ->
+            postgresRepositoryRegistry.provider(connection)
+                .provide<KravRepository>()
+                .hentHvisEksisterer(this.id)
+                ?.gjeldendeRelevanteKrav()
+                .orEmpty()
+                .map { it.referanse }
+        }
+
+        return this.løsAvklaringsBehov(
+            VurderAvslag11_27Løsning(
+                avslag11_27Vurdering = Avslag11_27VurderingerDto(
+                    vurderinger = kravreferanser.map { referanse ->
+                        Avslag11_27VurderingDto(
+                            referanse = referanse.verdi.toString(),
+                            begrunnelse = begrunnelse,
+                            harAnnenFullYtelse = skalAvslås1127,
+                            brukersYtelse = brukersYtelse,
+                            brukersYtelseTom = brukersYtelseTom,
+                            harSykepengegrunnlagOver2G = harSykepengegrunnlagOver2G,
+                            harArbeidsgiverSykepengerUtbetaling = harArbeidsgiverSykepengerUtbetaling,
+                            skalAvslås1127 = skalAvslås1127,
+                        )
+                    }
+                )
             )
         )
     }
@@ -715,8 +803,13 @@ open class AbstraktFlytOrkestratorTest(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = erOppfylt,
-                        erSkadeSykdomEllerLyteVesentligdel = true.takeIf { erOppfylt },
+                        erSkadeSykdomEllerLyteVesentligdel = when {
+                            erStudent -> null
+                            erOppfylt -> true
+                            else -> null
+                        },
                         erNedsettelseIArbeidsevneMerEnnHalvparten = when {
+                            erStudent -> null
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null -> false
                             erOppfylt -> true
                             else -> null
@@ -1334,6 +1427,24 @@ open class AbstraktFlytOrkestratorTest(
                     perioder = perioder.toSet()
                 )
             )
+        )
+    }
+
+    protected fun Behandling.løsVedtakslengde(startDato: LocalDate, sluttdato: LocalDate): Behandling {
+        return løsAvklaringsBehov(
+            behandling = this,
+            avklaringsBehovLøsning =
+                AvklarVedtakslengdeLøsning(
+                    løsningerForPerioder = listOf(
+                        VedtakslengdeVurderingDto(
+                            fom = startDato,
+                            tom = sluttdato,
+                            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),
+                            sluttdato = sluttdato,
+                            begrunnelse = "Vurdert vedtakslengde manuelt"
+                        )
+                    )
+                )
         )
     }
 

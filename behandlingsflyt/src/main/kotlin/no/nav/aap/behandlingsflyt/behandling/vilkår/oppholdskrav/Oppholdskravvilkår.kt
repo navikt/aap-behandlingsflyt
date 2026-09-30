@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.oppholdskrav
 
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -19,22 +19,22 @@ data class OppholdskravvilkårGrunnlag(
     val vurderFra: LocalDate,
 ) : Faktagrunnlag
 
-class Oppholdskravvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OppholdskravvilkårGrunnlag> {
-    private val vilkåret = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OPPHOLDSKRAV)
+object Oppholdskravvilkår : Vilkårsvurderer<OppholdskravvilkårGrunnlag> {
+    override val vilkårtype: Vilkårtype = Vilkårtype.OPPHOLDSKRAV
 
-    override fun vurder(grunnlag: OppholdskravvilkårGrunnlag) {
-        val rettighetsperiode = Periode(grunnlag.vurderFra, Tid.MAKS)
+    override fun vurder(faktagrunnlag: OppholdskravvilkårGrunnlag): Tidslinje<Vilkårsvurdering> {
+        val rettighetsperiode = Periode(faktagrunnlag.vurderFra, Tid.MAKS)
 
         val utgangspunktOppfylt = tidslinjeOf(
             rettighetsperiode to Vilkårsvurdering(
                 utfall = Utfall.OPPFYLT,
                 begrunnelse = null,
-                faktagrunnlag = grunnlag,
+                faktagrunnlag = faktagrunnlag,
                 manuellVurdering = false,
             )
         )
 
-        val saksbehandlersVurdering = grunnlag.oppholdskravGrunnlag
+        val saksbehandlersVurdering = faktagrunnlag.oppholdskravGrunnlag
             ?.tidslinje()
             .orEmpty()
             .map {
@@ -42,15 +42,13 @@ class Oppholdskravvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer
                     utfall = if (it.oppfylt) Utfall.OPPFYLT else Utfall.IKKE_OPPFYLT,
                     avslagsårsak = if (it.oppfylt) null else Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
                     begrunnelse = it.begrunnelse,
-                    faktagrunnlag = grunnlag,
+                    faktagrunnlag = faktagrunnlag,
                     manuellVurdering = true,
                 )
             }
 
-        vilkåret.leggTilVurderinger(
-            utgangspunktOppfylt
-                .mergePrioriterHøyre(saksbehandlersVurdering)
-                .begrensetTil(rettighetsperiode)
-        )
+        return utgangspunktOppfylt
+            .mergePrioriterHøyre(saksbehandlersVurdering)
+            .begrensetTil(rettighetsperiode)
     }
 }

@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakOppsummering
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaSakerResponse
 import io.mockk.Called
 import io.mockk.checkUnnecessaryStub
 import io.mockk.clearMocks
@@ -9,16 +7,19 @@ import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
+import no.nav.aap.behandlingsflyt.arena.ArenaSak
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
+import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -38,12 +39,11 @@ import org.junit.jupiter.api.assertThrows
 import java.sql.SQLException
 import java.time.Instant
 import java.time.LocalDate
-import no.nav.aap.behandlingsflyt.help.ident
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PersonOgSakServiceTest {
     private val pdlGateway: IdentGateway = mockk()
-    private val apiInternGateway: ApiInternGateway = mockk(relaxed = true)
+    private val arenaOppslagGateway: ArenaOppslagGateway = mockk(relaxed = true)
 
     private lateinit var dataSource: TestDataSource
 
@@ -54,9 +54,9 @@ class PersonOgSakServiceTest {
 
     @AfterEach
     fun afterEach() {
-        confirmVerified(apiInternGateway, pdlGateway)
-        checkUnnecessaryStub(pdlGateway, apiInternGateway)
-        clearMocks(pdlGateway, apiInternGateway)
+        confirmVerified(arenaOppslagGateway, pdlGateway)
+        checkUnnecessaryStub(pdlGateway, arenaOppslagGateway)
+        clearMocks(pdlGateway, arenaOppslagGateway)
     }
 
     @AfterAll
@@ -71,7 +71,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett oppretter ny sak for ny person`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val sak = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -83,7 +83,7 @@ class PersonOgSakServiceTest {
 
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
-                apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
+                arenaOppslagGateway.hentHarHistorikk(ident)
             }
         }
 
@@ -91,7 +91,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett returnerer eksisterende sak for samme person`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val sak1 = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -107,7 +107,7 @@ class PersonOgSakServiceTest {
 
             verify(exactly = 2) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
-                apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
+                arenaOppslagGateway.hentHarHistorikk(ident)
             }
         }
 
@@ -124,7 +124,7 @@ class PersonOgSakServiceTest {
             }
 
             verify(exactly = 1) { pdlGateway.hentAlleIdenterForPerson(ident) }
-            verify { apiInternGateway wasNot Called }
+            verify { arenaOppslagGateway wasNot Called }
         }
 
         @Test
@@ -134,7 +134,7 @@ class PersonOgSakServiceTest {
             val identliste = listOf(aktivIdent, gammelIdent)
 
             every { pdlGateway.hentAlleIdenterForPerson(aktivIdent) } returns identliste
-            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
 
             val sak = dataSource.transaction { connection ->
@@ -148,7 +148,7 @@ class PersonOgSakServiceTest {
 
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(aktivIdent)
-                apiInternGateway.hentArenaStatus(identliste.map { it.identifikator }.toSet())
+                arenaOppslagGateway.hentHarHistorikk(aktivIdent)
             }
         }
 
@@ -156,9 +156,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett rapporterer når person finnes i Arena men ikke i Kelvin`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(setOf(ident.identifikator)) } returns Result.success(
-                ArenaStatusResponse(true)
-            )
+            every { arenaOppslagGateway.hentHarHistorikk(ident) } returns HarHistorikkResponse(true)
 
             val sak = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -168,7 +166,7 @@ class PersonOgSakServiceTest {
             assertThat(sak).isNotNull
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
-                apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
+                arenaOppslagGateway.hentHarHistorikk(ident)
             }
         }
     }
@@ -181,13 +179,13 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett returnerer eksisterende sak når trukket søknad har skalTrekkes false`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val (opprinneligSak, sammeSak) = dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
                 val service = PersonOgSakService(
                     pdlGateway,
-                    apiInternGateway,
+                    arenaOppslagGateway,
                     repositoryProvider.provide<PersonRepository>(),
                     repositoryProvider.provide<SakRepository>(),
                     repositoryProvider.provide<ArenaMigreringRepository>()
@@ -218,7 +216,7 @@ class PersonOgSakServiceTest {
 
             verify(exactly = 2) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
-                apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
+                arenaOppslagGateway.hentHarHistorikk(ident)
             }
         }
 
@@ -227,14 +225,14 @@ class PersonOgSakServiceTest {
             val ident = ident()
             val søknadsdato = LocalDate.now()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val (opprinneligSak, nySak) = dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val service = PersonOgSakService(
                     pdlGateway,
-                    apiInternGateway,
+                    arenaOppslagGateway,
                     repositoryProvider.provide<PersonRepository>(),
                     sakRepository,
                     repositoryProvider.provide<ArenaMigreringRepository>()
@@ -273,7 +271,7 @@ class PersonOgSakServiceTest {
 
             verify(exactly = 2) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
-                apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
+                arenaOppslagGateway.hentHarHistorikk(ident)
             }
         }
 
@@ -282,14 +280,14 @@ class PersonOgSakServiceTest {
             val ident = ident()
             val søknadsdato = LocalDate.now()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
                 val sakRepository = repositoryProvider.provide<SakRepository>()
                 val service = PersonOgSakService(
                     pdlGateway,
-                    apiInternGateway,
+                    arenaOppslagGateway,
                     repositoryProvider.provide<PersonRepository>(),
                     sakRepository,
                     repositoryProvider.provide<ArenaMigreringRepository>()
@@ -318,7 +316,7 @@ class PersonOgSakServiceTest {
 
             verify(exactly = 2) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
-                apiInternGateway.hentArenaStatus(setOf(ident.identifikator))
+                arenaOppslagGateway.hentHarHistorikk(ident)
             }
         }
     }
@@ -340,14 +338,14 @@ class PersonOgSakServiceTest {
             assertThat(saker).isEmpty()
 
             verify(exactly = 1) { pdlGateway.hentAlleIdenterForPerson(ident) }
-            verify { apiInternGateway wasNot Called }
+            verify { arenaOppslagGateway wasNot Called }
         }
 
         @Test
         fun `finnSakerFor returnerer saker for person som har saker`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val (opprettetSak, funnetSaker) = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -361,7 +359,7 @@ class PersonOgSakServiceTest {
             assertThat(funnetSaker.first().id).isEqualTo(opprettetSak.id)
 
             verify(exactly = 2) { pdlGateway.hentAlleIdenterForPerson(ident) }
-            verify(exactly = 1) { apiInternGateway.hentArenaStatus(setOf(ident.identifikator)) }
+            verify(exactly = 1) { arenaOppslagGateway.hentHarHistorikk(ident) }
         }
 
         @Test
@@ -374,7 +372,7 @@ class PersonOgSakServiceTest {
                     val repositoryProvider = postgresRepositoryRegistry.provider(connection)
                     PersonOgSakService(
                         pdlGateway,
-                        apiInternGateway,
+                        arenaOppslagGateway,
                         repositoryProvider.provide<PersonRepository>(),
                         repositoryProvider.provide<SakRepository>(),
                         repositoryProvider.provide<ArenaMigreringRepository>()
@@ -385,7 +383,7 @@ class PersonOgSakServiceTest {
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(ident)
             }
-            verify { apiInternGateway wasNot Called }
+            verify { arenaOppslagGateway wasNot Called }
         }
 
         @Test
@@ -396,7 +394,7 @@ class PersonOgSakServiceTest {
 
             every { pdlGateway.hentAlleIdenterForPerson(aktivIdent) } returns identliste
             every { pdlGateway.hentAlleIdenterForPerson(gammelIdent) } returns identliste
-            every { apiInternGateway.hentArenaStatus(any()) } returns Result.success(ArenaStatusResponse(false))
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val (opprettetSak, funnetSaker) = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -411,7 +409,7 @@ class PersonOgSakServiceTest {
 
             verify(exactly = 1) {
                 pdlGateway.hentAlleIdenterForPerson(aktivIdent)
-                apiInternGateway.hentArenaStatus(setOf(aktivIdent.identifikator, gammelIdent.identifikator))
+                arenaOppslagGateway.hentHarHistorikk(aktivIdent)
                 pdlGateway.hentAlleIdenterForPerson(gammelIdent)
             }
         }
@@ -421,7 +419,7 @@ class PersonOgSakServiceTest {
     @DisplayName("finnArenasakForBruker")
     inner class FinnArenasakForBrukerTest {
 
-        private val arenaSak = ArenaSakOppsummering(
+        private val arenaSak = ArenaSakOppsummeringKontrakt(
             sakId = "123",
             lopenummer = 1,
             aar = 2024,
@@ -436,40 +434,40 @@ class PersonOgSakServiceTest {
         @Test
         fun `returnerer arenasak når saksnummer matcher`() {
             val ident = ident()
-            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(listOf(arenaSak))
+            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns SakerResponse(listOf(arenaSak))
 
             val result = dataSource.transaction { connection ->
                 initPersonOgSakService(connection).finnArenasakForBruker(ident, "2024-1")
             }
 
-            assertThat(result).isEqualTo(arenaSak)
-            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
+            assertThat(result).isEqualTo(ArenaSak(saksnummer = "2024-1", statuskode = arenaSak.statuskode))
+            verify(exactly = 1) { arenaOppslagGateway.hentSakerForPerson(ident) }
         }
 
         @Test
         fun `returnerer null når sak med gitt saksnummer ikke finnes`() {
             val ident = ident()
-            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(listOf(arenaSak))
+            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns SakerResponse(listOf(arenaSak))
 
             val result = dataSource.transaction { connection ->
                 initPersonOgSakService(connection).finnArenasakForBruker(ident, "2023-5")
             }
 
             assertThat(result).isNull()
-            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
+            verify(exactly = 1) { arenaOppslagGateway.hentSakerForPerson(ident) }
         }
 
         @Test
         fun `returnerer null når listen er tom`() {
             val ident = ident()
-            every { apiInternGateway.hentSakerForPerson(ident.identifikator) } returns ArenaSakerResponse(emptyList())
+            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns SakerResponse(emptyList())
 
             val result = dataSource.transaction { connection ->
                 initPersonOgSakService(connection).finnArenasakForBruker(ident, "2024-1")
             }
 
             assertThat(result).isNull()
-            verify(exactly = 1) { apiInternGateway.hentSakerForPerson(ident.identifikator) }
+            verify(exactly = 1) { arenaOppslagGateway.hentSakerForPerson(ident) }
         }
     }
 
@@ -477,7 +475,7 @@ class PersonOgSakServiceTest {
         val repositoryProvider = postgresRepositoryRegistry.provider(connection)
         val service = PersonOgSakService(
             pdlGateway,
-            apiInternGateway,
+            arenaOppslagGateway,
             repositoryProvider.provide<PersonRepository>(),
             repositoryProvider.provide<SakRepository>(),
             repositoryProvider.provide<ArenaMigreringRepository>()

@@ -22,6 +22,7 @@ enum class BehandlingsflytFeature(
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     GenererVilkarsvurderingOppsummeringPDF,
+    SaksbehandlerMeldekortKvitteringNyPdfgenerator,
 
     // --- Krav ---
     BackfillKrav,
@@ -31,12 +32,19 @@ enum class BehandlingsflytFeature(
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
 
+    // --- Migrering ---
+    MigererSykdomFraArenaAutomatisk,
+    MigrererKravFraArenaAutomatisk,
+
     // ------
     Avslag11_27,
-    SkalViseAlleSykdomssteg,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     BosattStatsborgerskapGjennomslipp,
-    HoppOverBeslutterVedAvslagSykdom
+    HoppOverBeslutterVedAvslagSykdom,
+    KanVurdereRefusjonIRevurdering,
+    KunEnAktivKlagebehandling,
+    KlagePaaTilbakekreving,
+    NySoknadTilApiIntern
     ;
 
     override fun key(): String = name

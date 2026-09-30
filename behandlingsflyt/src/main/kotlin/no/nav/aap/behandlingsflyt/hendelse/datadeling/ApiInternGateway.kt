@@ -22,6 +22,7 @@ import java.time.LocalDate
 interface ApiInternGateway : Gateway {
     fun sendPerioder(ident: String, perioder: List<Periode>)
     fun sendSakStatus(ident: String, sakStatus: SakStatus)
+    fun varsleNySøknadForPerson(ident: String)
 
     /**
      * @param vedtakId ID til raden i vedtak-tabellen som referer til behandlingen.
@@ -50,13 +51,6 @@ interface ApiInternGateway : Gateway {
         behandlingId: BehandlingId
     )
 
-    /**
-    Returnerer med overlegg `Result` slik at kalleren av metoden er nødt til å ta hensyn til at kallet kan feile.
-    Grunnen er at vi må passe på at Behandlingsflyt ikke feiler når Arena er utilgjengelig.
-     */
-    fun hentArenaStatus(personidentifikatorer: Set<String>): Result<ArenaStatusResponse>
-
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
 
-    fun hentSakerForPerson(personidentifikator: String): ArenaSakerResponse
 }

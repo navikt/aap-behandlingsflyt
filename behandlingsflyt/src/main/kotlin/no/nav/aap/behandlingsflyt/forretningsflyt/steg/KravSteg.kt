@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -32,7 +34,6 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
-import kotlin.collections.filterIsInstance
 
 class KravSteg(
     private val unleashGateway: UnleashGateway,
@@ -40,7 +41,8 @@ class KravSteg(
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val sakRepository: SakRepository,
-    private val behandlingService: BehandlingService
+    private val behandlingService: BehandlingService,
+    private val arenaMigreringService: ArenaMigreringService
 ) : BehandlingSteg {
 
     /**
@@ -50,18 +52,19 @@ class KravSteg(
      * For "resten": Alle søknader er ikke et eget "krav". Opphør/stans og gjeninntreden kan trolig holdes unna for backfill
      */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.KravSteg)
-        ) {
-            return Fullført
-        }
-
         // Migreringssaker har egne krav, kunne vært i den normale switch-casen, men vi ønsker at disse alltid
         // skal gå gjennom selv om feature-toggelen under er skrudd av så lenge krav-steget er skrudd på
         // så midlertidig legges koden fort sette her for å være utenfor feature-toggelen.
         if(kontekst.erMigreringFraArena()) {
+            val migrerKravAutomatisk = unleashGateway.isEnabled(BehandlingsflytFeature.MigrererKravFraArenaAutomatisk)
+            if (migrerKravAutomatisk
+                && kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.isNullOrEmpty()
+            ) {
+                migrerStegFraArena(kontekst)
+            }
             avklaringsbehovService.oppdaterAvklaringsbehov(
                 definisjon = Definisjon.VURDER_KRAV,
-                vedtakBehøverVurdering = { vedtakBehøverVurderingForMigrering(kontekst) },
+                vedtakBehøverVurdering = { !migrerKravAutomatisk },
                 erTilstrekkeligVurdert = { erTilstrekkeligVurdertForMigrering(kontekst) },
                 tilbakestillGrunnlag = { },
                 kontekst = kontekst
@@ -143,10 +146,6 @@ class KravSteg(
         )
     }
 
-    private fun vedtakBehøverVurderingForMigrering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.erMigreringFraArena()
-    }
-
     private fun vurderAutomatiskHvisMulig(kontekst: FlytKontekstMedPerioder) {
         if (erFørstegangsbehandlingUtenEksisterendeKrav(kontekst)) {
             val søknaderMottattIBehandling =
@@ -186,15 +185,8 @@ class KravSteg(
 
         val søknaderMottattIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
-
-        // Legeerklæring kan i noen tilfeller være første dokument på en første behandlingen.
-        val legeerklæringerMottattIBehandling = if (kontekst.forrigeBehandlingId == null) {
-            mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.LEGEERKLÆRING)
-        } else {
-            emptyList()
-        }
-
-        val alleDokumenter = (søknaderMottattIBehandling + legeerklæringerMottattIBehandling)
+        
+        val alleDokumenter = (søknaderMottattIBehandling)
             .sortedBy { it.mottattTidspunkt }
 
         // Dersom saksbehandler har overstyrt muligRettFra i denne behandlingen, bevarer vi overstyringen
@@ -228,8 +220,7 @@ class KravSteg(
                 || (gjeldendeKravFraForrige == null && index == 0)
             when {
                 erNyttKrav -> nyttKrav(kontekst.behandlingId, dokument, gjeldendeOverstyring)
-                dokument.type == InnsendingType.SØKNAD -> tilleggsopplysning(kontekst.behandlingId, dokument)
-                else -> null // Legeerklæring som ikke er eldste dokument – ingen separat vurdering
+                else -> tilleggsopplysning(kontekst.behandlingId, dokument)
             }
         }
 
@@ -297,6 +288,17 @@ class KravSteg(
                 && kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.isNullOrEmpty()
     }
 
+    private fun migrerStegFraArena(kontekst: FlytKontekstMedPerioder) {
+        val kravdataFraArena = arenaMigreringService.hentKravDataForSak(kontekst.sakId)
+        requireNotNull(kravdataFraArena) { "Kan ikke migrere krav. Klarte ikke finne relatert sak i Arena." }
+
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, StegType.KRAV, kravdataFraArena)
+        kravRepository.lagre(
+            kontekst.behandlingId,
+            setOf(ArenaMigreringMapper.mapMigrertKrav(kravdataFraArena, kontekst.behandlingId))
+        )
+    }
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
@@ -308,7 +310,8 @@ class KravSteg(
                 mottattDokumentRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 sakRepository = repositoryProvider.provide(),
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
             )
         }
 

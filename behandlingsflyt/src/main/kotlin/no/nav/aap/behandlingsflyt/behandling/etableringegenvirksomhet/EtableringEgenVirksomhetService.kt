@@ -21,6 +21,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
@@ -209,30 +210,31 @@ class EtableringEgenVirksomhetService(
     fun utledGyldighetsPeriode(
         behandlingId: BehandlingId
     ): List<Periode> {
-        val førsteDagIOppfyltPeriode = utledFørsteDagIOppfyltPeriode(behandlingId) ?: return emptyList()
-        val mapped = sykdomOgBistandTidslinje(behandlingId)
-            .filter {
-                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true
-                        && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
-            }
-        return mapped
-            .disjoint(Tidslinje(førsteDagIOppfyltPeriode, Unit)) { periode, segment -> Segment(periode, segment.verdi) }
-            .perioder()
-            .toList()
+        val førsteDagIOppfyltPeriode =
+            tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList().firstOrNull()?.fom ?: return emptyList()
+        return tidslinjeSykdomOgBistandOppfylt(behandlingId).begrensetTil(
+            Periode(
+                førsteDagIOppfyltPeriode.plusDays(1),
+                Tid.MAKS
+            )
+        ).perioder().toList()
     }
 
-    fun utledIkkeVurderbarePerioder(behandlingId: BehandlingId): List<Periode> {
-        val førsteDagIOppfyltPeriode = utledFørsteDagIOppfyltPeriode(behandlingId) ?: return emptyList()
+    private fun tidslinjeSykdomOgBistandOppfylt(behandlingId: BehandlingId) = sykdomOgBistandTidslinje(behandlingId)
+        .filter {
+            it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true && it.verdi.second?.erBehovForArbeidsrettetTiltak == true
+        }
 
-        val mapped = sykdomOgBistandTidslinje(behandlingId)
+    fun utledIkkeVurderbarePerioder(behandlingId: BehandlingId): List<Periode> {
+        val førsteDagIOppfyltPeriode =
+            tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList().firstOrNull()?.fom ?: return emptyList()
+
+        return sykdomOgBistandTidslinje(behandlingId)
             .filter {
                 it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true
                         || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
-            }
-
-        return mapped.perioder().plus(førsteDagIOppfyltPeriode).toList()
+            }.perioder().plus(Periode(førsteDagIOppfyltPeriode, førsteDagIOppfyltPeriode)).toList()
     }
-
     /**
      * Den (tekniske) første dagen i en periode der 11-5 & 11-6b er oppfylt. Denne dagen krever
      * ikke en egen vurdering.

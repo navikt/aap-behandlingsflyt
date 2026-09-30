@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -28,6 +30,7 @@ class BehandlingService(
     private val trukketSøknadService: TrukketSøknadService,
     private val underveisService: UnderveisService,
     private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
+    private val unleashGateway: UnleashGateway,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -39,6 +42,7 @@ class BehandlingService(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     fun finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId: SakId): Behandling? {
@@ -63,6 +67,7 @@ class BehandlingService(
      *
      * Er du sikker på at du ikke bryr deg om behandlingen du får er siste vedtatte eller en åpen behandling?
      */
+    @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         """
         Navnet på denne metoden er ikke tydelig på hva du egentlig ser etter. Bytt ut metodekallet med en av følgende:
@@ -78,7 +83,7 @@ class BehandlingService(
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
         val sak = sakRepository.hent(sakId)
         val alleBehandlingerMedVedtak =
-            behandlingRepository.hentAlleMedVedtakFor(sak.person.id, TypeBehandling.ytelseBehandlingstyper())
+            behandlingRepository.hentAlleMedVedtakFor(sak.id, TypeBehandling.ytelseBehandlingstyper())
         return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
     }
 
@@ -92,6 +97,7 @@ class BehandlingService(
             TypeBehandling.Revurdering -> underveisService.harRett(
                 requireNotNull(behandling.forrigeBehandlingId) { "Revurdering skal alltid ha forrigeBehandling" }
             )
+
             else -> return behandling.typeBehandling()
         }
         return utledTypeForRevurdering(behandling, harRett)
@@ -112,6 +118,7 @@ class BehandlingService(
                     }
                     utledTypeForRevurdering(behandling, harRettMap[forrigeBehandlingId] ?: false)
                 }
+
                 else -> behandling.typeBehandling()
             }
             behandling.id to type
@@ -213,7 +220,7 @@ class BehandlingService(
             sisteYtelsesbehandling.status().erÅpen() ->
                 if (fasttrackkandidat && sisteYtelsesbehandling.typeBehandling() != TypeBehandling.Førstegangsbehandling)
                     MåBehandlesAtomært(
-                        opprettRevurderingForranÅpenBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak),
+                        opprettRevurderingForanÅpenBehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak),
                         sisteYtelsesbehandling
                     )
                 else
@@ -300,6 +307,16 @@ class BehandlingService(
             "Mottok klage, men det finnes ingen eksisterende behandling"
         }
 
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KunEnAktivKlagebehandling)) {
+            val åpenKlagebehandling = behandlingRepository
+                .hentAlleFor(sisteYtelsesbehandling.sakId, listOf(TypeBehandling.Klage))
+                .find { it.status().erÅpen() }
+
+            if (åpenKlagebehandling != null) {
+                return åpenKlagebehandling
+            }
+        }
+
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,
             typeBehandling = TypeBehandling.Klage,
@@ -374,7 +391,7 @@ class BehandlingService(
         }
     }
 
-    private fun opprettRevurderingForranÅpenBehandling(
+    private fun opprettRevurderingForanÅpenBehandling(
         åpenRevurdering: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {

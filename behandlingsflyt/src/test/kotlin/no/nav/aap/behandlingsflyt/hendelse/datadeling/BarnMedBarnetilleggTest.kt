@@ -28,8 +28,9 @@ class BarnMedBarnetilleggTest {
     @Test
     fun `barn med ident får riktig gradert beløp for hele perioden når periodene er like`() {
         val periode = Periode(1 januar 2024, 31 januar 2024)
+        val sats = Beløp(38)
         val tilkjentYtelse = listOf(
-            TilkjentYtelsePeriode(periode, tilkjent(gradering = Prosent.`50_PROSENT`, barnetilleggsats = Beløp(38)))
+            TilkjentYtelsePeriode(periode, tilkjent(gradering = Prosent.`50_PROSENT`, barnetilleggsats = sats))
         )
         val grunnlag = BarnetilleggGrunnlag(listOf(BarnetilleggPeriode(periode, setOf(barnMedIdent))))
 
@@ -42,7 +43,12 @@ class BarnMedBarnetilleggTest {
                     BarnMedBarnetillegg(
                         ident = "12345678901",
                         perioderMedBarnetillegg = listOf(
-                            PeriodeMedBeløp(periode, Beløp(38).multiplisert(Prosent.`50_PROSENT`))
+                            PeriodeMedBeløp(
+                                periode,
+                                sats.multiplisert(Prosent.`50_PROSENT`),
+                                sats = sats,
+                                uredusertBeløp = sats
+                            )
                         )
                     )
                 )
@@ -65,6 +71,7 @@ class BarnMedBarnetilleggTest {
 
         val resultat = utledBarnMedBarnetillegg(tilkjentYtelse, grunnlag)
 
+        val sats = Beløp(38)
         assertThat(resultat)
             .usingRecursiveComparison()
             .ignoringCollectionOrder()
@@ -73,12 +80,23 @@ class BarnMedBarnetilleggTest {
                     BarnMedBarnetillegg(
                         ident = "12345678901",
                         perioderMedBarnetillegg = listOf(
-                            PeriodeMedBeløp(januarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`)),
-                            PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`50_PROSENT`)),
-                        )
+                            PeriodeMedBeløp(
+                                januarPeriode,
+                                sats,
+                                sats = sats,
+                                uredusertBeløp = sats
+                            ),
+                            PeriodeMedBeløp(
+                                februarPeriode,
+                                sats.multiplisert(Prosent.`50_PROSENT`),
+                                sats = sats,
+                                uredusertBeløp = sats,
+                            ),
+                        ),
                     )
                 )
             )
+
     }
 
     @Test
@@ -105,15 +123,34 @@ class BarnMedBarnetilleggTest {
             .ignoringCollectionOrder()
             .isEqualTo(
                 listOf(
-                    PeriodeMedBeløp(januarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`)),
-                    PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`)),
+                    PeriodeMedBeløp(
+                        januarPeriode,
+                        Beløp(38).multiplisert(Prosent.`100_PROSENT`),
+                        sats = Beløp(38),
+                        uredusertBeløp = Beløp(38)
+                    ),
+                    PeriodeMedBeløp(
+                        februarPeriode,
+                        Beløp(38).multiplisert(Prosent.`100_PROSENT`),
+                        sats = Beløp(38),
+                        uredusertBeløp = Beløp(38)
+                    ),
                 )
             )
 
         val utenIdent = resultat.single { it.ident == null }
         assertThat(utenIdent.perioderMedBarnetillegg)
             .usingRecursiveComparison()
-            .isEqualTo(listOf(PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`))))
+            .isEqualTo(
+                listOf(
+                    PeriodeMedBeløp(
+                        februarPeriode,
+                        Beløp(38).multiplisert(Prosent.`100_PROSENT`),
+                        sats = Beløp(38),
+                        uredusertBeløp = Beløp(38)
+                    )
+                )
+            )
     }
 
     @Test
@@ -137,7 +174,12 @@ class BarnMedBarnetilleggTest {
                     BarnMedBarnetillegg(
                         ident = "12345678901",
                         perioderMedBarnetillegg = listOf(
-                            PeriodeMedBeløp(februarPeriode, Beløp(38).multiplisert(Prosent.`100_PROSENT`))
+                            PeriodeMedBeløp(
+                                februarPeriode,
+                                Beløp(38).multiplisert(Prosent.`100_PROSENT`),
+                                sats = Beløp(38),
+                                uredusertBeløp = Beløp(38)
+                            )
                         )
                     )
                 )

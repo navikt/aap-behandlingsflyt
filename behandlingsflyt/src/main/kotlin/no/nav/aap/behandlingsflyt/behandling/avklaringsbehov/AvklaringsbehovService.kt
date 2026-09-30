@@ -57,6 +57,7 @@ class AvklaringsbehovService(
         avklaringsbehovValidering = AvklaringsbehovValidering(repositoryProvider, gatewayProvider),
     )
 
+    // TODO: Håndter frivillige. Må ta inn gradBehov
     fun oppdaterAvklaringsbehov(
         definisjon: Definisjon,
         vedtakBehøverVurdering: () -> Boolean,
@@ -138,36 +139,30 @@ class AvklaringsbehovService(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
 
-        // TODO: Fjern denne når alle kall tar i bruk perioderSomIkkeErTilstrekkeligVurdert
-        val erTilstrekkeligVurdertBakoverkompatibel =
-            { erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true }
-
-        val vurderingsbehovErNyere = vurderingsbehovetErNyereEnnAvklaringsbehovet(kontekst, avklaringsbehov)
+        val harLøsning =
+            avklaringsbehov != null && avklaringsbehov.harLøsning()
+        val måLøsesPåNytt by lazy {
+            vurderingsbehovetErNyereEnnAvklaringsbehovet(
+                kontekst,
+                avklaringsbehov
+            ) || !(erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true)
+        }
 
         if (vedtakBehøverVurdering()) {
-            if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT || vurderingsbehovErNyere) {
+            if (avklaringsbehov == null) {
                 /* ønsket tilstand: OPPRETTET */
-                when {
-                    avklaringsbehov?.status()?.erÅpent() == true -> {
-                        /* ønsket tilstand er OPPRETTET */
-                        avklaringsbehovene.oppdaterPerioder(
-                            avklaringsbehov.definisjon,
-                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                        )
-                    }
-
-                    else -> avklaringsbehovene.leggTil(
-                        definisjon,
-                        definisjon.løsesISteg,
-                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                    )
-                }
-            } else if (erTilstrekkeligVurdertBakoverkompatibel()) {
+                avklaringsbehovene.opprett(
+                    definisjon,
+                    definisjon.løsesISteg,
+                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                    perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                    perioderKanVurderes = null, // TODO
+                    gradBehov = null 
+                )
+            } else if (harLøsning && !måLøsesPåNytt) {
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
-                    OPPRETTET, AVBRUTT ->
+                    OPPRETTET ->
                         avklaringsbehovene.avslutt(definisjon, "Behovet var åpent, men er nå tilstrekkelig vurdert.")
 
                     SENDT_TILBAKE_FRA_BESLUTTER,
@@ -176,7 +171,9 @@ class AvklaringsbehovService(
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                            perioderKanVurderes = null, // TODO
+                            gradBehov = null
                         )
 
                     KVALITETSSIKRET,
@@ -184,33 +181,36 @@ class AvklaringsbehovService(
                     TOTRINNS_VURDERT -> {
                         /* uendret status */
                     }
+
+                    AVBRUTT -> {
+                        throw IllegalStateException("Forventet løsning, men fant avbrutt behov: $definisjon")
+                    }
                 }
             } else {
                 /* ønsket tilstand: OPPRETTET */
                 when (avklaringsbehov.status()) {
-                    OPPRETTET -> {
+                    OPPRETTET, SENDT_TILBAKE_FRA_BESLUTTER,
+                    SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
                         /* forbli OPPRETTET */
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                            perioderKanVurderes = null, // TODO
+                            gradBehov = null
                         )
 
                     }
 
+                    AVBRUTT,
                     AVSLUTTET,
                     TOTRINNS_VURDERT,
-                    SENDT_TILBAKE_FRA_BESLUTTER,
-                    KVALITETSSIKRET,
-                    SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    AVBRUTT -> {
-                        avklaringsbehovene.leggTil(
-                            definisjon,
-                            definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
-                        )
-                    }
+                    KVALITETSSIKRET -> avklaringsbehovene.reåpneAvklaringsbehov(
+                        avklaringsbehov,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                        gradBehov = null
+                    )
                 }
             }
         } else /* vedtaket behøver ikke vurdering */ {
@@ -227,16 +227,24 @@ class AvklaringsbehovService(
                 SENDT_TILBAKE_FRA_BESLUTTER,
                 KVALITETSSIKRET,
                 SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
-                    val erFrivilligAvklaringsbehov = avklaringsbehov.definisjon.erFrivillig()
+                    val erSøknadTrukket = trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
+                    val erRevurderingAvbrutt = avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)
 
-                    val søknadErIkkeTrukket = !trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
-                    if (erFrivilligAvklaringsbehov && søknadErIkkeTrukket) {
-                        return
-                    }
+                    when {
+                        erSøknadTrukket || erRevurderingAvbrutt -> {
+                            avklaringsbehovene.avbryt(definisjon)
+                        }
 
-                    avklaringsbehovene.avbryt(definisjon)
-                    if (!avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)) {
-                        tilbakestillGrunnlag()
+                        avklaringsbehov.definisjon.erFrivillig()
+                                && avklaringsbehov.definisjon in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov -> {
+                            // Skal ikke avbryte og tilbakestille frivillige behov
+                            return
+                        }
+
+                        else -> {
+                            avklaringsbehovene.avbryt(definisjon)
+                            tilbakestillGrunnlag()
+                        }
                     }
                 }
             }
@@ -276,7 +284,7 @@ class AvklaringsbehovService(
         Definisjon.SAMORDNING_BARNEPENSJON,
         Definisjon.SAMORDNING_REFUSJONS_KRAV,
     )
-
+    
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
@@ -413,6 +421,7 @@ class AvklaringsbehovService(
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
+        // TODO: Håndter frivillige. Må ta inn nårKanVurderes
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
@@ -452,6 +461,7 @@ class AvklaringsbehovService(
         tilbakestillGrunnlag: () -> Unit,
         gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
     ) {
+        // TODO: Håndter frivillige. Må ta inn nårKanVurderes
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,

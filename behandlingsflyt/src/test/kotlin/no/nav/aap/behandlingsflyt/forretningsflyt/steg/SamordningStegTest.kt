@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykepengerOgFerieOppgittISøknad.SykepengerOgFerieSøknad
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder as byggFlytKontekstMedPerioder
@@ -145,65 +146,6 @@ class SamordningStegTest {
         assertThat(perioderMedSamordning.samordningPerioder.first().gradering).isEqualTo(Prosent(90))
         assertThat(perioderMedSamordning.samordningPerioder.last().periode).isEqualTo(pleiepengerPeriode)
         assertThat(perioderMedSamordning.samordningPerioder.last().gradering).isEqualTo(Prosent(50))
-    }
-
-    @Test
-    fun `tilbakeføring skal slette vurderinger`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling()
-        settOppRessurser(Ytelse.SYKEPENGER, behandling.id)
-
-        InMemorySamordningVurderingRepository.lagreVurderinger(
-            behandling.id, SamordningVurderingGrunnlag(
-                begrunnelse = "",
-                vurderinger = setOf(
-                    SamordningVurdering(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        vurderingPerioder = setOf(
-                            SamordningVurderingPeriode(
-                                periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
-                                gradering = Prosent(50),
-                                manuell = false,
-                            )
-                        )
-                    )
-                ),
-                vurdertAv = Bruker("ident"),
-                vurdertTidspunkt = LocalDateTime.now()
-            )
-        )
-
-        steg().utfør(flytKontekstMedPerioder(behandling))
-        verifiserAvklaringsbehov(behandling, Status.OPPRETTET)
-        løsBehovet(behandling)
-
-        // Simuler trekk av søknad
-        InMemoryTrukketSøknadRepository.lagreTrukketSøknadVurdering(
-            behandling.id,
-            TrukketSøknadVurdering(
-                journalpostId = JournalpostId("12344321"),
-                begrunnelse = "en grunn",
-                vurdertAv = Bruker("Z00000"),
-                skalTrekkes = true,
-                vurdert = Instant.parse("2020-01-01T12:12:12Z"),
-                aarsak = AarsakTilTrekkSoknad.ANNET
-            )
-        )
-
-        // skal tilbakeføre
-        steg(
-            FakeTidligereVurderinger(
-                Tidslinje(
-                    sak.rettighetsperiode,
-                    TidligereVurderinger.UunngåeligAvslag
-                )
-            ).apply {
-                avslagEllerIngenBehandlingsgrunnlag = true
-                ingenBehandlingsgrunnlag = true
-            })
-            .utfør(flytKontekstMedPerioder(behandling))
-
-        val vurderinger = InMemorySamordningVurderingRepository.hentHvisEksisterer(behandling.id)
-        assertThat(vurderinger).isNull()
     }
 
     @Test
@@ -447,7 +389,7 @@ class SamordningStegTest {
             FakeTidligereVurderinger(
                 Tidslinje(
                     sak.rettighetsperiode,
-                    TidligereVurderinger.UunngåeligAvslag
+                    TidligereVurderinger.UunngåeligAvslag(Vilkårtype.SAMORDNING)
                 )
             )
         ).utfør(flytKontekstMedPerioder(behandling))
@@ -545,6 +487,7 @@ class SamordningStegTest {
             samordningService = SamordningService(inMemoryRepositoryProvider),
             samordningRepository = inMemoryRepositoryProvider.provide(),
             tidligereVurderinger = tidligereVurderinger,
+            avklaringsbehovRepository = inMemoryRepositoryProvider.provide(),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, minimalGatewayProvider()),
             sykepengerOgFerieOppgittISøknadRepository = inMemoryRepositoryProvider.provide()
         )

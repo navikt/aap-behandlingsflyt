@@ -7,10 +7,12 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import javax.sql.DataSource
@@ -31,15 +33,15 @@ class BackfillKrav(
                 var forrigeFraTil: List<Long>? = null
                 while (true) {
                     if (isLeader(log) && unleashGateway.isEnabled(BehandlingsflytFeature.BackfillKrav)) {
-                        val fraTil = unleashGateway.getVariantValue(
+                        val sakIder = unleashGateway.getVariantValue(
                             BehandlingsflytFeature.BackfillKrav,
                             "backfill-saker-ider"
                         ).split(",").map(String::toLong)
 
-                        if (forrigeFraTil != fraTil) {
+                        if (forrigeFraTil != sakIder) {
                             try {
-                                backfillKravLoop(fraTil[0], fraTil[1])
-                                forrigeFraTil = fraTil
+                                backfillKravLoop(sakIder)
+                                forrigeFraTil = sakIder
                             } catch (e: Exception) {
                                 log.warn("BackfillKrav: uncaughtException {}, se secure / team log", e.javaClass.name)
                                 teamLogs.warn(
@@ -58,11 +60,11 @@ class BackfillKrav(
 
     private var antallBackfillUtført = 0
 
-    private fun backfillKravLoop(fra: Long, til: Long) {
-        log.info("Begynner backfill krav for sak-ider $fra – $til")
+    private fun backfillKravLoop(sakIder: List<Long>) {
+        log.info("Begynner backfill krav for sak-ider $sakIder")
         antallBackfillUtført = 0
 
-        for (sakId in fra..til) {
+        for (sakId in sakIder) {
             dataSource.transaction { connection ->
                 val sakRepository = SakRepositoryImpl(connection)
                 val sak = sakRepository.hentSakHvisEksisterer(sakId) ?: return@transaction
@@ -85,16 +87,22 @@ class BackfillKrav(
                 }
 
                 try {
+                    log.info("Backfiller krav for sak ${sak.id} - ${sak.saksnummer}")
                     var sakenErFerdigBackfilled = false
                     for (behandling in behandlinger) {
                         if (sakenErFerdigBackfilled) break
                         taSkriveLåsRepository.withLåstBehandling(behandling.id) {
-                            val resultat = backfillService.backfillBehandling(sak, behandling, erNyesteBehandling = behandling == behandlinger.last())
+                            val resultat = backfillService.backfillBehandling(
+                                sak,
+                                behandlinger,
+                                behandling,
+                                erNyesteBehandling = behandling == behandlinger.last()
+                            )
                             when (resultat) {
                                 BackfillBehandlingResultat.AlleredeBackfilled -> {
                                     log.info(
                                         "Behandling ${behandling.id.toLong()} i sak ${sak.id.toLong()} " +
-                                            "hadde allerede krav – stopper backfill for saken"
+                                                "hadde allerede krav – stopper backfill for saken"
                                     )
                                     sakenErFerdigBackfilled = true
                                 }
@@ -118,7 +126,7 @@ class BackfillKrav(
         }
 
         log.info(
-            "Backfill krav ferdig: {} behandlinger for sak-ider $fra – $til",
+            "Backfill krav ferdig: {} behandlinger for sak-ider $sakIder",
             antallBackfillUtført
         )
         Thread.sleep(Duration.ofMinutes(5))
