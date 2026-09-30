@@ -308,7 +308,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .medKontekst {
                 val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(oppdatertBehandling.id)
                 assertThat(åpneAvklaringsbehov).hasSize(2)
-                assertThat(åpneAvklaringsbehov..first().definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM)
 
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
                     val kravGrunnlag = repositoryProvider.provide<KravRepository>().hentHvisEksisterer(behandling.id)

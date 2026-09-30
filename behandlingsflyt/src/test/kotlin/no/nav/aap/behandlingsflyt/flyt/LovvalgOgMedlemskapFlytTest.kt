@@ -571,7 +571,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
         // Validér avklaring
         åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
-        assertThat(åpneAvklaringsbehov..none())
+        assertThat(åpneAvklaringsbehov.none())
 
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
