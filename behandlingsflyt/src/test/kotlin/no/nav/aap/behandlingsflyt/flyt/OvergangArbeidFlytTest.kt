@@ -104,10 +104,7 @@ class OvergangArbeidFlytTest : AbstraktFlytOrkestratorSnapshotTest() {
             .assertRettighetstype(
                 periodeEttAar to RettighetsType.BISTANDSBEHOV,
             )
-            .assertVilkårsutfall(
-                Vilkårtype.OVERGANGARBEIDVILKÅRET,
-                sak.rettighetsperiode to Utfall.IKKE_VURDERT
-            )
+            .assertVilkårsutfall( Vilkårtype.OVERGANGARBEIDVILKÅRET, /* ikke vurdert */ )
     }
 
     @Test

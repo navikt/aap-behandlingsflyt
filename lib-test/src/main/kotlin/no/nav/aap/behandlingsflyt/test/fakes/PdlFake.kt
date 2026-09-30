@@ -139,7 +139,7 @@ class PdlFake(private val fakePersoner: () -> TestPersonService) : FakeServer() 
         if (person.dødsdato == null) {
             return null
         }
-        return setOf(PDLDødsfall(person.dødsdato.toFormatedString()))
+        return person.dødsdato?.let {  setOf(PDLDødsfall(it.toFormatedString())) }
     }
 
     private fun barnRelasjoner(req: PdlRequest): PdlRelasjonDataResponse {
@@ -257,7 +257,7 @@ class PdlFake(private val fakePersoner: () -> TestPersonService) : FakeServer() 
                     doedsfall = testPerson.dødsdato?.let {
                         setOf(
                             PDLDødsfall(
-                                testPerson.dødsdato.toFormatedString()
+                                it.toFormatedString()
                             )
                         )
                     }

@@ -30,6 +30,7 @@ public data class TilbakekrevingHendelseKafkaMelding(
     val totaltFeilutbetaltBeløp: BigDecimal? = null,
     val saksbehandlingURL: String? = null,
     val fullstendigPeriode: TilbakekrevingPeriode? = null,
+    val vedtaksdato: LocalDate? = null,
 
     ) {
 
@@ -141,6 +142,7 @@ public data class TilbakekrevingKafkaDto(
     val totaltFeilutbetaltBeløp: BigDecimal,
     val saksbehandlingURL: String,
     val fullstendigPeriode: TilbakekrevingPeriode,
+    val vedtaksdato: LocalDate? = null,
 )
 
 public data class TilbakekrevingVenterKafkaDto(

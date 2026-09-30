@@ -34,6 +34,15 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         synchronized(lock) {
             ensureDefault(behandlingId)
             return memory.getValue(behandlingId).avklaringsbehovene
+                .map {
+                    Avklaringsbehov(
+                        id = it.id,
+                        definisjon = it.definisjon,
+                        historikk = it.historikk.map { it },
+                        funnetISteg = it.funnetISteg,
+                        kreverToTrinn = it.kreverToTrinn,
+                    )
+                }
         }
     }
 

@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -35,13 +36,18 @@ fun NormalOpenAPIRoute.klagebehandlingNayGrunnlagApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val klagebehandlingNayRepository = repositoryProvider.provide<KlagebehandlingNayRepository>()
+                val påklagetBehandlingRepository = repositoryProvider.provide<PåklagetBehandlingRepository>()
 
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
+                val påklagetVedtakType = påklagetBehandlingRepository.hentPåklagetVedtakstype(behandling.id)
 
                 klagebehandlingNayRepository.hentHvisEksisterer(behandling.id)
-                    ?.tilDto(kanSaksbehandle(), ansattInfoService)
-                    ?: KlagebehandlingNayGrunnlagDto(harTilgangTilÅSaksbehandle = kanSaksbehandle())
+                    ?.tilDto(kanSaksbehandle(), ansattInfoService, påklagetVedtakType)
+                    ?: KlagebehandlingNayGrunnlagDto(
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        påklagetVedtakType = påklagetVedtakType,
+                    )
             }
             respond(respons)
         }

@@ -9,6 +9,9 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.aap.utbetal.simulering.SimuleringDto
+import no.nav.aap.utbetal.simulering.SimuleringsperiodeDto
+import no.nav.aap.utbetal.simulering.SimulertUtbetalingDto
 import no.nav.aap.utbetal.trekk.TrekkDto
 import no.nav.aap.utbetal.trekk.TrekkPosteringDto
 import no.nav.aap.utbetal.trekk.TrekkResponsDto
@@ -29,6 +32,27 @@ class UtbetalFake : FakeServer() {
         routing {
             post("/tilkjentytelse") {
                 call.respond(HttpStatusCode.NoContent)
+            }
+            post("/simulering/v2") {
+                val simulering = SimuleringDto(
+                    perioder = listOf(
+                        SimuleringsperiodeDto(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(13),
+                            utbetalinger = listOf(
+                                SimulertUtbetalingDto(
+                                    fagsystem = "AAP",
+                                    sakId = "123",
+                                    utbetalesTil = "12345678910",
+                                    stønadstype = "AAP_UNDER_ARBEIDSAVKLARING",
+                                    tidligereUtbetalt = 0,
+                                    nyttBeløp = 1000,
+                                )
+                            )
+                        )
+                    )
+                )
+                call.respond(simulering)
             }
             get("/trekk/{saksnummer}") {
                 val saksnummer = call.parameters["saksnummer"] ?: error("Mangler saksnummer")

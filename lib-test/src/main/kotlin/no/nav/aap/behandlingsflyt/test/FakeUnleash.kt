@@ -78,18 +78,26 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF to true,
+        BehandlingsflytFeature.SaksbehandlerMeldekortKvitteringNyPdfgenerator to true,
         // --- Krav ---
         BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
         BehandlingsflytFeature.KravAutomatiskVurdering to true,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
+
+        // --- Migrering ---
+        BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrererKravFraArenaAutomatisk to true,
+
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true,
         BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom to true,
         BehandlingsflytFeature.KanVurdereRefusjonIRevurdering to false,
         BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
+        BehandlingsflytFeature.KlagePaaTilbakekreving to true,
+        BehandlingsflytFeature.NySoknadTilApiIntern to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

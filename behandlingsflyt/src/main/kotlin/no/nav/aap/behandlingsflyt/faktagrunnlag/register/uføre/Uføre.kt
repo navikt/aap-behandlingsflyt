@@ -41,6 +41,7 @@ private fun Collection<Uføre>.utledRiktigSluttdatoForSegment(uføre: Uføre): L
  **/
 fun Collection<Uføre>.tilTidslinje(): Tidslinje<Prosent> {
     return this
+        .filterNot { it.uføregradTom != null && it.virkningstidspunkt > it.uføregradTom } // vedtak med tom-dato før virkningstidspunkt er avsluttet før de har startet. F.eks. dødsfall
         .sortedBy { it.virkningstidspunkt }
         .somTidslinje({
             Periode(
