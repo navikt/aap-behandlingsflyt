@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
@@ -31,6 +32,7 @@ class SakOgBehandlingService(
     private val behandlingService: BehandlingService,
     private val personRepository: PersonRepository,
     private val rettighetstypeService: RettighetstypeService,
+    private val virkningstidspunktService: VirkningstidspunktService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
@@ -40,6 +42,7 @@ class SakOgBehandlingService(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         personRepository = repositoryProvider.provide(),
         rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
+        virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider),
     )
 
     fun finnsSaksInfoTilPostmottak(ident: Ident): List<SaksInfoTilPostmottak> {
@@ -112,6 +115,8 @@ class SakOgBehandlingService(
 
         val gjeldendeYtelsesBehandling =
             behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
+        val sisteYtelsesbehandling =
+            behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
 
         val behandlinger = alleBehandlinger.map { behandling ->
             if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
@@ -154,7 +159,8 @@ class SakOgBehandlingService(
         return SakOgBehandlinger(
             sak = sak,
             behandlinger = (behandlinger + tilbakekrevingsbehandlinger).sortedByDescending { it.opprettet },
-            søknadErTrukket = søknadErTrukket
+            søknadErTrukket = søknadErTrukket,
+            virkningstidspunkt = sisteYtelsesbehandling?.let(virkningstidspunktService::finnVirkningstidspunkt)
         )
     }
 
@@ -163,5 +169,6 @@ class SakOgBehandlingService(
 data class SakOgBehandlinger(
     val sak: Sak,
     val behandlinger: List<BehandlinginfoDTO>,
-    val søknadErTrukket: Boolean?
+    val søknadErTrukket: Boolean?,
+    val virkningstidspunkt: LocalDate?
 )
