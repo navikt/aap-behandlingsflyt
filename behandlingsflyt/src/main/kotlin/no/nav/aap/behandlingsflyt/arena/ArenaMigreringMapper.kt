@@ -64,6 +64,11 @@ object ArenaMigreringMapper {
         val hoveddiagnose = requireNotNull(
             fraArena.diagnoser.sortedBy { it.opprettet }.lastOrNull { it.type == "HOVED" }
         ) { "Fant ingen hoveddiagnose i sykdomsvurdering fra Arena" }
+
+        require(hoveddiagnose.kodeverk in listOf("ICPC-2", "ICD-10")) {
+            "Hoveddiagnose har ikke støttet kodeverk i sykdomsvurdering fra Arena, støtter kun ICPC-2 og ICD-10"
+        }
+
         val bidiagnoser = fraArena.diagnoser.filter { it.type == "BI" }
 
         require(bidiagnoser.all { it.kodeverk == hoveddiagnose.kodeverk }) {
