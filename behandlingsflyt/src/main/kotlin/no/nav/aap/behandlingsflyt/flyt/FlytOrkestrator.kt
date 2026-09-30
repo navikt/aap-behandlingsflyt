@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -151,7 +150,7 @@ class FlytOrkestrator(
             return
         }
 
-        førTilbakeTilTidligsteÅpneAvklaringsbehov(avklaringsbehovene, behandlingFlyt, behandling, kontekst)
+        førTilbakeTilTidligsteAvklaringsbehovSomMåLøses(avklaringsbehovene, behandlingFlyt, behandling, kontekst)
 
         log.info("Oppdaterer faktagrunnlag for kravliste")
         val oppdaterFaktagrunnlagForKravliste =
@@ -179,33 +178,33 @@ class FlytOrkestrator(
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
     }
 
-    private fun førTilbakeTilTidligsteÅpneAvklaringsbehov(
+    private fun førTilbakeTilTidligsteAvklaringsbehovSomMåLøses(
         avklaringsbehovene: Avklaringsbehovene,
         behandlingFlyt: BehandlingFlyt,
         behandling: Behandling,
         kontekst: FlytKontekst
     ) {
-        val tidligsteÅpneAvklaringsbehov = avklaringsbehovene.åpne()
+        val tidligsteAvklaringsbehovSomMåLøses = avklaringsbehovene.måLøses()
             .minWithOrNull(compareBy(behandlingFlyt.stegComparator) { it.løsesISteg() })
 
-        if (tidligsteÅpneAvklaringsbehov != null) {
+        if (tidligsteAvklaringsbehovSomMåLøses != null) {
             val sendtTilbakeFraBeslutterNå =
-                tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_BESLUTTER && behandling.aktivtSteg() == StegType.FATTE_VEDTAK
+                tidligsteAvklaringsbehovSomMåLøses.status() == SENDT_TILBAKE_FRA_BESLUTTER && behandling.aktivtSteg() == StegType.FATTE_VEDTAK
             val sendtTilbakeFraKvalitetssikrerNå =
-                tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_KVALITETSSIKRER && behandling.aktivtSteg() == StegType.KVALITETSSIKRING
-            if (behandlingFlyt.erStegFør(tidligsteÅpneAvklaringsbehov.løsesISteg(), behandling.aktivtSteg())) {
+                tidligsteAvklaringsbehovSomMåLøses.status() == SENDT_TILBAKE_FRA_KVALITETSSIKRER && behandling.aktivtSteg() == StegType.KVALITETSSIKRING
+            if (behandlingFlyt.erStegFør(tidligsteAvklaringsbehovSomMåLøses.løsesISteg(), behandling.aktivtSteg())) {
                 if (!sendtTilbakeFraBeslutterNå && !sendtTilbakeFraKvalitetssikrerNå) {
                     log.error(
                         """
                         Behandlingen er i steg ${behandling.aktivtSteg()} og har passert det åpne
-                        avklaringsbehovet ${tidligsteÅpneAvklaringsbehov.definisjon} som skal løses i
-                        steg ${tidligsteÅpneAvklaringsbehov.løsesISteg()}. Med mindre det har skjedd
+                        avklaringsbehovet ${tidligsteAvklaringsbehovSomMåLøses.definisjon} som skal løses i
+                        steg ${tidligsteAvklaringsbehovSomMåLøses.løsesISteg()}. Med mindre det har skjedd
                         en endring i rekkefølgen av stegene, så er dette en bug.
                         """.trimIndent().replace("\n", " ")
                     )
                 }
 
-                val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
+                val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteAvklaringsbehovSomMåLøses)
                 tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
             }
         }
@@ -236,7 +235,7 @@ class FlytOrkestrator(
                 behandlingFlyt.faktagrunnlagForGjeldendeSteg()
             )
 
-            validerPlassering(behandlingFlyt, avklaringsbehovene.åpne())
+            validerPlassering(behandlingFlyt, avklaringsbehovene.måLøses())
 
             val neste = utledNesteSteg(result, behandlingFlyt)
 
@@ -278,8 +277,8 @@ class FlytOrkestrator(
     }
 
     private fun validerAtAvklaringsBehovErLukkede(avklaringsbehovene: Avklaringsbehovene) {
-        check(avklaringsbehovene.åpne().isEmpty()) {
-            "Behandlingen er avsluttet, men det finnes åpne avklaringsbehov."
+        check(avklaringsbehovene.måLøses().isEmpty()) {
+            "Behandlingen er avsluttet, men det finnes avklaringsbehov som må løses."
         }
     }
 
@@ -386,17 +385,16 @@ class FlytOrkestrator(
         avklaringsbehovene: Avklaringsbehovene
     ) {
         log.info(
-            "Stopper opp ved ${behandling.aktivtSteg()} med ${avklaringsbehovene.åpne()}"
+            "Stopper opp ved ${behandling.aktivtSteg()} med ${avklaringsbehovene.måLøses()}"
         )
     }
 
     private fun validerPlassering(
         behandlingFlyt: BehandlingFlyt,
-        åpneAvklaringsbehov: List<Avklaringsbehov>
+        avklaringsbehovSomMåLøses: List<Avklaringsbehov>
     ) {
         val nesteSteg = behandlingFlyt.aktivtStegType()
-        val uhåndterteBehov = åpneAvklaringsbehov
-            .filter { it.måLøses() }
+        val uhåndterteBehov = avklaringsbehovSomMåLøses
             .filter { definisjon ->
                 behandlingFlyt.erStegFør(
                     definisjon.løsesISteg(),

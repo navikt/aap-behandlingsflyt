@@ -85,8 +85,8 @@ class FatteVedtakLøserTest {
 
         // Kun avklar soningsbehov er gjenåpnet
         assertThat(avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).alle()).hasSize(2)
-        assertThat(avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()).hasSize(1)
-        assertThat(avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne().first().definisjon).isEqualTo(
+        assertThat(avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).måLøses()).hasSize(1)
+        assertThat(avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).måLøses().first().definisjon).isEqualTo(
             Definisjon.AVKLAR_SONINGSFORRHOLD
         )
     }

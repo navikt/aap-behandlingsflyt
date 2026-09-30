@@ -167,7 +167,7 @@ class SignaturService(
     ): SignaturGrunnlag {
         val behandling = behandlingRepository.hent(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        val avklaringsbehov = avklaringsbehovene.åpne().sistEndret()
+        val avklaringsbehov = avklaringsbehovene.måLøses().sistEndret()
         val enhet = if (avklaringsbehov != null) {
             val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
             enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)

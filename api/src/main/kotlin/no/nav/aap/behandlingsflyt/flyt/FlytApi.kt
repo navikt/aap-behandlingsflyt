@@ -218,7 +218,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(request)
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
+                    val avklaringsbehovSomMåLøses = avklaringsbehovene.måLøses().filterNot { it.erVentepunkt() }
                         .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
                     val relevanteIdenter = runBlocking {
                         relevanteIdenterForBehandlingResolver(
@@ -226,7 +226,7 @@ fun NormalOpenAPIRoute.flytApi(
                             dataSource
                         ).resolve(request.referanse.toString())
                     }
-                    Pair(åpentAvklaringsbehov, relevanteIdenter)
+                    Pair(avklaringsbehovSomMåLøses, relevanteIdenter)
                 }
                 sjekkTilgangTilSettPåVent(
                     åpentAvklaringsbehov = åpentAvklaringsbehov,

@@ -967,7 +967,7 @@ open class AbstraktFlytOrkestratorTest(
         return dataSource.transaction(readOnly = true) {
             AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
                 behandlingId
-            ).åpne()
+            ).måLøses()
         }
     }
 

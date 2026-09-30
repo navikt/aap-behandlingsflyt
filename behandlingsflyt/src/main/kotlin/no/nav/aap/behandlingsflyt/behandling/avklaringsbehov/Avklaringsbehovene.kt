@@ -268,13 +268,12 @@ class Avklaringsbehovene(
         return avklaringsbehovene
     }
 
-    fun alleEkskludertAvbruttOgVentebehov(): List<Avklaringsbehov> {
-        return avklaringsbehovene
-            .filterNot { it.status() == Status.AVBRUTT || it.definisjon.erVentebehov() }
-    }
-
-    fun åpne(): List<Avklaringsbehov> {
-        return alle().filter { it.erÅpent() }.toList()
+    /**
+     * Alle åpne avklaringsbehov som må løses.
+     * Inkluderer ikke frivillige behov som kan løses
+     */
+    fun måLøses(): List<Avklaringsbehov> {
+        return alle().filter { it.måLøses() }.toList()
     }
 
     fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
