@@ -74,7 +74,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val (_, behandling) = sendInnFørsteSøknad()
 
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG})
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
                 .extracting<Definisjon> { it.definisjon }
                 .containsOnly(Definisjon.AVKLAR_SYKDOM)
         }
@@ -113,7 +113,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val (sak, behandling) = sendInnFørsteSøknad()
 
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG})
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
                 .extracting<Definisjon> { it.definisjon }
                 .containsOnly(Definisjon.AVKLAR_SYKDOM)
         }
@@ -155,7 +155,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         // Assert at tilbakeføringen har skjedd
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG})
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
                 .extracting<Definisjon> { it.definisjon }
                 .containsExactly(Definisjon.AVKLAR_SYKDOM, Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }

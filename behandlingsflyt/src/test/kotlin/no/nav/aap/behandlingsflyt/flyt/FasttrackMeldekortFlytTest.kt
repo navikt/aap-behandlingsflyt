@@ -91,12 +91,12 @@ class FasttrackMeldekortFlytTest :
 
         åpenBehandling = åpenBehandling.løsBistand(revurderingGjelderFra)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev().bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 

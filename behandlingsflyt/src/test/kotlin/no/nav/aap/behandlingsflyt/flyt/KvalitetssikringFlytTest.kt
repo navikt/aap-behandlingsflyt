@@ -95,8 +95,8 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .løsSykdom(fom)
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon)
                     .describedAs { "Kvalitetssikring skal gjenåpnes etter ny løsning av underkjent behov" }
                     .isEqualTo(Definisjon.KVALITETSSIKRING)
             }
@@ -185,7 +185,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .bekreftVurderinger()
             .fattVedtak()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
                     .first().extracting("definisjon").isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
             }
     }
@@ -212,8 +212,8 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
             }
     }
 

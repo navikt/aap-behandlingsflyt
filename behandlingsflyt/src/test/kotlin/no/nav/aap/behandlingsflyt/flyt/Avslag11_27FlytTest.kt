@@ -42,13 +42,13 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
             .løsOppholdskrav(fom)
             .leggTilVurderingsbehov(Vurderingsbehov.VURDER_AVSLAG_11_27)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                     .describedAs("Skal ha åpent avklaringsbehov for avslag § 11-27")
                     .contains(Definisjon.VURDER_AVSLAG_11_27)
             }
             .løsAvslag11_27(skalAvslås1127 = false)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                     .doesNotContain(Definisjon.VURDER_AVSLAG_11_27)
 
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
@@ -234,7 +234,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
             }
             .løsAvslag11_27(skalAvslås1127 = true)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                     .doesNotContain(Definisjon.VURDER_AVSLAG_11_27)
 
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
@@ -304,7 +304,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                     .doesNotContain(Definisjon.VURDER_AVSLAG_11_27)
 
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = revurdering.id)

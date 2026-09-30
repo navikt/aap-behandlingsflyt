@@ -45,14 +45,14 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             // Vi svarer nei på rett til sykepengererstatning
             .løsSykepengeerstatning(sak.rettighetsperiode.fom to false)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -77,7 +77,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
         val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
 
         behandling.medKontekst {
-            assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
+            assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
             assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsAvklaringsBehov(
@@ -103,11 +103,11 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .kvalitetssikre()
             .medKontekst {
                 if (toggleForHoppOverBeslutter()) {
-                    assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+                    assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                         .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
                     assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
                 } else {
-                    assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                    assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
                     assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
                 }
             }
@@ -145,7 +145,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
                     .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
 
                 // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
             }
     }
 
@@ -166,7 +166,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy {
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy {
                     assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
                 }
             }
@@ -200,7 +200,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
             }
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger() // Krever ikke kvalitetskontroll i revurdering
@@ -215,7 +215,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
         val (sak, behandling) = sendInnFørsteSøknad()
         behandling.medKontekst {
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_SYKDOM)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).contains(Definisjon.AVKLAR_SYKDOM)
         }
 
         settBehandlingPåVent(
@@ -233,7 +233,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             val frist = åpneAvklaringsbehov.first { it.erVentepunkt() }.frist()
             assertThat(frist).isNotNull
 
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                 .hasSize(2)
                 .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
 
@@ -248,14 +248,14 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
             if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                     .containsExactlyInAnyOrder(
                         Definisjon.VURDER_KRAV,
                         Definisjon.MANUELT_SATT_PÅ_VENT,
                         Definisjon.AVKLAR_SYKDOM
                     )
             } else {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                     .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
             }
 

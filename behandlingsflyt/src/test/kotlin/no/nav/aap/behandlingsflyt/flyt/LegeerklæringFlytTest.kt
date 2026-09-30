@@ -23,7 +23,7 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         val (_, behandling) = sendInnFørsteSøknad()
         behandling.medKontekst {
             // Validér avklaring
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
         }
 
         // Oppretter bestilling av legeerklæring
@@ -68,7 +68,7 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         // Validér avklaring
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
         } // Oppretter bestilling av legeerklæring
             .bestillLegeerklæring()
             .medKontekst {
@@ -122,7 +122,7 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
         behandling
             .løsLovvalg(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
             } // Oppretter bestilling av legeerklæring
             .bestillLegeerklæring()
             .medKontekst {
@@ -150,12 +150,12 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
 
         // Validér avklaring
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
         }
             // Oppretter bestilling av legeerklæring
             .bestillLegeerklæring()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.BESTILL_LEGEERKLÆRING) }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.BESTILL_LEGEERKLÆRING) }
 
             }
 

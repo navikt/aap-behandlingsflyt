@@ -353,7 +353,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                    .map { it.definisjon })
                     .describedAs("Vi avklarte bare ett barn, behovet skal fortsatt være åpent")
                     .containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
 
@@ -662,7 +663,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .løsVedtaksbrev()
             .medKontekst {
                 val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
             }
 
         val sak: Sak = sakOgBehandlingPar.first
@@ -1168,7 +1169,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
         behandling = behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(fraDato)

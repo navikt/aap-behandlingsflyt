@@ -44,7 +44,7 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
 
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
@@ -63,7 +63,7 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
         behandling.løsFramTilGrunnlag(sak.rettighetsperiode.fom)
@@ -87,7 +87,7 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsFramTilGrunnlag(sak.rettighetsperiode.fom)

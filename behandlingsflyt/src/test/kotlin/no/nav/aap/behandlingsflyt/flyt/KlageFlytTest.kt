@@ -115,7 +115,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
 
             // PåklagetBehandlingSteg
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                 .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
 
         }
@@ -129,8 +129,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // FullmektigSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
             }
             .løsAvklaringsBehov(
                 FastsettFullmektigLøsning(
@@ -141,8 +141,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // FormkravSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
             }
             .løsAvklaringsBehov(
                 VurderFormkravLøsning(
@@ -158,7 +158,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // BehandlendeEnhetSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
 
             }
@@ -172,8 +172,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // KlagebehandlingKontorSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
             }
             .løsAvklaringsBehov(
                 VurderKlageKontorLøsning(
@@ -188,14 +188,14 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // KvalitetssikringsSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
             }
             .kvalitetssikre()
             .medKontekst {
                 // KlagebehandlingNaySteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
             }
             .løsAvklaringsBehov(
                 VurderKlageNayLøsning(
@@ -210,14 +210,14 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // Totalvurdering
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
             }
             .løsAvklaringsBehov(BekreftTotalvurderingKlageLøsning())
             .medKontekst {
                 // FatteVedtakSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
             }
             .løsAvklaringsBehov(
                 FatteVedtakLøsning(
@@ -288,7 +288,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             .anySatisfy { assertThat(it.steg() == StegType.OMGJØRING && it.status() == StegStatus.AVSLUTTER).isTrue }
 
         klagebehandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(0)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(0)
         }
     }
 
@@ -332,7 +332,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
 
 
                 // PåklagetBehandlingSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
             }
             .løsAvklaringsBehov(
@@ -345,8 +345,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // FullmektigSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = FastsettFullmektigLøsning(
@@ -356,8 +356,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             ).medKontekst {
                 // FormkravSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = VurderFormkravLøsning(
@@ -373,7 +373,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // BehandlendeEnhetSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
             }
             .løsAvklaringsBehov(
@@ -386,8 +386,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // KlagebehandlingKontorSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = VurderKlageKontorLøsning(
@@ -402,14 +402,14 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // KvalitetssikringsSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
             }
             .kvalitetssikre()
             .medKontekst {
                 // KlagebehandlingNaySteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = VurderKlageNayLøsning(
@@ -424,16 +424,16 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // Totalvurdering
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = BekreftTotalvurderingKlageLøsning()
             )
             .medKontekst {
                 // FatteVedtakSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = FatteVedtakLøsning(
@@ -525,7 +525,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             assertThat(klageDokumenter.first().strukturertDokument).isNotNull
             assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
 
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                 .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
         }
             .løsAvklaringsBehov(
@@ -538,8 +538,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 // FullmektigSteg
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = FastsettFullmektigLøsning(
@@ -550,8 +550,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             // FormkravSteg
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = VurderFormkravLøsning(
@@ -567,7 +567,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             // BehandlendeEnhetSteg
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
             }
             .løsAvklaringsBehov(
@@ -580,8 +580,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // KlagebehandlingKontorSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
             }
             .løsAvklaringsBehov(
                 VurderKlageKontorLøsning(
@@ -596,14 +596,14 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             // KvalitetssikringsSteg
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
             }
             .kvalitetssikre()
             // KlagebehandlingNaySteg
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
             }
             .løsAvklaringsBehov(
                 VurderKlageNayLøsning(
@@ -617,14 +617,14 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             ).medKontekst {
                 // Totalvurdering
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.BEKREFT_TOTALVURDERING_KLAGE)
             }
             .løsAvklaringsBehov(BekreftTotalvurderingKlageLøsning())
             .medKontekst {
                 // FatteVedtakSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
             }
             .løsAvklaringsBehov(
                 FatteVedtakLøsning(
@@ -676,8 +676,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
 
         // MeldingOmVedtakBrevSteg
         klagebehandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER)
         }
             .løsVedtaksbrevSaksbehandler(TypeBrev.KLAGE_OPPRETTHOLDELSE)
 
@@ -761,7 +761,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                     klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt
                 ).isEqualTo(kravMottatt)
 
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
             }
             .løsAvklaringsBehov(
@@ -773,8 +773,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             ).medKontekst {
                 // FullmektigSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
             }
             .løsAvklaringsBehov(
                 FastsettFullmektigLøsning(
@@ -789,7 +789,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // FormkravSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first()
                     .extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VURDER_FORMKRAV)
             }
@@ -806,7 +806,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FATTE_VEDTAK)
             }
     }
@@ -851,7 +851,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                     klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt
                 ).isEqualTo(kravMottatt)
 
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
 
             }
@@ -865,8 +865,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // FullmektigSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = FastsettFullmektigLøsning(
@@ -877,8 +877,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // FormkravSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = VurderFormkravLøsning(
@@ -893,7 +893,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
             }
 
@@ -913,7 +913,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
             }
             // Ta av vent manuelt
@@ -921,7 +921,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 avklaringsBehovLøsning = VentePåFristForhåndsvarselKlageFormkravLøsning(),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VURDER_FORMKRAV)
             }
             // Går manuelt tilbake til formkrav fordi nye opplysninger gir oppfylt
@@ -952,7 +952,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             // Går inn i normal flyt
             // BehandlendeEnhetSteg
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
             }
             .løsAvklaringsBehov(
@@ -965,8 +965,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // KlagebehandlingNaySteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
 
             }
             .løsAvklaringsBehov(
@@ -982,8 +982,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             // Beslutter
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
             }
             .løsAvklaringsBehov(
                 avklaringsBehovLøsning = FatteVedtakLøsning(
@@ -1006,8 +1006,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // Sjekk at avklaringsbehov er blitt gjenåpnet
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
                 assertThat(
                     åpneAvklaringsbehov.first().status()
                 ).isEqualTo(AvklaringsbehovStatus.SENDT_TILBAKE_FRA_BESLUTTER)
@@ -1053,7 +1053,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
 
             // PåklagetBehandlingSteg
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                 .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
         }
             .løsAvklaringsBehov(
@@ -1066,8 +1066,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // FullmektigSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
             }
             .løsAvklaringsBehov(
                 FastsettFullmektigLøsning(
@@ -1078,8 +1078,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // FormkravSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
             }
             .løsAvklaringsBehov(
                 VurderFormkravLøsning(
@@ -1095,7 +1095,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // BehandlendeEnhetSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
             }
             .løsAvklaringsBehov(
@@ -1108,8 +1108,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // KlagebehandlingKontorSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
             }
             .løsAvklaringsBehov(
                 VurderKlageKontorLøsning(
@@ -1124,14 +1124,14 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .medKontekst {
                 // KvalitetssikringsSteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
             }
             .kvalitetssikre()
             .medKontekst {
                 // KlagebehandlingNaySteg
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
             }
             .løsAvklaringsBehov(
                 VurderKlageNayLøsning(
@@ -1155,7 +1155,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
 
         trekkKlageBehandling.medKontekst {
             // Løs avklaringsbehovet som trekker klagen og trigger sletting - skal og sette klagen til avsluttet
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.VURDER_TREKK_AV_KLAGE)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).contains(Definisjon.VURDER_TREKK_AV_KLAGE)
         }
             .løsAvklaringsBehov(
                 TrekkKlageLøsning(
@@ -1231,7 +1231,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             assertThat(kabalHendelseDokumenter.first().strukturertDokument).isNotNull
             assertThat(kabalHendelseDokumenter.first().strukturerteData<KabalHendelseV0>()?.data).isNotNull
 
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                 .isEqualTo(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
         }
             .løsAvklaringsBehov(
@@ -1246,7 +1246,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
@@ -1313,7 +1313,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             assertThat(kabalHendelseDokumenter.first().strukturertDokument).isNotNull
             assertThat(kabalHendelseDokumenter.first().strukturerteData<KabalHendelseV0>()?.data).isNotNull
 
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                 .isEqualTo(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
         }
             .løsAvklaringsBehov(
@@ -1329,7 +1329,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
@@ -1367,7 +1367,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             .medKontekst {
                 assertThat(behandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
             }
             .løsAvklaringsBehov(
@@ -1382,8 +1382,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 FastsettFullmektigLøsning(fullmektigVurdering = FullmektigLøsningDto(harFullmektig = false))
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
             }
             // Avviser på formkrav
             .løsAvklaringsBehov(
@@ -1399,7 +1399,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
             }
 
@@ -1417,7 +1417,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
             }
 
@@ -1434,7 +1434,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             // Simuler at ventefrist går ut
             .løsAvklaringsBehov(VentePåFristForhåndsvarselKlageFormkravLøsning())
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FATTE_VEDTAK)
             }
             .løsAvklaringsBehov(
@@ -1451,8 +1451,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 Bruker("X123456")
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
             }
             .løsVedtaksbrev(TypeBrev.KLAGE_AVVIST)
             .medKontekst {
@@ -1471,7 +1471,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
         klage2
             .medKontekst {
                 // PåklagetBehandlingSteg - peker på klage 1
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
             }
             .løsAvklaringsBehov(
@@ -1506,8 +1506,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_KONTOR)
             }
             // Forsøk OMGJØR fvl. § 31 – kun opprettholdelse er gyldig for klage på avvisningsvedtak
             .assertThrows(
@@ -1540,8 +1540,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .kvalitetssikre()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
             }
             .løsAvklaringsBehov(
                 VurderKlageNayLøsning(
@@ -1556,8 +1556,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             )
             .løsAvklaringsBehov(BekreftTotalvurderingKlageLøsning())
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(1)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV_SAKSBEHANDLER)
             }
             .løsVedtaksbrevSaksbehandler(TypeBrev.KLAGE_OPPRETTHOLDELSE)
 
@@ -1566,7 +1566,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
             .anySatisfy { assertThat(it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER).isTrue }
 
         klage2.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).hasSize(0)
+            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(0)
         }
     }
 

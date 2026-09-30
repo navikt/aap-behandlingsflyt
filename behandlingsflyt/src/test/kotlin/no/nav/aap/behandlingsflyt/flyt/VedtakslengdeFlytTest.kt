@@ -861,7 +861,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                         ÅrMedHverdager.FØRSTE_ÅR
                     )
                 )
-                assertThat(this.åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
+                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 
@@ -1073,7 +1073,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertAutomatisk).isTrue
             }
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
             }
             .løsAvklaringsBehov(
@@ -1126,7 +1126,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             Vurderingsbehov.VEDTAKSLENGDE_MANUELT
         )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).extracting<Definisjon> { it.definisjon }
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
             }
             .løsAvklaringsBehov(

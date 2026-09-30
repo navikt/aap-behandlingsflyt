@@ -74,7 +74,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}).isNotEmpty()
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsSykdom(søknadsdato)
@@ -86,7 +86,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             .løsBeregningstidspunkt()
             .løsOppholdskrav(søknadsdato)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
     }
 
@@ -118,7 +118,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
             .løsAndreStatligeYtelser()
@@ -212,7 +212,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon })
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon })
                     .doesNotContain(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAndreStatligeYtelser()
@@ -396,7 +396,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
             .løsAndreStatligeYtelser()
@@ -489,7 +489,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAvklaringsBehov(løsToHelseinstitusjonMedReduksjon(oppholdFom1, oppholdTom1, oppholdFom2, oppholdTom2))
             .løsAndreStatligeYtelser()
@@ -615,7 +615,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         revurdering
             .medKontekst {
                 assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAvklaringsBehov(løsHelseinstitusjonUtenReduksjon(fom, oppholdTom, "Omgjør: forsørger ektefelle"))
             .løsAndreStatligeYtelser()
@@ -767,7 +767,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
         revurdering
             .medKontekst {
                 assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(åpneAvklaringsbehov.filterNot{it.gradBehov() == GradBehov.FRIVILLIG}.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
 
                 // Setter sluttdato for oppholdet
                 repositoryProvider.provide<InstitusjonsoppholdRepository>().lagreOpphold(
