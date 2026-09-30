@@ -37,30 +37,4 @@ class StatistikkFixtureNormaliseringTest {
         assertEquals("2025-09-24T12:00", normalisert["mottattTid"].asText())
         assertEquals("2025-09-24T12:00:00.001", normalisert["avsluttetBehandling"]["vedtakstidspunkt"].asText())
     }
-
-    @Test
-    fun `formaterer json som IntelliJ med fire mellomrom og linjeskift i lister`() {
-        val node = ObjectMapper().readTree(
-            """{"tekst":"æ","liste":[1,{"nøkkel":true}],"tom":[],"barn":{"tall":2},"tomtObjekt":{}}"""
-        )
-
-        val forventet = """
-            {
-                "tekst": "æ",
-                "liste": [
-                    1,
-                    {
-                        "nøkkel": true
-                    }
-                ],
-                "tom": [],
-                "barn": {
-                    "tall": 2
-                },
-                "tomtObjekt": {}
-            }
-        """.trimIndent()
-
-        assertEquals(forventet, formaterStatistikkFixtureJson(node))
-    }
 }

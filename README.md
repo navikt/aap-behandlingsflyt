@@ -43,12 +43,6 @@ genereres `avbrutt_revurdering.json`, `fullfort_forstegangsbehandling.json`,
 `resendt_hendelse.json`, `resendt_revurdering_automatisk.json` og
 `sendt_tilbake_11_5_fra_beslutter.json`.
 
-To historiske scenarier genereres ikke og må beholdes i `aap-statistikk`:
-`skal_være_iverksettes.json` inneholder et avsluttet, nå utfaset
-`BESTILL_BREV`-ventepunkt (9002), og `paa_vent_lovvalg.json` inneholder
-`VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING`, som ingen produksjonsflyt
-oppretter i dag. Historiske jobbdumper genereres heller ikke.
-
 ### Code quality
 
 Prosjektet bruker [detekt](https://detekt.dev/) for statisk kodeanalyse. Detekt er automatisk aktivert på alle moduler.
