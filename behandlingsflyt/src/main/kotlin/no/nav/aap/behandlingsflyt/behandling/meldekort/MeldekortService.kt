@@ -114,13 +114,9 @@ class MeldekortService(
         val behandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
             ?: throw UgyldigForespørselException("Kan ikke registrere meldedato når ingen vedtak eksisterer i saken")
 
-        underveisRepository.hentHvisEksisterer(behandling.id)
-            ?: throw UgyldigForespørselException("Fant ikke underveisgrunnlag for behandlingen")
+        validerMeldedato(behandling, registrerMeldedato.meldedato)
 
         val meldedato = registrerMeldedato.meldedato
-        if (meldedato.isAfter(LocalDate.now(clock))) {
-            throw UgyldigForespørselException("Meldedatoen $meldedato kan ikke være frem i tid")
-        }
 
         val journalpostId = journalførOgRegistrerMeldekort(
             sak = sak,
@@ -208,6 +204,24 @@ class MeldekortService(
         return MeldekortProsesseringResponse(
             meldekortProsesseringStatus = hentProsesseringStatus(sak)
         )
+    }
+
+    private fun validerMeldedato(behandling: BehandlingMedVedtak, meldedato: LocalDate) {
+        underveisRepository.hentHvisEksisterer(behandling.id)
+            ?: throw UgyldigForespørselException("Fant ikke underveisgrunnlag for behandlingen")
+
+        val virkningstidspunkt = behandling.virkningstidspunkt
+            ?: throw UgyldigForespørselException("Kan ikke registrere meldedato når virkningstidspunkt mangler")
+
+        if (meldedato < virkningstidspunkt) {
+            throw UgyldigForespørselException(
+                "Meldedatoen $meldedato kan ikke være før virkningstidspunktet $virkningstidspunkt"
+            )
+        }
+
+        if (meldedato.isAfter(LocalDate.now(clock))) {
+            throw UgyldigForespørselException("Meldedatoen $meldedato kan ikke være frem i tid")
+        }
     }
 
     private fun valider(

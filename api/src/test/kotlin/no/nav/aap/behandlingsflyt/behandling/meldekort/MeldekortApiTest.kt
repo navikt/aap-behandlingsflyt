@@ -793,7 +793,7 @@ class MeldekortApiTest : BaseApiTest() {
             input = object : Faktagrunnlag {}
         )
 
-        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), 6 januar 2025)
 
         val request = RegistrerMeldedatoRequest(
             meldeDato = 20 januar 2025,

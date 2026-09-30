@@ -59,12 +59,6 @@ data class MeldekortGrunnlag(
         }
 
     /**
-     * Nyeste meldekort mottatt på en gitt dato, uavhengig av meldeperiode og innmeldte timer.
-     */
-    fun nyesteMottattPåDato(dato: LocalDate): Meldekort? =
-        meldekort().lastOrNull { it.mottattTidspunkt.toLocalDate() == dato }
-
-    /**
      * Alle tidligere meldekort for en meldeperiode.
      * Det nyeste meldekortet (jf. [nyesteForMeldeperiode]) er ekskludert.
      */

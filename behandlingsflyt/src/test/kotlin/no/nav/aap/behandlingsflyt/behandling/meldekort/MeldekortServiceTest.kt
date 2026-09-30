@@ -210,6 +210,39 @@ class MeldekortServiceTest {
     }
 
     @Test
+    fun `registrer meldedato kaster feil når virkningstidspunkt mangler`() {
+        stubSakOgBehandling(virkningstidspunkt = null)
+        stubUnderveisgrunnlag(underveisperiode(Utfall.OPPFYLT, meldeperiode))
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+
+        assertThatThrownBy { service().registrerMeldedato(registrerMeldedato(20 januar 2025)) }
+            .isInstanceOf(UgyldigForespørselException::class.java)
+            .hasMessageContaining("virkningstidspunkt mangler")
+    }
+
+    @Test
+    fun `registrer meldedato kaster feil når meldedato er før virkningstidspunkt`() {
+        stubSakOgBehandling(virkningstidspunkt = 6 januar 2025)
+        stubUnderveisgrunnlag(underveisperiode(Utfall.OPPFYLT, meldeperiode))
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+
+        assertThatThrownBy { service().registrerMeldedato(registrerMeldedato(5 januar 2025)) }
+            .isInstanceOf(UgyldigForespørselException::class.java)
+            .hasMessageContaining("før virkningstidspunktet")
+    }
+
+    @Test
+    fun `registrer meldedato godtar meldedato lik virkningstidspunkt og lik dagens dato`() {
+        stubSakOgBehandling(virkningstidspunkt = 6 januar 2025)
+        stubUnderveisgrunnlag(underveisperiode(Utfall.OPPFYLT, meldeperiode))
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+        stubJournalføring(JournalpostId("journalpost-5"))
+
+        assertThatCode { service().registrerMeldedato(registrerMeldedato(6 januar 2025)) }.doesNotThrowAnyException()
+        assertThatCode { service().registrerMeldedato(registrerMeldedato(1 april 2025)) }.doesNotThrowAnyException()
+    }
+
+    @Test
     fun `registrer meldedato kaster feil når meldedato er frem i tid`() {
         stubSakOgBehandling()
         stubUnderveisgrunnlag(underveisperiode(Utfall.OPPFYLT, meldeperiode))
@@ -241,12 +274,13 @@ class MeldekortServiceTest {
         bruker = Bruker("saksbehandler"),
     )
 
-    private fun stubSakOgBehandling() {
+    private fun stubSakOgBehandling(virkningstidspunkt: LocalDate? = 6 januar 2025) {
         val sak = mockk<Sak>(relaxed = true)
         every { sakRepository.hent(saksnummer) } returns sak
 
         val behandling = mockk<BehandlingMedVedtak>(relaxed = true)
         every { behandling.id } returns behandlingId
+        every { behandling.virkningstidspunkt } returns virkningstidspunkt
         every { behandlingService.finnBehandlingMedSisteFattedeVedtak(any()) } returns behandling
     }
 
