@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
@@ -256,12 +257,16 @@ open class AbstraktFlytOrkestratorTest(
         fom: LocalDate = LocalDate.now().minusMonths(3),
         person: TestPerson = TestPersoner.STANDARD_PERSON(),
         sendMeldekort: Boolean = true,
+        etterKvalitetssikring: (Behandling) -> Unit = {},
+        etterFattVedtak: (Behandling) -> Unit = {},
+        etterSøknad: (Sak, Behandling) -> Unit = { _, _ -> },
     ): Sak {
         // Sender inn en søknad
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
         )
+        etterSøknad(sak, behandling)
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
         behandling = behandling.medKontekst {
@@ -296,6 +301,7 @@ open class AbstraktFlytOrkestratorTest(
         behandling = behandling
             .bekreftVurderinger()
             .kvalitetssikre()
+            .also(etterKvalitetssikring)
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
@@ -327,6 +333,7 @@ open class AbstraktFlytOrkestratorTest(
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
+            .also(etterFattVedtak)
             .medKontekst {
                 assertThat(hentVedtak().vedtakstidspunkt.toLocalDate()).isToday
             }
@@ -1481,7 +1488,8 @@ open class AbstraktFlytOrkestratorTest(
     @JvmName("sendReturExt")
     protected fun Behandling.beslutterGodkjennerIkke(
         behovÅKontrollere: List<Definisjon> = Definisjon.entries,
-        underkjennVurderinger: List<Definisjon> = emptyList()
+        underkjennVurderinger: List<Definisjon> = emptyList(),
+        grunner: List<ÅrsakTilRetur> = emptyList(),
     ): Behandling {
         return this.løsAvklaringsBehov(
             FatteVedtakLøsning(
@@ -1493,7 +1501,7 @@ open class AbstraktFlytOrkestratorTest(
                             behov.definisjon.kode,
                             behov.definisjon !in underkjennVurderinger,
                             "begrunnelse",
-                            emptyList(),
+                            if (behov.definisjon in underkjennVurderinger) grunner else emptyList(),
                         )
                     }),
             Bruker("BESLUTTER")
@@ -1592,7 +1600,10 @@ open class AbstraktFlytOrkestratorTest(
     protected fun Behandling.løsVedtaksbrev(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
         val brevbestilling = hentBrevAvType(this, typeBrev)
 
-        return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+        return this.løsAvklaringsBehov(
+            vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse),
+            Bruker("BESLUTTER")
+        )
     }
 
     protected fun Behandling.løsVedtaksbrevSaksbehandler(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {

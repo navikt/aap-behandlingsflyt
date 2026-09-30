@@ -31,6 +31,24 @@ For macOS og Linux anbefaler vi Colima. Det kan være nødvendig med et par tilp
 - `export DOCKER_HOST=unix://$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
 - `export TESTCONTAINERS_RYUK_DISABLED=true`
 
+### Generere statistikk-testhendelser (til bruk i tester i statistikkappen)
+
+```bash
+./gradlew :behandlingsflyt:genererStatistikkFixtures
+```
+
+Legges i `/build/statistikk-fixtures/avklaringsbehovhendelser/`. Foreløpig
+genereres `avbrutt_revurdering.json`, `fullfort_forstegangsbehandling.json`,
+`grunnlag_steg.json`, `er_pa_brev_steget.json`, `meldekort_behandling.json`,
+`resendt_hendelse.json`, `resendt_revurdering_automatisk.json` og
+`sendt_tilbake_11_5_fra_beslutter.json`.
+
+To historiske scenarier genereres ikke og må beholdes i `aap-statistikk`:
+`skal_være_iverksettes.json` inneholder et avsluttet, nå utfaset
+`BESTILL_BREV`-ventepunkt (9002), og `paa_vent_lovvalg.json` inneholder
+`VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING`, som ingen produksjonsflyt
+oppretter i dag. Historiske jobbdumper genereres heller ikke.
+
 ### Code quality
 
 Prosjektet bruker [detekt](https://detekt.dev/) for statisk kodeanalyse. Detekt er automatisk aktivert på alle moduler.
@@ -169,4 +187,3 @@ Spørsmål knyttet til koden eller repositoryet kan stilles som issues her på G
 ### For Nav-ansatte
 
 Interne henvendelser kan sendes via Slack i kanalen [`#ytelse-app-værsågod`](https://nav-it.slack.com/archives/C0312J501GX).
-
