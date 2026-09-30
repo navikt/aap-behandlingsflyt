@@ -29,9 +29,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
 
@@ -41,7 +43,7 @@ class KravSteg(
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val sakRepository: SakRepository,
-    private val behandlingService: BehandlingService,
+    private val sakService: SakService,
     private val arenaMigreringService: ArenaMigreringService
 ) : BehandlingSteg {
 
@@ -297,6 +299,12 @@ class KravSteg(
             kontekst.behandlingId,
             setOf(ArenaMigreringMapper.mapMigrertKrav(kravdataFraArena, kontekst.behandlingId))
         )
+
+        sakService.overstyrRettighetsperioden(
+            sakId = kontekst.sakId,
+            startDato = kravdataFraArena.migreringsdato,
+            sluttDato = Tid.MAKS
+        )
     }
 
     companion object : FlytSteg {
@@ -310,7 +318,7 @@ class KravSteg(
                 mottattDokumentRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 sakRepository = repositoryProvider.provide(),
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
                 arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
             )
         }
