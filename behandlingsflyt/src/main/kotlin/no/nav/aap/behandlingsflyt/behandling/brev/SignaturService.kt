@@ -234,7 +234,7 @@ class SignaturService(
         oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): UtledetSignatur? {
-        return avklaringsbehovForRolle(avklaringsbehovene, rolle).filter { it.erÅpent() }
+        return avklaringsbehovForRolle(avklaringsbehovene, rolle).filter { it.måLøses() }
             .sistEndret()
             ?.let { avklaringsbehov ->
                 val enhet = enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)

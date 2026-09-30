@@ -396,7 +396,7 @@ class FlytOrkestrator(
     ) {
         val nesteSteg = behandlingFlyt.aktivtStegType()
         val uhåndterteBehov = åpneAvklaringsbehov
-            .filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+            .filter { it.måLøses() }
             .filter { definisjon ->
                 behandlingFlyt.erStegFør(
                     definisjon.løsesISteg(),

@@ -364,7 +364,8 @@ class Avklaringsbehovene(
         val nesteSteg = behandling.aktivtSteg()
         val behandlingFlyt = behandling.flyt()
         behandlingFlyt.forberedFlyt(nesteSteg)
-        val uhåndterteBehov = alle().filter { it.erÅpent() }
+        val uhåndterteBehov = alle()
+            .filter { it.måLøses() }
             .filter { definisjon ->
                 behandlingFlyt.erStegFør(
                     definisjon.løsesISteg(),
