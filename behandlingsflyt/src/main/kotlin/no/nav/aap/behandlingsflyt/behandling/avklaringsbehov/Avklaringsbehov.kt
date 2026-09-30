@@ -163,6 +163,10 @@ class Avklaringsbehov(
         return false
     }
 
+    /**
+     * Avklaringsbehovet er opprettet eller returnert.
+     * For å ekskludere frivillige behov, bruk [måLøses]
+     */
     fun erÅpent(): Boolean {
         return status().erÅpent()
     }
