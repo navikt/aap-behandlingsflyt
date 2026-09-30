@@ -40,14 +40,14 @@ class MellomlagringFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                 .mellomlagreSykdom()
                 .løsRefusjonskrav()
                 .medKontekst {
-                    assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy {
+                    assertThat(avklaringsbehovSomMåLøses).anySatisfy {
                         assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
                     }
                 }
                 .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
                 .medKontekst {
-                    assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy {
+                    assertThat(avklaringsbehovSomMåLøses).anySatisfy {
                         assertThat(it.definisjon)
                             .describedAs { "Er ikke tilstrekkelig vurdert dersom det finnes mellomlagret sykdomsvurdering" }
                             .isEqualTo(Definisjon.BEKREFT_VURDERINGER_OPPFØLGING)

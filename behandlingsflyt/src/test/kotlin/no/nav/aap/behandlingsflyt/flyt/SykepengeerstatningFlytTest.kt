@@ -51,7 +51,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         )
 
         behandling = behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
+            assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(
@@ -60,7 +60,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).describedAs(
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
                     "Bistandsbehov skal ikke vurderes hvis viss varighet er nei"
                 ).doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV)
                 validerAtSykdomsvurderingHarSattNedsattArbeidsevneMedForbigåendeValg(behandling.id)
@@ -70,19 +70,19 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).describedAs(
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
                     "Person med yrkesskade skal gi avklaringsbehov for yrkesskade"
                 ).containsExactly(Definisjon.AVKLAR_YRKESSKADE)
             }
             .løsYrkesskade(person)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).describedAs(
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
                     "Viss varighet false skal gi avklaringsbehov for sykepengeerstatning"
                 ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsSykepengeerstatning(søknadsdato to true)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).describedAs(
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
                     "Forutgående medlemskap skal ikke vurderes for yrkesskade"
                 ).doesNotContain(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
@@ -126,7 +126,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)  // ingen avklaringsbehov løst av NAY, gå rett til fatte vedtak
             }
@@ -175,7 +175,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsSykepengeerstatning(søknadsdato to true)
@@ -183,7 +183,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsOppholdskrav(søknadsdato)
             .løsAndreStatligeYtelser()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { avklaringsbehov ->
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { avklaringsbehov ->
                     assertThat(avklaringsbehov.definisjon).isEqualTo(
                         Definisjon.FORESLÅ_VEDTAK
                     )
@@ -192,7 +192,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning()).medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
@@ -232,12 +232,12 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdom(vurderingGjelderFra = revurderingFom)
             .løsBistand(revurderingFom)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).containsOnly(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
             }
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
@@ -353,7 +353,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     )
                 ),
             ).medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV)
             }
 
@@ -367,13 +367,13 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsSykepengeerstatning(sak.rettighetsperiode.fom to true)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())

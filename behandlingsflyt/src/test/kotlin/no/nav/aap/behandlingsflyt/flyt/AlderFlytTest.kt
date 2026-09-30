@@ -44,7 +44,7 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
 
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
@@ -63,13 +63,13 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
+                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
         behandling.løsFramTilGrunnlag(sak.rettighetsperiode.fom)
             .løsBeregningstidspunkt()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                assertThat(avklaringsbehovSomMåLøses
                     .map { it.definisjon }).noneMatch { it == Definisjon.VURDER_INNTEKTSBORTFALL }
             }
     }
@@ -87,14 +87,14 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
+                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
             .løsBeregningstidspunkt()
             .løsFastsettManuellInntekt(0)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }
+                assertThat(avklaringsbehovSomMåLøses
                     .map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
             }
             .løsVurderInntektsbortfall(rettTilUttakAvAldersPensjon = true)

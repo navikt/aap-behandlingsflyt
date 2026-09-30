@@ -96,7 +96,7 @@ class AktivitetspliktFlytTest :
             .medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
                     .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_7)
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.VURDER_BRUDD_11_7)
 
             }.løsAvklaringsBehov(
@@ -110,7 +110,7 @@ class AktivitetspliktFlytTest :
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
 
                 val aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
@@ -127,7 +127,7 @@ class AktivitetspliktFlytTest :
                 )
             }
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).hasSize(1).first()
+                assertThat(avklaringsbehovSomMåLøses).hasSize(1).first()
                     .extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
             }
@@ -144,7 +144,7 @@ class AktivitetspliktFlytTest :
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
                 val grunnlagIAktivitetspliktBehandling = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
                     .hentHvisEksisterer(aktivitetspliktBehandling.id)
@@ -202,7 +202,7 @@ class AktivitetspliktFlytTest :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 
@@ -229,13 +229,13 @@ class AktivitetspliktFlytTest :
 
         åpenBehandling = åpenBehandling.løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 
@@ -364,7 +364,7 @@ class AktivitetspliktFlytTest :
                     )
                 )
             ).medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
+                assertThat(this.avklaringsbehovSomMåLøses).isEmpty()
             }
 
         val behandlingFraRepo = hentBehandling(aktivitetspliktBehandling.referanse)
@@ -402,7 +402,7 @@ class AktivitetspliktFlytTest :
                     )
                 )
             ).medKontekst {
-                assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
+                assertThat(this.avklaringsbehovSomMåLøses).isEmpty()
             }
 
         val behandlingFraRepo = hentBehandling(aktivitetspliktBehandling.referanse)
@@ -437,13 +437,13 @@ class AktivitetspliktFlytTest :
             revurdering
                 .løsBistand(sak.rettighetsperiode.fom)
                 .medKontekst {
-                    assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
                 }
                 .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
                 .medKontekst {
-                    assertThat(this.åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
                 }
 

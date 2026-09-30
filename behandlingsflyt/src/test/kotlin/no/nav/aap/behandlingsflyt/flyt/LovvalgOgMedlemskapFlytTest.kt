@@ -89,7 +89,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", "NEI", emptyList())),
         )
 
-        val åpneAvklaringsbehovRevurderingMedSøknad = hentÅpneAvklaringsbehov(revurdering1)
+        val åpneAvklaringsbehovRevurderingMedSøknad = hentAvklaringsbehovSomMåLøses(revurdering1)
         assertThat(åpneAvklaringsbehovRevurderingMedSøknad.size).isEqualTo(1)
         assertThat(åpneAvklaringsbehovRevurderingMedSøknad.first().definisjon).isEqualTo(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
 
@@ -107,7 +107,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             )
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
             }
 
         // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
@@ -150,8 +150,8 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.size).isEqualTo(1)
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.first().definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK)
+                assertThat(avklaringsbehovSomMåLøses.size).isEqualTo(1)
+                assertThat(avklaringsbehovSomMåLøses.first().definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK)
             }
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.UTREDES)
@@ -210,7 +210,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
         )
 
-        val åpentLovvalgsbehov = hentÅpneAvklaringsbehov(revurdering.id)
+        val åpentLovvalgsbehov = hentAvklaringsbehovSomMåLøses(revurdering.id)
             .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
 
         // For å verifisere periodene den forrige behandlingen var vurdert brukes både
@@ -254,7 +254,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
         val revurdering = sak.sendInnSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
 
-        val åpentLovvalgsbehov = hentÅpneAvklaringsbehov(revurdering.id)
+        val åpentLovvalgsbehov = hentAvklaringsbehovSomMåLøses(revurdering.id)
             .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
 
         // For å verifisere periodene den forrige behandlingen var vurdert brukes både
@@ -421,7 +421,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         )
 
         // Validér avklaring
-        val åpenAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        val åpenAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
         assertThat(åpenAvklaringsbehov)
             .extracting<Definisjon> { it.definisjon }
             .containsOnly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
@@ -439,7 +439,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         ).second
 
         // Validér avklaring
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
         assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
     }
 
@@ -470,16 +470,16 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         ).second
 
         // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        var avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
+        assertTrue(avklaringsbehovSomMåLøses.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
         // Trigger manuell vurdering
         behandling = behandling.løsLovvalg(søknadsdato)
 
         // Validér riktig resultat
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+        assertTrue(avklaringsbehovSomMåLøses.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
     }
 
@@ -509,7 +509,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         ).second
             // Validér avklaring
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
             }
 
         // Trigger manuell vurdering
@@ -529,7 +529,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             )
             .medKontekst {
                 // Validér riktig resultat
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).noneMatch { it == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).noneMatch { it == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
                 val vilkårsResultat =
                     hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
                 assertTrue(vilkårsResultat.none { it.erOppfylt() })
@@ -563,15 +563,15 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         ).second
 
         // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        var åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
         assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
         // Trigger manuell vurdering
         behandling = behandling.løsLovvalg(søknadsdato, false)
 
         // Validér avklaring
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.none())
+        åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
+        assertThat(åpneAvklaringsbehov..none())
 
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
@@ -593,7 +593,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         ).second
             .løsLovvalgOverstyrt(søknadsdato, false)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.MANUELL_OVERSTYRING_LOVVALG)
 
 
@@ -618,8 +618,8 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             .løsLovvalgOverstyrt(søknadsdato, true)
 
         // Validér avklaring
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.none { Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon })
+        val avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
+        assertTrue(avklaringsbehovSomMåLøses.none { Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon })
 
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
@@ -657,7 +657,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
         // Lovvalg krever manuell avklaring (ingen automatiske I_NORGE-kriterier er oppfylt)
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+            assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                 .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
 
@@ -746,7 +746,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
 
         // Lovvalg krever manuell avklaring pga. oppgitt utenlandsopphold i søknaden
         behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+            assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                 .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
 

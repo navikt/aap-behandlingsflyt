@@ -84,7 +84,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).noneMatch { it.definisjon == Definisjon.ETABLERING_EGEN_VIRKSOMHET }
+                assertThat(avklaringsbehovSomMåLøses).noneMatch { it.definisjon == Definisjon.ETABLERING_EGEN_VIRKSOMHET }
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()

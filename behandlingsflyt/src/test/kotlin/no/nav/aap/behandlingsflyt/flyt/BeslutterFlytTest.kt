@@ -46,7 +46,7 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
         )
         behandling.medKontekst {
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
+            assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsAvklaringsBehov(
@@ -73,8 +73,8 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .bekreftVurderinger()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING) }
+                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .bekreftVurderinger()
@@ -94,13 +94,13 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_SYKDOM))
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).allSatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
+                assertThat(avklaringsbehovSomMåLøses).allSatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
 
             }.løsAvklaringsBehov(
                 AvklarSykdomLøsning(
@@ -125,7 +125,7 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .kvalitetssikre()
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
@@ -160,7 +160,7 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
         )
         behandling.medKontekst {
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
+            assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(sak.rettighetsperiode.fom)
@@ -170,8 +170,8 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .bekreftVurderinger()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).containsExactly(Definisjon.KVALITETSSIKRING)
+                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.KVALITETSSIKRING)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .bekreftVurderinger()
@@ -183,7 +183,7 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
                 assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.FATTE_VEDTAK)
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
 
@@ -192,7 +192,7 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
 
         behandling.medKontekst {
             assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.FATTE_VEDTAK)
-            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }.map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
+            assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.FATTE_VEDTAK)
         }
     }
 
@@ -253,7 +253,7 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
                 // Avklar samordning gradering gjenåpnes, behandlingen står i samordning-steget
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SAMORDNING_GRADERING) }
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SAMORDNING_GRADERING) }
                 assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.SAMORDNING_GRADERING)
             }
     }

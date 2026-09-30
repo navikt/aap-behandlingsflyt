@@ -265,7 +265,7 @@ open class AbstraktFlytOrkestratorTest(
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
         behandling = behandling.medKontekst {
-            assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
+            assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(sak.rettighetsperiode.fom)
@@ -352,8 +352,8 @@ open class AbstraktFlytOrkestratorTest(
         }
 
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isEmpty()
+        val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
 
         return hentSak(behandling)
     }
@@ -434,7 +434,7 @@ open class AbstraktFlytOrkestratorTest(
     protected fun løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate, behandling: Behandling): Behandling {
         return behandling
             .medKontekst {
-                if (åpneAvklaringsbehov.firstOrNull { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP } != null) {
+                if (avklaringsbehovSomMåLøses.firstOrNull { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP } != null) {
                     this.behandling.løsLovvalg(LocalDate.now().minusYears(20))
                 }
             }
@@ -959,11 +959,11 @@ open class AbstraktFlytOrkestratorTest(
         }
     }
 
-    protected fun hentÅpneAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
-        return hentÅpneAvklaringsbehov(behandling.id)
+    protected fun hentAvklaringsbehovSomMåLøses(behandling: Behandling): List<Avklaringsbehov> {
+        return hentAvklaringsbehovSomMåLøses(behandling.id)
     }
 
-    protected fun hentÅpneAvklaringsbehov(behandlingId: BehandlingId): List<Avklaringsbehov> {
+    protected fun hentAvklaringsbehovSomMåLøses(behandlingId: BehandlingId): List<Avklaringsbehov> {
         return dataSource.transaction(readOnly = true) {
             AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
                 behandlingId
@@ -1222,7 +1222,7 @@ open class AbstraktFlytOrkestratorTest(
     ): Behandling {
         this.medKontekst {
             val skalLøseLovvalg =
-                åpneAvklaringsbehov.map { it.definisjon }.contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+                avklaringsbehovSomMåLøses.map { it.definisjon }.contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
             if (skalLøseLovvalg) {
                 behandling.løsLovvalg(vurderingerGjelderFra)
             }
@@ -1501,7 +1501,7 @@ open class AbstraktFlytOrkestratorTest(
     }
 
     class BehandlingInfo(
-        val åpneAvklaringsbehov: List<Avklaringsbehov>,
+        val avklaringsbehovSomMåLøses: List<Avklaringsbehov>,
         val avklaringsbehovene: Avklaringsbehovene,
         val behandling: Behandling,
         val ventebehov: List<Avklaringsbehov>,
@@ -1509,12 +1509,12 @@ open class AbstraktFlytOrkestratorTest(
     )
 
     protected fun Behandling.medKontekst(block: BehandlingInfo.() -> Unit): Behandling {
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(this)
+        val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(this)
         val oppdatertBehandling = hentBehandling(this.referanse)
         dataSource.transaction { connection ->
             block(
                 BehandlingInfo(
-                    åpneAvklaringsbehov = åpneAvklaringsbehov,
+                    avklaringsbehovSomMåLøses = åpneAvklaringsbehov,
                     behandling = oppdatertBehandling,
                     ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() },
                     repositoryProvider = postgresRepositoryRegistry.provider(connection),

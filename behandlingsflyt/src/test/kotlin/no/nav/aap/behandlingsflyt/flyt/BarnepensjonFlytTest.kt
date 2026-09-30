@@ -60,7 +60,7 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).isNotEmpty()
+                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsSykdom(søknadsdato)
@@ -73,7 +73,7 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
             .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(
-                    åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_BARNEPENSJON)
+                    avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_BARNEPENSJON)
             }
             .løsAvklaringsBehov(
                 AvklarSamordningBarnepensjonLøsning(

@@ -51,7 +51,7 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .describedAs { "AVKLAR_STUDENT_V2 skal opprettes etter sykdom er løst med NEI_MEN_STUDENT og kvalitetssikring er gjort" }
                     .contains(Definisjon.AVKLAR_STUDENT_V2)
             }
@@ -88,7 +88,7 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Pair<Definisjon, GradBehov?>> { it.definisjon to it.gradBehov() }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Pair<Definisjon, GradBehov?>> { it.definisjon to it.gradBehov() }
                     .describedAs { "Det er påkrevd å løse sykestipend når studentvilkåret er oppfylt" }
                     .contains(Pair(Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND, GradBehov.PÅKREVD))
             }
@@ -162,7 +162,7 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
                 AvklarStudentLøsningV2(løsningerForPerioder = emptyList())
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.AVKLAR_STUDENT_V2)
             }
     }

@@ -53,7 +53,7 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
+                assertThat(avklaringsbehovSomMåLøses)
                     .extracting<Definisjon> { it.definisjon }
                     .containsOnly(Definisjon.FASTSETT_MANUELL_INNTEKT)
 
@@ -86,7 +86,7 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG })
+                assertThat(avklaringsbehovSomMåLøses)
                     .extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.FASTSETT_MANUELL_INNTEKT)
             }
@@ -136,7 +136,7 @@ class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).noneMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
+                assertThat(avklaringsbehovSomMåLøses).noneMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
             }
     }
 
