@@ -20,14 +20,16 @@ fun PrometheusMeterRegistry.dokumentHendelse(type: InnsendingType): Counter =
 fun PrometheusMeterRegistry.varsleVedtakSam(
     varslet: Boolean,
     førstegangsbehandling: Boolean,
-    endringIRettighetstype: Boolean
+    endringIRettighetstype: Boolean,
+    harTpYtelser: Boolean,
 ): Counter =
     this.counter(
         "behandlingsflyt_varsle_vedtak_sam_total",
         listOf(
             Tag.of("varslet", varslet.toString()),
             Tag.of("forstegangsbehandling", førstegangsbehandling.toString()),
-            Tag.of("endring_i_rettighetstype", endringIRettighetstype.toString())
+            Tag.of("endring_i_rettighetstype", endringIRettighetstype.toString()),
+            Tag.of("har_tp_ytelser", harTpYtelser.toString()),
         )
     )
 
