@@ -78,6 +78,34 @@ class SakOgBehandlingServiceTest {
     }
 
     @Test
+    fun `saksinfo bruker virkningstidspunkt fra siste behandling`() {
+        val sak = dataSource.transaction { connection ->
+            opprettSak(connection, LocalDate.now())
+        }
+        val behandling = dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+            VedtakRepositoryImpl(connection).lagre(
+                behandling.id,
+                LocalDateTime.now(),
+                LocalDate.of(2026, 1, 1)
+            )
+            behandling
+        }
+
+        val result = dataSource.transaction(readOnly = true) { connection ->
+            SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<AlleAvskruddUnleash>() }
+            ).finnSakOgBehandlinger(sak.saksnummer)
+        }
+
+        assertThat(result.sak.saksnummer).isEqualTo(sak.saksnummer)
+        assertThat(result.virkningstidspunkt).isEqualTo(LocalDate.of(2026, 1, 1))
+        assertThat(result.behandlinger).anyMatch { it.referanse == behandling.referanse.referanse }
+    }
+
+    @Test
     fun `person har sak med behandling der søknad er trukket - returnerer TRUKKET`() {
         val sak = dataSource.transaction { connection ->
             opprettSak(connection, LocalDate.now())
