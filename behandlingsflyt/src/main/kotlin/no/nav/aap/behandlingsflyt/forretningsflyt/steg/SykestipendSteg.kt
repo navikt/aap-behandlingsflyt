@@ -27,61 +27,24 @@ class SykestipendSteg private constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårService: VilkårService,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider,
+        tidligereVurderinger: TidligereVurderinger
+    ) : this(
         studentRepository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        tidligereVurderinger = tidligereVurderinger,
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         vilkårService = VilkårService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId)
-
         avklaringsbehovService.oppdaterAvklaringsbehovMedGrad(
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
-            behov = {
-                when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA ->
-                        if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())) {
-                            if (studentGrunnlag.skalVurdereStudent() || studentGrunnlag?.gjeldendeStudentvurderinger()
-                                    ?.any { it.erOppfylt() } == true) {
-                                AvklaringsbehovService.Behov.PÅKREVD
-                            } else {
-                                AvklaringsbehovService.Behov.FRIVILLIG
-                            }
-                        } else {
-                            AvklaringsbehovService.Behov.INGEN_BEHOV
-                        }
-                                
-
-                    VurderingType.REVURDERING ->
-                        if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())) {
-                            if (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()) {
-                                AvklaringsbehovService.Behov.PÅKREVD
-                            } else {
-                                AvklaringsbehovService.Behov.FRIVILLIG
-                            }
-                        } else {
-                            AvklaringsbehovService.Behov.INGEN_BEHOV
-                        }
-                                
-
-                    VurderingType.UTVID_VEDTAKSLENGDE,
-                    VurderingType.MIGRER_RETTIGHETSPERIODE,
-                    VurderingType.MELDEKORT,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                    VurderingType.AUTOMATISK_BREV,
-                    VurderingType.G_REGULERING,
-                    VurderingType.OVERGANG_UFORE_STANS,
-                    VurderingType.IKKE_RELEVANT ->
-                        AvklaringsbehovService.Behov.INGEN_BEHOV
-                }
-            },
+            behov = { utledBehov(kontekst) },
             erTilstrekkeligVurdert = {
-                sykestipendGrunnlag != null
+                sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null
             },
             tilbakestillGrunnlag = {
                 // Manuelt frivillige skal ikke tilbakestilles
@@ -104,12 +67,62 @@ class SykestipendSteg private constructor(
         vilkårService.vurderVilkår(kontekst.behandlingId, grunnlag, SamordningAnnenLovgivningVilkår)
     }
 
+    fun utledBehov(
+        kontekst: FlytKontekstMedPerioder,
+    ): AvklaringsbehovService.Behov {
+
+        return when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA ->
+                if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())) {
+                    val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+                    if (studentGrunnlag.skalVurdereStudent() || studentGrunnlag?.gjeldendeStudentvurderinger()
+                            ?.any { it.erOppfylt() } == true
+                    ) {
+                        AvklaringsbehovService.Behov.PÅKREVD
+                    } else {
+                        AvklaringsbehovService.Behov.FRIVILLIG
+                    }
+                } else {
+                    AvklaringsbehovService.Behov.INGEN_BEHOV
+                }
+
+
+            VurderingType.REVURDERING ->
+                if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())) {
+                    if (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()) {
+                        AvklaringsbehovService.Behov.PÅKREVD
+                    } else {
+                        AvklaringsbehovService.Behov.FRIVILLIG
+                    }
+                } else {
+                    AvklaringsbehovService.Behov.INGEN_BEHOV
+                }
+
+
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.G_REGULERING,
+            VurderingType.OVERGANG_UFORE_STANS,
+            VurderingType.IKKE_RELEVANT ->
+                AvklaringsbehovService.Behov.INGEN_BEHOV
+        }
+    }
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return SykestipendSteg(repositoryProvider, gatewayProvider)
+            return SykestipendSteg(
+                repositoryProvider,
+                gatewayProvider,
+                TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
+            )
         }
 
         override fun type(): StegType {
