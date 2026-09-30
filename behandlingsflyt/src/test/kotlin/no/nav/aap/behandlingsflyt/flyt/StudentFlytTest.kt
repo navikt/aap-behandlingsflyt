@@ -21,30 +21,16 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedClass
-import org.junit.jupiter.params.provider.MethodSource
-import kotlin.reflect.KClass
 
-@ParameterizedClass
-@MethodSource("studentV2UnleashDataSource")
-class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
-
-    companion object {
-        @Suppress("unused")
-        @JvmStatic
-        fun studentV2UnleashDataSource() = listOf(
-            org.junit.jupiter.params.provider.Arguments.of(LokalUnleash::class),
-        )
-    }
-
+class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
+    
     @Test
-    fun `innvilge som student V2`() {
+    fun `innvilge som student`() {
         val fom = 24 november 2025
         val sykestipendPeriode = Periode(fom, fom.plusDays(14))
         val person = TestPersoner.STANDARD_PERSON()
@@ -59,11 +45,6 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
         val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
 
         behandling = behandling
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov.filterNot { it.gradBehov() == GradBehov.FRIVILLIG }).extracting<Definisjon> { it.definisjon }
-                    .describedAs { "AVKLAR_STUDENT (V1) skal ikke opprettes når StudentV2 er påskrudd" }
-                    .doesNotContain(Definisjon.AVKLAR_STUDENT)
-            }
             .løsSykdomSomPotensieltOppfyltStudent(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
@@ -106,6 +87,11 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             }
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Pair<Definisjon, GradBehov?>> { it.definisjon to it.gradBehov() }
+                    .describedAs { "Det er påkrevd å løse sykestipend når studentvilkåret er oppfylt" }
+                    .contains(Pair(Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND, GradBehov.PÅKREVD))
+            }
             .løsSykestipend(listOf(sykestipendPeriode))
             .medKontekst {
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
