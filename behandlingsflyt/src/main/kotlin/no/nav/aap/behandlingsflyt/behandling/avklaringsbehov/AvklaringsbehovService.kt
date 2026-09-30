@@ -96,20 +96,20 @@ class AvklaringsbehovService(
     }
 
     enum class Behov {
-        FRIVILLIG, PÅKREVD, NEI;
+        FRIVILLIG, PÅKREVD, INGEN_BEHOV;
 
         fun tilGradBehov(): GradBehov? {
             return when (this) {
                 PÅKREVD -> GradBehov.PÅKREVD
                 FRIVILLIG -> GradBehov.FRIVILLIG
-                NEI -> null
+                INGEN_BEHOV -> null
             }
         }
 
         companion object {
             @Deprecated("Brukes i overgangfase til vi har behov()")
             fun fraVedtakebehøverVurdering(vedtakBehøverVurdering: Boolean): Behov {
-                return if (vedtakBehøverVurdering) PÅKREVD else NEI // Ikke noe konsept om frivillig her
+                return if (vedtakBehøverVurdering) PÅKREVD else INGEN_BEHOV // Ikke noe konsept om frivillig her
             }
         }
     }
@@ -186,7 +186,7 @@ class AvklaringsbehovService(
             ) || !(erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true)
         }
         val behov = behov()
-        if (behov != Behov.NEI) {
+        if (behov != Behov.INGEN_BEHOV) {
             if (avklaringsbehov == null) {
                 /* ønsket tilstand: OPPRETTET */
                 avklaringsbehovene.opprett(
@@ -354,7 +354,7 @@ class AvklaringsbehovService(
                     VurderingType.MIGERING_FRA_ARENA -> {
                         when {
                             /* Felles guard: Har ikke avklaringsbehov for vilkår som ikke er relevante */
-                            perioderVilkåretErRelevant.segmenter().none { it.verdi } -> Behov.NEI
+                            perioderVilkåretErRelevant.segmenter().none { it.verdi } -> Behov.INGEN_BEHOV
 
                             kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov } -> Behov.PÅKREVD
 
@@ -371,10 +371,10 @@ class AvklaringsbehovService(
                                 }
                                 if (gjeldendeVurderinger.segmenter()
                                         .any { it.verdi.vurdertIBehandling == kontekst.behandlingId /* TODO: løstAv != Kelvin */ }
-                                ) Behov.PÅKREVD else Behov.NEI
+                                ) Behov.PÅKREVD else Behov.INGEN_BEHOV
                             }
 
-                            else -> if (perioderSomBehøverManuellVurderingIDenneBehandlingen.isNotEmpty()) Behov.PÅKREVD else Behov.NEI
+                            else -> if (perioderSomBehøverManuellVurderingIDenneBehandlingen.isNotEmpty()) Behov.PÅKREVD else Behov.INGEN_BEHOV
                         }
                     }
 
@@ -386,7 +386,7 @@ class AvklaringsbehovService(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
-                    VurderingType.IKKE_RELEVANT -> Behov.NEI
+                    VurderingType.IKKE_RELEVANT -> Behov.INGEN_BEHOV
                 }
             },
             perioderVedtaketBehøverVurdering = { perioderSomBehøverManuellVurderingIDenneBehandlingen },

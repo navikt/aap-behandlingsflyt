@@ -52,7 +52,7 @@ class SykestipendSteg private constructor(
                                 AvklaringsbehovService.Behov.FRIVILLIG
                             }
                         } else {
-                            AvklaringsbehovService.Behov.NEI
+                            AvklaringsbehovService.Behov.INGEN_BEHOV
                         }
                                 
 
@@ -64,7 +64,7 @@ class SykestipendSteg private constructor(
                                 AvklaringsbehovService.Behov.FRIVILLIG
                             }
                         } else {
-                            AvklaringsbehovService.Behov.NEI
+                            AvklaringsbehovService.Behov.INGEN_BEHOV
                         }
                                 
 
@@ -77,7 +77,7 @@ class SykestipendSteg private constructor(
                     VurderingType.G_REGULERING,
                     VurderingType.OVERGANG_UFORE_STANS,
                     VurderingType.IKKE_RELEVANT ->
-                        AvklaringsbehovService.Behov.NEI
+                        AvklaringsbehovService.Behov.INGEN_BEHOV
                 }
             },
             erTilstrekkeligVurdert = {
