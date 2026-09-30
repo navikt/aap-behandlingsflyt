@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.februar
@@ -112,5 +113,99 @@ class AvklaringsbehovTest {
                 2 februar 2020
             )
         )
+    }
+
+    @Test
+    fun `Skal stoppe dersom åpent avklaringsbehov er påkrevd`() {
+        val behov = Avklaringsbehov(
+            id = 1,
+            definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
+            funnetISteg = StegType.SAMORDNING_SYKESTIPEND,
+            kreverToTrinn = true,
+            historikk = mutableListOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    gradBehov = GradBehov.PÅKREVD,
+                    begrunnelse = "Første behov",
+                    endretAv = Bruker("test"),
+                    tidsstempel = LocalDateTime.now(),
+                    perioderVedtaketBehøverVurdering = setOf(Periode(2 januar 2020, 1 februar 2020)),
+                    perioderSomIkkeErTilstrekkeligVurdert = setOf(),
+                )
+            )
+        )
+
+        assertThat(behov.skalStoppeHer(StegType.SAMORDNING_SYKESTIPEND)).isTrue()
+    }
+
+    @Test
+    fun `Skal ikke stoppe dersom åpent avklaringsbehov går fra påkrevd til frivillig`() {
+        val behov = Avklaringsbehov(
+            id = 1,
+            definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
+            funnetISteg = StegType.SAMORDNING_SYKESTIPEND,
+            kreverToTrinn = true,
+            historikk = mutableListOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    gradBehov = GradBehov.PÅKREVD,
+                    begrunnelse = "Første behov",
+                    endretAv = Bruker("test"),
+                    tidsstempel = LocalDateTime.now(),
+                    perioderVedtaketBehøverVurdering = setOf(Periode(2 januar 2020, 1 februar 2020)),
+                    perioderSomIkkeErTilstrekkeligVurdert = setOf(),
+                ),
+                Endring(
+                    status = Status.OPPRETTET,
+                    gradBehov = GradBehov.FRIVILLIG,
+                    begrunnelse = "Andre behov",
+                    endretAv = Bruker("test"),
+                    tidsstempel = LocalDateTime.now().plusDays(1),
+                    perioderVedtaketBehøverVurdering = setOf(Periode(2 januar 2020, 1 februar 2020)),
+                    perioderSomIkkeErTilstrekkeligVurdert = setOf(),
+                )
+            )
+        )
+
+        assertThat(behov.skalStoppeHer(StegType.SAMORDNING_SYKESTIPEND)).isFalse()
+    }
+
+    @Test
+    fun `Skal stoppe ved retur av frivillig avklaringsbehov`() {
+        val behov = Avklaringsbehov(
+            id = 1,
+            definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
+            funnetISteg = StegType.SAMORDNING_SYKESTIPEND,
+            kreverToTrinn = true,
+            historikk = mutableListOf(
+                Endring(
+                    status = Status.OPPRETTET,
+                    gradBehov = GradBehov.FRIVILLIG,
+                    begrunnelse = "Første behov",
+                    endretAv = Bruker("test"),
+                    tidsstempel = LocalDateTime.now(),
+                    perioderVedtaketBehøverVurdering = setOf(Periode(2 januar 2020, 1 februar 2020)),
+                    perioderSomIkkeErTilstrekkeligVurdert = setOf(),
+                ),
+                Endring(
+                    status = Status.AVSLUTTET,
+                    begrunnelse = "Andre behov",
+                    endretAv = Bruker("test"),
+                    tidsstempel = LocalDateTime.now().plusDays(1),
+                    perioderVedtaketBehøverVurdering = setOf(Periode(2 januar 2020, 1 februar 2020)),
+                    perioderSomIkkeErTilstrekkeligVurdert = setOf(),
+                ),
+                Endring(
+                    status = Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
+                    begrunnelse = "Retur",
+                    endretAv = Bruker("test"),
+                    tidsstempel = LocalDateTime.now().plusDays(2),
+                    perioderVedtaketBehøverVurdering = setOf(Periode(2 januar 2020, 1 februar 2020)),
+                    perioderSomIkkeErTilstrekkeligVurdert = setOf(),
+                )
+            )
+        )
+
+        assertThat(behov.skalStoppeHer(StegType.SAMORDNING_SYKESTIPEND)).isTrue()
     }
 }
