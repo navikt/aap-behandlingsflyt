@@ -5,6 +5,11 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
+import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
+import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.arena.tilDomene
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
@@ -205,16 +210,114 @@ class KravStegTest {
     }
 
 
+    @Test
+    fun `migrering fra Arena - oppdaterer MigrertKrav når data fra Arena er endret`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+
+        val førsteRespons = kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+        )
+        val andreRespons = kravResponse(
+            søknadsdato = LocalDate.of(2025, 2, 3),
+            migreringsdato = LocalDate.of(2026, 9, 21),
+            kvote = 120,
+        )
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returnsMany listOf(førsteRespons, andreRespons)
+        val steg = stegMedAutomatiskMigrering(arenaOppslagGateway = arenaOppslagGateway)
+        val kontekst = migreringKontekst(behandling)
+
+        steg.utfør(kontekst)
+
+        val førsteKrav = InMemoryKravRepository.hent(behandling.id).vurderinger.single() as MigrertKrav
+        assertThat(førsteKrav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 1, 6))
+        assertThat(førsteKrav.muligRettFra).isEqualTo(LocalDate.of(2026, 9, 28))
+        assertThat(førsteKrav.resterendeKvoteOrdinær).isEqualTo(150)
+        assertThat(førsteKrav.arenaSaksnummer).isEqualTo("2016-123456")
+
+        steg.utfør(kontekst)
+
+        val oppdatertKrav = InMemoryKravRepository.hent(behandling.id).vurderinger.single() as MigrertKrav
+        assertThat(oppdatertKrav.referanse).isNotEqualTo(førsteKrav.referanse)
+        assertThat(oppdatertKrav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 2, 3))
+        assertThat(oppdatertKrav.muligRettFra).isEqualTo(LocalDate.of(2026, 9, 21))
+        assertThat(oppdatertKrav.resterendeKvoteOrdinær).isEqualTo(120)
+        assertThat(oppdatertKrav.arenaSaksnummer).isEqualTo("2016-123456")
+        assertThat(oppdatertKrav.vurdertIBehandling).isEqualTo(behandling.id)
+
+        verify(exactly = 1) {
+            sakService.overstyrRettighetsperioden(sak.id, LocalDate.of(2026, 9, 28), any())
+        }
+        verify(exactly = 1) {
+            sakService.overstyrRettighetsperioden(sak.id, LocalDate.of(2026, 9, 21), any())
+        }
+    }
+
+    @Test
+    fun `migrering fra Arena - lagrer ikke på nytt når data fra Arena er uendret`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returns kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+        )
+        val kravRepository = mockk<KravRepository> {
+            every { hentHvisEksisterer(any()) } answers { InMemoryKravRepository.hentHvisEksisterer(firstArg()) }
+            every { lagre(any(), any()) } answers { InMemoryKravRepository.lagre(firstArg(), secondArg()) }
+        }
+        val steg = stegMedAutomatiskMigrering(
+            arenaOppslagGateway = arenaOppslagGateway,
+            kravRepository = kravRepository,
+        )
+        val kontekst = migreringKontekst(behandling)
+
+        steg.utfør(kontekst)
+        val kravEtterFørsteKjøring = InMemoryKravRepository.hent(behandling.id).vurderinger.single()
+        verify(exactly = 1) { kravRepository.lagre(behandling.id, any()) }
+
+        steg.utfør(kontekst)
+
+        verify(exactly = 1) { kravRepository.lagre(any(), any()) }
+        verify(exactly = 1) { sakService.overstyrRettighetsperioden(any(), any(), any()) }
+        assertThat(InMemoryKravRepository.hent(behandling.id).vurderinger.single()).isEqualTo(kravEtterFørsteKjøring)
+    }
+
+    private fun kravResponse(søknadsdato: LocalDate, migreringsdato: LocalDate, kvote: Int) = KravResponse(
+        lopenr = 123456,
+        aar = 2016,
+        soknadsdato = søknadsdato,
+        migreringsdato = migreringsdato,
+        gjenstaaendeKvote = GjenstaaendeKvote(ordinaer = kvote),
+    )
+
     private fun stegMedAutomatiskMigrering(
         avklaringsbehovService: AvklaringsbehovService = mockk(relaxed = true),
+        arenaOppslagGateway: ArenaOppslagGateway? = null,
+        kravRepository: KravRepository = InMemoryKravRepository,
     ) = KravSteg(
         unleashGateway = KravMigreringAutomatiskUnleash,
-        kravRepository = InMemoryKravRepository,
+        kravRepository = kravRepository,
         mottattDokumentRepository = InMemoryMottattDokumentRepository,
         avklaringsbehovService = avklaringsbehovService,
         sakRepository = InMemorySakRepository,
         sakService = sakService,
-        arenaMigreringService = arenaMigreringService,
+        arenaMigreringService = arenaOppslagGateway?.let {
+            ArenaMigreringService(
+                arenaMigreringRepository = mockk {
+                    every { hentForSakHvisEksisterer(any()) } answers { arenaMigreringForSak }
+                },
+                arenaMigreringsdataRepository = InMemoryArenaMigreringsdataRepository,
+                arenaOppslagGateway = it,
+            )
+        } ?: arenaMigreringService,
     )
 
     private fun migreringKontekst(behandling: Behandling) = flytKontekstMedPerioder {
