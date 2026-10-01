@@ -76,7 +76,7 @@ class BehandlingService(
             - Hvis du ikke bryr deg om du får den gjeldende behandlingen eller en åpen (les: ikke-gjeldende) ytelsesbehandling: finnSisteGjeldendeEllerÅpneYtelsesbehandling
     """
     )
-    fun finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId: SakId): Behandling? {
+    fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
         return alleYtelsesbehandlinger(sakId).lastOrNull()
     }
 
