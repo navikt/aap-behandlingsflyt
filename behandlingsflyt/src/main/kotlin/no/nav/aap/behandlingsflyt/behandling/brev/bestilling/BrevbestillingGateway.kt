@@ -31,6 +31,8 @@ interface BrevbestillingGateway : Gateway {
 
     fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>, mottakere: List<MottakerDto> =  emptyList()): Boolean
 
+    fun oppdaterMottakere(referanse: BrevbestillingReferanse, mottaker: MottakerDto, kopimottaker: MottakerDto? = null)
+
     fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse
 
     fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev)
@@ -44,6 +46,8 @@ interface BrevbestillingGateway : Gateway {
     fun gjenoppta(bestillingReferanse: BrevbestillingReferanse)
 
     fun kanDistribuereBrev(brukerIdent: String, mottakerIdentListe: List<String>, brevbestillingReferanse: BrevbestillingReferanse): List<MottakerDistStatus>
+
+    fun kanDistribuereBrevV2(brevbestillingReferanse: BrevbestillingReferanse, mottakerId: String): Boolean
 
     fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
