@@ -1,5 +1,5 @@
 [versions]
-ktor = "3.5.2"
+ktor = "3.6.0"
 komponenter = "2.0.173"
 tilgang = "1.0.242"
 utbetaling = "0.0.136"
@@ -43,22 +43,22 @@ apiInternKontrakt = { module = "no.nav.aap.api.intern:kontrakt", version.ref = "
 dokumentinnhentingKontrakt = { module = "no.nav.aap.dokumentinnhenting:kontrakt", version.ref = "dokumentinnhenting" }
 arenaoppslag-kontrakt = { module = "no.nav.aap.arenaoppslag:kontrakt", version.ref = "arenaoppslag" }
 
-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.3.0" }
 jacksonAnnotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }
-jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.22.2" }
-jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.2" }
+jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version = "2.22.3" }
+jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.3" }
 hikariCp = { module = "com.zaxxer:HikariCP", version = "7.1.0" }
 
 opentelemetryInstrumentationAnnotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version = "2.31.1" }
 opentelemetryLogbackMdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version = "2.31.1-alpha" }
 opentelemetryKtor = { module = "io.opentelemetry.instrumentation:opentelemetry-ktor-3.0", version = "2.31.1-alpha" }
 
-joseJwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
+joseJwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.10" }
 
 logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.3" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.17.1" }
-julToSlf4J = { module = "org.slf4j:jul-to-slf4j", version = "2.0.19" }
+julToSlf4J = { module = "org.slf4j:jul-to-slf4j", version = "2.0.20" }
 logbackSyslog = { module = "com.papertrailapp:logback-syslog4j", version = "1.0.0" }
 
 avro = { module = "org.apache.avro:avro", version = "1.12.2" }
