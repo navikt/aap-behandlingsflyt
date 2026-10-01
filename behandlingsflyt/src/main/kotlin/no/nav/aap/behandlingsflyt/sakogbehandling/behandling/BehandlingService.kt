@@ -76,7 +76,7 @@ class BehandlingService(
             - Hvis du ikke bryr deg om du får den gjeldende behandlingen eller en åpen (les: ikke-gjeldende) ytelsesbehandling: finnSisteGjeldendeEllerÅpneYtelsesbehandling
     """
     )
-    fun finnSisteYtelsesbehandlingFor(sakId: SakId): Behandling? {
+    fun finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId: SakId): Behandling? {
         return alleYtelsesbehandlinger(sakId).lastOrNull()
     }
 
@@ -177,7 +177,7 @@ class BehandlingService(
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
-        val sisteYtelsesbehandling = finnSisteYtelsesbehandlingFor(sakId)
+        val sisteYtelsesbehandling = finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
