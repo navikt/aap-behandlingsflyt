@@ -43,7 +43,7 @@ class InstitusjonsOppholdService(
         if (person != null) {
             val saker = sakRepository.finnSakerFor(person.id)
             for (saken in saker) {
-                val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(saken.id)
+                val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(saken.id)
                 if (sisteYtelsesBehandling != null) {
                     val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
                     if (søknadErTrukket) {
