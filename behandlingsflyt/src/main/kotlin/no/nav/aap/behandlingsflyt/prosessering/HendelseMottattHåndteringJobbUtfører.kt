@@ -179,7 +179,7 @@ class HendelseMottattHåndteringJobbUtfører(
             }
 
             InnsendingType.LEGEERKLÆRING -> {
-                val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
+                val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
                 if (sisteYtelsesBehandling != null &&
                     trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
                 ) {

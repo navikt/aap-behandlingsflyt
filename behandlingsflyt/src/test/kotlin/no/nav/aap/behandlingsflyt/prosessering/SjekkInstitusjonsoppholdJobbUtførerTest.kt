@@ -180,7 +180,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             versjon = 0L
         )
 
-        every { behandlingServiceMock.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns fakeBehandling
+        every { behandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
 
         every { trukketSøknadServiceMock.søknadErTrukket(any()) } returns false
 

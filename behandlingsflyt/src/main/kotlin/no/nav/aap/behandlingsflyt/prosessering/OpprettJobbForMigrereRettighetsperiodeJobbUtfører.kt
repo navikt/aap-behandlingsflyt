@@ -28,7 +28,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
         val saker = sakRepository.finnSakerMedAvsluttedeBehandlingerUtenRiktigSluttdatoPåRettighetsperiode()
         val sakerForMigrering = saker
             .filter { sak ->
-                val sisteYtelsesbehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
+                val sisteYtelsesbehandling = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
                 if (sisteYtelsesbehandling != null) {
                     erAktuellForMigrering(sisteYtelsesbehandling)
                 } else {

@@ -54,7 +54,7 @@ class HåndterFolkeregisterIdentHendelseService(
         meldekortGateway.oppdaterIdenter(saksnummer = sak.saksnummer, identer = oppdatertPerson.identer())
         apiInternGateway.oppdaterIdenter(sak.saksnummer, oppdatertPerson.identer())
 
-        behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)?.let {
+        behandlingService.finnSisteYtelsesbehandlingFor(sakId)?.let {
             mottaDokumentService.markerSomBehandlet(sakId, it.id, referanse)
         }
 

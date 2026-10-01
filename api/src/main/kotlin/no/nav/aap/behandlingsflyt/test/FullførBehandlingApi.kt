@@ -105,7 +105,7 @@ fun NormalOpenAPIRoute.fullførBehandlingApi(
                 val sak = provider.provide<SakRepository>().finnSakerFor(person.id).firstOrNull()
                     ?: return@transaction BehandlingStatusRespons(req.ident, null, false)
                 val behandling = BehandlingService(provider, gatewayProvider)
-                    .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
+                    .finnSisteYtelsesbehandlingFor(sak.id)
                     ?: return@transaction BehandlingStatusRespons(sak.saksnummer.toString(), null, false)
                 val status = behandling.status()
 

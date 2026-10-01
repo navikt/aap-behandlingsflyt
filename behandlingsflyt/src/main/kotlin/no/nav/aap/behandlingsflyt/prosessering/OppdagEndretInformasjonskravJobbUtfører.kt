@@ -48,7 +48,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
-        val sisteBehandling = behandlingService.finnGjeldendeYtelsesbehandling(sakId)
+        val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
             ?: error("Fant ikke ytelsesbehandling for sak $sakId")
 
 

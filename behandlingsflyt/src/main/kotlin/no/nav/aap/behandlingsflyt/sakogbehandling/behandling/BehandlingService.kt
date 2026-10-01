@@ -177,7 +177,7 @@ class BehandlingService(
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
-        val sisteYtelsesbehandling = finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
+        val sisteYtelsesbehandling = finnSisteYtelsesbehandlingFor(sakId)
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }

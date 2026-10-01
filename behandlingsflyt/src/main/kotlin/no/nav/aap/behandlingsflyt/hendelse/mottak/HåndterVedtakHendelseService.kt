@@ -33,7 +33,7 @@ class HåndterVedtakHendelseService(
         sakId: SakId,
         referanse: InnsendingReferanse,
     ) {
-        val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
+        val sisteYtelsesBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
         if (sisteYtelsesBehandling == null) {
             log.info("Fant ingen behandling for sak med sakId: $sakId - kan ikke håndtere dokumentet eller markere det som behandlet ")
         } else {
