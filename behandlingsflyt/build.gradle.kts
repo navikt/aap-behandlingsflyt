@@ -24,9 +24,9 @@ tasks {
         }
     }
 
-    named<Test>("test") {
-        useJUnitPlatform { excludeTags("statistikk-fixtures") }
-    }
+//    named<Test>("test") {
+//        useJUnitPlatform { excludeTags("statistikk-fixtures") }
+//    }
 
     processResources {
         // Depend on output of the task to create properties,

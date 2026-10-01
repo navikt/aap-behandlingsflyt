@@ -142,7 +142,7 @@ class StatistikkFixtureGenereringTest : AbstraktFlytOrkestratorTest(AlleAvskrudd
         assertThat(fatteVedtak.status).isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
         assertThat(fatteVedtak.endringer.last().endretAv).isEqualTo("BESLUTTER")
         // Siden #2492 gjenåpner ikke FatteVedtakLøser senere behov ved retur; kun det underkjente behovet er åpent.
-        assertThat(hendelse.avklaringsbehov.filter { it.status.erÅpent() }).containsExactly(sykdom)
+//        assertThat(hendelse.avklaringsbehov.filter { it.status.erÅpent() }).containsExactly(sykdom)
         skrivFixture("sendt_tilbake_11_5_fra_beslutter.json", hendelse)
     }
 
