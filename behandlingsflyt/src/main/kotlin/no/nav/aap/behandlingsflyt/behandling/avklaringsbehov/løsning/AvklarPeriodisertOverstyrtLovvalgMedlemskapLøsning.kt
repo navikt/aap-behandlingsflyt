@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarPeriodisertOverstyrtLovvalgMedlemskapLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
@@ -49,7 +49,7 @@ class AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning(
         return repository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
     }
 
-    override fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<ManuellVurderingForLovvalgMedlemskap> {
+    override fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<LovvalgMedlemskapVurdering> {
         return løsningerForPerioder.map { it.toManuellVurderingForLovvalgMedlemskap(overstyrt = true, bruker, behandlingId) }
     }
 }

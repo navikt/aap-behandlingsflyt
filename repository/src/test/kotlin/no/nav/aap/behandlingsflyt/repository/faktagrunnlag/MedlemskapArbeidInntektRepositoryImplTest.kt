@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
@@ -334,8 +334,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         tom: LocalDate?,
         vurdertIBehandling: BehandlingId,
         begrunnelse: String = "begrunnelse"
-    ): ManuellVurderingForLovvalgMedlemskap =
-        ManuellVurderingForLovvalgMedlemskap(
+    ): LovvalgMedlemskapVurdering =
+        LovvalgMedlemskapVurdering(
             fom = fom,
             tom = tom,
             lovvalg = LovvalgDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),

@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
@@ -66,7 +66,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     override fun lagreVurderinger(
         behandlingId: BehandlingId,
-        vurderinger: List<ManuellVurderingForLovvalgMedlemskap>
+        vurderinger: List<LovvalgMedlemskapVurdering>
     ) {
         val grunnlagOppslag = hentGrunnlag(behandlingId)
         if (grunnlagOppslag != null) {
@@ -93,7 +93,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private fun lagreVurderinger(vurderinger: List<ManuellVurderingForLovvalgMedlemskap>): Long {
+    private fun lagreVurderinger(vurderinger: List<LovvalgMedlemskapVurdering>): Long {
         val overstyrt = vurderinger.any { it.overstyrt }
 
         val vurderingerId = connection.executeReturnKey(
@@ -288,7 +288,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private fun hentVurderinger(vurderingerId: Long?): List<ManuellVurderingForLovvalgMedlemskap> {
+    private fun hentVurderinger(vurderingerId: Long?): List<LovvalgMedlemskapVurdering> {
         if (vurderingerId == null) return emptyList()
 
         val query = """
@@ -632,8 +632,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         )
     }
 
-    private fun mapManuellVurderingForLovvalgMedlemskap(row: Row): ManuellVurderingForLovvalgMedlemskap =
-        ManuellVurderingForLovvalgMedlemskap(
+    private fun mapManuellVurderingForLovvalgMedlemskap(row: Row): LovvalgMedlemskapVurdering =
+        LovvalgMedlemskapVurdering(
             lovvalg = LovvalgDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
                 lovvalgsEØSLandEllerLandMedAvtale = row.getEnum("lovvalgs_land")

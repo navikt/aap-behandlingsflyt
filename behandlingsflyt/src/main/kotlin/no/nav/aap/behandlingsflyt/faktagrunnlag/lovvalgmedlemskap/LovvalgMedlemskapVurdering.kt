@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlin.enums.enumEntries
 
-data class ManuellVurderingForLovvalgMedlemskap(
+data class LovvalgMedlemskapVurdering(
     val lovvalg: LovvalgDto,
     val medlemskap: MedlemskapDto?,
     override val vurdertAv: Bruker,
@@ -45,14 +45,14 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
     fun toManuellVurderingForLovvalgMedlemskap(
         kontekst: AvklaringsbehovKontekst,
         overstyrt: Boolean,
-    ): ManuellVurderingForLovvalgMedlemskap =
+    ): LovvalgMedlemskapVurdering =
         toManuellVurderingForLovvalgMedlemskap(overstyrt, kontekst.bruker, kontekst.behandlingId())
 
     fun toManuellVurderingForLovvalgMedlemskap(
         overstyrt: Boolean,
         bruker: Bruker,
         vurdertIBehandling: BehandlingId,
-    ): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+    ): LovvalgMedlemskapVurdering = LovvalgMedlemskapVurdering(
         fom = fom,
         tom = tom,
         vurdertIBehandling = vurdertIBehandling,

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
@@ -23,9 +23,9 @@ data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
-    val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
+    val vurderinger: List<LovvalgMedlemskapVurdering> = emptyList()
 ) {
-    fun gjeldendeVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
+    fun gjeldendeVurderinger(): Tidslinje<LovvalgMedlemskapVurdering> {
         return vurderinger.gjeldendeVurderinger()
     }
 }
@@ -114,7 +114,7 @@ enum class InntektTyper {
     FERIEPENGERSYKEPENGERTILFISKERSOMBAREHARHYRE,
 }
 
-fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<ManuellVurderingForLovvalgMedlemskap>> {
+fun Tidslinje<LovvalgMedlemskapVurdering>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<LovvalgMedlemskapVurdering>> {
     val periodeForVurdering = helePerioden()
 
     if (!erSammenhengende()) {
