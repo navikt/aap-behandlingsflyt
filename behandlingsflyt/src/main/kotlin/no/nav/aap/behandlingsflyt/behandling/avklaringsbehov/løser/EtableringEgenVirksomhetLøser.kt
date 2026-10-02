@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.UgyldigEtableringEgenVirksomhetException
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringIkkeGyldig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.justerEtableringPerioder
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -29,22 +29,21 @@ class EtableringEgenVirksomhetLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val nyeVurderinger = løsning.løsningerForPerioder.map { it.toEtableringEgenVirksomhetVurdering(kontekst) }
 
-        when (val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, nyeVurderinger)) {
-            is VirksomhetEtableringIkkeGyldig -> throw UgyldigForespørselException(evaluering.feilmelding)
-            else -> {}
+        val beregning = try {
+            etableringEgenVirksomhetService.beregnOgValider(behandling.id, nyeVurderinger)
+        } catch (e: UgyldigEtableringEgenVirksomhetException) {
+            throw UgyldigForespørselException(
+                message = e.message ?: "Ugyldig fase-/periode-konfigurasjon",
+                cause = e,
+            )
         }
-
-        // Må bruke de beregnede vurderingene (med utledet tom for siste periode per fase), ikke
-        // de rå innsendte, slik at det faktisk er den validerte datoen som blir persistert.
-        val beregnedeNyeVurderinger =
-            etableringEgenVirksomhetService.beregnVurderingerForLagring(behandling.id, nyeVurderinger)
 
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = gamleVurderinger + beregnedeNyeVurderinger
+            etableringEgenvirksomhetVurderinger = gamleVurderinger + beregning.beregnedeVurderinger
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }

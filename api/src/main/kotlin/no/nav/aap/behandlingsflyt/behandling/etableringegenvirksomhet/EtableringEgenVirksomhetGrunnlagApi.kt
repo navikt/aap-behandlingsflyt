@@ -77,7 +77,9 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             .sumOf { it.periode.antallHverdager().asInt }
 
                     val bruktOppstartsdager = alleVurderinger.filter { it.fase == EtableringFase.OPPSTART }.mapNotNull { vurdering ->
-                        if (vurdering.tom != null) Periode(vurdering.fom, vurdering.tom!!) else null
+                        vurdering.tom?.let { tom ->
+                            Periode(vurdering.fom, tom)
+                        }
                     }.somTidslinje { it }.komprimer().segmenter()
                             .sumOf { it.periode.antallHverdager().asInt }
 

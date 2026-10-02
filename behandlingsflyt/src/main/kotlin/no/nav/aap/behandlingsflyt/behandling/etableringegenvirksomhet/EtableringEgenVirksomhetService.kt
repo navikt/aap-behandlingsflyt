@@ -70,44 +70,34 @@ class EtableringEgenVirksomhetService(
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat {
         return try {
-            // beregnVurderinger kan selv kaste IllegalArgumentException (f.eks. når kvoten for
-            // en fase er brukt opp), og må derfor også evalueres innenfor try-blokken.
-            val beregning = beregnVurderinger(behandlingId, nyeVurderinger)
-            val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
-
-            val alleUtviklingsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.UTVIKLING)
-            val alleOppstartsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.OPPSTART)
-
-            validerGyldighetsperiodeFinnes(gyldighetPeriode)
-            val førsteMuligeDato = gyldighetPeriode.first().fom
-            validerEtterFørsteMuligeDato(førsteMuligeDato, beregning.beregnedeVurderinger)
-            validerInnenforGyldighetsperiode(gyldighetPeriode, beregning.beregnedeVurderinger)
-            validerFaseOgPerioderForAlle(beregning)
-            validerOppstartEtterUtvikling(alleUtviklingsPerioder, alleOppstartsPerioder)
-            validerDagkvoter(alleUtviklingsPerioder, alleOppstartsPerioder)
+            beregnOgValider(behandlingId, nyeVurderinger)
             VirksomhetEtableringGyldig
-        } catch (e: IllegalArgumentException) {
+        } catch (e: UgyldigEtableringEgenVirksomhetException) {
             VirksomhetEtableringIkkeGyldig(e.message ?: "Ugyldig fase-/periode-konfigurasjon")
         }
     }
 
-    private data class Beregning(
+    fun beregnOgValider(
+        behandlingId: BehandlingId,
+        nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
+    ): Beregning {
+        return try {
+            val beregning = beregnVurderinger(behandlingId, nyeVurderinger)
+            validerBeregning(behandlingId, beregning)
+            beregning
+        } catch (e: IllegalArgumentException) {
+            throw UgyldigEtableringEgenVirksomhetException(
+                message = e.message ?: "Ugyldig fase-/periode-konfigurasjon",
+                cause = e,
+            )
+        }
+    }
+
+    data class Beregning(
         val gamleVurderinger: List<EtableringEgenVirksomhetVurdering>,
         val beregnedeVurderinger: List<EtableringEgenVirksomhetVurdering>,
         val gjeldendeVurderinger: Set<EtableringEgenVirksomhetVurdering>
     )
-
-    /**
-     * Beregner (juster perioder + beregn tom for siste periode per fase) de nye vurderingene
-     * som skal persisteres for [behandlingId]. Må brukes av kallere som skal lagre vurderingene,
-     * slik at det faktisk er den beregnede (og ikke en evt. vilkårlig innsendt) tom-datoen som
-     * havner i grunnlaget.
-     */
-    fun beregnVurderingerForLagring(
-        behandlingId: BehandlingId,
-        nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
-    ): List<EtableringEgenVirksomhetVurdering> =
-        beregnVurderinger(behandlingId, nyeVurderinger).beregnedeVurderinger
 
     private fun beregnVurderinger(
         behandlingId: BehandlingId,
@@ -125,9 +115,6 @@ class EtableringEgenVirksomhetService(
 
         val skalValideres = justerteVurderinger.filter { it.vurdertIBehandling == behandlingId }.toSet()
 
-        // Fase+fom bestemmer tom for den siste (åpne) perioden i hver fase - en eventuell
-        // innsendt tom for denne perioden skal ikke tillit blindt, siden frontend uansett
-        // ikke har mulighet til å sende tom når fase er satt.
         val sisteVurderingPerFase = (gamleVurderinger + justerteVurderinger)
             .filter { it.fase != null }
             .groupBy { it.fase }
@@ -154,6 +141,24 @@ class EtableringEgenVirksomhetService(
             .verdier().toSet()
 
         return Beregning(gamleVurderinger, beregnedeVurderinger, gjeldendeVurderinger)
+    }
+
+    private fun validerBeregning(
+        behandlingId: BehandlingId,
+        beregning: Beregning
+    ) {
+        val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
+
+        val alleUtviklingsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.UTVIKLING)
+        val alleOppstartsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.OPPSTART)
+
+        validerGyldighetsperiodeFinnes(gyldighetPeriode)
+        val førsteMuligeDato = gyldighetPeriode.first().fom
+        validerEtterFørsteMuligeDato(førsteMuligeDato, beregning.beregnedeVurderinger)
+        validerInnenforGyldighetsperiode(gyldighetPeriode, beregning.beregnedeVurderinger)
+        validerFaseOgPerioderForAlle(beregning)
+        validerOppstartEtterUtvikling(alleUtviklingsPerioder, alleOppstartsPerioder)
+        validerDagkvoter(alleUtviklingsPerioder, alleOppstartsPerioder)
     }
 
     private fun validerGyldighetsperiodeFinnes(gyldighetPeriode: List<Periode>) {
