@@ -5,12 +5,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf("INNTNEDS", "SYKSKADLYT", "AAARBEVNE")
 
@@ -124,6 +126,15 @@ object ArenaMigreringMapper {
             vurdertAv = SYSTEMBRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
+        )
+    }
+
+    fun mapRefusjonskravVurdering(): RefusjonkravVurdering {
+        return RefusjonkravVurdering(
+            harKrav = false,
+            navKontor = null,
+            vurdertAv = SYSTEMBRUKER,
+            opprettetTid = LocalDateTime.now()
         )
     }
 }
