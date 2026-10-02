@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -22,6 +23,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -67,10 +69,18 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
 
                     val bruktUtviklingsDager =
-                        (alleVurderinger).flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
+                        alleVurderinger.filter { it.fase == EtableringFase.UTVIKLING }.mapNotNull { vurdering ->
+                            vurdering.tom?.let { tom ->
+                                Periode(vurdering.fom, tom)
+                            }
+                        }.somTidslinje { it }.komprimer().segmenter()
                             .sumOf { it.periode.antallHverdager().asInt }
-                    val bruktOppstartsdager =
-                        (alleVurderinger).flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
+
+                    val bruktOppstartsdager = alleVurderinger.filter { it.fase == EtableringFase.OPPSTART }.mapNotNull { vurdering ->
+                        vurdering.tom?.let { tom ->
+                            Periode(vurdering.fom, tom)
+                        }
+                    }.somTidslinje { it }.komprimer().segmenter()
                             .sumOf { it.periode.antallHverdager().asInt }
 
                     EtableringEgenVirksomhetGrunnlagResponse(

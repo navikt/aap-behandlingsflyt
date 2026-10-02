@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtablerEgenVirksomhetMapper
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.LegacyEtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
@@ -76,11 +78,12 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
 
         connection.executeBatch(
             """
-            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_VURDERING (BEGRUNNELSE, FORELIGGER_FAGLIG_VURDERING, VIRKSOMHET_ER_NY, BRUKER_EIER_VIRKSOMHET, KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID, EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?, ?)
+            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_VURDERING (BEGRUNNELSE, FORELIGGER_FAGLIG_VURDERING, VIRKSOMHET_ER_NY, BRUKER_EIER_VIRKSOMHET, KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID, EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID, FASE, ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER, JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?, ?, ?, ?, ?)
         """.trimIndent(), etableringEgenvirksomhetVurderinger
         ) {
             setParams {
+                val legacy = EtablerEgenVirksomhetMapper.tilLegacy(it)
                 setString(1, it.begrunnelse)
                 setBoolean(2, it.foreliggerFagligVurdering)
                 setBoolean(3, it.virksomhetErNy)
@@ -88,14 +91,17 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setBoolean(5, it.kanFøreTilSelvforsørget)
                 setString(6, it.virksomhetNavn)
                 setString(7, it.orgNr)
-                setLong(8, lagreUtviklingsperiode(it.utviklingsPerioder))
-                setLong(9, lagreOppstartsperiode(it.oppstartsPerioder))
+                setLong(8, lagreUtviklingsperiode(legacy.utviklingsPerioder))
+                setLong(9, lagreOppstartsperiode(legacy.oppstartsPerioder))
                 setLong(10, vurderingerId)
                 setLong(11, it.vurdertIBehandling.id)
                 setString(12, it.vurdertAv.ident)
                 setLocalDate(13, it.fom)
                 setLocalDate(14, it.tom)
                 setInstant(15, it.opprettet)
+                setEnumName(16, it.fase)
+                setBoolean(17, it.erRegistrertINødvendigeOffentligeRegister)
+                setBoolean(18, it.jobberBrukerAktivMedVirksomheten)
             }
         }
 
@@ -146,7 +152,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setLong(1, vurderingerId)
             }
             setRowMapper { row ->
-                EtableringEgenVirksomhetVurdering(
+                val legacy = LegacyEtableringEgenVirksomhetVurdering(
                     begrunnelse = row.getString("BEGRUNNELSE"),
                     virksomhetNavn = row.getString("VIRKSOMHET_NAVN"),
                     orgNr = row.getStringOrNull("ORG_NR"),
@@ -162,8 +168,12 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     opprettet = row.getInstant("OPPRETTET_TID"),
                     vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
                     fom = row.getLocalDate("GJELDER_FRA"),
-                    tom = row.getLocalDateOrNull("GJELDER_TIL")
+                    tom = row.getLocalDateOrNull("GJELDER_TIL"),
+                    fase = row.getEnumOrNull("FASE"),
+                    erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
+                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET")
                 )
+                EtablerEgenVirksomhetMapper.fraLegacy(legacy)
             }
         }
     }

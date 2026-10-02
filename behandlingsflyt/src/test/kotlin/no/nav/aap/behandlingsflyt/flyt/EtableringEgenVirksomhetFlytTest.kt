@@ -103,15 +103,18 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
         assertThat(etableringGrunnlag?.vurderinger?.size).isEqualTo(2)
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
+        val oppfyltVurdering = requireNotNull(etableringGrunnlag?.vurderinger)
+            .single { it.virksomhetErNy == true }
+        val ikkeOppfyltVurdering = requireNotNull(etableringGrunnlag?.vurderinger)
+            .single { it.virksomhetErNy == false }
+
         dataSource.transaction {
             val service = EtableringEgenVirksomhetService(
                 postgresRepositoryRegistry.provider(it)
             )
-            val oppfylt = service.evaluerVirksomhetVurdering(etableringGrunnlag?.vurderinger?.first()!!)
-            val ikkeOppfyltVurdering = service.evaluerVirksomhetVurdering(etableringGrunnlag.vurderinger.last())
 
-            assertThat(oppfylt).isEqualTo(true)
-            assertThat(ikkeOppfyltVurdering).isEqualTo(false)
+            assertThat(service.evaluerVirksomhetVurdering(oppfyltVurdering)).isEqualTo(true)
+            assertThat(service.evaluerVirksomhetVurdering(ikkeOppfyltVurdering)).isEqualTo(false)
         }
     }
 

@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -35,8 +36,11 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val virksomhetErNy: Boolean?,
     val brukerEierVirksomheten: EierVirksomhet?,
     val kanFøreTilSelvforsørget: Boolean?,
-    val utviklingsPeriode: List<Periode>,
-    val oppstartsPeriode: List<Periode>,
+    val utviklingsPeriode: List<Periode>?,
+    val oppstartsPeriode: List<Periode>?,
+    val fase: EtableringFase?,
+    val erRegistrertINødvendigeOffentligeRegister: Boolean?,
+    val jobberBrukerAktivMedVirksomheten: Boolean?,
     val oppfylt: Boolean
 ) : VurderingDto {
     companion object {
@@ -68,6 +72,16 @@ data class EtableringEgenVirksomhetVurderingResponse(
             fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
         ) = EtableringEgenVirksomhetVurderingResponse(
+            utviklingsPeriode = when {
+                etableringEgenVirksomhetVurdering.fase == EtableringFase.UTVIKLING && tom != null ->
+                    listOf(Periode(fom, tom))
+                else -> emptyList()
+            },
+            oppstartsPeriode = when {
+                etableringEgenVirksomhetVurdering.fase == EtableringFase.OPPSTART && tom != null ->
+                    listOf(Periode(fom, tom))
+                else -> emptyList()
+            },
             begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
             virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
             orgNr = etableringEgenVirksomhetVurdering.orgNr,
@@ -75,8 +89,9 @@ data class EtableringEgenVirksomhetVurderingResponse(
             virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
             brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
             kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
-            utviklingsPeriode = etableringEgenVirksomhetVurdering.utviklingsPerioder,
-            oppstartsPeriode = etableringEgenVirksomhetVurdering.oppstartsPerioder,
+            fase = etableringEgenVirksomhetVurdering.fase,
+            erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
+            jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten,
             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                 behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
