@@ -11,8 +11,9 @@ import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import kotlin.collections.filter
 
-data class MedlemskapLovvalgGrunnlag(
+data class MedlemskapLovvalgFaktaGrunnlag(
     val medlemskapArbeidInntektGrunnlag: MedlemskapArbeidInntektGrunnlag?,
     val personopplysning: Personopplysning?,
     val nyeSoknadGrunnlag: UtenlandsOppholdData?,
@@ -25,8 +26,21 @@ data class MedlemskapArbeidInntektGrunnlag(
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val vurderinger: List<LovvalgMedlemskapVurdering> = emptyList()
 ) {
-    fun gjeldendeVurderinger(): Tidslinje<LovvalgMedlemskapVurdering> {
-        return vurderinger.gjeldendeVurderinger()
+    // TODO: Inkluder automatiske når vi skal støtte kombinert automatisk og manuelle
+    fun gjeldendeManuelleVurderinger(): Tidslinje<LovvalgMedlemskapVurdering> {
+        return manuelleVurderinger().gjeldendeVurderinger()
+    }
+    
+    fun manuelleVurderinger(): List<LovvalgMedlemskapVurdering> {
+        return vurderinger.filter { !it.erAutomatiskVurdert() }.toList()
+    }
+    
+    fun gjeldendeAutomatiskeVurderinger(): Tidslinje<LovvalgMedlemskapVurdering> {
+        return automatiskeVurderinger().gjeldendeVurderinger()
+    }
+
+    fun automatiskeVurderinger(): List<LovvalgMedlemskapVurdering> {
+        return vurderinger.filter { it.erAutomatiskVurdert() }.toList()
     }
 }
 

@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.collections.orEmpty
@@ -39,7 +40,7 @@ class AvklarPeriodisertLovvalgMedlemskapLøsning(
         gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeManuelleVurderinger().orEmpty()
     }
 
     override fun hentVurderinger(

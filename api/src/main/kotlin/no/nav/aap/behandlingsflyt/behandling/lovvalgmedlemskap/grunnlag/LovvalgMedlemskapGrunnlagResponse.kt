@@ -15,15 +15,16 @@ import java.time.LocalDate
 
 data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
     override val harTilgangTilÅSaksbehandle: Boolean,
-    override val sisteVedtatteVurderinger: List<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>,
-    override val nyeVurderinger: List<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>,
+    override val sisteVedtatteVurderinger: List<PeriodisertVurderingForLovvalgMedlemskapResponse>,
+    override val nyeVurderinger: List<PeriodisertVurderingForLovvalgMedlemskapResponse>,
     override val kanVurderes: List<Periode>,
     override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
+    val automatiskeVurderinger: List<PeriodisertVurderingForLovvalgMedlemskapResponse>,
     val overstyrt: Boolean = false
-): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>
+): PeriodiserteVurderingerDto<PeriodisertVurderingForLovvalgMedlemskapResponse>
 
-data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
+data class PeriodisertVurderingForLovvalgMedlemskapResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
     override val vurderingerMeta: VurderingerMetaResponse,
@@ -47,7 +48,7 @@ fun LovvalgMedlemskapVurdering.toResponse(
     fom: LocalDate = this.fom,
     tom: LocalDate? = this.tom,
 ) =
-    PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
+    PeriodisertVurderingForLovvalgMedlemskapResponse(
         fom = fom,
         tom = tom,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(

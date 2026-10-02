@@ -38,7 +38,7 @@ class AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning(
         gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
         val repository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeManuelleVurderinger() ?: Tidslinje<Unit>()
     }
 
     override fun hentVurderinger(
