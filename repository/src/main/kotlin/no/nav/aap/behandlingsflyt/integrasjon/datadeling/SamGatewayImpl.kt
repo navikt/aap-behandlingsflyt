@@ -37,8 +37,8 @@ class SamGatewayImpl : SamGateway {
 
     private val uri = URI.create(requiredConfigForKey("INTEGRASJON_SAM_URL"))
 
-    override fun varsleVedtak(request: SamordneVedtakRequest) {
-        restClient.post<SamordneVedtakRequest, SamordneVedtakRespons>(
+    override fun varsleVedtak(request: SamordneVedtakRequest): SamordneVedtakRespons? {
+        return restClient.post<SamordneVedtakRequest, SamordneVedtakRespons>(
             uri = uri.resolve("/api/vedtak/samordne"),
             request = PostRequest(body = request),
             mapper = { body, _ ->
