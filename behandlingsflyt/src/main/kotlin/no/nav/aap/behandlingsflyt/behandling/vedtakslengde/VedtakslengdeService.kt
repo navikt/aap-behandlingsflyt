@@ -171,6 +171,11 @@ class VedtakslengdeService(
         val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.gjeldendeVurdering()?.utvidetMed
         val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
 
+        // Gjeldende vedtatt vedtakslengde er manuelt overstyrt - skal ikke overskrives med en automatisk beregning
+        if (vedtattVedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertManuelt == true) {
+            return vedtattSluttdato ?: sluttdato
+        }
+
         // Henter forrige automatiske vurdering for å sammenligne med ny automatisk beregnet sluttdato
         val sisteAutomatiskeVurdering = vedtakslengdeGrunnlag?.vurderinger.orEmpty()
             .filter { it.vurdertAutomatisk }
