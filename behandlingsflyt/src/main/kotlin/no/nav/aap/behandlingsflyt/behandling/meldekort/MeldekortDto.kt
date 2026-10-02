@@ -70,6 +70,21 @@ data class OppdaterMeldekort(
     fun meldekortMedTimerRegistrert() = dager.isNotEmpty()
 }
 
+data class RegistrerMeldedato(
+    val saksnummer: Saksnummer,
+    val meldedato: LocalDate,
+    val begrunnelse: String,
+    val bruker: Bruker,
+) {
+    fun tilMeldekort(): MeldekortV0 =
+        MeldekortV0(
+            harDuArbeidet = null,
+            opprettetAv = bruker.ident,
+            begrunnelse = begrunnelse,
+            timerArbeidPerPeriode = emptyList(),
+        )
+}
+
 data class OppdaterMeldekortResponse(
     val journalpostId: String,
 )
