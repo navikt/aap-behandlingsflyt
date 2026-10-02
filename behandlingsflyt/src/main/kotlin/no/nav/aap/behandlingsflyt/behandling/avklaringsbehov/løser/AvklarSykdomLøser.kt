@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingValideringsfeil
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -70,10 +71,28 @@ class AvklarSykdomLøser(
         val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
 
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
-        sykdomLøsning.segmenter().forEach {
-            if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
-                logWarning(harYrkesskade, behandling, it)
-                throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
+        sykdomLøsning.segmenter().forEach { segment ->
+            val feil = segment.verdi.validerKonsistensForSykdom(harYrkesskade)
+            if (feil.isNotEmpty()) {
+                logWarning(harYrkesskade, behandling, segment)
+
+                val meldinger = feil.map { feiltype ->
+                    when (feiltype) {
+                        SykdomsvurderingValideringsfeil.MANGLER_NEDSATT_ARBEIDSEVNE ->
+                            "Svaret på nedsatt arbeidsevne mangler."
+
+                        SykdomsvurderingValideringsfeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_50_PROSENT ->
+                            "Svarene om nedsatt arbeidsevne og 50-prosentgrensen stemmer ikke overens."
+
+                        SykdomsvurderingValideringsfeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_VESENTLIGHET ->
+                            "Svarene om nedsatt arbeidsevne og om sykdommen er en vesentlig del stemmer ikke overens."
+
+                        SykdomsvurderingValideringsfeil.MANGLER_VURDERING_AV_YRKESSKADEGRENSE ->
+                            "Svarene mangler vurdering av yrkesskadegrense."
+                    }
+                }
+
+                throw UgyldigForespørselException(meldinger.joinToString(" "))
             }
         }
     }
