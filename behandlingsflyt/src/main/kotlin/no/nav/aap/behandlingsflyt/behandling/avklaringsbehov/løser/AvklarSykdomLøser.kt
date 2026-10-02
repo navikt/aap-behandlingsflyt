@@ -79,7 +79,7 @@ class AvklarSykdomLøser(
                 val meldinger = feil.map { feiltype ->
                     when (feiltype) {
                         SykdomsvurderingValideringsfeil.MANGLER_NEDSATT_ARBEIDSEVNE ->
-                            "Du må svare på om arbeidsevnen er nedsatt."
+                            "Svaret på nedsatt arbeidsevne mangler."
 
                         SykdomsvurderingValideringsfeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_50_PROSENT ->
                             "Svarene om nedsatt arbeidsevne og 50-prosentgrensen stemmer ikke overens."
@@ -88,7 +88,7 @@ class AvklarSykdomLøser(
                             "Svarene om nedsatt arbeidsevne og om sykdommen er en vesentlig del stemmer ikke overens."
 
                         SykdomsvurderingValideringsfeil.MANGLER_VURDERING_AV_YRKESSKADEGRENSE ->
-                            "Du må svare på om arbeidsevnen er nedsatt mer enn yrkesskadegrensen."
+                            "Svarene mangler vurdering av yrkesskadegrense."
                     }
                 }
 
