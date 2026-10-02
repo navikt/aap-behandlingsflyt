@@ -11,11 +11,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soning
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import java.time.Clock
-import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.*
 
 class InMemoryInstitusjonsoppholdRepository(private val clock: Clock = Clock.systemDefaultZone()) :
     InstitusjonsoppholdRepository {
@@ -61,7 +61,8 @@ class InMemoryInstitusjonsoppholdRepository(private val clock: Clock = Clock.sys
 
     override fun lagreHelseVurdering(
         behandlingId: BehandlingId,
-        helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>
+        helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>,
+        sammenhengendeOppholdEnabled: Boolean
     ) = synchronized(lock) {
         val eksisterende = memory[behandlingId] ?: InstitusjonsoppholdGrunnlag()
         memory[behandlingId] = eksisterende.copy(
