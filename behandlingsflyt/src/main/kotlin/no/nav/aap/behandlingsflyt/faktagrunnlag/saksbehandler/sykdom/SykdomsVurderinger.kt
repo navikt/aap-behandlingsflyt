@@ -24,35 +24,40 @@ data class Sykdomsvurdering(
     override val vurdertIBehandling: BehandlingId,
     override val opprettet: Instant,
 ) : PeriodisertVurdering {
+
     override val fom: LocalDate = vurderingenGjelderFra
     override val tom: LocalDate? = vurderingenGjelderTil
 
-    fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean): Boolean {
-
+    fun validerKonsistensForSykdom(
+        harYrkesskadeRegistrert: Boolean,
+    ): List<SykdomsvurderingFeil> = buildList {
         if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
-            return false
+            add(SykdomsvurderingFeil.MANGLER_NEDSATT_ARBEIDSEVNE)
         }
 
-        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
-            && (erNedsettelseIArbeidsevneMerEnnHalvparten == true)
+        if (
+            (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI ||
+                    harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT) &&
+            erNedsettelseIArbeidsevneMerEnnHalvparten == true
         ) {
-            return false
+            add(SykdomsvurderingFeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_50_PROSENT)
         }
 
-        if ((harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI || harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT)
-            && (erSkadeSykdomEllerLyteVesentligdel == true)
+        if (
+            (harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI ||
+                    harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT) &&
+            erSkadeSykdomEllerLyteVesentligdel == true
         ) {
-            return false
+            add(SykdomsvurderingFeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_VESENTLIGHET)
         }
 
-        if (erNedsettelseIArbeidsevneMerEnnHalvparten != null
-            && !erNedsettelseIArbeidsevneMerEnnHalvparten
-            && harYrkesskadeRegistrert
-            && erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
+        if (
+            erNedsettelseIArbeidsevneMerEnnHalvparten == false &&
+            harYrkesskadeRegistrert &&
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
         ) {
-            return false
+            add(SykdomsvurderingFeil.MANGLER_VURDERING_AV_YRKESSKADEGRENSE)
         }
-        return true
     }
 
     fun potensieltOppfyltStudent(): Boolean {
@@ -123,6 +128,7 @@ fun List<Sykdomsvurdering>.erFunksjoneltLik(annen: List<Sykdomsvurdering>): Bool
                 første.diagnose == andre.diagnose
     }
 }
+
 
 /**
  * @param relevanteSaker Liste over saksnumre til yrkesskadesaker fra register.
