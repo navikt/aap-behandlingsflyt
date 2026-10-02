@@ -30,9 +30,9 @@ data class Sykdomsvurdering(
 
     fun validerKonsistensForSykdom(
         harYrkesskadeRegistrert: Boolean,
-    ): List<SykdomsvurderingFeil> = buildList {
+    ): List<SykdomsvurderingValideringsfeil> = buildList {
         if (harSkadeSykdomEllerLyte && harNedsattArbeidsevne == null) {
-            add(SykdomsvurderingFeil.MANGLER_NEDSATT_ARBEIDSEVNE)
+            add(SykdomsvurderingValideringsfeil.MANGLER_NEDSATT_ARBEIDSEVNE)
         }
 
         if (
@@ -40,7 +40,7 @@ data class Sykdomsvurdering(
                     harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT) &&
             erNedsettelseIArbeidsevneMerEnnHalvparten == true
         ) {
-            add(SykdomsvurderingFeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_50_PROSENT)
+            add(SykdomsvurderingValideringsfeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_50_PROSENT)
         }
 
         if (
@@ -48,7 +48,7 @@ data class Sykdomsvurdering(
                     harNedsattArbeidsevne == ArbeidsevneNedsattValg.NEI_MEN_STUDENT) &&
             erSkadeSykdomEllerLyteVesentligdel == true
         ) {
-            add(SykdomsvurderingFeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_VESENTLIGHET)
+            add(SykdomsvurderingValideringsfeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_VESENTLIGHET)
         }
 
         if (
@@ -56,7 +56,7 @@ data class Sykdomsvurdering(
             harYrkesskadeRegistrert &&
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == null
         ) {
-            add(SykdomsvurderingFeil.MANGLER_VURDERING_AV_YRKESSKADEGRENSE)
+            add(SykdomsvurderingValideringsfeil.MANGLER_VURDERING_AV_YRKESSKADEGRENSE)
         }
     }
 
