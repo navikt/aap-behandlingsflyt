@@ -53,6 +53,7 @@ class EtableringEgenVirksomhetRepositoryTest {
                     kanFøreTilSelvforsørget = true,
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.OPPSTART,
+                    jobberBrukerAktivMedVirksomheten = true
                 )
 
             repository.lagre(behandling.id, listOf(vurdering))
@@ -90,6 +91,7 @@ class EtableringEgenVirksomhetRepositoryTest {
                         kanFøreTilSelvforsørget = true,
                 erRegistrertINødvendigeOffentligeRegister = true,
                 fase = EtableringFase.OPPSTART,
+                jobberBrukerAktivMedVirksomheten = true
                     )
                 )
             )

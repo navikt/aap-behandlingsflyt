@@ -48,8 +48,8 @@ class EtableringEgenVirksomhetLøserTest {
         tom: LocalDate? = null,
     ): EtableringEgenVirksomhetLøsningDto {
         val beregnetTom = tom ?: when (fase) {
-            EtableringFase.UTVIKLING -> fom.plusMonths(6)
-            EtableringFase.OPPSTART -> fom.plusMonths(3)
+            EtableringFase.UTVIKLING -> fom.plusMonths(6).minusDays(1)
+            EtableringFase.OPPSTART -> fom.plusMonths(3).minusDays(1)
         }
 
         return EtableringEgenVirksomhetLøsningDto(
@@ -62,6 +62,7 @@ class EtableringEgenVirksomhetLøserTest {
             virksomhetErNy = true,
             brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
             kanFøreTilSelvforsørget = true,
+            jobberBrukerAktivMedVirksomheten = true,
             fase = fase,
             erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
         )
@@ -89,14 +90,15 @@ class EtableringEgenVirksomhetLøserTest {
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
-                    fom = sak.rettighetsperiode.fom.plusDays(1),
+                    fom = sak.rettighetsperiode.fom,
                     fase = EtableringFase.OPPSTART,
                     erRegistrertINødvendigeOffentligeRegister = true,
                 )
             )
         )
 
-        assertDoesNotThrow { løser.løs(kontekst, løsning) }
+        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
+        assertThat(feil.message).contains("Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP")
     }
 
     @Test
@@ -122,6 +124,7 @@ class EtableringEgenVirksomhetLøserTest {
                     kanFøreTilSelvforsørget = true,
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.UTVIKLING,
+                    jobberBrukerAktivMedVirksomheten = true
                 )
             )
         )
@@ -162,6 +165,7 @@ class EtableringEgenVirksomhetLøserTest {
                     brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                     kanFøreTilSelvforsørget = true,
                     erRegistrertINødvendigeOffentligeRegister = true,
+                    jobberBrukerAktivMedVirksomheten = true,
                     fase = EtableringFase.OPPSTART
                 )
             )
@@ -204,7 +208,7 @@ class EtableringEgenVirksomhetLøserTest {
                 oppfyltVurdering(
                     fase = EtableringFase.OPPSTART,
                     fom = sak.rettighetsperiode.fom.plusMonths(1),
-                    tom = sak.rettighetsperiode.fom.plusMonths(4),
+                    tom = sak.rettighetsperiode.fom.plusMonths(6),
                     erRegistrertINødvendigeOffentligeRegister = true,
                 )
             )

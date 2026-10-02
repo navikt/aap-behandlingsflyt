@@ -71,15 +71,15 @@ class EtableringEgenVirksomhetService(
     ): VirksomhetEtableringResultat {
         val beregning = beregnVurderinger(behandlingId, nyeVurderinger)
         val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
-        val førsteMuligeDato = utledFørsteDagIOppfyltPeriode(behandlingId)?.fom
+        val førsteMuligeDato = gyldighetPeriode.first().fom
 
         val alleUtviklingsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.UTVIKLING)
         val alleOppstartsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.OPPSTART)
 
         return try {
             validerGyldighetsperiodeFinnes(gyldighetPeriode)
-            validerInnenforGyldighetsperiode(gyldighetPeriode, beregning.beregnedeVurderinger)
             validerEtterFørsteMuligeDato(førsteMuligeDato, beregning.beregnedeVurderinger)
+            validerInnenforGyldighetsperiode(gyldighetPeriode, beregning.beregnedeVurderinger)
             validerFaseOgPerioderForAlle(beregning)
             validerOppstartEtterUtvikling(alleUtviklingsPerioder, alleOppstartsPerioder)
             validerDagkvoter(alleUtviklingsPerioder, alleOppstartsPerioder)
@@ -154,7 +154,7 @@ class EtableringEgenVirksomhetService(
         requireNotNull(førsteMuligeDato) {
             "Kan ikke vurdere virksomhet før første dag i periode med oppfylt 11-5 & 11-6b"
         }
-        require(vurderinger.all { it.fom.isAfter(førsteMuligeDato) }) {
+        require(vurderinger.all { it.fom.isAfter(førsteMuligeDato) || it.fom.isEqual(førsteMuligeDato) }) {
             "Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP"
         }
     }
@@ -234,18 +234,6 @@ class EtableringEgenVirksomhetService(
                 it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true
                         || it.verdi.second?.erBehovForArbeidsrettetTiltak != true
             }.perioder().plus(Periode(førsteDagIOppfyltPeriode, førsteDagIOppfyltPeriode)).toList()
-    }
-    /**
-     * Den (tekniske) første dagen i en periode der 11-5 & 11-6b er oppfylt. Denne dagen krever
-     * ikke en egen vurdering.
-     */
-    fun utledFørsteDagIOppfyltPeriode(behandlingId: BehandlingId): Periode? {
-        val førsteDag = sykdomOgBistandTidslinje(behandlingId)
-            .filter {
-                it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() == true || it.verdi.second?.erBehovForBistand() != true
-            }.perioder().toList().firstOrNull()?.fom ?: return null
-
-        return Periode(førsteDag, førsteDag)
     }
 
     private fun sykdomOgBistandTidslinje(behandlingId: BehandlingId): Tidslinje<Pair<Sykdomsvurdering?, Bistandsvurdering?>> {
