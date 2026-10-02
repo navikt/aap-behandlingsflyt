@@ -62,8 +62,16 @@ class InstitusjonsoppholdUtlederService(
         val barnetillegg = input.barnetillegg
         val soningsvurderingTidslinje = byggSoningsvurderingTidslinje(input.soningsvurderinger)
 
-        // Fyll inn gaps med GODKJENT slik at de ikke krever vurdering
-        val helseoppholdPerioder = helseopphold.map { it.periode }
+        // Fyll inn gaps med GODKJENT slik at de ikke krever vurdering.
+        // Bruk KJEDENE (sammenhengende opphold slått sammen), ikke de rå enkeltsegmentene,
+        // slik at en vurdering som dekker deler av en kjede matches mot HELE kjeden,
+        // og ikke feilaktig etterlater andre delsegmenter i kjeden som UAVKLART.
+        val helseoppholdPerioder =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
+                grupperSammenhengendeOppholdSegmenter(helseopphold).map { it.periode }
+            } else {
+                helseopphold.map { it.periode }
+            }
         val helseoppholdvurderinger = input.helsevurderinger
 
         val helsevurderingerTidslinje = byggHelsevurderingTidslinje(
@@ -94,7 +102,10 @@ class InstitusjonsoppholdUtlederService(
             val oppholdUtenBarnetillegg =
                 helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
 
-            var oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
+            // Kjedene bygges på de ORIGINALE institusjonsoppholds-segmentene (før barnetillegg splitter dem),
+            // slik at en barnetillegg-indusert splitt midt i et fysisk sammenhengende opphold ikke
+            // forstyrrer varighets-/kjedeberegningen.
+            var oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg, helseopphold)
 
             //Håndterer den sære casen ved at barnetillegg opphører
             oppholdSomKanGiReduksjon =
@@ -345,51 +356,69 @@ class InstitusjonsoppholdUtlederService(
         return tidslinje
     }
 
+    /**
+     * En periode "krever avklaring" dersom:
+     * 1) Den inngår i en faktisk SAMMENHENGENDE kjede (0 dagers gap) hvis totale varighet
+     *    er minst 4 måneder og ikke for kort, ELLER
+     * 2) Det finnes en FORRIGE (tidligere) kjede som selv er kvalifisert, og denne kjeden
+     *    starter innen 3 måneder etter at den forrige kjeden sluttet - uavhengig av denne
+     *    kjedens egen varighet.
+     */
     private fun harOppholdSomKreverAvklaring(
         oppholdUtenBarnetillegg: Tidslinje<Boolean>,
+        originaleOppholdSegmenter: List<Segment<Institusjon>> = emptyList(),
         ignorerVarighetsBegrensning: Boolean? = false
     ): Tidslinje<Boolean> {
         val segmenter = oppholdUtenBarnetillegg.segmenter().sortedBy { it.periode.fom }
 
-        // Finn starten på den sammenhengende kjeden (opphold som følger hverandre med < 3 mnd mellomrom)
-        // som hvert segment inngår i, slik at varighet kan vurderes for hele kjeden - ikke bare siste segment.
-        val kjedeStart = mutableMapOf<Segment<Boolean>, LocalDate>()
-        segmenter.forEach { segment ->
-            val forrige = segmenter
-                .filter { it.periode.tom.isBefore(segment.periode.fom) }
-                .maxByOrNull { it.periode.tom }
+        val kjeder = grupperSammenhengende(
+            originaleOppholdSegmenter,
+            fom = { it.periode.fom },
+            tom = { it.periode.tom },
+            erSammenhengende = { sistePeriode, nesteFom -> !nesteFom.isAfter(sistePeriode.tom.plusDays(1)) }
+        ).sortedBy { it.periode.fom }
 
-            kjedeStart[segment] = if (forrige != null && segment.periode.fom.isBefore(forrige.periode.tom.plusMonths(3))) {
-                kjedeStart[forrige] ?: forrige.periode.fom
-            } else {
-                segment.periode.fom
-            }
+        val oppholdUtenBarnetileggMinDato = oppholdUtenBarnetillegg.takeIf { it.isNotEmpty() }?.minDato()
+
+        fun kjedeOppfyllerVarighetskrav(kjedePeriode: Periode): Boolean {
+            val startDato = oppholdUtenBarnetileggMinDato ?: return false
+            val kjedeSegment = Segment(kjedePeriode, true)
+            return harOppholdSomVarerMinstFireMånederOgIkkeErForKort(kjedeSegment) &&
+                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(kjedeSegment, startDato)
         }
+
+        fun erInnenTreMånederEtterForrige(forrige: Periode, denne: Periode): Boolean =
+            denne.fom.isBefore(forrige.tom.plusMonths(3))
+
+        val startFlagg = kjeder.map { kjedeOppfyllerVarighetskrav(it.periode) }
+
+        // Propager KUN forover: en ikke-flagget kjede flagges hvis FORRIGE kjede er flagget
+        // og denne kjeden starter innen 3 måneder etter at forrige sluttet.
+        fun propagerEnGang(flagg: List<Boolean>): List<Boolean> =
+            flagg.indices.map { i ->
+                flagg[i] ||
+                        (i > 0 && flagg[i - 1] && erInnenTreMånederEtterForrige(kjeder[i - 1].periode, kjeder[i].periode))
+            }
+
+        val kjedeFlagget = generateSequence(startFlagg, ::propagerEnGang)
+            .zipWithNext()
+            .firstOrNull { (forrige, neste) -> forrige == neste }
+            ?.second
+            ?: startFlagg
+
+        fun kjedeIndexFor(periode: Periode): Int =
+            kjeder.indexOfFirst { it.periode.overlapper(periode) }
 
         return Tidslinje(
             segmenter.filter { segment ->
-                val forrigePeriodeTom = segmenter
-                    .filter { it.periode.tom.isBefore(segment.periode.fom) }
-                    .maxOfOrNull { it.periode.tom }
-
-                val mindreEnnTreMånederFraForrige = forrigePeriodeTom != null &&
-                        segment.periode.fom.isBefore(forrigePeriodeTom.plusMonths(3))
-
                 if (ignorerVarighetsBegrensning == true) {
                     true
-                } else if (mindreEnnTreMånederFraForrige) {
-                    // Sammenhengende opphold: vurder varighet for hele kjeden, ikke bare dette segmentet
-                    val sammenhengendeFom = kjedeStart[segment] ?: segment.periode.fom
-                    val sammenhengendeSegment = Segment(Periode(sammenhengendeFom, segment.periode.tom), segment.verdi)
-                    harOppholdSomVarerMinstFireMånederOgIkkeErForKort(sammenhengendeSegment)
                 } else {
-                    harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
-                            harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
-                                segment,
-                                oppholdUtenBarnetillegg.minDato()
-                            )
+                    val idx = kjedeIndexFor(segment.periode)
+                    idx >= 0 && kjedeFlagget[idx]
                 }
-            })
+            }
+        ).komprimer()
     }
 
     private fun harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment: Segment<Boolean>): Boolean {
@@ -540,19 +569,19 @@ class InstitusjonsoppholdUtlederService(
 }
 
 private val SEGMENT_ER_SAMMENHENGENDE: (Periode, LocalDate) -> Boolean =
-        { periode, nesteFom -> !nesteFom.isAfter(periode.tom.plusDays(1)) }
+    { periode, nesteFom -> !nesteFom.isAfter(periode.tom.plusDays(1)) }
 
 fun finnRelevanteOppholdSegmenter(
-        segmenter: List<Segment<Institusjon>>,
-        periode: Periode
-    ): List<Segment<Institusjon>> {
-        return finnRelevanteInnenforPeriode(
-                segmenter, periode, { it.periode.fom }, { it.periode.tom }, SEGMENT_ER_SAMMENHENGENDE
-                    )
-    }
+    segmenter: List<Segment<Institusjon>>,
+    periode: Periode
+): List<Segment<Institusjon>> {
+    return finnRelevanteInnenforPeriode(
+        segmenter, periode, { it.periode.fom }, { it.periode.tom }, SEGMENT_ER_SAMMENHENGENDE
+    )
+}
 
 fun grupperSammenhengendeOppholdSegmenter(
-        segmenter: List<Segment<Institusjon>>
-    ): List<SammenhengendeGruppe<Segment<Institusjon>>> {
-        return grupperSammenhengende(segmenter, { it.periode.fom }, { it.periode.tom }, SEGMENT_ER_SAMMENHENGENDE)
-    }
+    segmenter: List<Segment<Institusjon>>
+): List<SammenhengendeGruppe<Segment<Institusjon>>> {
+    return grupperSammenhengende(segmenter, { it.periode.fom }, { it.periode.tom }, SEGMENT_ER_SAMMENHENGENDE)
+}
