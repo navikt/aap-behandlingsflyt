@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.Reduksjon
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid.SamIdRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samvarsling.SamVarslingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9RepositoryImpl
@@ -158,6 +159,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<GjenopptakRepositoryImpl>()
     .register<ManuellInntektGrunnlagRepositoryImpl>()
     .register<SamIdRepositoryImpl>()
+    .register<SamVarslingRepositoryImpl>()
     .register<SvarFraAndreinstansRepositoryImpl>()
     .register<FullmektigRepositoryImpl>()
     .register<OppfølgingsBehandlingRepositoryImpl>()

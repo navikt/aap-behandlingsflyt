@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -47,7 +48,9 @@ class AvklaringsbehovRepositoryTest {
                 begrunnelse = "",
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
-                perioderSomIkkeErTilstrekkeligVurdert = null
+                perioderSomIkkeErTilstrekkeligVurdert = null,
+                perioderKanVurderes = null,
+                gradBehov = null
             )
 
             val avklarSykdom= repository.hentAvklaringsbehovene(behandling.id)
@@ -71,7 +74,8 @@ class AvklaringsbehovRepositoryTest {
                 begrunnelse = "",
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
-                perioderSomIkkeErTilstrekkeligVurdert = null
+                perioderSomIkkeErTilstrekkeligVurdert = null,
+                perioderKanVurderes = null
             )
 
             val avklaringsbehov = repository.hentAvklaringsbehovene(behandling.id)
@@ -106,7 +110,8 @@ class AvklaringsbehovRepositoryTest {
                 begrunnelse = "Første behov",
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
-                perioderSomIkkeErTilstrekkeligVurdert = null
+                perioderSomIkkeErTilstrekkeligVurdert = null,
+                perioderKanVurderes = null
             )
 
             val resultat = repository.hentAlleAvklaringsbehovForSak(listOf(behandling1.id, behandling2.id))
@@ -136,7 +141,8 @@ class AvklaringsbehovRepositoryTest {
                 grunn = null,
                 endretAv = SYSTEMBRUKER,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderVedtaketBehøverVurdering = null
+                perioderVedtaketBehøverVurdering = null,
+                gradBehov = GradBehov.PÅKREVD
             )
             repository.opprett(
                 behandlingId = behandling.id,
@@ -147,7 +153,8 @@ class AvklaringsbehovRepositoryTest {
                 grunn = null,
                 endretAv = SYSTEMBRUKER,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderVedtaketBehøverVurdering = null
+                perioderVedtaketBehøverVurdering = null,
+                gradBehov = GradBehov.FRIVILLIG
             )
 
             val behov = repository.hent(behandling.id)

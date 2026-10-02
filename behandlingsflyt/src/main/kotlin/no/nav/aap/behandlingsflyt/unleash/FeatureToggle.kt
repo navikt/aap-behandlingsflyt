@@ -34,6 +34,7 @@ enum class BehandlingsflytFeature(
 
     // --- Migrering ---
     MigererSykdomFraArenaAutomatisk,
+    MigrererKravFraArenaAutomatisk,
 
     // ------
     Avslag11_27,
