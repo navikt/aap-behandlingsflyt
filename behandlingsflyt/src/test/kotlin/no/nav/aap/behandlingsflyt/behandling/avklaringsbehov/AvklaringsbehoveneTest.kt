@@ -122,11 +122,11 @@ class AvklaringsbehoveneTest {
             avklaringsbehov1.definisjon, avklaringsbehov1.funnetISteg, null, null, null
         )
 
-        assertThat(avklaringsbehovene.åpne()).hasSize(2)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(2)
 
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, begrunnelse = "Derfor", endretAv = Bruker("Meg"))
 
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
     }
 
     @Test
@@ -149,7 +149,7 @@ class AvklaringsbehoveneTest {
             perioderKanVurderes = gamlePerioder
         )
 
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVedtaketBehøverVurdering()
         )
@@ -161,7 +161,7 @@ class AvklaringsbehoveneTest {
         )
         avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder, nyePerioder, nyePerioder, null)
 
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVedtaketBehøverVurdering()
         )

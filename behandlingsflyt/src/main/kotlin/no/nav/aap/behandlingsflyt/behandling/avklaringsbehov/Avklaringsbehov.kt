@@ -148,7 +148,7 @@ class Avklaringsbehov(
         }
         if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert
             || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering
-            || perioderKanVurderes != siste.perioderKanVurderes 
+            || perioderKanVurderes != siste.perioderKanVurderes
             || gradBehov != siste.gradBehov
         ) {
             historikk += siste.copy(
@@ -163,24 +163,33 @@ class Avklaringsbehov(
         return false
     }
 
+    /**
+     * Avklaringsbehovet er opprettet eller returnert.
+     * For å ekskludere frivillige behov, bruk [måLøses]
+     */
     fun erÅpent(): Boolean {
         return status().erÅpent()
     }
 
-    fun skalStoppeHer(stegType: StegType): Boolean {
-        return definisjon.skalLøsesISteg(stegType, funnetISteg) && erÅpent() &&
-                when (definisjon.type) {
-                    Definisjon.BehovType.MANUELT_FRIVILLIG if definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov ->
-                        false
+    fun måLøses(): Boolean {
+        return erÅpent() && when (definisjon.type) {
+            Definisjon.BehovType.MANUELT_FRIVILLIG if definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov ->
+                gradBehov() == GradBehov.PÅKREVD || status() in listOf(
+                    Status.SENDT_TILBAKE_FRA_BESLUTTER,
+                    Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
+                )
+            Definisjon.BehovType.MANUELT_FRIVILLIG,
+            Definisjon.BehovType.MANUELT_PÅKREVD,
+            Definisjon.BehovType.VENTEPUNKT,
+            Definisjon.BehovType.OVERSTYR,
+            Definisjon.BehovType.BREV,
+            Definisjon.BehovType.BREV_VENTEPUNKT,
+                -> true
+        }
+    }
 
-                    Definisjon.BehovType.MANUELT_FRIVILLIG,
-                    Definisjon.BehovType.MANUELT_PÅKREVD,
-                    Definisjon.BehovType.VENTEPUNKT,
-                    Definisjon.BehovType.OVERSTYR,
-                    Definisjon.BehovType.BREV,
-                    Definisjon.BehovType.BREV_VENTEPUNKT,
-                        -> true
-                }
+    fun skalStoppeHer(stegType: StegType): Boolean {
+        return definisjon.skalLøsesISteg(stegType, funnetISteg) && måLøses()
     }
 
     internal fun løs(begrunnelse: String, endretAv: Bruker) {

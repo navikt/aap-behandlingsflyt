@@ -10,6 +10,24 @@ tasks {
         property("project.version", providers.provider { getCheckedOutGitCommitHash() })
     }
 
+    register<Test>("genererStatistikkFixtures") {
+        group = "verification"
+        description = "Generer statistikkhendelser fra behandlingsflyt-tester under build/statistikk-fixtures."
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        useJUnitPlatform { includeTags("statistikk-fixtures") }
+        outputs.dir(layout.buildDirectory.dir("statistikk-fixtures"))
+        outputs.upToDateWhen { false }
+        val fixtureKatalog = layout.buildDirectory.dir("statistikk-fixtures")
+        doFirst {
+            fixtureKatalog.get().asFile.deleteRecursively()
+        }
+    }
+
+//    named<Test>("test") {
+//        useJUnitPlatform { excludeTags("statistikk-fixtures") }
+//    }
+
     processResources {
         // Depend on output of the task to create properties,
         // so the properties file will be part of the Java resources.

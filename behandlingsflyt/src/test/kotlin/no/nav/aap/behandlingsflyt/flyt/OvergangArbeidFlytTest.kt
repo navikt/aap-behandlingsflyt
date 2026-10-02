@@ -122,7 +122,7 @@ class OvergangArbeidFlytTest : AbstraktFlytOrkestratorSnapshotTest() {
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
         )
             .medKontekst {
-                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_SYKDOM)
+                assertThat( avklaringsbehovSomMåLøses.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_SYKDOM)
             }
             .løsAvklaringsBehov(
                 AvklarSykdomLøsning(
@@ -156,13 +156,13 @@ class OvergangArbeidFlytTest : AbstraktFlytOrkestratorSnapshotTest() {
             )
             // 2.
             .medKontekst {
-                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_OVERGANG_ARBEID)
+                assertThat( avklaringsbehovSomMåLøses.map { it.definisjon } ).containsExactly(Definisjon.AVKLAR_OVERGANG_ARBEID)
             }
 
             // 1.
             .løsOvergangArbeid(Utfall.OPPFYLT, fom = endringsdato)
             .medKontekst {
-                assertThat( åpneAvklaringsbehov.map { it.definisjon } ).doesNotContain(Definisjon.AVKLAR_OVERGANG_ARBEID)
+                assertThat( avklaringsbehovSomMåLøses.map { it.definisjon } ).doesNotContain(Definisjon.AVKLAR_OVERGANG_ARBEID)
             }
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
