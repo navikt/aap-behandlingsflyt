@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
@@ -55,6 +56,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
@@ -106,7 +108,8 @@ class BrevUtlederService(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val personOpplysningRepository: PersonopplysningRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -135,7 +138,8 @@ class BrevUtlederService(
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
+        personOpplysningRepository = repositoryProvider.provide(),
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -218,7 +222,7 @@ class BrevUtlederService(
                         MIGRER_RETTIGHETSPERIODE,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                        G_REGULERING
+                        G_REGULERING,
                     ).containsAll(
                         vurderingsbehov
                     )
@@ -249,6 +253,10 @@ class BrevUtlederService(
                     !harRettighetsType(forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
                 ) {
                     return brevBehovArbeidssøker(behandling)
+                }
+
+                if (Vurderingsbehov.DØDSFALL_BRUKER in vurderingsbehov) {
+                    return brevBehovDødsfall(behandling)
                 }
 
                 if (resultat == Resultat.INNVILGELSE) {
@@ -446,6 +454,15 @@ class BrevUtlederService(
             }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
+    }
+
+    private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
+        val dødsdato = personOpplysningRepository
+            .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
+            ?.dødsdato
+            ?: error("Mangler dødsdato for dødsfallsbrev i behandling ${behandling.id}")
+
+        return VedtakEndringDødsfall(dødsdato.toLocalDate())
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
