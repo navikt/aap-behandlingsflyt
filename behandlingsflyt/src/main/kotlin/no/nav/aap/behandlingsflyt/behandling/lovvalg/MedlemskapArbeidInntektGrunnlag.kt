@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
@@ -11,8 +11,9 @@ import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import kotlin.collections.filter
 
-data class MedlemskapLovvalgGrunnlag(
+data class MedlemskapLovvalgFaktaGrunnlag(
     val medlemskapArbeidInntektGrunnlag: MedlemskapArbeidInntektGrunnlag?,
     val personopplysning: Personopplysning?,
     val nyeSoknadGrunnlag: UtenlandsOppholdData?,
@@ -23,10 +24,23 @@ data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
-    val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
+    val vurderinger: List<LovvalgMedlemskapVurdering> = emptyList()
 ) {
-    fun gjeldendeVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
-        return vurderinger.gjeldendeVurderinger()
+    // TODO: Inkluder automatiske når vi skal støtte kombinert automatisk og manuelle
+    fun gjeldendeManuelleVurderinger(): Tidslinje<LovvalgMedlemskapVurdering> {
+        return manuelleVurderinger().gjeldendeVurderinger()
+    }
+    
+    fun manuelleVurderinger(): List<LovvalgMedlemskapVurdering> {
+        return vurderinger.filter { !it.erAutomatiskVurdert() }.toList()
+    }
+    
+    fun gjeldendeAutomatiskeVurderinger(): Tidslinje<LovvalgMedlemskapVurdering> {
+        return automatiskeVurderinger().gjeldendeVurderinger()
+    }
+
+    fun automatiskeVurderinger(): List<LovvalgMedlemskapVurdering> {
+        return vurderinger.filter { it.erAutomatiskVurdert() }.toList()
     }
 }
 
@@ -114,7 +128,7 @@ enum class InntektTyper {
     FERIEPENGERSYKEPENGERTILFISKERSOMBAREHARHYRE,
 }
 
-fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<ManuellVurderingForLovvalgMedlemskap>> {
+fun Tidslinje<LovvalgMedlemskapVurdering>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<LovvalgMedlemskapVurdering>> {
     val periodeForVurdering = helePerioden()
 
     if (!erSammenhengende()) {

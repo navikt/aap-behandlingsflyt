@@ -54,11 +54,13 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                             AvklaringsbehovMetadataService(repositoryProvider, gatewayProvider)
 
                         val grunnlag = lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)
-                        val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
-                        val gjeldendeVedtatteVurderinger =
-                            grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }
-                                ?.gjeldendeVurderinger()
-                                .orEmpty()
+                        val nyeManuelleVurderinger =
+                            grunnlag?.manuelleVurderinger()?.filter { it.vurdertIBehandling == behandling.id }
+
+                        val gjeldendeVedtatteManuelleVurderinger =
+                            behandling.forrigeBehandlingId?.let { forrigeBehandlingId ->
+                                lovvalgMedlemskapRepository.hentHvisEksisterer(forrigeBehandlingId)
+                            }?.gjeldendeManuelleVurderinger().orEmpty()
 
                         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val behøverVurderinger =
@@ -67,15 +69,17 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                                 .orEmpty()
 
                         // Dersom steget behøver en vurdering, skal det ikke lenger være overstyrt i denne behandlingen
-                        val overstyrt = nyeVurderinger?.any { it.overstyrt } ?: false && behøverVurderinger.isEmpty()
+                        val overstyrt =
+                            nyeManuelleVurderinger?.any { it.overstyrt } ?: false && behøverVurderinger.isEmpty()
 
                         PeriodisertLovvalgMedlemskapGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             overstyrt = overstyrt,
                             behøverVurderinger = behøverVurderinger.toList(),
                             kanVurderes = listOf(sak.rettighetsperiode),
-                            nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
-                            sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
+                            nyeVurderinger = nyeManuelleVurderinger?.map { it.toResponse(vurdertAvService) }
+                                ?: emptyList(),
+                            sisteVedtatteVurderinger = gjeldendeVedtatteManuelleVurderinger
                                 .komprimer()
                                 .segmenter()
                                 .map { segment ->
@@ -90,6 +94,14 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                                 vurderLovvalgSteg,
                                 behandling,
                             ),
+                            automatiskeVurderinger = grunnlag?.automatiskeVurderinger()?.gjeldendeVurderinger()
+                                .orEmpty().komprimer().segmenter().map {
+                                    it.verdi.toResponse(
+                                        vurdertAvService,
+                                        fom = it.fom(),
+                                        tom = if (it.tom().isEqual(Tid.MAKS)) null else it.tom()
+                                    )
+                                }
                         )
                     }
 

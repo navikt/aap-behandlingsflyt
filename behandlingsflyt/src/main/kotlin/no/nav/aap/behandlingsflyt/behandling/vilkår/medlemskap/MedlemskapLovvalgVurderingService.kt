@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektTyper
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
@@ -22,9 +22,8 @@ import kotlin.enums.enumEntries
 
 class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(
-        grunnlag: MedlemskapLovvalgGrunnlag,
+        grunnlag: MedlemskapLovvalgFaktaGrunnlag,
         rettighetsPeriode: Periode,
-        type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
         val førsteDelVurderinger = vurderFørsteDelKriterier(grunnlag, rettighetsPeriode)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
@@ -33,58 +32,15 @@ class MedlemskapLovvalgVurderingService {
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
         val kanBehandlesAutomatisk = oppfyltMinstEttKrav && ingenInntruffet
 
-        // No-op: Metrikker for videre utviklingsplan
-        if (type == VurderingType.FØRSTEGANGSBEHANDLING) {
-            // Målinger fra 12.08.26
-            val bosatt = grunnlag.personopplysning?.status == PersonStatus.bosatt
-
-            // Har bosatt-status
-            prometheus.lovvalgBosattOgPotensielleAndreDel1(bosatt).increment()
-
-            // Har bosatt-status og ingen oppfyllende del 1 kriterier
-            prometheus.lovvalgBosattOgIngenAndreDel1(bosatt && !oppfyltMinstEttKrav).increment()
-
-            // Har bosatt-status + potensielle andre del 1 + ingenInntruffet del 2 -> kanBehandlesAutomatisk
-            prometheus.lovvalgBosattOgPotensielleAndreDel1IngenDel2(bosatt && ingenInntruffet).increment()
-
-            // Har bosatt-status og ingen oppfyllende del 1 kriterier + ingenInntruffet del 2 -> kanBehandlesAutomatisk
-            prometheus.lovvalgBosattOgIngenAndreDel1IngenDel2(bosatt && !oppfyltMinstEttKrav && ingenInntruffet)
-                .increment()
-
-            prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
-
-            if (!oppfyltMinstEttKrav) {
-                prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1("del1_ikke_oppfylt").increment()
-                andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
-                    prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
-                        .increment()
-                }
-            } else {
-                andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
-                    prometheus.lovvalgÅrsakTilManuellVurderingOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
-                        .increment()
-                }
-            }
-        }
-
         return KanBehandlesAutomatiskVurdering(
             kanBehandlesAutomatisk,
             førsteDelVurderinger + andreDelVurdering
         )
     }
 
-    private fun lovvalgÅrsakNavn(opplysning: String): String = when (opplysning) {
-        "Arbeid i utland" -> "arbeid_i_utland"
-        "Opphold i utland" -> "opphold_i_utland"
-        "Utenlandsk adresse" -> "utenlandsk_adresse"
-        "Vedtak om annet lovvalgsland finnes" -> "annet_lovvalgsland"
-        "Mangler statsborgerskap i EØS" -> "mangler_statsborgerskap_eos"
-        else -> opplysning.replace(" ", "_").lowercase()
-    }
-
     // Minst én må oppfylles
     private fun vurderFørsteDelKriterier(
-        grunnlag: MedlemskapLovvalgGrunnlag,
+        grunnlag: MedlemskapLovvalgFaktaGrunnlag,
         rettighetsPeriode: Periode,
     ): List<TilhørighetVurdering> {
         val mottarSykepengerVurdering = mottarSykepenger(grunnlag.medlemskapArbeidInntektGrunnlag)
@@ -102,7 +58,7 @@ class MedlemskapLovvalgVurderingService {
 
     // Ingen kan inntreffe
     private fun vurderAndreDelKriterier(
-        grunnlag: MedlemskapLovvalgGrunnlag,
+        grunnlag: MedlemskapLovvalgFaktaGrunnlag,
         rettighetsPeriode: Periode
     ): List<TilhørighetVurdering> {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode)
@@ -393,4 +349,57 @@ class MedlemskapLovvalgVurderingService {
             vurdertPeriode = VurdertPeriode.SØKNADSTIDSPUNKT.beskrivelse
         )
     }
+}
+
+// No-op: Metrikker for videre utviklingsplan. Målinger fra 12.08.26
+fun KanBehandlesAutomatiskVurdering.medMetrikker(
+    grunnlag: MedlemskapLovvalgFaktaGrunnlag,
+    type: VurderingType?
+): KanBehandlesAutomatiskVurdering {
+    if (type != VurderingType.FØRSTEGANGSBEHANDLING) return this
+
+    val førsteDelVurderinger = tilhørighetVurdering.filter { it.indikasjon == Indikasjon.I_NORGE }
+    val andreDelVurdering = tilhørighetVurdering.filter { it.indikasjon == Indikasjon.UTENFOR_NORGE }
+    val oppfyltMinstEttKrav = førsteDelVurderinger.any { it.resultat }
+    val ingenInntruffet = andreDelVurdering.all { !it.resultat }
+    val bosatt = grunnlag.personopplysning?.status == PersonStatus.bosatt
+
+    // Har bosatt-status
+    prometheus.lovvalgBosattOgPotensielleAndreDel1(bosatt).increment()
+
+    // Har bosatt-status og ingen oppfyllende del 1 kriterier
+    prometheus.lovvalgBosattOgIngenAndreDel1(bosatt && !oppfyltMinstEttKrav).increment()
+
+    // Har bosatt-status + potensielle andre del 1 + ingenInntruffet del 2 -> kanBehandlesAutomatisk
+    prometheus.lovvalgBosattOgPotensielleAndreDel1IngenDel2(bosatt && ingenInntruffet).increment()
+
+    // Har bosatt-status og ingen oppfyllende del 1 kriterier + ingenInntruffet del 2 -> kanBehandlesAutomatisk
+    prometheus.lovvalgBosattOgIngenAndreDel1IngenDel2(bosatt && !oppfyltMinstEttKrav && ingenInntruffet)
+        .increment()
+
+    prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
+
+    if (!oppfyltMinstEttKrav) {
+        prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1("del1_ikke_oppfylt").increment()
+        andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
+            prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
+                .increment()
+        }
+    } else {
+        andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
+            prometheus.lovvalgÅrsakTilManuellVurderingOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
+                .increment()
+        }
+    }
+
+    return this
+}
+
+private fun lovvalgÅrsakNavn(opplysning: String): String = when (opplysning) {
+    "Arbeid i utland" -> "arbeid_i_utland"
+    "Opphold i utland" -> "opphold_i_utland"
+    "Utenlandsk adresse" -> "utenlandsk_adresse"
+    "Vedtak om annet lovvalgsland finnes" -> "annet_lovvalgsland"
+    "Mangler statsborgerskap i EØS" -> "mangler_statsborgerskap_eos"
+    else -> opplysning.replace(" ", "_").lowercase()
 }
