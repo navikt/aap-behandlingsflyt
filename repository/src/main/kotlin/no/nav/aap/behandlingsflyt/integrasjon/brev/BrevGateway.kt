@@ -39,9 +39,11 @@ import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevV2Request
 import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.OppdaterBrevmalRequest
+import no.nav.aap.brev.kontrakt.OppdaterMottakereRequest
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -161,6 +163,18 @@ class BrevGateway : BrevbestillingGateway {
         }
 
         return true
+    }
+
+    override fun oppdaterMottakere(
+        referanse: BrevbestillingReferanse,
+        mottaker: MottakerDto,
+        kopimottaker: MottakerDto?
+    ) {
+        val url = baseUri.resolve("/api/bestilling/$referanse/oppdater-mottakere")
+
+        val request = PutRequest(body = OppdaterMottakereRequest(mottaker, kopimottaker))
+
+        client.put<_, Unit>(url, request)
     }
 
     override fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse {
@@ -341,6 +355,18 @@ class BrevGateway : BrevbestillingGateway {
             )
         )
         return response.mottakereDistStatus
+    }
+
+    override fun kanDistribuereBrevV2(
+        brevbestillingReferanse: BrevbestillingReferanse,
+        mottakerId: String
+    ): Boolean {
+        return requireNotNull(
+            client.post<KanDistribuereBrevV2Request, Boolean?>(
+                uri = baseUri.resolve("/api/$brevbestillingReferanse/v2/kan-distribuere-brev"),
+                request = PostRequest(KanDistribuereBrevV2Request(mottakerId))
+            )
+        )
     }
 
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
@@ -579,6 +605,7 @@ class BrevGateway : BrevbestillingGateway {
             },
         )
     }
+
     private fun aarsakTidspunktVurderingTilFaktagrunnlag(
         grunnlag: GrunnlagBeregning
     ): Faktagrunnlag.AarsakTidspunktVurdering? {
@@ -603,7 +630,7 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakBeregningstidspunkt.DATO_PAA_LEGEERKLÆRING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.DATO_PAA_LEGEERKLAERING
             ÅrsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING
             ÅrsakBeregningstidspunkt.SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SEKSTEN_AAR_SOM_BEREGNINGSTIDSPUNKT
-            ÅrsakBeregningstidspunkt.ANNET,  ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT,  null -> null
+            ÅrsakBeregningstidspunkt.ANNET, ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT, null -> null
         }
 
     private fun ÅrsakYtterligereNedsatt?.tilKontrakt():
@@ -617,6 +644,7 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakYtterligereNedsatt.KRAVDATO,
             ÅrsakYtterligereNedsatt.DATO_PAA_LEGEERKLÆRING,
             ÅrsakYtterligereNedsatt.HENVIST_TIL_BEHANDLING -> null
+
             ÅrsakYtterligereNedsatt.ANNET, null -> null
         }
 
