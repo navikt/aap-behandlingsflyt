@@ -394,11 +394,7 @@ class BrevUtlederService(
 
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
-        val samordning = if (unleashGateway.isEnabled(BehandlingsflytFeature.SamordningFaktagrunnlagBrev)) {
-            hentForholdTilAndreYtelserForBrev(behandling.id)
-        } else {
-            null
-        }
+        val samordning = hentForholdTilAndreYtelserForBrev(behandling.id)
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
         val yrkesSkadeISøknadIkkeIRegister =
