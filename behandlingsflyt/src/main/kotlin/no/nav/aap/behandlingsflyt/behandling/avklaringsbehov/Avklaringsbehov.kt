@@ -148,7 +148,7 @@ class Avklaringsbehov(
         }
         if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert
             || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering
-            || perioderKanVurderes != siste.perioderKanVurderes 
+            || perioderKanVurderes != siste.perioderKanVurderes
             || gradBehov != siste.gradBehov
         ) {
             historikk += siste.copy(
@@ -163,10 +163,10 @@ class Avklaringsbehov(
         return false
     }
 
-    internal fun oppdaterFristForVentebehov(
+    internal fun oppdaterVentebehovHvisFristEndret(
         nyFrist: LocalDate,
         bruker: Bruker,
-    ) {
+    ): Boolean {
         require(definisjon.erVentebehov()) {
             "Kan ikke oppdatere frist for et behov som ikke er ventebehov"
         }
@@ -180,7 +180,9 @@ class Avklaringsbehov(
                 endretAv = bruker,
                 tidsstempel = LocalDateTime.now()
             )
+            return true
         }
+        return false
     }
 
     fun erÅpent(): Boolean {

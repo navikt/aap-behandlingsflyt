@@ -200,19 +200,26 @@ class Avklaringsbehovene(
                 venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
                 bruker = bruker,
             )
+            repository.endreVentepunkt(
+                bestillLegeerklæringBehov.id,
+                bestillLegeerklæringBehov.historikk.last(),
+                funnetISteg
+            )
         } else {
-            bestillLegeerklæringBehov.oppdaterFristForVentebehov(
+            val harEndring = bestillLegeerklæringBehov.oppdaterVentebehovHvisFristEndret(
                 nyFrist = requireNotNull(utledFrist(Definisjon.BESTILL_LEGEERKLÆRING, frist)) {
                     "Forsøkte å oppdatere ventebehov for bestill legeerklæring uten å angi frist"
                 },
                 bruker = bruker,
             )
+            if (harEndring) {
+                repository.endreVentepunkt(
+                    bestillLegeerklæringBehov.id,
+                    bestillLegeerklæringBehov.historikk.last(),
+                    funnetISteg
+                )
+            }
         }
-        repository.endreVentepunkt(
-            bestillLegeerklæringBehov.id,
-            bestillLegeerklæringBehov.historikk.last(),
-            funnetISteg
-        )
     }
 
     private fun utledFrist(definisjon: Definisjon, frist: LocalDate?): LocalDate? {
