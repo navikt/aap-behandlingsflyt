@@ -48,6 +48,9 @@ data class Vedtak11_18OpphørFullUfør(
     val virkningstidspunkt: LocalDate
 ) : BrevBehov(TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR)
 
+data class VedtakEndringDødsfall(
+    val dødsdato: LocalDate
+) : BrevBehov(TypeBrev.VEDTAK_ENDRING_DODSFALL)
 
 sealed class AvslagBrev(typeBrev: TypeBrev) : BrevBehov(typeBrev) {
     abstract val sykdomsvurdering: String?
