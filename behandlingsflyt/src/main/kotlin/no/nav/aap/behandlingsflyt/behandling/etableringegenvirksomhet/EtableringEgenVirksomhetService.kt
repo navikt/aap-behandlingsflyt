@@ -69,15 +69,17 @@ class EtableringEgenVirksomhetService(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat {
-        val beregning = beregnVurderinger(behandlingId, nyeVurderinger)
-        val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
-        val førsteMuligeDato = gyldighetPeriode.first().fom
-
-        val alleUtviklingsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.UTVIKLING)
-        val alleOppstartsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.OPPSTART)
-
         return try {
+            // beregnVurderinger kan selv kaste IllegalArgumentException (f.eks. når kvoten for
+            // en fase er brukt opp), og må derfor også evalueres innenfor try-blokken.
+            val beregning = beregnVurderinger(behandlingId, nyeVurderinger)
+            val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
+
+            val alleUtviklingsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.UTVIKLING)
+            val alleOppstartsPerioder = beregning.gjeldendeVurderinger.perioderForFase(EtableringFase.OPPSTART)
+
             validerGyldighetsperiodeFinnes(gyldighetPeriode)
+            val førsteMuligeDato = gyldighetPeriode.first().fom
             validerEtterFørsteMuligeDato(førsteMuligeDato, beregning.beregnedeVurderinger)
             validerInnenforGyldighetsperiode(gyldighetPeriode, beregning.beregnedeVurderinger)
             validerFaseOgPerioderForAlle(beregning)
@@ -95,6 +97,18 @@ class EtableringEgenVirksomhetService(
         val gjeldendeVurderinger: Set<EtableringEgenVirksomhetVurdering>
     )
 
+    /**
+     * Beregner (juster perioder + beregn tom for siste periode per fase) de nye vurderingene
+     * som skal persisteres for [behandlingId]. Må brukes av kallere som skal lagre vurderingene,
+     * slik at det faktisk er den beregnede (og ikke en evt. vilkårlig innsendt) tom-datoen som
+     * havner i grunnlaget.
+     */
+    fun beregnVurderingerForLagring(
+        behandlingId: BehandlingId,
+        nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
+    ): List<EtableringEgenVirksomhetVurdering> =
+        beregnVurderinger(behandlingId, nyeVurderinger).beregnedeVurderinger
+
     private fun beregnVurderinger(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
@@ -111,17 +125,27 @@ class EtableringEgenVirksomhetService(
 
         val skalValideres = justerteVurderinger.filter { it.vurdertIBehandling == behandlingId }.toSet()
 
+        // Fase+fom bestemmer tom for den siste (åpne) perioden i hver fase - en eventuell
+        // innsendt tom for denne perioden skal ikke tillit blindt, siden frontend uansett
+        // ikke har mulighet til å sende tom når fase er satt.
+        val sisteVurderingPerFase = (gamleVurderinger + justerteVurderinger)
+            .filter { it.fase != null }
+            .groupBy { it.fase }
+            .mapNotNull { (_, vurderinger) -> vurderinger.maxByOrNull { it.fom } }
+            .toSet()
+
         val beregnedeVurderinger = justerteVurderinger.map { vurdering ->
-            if (vurdering !in skalValideres) {
-                vurdering
-            } else {
-                vurdering.takeIf { it.tom != null || it.fase == null }
-                    ?: vurdering.copy(
-                        tom = beregnTomForSistePeriode(
-                            vurderinger = gamleVurderinger + justerteVurderinger,
-                            sisteVurdering = vurdering
-                        )
+            when {
+                vurdering !in skalValideres -> vurdering
+                vurdering.fase == null -> vurdering
+                vurdering in sisteVurderingPerFase -> vurdering.copy(
+                    tom = beregnTomForSistePeriode(
+                        vurderinger = gamleVurderinger + justerteVurderinger,
+                        sisteVurdering = vurdering
                     )
+                )
+
+                else -> vurdering
             }
         }
 

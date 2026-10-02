@@ -168,7 +168,10 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     opprettet = row.getInstant("OPPRETTET_TID"),
                     vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
                     fom = row.getLocalDate("GJELDER_FRA"),
-                    tom = row.getLocalDateOrNull("GJELDER_TIL")
+                    tom = row.getLocalDateOrNull("GJELDER_TIL"),
+                    fase = row.getEnumOrNull("FASE"),
+                    erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
+                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET")
                 )
                 EtablerEgenVirksomhetMapper.fraLegacy(legacy)
             }

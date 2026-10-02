@@ -48,8 +48,7 @@ data class EtableringEgenVirksomhetLøsningDto(
         val avklartErRegistrert = erRegistrertINødvendigeOffentligeRegister
             ?: if (fase == null && avklartFase == EtableringFase.OPPSTART) true else erRegistrertINødvendigeOffentligeRegister
 
-        val avklartAktivJobber = jobberBrukerAktivMedVirksomheten
-            ?: if (fase == null) true else jobberBrukerAktivMedVirksomheten
+        val avklartAktivJobber = jobberBrukerAktivMedVirksomheten ?: true
 
         val avklartFom = when (avklartFase){
             EtableringFase.UTVIKLING -> utviklingsPerioder?.firstOrNull()?.fom ?: this.fom

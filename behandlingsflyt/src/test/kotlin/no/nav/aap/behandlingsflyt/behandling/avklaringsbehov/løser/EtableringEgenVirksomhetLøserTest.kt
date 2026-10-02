@@ -2,11 +2,14 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.MAKS_OPPSTART_HVERDAGER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.MAKS_UTVIKLING_HVERDAGER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -199,43 +202,89 @@ class EtableringEgenVirksomhetLøserTest {
 
     @Test
     fun `Skal ikke kunne overstige oppstartsperiodens kvote på 66 dager`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
-        oppfyllSykdomOgBistand(behandling)
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
 
-        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
+        val kontekst = avklaringsbehovKontekst { this.behandling = revurdering }
+        val forrigeOppstartFom = sak.rettighetsperiode.fom.plusDays(1)
+        InMemoryEtableringEgenVirksomRepository.lagre(
+            førstegangsbehandling.id,
+            listOf(
+                EtableringEgenVirksomhetVurdering(
+                    begrunnelse = "Brukte opp hele oppstartskvoten",
+                    fom = forrigeOppstartFom,
+                    tom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(forrigeOppstartFom),
+                    vurdertAv = Bruker("saks"),
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = førstegangsbehandling.id,
+                    virksomhetNavn = "peppas peppers",
+                    foreliggerFagligVurdering = true,
+                    virksomhetErNy = true,
+                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                    kanFøreTilSelvforsørget = true,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    fase = EtableringFase.OPPSTART,
+                    jobberBrukerAktivMedVirksomheten = true
+                )
+            )
+        )
+
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
                     fase = EtableringFase.OPPSTART,
-                    fom = sak.rettighetsperiode.fom.plusMonths(1),
-                    tom = sak.rettighetsperiode.fom.plusMonths(6),
+                    fom = sak.rettighetsperiode.fom.plusMonths(6),
+                    tom = null,
                     erRegistrertINødvendigeOffentligeRegister = true,
                 )
             )
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Oppsatte oppstartsdager overstiger gjenværende dager:")
+        assertThat(feil.message).contains("Kvoten for OPPSTART er brukt opp")
     }
 
     @Test
     fun `Skal ikke kunne overstige utviklingsperiodens kvote på 131 dager`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
-        oppfyllSykdomOgBistand(behandling)
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
 
-        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
+        val kontekst = avklaringsbehovKontekst { this.behandling = revurdering }
+        val forrigeUtviklingFom = sak.rettighetsperiode.fom.plusDays(1)
+        InMemoryEtableringEgenVirksomRepository.lagre(
+            førstegangsbehandling.id,
+            listOf(
+                EtableringEgenVirksomhetVurdering(
+                    begrunnelse = "Brukte opp hele utviklingskvoten",
+                    fom = forrigeUtviklingFom,
+                    tom = Hverdager(MAKS_UTVIKLING_HVERDAGER).fraOgMed(forrigeUtviklingFom),
+                    vurdertAv = Bruker("saks"),
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = førstegangsbehandling.id,
+                    virksomhetNavn = "peppas peppers",
+                    foreliggerFagligVurdering = true,
+                    virksomhetErNy = true,
+                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                    kanFøreTilSelvforsørget = true,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    fase = EtableringFase.UTVIKLING,
+                    jobberBrukerAktivMedVirksomheten = true
+                )
+            )
+        )
+
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
                     fase = EtableringFase.UTVIKLING,
-                    fom = sak.rettighetsperiode.fom.plusMonths(1),
-                    tom = sak.rettighetsperiode.fom.plusMonths(1).plusDays(200),
+                    fom = sak.rettighetsperiode.fom.plusMonths(10),
+                    tom = null,
                 )
             )
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Oppsatte utviklingsdager overstiger gjenværende dager:")
+        assertThat(feil.message).contains("Kvoten for UTVIKLING er brukt opp")
     }
 
     private fun oppfyllSykdomOgBistand(behandling: Behandling) {

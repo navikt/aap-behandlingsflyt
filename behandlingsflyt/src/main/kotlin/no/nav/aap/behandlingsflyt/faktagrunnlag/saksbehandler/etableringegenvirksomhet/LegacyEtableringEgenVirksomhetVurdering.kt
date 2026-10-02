@@ -21,13 +21,40 @@ data class LegacyEtableringEgenVirksomhetVurdering(
     val opprettet: Instant,
     val vurdertIBehandling: BehandlingId,
     val fom: LocalDate,
-    val tom: LocalDate?
+    val tom: LocalDate?,
+    val fase: EtableringFase? = null,
+    val erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
+    val jobberBrukerAktivMedVirksomheten: Boolean? = null,
 )
 
 object EtablerEgenVirksomhetMapper {
     fun fraLegacy(
         legacy: LegacyEtableringEgenVirksomhetVurdering
     ): EtableringEgenVirksomhetVurdering {
+        // Nye vurderinger har alltid FASE (og de andre feltene) persistert direkte, og skal
+        // ikke overstyres/utledes på nytt fra de gamle oppstart-/utviklingsperiode-tabellene.
+        if (legacy.fase != null) {
+            return EtableringEgenVirksomhetVurdering(
+                begrunnelse = legacy.begrunnelse,
+                virksomhetNavn = legacy.virksomhetNavn,
+                orgNr = legacy.orgNr,
+                foreliggerFagligVurdering = legacy.foreliggerFagligVurdering,
+                virksomhetErNy = legacy.virksomhetErNy,
+                brukerEierVirksomheten = legacy.brukerEierVirksomheten,
+                kanFøreTilSelvforsørget = legacy.kanFøreTilSelvforsørget,
+                erRegistrertINødvendigeOffentligeRegister = legacy.erRegistrertINødvendigeOffentligeRegister,
+                fase = legacy.fase,
+                jobberBrukerAktivMedVirksomheten = legacy.jobberBrukerAktivMedVirksomheten ?: true,
+                vurdertAv = legacy.vurdertAv,
+                opprettet = legacy.opprettet,
+                vurdertIBehandling = legacy.vurdertIBehandling,
+                fom = legacy.fom,
+                tom = legacy.tom
+            )
+        }
+
+        // Gammel (pre-migrert) rad: fase/registrert var aldri lagret, og må utledes fra
+        // hvilken av de gamle periodetabellene som er fylt ut.
         val fase = when {
             legacy.oppstartsPerioder.isNotEmpty() -> EtableringFase.OPPSTART
             legacy.utviklingsPerioder.isNotEmpty() -> EtableringFase.UTVIKLING

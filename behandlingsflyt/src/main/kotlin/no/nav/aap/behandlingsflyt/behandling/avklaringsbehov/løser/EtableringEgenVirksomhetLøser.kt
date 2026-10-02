@@ -28,19 +28,23 @@ class EtableringEgenVirksomhetLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val nyeVurderinger = løsning.løsningerForPerioder.map { it.toEtableringEgenVirksomhetVurdering(kontekst) }
-        val justerteNyeVurderinger = justerEtableringPerioder(nyeVurderinger)
 
-        when (val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, justerteNyeVurderinger)) {
+        when (val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, nyeVurderinger)) {
             is VirksomhetEtableringIkkeGyldig -> throw UgyldigForespørselException(evaluering.feilmelding)
             else -> {}
         }
+
+        // Må bruke de beregnede vurderingene (med utledet tom for siste periode per fase), ikke
+        // de rå innsendte, slik at det faktisk er den validerte datoen som blir persistert.
+        val beregnedeNyeVurderinger =
+            etableringEgenVirksomhetService.beregnVurderingerForLagring(behandling.id, nyeVurderinger)
 
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = gamleVurderinger + justerteNyeVurderinger
+            etableringEgenvirksomhetVurderinger = gamleVurderinger + beregnedeNyeVurderinger
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }
