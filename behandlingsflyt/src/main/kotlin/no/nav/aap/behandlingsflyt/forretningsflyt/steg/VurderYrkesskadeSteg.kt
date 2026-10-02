@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -39,7 +40,7 @@ class VurderYrkesskadeSteg private constructor(
             definisjon = Definisjon.AVKLAR_YRKESSKADE,
             vedtakBehøverVurdering = {
                 behøverVurdering(
-                    kontekst, tidligereVurderinger, yrkesskader
+                    kontekst, tidligereVurderinger, yrkesskader, sykdomsgrunnlag
                 )
             },
             erTilstrekkeligVurdert = { sykdomsgrunnlag?.yrkesskadevurdering != null },
@@ -57,14 +58,28 @@ class VurderYrkesskadeSteg private constructor(
     private fun behøverVurdering(
         flytKontekstMedPerioder: FlytKontekstMedPerioder,
         tidligereVurderinger: TidligereVurderinger,
-        yrkesskadeGrunnlag: YrkesskadeGrunnlag?
+        yrkesskadeGrunnlag: YrkesskadeGrunnlag?,
+        sykdomsgrunnlag: SykdomGrunnlag?
     ): Boolean {
-        return when (flytKontekstMedPerioder.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MIGERING_FRA_ARENA -> {
+        val harUvurdertYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+                && sykdomsgrunnlag?.yrkesskadevurdering == null
+        val kanYrkesskadeEndreAvslag = harUvurdertYrkesskade &&
+                sykdomsgrunnlag?.somSykdomsvurderingstidslinje()
+                    ?.begrensetTil(flytKontekstMedPerioder.rettighetsperiode)
+                    ?.segmenter()
+                    ?.any {
+                        it.verdi.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng()
+                    } == true
 
-                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                    flytKontekstMedPerioder, type()
-                ) && flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() && yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+        val tidligereAvslag =
+            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(flytKontekstMedPerioder, type())
+        return when (flytKontekstMedPerioder.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA -> {
+                (!tidligereAvslag || kanYrkesskadeEndreAvslag) &&
+                        flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() &&
+                        yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
             }
 
             VurderingType.MELDEKORT,
