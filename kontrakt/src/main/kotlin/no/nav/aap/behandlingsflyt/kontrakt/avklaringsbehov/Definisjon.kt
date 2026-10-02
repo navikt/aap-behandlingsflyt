@@ -69,7 +69,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`9003`,
         løsesISteg = StegType.UDEFINERT,
         type = BehovType.VENTEPUNKT,
-        defaultFrist = Period.ofWeeks(4),
+        defaultFrist = Period.ofWeeks(5),
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
             Rolle.SAKSBEHANDLER_NASJONAL
