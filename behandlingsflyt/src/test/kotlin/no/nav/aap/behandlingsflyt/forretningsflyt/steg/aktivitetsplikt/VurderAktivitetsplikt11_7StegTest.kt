@@ -57,8 +57,8 @@ class VurderAktivitetsplikt11_7StegTest {
 
         steg.utfør(kontekst)
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
-        assertThat(avklaringsbehovene.åpne().first().definisjon).isEqualTo(Definisjon.VURDER_BRUDD_11_7)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses().first().definisjon).isEqualTo(Definisjon.VURDER_BRUDD_11_7)
     }
 
     @Test
@@ -89,7 +89,7 @@ class VurderAktivitetsplikt11_7StegTest {
         steg.utfør(kontekst)
         val oppdatertAvklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        assertThat(oppdatertAvklaringsbehov.åpne()).hasSize(0)
+        assertThat(oppdatertAvklaringsbehov.måLøses()).hasSize(0)
         assertThat(oppdatertAvklaringsbehov.alle()).hasSize(1)
     }
 
@@ -101,8 +101,8 @@ class VurderAktivitetsplikt11_7StegTest {
 
         steg.utfør(kontekst)
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
-        assertThat(avklaringsbehovene.åpne().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
 
         ferdigstillSkrivForhåndsvarsel()
 
@@ -133,7 +133,7 @@ class VurderAktivitetsplikt11_7StegTest {
         assertThat(resultat).isEqualTo(Fullført)
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        assertThat(avklaringsbehov.åpne()).hasSize(0)
+        assertThat(avklaringsbehov.måLøses()).hasSize(0)
 
     }
 
@@ -145,8 +145,8 @@ class VurderAktivitetsplikt11_7StegTest {
 
         steg.utfør(kontekst)
         val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        assertThat(avklaringsbehov.åpne()).hasSize(1)
-        assertThat(avklaringsbehov.åpne().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+        assertThat(avklaringsbehov.måLøses()).hasSize(1)
+        assertThat(avklaringsbehov.måLøses().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
 
         ferdigstillSkrivForhåndsvarsel()
 
@@ -169,8 +169,8 @@ class VurderAktivitetsplikt11_7StegTest {
 
         steg.utfør(kontekst)
         var avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
-        assertThat(avklaringsbehovene.åpne().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
         opprettAvklaringsbehovForÅSkriveForhåndsvarsel()
 
         val eksisterendeVurdering =
@@ -181,7 +181,7 @@ class VurderAktivitetsplikt11_7StegTest {
         InMemoryAktivitetsplikt11_7Repository.lagre(kontekst.behandlingId, listOf(oppdatertVurderingOppfylt))
         steg.utfør(kontekst)
         avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        assertThat(avklaringsbehovene.åpne()).hasSize(0)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(0)
 
         val avklaringsbehovForhåndsvarselOppdatert = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
         assertThat(avklaringsbehovForhåndsvarselOppdatert?.status()?.erAvsluttet()).isTrue
