@@ -218,7 +218,8 @@ class StatistikkJobbUtførerTest {
             vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
             mottattDokumenter = emptyList(),
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
-            reserverTilPerAvklaringsbehov = emptyMap()
+            reserverTilPerAvklaringsbehov = emptyMap(),
+            aktivtAvklaringsbehov = null,
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -485,7 +486,8 @@ class StatistikkJobbUtførerTest {
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             reserverTil = "meg",
             mottattDokumenter = emptyList(),
-            reserverTilPerAvklaringsbehov = emptyMap()
+            reserverTilPerAvklaringsbehov = emptyMap(),
+            aktivtAvklaringsbehov = null,
 
         )
 
@@ -668,7 +670,8 @@ class StatistikkJobbUtførerTest {
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             mottattDokumenter = emptyList(),
             reserverTil = "meg",
-            reserverTilPerAvklaringsbehov = emptyMap()
+            reserverTilPerAvklaringsbehov = emptyMap(),
+            aktivtAvklaringsbehov = null,
         )
 
         val hendelse = DefaultJsonMapper.toJson(payload)

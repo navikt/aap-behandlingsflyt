@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -579,4 +580,14 @@ class AvklaringsbehovService(
         other: Tidslinje<B>,
         create: (Periode, Segment<A>) -> Segment<A>
     ): Tidslinje<A> = this.disjoint(other, create)
+
+    fun finnAktivtAvklaringsbehov(behandling: Behandling): Avklaringsbehov? {
+        val flyt = behandling.flyt()
+        val aktivtSteg = flyt.aktivtSteg()
+        return avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+            .alle()
+            .filter { !it.erVentepunkt() && it.skalStoppeHer(aktivtSteg.type()) }
+            .sortedWith(flyt.avklaringsbehovComparator)
+            .firstOrNull()
+    }
 }
