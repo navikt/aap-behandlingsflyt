@@ -129,6 +129,9 @@ object ArenaMigreringMapper {
         )
     }
 
+    /**
+     * I migreringsgruppe 1 er det ikke refusjonskrav. Svarer derfor alltid "nei" på om det finnes refusjonskrav.
+     */
     fun mapRefusjonskravVurdering(): RefusjonkravVurdering {
         return RefusjonkravVurdering(
             harKrav = false,
