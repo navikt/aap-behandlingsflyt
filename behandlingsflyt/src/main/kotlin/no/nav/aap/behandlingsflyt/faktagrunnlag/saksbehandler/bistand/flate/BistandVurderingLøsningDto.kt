@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import java.time.Instant
 import java.time.LocalDate
 
@@ -33,11 +33,16 @@ data class BistandLøsningDto(
             tom = tom
         )
 
-    fun valider() {
+    fun valider(): Validation<BistandLøsningDto> {
         val gyldigAnnenOppfølging =
             (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)
-        if (!gyldigAnnenOppfølging) throw UgyldigForespørselException(
-            "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
-        )
+        return if (gyldigAnnenOppfølging) {
+            Validation.Valid(this)
+        } else {
+            Validation.Invalid(
+                this,
+                "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
+            )
+        }
     }
 }

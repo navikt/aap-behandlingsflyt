@@ -4,6 +4,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.utils.aggregerteFeilmeldinger
+import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarBistandLøser(
@@ -18,7 +21,17 @@ class AvklarBistandLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarBistandsbehovLøsning
     ): LøsningsResultat {
-        løsning.løsningerForPerioder.map { it.valider() }
+
+        løsning.løsningerForPerioder
+            .map { it.valider() }
+            .aggregerteFeilmeldinger({ invalid ->
+                "(Gjelder vurderinger fra: ${
+                    invalid.joinToString(", ") { it.fom.tilNorskFormat() }
+                })"
+            })
+            .takeIf { it.isNotEmpty() }
+            ?.let { throw UgyldigForespørselException(it.joinToString("\n")) }
+
 
         val forrigeBehandlingId = kontekst.kontekst.forrigeBehandlingId
 
