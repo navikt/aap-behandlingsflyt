@@ -68,21 +68,12 @@ class OvergangUføreSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val uførevedtak = hentUførevedtak(kontekst.sakId)
-        if (erAutomatiskOpphør11_18(kontekst, uførevedtak)) {
-            val mottattUførevedtak = requireNotNull(uførevedtak)
-            val opphørsdato = maxOf(
-                mottattUførevedtak.vedtak.virkningsdato,
-                mottattUførevedtak.mottattDato,
-            )
-            lagreAutomatiskOpphør11_18(
-                sakId = kontekst.sakId,
-                behandlingId = kontekst.behandlingId,
-                forrigeBehandlingId = kontekst.forrigeBehandlingId,
-                uførevedtak = mottattUførevedtak.vedtak,
-                opphørsdato = opphørsdato,
-            )
+        val automatiskVurdert = if (kontekst.vurderingType == VurderingType.OVERGANG_UFORE_STANS) {
+            automatiskVurderingOvergangUføre(kontekst)
         } else {
+            false
+        }
+        if (!automatiskVurdert) {
             avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
                 kontekst = kontekst,
                 definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
@@ -122,29 +113,21 @@ class OvergangUføreSteg private constructor(
         return Fullført
     }
 
-    private fun erAutomatiskOpphør11_18(
-        kontekst: FlytKontekstMedPerioder,
-        uførevedtak: MottattUførevedtak?,
-    ): Boolean {
-        if (kontekst.vurderingType != VurderingType.OVERGANG_UFORE_STANS) return false
+    private fun automatiskVurderingOvergangUføre(kontekst: FlytKontekstMedPerioder): Boolean {
+        val mottattUførevedtak = hentUførevedtak(kontekst.sakId) ?: return false
+        val uførevedtak = mottattUførevedtak.vedtak
+        if (uførevedtak.resultat != UførevedtakResultat.INNV) return false
 
-        return uførevedtak?.vedtak?.resultat == UførevedtakResultat.INNV
-    }
-
-    private fun lagreAutomatiskOpphør11_18(
-        sakId: SakId,
-        behandlingId: BehandlingId,
-        forrigeBehandlingId: BehandlingId?,
-        uførevedtak: UførevedtakV0,
-        opphørsdato: LocalDate,
-    ) {
+        val opphørsdato = maxOf(uførevedtak.virkningsdato, mottattUførevedtak.mottattDato)
+        val sakId = kontekst.sakId
+        val behandlingId = kontekst.behandlingId
         log.info("Lagrer automatisk 11-18 for sak $sakId i behandling $behandlingId")
         val vedtakResultat = utledVedtakResultat(
             behandlingId = behandlingId,
             virkningsdato = uførevedtak.virkningsdato,
         )
 
-        val vedtatteVurderinger = forrigeBehandlingId
+        val vedtatteVurderinger = kontekst.forrigeBehandlingId
             ?.let { overgangUføreRepository.hentHvisEksisterer(it) }
             ?.vurderinger
             .orEmpty()
@@ -152,7 +135,7 @@ class OvergangUføreSteg private constructor(
         val harAutomatiskVurderingAllerede = eksisterendeVurderinger.any {
             it.erAutomatiskVurdert() && it.fom == opphørsdato
         }
-        if (harAutomatiskVurderingAllerede) return
+        if (harAutomatiskVurderingAllerede) return true
 
         val automatiskVurdering = OvergangUføreVurdering(
             begrunnelse = "Automatisk opphør på grunn av vedtak om uføre",
@@ -170,6 +153,7 @@ class OvergangUføreSteg private constructor(
             behandlingId = behandlingId,
             overgangUføreVurderinger = (eksisterendeVurderinger + vedtatteVurderinger) + automatiskVurdering,
         )
+        return true
     }
 
     private fun hentUførevedtak(sakId: SakId): MottattUførevedtak? {
