@@ -26,8 +26,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -48,7 +46,6 @@ class IverksettVedtakSteg internal constructor(
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
     private val resultatUtleder: ResultatUtleder,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -73,9 +70,7 @@ class IverksettVedtakSteg internal constructor(
                 .forSak(kontekst.sakId.id)
                 .medPrioritet(Prioritet.LAV)
         )
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.GenererVilkarsvurderingOppsummeringPDF) &&
-            skalGenerereVilkårsvurderingOppsummering(kontekst)
-        ) {
+        if (skalGenerereVilkårsvurderingOppsummering(kontekst)) {
             flytJobbRepository.leggTil(
                 GenererVilkårsvurderingOppsummeringJobbUtfører.nyJobb(
                     behandlingId = kontekst.behandlingId,
@@ -288,7 +283,6 @@ class IverksettVedtakSteg internal constructor(
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
                 gosysService = gosysService,
                 resultatUtleder = resultatUtleder,
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 
