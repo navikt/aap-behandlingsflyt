@@ -12,9 +12,9 @@ import no.nav.aap.bistandsbehov.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.erFunksjoneltLik
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.erFunksjoneltLik
+import no.nav.aap.meldeplikt.Fritaksvurdering
+import no.nav.aap.meldeplikt.MeldepliktRepository
+import no.nav.aap.meldeplikt.erFunksjoneltLik
 import no.nav.aap.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.overgangarbeid.OvergangArbeidVurdering
 import no.nav.aap.overgangarbeid.erFunksjoneltLik

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType

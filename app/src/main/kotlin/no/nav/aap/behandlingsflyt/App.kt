@@ -31,7 +31,7 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.bekreftvurderingeroppfølging.bekreftVurderingerOppfølgingApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
+import no.nav.aap.meldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagApi
 import no.nav.aap.bistandsbehov.bistandsgrunnlagApi
 import no.nav.aap.overgangarbeid.overgangArbeidGrunnlagApi
@@ -78,7 +78,7 @@ import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreins
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
-import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
+import no.nav.aap.meldeplikt.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi

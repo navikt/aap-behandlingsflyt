@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.FØR_VEDTAK
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus.IKKE_MELDT_SEG
+import no.nav.aap.meldeplikt.MeldepliktStatus
+import no.nav.aap.meldeplikt.MeldepliktStatus.FØR_VEDTAK
+import no.nav.aap.meldeplikt.MeldepliktStatus.IKKE_MELDT_SEG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType.BISTANDSBEHOV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status

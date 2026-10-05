@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurdering
+import no.nav.aap.meldeplikt.OverstyringMeldepliktGrunnlag
+import no.nav.aap.meldeplikt.OverstyringMeldepliktRepository
+import no.nav.aap.meldeplikt.OverstyringMeldepliktVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.repository.RepositoryFactory

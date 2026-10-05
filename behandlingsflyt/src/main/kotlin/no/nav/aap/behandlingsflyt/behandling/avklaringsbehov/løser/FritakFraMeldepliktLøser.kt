@@ -2,13 +2,11 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertFritakMeldepliktLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.PeriodisertFritaksvurderingDto
+import no.nav.aap.meldeplikt.Fritaksvurdering
+import no.nav.aap.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDateTime
 
 class FritakFraMeldepliktLøser(
     private val behandlingRepository: BehandlingRepository,

@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.Sa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.utledBarnMedBarnetillegg
