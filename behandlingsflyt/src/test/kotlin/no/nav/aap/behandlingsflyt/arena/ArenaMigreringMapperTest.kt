@@ -23,13 +23,13 @@ class ArenaMigreringMapperTest {
         ),
         diagnoser = listOf(
             ArenaDiagnose(
-                kodeverk = "ICD10",
+                kodeverk = "ICD-10",
                 kode = "M797",
                 type = "HOVED",
                 opprettet = LocalDate.of(2016, 1, 1),
             ),
             ArenaDiagnose(
-                kodeverk = "ICD10",
+                kodeverk = "ICD-10",
                 kode = "M80",
                 type = "BI",
                 opprettet = LocalDate.of(2016, 1, 1),
@@ -95,6 +95,24 @@ class ArenaMigreringMapperTest {
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("Bidiagnoser har ikke samme kodeverk")
+    }
+
+    @Test
+    fun `mapSykdomsvurdering feiler når hoveddiagnose har ikke støttet kodeverk`() {
+        val medAvvikendeBidiagnose = fraArena.copy(
+            diagnoser = fraArena.diagnoser + ArenaDiagnose(
+                kodeverk = "ICPC-1",
+                kode = "L84",
+                type = "HOVED",
+                opprettet = LocalDate.of(2026, 1, 1),
+            )
+        )
+
+        assertThatThrownBy {
+            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+        }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Hoveddiagnose har ikke støttet kodeverk i sykdomsvurdering fra Arena, støtter kun ICPC-2 og ICD-10")
     }
 
     @Test

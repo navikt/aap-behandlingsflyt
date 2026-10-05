@@ -148,7 +148,7 @@ class Avklaringsbehov(
         }
         if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert
             || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering
-            || perioderKanVurderes != siste.perioderKanVurderes 
+            || perioderKanVurderes != siste.perioderKanVurderes
             || gradBehov != siste.gradBehov
         ) {
             historikk += siste.copy(
@@ -156,6 +156,28 @@ class Avklaringsbehov(
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                 perioderKanVurderes = perioderKanVurderes,
                 gradBehov = gradBehov,
+                tidsstempel = LocalDateTime.now()
+            )
+            return true
+        }
+        return false
+    }
+
+    internal fun oppdaterVentebehovHvisFristEndret(
+        nyFrist: LocalDate,
+        bruker: Bruker,
+    ): Boolean {
+        require(definisjon.erVentebehov()) {
+            "Kan ikke oppdatere frist for et behov som ikke er ventebehov"
+        }
+        val siste = historikk.last()
+        require(siste.status.erÅpent()) {
+            "Prøvde å oppdatere et lukket ventebehov"
+        }
+        if (nyFrist != siste.frist) {
+            historikk += siste.copy(
+                frist = nyFrist,
+                endretAv = bruker,
                 tidsstempel = LocalDateTime.now()
             )
             return true

@@ -322,7 +322,7 @@ fun NormalOpenAPIRoute.saksApi(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
             ) { req ->
                 val saksnummer = req.saksnummer
-                val (sak, behandlinger, søknadErTrukket) = dataSource.transaction(readOnly = true) { connection ->
+                val (sak, behandlinger, søknadErTrukket, virkningstidspunkt) = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     SakOgBehandlingService(repositoryProvider, gatewayProvider).finnSakOgBehandlinger(Saksnummer(saksnummer))
                 }
@@ -335,6 +335,7 @@ fun NormalOpenAPIRoute.saksApi(
                         ident = sak.person.aktivIdent().identifikator,
                         behandlinger = behandlinger,
                         status = sak.status(),
+                        virkningstidspunkt = virkningstidspunkt,
                         søknadErTrukket = søknadErTrukket
                     )
                 )
@@ -478,5 +479,3 @@ fun NormalOpenAPIRoute.saksApi(
         }
     }
 }
-
-
