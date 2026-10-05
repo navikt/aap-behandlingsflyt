@@ -76,7 +76,7 @@ class AvklarSykdomLøser(
         sykdomLøsning.segmenter().forEach { segment ->
             val feil = segment.verdi.validerKonsistensForSykdom(harYrkesskade)
             if (feil.isNotEmpty()) {
-                logWarning(harYrkesskade, behandling, segment)
+                logWarning(harYrkesskade, behandling, segment, feil)
 
                 val meldinger = feil.map { feiltype ->
                     when (feiltype) {
@@ -107,19 +107,27 @@ class AvklarSykdomLøser(
     private fun logWarning(
         harYrkesskade: Boolean,
         behandling: Behandling,
-        segment: Segment<Sykdomsvurdering>
+        segment: Segment<Sykdomsvurdering>,
+        feil: List<SykdomsvurderingValideringsfeil>,
     ) {
+        val vurdering = segment.verdi
+
         log.warn(
-            "Sykdomsvurderingen er ikke konsistent med yrkesskade. " +
-                    "harYrkesskade: $harYrkesskade, " +
-                    "typeBehandling: ${behandling.typeBehandling()}, " +
-                    "sykdomsvurdering: ${
-                        segment.verdi.copy(
-                            begrunnelse = "",
-                            yrkesskadeBegrunnelse = "",
-                            diagnose = null,
-                        )
-                    }"
+            "Sykdomsvurdering er inkonsistent med yrkesskade. " +
+                    "typeBehandling={}, harYrkesskade={}, periode={}, valideringsfeil={}, " +
+                    "harSkadeSykdomEllerLyte={}, harNedsattArbeidsevne={}, " +
+                    "erNedsettelseIArbeidsevneMerEnnHalvparten={}, " +
+                    "erSkadeSykdomEllerLyteVesentligdel={}, " +
+                    "erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense={}",
+            behandling.typeBehandling(),
+            harYrkesskade,
+            segment.periode.toHumanReadable(),
+            feil.joinToString(),
+            vurdering.harSkadeSykdomEllerLyte,
+            vurdering.harNedsattArbeidsevne,
+            vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten,
+            vurdering.erSkadeSykdomEllerLyteVesentligdel,
+            vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
         )
     }
 
