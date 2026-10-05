@@ -78,9 +78,10 @@ class AvklarHelseinstitusjonLøser(
     ): List<HelseinstitusjonVurdering> {
         val forrigeGrunnlag =
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
+        val nåværendeGrunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
 
         val eksisterendeTidslinje =
-            byggTidslinjeForHelseoppholdvurderingerBegrensetTilOpphold(forrigeGrunnlag, behandling.id)
+            byggTidslinjeForHelseoppholdvurderingerBegrensetTilOpphold(forrigeGrunnlag, nåværendeGrunnlag)
 
         if (nyeVurderinger.isEmpty()) {
             return eksisterendeTidslinje.segmenter().map {
@@ -132,10 +133,8 @@ class AvklarHelseinstitusjonLøser(
 
     private fun byggTidslinjeForHelseoppholdvurderingerBegrensetTilOpphold(
         forrigeGrunnlag: InstitusjonsoppholdGrunnlag?,
-        nåværendeBehandlingId: BehandlingId
+        nåværendeGrunnlag: InstitusjonsoppholdGrunnlag?
     ): Tidslinje<HelseoppholdVurderingData> {
-        val nåværendeGrunnlag = helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)
-        val nåværendeOppholdTom = nåværendeGrunnlag?.oppholdene?.opphold?.maxOfOrNull { it.periode.tom }
         val tidslinje = forrigeGrunnlag?.helseoppholdvurderinger?.tilTidslinje()
             ?.mapValue {
                 HelseoppholdVurderingData(
@@ -149,23 +148,33 @@ class AvklarHelseinstitusjonLøser(
                 )
             }.orEmpty()
 
-        if (nåværendeOppholdTom == null) return tidslinje
+        val forrigeOpphold = forrigeGrunnlag?.oppholdene?.opphold.orEmpty()
+        val nåværendeOpphold = nåværendeGrunnlag?.oppholdene?.opphold.orEmpty()
 
-        val begrensetSegmenter = tidslinje.segmenter()
-            .filter { it.periode.fom <= nåværendeOppholdTom }
-            .map { segment ->
-                if (segment.periode.tom > nåværendeOppholdTom)
-                    Segment(
-                        Periode(segment.periode.fom, nåværendeOppholdTom),
-                        segment.verdi.copy(
-                            vurdertTidspunkt = LocalDateTime.now()
-                        )
-                    )
-                else
-                    segment
+        // Mangler vi oppholdsgrunnlag for enten forrige eller nåværende, behold gammel tidslinje uendret
+        if (forrigeOpphold.isEmpty() || nåværendeOpphold.isEmpty()) return tidslinje
+
+        // Match hvert nåværende opphold mot forrige opphold med SAMME fom (startdato).
+        // Dette identifiserer om oppholdet er en videreføring (forkortet/forlenget) av et
+        // eksisterende opphold, eller om det er et helt nytt opphold som tilfeldigvis
+        // ligger innenfor den gamle oppholdets (evt. løpende) tidsrom.
+        val gjenkjenteOppholdsperioder = nåværendeOpphold.mapNotNull { nå ->
+            val matchendeForrige = forrigeOpphold.find { it.periode.fom == nå.periode.fom }
+            matchendeForrige?.let {
+                Periode(nå.periode.fom, minOf(it.periode.tom, nå.periode.tom))
             }
+        }
 
-        return if (begrensetSegmenter.isEmpty()) Tidslinje(emptyList()) else Tidslinje(begrensetSegmenter)
+        if (gjenkjenteOppholdsperioder.isEmpty()) return Tidslinje(emptyList())
+
+        val gjenkjentTidslinje = gjenkjenteOppholdsperioder
+            .map { Tidslinje(it, Unit) }
+            .fold(Tidslinje<Unit>()) { acc, t -> acc.kombiner(t, StandardSammenslåere.prioriterHøyreSideCrossJoin()) }
+            .komprimer()
+
+        return tidslinje.kombiner(gjenkjentTidslinje, StandardSammenslåere.kunVenstre())
+            .map { it.copy(vurdertTidspunkt = LocalDateTime.now()) }
+            .komprimer()
     }
 
     private fun validerReduksjonsdatoForInstitusjonsopphold(
