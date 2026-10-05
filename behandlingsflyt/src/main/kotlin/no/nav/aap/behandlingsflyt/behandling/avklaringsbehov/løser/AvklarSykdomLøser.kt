@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -63,7 +64,7 @@ class AvklarSykdomLøser(
     private fun validerSykdomOgYrkesskadeKonsistens(
         behandling: Behandling,
         gjeldendeSykdomsvurderinger: List<Sykdomsvurdering>,
-    ) {
+    ): Validation<List<Sykdomsvurdering>> {
         val sykdomLøsning = SykdomGrunnlag(
             sykdomsvurderinger = gjeldendeSykdomsvurderinger,
             yrkesskadevurdering = null
@@ -92,9 +93,11 @@ class AvklarSykdomLøser(
                     }
                 }
 
-                throw UgyldigForespørselException(meldinger.joinToString(" "))
+                return Validation.Invalid(gjeldendeSykdomsvurderinger, meldinger.joinToString(" "))
             }
         }
+
+        return Validation.Valid(gjeldendeSykdomsvurderinger)
     }
 
     private fun logWarning(
