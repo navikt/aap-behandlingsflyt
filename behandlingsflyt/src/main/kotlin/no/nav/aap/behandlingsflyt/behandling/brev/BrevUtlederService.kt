@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
@@ -395,7 +396,7 @@ class BrevUtlederService(
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
         val samordning = if (unleashGateway.isEnabled(BehandlingsflytFeature.SamordningFaktagrunnlagBrev)) {
-            hentForholdTilAndreYtelserForBrev(behandling.id)
+            hentForholdTilAndreYtelserForBrev(behandling.id, vedtak)
         } else {
             null
         }
@@ -720,11 +721,11 @@ class BrevUtlederService(
             .any { it.rettighetsType == rettighetsType }
     }
 
-    fun hentForholdTilAndreYtelserForBrev(behandlingId: BehandlingId): ForholdTilAndreYtelser? {
+    fun hentForholdTilAndreYtelserForBrev(behandlingId: BehandlingId, vedtak: Vedtak): ForholdTilAndreYtelser? {
         val samordningAndreYtelser = hentSamordningAndreYtelser(behandlingId)
         val samordningUføre = hentSisteSamordningUføre(behandlingId)
         val reduksjonArbeidsgiver = hentReduksjonArbeidsgiver(behandlingId)
-        val refusjonskravTjenestepensjon = hentRefusjonskravTjenestepensjon(behandlingId)
+        val refusjonskravTjenestepensjon = hentRefusjonskravTjenestepensjon(behandlingId, vedtak)
         val sykestipend = hentSykestipend(behandlingId)
         val samordningBarnepensjon = hentSamordningBarnepensjon(behandlingId)
         val fradragAndreYtelser = hentFradragAndreYtelser(behandlingId)
@@ -801,13 +802,29 @@ class BrevUtlederService(
         } ?: emptyList()
     }
 
-    private fun hentRefusjonskravTjenestepensjon(behandlingId: BehandlingId): RefusjonskravTjenestepensjon? {
+    private fun hentRefusjonskravTjenestepensjon(
+        behandlingId: BehandlingId,
+        vedtak: Vedtak,
+    ): RefusjonskravTjenestepensjon? {
         return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
-            RefusjonskravTjenestepensjon(
-                skalEtterbetalingHoldesIgjen = vurdering.harKrav,
-                fraOgMed = vurdering.fom,
-                tilOgMed = vurdering.tom,
-            )
+            if (!vurdering.harKrav) {
+                RefusjonskravTjenestepensjon(
+                    skalEtterbetalingHoldesIgjen = false,
+                    fraOgMed = null,
+                    tilOgMed = null,
+                )
+            } else {
+                val fraOgMed = checkNotNull(vedtak.virkningstidspunkt) {
+                    "Vedtak mangler virkningstidspunkt"
+                }
+                val tilOgMed = vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt)
+
+                RefusjonskravTjenestepensjon(
+                    skalEtterbetalingHoldesIgjen = true,
+                    fraOgMed = fraOgMed,
+                    tilOgMed = tilOgMed,
+                )
+            }
         }
     }
 

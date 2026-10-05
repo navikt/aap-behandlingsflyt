@@ -1,8 +1,15 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
+import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
+import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.arena.tilDomene
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
@@ -32,13 +39,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
@@ -59,14 +66,14 @@ import java.util.UUID
 
 class KravStegTest {
 
-    private lateinit var behandlingService: BehandlingService
+    private lateinit var sakService: SakService
     private lateinit var steg: KravSteg
     private lateinit var arenaMigreringService: ArenaMigreringService
     private var arenaMigreringForSak: ArenaMigrering? = null
 
     @BeforeEach
     fun setup() {
-        behandlingService = mockk()
+        sakService = mockk()
         arenaMigreringForSak = null
         InMemoryArenaMigreringsdataRepository.reset()
         arenaMigreringService = ArenaMigreringService(
@@ -82,9 +89,11 @@ class KravStegTest {
             mottattDokumentRepository = InMemoryMottattDokumentRepository,
             avklaringsbehovService = mockk(relaxed = true),
             sakRepository = InMemorySakRepository,
-            behandlingService = behandlingService,
+            sakService = sakService,
             arenaMigreringService = arenaMigreringService,
         )
+
+        every { sakService.overstyrRettighetsperioden(any(), any(), any()) } just Runs
     }
 
     @Test
@@ -95,7 +104,7 @@ class KravStegTest {
             mottattDokumentRepository = InMemoryMottattDokumentRepository,
             avklaringsbehovService = mockk(relaxed = true),
             sakRepository = InMemorySakRepository,
-            behandlingService = behandlingService,
+            sakService = sakService,
             arenaMigreringService = arenaMigreringService,
         )
         val sak = opprettInMemorySak()
@@ -115,7 +124,7 @@ class KravStegTest {
             mottattDokumentRepository = InMemoryMottattDokumentRepository,
             avklaringsbehovService = mockk(relaxed = true),
             sakRepository = InMemorySakRepository,
-            behandlingService = behandlingService,
+            sakService = sakService,
             arenaMigreringService = arenaMigreringService,
         )
         val sak = opprettInMemorySak()
@@ -201,16 +210,114 @@ class KravStegTest {
     }
 
 
+    @Test
+    fun `migrering fra Arena - oppdaterer MigrertKrav når data fra Arena er endret`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+
+        val førsteRespons = kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+        )
+        val andreRespons = kravResponse(
+            søknadsdato = LocalDate.of(2025, 2, 3),
+            migreringsdato = LocalDate.of(2026, 9, 21),
+            kvote = 120,
+        )
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returnsMany listOf(førsteRespons, andreRespons)
+        val steg = stegMedAutomatiskMigrering(arenaOppslagGateway = arenaOppslagGateway)
+        val kontekst = migreringKontekst(behandling)
+
+        steg.utfør(kontekst)
+
+        val førsteKrav = InMemoryKravRepository.hent(behandling.id).vurderinger.single() as MigrertKrav
+        assertThat(førsteKrav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 1, 6))
+        assertThat(førsteKrav.muligRettFra).isEqualTo(LocalDate.of(2026, 9, 28))
+        assertThat(førsteKrav.resterendeKvoteOrdinær).isEqualTo(150)
+        assertThat(førsteKrav.arenaSaksnummer).isEqualTo("2016-123456")
+
+        steg.utfør(kontekst)
+
+        val oppdatertKrav = InMemoryKravRepository.hent(behandling.id).vurderinger.single() as MigrertKrav
+        assertThat(oppdatertKrav.referanse).isNotEqualTo(førsteKrav.referanse)
+        assertThat(oppdatertKrav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 2, 3))
+        assertThat(oppdatertKrav.muligRettFra).isEqualTo(LocalDate.of(2026, 9, 21))
+        assertThat(oppdatertKrav.resterendeKvoteOrdinær).isEqualTo(120)
+        assertThat(oppdatertKrav.arenaSaksnummer).isEqualTo("2016-123456")
+        assertThat(oppdatertKrav.vurdertIBehandling).isEqualTo(behandling.id)
+
+        verify(exactly = 1) {
+            sakService.overstyrRettighetsperioden(sak.id, LocalDate.of(2026, 9, 28), any())
+        }
+        verify(exactly = 1) {
+            sakService.overstyrRettighetsperioden(sak.id, LocalDate.of(2026, 9, 21), any())
+        }
+    }
+
+    @Test
+    fun `migrering fra Arena - lagrer ikke på nytt når data fra Arena er uendret`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returns kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+        )
+        val kravRepository = mockk<KravRepository> {
+            every { hentHvisEksisterer(any()) } answers { InMemoryKravRepository.hentHvisEksisterer(firstArg()) }
+            every { lagre(any(), any()) } answers { InMemoryKravRepository.lagre(firstArg(), secondArg()) }
+        }
+        val steg = stegMedAutomatiskMigrering(
+            arenaOppslagGateway = arenaOppslagGateway,
+            kravRepository = kravRepository,
+        )
+        val kontekst = migreringKontekst(behandling)
+
+        steg.utfør(kontekst)
+        val kravEtterFørsteKjøring = InMemoryKravRepository.hent(behandling.id).vurderinger.single()
+        verify(exactly = 1) { kravRepository.lagre(behandling.id, any()) }
+
+        steg.utfør(kontekst)
+
+        verify(exactly = 1) { kravRepository.lagre(any(), any()) }
+        verify(exactly = 1) { sakService.overstyrRettighetsperioden(any(), any(), any()) }
+        assertThat(InMemoryKravRepository.hent(behandling.id).vurderinger.single()).isEqualTo(kravEtterFørsteKjøring)
+    }
+
+    private fun kravResponse(søknadsdato: LocalDate, migreringsdato: LocalDate, kvote: Int) = KravResponse(
+        lopenr = 123456,
+        aar = 2016,
+        soknadsdato = søknadsdato,
+        migreringsdato = migreringsdato,
+        gjenstaaendeKvote = GjenstaaendeKvote(ordinaer = kvote),
+    )
+
     private fun stegMedAutomatiskMigrering(
         avklaringsbehovService: AvklaringsbehovService = mockk(relaxed = true),
+        arenaOppslagGateway: ArenaOppslagGateway? = null,
+        kravRepository: KravRepository = InMemoryKravRepository,
     ) = KravSteg(
         unleashGateway = KravMigreringAutomatiskUnleash,
-        kravRepository = InMemoryKravRepository,
+        kravRepository = kravRepository,
         mottattDokumentRepository = InMemoryMottattDokumentRepository,
         avklaringsbehovService = avklaringsbehovService,
         sakRepository = InMemorySakRepository,
-        behandlingService = behandlingService,
-        arenaMigreringService = arenaMigreringService,
+        sakService = sakService,
+        arenaMigreringService = arenaOppslagGateway?.let {
+            ArenaMigreringService(
+                arenaMigreringRepository = mockk {
+                    every { hentForSakHvisEksisterer(any()) } answers { arenaMigreringForSak }
+                },
+                arenaMigreringsdataRepository = InMemoryArenaMigreringsdataRepository,
+                arenaOppslagGateway = it,
+            )
+        } ?: arenaMigreringService,
     )
 
     private fun migreringKontekst(behandling: Behandling) = flytKontekstMedPerioder {
@@ -232,8 +339,6 @@ class KravStegTest {
         val søknadsdato = LocalDate.of(2024, 1, 15)
         leggTilSøknad(behandling.id, sak.id, søknadsdato.atStartOfDay())
 
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
@@ -253,8 +358,6 @@ class KravStegTest {
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 2, 1).atStartOfDay())
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 3, 1).atStartOfDay())
 
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
@@ -271,9 +374,6 @@ class KravStegTest {
         leggTilSøknad(forrigeBehandling.id, sak.id, LocalDate.of(2024, 5, 1).atStartOfDay())
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2025, 5, 1).atStartOfDay())
 
-        every { behandlingService.utledFaktiskBehandlingstype(forrigeBehandling.id) } returns TypeBehandling.Førstegangsbehandling
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Revurdering
-        
         steg.utfør(flytKontekstMedPerioder { this.behandling = forrigeBehandling })
         val vurderingerFørstegangsbehandling = InMemoryKravRepository.hent(forrigeBehandling.id).vurderinger
         assertThat(vurderingerFørstegangsbehandling).hasSize(1)
@@ -308,8 +408,6 @@ class KravStegTest {
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 1, 1).atStartOfDay())
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 2, 1).atStartOfDay())
 
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
@@ -339,8 +437,6 @@ class KravStegTest {
         InMemoryKravRepository.lagre(behandling.id, setOf(overstyrtKrav))
 
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 3, 1).atStartOfDay())
-
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
 
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
@@ -379,8 +475,6 @@ class KravStegTest {
 
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 1, 1).atStartOfDay())
 
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
@@ -395,8 +489,6 @@ class KravStegTest {
         val sak = opprettInMemorySak()
         val behandling = opprettFørstegangsbehandling(sak.id)
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 1, 1).atStartOfDay())
-
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
 
         val kontekst = flytKontekstMedPerioder { this.behandling = behandling }
         steg.utfør(kontekst)
@@ -414,8 +506,6 @@ class KravStegTest {
         val behandling = opprettRevurdering(sak.id, forrigeBehandling.id)
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 5, 1).atStartOfDay())
 
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Revurdering
-
         // Ingen kopier-kall – simulerer at forrige behandling ikke er migrert ennå
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
@@ -430,8 +520,6 @@ class KravStegTest {
         val legeerklæringDato = LocalDate.of(2024, 2, 1)
         leggTilSøknad(behandling.id, sak.id, søknadDato.atStartOfDay())
         leggTilLegeerklæring(behandling.id, sak.id, legeerklæringDato.atStartOfDay())
-
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
 
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
@@ -449,9 +537,6 @@ class KravStegTest {
 
         val gammeltSøknadDato = LocalDate.of(2024, 2, 1)
         val nyttSøknadDato = LocalDate.of(2024, 1, 1) // eldre
-
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-        every { behandlingService.utledFaktiskBehandlingstype(revurdering.id) } returns TypeBehandling.Revurdering
 
         leggTilSøknad(behandling.id, sak.id, gammeltSøknadDato.atStartOfDay())
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
@@ -481,9 +566,6 @@ class KravStegTest {
         val gammeltSøknadDato = LocalDate.of(2024, 2, 1)
         val overstyrtDato = LocalDate.of(2023, 6, 1)
         val nyttSøknadDato = LocalDate.of(2024, 1, 15) // eldre enn søknadsdato, men nyere enn overstyrtDato
-
-        every { behandlingService.utledFaktiskBehandlingstype(behandling.id) } returns TypeBehandling.Førstegangsbehandling
-        every { behandlingService.utledFaktiskBehandlingstype(revurdering.id) } returns TypeBehandling.Revurdering
 
         leggTilSøknad(behandling.id, sak.id, gammeltSøknadDato.atStartOfDay())
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })

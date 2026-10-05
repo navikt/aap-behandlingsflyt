@@ -6,9 +6,9 @@ plugins {
 dependencies {
     implementation(project(":behandlingsflyt"))
 
-    implementation(libs.coroutinesCore)
-    implementation(libs.opentelemetryInstrumentationAnnotations)
-    implementation(libs.logbackClassic)
+    implementation(kelvinLibs.coroutines.core)
+    implementation(kelvinLibs.opentelemetry.annotations)
+    implementation(kelvinLibs.logback.classic)
     implementation(libs.verdityper)
     implementation(libs.dbconnect)
     implementation(libs.dbmigrering)
@@ -17,15 +17,15 @@ dependencies {
     implementation(libs.tidslinje)
     implementation(libs.apiInternKontrakt)
 
-    implementation(libs.caffeine)
-    implementation("io.getunleash:unleash-client-java:12.3.0")
-    implementation("no.bekk.bekkopen:nocommons:0.17.0")
+    implementation(kelvinLibs.caffeine)
+    implementation(kelvinLibs.unleash.client.java)
+    implementation(libs.bekk.nocommons)
 
     testImplementation(project(":lib-test"))
     testImplementation(libs.dbtest)
-    testImplementation(libs.mockk)
+    testImplementation(kelvinLibs.mockk)
 
-    testRuntimeOnly(libs.junitPlatformLauncher)
-    testImplementation(libs.bundles.junit)
+    testRuntimeOnly(kelvinLibs.junit.platform.launcher)
+    testImplementation(kelvinLibs.bundles.junit)
     testImplementation(kotlin("test"))
 }
