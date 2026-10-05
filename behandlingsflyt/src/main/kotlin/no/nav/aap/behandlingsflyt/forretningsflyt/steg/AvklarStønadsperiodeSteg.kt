@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.erSystembruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
@@ -50,7 +51,7 @@ class AvklarStønadsperiodeSteg(
             gjeldendeRelevanteKrav.filter { krav ->
                 val vedtatteStønadsperiodeForVurdering = vedtatteStønadsperiodeGrunnlag?.gjeldendeVurderinger()?.firstOrNull { it.referanse == krav.referanse }
                 vedtatteStønadsperiodeForVurdering == null || (
-                        vedtatteStønadsperiodeForVurdering.vurdertAv == SYSTEMBRUKER &&
+                        vedtatteStønadsperiodeForVurdering.vurdertAv.erSystembruker() &&
                                 vedtatteStønadsperiodeForVurdering.startDato != krav.muligRettFra
                         )
             }
