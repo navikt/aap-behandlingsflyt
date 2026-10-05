@@ -158,7 +158,7 @@ class EtableringEgenVirksomhetLøserTest {
                 EtableringEgenVirksomhetVurdering(
                     begrunnelse = "Opprinnelig vurdering",
                     fom = vurderingFom,
-                    tom = vurderingFom.plusMonths(2),
+                    tom = vurderingFom.plusMonths(2).minusDays(1),
                     vurdertAv = Bruker("saks"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = førstegangsbehandling.id,
@@ -180,7 +180,7 @@ class EtableringEgenVirksomhetLøserTest {
                     fom = vurderingFom,
                     fase = EtableringFase.OPPSTART,
                     erRegistrertINødvendigeOffentligeRegister = true,
-                    tom = vurderingFom.plusMonths(3),
+                    tom = vurderingFom.plusMonths(3).minusDays(1),
                 )
             )
         )
@@ -197,7 +197,7 @@ class EtableringEgenVirksomhetLøserTest {
         assertThat(lagredeVurderinger).hasSize(2)
         assertThat(gjeldendeVurdering.fase).isEqualTo(EtableringFase.OPPSTART)
         assertThat(gjeldendeVurdering.fom).isEqualTo(vurderingFom)
-        assertThat(gjeldendeVurdering.tom).isEqualTo(vurderingFom.plusMonths(3))
+        assertThat(gjeldendeVurdering.tom).isEqualTo(vurderingFom.plusMonths(3).minusDays(1))
     }
 
     @Test

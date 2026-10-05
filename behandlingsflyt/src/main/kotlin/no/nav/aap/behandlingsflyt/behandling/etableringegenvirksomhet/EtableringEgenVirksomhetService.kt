@@ -113,9 +113,15 @@ class EtableringEgenVirksomhetService(
                     ?.vurderinger
                     .orEmpty())
 
+        val gamleVurderingerUtenOverstyrte = gamleVurderinger.filterNot { gammel ->
+            justerteVurderinger.any { ny -> ny.fase == gammel.fase && ny.fom == gammel.fom }
+        }
+
+        val aktiveVurderingerForValidering = (gamleVurderingerUtenOverstyrte + justerteVurderinger)
+
         val skalValideres = justerteVurderinger.filter { it.vurdertIBehandling == behandlingId }.toSet()
 
-        val sisteVurderingPerFase = (gamleVurderinger + justerteVurderinger)
+        val sisteVurderingPerFase = aktiveVurderingerForValidering
             .filter { it.fase != null }
             .groupBy { it.fase }
             .mapNotNull { (_, vurderinger) -> vurderinger.maxByOrNull { it.fom } }
@@ -127,7 +133,7 @@ class EtableringEgenVirksomhetService(
                 vurdering.fase == null -> vurdering
                 vurdering in sisteVurderingPerFase -> vurdering.copy(
                     tom = beregnTomForSistePeriode(
-                        vurderinger = gamleVurderinger + justerteVurderinger,
+                        vurderinger = aktiveVurderingerForValidering,
                         sisteVurdering = vurdering
                     )
                 )
@@ -136,7 +142,7 @@ class EtableringEgenVirksomhetService(
             }
         }
 
-        val gjeldendeVurderinger = (gamleVurderinger + beregnedeVurderinger)
+        val gjeldendeVurderinger = (gamleVurderingerUtenOverstyrte + beregnedeVurderinger)
             .gjeldendeVurderinger()
             .verdier().toSet()
 
