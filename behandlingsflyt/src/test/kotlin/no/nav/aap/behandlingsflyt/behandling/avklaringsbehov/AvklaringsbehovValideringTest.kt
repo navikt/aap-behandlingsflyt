@@ -111,6 +111,8 @@ class AvklaringsbehovValideringTest {
                 Periode(1 januar 2021, 1 februar 2021),
                 Periode(1 mars 2021, 1 april 2021)
             ),
+            perioderKanVurderes = setOf(Periode(1 januar 2021, 1 januar 2022)),
+            gradBehov = null,
             definisjon =
                 avklaringsbehov.definisjon, funnetISteg = avklaringsbehov.funnetISteg
         )
@@ -175,6 +177,8 @@ class AvklaringsbehovValideringTest {
         avklaringsbehovene.leggTil(
             perioderVedtaketBehøverVurdering = emptySet(),
             perioderSomIkkeErTilstrekkeligVurdert = null,
+            perioderKanVurderes = null,
+            gradBehov = null,
             definisjon = avklaringsbehov.definisjon,
             funnetISteg = avklaringsbehov.funnetISteg,
         )
@@ -218,6 +222,8 @@ class AvklaringsbehovValideringTest {
         avklaringsbehovene.leggTil(
             perioderVedtaketBehøverVurdering = null,
             perioderSomIkkeErTilstrekkeligVurdert = null,
+            perioderKanVurderes = null,
+            gradBehov = null,
             definisjon = avklaringsbehov.definisjon,
             funnetISteg = avklaringsbehov.funnetISteg
         )
@@ -264,6 +270,8 @@ class AvklaringsbehovValideringTest {
                 Periode(1 januar 2021, 1 februar 2021),
                 Periode(1 mars 2021, 1 april 2021)
             ),
+            perioderKanVurderes = null,
+            gradBehov = null,
             definisjon =
                 avklaringsbehov.definisjon, funnetISteg = avklaringsbehov.funnetISteg
         )

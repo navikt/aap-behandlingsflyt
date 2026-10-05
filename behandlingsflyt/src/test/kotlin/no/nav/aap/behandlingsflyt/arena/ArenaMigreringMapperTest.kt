@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
@@ -11,7 +12,7 @@ import java.time.LocalDate
 
 class ArenaMigreringMapperTest {
 
-    private val fraArena = ArenaSykdomsvurderingResponse(
+    private val fraArena = ArenaSykdomsvurdering(
         vedtakId = 1,
         begrunnelse = "Bruker oppfyller vilkåret for 11-5",
         vilkar = listOf(
@@ -21,15 +22,15 @@ class ArenaMigreringMapperTest {
         ),
         diagnoser = listOf(
             ArenaDiagnose(
-                kodeverk = "ICD10",
+                kodeverk = "ICD-10",
                 kode = "M797",
-                type = ArenaDiagnoseType.HOVEDDIAGNOSE,
+                type = "HOVED",
                 opprettet = LocalDate.of(2016, 1, 1),
             ),
             ArenaDiagnose(
-                kodeverk = "ICD10",
+                kodeverk = "ICD-10",
                 kode = "M80",
-                type = ArenaDiagnoseType.BIDIAGNOSE,
+                type = "BI",
                 opprettet = LocalDate.of(2016, 1, 1),
             )
         )
@@ -46,7 +47,7 @@ class ArenaMigreringMapperTest {
             vurderingenGjelderFra = fom,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo("Automatisk migrert fra Arena\n\n${fraArena.begrunnelse}")
+        assertThat(vurdering.begrunnelse).isEqualTo(fraArena.begrunnelse)
         assertThat(vurdering.vurderingenGjelderFra).isEqualTo(fom)
         assertThat(vurdering.vurderingenGjelderTil).isNull()
         assertThat(vurdering.diagnose?.kodeverk).isEqualTo("ICD10")
@@ -66,7 +67,7 @@ class ArenaMigreringMapperTest {
     @Test
     fun `mapSykdomsvurdering feiler med tydelig melding når Arena mangler hoveddiagnose`() {
         val utenHoveddiagnose = fraArena.copy(
-            diagnoser = fraArena.diagnoser.filter { it.type == ArenaDiagnoseType.BIDIAGNOSE }
+            diagnoser = fraArena.diagnoser.filter { it.type == "BI" }
         )
 
         assertThatThrownBy {
@@ -74,6 +75,42 @@ class ArenaMigreringMapperTest {
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("hoveddiagnose")
+    }
+
+    @Test
+    fun `mapSykdomsvurdering feiler når bidiagnose har annet kodeverk enn hoveddiagnose`() {
+        val medAvvikendeBidiagnose = fraArena.copy(
+            diagnoser = fraArena.diagnoser + ArenaDiagnose(
+                kodeverk = "ICPC2",
+                kode = "L84",
+                type = "BI",
+                opprettet = LocalDate.of(2016, 1, 1),
+            )
+        )
+
+        assertThatThrownBy {
+            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+        }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Bidiagnoser har ikke samme kodeverk")
+    }
+
+    @Test
+    fun `mapSykdomsvurdering feiler når hoveddiagnose har ikke støttet kodeverk`() {
+        val medAvvikendeBidiagnose = fraArena.copy(
+            diagnoser = fraArena.diagnoser + ArenaDiagnose(
+                kodeverk = "ICPC-1",
+                kode = "L84",
+                type = "HOVED",
+                opprettet = LocalDate.of(2026, 1, 1),
+            )
+        )
+
+        assertThatThrownBy {
+            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+        }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Hoveddiagnose har ikke støttet kodeverk i sykdomsvurdering fra Arena, støtter kun ICPC-2 og ICD-10")
     }
 
     @Test
@@ -93,5 +130,39 @@ class ArenaMigreringMapperTest {
         assertThat(vurdering.skalVurdereAapIOvergangTilArbeid).isNull()
         assertThat(vurdering.vurdertAv).isEqualTo(SYSTEMBRUKER)
         assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
+    }
+
+    @Test
+    fun `ArenaMigreringMapper mapper ArenaKrav til MigrertKrav`() {
+        val behandlingId = BehandlingId(1)
+        val fraArena = ArenaKrav(
+            arenaSaksnummer = "2016-123456",
+            søknadsdato = LocalDate.of(2025, 1, 15),
+            migreringsdato = LocalDate.of(2025, 12, 1),
+            gjenståendeKvoteOrdinær = 150,
+        )
+
+        val krav = ArenaMigreringMapper.mapMigrertKrav(fraArena, behandlingId)
+
+        assertThat(krav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 1, 15))
+        assertThat(krav.muligRettFra).isEqualTo(LocalDate.of(2025, 12, 1))
+        assertThat(krav.arenaSaksnummer).isEqualTo("2016-123456")
+        assertThat(krav.rettighetstype).isEqualTo(MigrertRettighetstype.ORDINÆR)
+        assertThat(krav.resterendeKvoteOrdinær).isEqualTo(150)
+        assertThat(krav.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(krav.vurdertIBehandling).isEqualTo(behandlingId)
+        assertThat(krav.begrunnelse).isEqualTo("Migrering av sak 2016-123456 fra Arena")
+    }
+
+    @Test
+    fun `ArenaMigreringMapper mapper manglende ordinær kvote til 0`() {
+        val fraArena = ArenaKrav(
+            arenaSaksnummer = "2016-123456",
+            søknadsdato = LocalDate.of(2025, 1, 15),
+            migreringsdato = LocalDate.of(2025, 12, 1),
+            gjenståendeKvoteOrdinær = null,
+        )
+
+        assertThat(ArenaMigreringMapper.mapMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)
     }
 }

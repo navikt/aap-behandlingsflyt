@@ -202,7 +202,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 .utfør(førstegangsbehandlingen.sakId)
 
             val sisteYtelsesbehandling = BehandlingService(repositoryProvider, gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(førstegangsbehandlingen.sakId)!!
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
             assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(3)
@@ -244,7 +244,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             oppdagEndretInformasjonskravJobbUtfører.utfør(førstegangsbehandlingen.sakId)
 
             val sisteYtelsesbehandling = BehandlingService(repositoryProvider, gatewayProvider)
-                .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(førstegangsbehandlingen.sakId)
             assertThat(sisteYtelsesbehandling?.id)
                 .isEqualTo(førstegangsbehandlingen.id)
         }

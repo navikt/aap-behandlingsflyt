@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
+import no.nav.aap.behandlingsflyt.datadeling.sam.SamVarsling
+import no.nav.aap.behandlingsflyt.datadeling.sam.SamVarslingRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -13,6 +15,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.varsleVedtakSam
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -33,7 +37,8 @@ class VarsleVedtakJobbUtfører(
     private val tjenestePensjonRepository: TjenestePensjonRepository,
     private val flytJobbRepository: FlytJobbRepository,
     private val behandlingService: BehandlingService,
-    private val samGateway: SamGateway
+    private val samGateway: SamGateway,
+    private val samVarslingRepository: SamVarslingRepository,
 ) : JobbUtfører {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -44,7 +49,8 @@ class VarsleVedtakJobbUtfører(
         tjenestePensjonRepository = repositoryProvider.provide(),
         flytJobbRepository = repositoryProvider.provide(),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-        samGateway = gatewayProvider.provide()
+        samGateway = gatewayProvider.provide(),
+        samVarslingRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -102,12 +108,36 @@ class VarsleVedtakJobbUtfører(
             )
 
 
-        if (relevantEndring.contains(true) && tpYtelser.isNotEmpty()) {
+        val skalVarsle = relevantEndring.contains(true) && tpYtelser.isNotEmpty()
+
+        val respons = if (skalVarsle) {
             log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}")
-            samGateway.varsleVedtak(request)
+            samGateway.varsleVedtak(request).also {
+                log.info("SAM varslet for behandling med referanse ${behandling.referanse}, saksnummer ${sak.saksnummer} og vedtakId $vedtakId. ventPaaSvar=${it?.ventPaaSvar}")
+            }
         } else {
             log.info("Varsler ikke SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}, tpYtelser=${tpYtelser.size}")
+            null
         }
+
+        samVarslingRepository.lagre(
+            behandling.id,
+            SamVarsling(
+                vedtakId = vedtakId,
+                varslet = skalVarsle,
+                førstegangsbehandling = førstegangsbehandling,
+                endringIRettighetstype = endringIRettighetsTypeTidslinje,
+                antallTpYtelser = tpYtelser.size,
+                request = request,
+                respons = respons,
+            )
+        )
+        prometheus.varsleVedtakSam(
+            varslet = skalVarsle,
+            førstegangsbehandling = førstegangsbehandling,
+            endringIRettighetstype = endringIRettighetsTypeTidslinje,
+            harTpYtelser = tpYtelser.isNotEmpty(),
+        ).increment()
 
         // Trigger henting av samordnings-ID, som igjen trigger datadelingsjobb. Chainet, fordi datadelingsjobben trenger sam-id.
         flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id).forSak(sak.id.id).medPrioritet(Prioritet.LAV))

@@ -1,6 +1,9 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.arena.ArenaKrav
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -8,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
@@ -22,17 +26,17 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
-import kotlin.collections.filterIsInstance
 
 class KravSteg(
     private val unleashGateway: UnleashGateway,
@@ -40,7 +44,8 @@ class KravSteg(
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val sakRepository: SakRepository,
-    private val behandlingService: BehandlingService
+    private val sakService: SakService,
+    private val arenaMigreringService: ArenaMigreringService
 ) : BehandlingSteg {
 
     /**
@@ -54,9 +59,13 @@ class KravSteg(
         // skal gå gjennom selv om feature-toggelen under er skrudd av så lenge krav-steget er skrudd på
         // så midlertidig legges koden fort sette her for å være utenfor feature-toggelen.
         if(kontekst.erMigreringFraArena()) {
+            val migrerKravAutomatisk = unleashGateway.isEnabled(BehandlingsflytFeature.MigrererKravFraArenaAutomatisk)
+            if (migrerKravAutomatisk) {
+                migrerStegFraArena(kontekst)
+            }
             avklaringsbehovService.oppdaterAvklaringsbehov(
                 definisjon = Definisjon.VURDER_KRAV,
-                vedtakBehøverVurdering = { vedtakBehøverVurderingForMigrering(kontekst) },
+                vedtakBehøverVurdering = { !migrerKravAutomatisk },
                 erTilstrekkeligVurdert = { erTilstrekkeligVurdertForMigrering(kontekst) },
                 tilbakestillGrunnlag = { },
                 kontekst = kontekst
@@ -136,10 +145,6 @@ class KravSteg(
         return (harSøknadIBehandling && !erAlleSøknaderIBehandlingAutomatiskVurdert) || kontekst.vurderingsbehovRelevanteForSteg.contains(
             Vurderingsbehov.VURDER_KRAV
         )
-    }
-
-    private fun vedtakBehøverVurderingForMigrering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.erMigreringFraArena()
     }
 
     private fun vurderAutomatiskHvisMulig(kontekst: FlytKontekstMedPerioder) {
@@ -284,6 +289,41 @@ class KravSteg(
                 && kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.isNullOrEmpty()
     }
 
+    private fun migrerStegFraArena(kontekst: FlytKontekstMedPerioder) {
+        val kravdataFraArena = arenaMigreringService.hentKravDataForSak(kontekst.sakId)
+        val eksisterendeKrav = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        requireNotNull(kravdataFraArena) { "Kan ikke migrere krav. Klarte ikke finne relatert sak i Arena." }
+
+        if (!kravdataFraArena.erLikVurdering(eksisterendeKrav)) {
+            arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, StegType.KRAV, kravdataFraArena)
+            kravRepository.lagre(
+                kontekst.behandlingId,
+                setOf(ArenaMigreringMapper.mapMigrertKrav(kravdataFraArena, kontekst.behandlingId))
+            )
+
+            sakService.overstyrRettighetsperioden(
+                sakId = kontekst.sakId,
+                startDato = kravdataFraArena.migreringsdato,
+                sluttDato = Tid.MAKS
+            )
+        }
+    }
+
+    private fun ArenaKrav.erLikVurdering(grunnlag: KravGrunnlag?): Boolean {
+        val migrerteKravVurderinger = grunnlag?.vurderinger?.filterIsInstance<MigrertKrav>()
+
+        if (migrerteKravVurderinger.isNullOrEmpty()) {
+            return false
+        }
+
+        return migrerteKravVurderinger.any {
+            it.resterendeKvoteOrdinær == this.gjenståendeKvoteOrdinær
+                    && it.arenaSaksnummer == this.arenaSaksnummer
+                    && it.muligRettFra == this.migreringsdato
+                    && it.virkningstidspunktArena == this.søknadsdato
+        }
+    }
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
@@ -295,7 +335,8 @@ class KravSteg(
                 mottattDokumentRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 sakRepository = repositoryProvider.provide(),
-                behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
+                sakService = SakService(repositoryProvider, gatewayProvider),
+                arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
             )
         }
 

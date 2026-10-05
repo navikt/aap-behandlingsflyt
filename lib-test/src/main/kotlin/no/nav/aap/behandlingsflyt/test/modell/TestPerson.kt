@@ -38,7 +38,7 @@ fun defaultInntekt(): List<InntektPerÅr> {
 class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
     val identer: Set<Ident> = setOf(ident()),
-    val dødsdato: Dødsdato? = null,
+    var dødsdato: Dødsdato? = null,
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     var yrkesskade: List<TestYrkesskade> = emptyList(),
@@ -156,6 +156,11 @@ class TestPerson(
 
     fun medDagpenger(dagpenger: List<Dagpenger>): TestPerson {
         this.dagpenger = dagpenger
+        return this
+    }
+
+    fun medDødsdato(dødsdato: LocalDate): TestPerson {
+        this.dødsdato = Dødsdato(dødsdato)
         return this
     }
 

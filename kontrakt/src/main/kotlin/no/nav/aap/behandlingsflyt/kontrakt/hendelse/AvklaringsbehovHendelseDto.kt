@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -25,6 +26,7 @@ public data class EndringDTO(
     val årsakTilSattPåVent: ÅrsakTilSettPåVent? = null,
     val årsakTilRetur: List<ÅrsakTilRetur> = emptyList(),
     val begrunnelse: String? = "",
+    val gradBehov: GradBehov? = null
 )
 
 public data class ÅrsakTilRetur(val årsak: ÅrsakTilReturKode)

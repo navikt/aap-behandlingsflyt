@@ -8,9 +8,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
-import no.nav.aap.behandlingsflyt.arena.ArenaSakOppsummering
-import no.nav.aap.behandlingsflyt.arena.ArenaSakerResponse
-import no.nav.aap.behandlingsflyt.arena.HarArenaHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
+import no.nav.aap.behandlingsflyt.arena.ArenaSak
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
@@ -70,7 +71,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett oppretter ny sak for ny person`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarArenaHistorikkResponse(false)
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val sak = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -90,7 +91,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett returnerer eksisterende sak for samme person`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarArenaHistorikkResponse(false)
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val sak1 = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -133,7 +134,7 @@ class PersonOgSakServiceTest {
             val identliste = listOf(aktivIdent, gammelIdent)
 
             every { pdlGateway.hentAlleIdenterForPerson(aktivIdent) } returns identliste
-            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarArenaHistorikkResponse(false)
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
 
             val sak = dataSource.transaction { connection ->
@@ -155,7 +156,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett rapporterer når person finnes i Arena men ikke i Kelvin`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { arenaOppslagGateway.hentHarHistorikk(ident) } returns HarArenaHistorikkResponse(true)
+            every { arenaOppslagGateway.hentHarHistorikk(ident) } returns HarHistorikkResponse(true)
 
             val sak = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -178,7 +179,7 @@ class PersonOgSakServiceTest {
         fun `finnEllerOpprett returnerer eksisterende sak når trukket søknad har skalTrekkes false`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarArenaHistorikkResponse(false)
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val (opprinneligSak, sammeSak) = dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -224,7 +225,7 @@ class PersonOgSakServiceTest {
             val ident = ident()
             val søknadsdato = LocalDate.now()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarArenaHistorikkResponse(false)
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val (opprinneligSak, nySak) = dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -279,7 +280,7 @@ class PersonOgSakServiceTest {
             val ident = ident()
             val søknadsdato = LocalDate.now()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarArenaHistorikkResponse(false)
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             dataSource.transaction { connection ->
                 val repositoryProvider = postgresRepositoryRegistry.provider(connection)
@@ -344,7 +345,7 @@ class PersonOgSakServiceTest {
         fun `finnSakerFor returnerer saker for person som har saker`() {
             val ident = ident()
             every { pdlGateway.hentAlleIdenterForPerson(ident) } returns listOf(ident)
-            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarArenaHistorikkResponse(false)
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val (opprettetSak, funnetSaker) = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -393,7 +394,7 @@ class PersonOgSakServiceTest {
 
             every { pdlGateway.hentAlleIdenterForPerson(aktivIdent) } returns identliste
             every { pdlGateway.hentAlleIdenterForPerson(gammelIdent) } returns identliste
-            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarArenaHistorikkResponse(false)
+            every { arenaOppslagGateway.hentHarHistorikk(any()) } returns HarHistorikkResponse(false)
 
             val (opprettetSak, funnetSaker) = dataSource.transaction { connection ->
                 val service = initPersonOgSakService(connection)
@@ -418,7 +419,7 @@ class PersonOgSakServiceTest {
     @DisplayName("finnArenasakForBruker")
     inner class FinnArenasakForBrukerTest {
 
-        private val arenaSak = ArenaSakOppsummering(
+        private val arenaSak = ArenaSakOppsummeringKontrakt(
             sakId = "123",
             lopenummer = 1,
             aar = 2024,
@@ -433,20 +434,20 @@ class PersonOgSakServiceTest {
         @Test
         fun `returnerer arenasak når saksnummer matcher`() {
             val ident = ident()
-            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns ArenaSakerResponse(listOf(arenaSak))
+            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns SakerResponse(listOf(arenaSak))
 
             val result = dataSource.transaction { connection ->
                 initPersonOgSakService(connection).finnArenasakForBruker(ident, "2024-1")
             }
 
-            assertThat(result).isEqualTo(arenaSak)
+            assertThat(result).isEqualTo(ArenaSak(saksnummer = "2024-1", statuskode = arenaSak.statuskode))
             verify(exactly = 1) { arenaOppslagGateway.hentSakerForPerson(ident) }
         }
 
         @Test
         fun `returnerer null når sak med gitt saksnummer ikke finnes`() {
             val ident = ident()
-            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns ArenaSakerResponse(listOf(arenaSak))
+            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns SakerResponse(listOf(arenaSak))
 
             val result = dataSource.transaction { connection ->
                 initPersonOgSakService(connection).finnArenasakForBruker(ident, "2023-5")
@@ -459,7 +460,7 @@ class PersonOgSakServiceTest {
         @Test
         fun `returnerer null når listen er tom`() {
             val ident = ident()
-            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns ArenaSakerResponse(emptyList())
+            every { arenaOppslagGateway.hentSakerForPerson(ident) } returns SakerResponse(emptyList())
 
             val result = dataSource.transaction { connection ->
                 initPersonOgSakService(connection).finnArenasakForBruker(ident, "2024-1")
