@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+package no.nav.aap.overgangarbeid
 
 import io.mockk.every
 import io.mockk.mockk
@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository

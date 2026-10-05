@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid
+package no.nav.aap.overgangarbeid
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Varighetsvurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.mapMedDatoTilDatoVarighet

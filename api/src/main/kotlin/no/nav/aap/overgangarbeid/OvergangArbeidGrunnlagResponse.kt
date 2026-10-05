@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid
+package no.nav.aap.overgangarbeid
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse

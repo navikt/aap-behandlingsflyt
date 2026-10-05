@@ -50,7 +50,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangArbeidSteg
+import no.nav.aap.overgangarbeid.OvergangArbeidSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.OvergangUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RefusjonkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
