@@ -230,6 +230,10 @@ class BrevUtlederService(
                     return null
                 }
 
+                if (Vurderingsbehov.DØDSFALL_BRUKER in vurderingsbehov) {
+                    return brevBehovDødsfall(behandling)
+                }
+                
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
                     return BarnetilleggSatsRegulering
                 }
@@ -253,10 +257,6 @@ class BrevUtlederService(
                     !harRettighetsType(forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
                 ) {
                     return brevBehovArbeidssøker(behandling)
-                }
-
-                if (Vurderingsbehov.DØDSFALL_BRUKER in vurderingsbehov) {
-                    return brevBehovDødsfall(behandling)
                 }
 
                 if (resultat == Resultat.INNVILGELSE) {

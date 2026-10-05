@@ -51,6 +51,7 @@ enum class TypeBrev {
             VEDTAK_11_9,
             VEDTAK_11_23_SJETTE_LEDD,
             VEDTAK_ENDRING,
+            VEDTAK_ENDRING_DODSFALL,
             BARNETILLEGG_SATS_REGULERING,
             KLAGE_AVVIST,
             KLAGE_OPPRETTHOLDELSE,
