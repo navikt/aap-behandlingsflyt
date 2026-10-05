@@ -1,7 +1,6 @@
-package no.nav.aap.behandlingsflyt.behandling.vilkår.overgangarbeid
+package no.nav.aap.overgangarbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
 import no.nav.aap.komponenter.type.Periode
 
 data class OvergangArbeidFaktagrunnlag(
