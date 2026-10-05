@@ -74,8 +74,8 @@ class RefusjonkravSteg(
                             when {
                                 !unleashGateway.isEnabled(BehandlingsflytFeature.KanVurdereRefusjonIRevurdering) -> false
                                 tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                                erVurdertAutomatisk(grunnlag.value) -> false
                                 kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
+                                erVurdertAutomatisk(grunnlag.value) -> false
                                 else -> false
                             }
                         }

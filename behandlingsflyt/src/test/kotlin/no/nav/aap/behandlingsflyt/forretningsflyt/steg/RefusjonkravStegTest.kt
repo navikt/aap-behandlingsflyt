@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
@@ -40,6 +41,10 @@ class RefusjonkravStegTest {
 
     private val migreringUnleash = FakeUnleashBaseWithDefaultDisabled(
         enabledFlags = listOf(BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk)
+    )
+
+    private val revurderingUnleash = FakeUnleashBaseWithDefaultDisabled(
+        enabledFlags = listOf(BehandlingsflytFeature.KanVurdereRefusjonIRevurdering)
     )
 
     @Test
@@ -127,12 +132,82 @@ class RefusjonkravStegTest {
         assertThat(hentRefusjonkravbehov(behandling)?.erÅpent() ?: false).isTrue
     }
 
+    @Test
+    fun `revurdering av migrert sak med automatisk vurdering løfter avklaringsbehov når refusjonskrav er vurderingsbehov`() {
+        val sak = opprettInMemorySak(1 januar 2020)
+        val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
+        val kontekst = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.rettighetsperiode = sak.rettighetsperiode
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.REFUSJONSKRAV)
+        }
+
+        val steg = nyttSteg(
+            refusjonkravRepositoryMedAutomatiskVurdering(),
+            revurderingUnleash,
+            TypeBehandling.Revurdering
+        )
+
+        steg.utfør(kontekst)
+
+        assertThat(hentRefusjonkravbehov(behandling)?.erÅpent() ?: false).isTrue
+    }
+
+    @Test
+    fun `revurdering av migrert sak med automatisk vurdering løfter ikke avklaringsbehov uten refusjonskrav som vurderingsbehov`() {
+        val sak = opprettInMemorySak(1 januar 2020)
+        val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
+        val kontekst = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.rettighetsperiode = sak.rettighetsperiode
+            this.vurderingsbehovRelevanteForSteg = emptySet()
+        }
+
+        val steg = nyttSteg(
+            refusjonkravRepositoryMedAutomatiskVurdering(),
+            revurderingUnleash,
+            TypeBehandling.Revurdering
+        )
+
+        steg.utfør(kontekst)
+
+        assertThat(hentRefusjonkravbehov(behandling)?.erÅpent() ?: false).isFalse
+    }
+
+    @Test
+    fun `revurdering løfter ikke avklaringsbehov når KanVurdereRefusjonIRevurdering er avskrudd`() {
+        val sak = opprettInMemorySak(1 januar 2020)
+        val behandling = opprettBehandling(sak, TypeBehandling.Revurdering)
+        val kontekst = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.rettighetsperiode = sak.rettighetsperiode
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.REFUSJONSKRAV)
+        }
+
+        val steg = nyttSteg(
+            refusjonkravRepositoryMedAutomatiskVurdering(),
+            AlleAvskruddUnleash,
+            TypeBehandling.Revurdering
+        )
+
+        steg.utfør(kontekst)
+
+        assertThat(hentRefusjonkravbehov(behandling)?.erÅpent() ?: false).isFalse
+    }
+
+    private fun refusjonkravRepositoryMedAutomatiskVurdering(): RefusjonkravRepository = mockk(relaxed = true) {
+        every { hentHvisEksisterer(any()) } returns listOf(
+            RefusjonkravVurdering(harKrav = false, navKontor = null, vurdertAv = SYSTEMBRUKER)
+        )
+    }
+
     private fun nyttSteg(
         refusjonkravRepository: RefusjonkravRepository,
-        unleashGateway: no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+        unleashGateway: no.nav.aap.behandlingsflyt.unleash.UnleashGateway,
+        behandlingstype: TypeBehandling = TypeBehandling.Førstegangsbehandling
     ): RefusjonkravSteg {
         val behandlingService = mockk<BehandlingService>(relaxed = true) {
-            every { utledFaktiskBehandlingstype(any<Behandling>()) } returns TypeBehandling.Førstegangsbehandling
+            every { utledFaktiskBehandlingstype(any<Behandling>()) } returns behandlingstype
         }
         val behandlingRepo = mockk<BehandlingRepository>(relaxed = true)
 
@@ -157,10 +232,13 @@ class RefusjonkravStegTest {
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
             .hentBehovForDefinisjon(Definisjon.REFUSJON_KRAV)
 
-    private fun opprettBehandling(sak: Sak): Behandling =
+    private fun opprettBehandling(
+        sak: Sak,
+        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling
+    ): Behandling =
         behandlingRepository.opprettBehandling(
             sakId = sak.id,
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),

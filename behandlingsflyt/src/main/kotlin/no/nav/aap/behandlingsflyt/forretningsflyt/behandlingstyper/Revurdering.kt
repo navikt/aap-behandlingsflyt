@@ -253,7 +253,6 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REFUSJONSKRAV,
                 )
