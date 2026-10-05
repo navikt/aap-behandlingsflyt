@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.Validation
+import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -93,7 +94,10 @@ class AvklarSykdomLøser(
                     }
                 }
 
-                return Validation.Invalid(gjeldendeSykdomsvurderinger, meldinger.joinToString(" "))
+                return Validation.Invalid(
+                    gjeldendeSykdomsvurderinger,
+                    "${meldinger.joinToString(" ")} Gjelder perioden ${segment.periode.toHumanReadable()}."
+                )
             }
         }
 
