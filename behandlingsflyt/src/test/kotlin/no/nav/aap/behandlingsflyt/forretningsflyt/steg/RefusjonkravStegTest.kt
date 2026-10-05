@@ -3,9 +3,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
@@ -88,7 +87,7 @@ class RefusjonkravStegTest {
                 RefusjonkravVurdering(
                     harKrav = false,
                     navKontor = null,
-                    vurdertAv = no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+                    vurdertAv = ARENA_MIGRERING_BRUKER
                 )
             )
         }
@@ -113,7 +112,12 @@ class RefusjonkravStegTest {
     fun `ikke-migrering oppfører seg som før og kan løfte avklaringsbehovet`() {
         val søknadsdato = 1 januar 2020
         val sak = opprettInMemorySak(søknadsdato)
-        val behandling = opprettBehandling(sak)
+        val behandling = opprettBehandling(
+            sak = sak,
+            vurderingsbehov = Vurderingsbehov.MOTTATT_SØKNAD,
+            årsak = ÅrsakTilOpprettelse.SØKNAD
+        )
+
         val kontekst = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
             this.behandling = behandling
             this.rettighetsperiode = sak.rettighetsperiode
@@ -197,7 +201,7 @@ class RefusjonkravStegTest {
 
     private fun refusjonkravRepositoryMedAutomatiskVurdering(): RefusjonkravRepository = mockk(relaxed = true) {
         every { hentHvisEksisterer(any()) } returns listOf(
-            RefusjonkravVurdering(harKrav = false, navKontor = null, vurdertAv = SYSTEMBRUKER)
+            RefusjonkravVurdering(harKrav = false, navKontor = null, vurdertAv = ARENA_MIGRERING_BRUKER)
         )
     }
 
@@ -234,15 +238,17 @@ class RefusjonkravStegTest {
 
     private fun opprettBehandling(
         sak: Sak,
-        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling
+        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling,
+        vurderingsbehov: Vurderingsbehov = Vurderingsbehov.MIGRERING_FRA_ARENA,
+        årsak: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
     ): Behandling =
         behandlingRepository.opprettBehandling(
             sakId = sak.id,
             typeBehandling = typeBehandling,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                årsak = ÅrsakTilOpprettelse.SØKNAD
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
+                årsak = årsak
             )
         )
 }

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.erSystembruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -101,7 +102,7 @@ class RefusjonkravSteg(
     }
 
     private fun erVurdertAutomatisk(grunnlag: List<RefusjonkravVurdering>?): Boolean {
-        return grunnlag?.all { it.vurdertAv == SYSTEMBRUKER } ?: false
+        return grunnlag?.all { it.vurdertAv.erSystembruker()  } ?: false
     }
 
     override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {

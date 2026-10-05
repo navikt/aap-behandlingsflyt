@@ -136,7 +136,7 @@ object ArenaMigreringMapper {
         return RefusjonkravVurdering(
             harKrav = false,
             navKontor = null,
-            vurdertAv = SYSTEMBRUKER,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
             opprettetTid = LocalDateTime.now()
         )
     }
