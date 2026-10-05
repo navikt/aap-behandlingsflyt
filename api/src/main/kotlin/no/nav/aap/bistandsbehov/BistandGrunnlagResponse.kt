@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand
+package no.nav.aap.bistandsbehov
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.komponenter.type.Periode
