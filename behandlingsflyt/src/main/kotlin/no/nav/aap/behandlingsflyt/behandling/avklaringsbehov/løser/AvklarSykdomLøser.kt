@@ -96,7 +96,7 @@ class AvklarSykdomLøser(
 
                 return Validation.Invalid(
                     gjeldendeSykdomsvurderinger,
-                    "${meldinger.joinToString(" ")} Gjelder perioden ${segment.periode.toHumanReadable()}."
+                    meldinger.joinToString(" ")
                 )
             }
         }
