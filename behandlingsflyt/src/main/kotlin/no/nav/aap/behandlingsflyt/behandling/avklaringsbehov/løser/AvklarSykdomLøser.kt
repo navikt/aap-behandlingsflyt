@@ -6,10 +6,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingValideringsfeil
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.Validation
+import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -62,7 +65,7 @@ class AvklarSykdomLøser(
     private fun validerSykdomOgYrkesskadeKonsistens(
         behandling: Behandling,
         gjeldendeSykdomsvurderinger: List<Sykdomsvurdering>,
-    ) {
+    ): Validation<List<Sykdomsvurdering>> {
         val sykdomLøsning = SykdomGrunnlag(
             sykdomsvurderinger = gjeldendeSykdomsvurderinger,
             yrkesskadevurdering = null
@@ -70,30 +73,61 @@ class AvklarSykdomLøser(
         val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
 
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
-        sykdomLøsning.segmenter().forEach {
-            if (!it.verdi.erKonsistentForSykdom(harYrkesskade)) {
-                logWarning(harYrkesskade, behandling, it)
-                throw UgyldigForespørselException("Sykdomsvurdering og yrkesskade har ikke konsistente verdier")
+        sykdomLøsning.segmenter().forEach { segment ->
+            val feil = segment.verdi.validerKonsistensForSykdom(harYrkesskade)
+            if (feil.isNotEmpty()) {
+                logWarning(harYrkesskade, behandling, segment, feil)
+
+                val meldinger = feil.map { feiltype ->
+                    when (feiltype) {
+                        SykdomsvurderingValideringsfeil.MANGLER_NEDSATT_ARBEIDSEVNE ->
+                            "Svaret på nedsatt arbeidsevne mangler."
+
+                        SykdomsvurderingValideringsfeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_50_PROSENT ->
+                            "Svarene om nedsatt arbeidsevne og 50-prosentgrensen stemmer ikke overens."
+
+                        SykdomsvurderingValideringsfeil.NEDSATT_ARBEIDSEVNE_STEMMER_IKKE_MED_VESENTLIGHET ->
+                            "Svarene om nedsatt arbeidsevne og om sykdommen er en vesentlig del stemmer ikke overens."
+
+                        SykdomsvurderingValideringsfeil.MANGLER_VURDERING_AV_YRKESSKADEGRENSE ->
+                            "Svarene mangler vurdering av yrkesskadegrense."
+                    }
+                }
+
+                return Validation.Invalid(
+                    gjeldendeSykdomsvurderinger,
+                    meldinger.joinToString(" ")
+                )
             }
         }
+
+        return Validation.Valid(gjeldendeSykdomsvurderinger)
     }
 
     private fun logWarning(
         harYrkesskade: Boolean,
         behandling: Behandling,
-        segment: Segment<Sykdomsvurdering>
+        segment: Segment<Sykdomsvurdering>,
+        feil: List<SykdomsvurderingValideringsfeil>,
     ) {
+        val vurdering = segment.verdi
+
         log.warn(
-            "Sykdomsvurderingen er ikke konsistent med yrkesskade. " +
-                    "harYrkesskade: $harYrkesskade, " +
-                    "typeBehandling: ${behandling.typeBehandling()}, " +
-                    "sykdomsvurdering: ${
-                        segment.verdi.copy(
-                            begrunnelse = "",
-                            yrkesskadeBegrunnelse = "",
-                            diagnose = null,
-                        )
-                    }"
+            "Sykdomsvurdering er inkonsistent med yrkesskade. " +
+                    "typeBehandling={}, harYrkesskade={}, periode={}, valideringsfeil={}, " +
+                    "harSkadeSykdomEllerLyte={}, harNedsattArbeidsevne={}, " +
+                    "erNedsettelseIArbeidsevneMerEnnHalvparten={}, " +
+                    "erSkadeSykdomEllerLyteVesentligdel={}, " +
+                    "erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense={}",
+            behandling.typeBehandling(),
+            harYrkesskade,
+            segment.periode.toHumanReadable(),
+            feil.joinToString(),
+            vurdering.harSkadeSykdomEllerLyte,
+            vurdering.harNedsattArbeidsevne,
+            vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten,
+            vurdering.erSkadeSykdomEllerLyteVesentligdel,
+            vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
         )
     }
 
