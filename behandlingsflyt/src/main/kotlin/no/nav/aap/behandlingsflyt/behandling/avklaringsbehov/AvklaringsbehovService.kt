@@ -582,12 +582,11 @@ class AvklaringsbehovService(
     ): Tidslinje<A> = this.disjoint(other, create)
 
     fun finnAktivtAvklaringsbehov(behandling: Behandling): Avklaringsbehov? {
-        val flyt = behandling.flyt()
-        val aktivtSteg = flyt.aktivtSteg()
+        val aktivtSteg = behandling.aktivtSteg()
         return avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
             .alle()
-            .filter { !it.erVentepunkt() && it.skalStoppeHer(aktivtSteg.type()) }
-            .sortedWith(flyt.avklaringsbehovComparator)
+            .filter { !it.erVentepunkt() && it.skalStoppeHer(aktivtSteg) }
+            .sortedWith(behandling.flyt().avklaringsbehovComparator)
             .firstOrNull()
     }
 }
