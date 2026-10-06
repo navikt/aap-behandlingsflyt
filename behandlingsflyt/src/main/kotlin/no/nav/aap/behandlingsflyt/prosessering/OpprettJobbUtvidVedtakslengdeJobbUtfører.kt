@@ -89,7 +89,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     }
 
     private fun harÅpenUtvidVedtakslengdeBehandling(sakId: SakId): Boolean {
-        val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId) ?: return false
+        val sisteBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) ?: return false
         return sisteBehandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE && sisteBehandling.status().erÅpen()
     }
 
