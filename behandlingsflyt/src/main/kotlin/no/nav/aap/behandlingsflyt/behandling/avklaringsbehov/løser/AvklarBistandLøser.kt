@@ -22,16 +22,7 @@ class AvklarBistandLøser(
         løsning: AvklarBistandsbehovLøsning
     ): LøsningsResultat {
 
-        løsning.løsningerForPerioder
-            .map { it.valider() }
-            .aggregerteFeilmeldinger({ invalid ->
-                "(Gjelder vurderinger fra: ${
-                    invalid.joinToString(", ") { it.fom.tilNorskFormat() }
-                })"
-            })
-            .takeIf { it.isNotEmpty() }
-            ?.let { throw UgyldigForespørselException(it.joinToString("\n")) }
-
+        valider(løsning)
 
         val forrigeBehandlingId = kontekst.kontekst.forrigeBehandlingId
 
@@ -53,6 +44,18 @@ class AvklarBistandLøser(
         return LøsningsResultat(
             begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
         )
+    }
+
+    private fun valider(løsning: AvklarBistandsbehovLøsning) {
+        løsning.løsningerForPerioder
+            .map { it.valider() }
+            .aggregerteFeilmeldinger({ ugyldigVurdering ->
+                "(Gjelder vurderinger fra: ${
+                    ugyldigVurdering.joinToString(", ") { it.fom.tilNorskFormat() }
+                })"
+            })
+            .takeIf { it.isNotEmpty() }
+            ?.let { throw UgyldigForespørselException(it.joinToString("\n")) }
     }
 
     override fun forBehov(): Definisjon {
