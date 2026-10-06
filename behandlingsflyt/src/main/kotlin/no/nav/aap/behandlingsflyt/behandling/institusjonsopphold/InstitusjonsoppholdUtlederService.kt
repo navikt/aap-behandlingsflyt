@@ -363,6 +363,10 @@ class InstitusjonsoppholdUtlederService(
      * 2) Det finnes en FORRIGE (tidligere) kjede som selv er kvalifisert, og denne kjeden
      *    starter innen 3 måneder etter at den forrige kjeden sluttet - uavhengig av denne
      *    kjedens egen varighet.
+     *
+     * NB: Kjede-basert logikk (punkt 1 og 2) kjører kun når featuren
+     * SammenhengendeInstitusjonsopphold er PÅ. Når featuren er AV, brukes den
+     * opprinnelige segment-for-segment-logikken (pre-PR).
      */
     private fun harOppholdSomKreverAvklaring(
         oppholdUtenBarnetillegg: Tidslinje<Boolean>,
@@ -370,6 +374,30 @@ class InstitusjonsoppholdUtlederService(
         ignorerVarighetsBegrensning: Boolean? = false
     ): Tidslinje<Boolean> {
         val segmenter = oppholdUtenBarnetillegg.segmenter().sortedBy { it.periode.fom }
+
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
+            return Tidslinje(
+                segmenter.filter { segment ->
+                    val forrigePeriodeTom = segmenter
+                        .filter { it.periode.tom.isBefore(segment.periode.fom) }
+                        .maxOfOrNull { it.periode.tom }
+
+                    val mindreEnnTreMånederFraForrige = forrigePeriodeTom != null &&
+                            segment.periode.fom.isBefore(forrigePeriodeTom.plusMonths(3))
+
+                    if (ignorerVarighetsBegrensning == true) {
+                        true
+                    } else {
+                        mindreEnnTreMånederFraForrige ||
+                                (harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
+                                        harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
+                                            segment,
+                                            oppholdUtenBarnetillegg.minDato()
+                                        ))
+                    }
+                }
+            )
+        }
 
         val kjeder = grupperSammenhengende(
             originaleOppholdSegmenter,
