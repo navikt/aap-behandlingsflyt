@@ -27,6 +27,7 @@ import no.nav.aap.motor.Prioritet
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import no.nav.aap.meldeplikt.OpprettBehandlingFritakMeldepliktJobbUtfører
 
 class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
