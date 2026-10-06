@@ -21,7 +21,8 @@ data class EtableringEgenVirksomhetGrunnlagResponse(
     override val ikkeRelevantePerioder: List<Periode>,
     val vurderingerMeta: VurderingerMetaResponse,
     val bruktUtviklingsDager: Int?,
-    val bruktOppstartsdager: Int?
+    val bruktOppstartsdager: Int?,
+    val tom: LocalDate?
 ) : PeriodiserteVurderingerDto<EtableringEgenVirksomhetVurderingResponse>
 
 data class EtableringEgenVirksomhetVurderingResponse(

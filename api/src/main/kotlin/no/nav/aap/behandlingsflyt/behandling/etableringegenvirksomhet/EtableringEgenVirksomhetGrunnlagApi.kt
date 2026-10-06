@@ -83,6 +83,8 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     }.somTidslinje { it }.komprimer().segmenter()
                             .sumOf { it.periode.antallHverdager().asInt }
 
+                    val tom = alleVurderinger.lastOrNull()?.tom
+
                     EtableringEgenVirksomhetGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
                             Definisjon.ETABLERING_EGEN_VIRKSOMHET.løsesISteg,
@@ -113,7 +115,8 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         ),
                         ikkeRelevantePerioder = ikkeVurderbarePerioder,
                         bruktUtviklingsDager = bruktUtviklingsDager,
-                        bruktOppstartsdager = bruktOppstartsdager
+                        bruktOppstartsdager = bruktOppstartsdager,
+                        tom = tom
                     )
                 }
             respond(

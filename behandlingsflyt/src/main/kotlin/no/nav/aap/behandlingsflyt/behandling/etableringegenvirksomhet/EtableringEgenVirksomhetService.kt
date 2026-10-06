@@ -127,7 +127,7 @@ class EtableringEgenVirksomhetService(
             .mapNotNull { (_, vurderinger) -> vurderinger.maxByOrNull { it.fom } }
             .toSet()
 
-        val beregnedeVurderinger = justerteVurderinger.map { vurdering ->
+        val beregnedeVurderinger = aktiveVurderingerForValidering.map { vurdering ->
             when {
                 vurdering !in skalValideres -> vurdering
                 vurdering.fase == null -> vurdering
