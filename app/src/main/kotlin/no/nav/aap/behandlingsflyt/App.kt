@@ -33,7 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
+import no.nav.aap.bistandsbehov.bistandsgrunnlagApi
 import no.nav.aap.overgangarbeid.overgangArbeidGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi

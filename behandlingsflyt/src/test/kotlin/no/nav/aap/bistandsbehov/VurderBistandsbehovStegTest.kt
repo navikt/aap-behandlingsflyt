@@ -1,13 +1,10 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+package no.nav.aap.bistandsbehov
 
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -45,7 +42,7 @@ class VurderBistandsbehovStegTest {
     @Test
     fun `Gjeldende vurdering er ikke god nok dersom den ikke dekker hele rettighetsperioden`() {
         val søknadsdato = 1 januar 2020
-        
+
         val bistandMock: BistandRepository = mockk(relaxed = true) {
             every { hentHvisEksisterer(any()) } returns BistandGrunnlag(
                 vurderinger = listOf(

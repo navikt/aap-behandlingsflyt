@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+package no.nav.aap.bistandsbehov
 
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
@@ -7,11 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMeta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg

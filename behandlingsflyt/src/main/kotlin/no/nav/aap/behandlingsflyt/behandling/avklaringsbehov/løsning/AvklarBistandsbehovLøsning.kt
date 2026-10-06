@@ -7,9 +7,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
+import no.nav.aap.bistandsbehov.BistandRepository
+import no.nav.aap.bistandsbehov.Bistandsvurdering
+import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_BISTANDSBEHOV_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId

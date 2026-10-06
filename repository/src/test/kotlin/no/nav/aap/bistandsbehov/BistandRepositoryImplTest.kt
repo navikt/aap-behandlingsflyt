@@ -1,6 +1,5 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand
+package no.nav.aap.bistandsbehov
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
