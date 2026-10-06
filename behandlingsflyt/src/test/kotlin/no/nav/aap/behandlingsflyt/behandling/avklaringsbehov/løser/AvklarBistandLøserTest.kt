@@ -37,7 +37,7 @@ class AvklarBistandLøserTest {
         val feilmelding =
             "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
         assertThat(exception.message).isEqualTo(
-            "$feilmelding (perioder: 2020-01-01, 2020-02-01)"
+            "$feilmelding (jelder vurderinger fra:: 2020-01-01, 2020-02-01)"
         )
         verify(exactly = 0) { bistandRepository.lagre(any(), any()) }
     }
