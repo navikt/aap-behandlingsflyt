@@ -65,7 +65,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.G_REGULER
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
@@ -395,11 +394,7 @@ class BrevUtlederService(
 
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
-        val samordning = if (unleashGateway.isEnabled(BehandlingsflytFeature.SamordningFaktagrunnlagBrev)) {
-            hentForholdTilAndreYtelserForBrev(behandling.id, vedtak)
-        } else {
-            null
-        }
+        val samordning = hentForholdTilAndreYtelserForBrev(behandling.id, vedtak)
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
         val yrkesSkadeISøknadIkkeIRegister =
