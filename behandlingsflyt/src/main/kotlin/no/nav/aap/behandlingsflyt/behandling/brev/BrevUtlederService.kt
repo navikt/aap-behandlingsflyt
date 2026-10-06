@@ -230,7 +230,7 @@ class BrevUtlederService(
                     return null
                 }
 
-                if (Vurderingsbehov.DØDSFALL_BRUKER in vurderingsbehov) {
+                if (Miljø.erDev() && Vurderingsbehov.DØDSFALL_BRUKER in vurderingsbehov) {
                     return brevBehovDødsfall(behandling)
                 }
                 
