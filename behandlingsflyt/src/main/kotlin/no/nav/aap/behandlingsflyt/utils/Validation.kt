@@ -5,18 +5,22 @@ sealed class Validation<VALIDATEDCLASS>(
     val validatedObject: VALIDATEDCLASS
 ) {
     class Valid<VALIDATEDCLASS>(validatedObject: VALIDATEDCLASS) : Validation<VALIDATEDCLASS>(validatedObject)
-    class Invalid<VALIDATEDCLASS>(validatedObject: VALIDATEDCLASS, val errorMessage: String) : Validation<VALIDATEDCLASS>(validatedObject)
+    class Invalid<VALIDATEDCLASS>(validatedObject: VALIDATEDCLASS, val errorMessage: String) :
+        Validation<VALIDATEDCLASS>(validatedObject)
 
-    fun <NEW_TYPE>fold(onValid: (it: Valid<VALIDATEDCLASS>) -> NEW_TYPE, onInvalid: (it: Invalid<VALIDATEDCLASS>) -> NEW_TYPE): NEW_TYPE {
-        return when(this) {
+    fun <NEW_TYPE> fold(
+        onValid: (it: Valid<VALIDATEDCLASS>) -> NEW_TYPE,
+        onInvalid: (it: Invalid<VALIDATEDCLASS>) -> NEW_TYPE
+    ): NEW_TYPE {
+        return when (this) {
             is Valid -> onValid(this)
             is Invalid -> onInvalid(this)
         }
     }
 
-    fun <NEW_TYPE>map(mapper: (it: VALIDATEDCLASS) -> NEW_TYPE): Validation<NEW_TYPE> {
+    fun <NEW_TYPE> map(mapper: (it: VALIDATEDCLASS) -> NEW_TYPE): Validation<NEW_TYPE> {
         val newType = mapper(this.validatedObject)
-        return when(this) {
+        return when (this) {
             is Valid -> Valid(newType)
             is Invalid -> Invalid(newType, errorMessage)
         }
@@ -26,14 +30,14 @@ sealed class Validation<VALIDATEDCLASS>(
     val isInvalid: Boolean get() = this is Invalid
 
     fun onValid(block: (it: Valid<VALIDATEDCLASS>) -> Unit): Validation<VALIDATEDCLASS> {
-        if(this is Valid) {
+        if (this is Valid) {
             block(this)
         }
         return this
     }
 
     fun onInvalid(block: (it: Invalid<VALIDATEDCLASS>) -> Unit): Validation<VALIDATEDCLASS> {
-        if(this is Invalid) {
+        if (this is Invalid) {
             block(this)
         }
         return this
@@ -50,12 +54,12 @@ sealed class Validation<VALIDATEDCLASS>(
         return throwOnInvalid { RuntimeException(it.errorMessage) }
     }
 
-    fun get(): VALIDATEDCLASS = when(this) {
+    fun get(): VALIDATEDCLASS = when (this) {
         is Valid -> this.validatedObject
         is Invalid -> error("Kan ikke hente et validert objekt når objektet ikke er validert som gyldig")
     }
 
-    fun getOrNull(): VALIDATEDCLASS? = when(this) {
+    fun getOrNull(): VALIDATEDCLASS? = when (this) {
         is Valid -> this.validatedObject
         is Invalid -> null
     }
@@ -63,8 +67,23 @@ sealed class Validation<VALIDATEDCLASS>(
     fun getOrThrow(): VALIDATEDCLASS =
         getOrThrow { RuntimeException(it.errorMessage) }
 
-    fun getOrThrow(block: (it: Invalid<VALIDATEDCLASS>) -> Exception): VALIDATEDCLASS = when(this) {
+    fun getOrThrow(block: (it: Invalid<VALIDATEDCLASS>) -> Exception): VALIDATEDCLASS = when (this) {
         is Valid -> this.validatedObject
         is Invalid -> throw block(this)
     }
 }
+
+fun <VALIDATEDCLASS> List<Validation<VALIDATEDCLASS>>.aggregerteFeilmeldinger(
+    formatInvalidValues: (List<VALIDATEDCLASS>) -> String,
+): List<String> =
+    mapNotNull {
+        when (it) {
+            is Validation.Valid -> null
+            is Validation.Invalid -> it
+        }
+    }.groupBy(
+        keySelector = { it.errorMessage },
+        valueTransform = { it.validatedObject }
+    ).map { (errorMessage, values) ->
+        "$errorMessage ${formatInvalidValues(values)}"
+    }
