@@ -325,4 +325,49 @@ class EtableringEgenVirksomhetLøserTest {
             )
         )
     }
+
+    @Test
+    fun `Legacy frontend uten fase skal fortsatt kunne vurdere virksomhet via oppstartsPerioder`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+
+        val fom = sak.rettighetsperiode.fom.plusDays(1)
+        val tom = fom.plusMonths(3).minusDays(1)
+
+        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
+        val løsning = EtableringEgenVirksomhetLøsning(
+            listOf(
+                EtableringEgenVirksomhetLøsningDto(
+                    begrunnelse = "legacy innsending",
+                    fom = fom,
+                    tom = tom,
+                    virksomhetNavn = "peppas peppers",
+                    orgNr = null,
+                    foreliggerFagligVurdering = true,
+                    virksomhetErNy = true,
+                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                    kanFøreTilSelvforsørget = true,
+                    jobberBrukerAktivMedVirksomheten = null,
+                    fase = null,
+                    erRegistrertINødvendigeOffentligeRegister = null,
+                    oppstartsPerioder = listOf(Periode(fom, tom)),
+                )
+            )
+        )
+
+        assertDoesNotThrow { løser.løs(kontekst, løsning) }
+
+        val lagretVurdering = InMemoryEtableringEgenVirksomRepository
+            .hentHvisEksisterer(behandling.id)
+            ?.vurderinger
+            ?.single()
+
+        assertThat(lagretVurdering).isNotNull
+        assertThat(lagretVurdering!!.fase).isEqualTo(EtableringFase.OPPSTART)
+        assertThat(lagretVurdering.fom).isEqualTo(fom)
+        assertThat(lagretVurdering.tom).isEqualTo(tom)
+        // Legacy-regel: oppstart ble alltid ansett som registrert i offentlige register i gammelt flyt
+        assertThat(lagretVurdering.erRegistrertINødvendigeOffentligeRegister).isTrue()
+    }
+
 }

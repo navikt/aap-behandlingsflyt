@@ -2,9 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.BeregningResultat
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.UgyldigEtableringEgenVirksomhetException
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringIkkeGyldig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -29,17 +28,17 @@ class EtableringEgenVirksomhetLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val nyeVurderinger = løsning.løsningerForPerioder.map { it.toEtableringEgenVirksomhetVurdering(kontekst) }
 
-        val beregning = try {
-            etableringEgenVirksomhetService.beregnOgValider(behandling.id, nyeVurderinger)
-        } catch (e: UgyldigEtableringEgenVirksomhetException) {
-            throw UgyldigForespørselException(
-                message = e.message ?: "Ugyldig fase-/periode-konfigurasjon",
-                cause = e,
-            )
+        val beregning = when (
+            val resultat = etableringEgenVirksomhetService.beregnOgValider(behandling.id, nyeVurderinger)
+        ) {
+            is BeregningResultat.Gyldig -> resultat.beregning
+            is BeregningResultat.Ugyldig -> throw UgyldigForespørselException(resultat.feilmelding)
         }
 
-        val gamleVurderinger =
-            behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+        val gamleVurderinger = behandling.forrigeBehandlingId?.let {
+            etableringEgenVirksomhetRepository.hentHvisEksisterer(it)?.vurderinger.orEmpty()
+        }.orEmpty()
+
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
