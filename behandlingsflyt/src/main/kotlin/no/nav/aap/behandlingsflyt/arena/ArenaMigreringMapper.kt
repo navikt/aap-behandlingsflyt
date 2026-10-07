@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.arena
 
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
@@ -15,6 +16,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf("INNTNEDS", "SYKSKADLYT", "AAARBEVNE")
+private const val REFUSJONSKRAV_SOSIALHJELP = "REFKRAVSOS"
 
 /**
  * Migreringsgruppe 1 støtter kun ordinær AAP. Dette er oppfylt når alle disse
@@ -130,9 +132,13 @@ object ArenaMigreringMapper {
     }
 
     /**
-     * I migreringsgruppe 1 er det ikke refusjonskrav. Svarer derfor alltid "nei" på om det finnes refusjonskrav.
+     * Refusjonskrav av typen REFKRAVSOS støttes ikke i migreringsgruppe 1 og gir feil. Hvis det ikke finnes
+     * refusjonskrav, eller kravet har en annen årsak, svares "nei" på om det finnes refusjonskrav.
      */
-    fun mapRefusjonskravVurdering(): RefusjonkravVurdering {
+    fun mapRefusjonskravVurdering(arenaRefusjonskrav: ArenaRefusjonskrav?): RefusjonkravVurdering {
+        require(arenaRefusjonskrav?.aarsak != REFUSJONSKRAV_SOSIALHJELP) {
+            "Kan ikke migrere refusjonskrav fra Arena fordi det finnes refusjonskrav av typen $REFUSJONSKRAV_SOSIALHJELP"
+        }
         return RefusjonkravVurdering(
             harKrav = false,
             navKontor = null,

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -30,7 +31,8 @@ class RefusjonkravSteg(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val behandlingRepository: BehandlingRepository,
     private val behandlingService: BehandlingService,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val arenaMigreringService: ArenaMigreringService,
 ) : BehandlingSteg, MigrerVurderingFraArena {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         refusjonkravRepository = repositoryProvider.provide(),
@@ -38,7 +40,8 @@ class RefusjonkravSteg(
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide()
+        unleashGateway = gatewayProvider.provide(),
+        arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -106,8 +109,14 @@ class RefusjonkravSteg(
     }
 
     override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
-        // TODO trengs det å hente info fra Arena her for å lagre ned at det _ikke_ finnes refusjonskrav?
-        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering()
+        require(kontekst.erMigreringFraArena()) {
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
+        }
+
+        val refusjonskravFraArena = arenaMigreringService.hentRefusjonskrav(kontekst.sakId)
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, type(), refusjonskravFraArena)
+
+        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering(refusjonskravFraArena)
         refusjonkravRepository.lagre(
             kontekst.sakId, kontekst.behandlingId, listOf(vurdering)
         )

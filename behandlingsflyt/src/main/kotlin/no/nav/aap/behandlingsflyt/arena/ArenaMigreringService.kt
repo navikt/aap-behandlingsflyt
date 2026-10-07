@@ -42,13 +42,19 @@ class ArenaMigreringService(
         return sykdomsvurderingFraArena.tilDomene()
     }
 
+    fun hentRefusjonskrav(sakId: SakId): ArenaRefusjonskrav? {
+        logger.info("Henter refusjonskrav fra Arena for sak $sakId.")
+        val refusjonskrav = arenaOppslagGateway.hentRefusjonskrav(hentSaksnummerArena(sakId))
+        return refusjonskrav.tilDomene()
+    }
+
     fun hentKravDataForSak(sakId: SakId): ArenaKrav? {
         return arenaMigreringRepository.hentForSakHvisEksisterer(sakId)?.let {
             arenaOppslagGateway.hentKravDataForSak(it.saksnummerArena).tilDomene()
         }
     }
 
-    fun lagreMigreringsdataForSporing(behandlingId: BehandlingId, steg: StegType, data: Any) {
+    fun lagreMigreringsdataForSporing(behandlingId: BehandlingId, steg: StegType, data: Any?) {
         logger.info("Lagrer migreringsdata for behandling $behandlingId, steg $steg.")
         arenaMigreringsdataRepository.lagre(
             behandlingId = behandlingId,

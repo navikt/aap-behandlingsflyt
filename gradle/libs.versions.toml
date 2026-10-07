@@ -6,7 +6,7 @@ brev = "0.0.287"
 meldekort = "0.0.237"
 apiIntern = "0.0.111"
 dokumentinnhenting = "0.0.7"
-arenaoppslag = "0.7.13"
+arenaoppslag = "0.7.15"
 
 [libraries]
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }

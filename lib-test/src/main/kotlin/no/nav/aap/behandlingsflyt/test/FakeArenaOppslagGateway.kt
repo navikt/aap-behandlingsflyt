@@ -5,6 +5,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar as ArenaVilkarKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose as ArenaDiagnoseKontrakt
@@ -55,6 +56,10 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 ordinaer = 150
             )
         )
+    }
+
+    override fun hentRefusjonskrav(saksnummerArena: String): ArenaRefusjonskravResponse {
+        return ArenaRefusjonskravResponse(refusjonskrav = null)
     }
 
     override fun hentSykdomsvurdering(saksnummerArena: String): ArenaSykdomsvurderingResponse {

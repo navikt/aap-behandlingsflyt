@@ -4,6 +4,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
+import no.nav.aap.behandlingsflyt.arena.ArenaRefusjonskrav
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
@@ -11,6 +13,7 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -30,6 +33,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 
 class RefusjonkravStegTest {
@@ -106,6 +110,41 @@ class RefusjonkravStegTest {
             )
         }
         assertThat(hentRefusjonkravbehov(behandling)?.erÅpent() ?: false).isFalse
+    }
+
+    @Test
+    fun `migrering lagrer payload fra Arena for sporing`() {
+        val sak = opprettInMemorySak(1 januar 2020)
+        val behandling = opprettBehandling(sak)
+        val arenaService = standardArenaMigreringService()
+
+        nyttSteg(mockk(relaxed = true), migreringUnleash, arenaMigreringService = arenaService)
+            .utfør(migreringsKontekst(sak, behandling))
+
+        verify(exactly = 1) {
+            arenaService.lagreMigreringsdataForSporing(
+                behandling.id,
+                StegType.REFUSJON_KRAV,
+                null
+            )
+        }
+    }
+
+    @Test
+    fun `migrering feiler men lagrer payload når Arena har refusjonskrav REFKRAVSOS`() {
+        val sak = opprettInMemorySak(1 januar 2020)
+        val behandling = opprettBehandling(sak)
+        val arenaService = standardArenaMigreringService(ArenaRefusjonskrav("REFKRAVSOS", 1 januar 2020, null))
+        val refusjonkravRepository: RefusjonkravRepository = mockk(relaxed = true)
+
+        val steg = nyttSteg(refusjonkravRepository, migreringUnleash, arenaMigreringService = arenaService)
+
+        assertThatThrownBy { steg.utfør(migreringsKontekst(sak, behandling)) }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("REFKRAVSOS")
+
+        verify(exactly = 1) { arenaService.lagreMigreringsdataForSporing(behandling.id, StegType.REFUSJON_KRAV, any()) }
+        verify(exactly = 0) { refusjonkravRepository.lagre(any(), any(), any()) }
     }
 
     @Test
@@ -208,7 +247,8 @@ class RefusjonkravStegTest {
     private fun nyttSteg(
         refusjonkravRepository: RefusjonkravRepository,
         unleashGateway: no.nav.aap.behandlingsflyt.unleash.UnleashGateway,
-        behandlingstype: TypeBehandling = TypeBehandling.Førstegangsbehandling
+        behandlingstype: TypeBehandling = TypeBehandling.Førstegangsbehandling,
+        arenaMigreringService: ArenaMigreringService = standardArenaMigreringService(),
     ): RefusjonkravSteg {
         val behandlingService = mockk<BehandlingService>(relaxed = true) {
             every { utledFaktiskBehandlingstype(any<Behandling>()) } returns behandlingstype
@@ -221,9 +261,15 @@ class RefusjonkravStegTest {
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
             behandlingRepository = behandlingRepo,
             behandlingService = behandlingService,
-            unleashGateway = unleashGateway
+            unleashGateway = unleashGateway,
+            arenaMigreringService = arenaMigreringService
         )
     }
+
+    private fun standardArenaMigreringService(refusjonskrav: ArenaRefusjonskrav? = null): ArenaMigreringService =
+        mockk(relaxed = true) {
+            every { hentRefusjonskrav(any()) } returns refusjonskrav
+        }
 
     private fun migreringsKontekst(sak: Sak, behandling: Behandling): FlytKontekstMedPerioder =
         no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
