@@ -38,8 +38,9 @@ import no.nav.aap.behandlingsflyt.test.fakes.YrkesskadeFake
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import org.slf4j.LoggerFactory
-import java.util.*
-import java.util.concurrent.atomic.*
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
