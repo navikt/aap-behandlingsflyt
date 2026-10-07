@@ -126,6 +126,7 @@ spec:
         - application: utbetal
         - application: statistikk
         - application: dokumentinnhenting
+        - application: pdfgenerator-saksbehandling
         - application: spokelse
           namespace: tbd
         - application: pensjon-pen
