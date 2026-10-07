@@ -56,6 +56,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
@@ -111,6 +112,7 @@ class BrevUtlederService(
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val behandlingService: BehandlingService,
     private val personOpplysningRepository: PersonopplysningRepository,
     private val sakRepository: SakRepository,
     private val personinfoBulkGateway: PersoninfoBulkGateway
@@ -146,6 +148,7 @@ class BrevUtlederService(
         sakRepository = repositoryProvider.provide(),
         personinfoBulkGateway = gatewayProvider.provide(),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -239,7 +242,7 @@ class BrevUtlederService(
                 if (Miljø.erDev() && Vurderingsbehov.DØDSFALL_BRUKER in vurderingsbehov) {
                     return brevBehovDødsfall(behandling)
                 }
-                
+
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
                     return BarnetilleggSatsRegulering
                 }
@@ -267,6 +270,16 @@ class BrevUtlederService(
 
                 if (resultat == Resultat.INNVILGELSE) {
                     return brevBehovInnvilgelse(behandling)
+                }
+
+                if (
+                    resultat == Resultat.AVSLAG &&
+                    behandlingService.utledFaktiskBehandlingstype(behandling) == TypeBehandling.Førstegangsbehandling
+                ) {
+                    val avslagsbrev = brevBehovAvslag(behandling)
+                    if (avslagsbrev is AvslagBrev.AvslagSykdomsvilkåret) {
+                        return avslagsbrev
+                    }
                 }
 
                 return VedtakEndring
