@@ -449,7 +449,7 @@ class BrevGateway : BrevbestillingGateway {
             }
 
             is VedtakEndringDødsfall ->
-                setOf(Faktagrunnlag.Dødsfall(brevBehov.dødsdato))
+                setOf(Faktagrunnlag.Dødsfall(brevBehov.dødsdato, brevBehov.navn))
 
             else -> emptySet()
         }
