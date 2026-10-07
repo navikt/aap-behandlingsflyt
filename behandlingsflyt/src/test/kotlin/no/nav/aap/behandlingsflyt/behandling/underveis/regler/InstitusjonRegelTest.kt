@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import no.nav.aap.meldeplikt.MeldepliktVurdering
 
 @Fakes
 class InstitusjonRegelTest {

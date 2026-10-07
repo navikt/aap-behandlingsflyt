@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.erSystembruker
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -24,7 +25,7 @@ sealed interface KravVurdering {
     val opprettet: Instant
 
     fun erAutomatiskVurdert(): Boolean {
-        return vurdertAv == SYSTEMBRUKER
+        return vurdertAv.erSystembruker()
     }
 
     fun forJournalpostId(journalpostId: JournalpostId): Boolean {

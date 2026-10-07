@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
 import java.util.Locale
@@ -24,18 +25,24 @@ import java.util.UUID
 
 internal fun meldekortJournalpost(
     sak: Sak,
-    meldeperiode: Periode,
+    meldeperiode: Periode?,
     meldekort: MeldekortV0,
     enhet: String,
     pdf: ByteArray,
     korrigert: Boolean,
+    meldedato: LocalDate,
 ): Journalpost {
-    val uke1 = meldeperiode.fom.get(uke)
-    val uke2 = meldeperiode.tom.get(uke)
-    val fra = meldeperiode.fom.format(dateFormatter)
-    val til = meldeperiode.tom.format(dateFormatter)
     val prefix = if (korrigert) "Korrigert meldekort" else "Meldekort"
-    val tittel = "$prefix for uke $uke1 - $uke2 ($fra - $til)"
+    val utenTimer = meldekort.harDuArbeidet == null && meldekort.timerArbeidPerPeriode.isEmpty()
+    val tittel = if (utenTimer || meldeperiode == null) {
+        "Registrering av meldeplikt ${meldedato.format(dateFormatter)}"
+    } else {
+        val uke1 = meldeperiode.fom.get(uke)
+        val uke2 = meldeperiode.tom.get(uke)
+        val fra = meldeperiode.fom.format(dateFormatter)
+        val til = meldeperiode.tom.format(dateFormatter)
+        "$prefix for uke $uke1 - $uke2 ($fra - $til)"
+    }
 
     return Journalpost(
         journalposttype = Journalposttype.NOTAT,

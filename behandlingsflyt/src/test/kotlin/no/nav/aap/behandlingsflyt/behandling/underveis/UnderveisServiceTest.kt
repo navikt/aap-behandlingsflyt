@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstype
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktVurdering
+import no.nav.aap.meldeplikt.MeldepliktVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Oppfylt
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput

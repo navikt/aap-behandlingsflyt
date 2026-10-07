@@ -19,6 +19,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.MottakerDto
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.utbetaling.helved.base64ToUUID
@@ -132,6 +133,15 @@ class HåndterTilbakekrevingHendelseService(
 
         val vedtakstidspunkt = vedtakRepository.hent(behandling.id)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
         val nayEnhetForPerson = tilbakekrevingService.finnNayEnhetForPerson(sak.person.aktivIdent(), behandling)
+
+        val url = runCatching {
+            requiredConfigForKey("INTEGRASJON_SAKSBEHANDLING_URL")
+                .takeIf { it.isNotBlank() }
+                ?.let(URI::create)
+                ?.resolve("/saksbehandling/sak/${sak.saksnummer}")
+                ?.toString()
+        }.getOrNull()
+
         return FagsysteminfoSvarHendelse(
             eksternFagsakId = this.eksternFagsakId,
             hendelseOpprettet = LocalDateTime.now(),
@@ -144,6 +154,7 @@ class HåndterTilbakekrevingHendelseService(
                 årsak = årsak,
                 årsakTilFeilutbetaling = null,
                 vedtaksdato = vedtakstidspunkt.toLocalDate(),
+                url = url,
             ),
             // TODO: Meldeperioder inkluderer helg i Kelvin, men er mandag-fredag i tilbakekreving. Kan bruke denne for å "slå sammen" to mandag-fredag-perioder til én lang periode.
             utvidPerioder = emptyList(),

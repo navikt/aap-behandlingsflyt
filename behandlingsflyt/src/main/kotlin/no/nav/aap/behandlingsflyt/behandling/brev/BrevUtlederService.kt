@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
@@ -41,8 +42,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
@@ -64,7 +65,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.G_REGULER
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
@@ -394,11 +394,7 @@ class BrevUtlederService(
 
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
 
-        val samordning = if (unleashGateway.isEnabled(BehandlingsflytFeature.SamordningFaktagrunnlagBrev)) {
-            hentForholdTilAndreYtelserForBrev(behandling.id)
-        } else {
-            null
-        }
+        val samordning = hentForholdTilAndreYtelserForBrev(behandling.id, vedtak)
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
 
         val yrkesSkadeISøknadIkkeIRegister =
@@ -720,11 +716,11 @@ class BrevUtlederService(
             .any { it.rettighetsType == rettighetsType }
     }
 
-    fun hentForholdTilAndreYtelserForBrev(behandlingId: BehandlingId): ForholdTilAndreYtelser? {
+    fun hentForholdTilAndreYtelserForBrev(behandlingId: BehandlingId, vedtak: Vedtak): ForholdTilAndreYtelser? {
         val samordningAndreYtelser = hentSamordningAndreYtelser(behandlingId)
         val samordningUføre = hentSisteSamordningUføre(behandlingId)
         val reduksjonArbeidsgiver = hentReduksjonArbeidsgiver(behandlingId)
-        val refusjonskravTjenestepensjon = hentRefusjonskravTjenestepensjon(behandlingId)
+        val refusjonskravTjenestepensjon = hentRefusjonskravTjenestepensjon(behandlingId, vedtak)
         val sykestipend = hentSykestipend(behandlingId)
         val samordningBarnepensjon = hentSamordningBarnepensjon(behandlingId)
         val fradragAndreYtelser = hentFradragAndreYtelser(behandlingId)
@@ -801,13 +797,29 @@ class BrevUtlederService(
         } ?: emptyList()
     }
 
-    private fun hentRefusjonskravTjenestepensjon(behandlingId: BehandlingId): RefusjonskravTjenestepensjon? {
+    private fun hentRefusjonskravTjenestepensjon(
+        behandlingId: BehandlingId,
+        vedtak: Vedtak,
+    ): RefusjonskravTjenestepensjon? {
         return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
-            RefusjonskravTjenestepensjon(
-                skalEtterbetalingHoldesIgjen = vurdering.harKrav,
-                fraOgMed = vurdering.fom,
-                tilOgMed = vurdering.tom,
-            )
+            if (!vurdering.harKrav) {
+                RefusjonskravTjenestepensjon(
+                    skalEtterbetalingHoldesIgjen = false,
+                    fraOgMed = null,
+                    tilOgMed = null,
+                )
+            } else {
+                val fraOgMed = checkNotNull(vedtak.virkningstidspunkt) {
+                    "Vedtak mangler virkningstidspunkt"
+                }
+                val tilOgMed = vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt)
+
+                RefusjonskravTjenestepensjon(
+                    skalEtterbetalingHoldesIgjen = true,
+                    fraOgMed = fraOgMed,
+                    tilOgMed = tilOgMed,
+                )
+            }
         }
     }
 

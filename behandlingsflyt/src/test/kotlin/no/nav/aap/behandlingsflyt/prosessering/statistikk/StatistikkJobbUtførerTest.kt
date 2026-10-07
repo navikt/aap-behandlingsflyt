@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
@@ -218,7 +218,8 @@ class StatistikkJobbUtførerTest {
             vurderingsbehov = listOf(Vurderingsbehov.SØKNAD.name),
             mottattDokumenter = emptyList(),
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
-            reserverTilPerAvklaringsbehov = emptyMap()
+            reserverTilPerAvklaringsbehov = emptyMap(),
+            aktivtAvklaringsbehov = null,
         )
 
         val hendelse2 = DefaultJsonMapper.toJson(payload)
@@ -485,7 +486,8 @@ class StatistikkJobbUtførerTest {
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             reserverTil = "meg",
             mottattDokumenter = emptyList(),
-            reserverTilPerAvklaringsbehov = emptyMap()
+            reserverTilPerAvklaringsbehov = emptyMap(),
+            aktivtAvklaringsbehov = null,
 
         )
 
@@ -668,7 +670,8 @@ class StatistikkJobbUtførerTest {
             årsakTilOpprettelse = behandling.årsakTilOpprettelse.tilKontrakt(),
             mottattDokumenter = emptyList(),
             reserverTil = "meg",
-            reserverTilPerAvklaringsbehov = emptyMap()
+            reserverTilPerAvklaringsbehov = emptyMap(),
+            aktivtAvklaringsbehov = null,
         )
 
         val hendelse = DefaultJsonMapper.toJson(payload)

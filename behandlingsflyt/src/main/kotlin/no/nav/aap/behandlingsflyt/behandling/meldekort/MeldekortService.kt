@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.meldekort
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.journalføring.JournalføringService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -108,6 +109,33 @@ class MeldekortService(
             .any { it.meldekort?.dager?.isNotEmpty() == true }
     }
 
+    fun registrerMeldedato(registrerMeldedato: RegistrerMeldedato): OppdatertMeldekort {
+        val sak = sakRepository.hent(registrerMeldedato.saksnummer)
+        val behandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
+            ?: throw UgyldigForespørselException("Kan ikke registrere meldedato når ingen vedtak eksisterer i saken")
+
+        validerMeldedato(behandling, registrerMeldedato.meldedato)
+
+        val meldedato = registrerMeldedato.meldedato
+
+        val journalpostId = journalførOgRegistrerMeldekort(
+            sak = sak,
+            meldeperiode = null,
+            meldekort = registrerMeldedato.tilMeldekort(),
+            bruker = registrerMeldedato.bruker,
+            meldedato = meldedato,
+            korrigert = false,
+            /**
+             * Ikke interessant ved registrering av meldedato fordi arbeidstimer ikke har noen påvirkning for om
+             * meldeplikten oppfylles.
+             */
+            nyesteMeldekortPåDato = null,
+        )
+
+        logger.info("Saksbehandler har registrert meldedato for saksnummer ${registrerMeldedato.saksnummer}")
+        return OppdatertMeldekort(journalpostId)
+    }
+
     fun oppdaterMeldekort(oppdaterMeldekort: OppdaterMeldekort): OppdatertMeldekort {
         val sak = sakRepository.hent(oppdaterMeldekort.saksnummer)
         val behandling = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
@@ -116,33 +144,52 @@ class MeldekortService(
 
         valider(behandling, meldekortGrunnlag, oppdaterMeldekort)
 
-        val meldekort = oppdaterMeldekort.tilMeldekort()
+        val journalpostId = journalførOgRegistrerMeldekort(
+            sak = sak,
+            meldeperiode = oppdaterMeldekort.meldeperiode,
+            meldekort = oppdaterMeldekort.tilMeldekort(),
+            bruker = oppdaterMeldekort.bruker,
+            meldedato = oppdaterMeldekort.meldedato,
+            korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(oppdaterMeldekort.meldeperiode) != null,
+            nyesteMeldekortPåDato = meldekortGrunnlag?.nyesteForMeldeperiodePåDato(
+                oppdaterMeldekort.meldeperiode,
+                oppdaterMeldekort.meldedato
+            ),
+        )
 
+        logger.info("Saksbehandler har opprettet/korrigert meldekort for saksnummer ${oppdaterMeldekort.saksnummer}")
+        return OppdatertMeldekort(journalpostId)
+    }
+
+    private fun journalførOgRegistrerMeldekort(
+        sak: Sak,
+        meldeperiode: Periode?,
+        meldekort: MeldekortV0,
+        bruker: Bruker,
+        meldedato: LocalDate,
+        korrigert: Boolean,
+        nyesteMeldekortPåDato: Meldekort?,
+    ): JournalpostId {
         try {
             val journalpostId = journalføringService.journalførMeldekort(
                 sak = sak,
-                meldeperiode = oppdaterMeldekort.meldeperiode,
+                meldeperiode = meldeperiode,
                 meldekort = meldekort,
-                oppdatertAv = oppdaterMeldekort.bruker,
-                enhet = ansattInfoService.hentAnsattEnhet(oppdaterMeldekort.bruker),
+                oppdatertAv = bruker,
+                enhet = ansattInfoService.hentAnsattEnhet(bruker),
                 tidspunkt = Instant.now(clock),
-                meldeDato = oppdaterMeldekort.meldedato,
-                korrigert = meldekortGrunnlag?.nyesteForMeldeperiode(oppdaterMeldekort.meldeperiode) != null
+                meldeDato = meldedato,
+                korrigert = korrigert
             )
 
-            val mottattTidspunkt = utledetMottattTidspunkt(
-                oppdaterMeldekort.meldedato,
-                meldekortGrunnlag?.nyesteForMeldeperiodePåDato(oppdaterMeldekort.meldeperiode, oppdaterMeldekort.meldedato)
-            )
+            val mottattTidspunkt = utledetMottattTidspunkt(meldedato, nyesteMeldekortPåDato)
 
             // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
             mottattHendelseService.registrerMottattHendelse(
                 tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)
             )
 
-            logger.info("Saksbehandler har opprettet/korrigert meldekort for saksnummer ${oppdaterMeldekort.saksnummer}")
-            return OppdatertMeldekort(journalpostId)
-
+            return journalpostId
         } catch (e: Exception) {
             logger.error(
                 "En feil oppstod ved oppdatering av meldekort, dette må undersøkes da journalføring kan " +
@@ -157,6 +204,24 @@ class MeldekortService(
         return MeldekortProsesseringResponse(
             meldekortProsesseringStatus = hentProsesseringStatus(sak)
         )
+    }
+
+    private fun validerMeldedato(behandling: BehandlingMedVedtak, meldedato: LocalDate) {
+        underveisRepository.hentHvisEksisterer(behandling.id)
+            ?: throw UgyldigForespørselException("Fant ikke underveisgrunnlag for behandlingen")
+
+        val virkningstidspunkt = behandling.virkningstidspunkt
+            ?: throw UgyldigForespørselException("Kan ikke registrere meldedato når virkningstidspunkt mangler")
+
+        if (meldedato < virkningstidspunkt) {
+            throw UgyldigForespørselException(
+                "Meldedatoen $meldedato kan ikke være før virkningstidspunktet $virkningstidspunkt"
+            )
+        }
+
+        if (meldedato.isAfter(LocalDate.now(clock))) {
+            throw UgyldigForespørselException("Meldedatoen $meldedato kan ikke være frem i tid")
+        }
     }
 
     private fun valider(

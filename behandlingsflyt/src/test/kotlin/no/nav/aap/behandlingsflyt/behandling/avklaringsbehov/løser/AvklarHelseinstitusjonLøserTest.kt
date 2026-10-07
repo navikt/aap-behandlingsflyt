@@ -22,8 +22,10 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.time.Clock
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -231,7 +234,7 @@ class AvklarHelseinstitusjonLøserTest {
                 lagHelseinstitusjonVurdering(
                     begrunnelse = "Eksisterende vurdering",
                     periode = Periode(1 januar 2025, 31 desember 2025),
-                    behandlingId = nåværendeBehandlingId
+                    behandlingId = forrigeBehandlingId
                 )
             )
         )
@@ -982,6 +985,212 @@ class AvklarHelseinstitusjonLøserTest {
         assertThat(lagrede[0].vurdertIBehandling).isEqualTo(behandlingId)
     }
 
+
+    // -------------------------------------------------------------------------
+    // Reduksjon skal ikke smitte til gap eller nytt opphold
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `reduksjon skal ikke smitte over til gap mellom to opphold`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val nåværendeBehandlingId = revurdering.id
+
+        // Forrige: ett løpende opphold med reduksjon fra 1/4 og ut
+        val løpendeTom = 1 januar 2999
+        helseinstitusjonRepository.lagreOpphold(
+            forrigeBehandlingId, listOf(
+                lagInstitusjonsopphold(fra = 17 desember 2025, til = løpendeTom)
+            )
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon løpende",
+                    periode = Periode(1 april 2026, løpendeTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Nåværende: opphold A avkortet, nytt opphold B med gap mellom
+        val oppholdATom = 14 april 2026
+        val oppholdBFom = 15 juni 2026
+        val oppholdBTom = 3 september 2026
+        helseinstitusjonRepository.lagreOpphold(
+            nåværendeBehandlingId, listOf(
+                lagInstitusjonsopphold(fra = 17 desember 2025, til = oppholdATom),
+                lagInstitusjonsopphold(fra = oppholdBFom, til = oppholdBTom, orgnr = "999", institusjonsnavn = "Sykehus B")
+            )
+        )
+
+        // Saksbehandler setter ny reduksjon fra 1/7 for opphold B
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            lagLøsning(
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "ikke reduksjon opphold B",
+                    faarFriKostOgLosji = false,
+                    periode = Periode(oppholdBFom, 30 juni 2026)
+                ),
+                lagHelseinstitusjonVurderingDto(
+                    begrunnelse = "reduksjon opphold B",
+                    periode = Periode(1 juli 2026, oppholdBTom)
+                )
+            )
+        )
+
+        val lagrede =
+            helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+
+        // Ingen vurdering skal dekke gapet mellom oppholdene (15/4 - 14/6)
+        val gapPeriode = Periode(oppholdATom.plusDays(1), oppholdBFom.minusDays(1))
+        assertThat(lagrede.none { it.periode.overlapper(gapPeriode) })
+            .`as`("Ingen vurdering skal ligge i gapet mellom oppholdene").isTrue()
+
+        val ikkeReduksjon = lagrede.find { it.begrunnelse == "ikke reduksjon opphold B" }
+        assertThat(ikkeReduksjon).isNotNull
+        assertThat(ikkeReduksjon!!.faarFriKostOgLosji).isFalse()
+        assertThat(ikkeReduksjon.vurdertIBehandling).isEqualTo(nåværendeBehandlingId)
+
+
+        // Perioden fra 1/7 skal ha reduksjon
+        val reduksjonOppholdB = lagrede.find { it.begrunnelse == "reduksjon opphold B" }
+        assertThat(reduksjonOppholdB).isNotNull
+        assertThat(reduksjonOppholdB!!.faarFriKostOgLosji).isTrue()
+        assertThat(reduksjonOppholdB.harFasteUtgifter).isFalse()
+        assertThat(reduksjonOppholdB.harFasteUtgifter).isFalse()
+        assertThat(reduksjonOppholdB.periode.fom).isEqualTo(1 juli 2026)
+        assertThat(reduksjonOppholdB.periode.tom).isEqualTo(oppholdBTom)
+
+        // Ingen gammel vurdering skal strekke seg inn i opphold B
+        assertThat(lagrede.none { it.vurdertIBehandling == forrigeBehandlingId && it.periode.fom >= oppholdBFom })
+            .`as`("Gammel vurdering skal ikke smitte over til nytt opphold").isTrue()
+    }
+
+    @Test
+    fun `gammel vurdering skal ikke strekke seg forbi avkortet opphold inn i gap`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val nåværendeBehandlingId = revurdering.id
+
+        val løpendeTom = 1 januar 2999
+        helseinstitusjonRepository.lagreOpphold(
+            forrigeBehandlingId, listOf(
+                lagInstitusjonsopphold(fra = 1 februar 2025, til = løpendeTom)
+            )
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon løpende",
+                    periode = Periode(1 juni 2025, løpendeTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Nåværende: opphold avkortet, ingen ny vurdering sendes inn (ingen avklaringsbehov-løsning for perioden etter)
+        val nyTom = 1 august 2025
+        helseinstitusjonRepository.lagreOpphold(
+            nåværendeBehandlingId, listOf(
+                lagInstitusjonsopphold(fra = 1 februar 2025, til = nyTom)
+            )
+        )
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            lagLøsning()
+        )
+
+        val lagrede =
+            helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+
+        assertThat(lagrede.none { it.periode.tom.isAfter(nyTom) })
+            .`as`("Ingen vurdering skal strekke seg forbi oppholdets nye sluttdato").isTrue()
+    }
+
+    @Test
+    fun `ett opphold videreføres og ett er helt nytt i samme revurdering`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val nåværendeBehandlingId = revurdering.id
+
+        helseinstitusjonRepository.lagreOpphold(
+            forrigeBehandlingId, listOf(
+                lagInstitusjonsopphold(fra = 1 februar 2025, til = 1 august 2025)
+            )
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon opphold 1",
+                    periode = Periode(1 juni 2025, 1 august 2025),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Opphold 1 uendret + helt nytt opphold 2 (annen fom)
+        helseinstitusjonRepository.lagreOpphold(
+            nåværendeBehandlingId, listOf(
+                lagInstitusjonsopphold(fra = 1 februar 2025, til = 1 august 2025),
+                lagInstitusjonsopphold(
+                    fra = 1 november 2025, til = 1 april 2026,
+                    orgnr = "555", institusjonsnavn = "Sykehus 2"
+                )
+            )
+        )
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            lagLøsning() // ingen nye vurderinger
+        )
+
+        val lagrede =
+            helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+
+        // Opphold 1 skal beholde gammel vurdering
+        assertThat(lagrede.any { it.periode == Periode(1 juni 2025, 1 august 2025) && it.vurdertIBehandling == forrigeBehandlingId }).isTrue()
+
+        // Opphold 2 skal IKKE ha noen vurdering (helt nytt, ingen historikk å arve)
+        assertThat(lagrede.none { it.periode.fom >= 1 november 2025 }).isTrue()
+    }
+
+    @Test
+    fun `KJENT BEGRENSNING - endret fom på samme opphold mister gammel vurdering`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val nåværendeBehandlingId = revurdering.id
+
+        helseinstitusjonRepository.lagreOpphold(
+            forrigeBehandlingId, listOf(lagInstitusjonsopphold(fra = 1 februar 2025, til = 1 august 2025))
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon",
+                    periode = Periode(1 juni 2025, 1 august 2025),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+
+        // Register korrigerer fom noen dager - samme fysiske opphold, men matcher ikke lenger
+        helseinstitusjonRepository.lagreOpphold(
+            nåværendeBehandlingId, listOf(lagInstitusjonsopphold(fra = 3 februar 2025, til = 1 august 2025))
+        )
+
+        løser.løs(avklaringsbehovKontekst { this.behandling = revurdering }, lagLøsning())
+
+        val lagrede =
+            helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+
+        // Dokumenterer dagens (begrensede) oppførsel - bør revurderes hvis det blir et reelt problem
+        assertThat(lagrede).isEmpty()
+    }
+
+
     // -------------------------------------------------------------------------
     // Hjelpemetoder
     // -------------------------------------------------------------------------
@@ -1027,8 +1236,8 @@ class AvklarHelseinstitusjonLøserTest {
     )
 
     private fun lagInstitusjonsopphold(
-        fra: java.time.LocalDate,
-        til: java.time.LocalDate,
+        fra: LocalDate,
+        til: LocalDate,
         institusjonstype: Institusjonstype = Institusjonstype.HS,
         kategori: Oppholdstype = Oppholdstype.H,
         orgnr: String = "987654321",

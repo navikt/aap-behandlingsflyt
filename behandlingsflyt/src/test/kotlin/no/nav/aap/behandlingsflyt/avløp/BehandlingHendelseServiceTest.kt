@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
@@ -43,6 +44,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -53,7 +55,13 @@ class BehandlingHendelseServiceTest {
     private val mottattDokumentRepository = mockk<MottattDokumentRepository>()
     private val pipRepository = mockk<PipService>()
     private val behandlingService = mockk<BehandlingService>()
+    private val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
     private val unleashGateway = mockk<UnleashGateway>()
+
+    @BeforeEach
+    fun beforeEach() {
+        every { avklaringsbehovService.finnAktivtAvklaringsbehov(any()) } returns null
+    }
 
     @AfterEach
     fun afterEach() {
@@ -274,6 +282,7 @@ class BehandlingHendelseServiceTest {
                 mottattDokumentRepository,
                 pipRepository,
                 behandlingService,
+                avklaringsbehovService,
                 unleashGateway,
             )
 

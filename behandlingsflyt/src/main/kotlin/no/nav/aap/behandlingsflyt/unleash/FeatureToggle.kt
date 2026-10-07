@@ -16,12 +16,10 @@ enum class BehandlingsflytFeature(
     Under18,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
-    SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
-    GenererVilkarsvurderingOppsummeringPDF,
     SaksbehandlerMeldekortKvitteringNyPdfgenerator,
 
     // --- Krav ---
