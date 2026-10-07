@@ -5,7 +5,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
-import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -32,7 +31,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeDokarkivGateway
 import no.nav.aap.behandlingsflyt.test.FakePdfGeneratorGateway
-import no.nav.aap.behandlingsflyt.test.FakePdfgenGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.april
@@ -51,6 +49,7 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -78,7 +77,6 @@ class MeldekortApiTest : BaseApiTest() {
         register<NorgGateway>()
         register<AlleAvskruddUnleash>()
         register<FakeDokarkivGateway>()
-        register<FakePdfgenGateway>()
         register<FakePdfGeneratorGateway>()
     }
 
