@@ -64,7 +64,7 @@ class UføreRepositoryImplTest {
                 )
             )
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(
+            assertThat(uføreGrunnlag?.vedtak).isEqualTo(
                 setOf(
                     Uføre(
                         LocalDate.now(),
@@ -125,7 +125,7 @@ class UføreRepositoryImplTest {
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(100))))
+            assertThat(uføreGrunnlag?.vedtak).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(100))))
         }
     }
 
@@ -164,7 +164,7 @@ class UføreRepositoryImplTest {
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(80))))
+            assertThat(uføreGrunnlag?.vedtak).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(80))))
         }
     }
 
@@ -177,11 +177,11 @@ class UføreRepositoryImplTest {
 
             uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(100))))
             val orginaltGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(100))))
+            assertThat(orginaltGrunnlag?.vedtak).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(100))))
 
             uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(80))))
             val oppdatertGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(80))))
+            assertThat(oppdatertGrunnlag?.vedtak).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(80))))
 
             val eldsteGrunnlag = uføreRepository.hentEldsteGrunnlag(behandling.id)
             assertThat(eldsteGrunnlag).isEqualTo(orginaltGrunnlag)

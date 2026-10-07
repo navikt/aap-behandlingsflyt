@@ -178,7 +178,7 @@ class OvergangUføreSteg private constructor(
         virkningsdato: LocalDate,
     ): UføreSøknadVedtakResultat {
         val uføregrad = uføreRepository.hentHvisEksisterer(behandlingId)
-            ?.vurderinger
+            ?.vedtak
             .orEmpty()
             .tilTidslinje()
             .segment(virkningsdato)
