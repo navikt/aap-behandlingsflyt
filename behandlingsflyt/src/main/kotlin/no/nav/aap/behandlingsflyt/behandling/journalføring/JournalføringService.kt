@@ -22,13 +22,11 @@ class JournalføringService(
     private val dokarkivGateway: DokarkivGateway,
     private val pdfgenGateway: PdfgenGateway,
     private val pdfGeneratorGateway: PdfGeneratorGateway,
-    private val unleashGateway: UnleashGateway,
 ) {
     constructor(gatewayProvider: GatewayProvider) : this(
         dokarkivGateway = gatewayProvider.provide(),
         pdfgenGateway = gatewayProvider.provide(),
         pdfGeneratorGateway = gatewayProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
     )
 
     fun journalførMeldekort(
@@ -41,30 +39,16 @@ class JournalføringService(
         meldeDato: LocalDate,
         korrigert: Boolean,
     ): JournalpostId {
-        val pdf = if(unleashGateway.isEnabled(BehandlingsflytFeature.SaksbehandlerMeldekortKvitteringNyPdfgenerator)){
-            pdfGeneratorGateway.genererMeldekortPdf(
-                meldekort.tilPdfRequest(
-                    ident = sak.person.aktivIdent().identifikator,
-                    meldeperiode = meldeperiode,
-                    utførtAv = oppdatertAv.ident,
-                    tidspunkt = tidspunkt,
-                    meldeDato = meldeDato,
-                    korrigert = korrigert,
-                )
+        val pdf = pdfGeneratorGateway.genererMeldekortPdf(
+            meldekort.tilPdfRequest(
+                ident = sak.person.aktivIdent().identifikator,
+                meldeperiode = meldeperiode,
+                utførtAv = oppdatertAv.ident,
+                tidspunkt = tidspunkt,
+                meldeDato = meldeDato,
+                korrigert = korrigert,
             )
-        } else {
-
-            pdfgenGateway.genererMeldekortPdf(
-                meldekort.tilPdfRequest(
-                    ident = sak.person.aktivIdent().identifikator,
-                    meldeperiode = meldeperiode,
-                    utførtAv = oppdatertAv.ident,
-                    tidspunkt = tidspunkt,
-                    meldeDato = meldeDato,
-                    korrigert = korrigert,
-                )
-            )
-        }
+        )
 
         return journalfør(
             oppdatertAv = oppdatertAv,

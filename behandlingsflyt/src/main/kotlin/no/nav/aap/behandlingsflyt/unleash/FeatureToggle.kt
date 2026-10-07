@@ -20,7 +20,6 @@ enum class BehandlingsflytFeature(
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
-    SaksbehandlerMeldekortKvitteringNyPdfgenerator,
 
     // --- Krav ---
     BackfillKrav,
