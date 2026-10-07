@@ -67,6 +67,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.G_REGULER
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
@@ -109,7 +111,9 @@ class BrevUtlederService(
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val personOpplysningRepository: PersonopplysningRepository
+    private val personOpplysningRepository: PersonopplysningRepository,
+    private val sakRepository: SakRepository,
+    private val personinfoBulkGateway: PersoninfoBulkGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -139,6 +143,8 @@ class BrevUtlederService(
         meldepliktRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
         personOpplysningRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        personinfoBulkGateway = gatewayProvider.provide(),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
     )
 
@@ -453,12 +459,17 @@ class BrevUtlederService(
     }
 
     private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
+
+        val behandling = behandlingRepository.hent(behandling.id)
+        val ident = sakRepository.hent(behandling.sakId).person.aktivIdent()
+
         val dødsdato = personOpplysningRepository
             .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
             ?.dødsdato
             ?: error("Mangler dødsdato for dødsfallsbrev i behandling ${behandling.id}")
-
-        return VedtakEndringDødsfall(dødsdato.toLocalDate())
+        val personinfo = personinfoBulkGateway.hentPersoninfoForIdenter(listOf(ident)).singleOrNull()
+            ?: error("Mangler personinfo for ident i behandling ${behandling.id}")
+        return VedtakEndringDødsfall(dødsdato.toLocalDate(), personinfo.fulltNavn())
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
