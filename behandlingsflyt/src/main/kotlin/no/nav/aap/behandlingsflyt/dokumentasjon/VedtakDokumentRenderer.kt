@@ -953,7 +953,7 @@ internal object VedtakDokumentRenderer {
 
     private fun VedtakDokumentGrunnlag.lovvalgMedlemskapSub(): Seksjon? {
         val grunnlag = lovvalgMedlemskapGrunnlag ?: return null
-        val tidslinje = grunnlag.gjeldendeVurderinger()
+        val tidslinje = grunnlag.gjeldendeManuelleVurderinger()
         if (tidslinje.isEmpty()) return null
         return Seksjon(
             tittel = Tekst("Lovvalg og medlemskap"),

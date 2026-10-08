@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.AutomatiskPeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -96,6 +97,11 @@ class AvklaringsbehovService(
         )
     }
 
+    enum class Stoppunkt {
+        STOPPUNKT,
+        IKKE_STOPPUNKT
+    }
+    
     enum class Behov {
         FRIVILLIG, PÅKREVD, INGEN_BEHOV;
 
@@ -212,7 +218,7 @@ class AvklaringsbehovService(
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
                             perioderKanVurderes = null, // TODO
-                            gradBehov = behov.tilGradBehov()
+                            gradBehov = behov.tilGradBehov() // Gradbehov styrer stopp, men ikke nødevndigvis at i vi krever en vurdering
                         )
 
                     KVALITETSSIKRET,
@@ -473,6 +479,173 @@ class AvklaringsbehovService(
             gjeldendeVurderinger = gjeldendeVurderinger
         )
     }
+    
+    enum class Tilstand {
+        KAN_IKKE_VURDERES, // Samme effekt som ikke relevant
+        IKKE_LENGER_TILSTREKKELIG_VURDERT,
+        IKKE_TILSTREKKELIG_VURDERT,
+        MANGLER_VURDERING,
+        NYTT_KRAV_KREVER_NY_VURDERING,
+        FRIVILLIG,
+        UØNSKET_VURDERING,
+        ;
+        
+        fun erPåkrevd(): Boolean {
+            return this in setOf(IKKE_LENGER_TILSTREKKELIG_VURDERT, IKKE_TILSTREKKELIG_VURDERT, MANGLER_VURDERING, NYTT_KRAV_KREVER_NY_VURDERING)
+        }
+        
+    }
+
+    enum class VurderingTilstand {
+        VURDERING_OK,
+        VURDERING_FEIL,
+        VURDERING_UØNSKET,
+        VURDERING_MANGLER,
+    }
+
+    fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        definisjon: Definisjon,
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        tilstandPåVurderinger:  Tidslinje<VurderingTilstand>,
+        tvingStopp: Stoppunkt, // input:         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
+        behovForVurderingIDenneBehandlingen: Tidslinje<Behov>, // Vi krever ny vurdering (ved påkrevd), holder ikke med tom løsning
+        kontekst: FlytKontekstMedPerioder,
+        tilbakestillGrunnlag: () -> Unit,
+        kanOverstyreAutomatiskeVurderinger: Boolean,
+        gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
+    ) {
+        val perioderVilkåretErRelevant by lazy { nårVurderingErRelevant(kontekst) }
+        val perioderVilkåretVarRelevant by lazy { nårVurderingErRelevant(/*forrige */ kontekst) }
+
+        val behovForVurderingDenneBehandlingen = Tidslinje.map5(
+            gjeldendeVurderinger,
+            perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
+            perioderVilkåretVarRelevant.begrensetTil(kontekst.rettighetsperiode),
+            tilstandPåVurderinger,
+            avklaringsbehovValidering.nårKravHarLøsning(definisjon, gjeldendeVurderinger, kontekst.tilFlytKontekst())
+        ) { gjeldendeVurdering, erRelevant, varRelevant, vurderingTilstand, manglerVurderingEtterNyttKrav ->
+            when {
+//                varRelevant != true && erRelevant == true && -> Tilstand.
+                erRelevant != true -> Tilstand.KAN_IKKE_VURDERES
+                vurderingTilstand == VurderingTilstand.VURDERING_FEIL ->
+                    if (gjeldendeVurdering.vurdertIBehandling == kontekst.behandlingId)
+                        Tilstand.IKKE_TILSTREKKELIG_VURDERT
+                else
+                        Tilstand.IKKE_LENGER_TILSTREKKELIG_VURDERT
+                manglerVurderingEtterNyttKrav == true -> Tilstand.NYTT_KRAV_KREVER_NY_VURDERING
+                vurderingTilstand == VurderingTilstand.VURDERING_OK -> when {
+                    gjeldendeVurdering?.erAutomatiskVurdert() != true-> Tilstand.FRIVILLIG
+                    kanOverstyreAutomatiskeVurderinger -> Tilstand.FRIVILLIG
+                    !kanOverstyreAutomatiskeVurderinger -> Tilstand.KAN_IKKE_VURDERES
+                }
+                vurderingTilstand == VurderingTilstand.VURDERING_MANGLER -> Tilstand.MANGLER_VURDERING
+                //erTilstrekkeligVurdertITidligereBehandling != true -> Tilstand.IKKE_LENGER_TILSTREKKELIG_VURDERT
+             
+                else -> // Havner ikke her hvis tilstrekkeligVurdert ikke kan inneholde hull
+                    throw IllegalStateException("blabla")
+            }
+        }
+        
+        
+
+        oppdaterAvklaringsbehov(
+            definisjon = definisjon,
+            behov = { // TODO: Håndter frivillig
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING,
+                    VurderingType.MIGERING_FRA_ARENA -> {
+                        when {
+                            // Dette betyr egentlig om vi må løse et avklaringsbehov (stopp), ikke om vi trenger en vurdering
+                            // Vi må løse et behov hvis vi trenger en vurdering, eller hvis vi av andre årsaker tvinger stopp
+                            
+                            // Dekker denne caset no-op på samordning?
+                            tvingStopp == Stoppunkt.STOPPUNKT -> Behov.PÅKREVD // Løfter påkrevd avklaringsbehov. Fører til stopp
+                            else -> when (behovForVurderingDenneBehandlingen.segmenter().any { it.verdi == Behov.PÅKREVD } ||any ikke tilstrekkelig vurdert i denne) {
+                                true -> Behov.PÅKREVD // Løfter påkrevd avklaringsbehov. Fører til stopp
+                                false -> when (behovForVurderingDenneBehandlingen.segmenter().any { it.verdi == Behov.FRIVILLIG }) {
+                                    true -> Behov.FRIVILLIG // Løfter frivillig avklaringsbehov. Fører ikke til stopp
+                                    false -> Behov.INGEN_BEHOV // Løfter ikke avklaringsbehov
+                                }
+                            }
+                        }
+                    }
+
+                    VurderingType.OVERGANG_UFORE_STANS,
+                    VurderingType.MELDEKORT,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.AUTOMATISK_BREV,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.G_REGULERING,
+                    VurderingType.IKKE_RELEVANT -> Behov.INGEN_BEHOV
+                }
+            },
+            perioderSomKanVurderes = {behovForVurderingDenneBehandlingen.segmenter().filter{it.verdi == Tilstand.FRIVILLIG},
+            perioderVedtaketBehøverVurdering = { behovForVurderingDenneBehandlingen.segmenter().filter{it.verdi.erPåkrevd()} }, // Vurdering mangler | Ny vurdering ikke tilstrekklig vurdert | tidligere vurdering ikke tilstrekklig vurdert 
+            perioderSomIkkeErTilstrekkeligVurdert = 
+                // TODO: Denne må regnes ut på nytt selv om vi har regnet ut dette i behovForVurderingDenneBehandlingen. Kanskje ta med mer informasjon i stedet (hvorfor er det påkrevd)?
+                
+                {
+                    val perioderSomIkkeErTilstrekkeligVurdertEvaluert = perioderSomIkkeErTilstrekkeligVurdert(kontekst)
+                    if (perioderSomIkkeErTilstrekkeligVurdertEvaluert != null) {
+                        perioderSomIkkeErTilstrekkeligVurdertEvaluert.toSet()
+                    } else {
+                        val nårVurderingErGyldigTidslinje = nårVurderingErGyldig()
+                        if (nårVurderingErGyldigTidslinje == null) {
+                            null
+                        } else {
+                            Tidslinje.map3(
+                                nårVurderingErRelevant(kontekst),
+                                nårVurderingErGyldigTidslinje,
+                                if (definisjon.erFrivillig() && definisjon !in ikkeEkteFrivillig) Tidslinje.empty() else avklaringsbehovValidering.nårKravHarLøsning(
+                                    definisjon,
+                                    gjeldendeVurderinger(),
+                                    kontekst.tilFlytKontekst()
+                                )
+                            ) { erRelevant, erGyldig, dekkerKrav ->
+                                erRelevant != true || (erGyldig == true && dekkerKrav != false)
+                            }
+                                .begrensetTil(kontekst.rettighetsperiode)
+                                .komprimer()
+                                .filter { !it.verdi }
+                                .perioder()
+                                .toSet()
+                        }
+                    }
+                },
+            erTilstrekkeligVurdert = { false },
+            tilbakestillGrunnlag = {
+                // TODO: Tilbakestill ved INGEN_BEHOV, ikke tilbakestill ved FRIVILLIG
+                // Ikke tilbakestill automatiske vurderinger; de vil bli håndtert i steget?
+                
+                val vurderingerFraDenneBehandlingen = gjeldendeVurderinger().orEmpty()
+                    .filter { it.verdi.vurdertIBehandling == kontekst.behandlingId }
+
+                val kunAutomatiskeVurderinger = vurderingerFraDenneBehandlingen.isNotEmpty() &&
+                        vurderingerFraDenneBehandlingen.all { it.erAutomatiskVurdert() }
+
+                /* Hopper over tilbakestilling når alt denne behandlingen har lagt inn er automatisk
+                 * vurdert og minst en periode er relevant: det er steget selv som har skrevet vurderingene,
+                 * så en tilbakestilling ville bare ført til at de ble skrevet på nytt ved neste gjennomkjøring.
+                 * Finnes det manuelle vurderinger i behandlingen, må de fortsatt ryddes bort.
+                 */
+                if (kunAutomatiskeVurderinger && perioderVilkåretErRelevant.segmenter().any { it.verdi }) {
+                    log.info(
+                        "Tilbakestiller ikke grunnlag for {} i behandling {}: alle vurderingene i behandlingen er automatisk vurdert.",
+                        definisjon,
+                        kontekst.behandlingId
+                    )
+                } else {
+                    tilbakestillGrunnlag()
+                }
+            },
+            kontekst = kontekst
+        )
+        }
+        
+    
 
     /** Spesialtilfelle av [oppdaterAvklaringsbehovMedGrad] for vilkår som er periodisert. Brukeren
      * av funksjonen må fortelle hvilke perioder hvor vilkåret kan bli vurdert for ([nårVurderingErRelevant]).

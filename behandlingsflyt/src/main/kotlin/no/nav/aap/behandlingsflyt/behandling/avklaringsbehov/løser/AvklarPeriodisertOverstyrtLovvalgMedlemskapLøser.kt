@@ -36,9 +36,16 @@ class AvklarPeriodisertOverstyrtLovvalgMedlemskapLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
 
-        val nyeVurderinger = løsning.løsningerForPerioder.map { it.toManuellVurderingForLovvalgMedlemskap(kontekst, overstyrt = true) }
-        val tidligereVurderinger = kontekst.kontekst.forrigeBehandlingId?.let { medlemskapArbeidInntektRepository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
-        val vurderinger = tidligereVurderinger + nyeVurderinger
+        val nyeVurderinger =
+            løsning.løsningerForPerioder.map { it.toManuellVurderingForLovvalgMedlemskap(kontekst, overstyrt = true) }
+        val tidligereVurderinger =
+            kontekst.kontekst.forrigeBehandlingId?.let { medlemskapArbeidInntektRepository.hentHvisEksisterer(it) }?.vurderinger
+                ?: emptyList()
+        val nyeAutomatiske =
+            medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)?.automatiskeVurderinger().orEmpty()
+                .filter { it.vurdertIBehandling == behandling.id }
+        val vurderinger =
+            tidligereVurderinger + nyeVurderinger + nyeAutomatiske // TODO: Skal vi ta vare på automatiske i denne behandlingen? Vi må det på sikt for å støtte kombinajson av manuelle og automatiske
 
         val komplettTidslinje = tidligereVurderinger.gjeldendeVurderinger()
             .mergePrioriterHøyre(nyeVurderinger.gjeldendeVurderinger())

@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.type.Periode
@@ -15,15 +15,16 @@ import java.time.LocalDate
 
 data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
     override val harTilgangTilÅSaksbehandle: Boolean,
-    override val sisteVedtatteVurderinger: List<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>,
-    override val nyeVurderinger: List<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>,
+    override val sisteVedtatteVurderinger: List<PeriodisertVurderingForLovvalgMedlemskapResponse>,
+    override val nyeVurderinger: List<PeriodisertVurderingForLovvalgMedlemskapResponse>,
     override val kanVurderes: List<Periode>,
     override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
+    val automatiskeVurderinger: List<PeriodisertVurderingForLovvalgMedlemskapResponse>,
     val overstyrt: Boolean = false
-): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>
+): PeriodiserteVurderingerDto<PeriodisertVurderingForLovvalgMedlemskapResponse>
 
-data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
+data class PeriodisertVurderingForLovvalgMedlemskapResponse(
     override val fom: LocalDate,
     override val tom: LocalDate?,
     override val vurderingerMeta: VurderingerMetaResponse,
@@ -42,12 +43,12 @@ data class MedlemskapResponse(
     val varMedlemIFolketrygd: Boolean
 )
 
-fun ManuellVurderingForLovvalgMedlemskap.toResponse(
+fun LovvalgMedlemskapVurdering.toResponse(
     vurdertAvService: VurdertAvService,
     fom: LocalDate = this.fom,
     tom: LocalDate? = this.tom,
 ) =
-    PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
+    PeriodisertVurderingForLovvalgMedlemskapResponse(
         fom = fom,
         tom = tom,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(

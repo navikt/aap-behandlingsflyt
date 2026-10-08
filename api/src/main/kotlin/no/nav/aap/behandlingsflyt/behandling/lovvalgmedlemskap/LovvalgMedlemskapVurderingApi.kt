@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovvalgVurderingService
@@ -70,7 +70,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                             )
 
                     MedlemskapLovvalgVurderingService().vurderTilhørighet(
-                        MedlemskapLovvalgGrunnlag(
+                        MedlemskapLovvalgFaktaGrunnlag(
                             medlemskapArbeidInntektGrunnlag,
                             brukerPersonopplysning,
                             oppgittUtenlandsOppholdGrunnlag,
