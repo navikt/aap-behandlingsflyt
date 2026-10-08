@@ -11,10 +11,12 @@ import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.`HentUbesvarteForespørslerLegeerklæringDto`
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingerResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.UbesvarteForespørslerLegeerklæringResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -41,6 +43,7 @@ import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -196,6 +199,20 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
                     val meldinger = service.hentDialogForSak(params.saksnummer, token())
                     respond(meldinger)
+                }
+            }
+
+            route("/dialogmeldinger/{behandlingsReferanse}/legeerklaeringer/ubesvarte-foresporsler") {
+                authorizedGet<HentUbesvarteForespørslerLegeerklæringDto, UbesvarteForespørslerLegeerklæringResponse>(
+                    AuthorizationParamPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        applicationsOnly = false,
+                        behandlingPathParam = BehandlingPathParam("behandlingsReferanse")
+                    )
+                ) { params ->
+                    val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
+                    val meldinger = service.hentUbesvarteForespørslerOmLegeerklæringer(params.behandlingsReferanse, token())
+                    respond(UbesvarteForespørslerLegeerklæringResponse(meldinger))
                 }
             }
         }

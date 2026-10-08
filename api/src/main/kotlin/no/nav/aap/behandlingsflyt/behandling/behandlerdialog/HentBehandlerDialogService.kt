@@ -3,18 +3,23 @@ package no.nav.aap.behandlingsflyt.behandling.behandlerdialog
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetJournalpostDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
+import no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
+import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import java.util.UUID
 import javax.sql.DataSource
 
 
@@ -49,43 +54,73 @@ class HentBehandlerDialogService(
         return MeldingerResponse(
             meldinger = sorterteMeldinger,
             kommendeMeldinger = utledKommendeMeldingerForSak(
-                dialogmeldinger = dialogmeldingerMedDokumentoversikt,
+                dialogmeldinger = dialogmeldingerMedDokumentoversikt.map { it.melding },
                 legeerklæringer = legeerklæringer
             )
         )
     }
 
     private fun utledKommendeMeldingerForSak(
-        dialogmeldinger: List<MeldingMedDokumenterDto>,
+        dialogmeldinger: List<MeldingDto>,
         legeerklæringer: Set<MottattDokument>
     ): List<KommendeMeldingDto> {
+        val forespørslerSomIkkeErBesvart = utledUbesvarteForespørslerLegeerklæringInnenTidsfrist(dialogmeldinger, legeerklæringer)
+
+        return forespørslerSomIkkeErBesvart.sortedBy { it.opprettetTidspunkt }.map { melding ->
+            KommendeMeldingDto(
+                bestillingId = requireNotNull(melding.dialogmeldingId) {
+                    "Kan ikke sende påminnelse når bestillingId ikke finnes"
+                },
+                behandlerNavn = requireNotNull(melding.meldingFraNavn) {
+                    "Navn på behandler må være satt for utgående dialogmelding"
+                },
+                påminnelseErAvbrutt = melding.påminnelseAvbrutt ?: false,
+                påminnelseDato = melding.opprettetTidspunkt.toLocalDate().plusDays(DAGER_TIL_PÅMINNELSE)
+            )
+        }
+    }
+
+    private fun utledUbesvarteForespørslerLegeerklæringInnenTidsfrist(
+        dialogmeldinger: List<MeldingDto>,
+        legeerklæringer: Set<MottattDokument>
+    ): List<MeldingDto> {
         val kandidaterForPåminnelse =
             dialogmeldinger.filter {
-                it.melding.dokumentasjonsType == no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40
-                        && it.melding.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
-                        && it.melding.dialogmeldingId != null
-                        && it.melding.opprettetTidspunkt.toLocalDate().plusDays(DAGER_TIL_PÅMINNELSE) > java.time.LocalDate.now()
+                it.dokumentasjonsType == no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40
+                        && it.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
+                        && it.dialogmeldingId != null
+                        && it.opprettetTidspunkt.toLocalDate().plusDays(DAGER_TIL_PÅMINNELSE) > java.time.LocalDate.now()
             }
 
-        val forespørslerSomIkkeErBesvart = kandidaterForPåminnelse.filter { melding ->
+        return kandidaterForPåminnelse.filter { melding ->
             val finnesLegeerklæringSomKomInnEtterBestilling = legeerklæringer.any { legeerklæring ->
-                legeerklæring.mottattTidspunkt > melding.melding.opprettetTidspunkt
+                legeerklæring.mottattTidspunkt > melding.opprettetTidspunkt
             }
             !finnesLegeerklæringSomKomInnEtterBestilling
         }
+    }
 
-        return forespørslerSomIkkeErBesvart.sortedBy { it.melding.opprettetTidspunkt }.map { melding ->
-            KommendeMeldingDto(
-                bestillingId = requireNotNull(melding.melding.dialogmeldingId) {
-                    "Kan ikke sende påminnelse når bestillingId ikke finnes"
-                },
-                behandlerNavn = requireNotNull(melding.melding.meldingFraNavn) {
-                    "Navn på behandler må være satt for utgående dialogmelding"
-                },
-                påminnelseErAvbrutt = melding.melding.påminnelseAvbrutt ?: false,
-                påminnelseDato = melding.melding.opprettetTidspunkt.toLocalDate().plusDays(DAGER_TIL_PÅMINNELSE)
-            )
+    private fun utledUbesvarteForespørslerLegeerklæringUavhengigAvTidsfrist(
+        forespørsler: List<MeldingDto>,
+        legeerklæringer: Set<MottattDokument>
+    ): List<MeldingDto> {
+        val filtreteForespørsler =
+            forespørsler.filter {
+                it.dokumentasjonsType == no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40
+                        && it.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
+                        && it.dialogmeldingId != null
+            }
+
+        return filtreteForespørsler.filter {
+            forespørsel -> ingenLegeerklæringMottattEtterBestilling(forespørsel, legeerklæringer)
         }
+    }
+
+    private fun ingenLegeerklæringMottattEtterBestilling(forespørsel: MeldingDto, legeerklæringer: Set<MottattDokument>): Boolean {
+        val finnesLegeerklæringSomKomInnEtterBestilling = legeerklæringer.any { legeerklæring ->
+            legeerklæring.mottattTidspunkt > forespørsel.opprettetTidspunkt
+        }
+        return !finnesLegeerklæringSomKomInnEtterBestilling
     }
 
     private fun hentDialogmeldingerFraDokumentinnhenting(saksnummer: String): List<no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto> {
@@ -126,25 +161,41 @@ class HentBehandlerDialogService(
         return dokumentoversiktMap
     }
 
+    fun hentUbesvarteForespørslerOmLegeerklæringer(
+        behandlingsReferanse: UUID,
+        currentToken: OidcToken
+    ): List<MeldingDto> {
+        val forespørslerLegeerklæring = hentForespørslerOmLegeerklæringFraDokumentinnhenting(
+            behandlingsReferanse = behandlingsReferanse,
+            currentToken = currentToken
+        )
+        val forespørslerMeldingDto = forespørslerLegeerklæring.map { it.tilMeldingDto() }
+
+        val saksnummer = hentSaksnummerFraBehandlingsReferanse(behandlingsReferanse)
+        val legeerklæringer = hentLegeerklæringerForSakFraDatabase(saksnummer.toString())
+
+        return utledUbesvarteForespørslerLegeerklæringUavhengigAvTidsfrist(forespørslerMeldingDto, legeerklæringer)
+    }
+
+    private fun hentForespørslerOmLegeerklæringFraDokumentinnhenting(
+        behandlingsReferanse: UUID,
+        currentToken: OidcToken
+    ): List<FellesDialogmeldingDto> {
+        return dokumentinnhentingGateway.hentLegeerklæringForespørslerForSak(
+            HentLegeerklæringForespørslerForSakParams(behandlingsReferanse),
+            currentToken
+        )
+    }
+
     private fun lagMeldingMedDokumentoversiktForDialogmeldinger(
-        dialogmeldinger: List<no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto>,
+        dialogmeldinger: List<FellesDialogmeldingDto>,
         journalposter: Map<String, BegrensetJournalpostDto>
     ): List<MeldingMedDokumenterDto> {
         return dialogmeldinger.map { dialogmelding ->
             val dokumentoversikt = journalposter[dialogmelding.journalpostId]
 
             MeldingMedDokumenterDto(
-                melding = MeldingDto(
-                    dialogmeldingId = dialogmelding.dialogmeldingReferanse,
-                    innkommendeUtgående = dialogmelding.innkommendeUtgående.tilResponseType(),
-                    meldingFraNavn = dialogmelding.meldingFraNavn,
-                    opprettetTidspunkt = dialogmelding.opprettetTidspunkt,
-                    dokumentasjonsType = dialogmelding.dokumentasjonsType?.tilResponseType(),
-                    tekst = dialogmelding.tekst,
-                    meldingStatus = dialogmelding.meldingStatus?.tilResponseDto(),
-                    journalpostId = dialogmelding.journalpostId,
-                    påminnelseAvbrutt = dialogmelding.automatiskPåminnelse?.let { !it }
-                ),
+                melding = dialogmelding.tilMeldingDto(),
                 dokumentIdListe = dokumentoversikt?.dokumenter?.map { it.tilResponseDto() }.orEmpty()
             )
         }
@@ -170,6 +221,18 @@ class HentBehandlerDialogService(
                 ),
                 dokumentIdListe = journalpost?.dokumenter?.map { it.tilResponseDto() }.orEmpty()
             )
+        }
+    }
+
+    private fun hentSaksnummerFraBehandlingsReferanse(behandlingsReferanse: UUID): Saksnummer {
+        return dataSource.transaction { connection ->
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+
+            val behandling = behandlingRepository.hent(BehandlingReferanse(behandlingsReferanse))
+            val sak = sakRepository.hent(behandling.sakId)
+            return@transaction sak.saksnummer
         }
     }
 
@@ -203,6 +266,20 @@ class HentBehandlerDialogService(
         return DokumentInfoDto(
             dokumentInfoId = dokumentInfoId,
             tittel = this.tittel,
+        )
+    }
+
+    private fun FellesDialogmeldingDto.tilMeldingDto(): MeldingDto {
+        return MeldingDto(
+            dialogmeldingId = this.dialogmeldingReferanse,
+            innkommendeUtgående = this.innkommendeUtgående.tilResponseType(),
+            meldingFraNavn = this.meldingFraNavn,
+            opprettetTidspunkt = this.opprettetTidspunkt,
+            dokumentasjonsType = this.dokumentasjonsType?.tilResponseType(),
+            tekst = this.tekst,
+            meldingStatus = this.meldingStatus?.tilResponseDto(),
+            journalpostId = this.journalpostId,
+            påminnelseAvbrutt = this.automatiskPåminnelse?.let { !it }
         )
     }
 }
