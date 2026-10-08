@@ -44,6 +44,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbr
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -51,7 +52,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
@@ -99,6 +102,7 @@ class BrevUtlederServiceTest {
     val repositoryProvider = inMemoryRepositoryProvider
     val gatewayProvider = createGatewayProvider {
         register<BrevUtlederServiceTestUnleash>()
+        register<TestPersoninfoBulkGateway>()
     }
 
     val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
@@ -1639,3 +1643,15 @@ class BrevUtlederServiceTest {
 object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = emptyList()
 )
+
+object TestPersoninfoBulkGateway : PersoninfoBulkGateway {
+    override fun hentPersoninfoForIdenter(identer: List<Ident>): List<Personinfo> =
+        identer.map { ident ->
+            Personinfo(
+                ident = ident,
+                fornavn = "Test",
+                mellomnavn = null,
+                etternavn = "Person"
+            )
+        }
+}
