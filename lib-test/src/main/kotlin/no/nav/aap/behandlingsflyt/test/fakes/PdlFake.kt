@@ -10,13 +10,13 @@ import io.ktor.server.routing.*
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PERSONINFO_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.BARN_RELASJON_QUERY
+import no.nav.aap.barnetillegg.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjon
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjonRolle
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPerson
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPersonBolkResult
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PDLDødsfall
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PERSON_BOLK_QUERY
+import no.nav.aap.barnetillegg.PERSON_BOLK_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PERSON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PERSON_QUERY_HISTORIKK
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFoedsel
