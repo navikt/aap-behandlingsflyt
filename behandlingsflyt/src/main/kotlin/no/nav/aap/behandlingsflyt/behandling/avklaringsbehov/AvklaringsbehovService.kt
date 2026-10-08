@@ -485,7 +485,9 @@ class AvklaringsbehovService(
         IKKE_TILSTREKKELIG_VURDERT,
         MANGLER_VURDERING,
         NYTT_KRAV_KREVER_NY_VURDERING,
-        FRIVILLIG;
+        FRIVILLIG,
+        UØNSKET_VURDERING,
+        ;
         
         fun erPåkrevd(): Boolean {
             return this in setOf(IKKE_LENGER_TILSTREKKELIG_VURDERT, IKKE_TILSTREKKELIG_VURDERT, MANGLER_VURDERING, NYTT_KRAV_KREVER_NY_VURDERING)
@@ -493,38 +495,49 @@ class AvklaringsbehovService(
         
     }
 
+    enum class VurderingTilstand {
+        VURDERING_OK,
+        VURDERING_FEIL,
+        VURDERING_UØNSKET,
+        VURDERING_MANGLER,
+    }
+
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-        automatiskeVurderinger: Tidslinje<AutomatiskPeriodisertVurdering>,
         definisjon: Definisjon,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
-        nårVurderingErTilstrekkelig: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>, // Må ta inn kontekst for å kjøre på gamle behandlinger
+        tilstandPåVurderinger:  Tidslinje<VurderingTilstand>,
         tvingStopp: Stoppunkt, // input:         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         behovForVurderingIDenneBehandlingen: Tidslinje<Behov>, // Vi krever ny vurdering (ved påkrevd), holder ikke med tom løsning
         kontekst: FlytKontekstMedPerioder,
         tilbakestillGrunnlag: () -> Unit,
-        gjeldendeVurderinger: () -> Tidslinje<out PeriodisertVurdering>? = { null } // TODO: Fjern default-verdi når vi implementerer dette for alle steg
+        kanOverstyreAutomatiskeVurderinger: Boolean,
+        gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>,
     ) {
         val perioderVilkåretErRelevant by lazy { nårVurderingErRelevant(kontekst) }
-        
-        val behovForVurderingDenneBehandlingen = Tidslinje.map6(
-            automatiskeVurderinger,
+        val perioderVilkåretVarRelevant by lazy { nårVurderingErRelevant(/*forrige */ kontekst) }
+
+        val behovForVurderingDenneBehandlingen = Tidslinje.map5(
+            gjeldendeVurderinger,
             perioderVilkåretErRelevant.begrensetTil(kontekst.rettighetsperiode),
-            perioderVilkåretErTilstrekkeligVurdertTidligere(kontekst, nårVurderingErRelevant, nårVurderingErTilstrekkelig), // TODO: Splitt opp denne?
-            nårVurderingErTilstrekkeligIDenne(kontekst),
-            nårEndringIKrav(kontekst)
-        ) { automatiskVurdering, erRelevant, erVurdertITidligereBehandling, erTilstrekkeligVurdertITidligereBehandling, erTilstrekkeligVurdertIDenne, manglerVurderingEtterNyttKrav ->
+            perioderVilkåretVarRelevant.begrensetTil(kontekst.rettighetsperiode),
+            tilstandPåVurderinger,
+            avklaringsbehovValidering.nårKravHarLøsning(definisjon, gjeldendeVurderinger, kontekst.tilFlytKontekst())
+        ) { gjeldendeVurdering, erRelevant, varRelevant, vurderingTilstand, manglerVurderingEtterNyttKrav ->
             when {
+//                varRelevant != true && erRelevant == true && -> Tilstand.
                 erRelevant != true -> Tilstand.KAN_IKKE_VURDERES
-                erTilstrekkeligVurdertNå == false -> Tilstand.IKKE_TILSTREKKELIG_VURDERT
+                vurderingTilstand == VurderingTilstand.VURDERING_FEIL ->
+                    if (gjeldendeVurdering.vurdertIBehandling == kontekst.behandlingId)
+                        Tilstand.IKKE_TILSTREKKELIG_VURDERT
+                else
+                        Tilstand.IKKE_LENGER_TILSTREKKELIG_VURDERT
                 manglerVurderingEtterNyttKrav == true -> Tilstand.NYTT_KRAV_KREVER_NY_VURDERING
-                erTilstrekkeligVurdertNå == true -> when {
-                    automatiskVurdering == null -> Tilstand.FRIVILLIG
-                    automatiskVurdering.kanOverstyres() -> Tilstand.FRIVILLIG
-                    !automatiskVurdering.kanOverstyres() -> Tilstand.KAN_IKKE_VURDERES // Forutsetter at alle perioder som kan påvirke utfallet, men som ikke er påkrevde, er frivillige. 
-                    // Dette er ikke nødvendigvis sant.
+                vurderingTilstand == VurderingTilstand.VURDERING_OK -> when {
+                    gjeldendeVurdering?.erAutomatiskVurdert() != true-> Tilstand.FRIVILLIG
+                    kanOverstyreAutomatiskeVurderinger -> Tilstand.FRIVILLIG
+                    !kanOverstyreAutomatiskeVurderinger -> Tilstand.KAN_IKKE_VURDERES
                 }
-                erTilstrekkeligVurdertNå == null -> Tilstand.MANGLER_VURDERING
-                //erVurdertITidligereBehandling != true -> Tilstand.MANGLER_VURDERING
+                vurderingTilstand == VurderingTilstand.VURDERING_MANGLER -> Tilstand.MANGLER_VURDERING
                 //erTilstrekkeligVurdertITidligereBehandling != true -> Tilstand.IKKE_LENGER_TILSTREKKELIG_VURDERT
              
                 else -> // Havner ikke her hvis tilstrekkeligVurdert ikke kan inneholde hull
