@@ -99,7 +99,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 
     @Test
     fun `skal automatisk legge inn sykdom- og bistandsvurdering basert på sykdomsvurdering fra Arena i behandlingen`() {
-        unleash = MigreringFraArenaMedAutomatikSykdomFlytTestUnleash::class
+        unleash = MigreringFraArenaMedAutomatiskSykdomFlytTestUnleash::class
 
         val (sak, migreringsbehandling) = migrerFraArena()
         val startDato = sak.rettighetsperiode.fom
@@ -221,7 +221,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 
 }
 
-object MigreringFraArenaMedAutomatikSykdomFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+object MigreringFraArenaMedAutomatiskSykdomFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk,
     )

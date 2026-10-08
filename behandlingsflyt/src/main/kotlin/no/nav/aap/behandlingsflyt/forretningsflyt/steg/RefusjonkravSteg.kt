@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
@@ -59,33 +58,31 @@ class RefusjonkravSteg(
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.REFUSJON_KRAV,
             vedtakBehøverVurdering = {
-                when {
-                    else -> when (behandlingstype) {
-                        TypeBehandling.Førstegangsbehandling -> {
-                            when {
-                                tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                                erVurdertAutomatisk(grunnlag.value) -> false
-                                kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
-                                else -> {
-                                    kontekst.forrigeBehandlingId?.let {
-                                        refusjonkravRepository.hentHvisEksisterer(it).isNullOrEmpty()
-                                    } ?: true
-                                }
+                when (behandlingstype) {
+                    TypeBehandling.Førstegangsbehandling -> {
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            erVurdertAutomatisk(grunnlag.value) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
+                            else -> {
+                                kontekst.forrigeBehandlingId?.let {
+                                    refusjonkravRepository.hentHvisEksisterer(it).isNullOrEmpty()
+                                } ?: true
                             }
                         }
-
-                        TypeBehandling.Revurdering -> {
-                            when {
-                                !unleashGateway.isEnabled(BehandlingsflytFeature.KanVurdereRefusjonIRevurdering) -> false
-                                tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                                kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
-                                erVurdertAutomatisk(grunnlag.value) -> false
-                                else -> false
-                            }
-                        }
-
-                        else -> false
                     }
+
+                    TypeBehandling.Revurdering -> {
+                        when {
+                            !unleashGateway.isEnabled(BehandlingsflytFeature.KanVurdereRefusjonIRevurdering) -> false
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
+                            erVurdertAutomatisk(grunnlag.value) -> false
+                            else -> false
+                        }
+                    }
+
+                    else -> false
                 }
             },
             erTilstrekkeligVurdert = {
