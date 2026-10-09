@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.arena
 
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskrav as ArenaRefusjonskravKontrakt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -155,6 +156,43 @@ class ArenaMigreringMapperTest {
         assertThat(krav.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
         assertThat(krav.vurdertIBehandling).isEqualTo(behandlingId)
         assertThat(krav.begrunnelse).isEqualTo("Migrering av sak 2016-123456 fra Arena")
+    }
+
+    @Test
+    fun `mapRefusjonskravVurdering gir automatisk vurdering uten krav når Arena ikke har refusjonskrav`() {
+        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering(null)
+
+        assertThat(vurdering.harKrav).isFalse
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+    }
+
+    @Test
+    fun `mapRefusjonskravVurdering gir automatisk vurdering ved annen årsak enn REFKRAVSOS`() {
+        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering(
+            ArenaRefusjonskrav("ANNET", LocalDate.of(2025, 1, 1), null)
+        )
+
+        assertThat(vurdering.harKrav).isFalse
+    }
+
+    @Test
+    fun `ArenaRefusjonskravResponse tilDomene mapper alle felter og null`() {
+        assertThat(ArenaRefusjonskravResponse(refusjonskrav = null).tilDomene()).isNull()
+
+        val mappet = ArenaRefusjonskravResponse(
+            ArenaRefusjonskravKontrakt("ANNET", 1 januar 2025, 31 januar 2025)
+        ).tilDomene()
+
+        assertThat(mappet).isEqualTo(ArenaRefusjonskrav("ANNET", 1 januar 2025, 31 januar 2025))
+    }
+
+    @Test
+    fun `mapRefusjonskravVurdering feiler ved refusjonskrav av typen REFKRAVSOS`() {
+        assertThatThrownBy {
+            ArenaMigreringMapper.mapRefusjonskravVurdering(
+                ArenaRefusjonskrav("REFKRAVSOS", LocalDate.of(2025, 1, 1), null)
+            )
+        }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("REFKRAVSOS")
     }
 
     @Test

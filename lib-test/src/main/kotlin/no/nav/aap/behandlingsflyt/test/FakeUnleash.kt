@@ -86,6 +86,7 @@ object LokalUnleash : FakeUnleashBase(
 
         // --- Migrering ---
         BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererKravFraArenaAutomatisk to true,
 
         // ------

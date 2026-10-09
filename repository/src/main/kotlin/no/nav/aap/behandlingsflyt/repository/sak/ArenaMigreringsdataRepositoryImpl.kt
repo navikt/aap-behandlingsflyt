@@ -17,8 +17,8 @@ class ArenaMigreringsdataRepositoryImpl(private val connection: DBConnection) : 
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, steg: StegType, data: Any, hentetTidspunkt: Instant) {
-        val json = DefaultJsonMapper.toJson(data)
+    override fun lagre(behandlingId: BehandlingId, steg: StegType, data: Any?, hentetTidspunkt: Instant) {
+        val json = data?.let { DefaultJsonMapper.toJson(data) }
         if (erLikAktivRad(behandlingId, steg, json)) return
 
         connection.execute(
@@ -48,11 +48,11 @@ class ArenaMigreringsdataRepositoryImpl(private val connection: DBConnection) : 
     }
 
     // jsonb-likhet ignorerer nøkkelrekkefølge og whitespace, men ikke rekkefølge i lister.
-    private fun erLikAktivRad(behandlingId: BehandlingId, steg: StegType, json: String): Boolean {
+    private fun erLikAktivRad(behandlingId: BehandlingId, steg: StegType, json: String?): Boolean {
         return connection.queryFirstOrNull(
             """
             SELECT 1 AS finnes FROM ARENA_MIGRERINGSDATA
-            WHERE BEHANDLING_ID = ? AND STEG = ? AND AKTIV = TRUE AND DATA = ?::jsonb
+            WHERE BEHANDLING_ID = ? AND STEG = ? AND AKTIV = TRUE AND DATA IS NOT DISTINCT FROM ?::jsonb
             """.trimIndent()
         ) {
             setParams {
@@ -80,7 +80,7 @@ class ArenaMigreringsdataRepositoryImpl(private val connection: DBConnection) : 
                     behandlingId = BehandlingId(row.getLong("behandling_id")),
                     steg = StegType.valueOf(row.getString("steg")),
                     hentetTidspunkt = row.getInstant("hentet_tidspunkt"),
-                    data = row.getString("data"),
+                    data = row.getStringOrNull("data"),
                 )
             }
         }
