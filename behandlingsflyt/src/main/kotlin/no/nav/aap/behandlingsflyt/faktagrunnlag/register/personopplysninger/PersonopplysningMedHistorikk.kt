@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import java.time.LocalDate
 
 data class PersonopplysningMedHistorikk(
