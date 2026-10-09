@@ -81,7 +81,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         manglerInntektForÅr = manglerInntekterFor.map { it.value }.toList(),
                         manglendeMånedsInntekter = utledManglendeMånedsperioderForSplittÅr(
                             ytterligereNedsattDato = beregningVurderingRepository.hentHvisEksisterer(behandling.id)?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato,
-                            uføregrader = uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty(),
+                            uføregrader = uføreRepository.hentHvisEksisterer(behandling.id)?.vedtak.orEmpty(),
                             inntektGrunnlag = inntektGrunnlag,
                         ),
                     )

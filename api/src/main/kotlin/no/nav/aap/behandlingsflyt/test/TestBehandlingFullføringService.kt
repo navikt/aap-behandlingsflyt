@@ -76,7 +76,6 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.time.LocalDate
 import javax.sql.DataSource
 
 private val SAKSBEHANDLER = Bruker("SAKSBEHANDLER")
@@ -540,7 +539,7 @@ class TestBehandlingFullføringService(
             repositoryRegistry.provider(connection)
                 .provide<UføreRepository>()
                 .hentHvisEksisterer(behandlingId)
-                ?.vurderinger
+                ?.vedtak
                 .orEmpty()
                 .filter {
                     val uføregradTom = it.uføregradTom
