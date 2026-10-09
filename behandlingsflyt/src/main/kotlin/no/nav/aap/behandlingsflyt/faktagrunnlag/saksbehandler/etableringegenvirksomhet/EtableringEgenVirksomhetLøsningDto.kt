@@ -20,7 +20,10 @@ data class EtableringEgenVirksomhetLøsningDto(
     val brukerEierVirksomheten: EierVirksomhet? = null,
     val kanFøreTilSelvforsørget: Boolean? = null,
     val utviklingsPerioder: List<Periode>,
-    val oppstartsPerioder: List<Periode>
+    val oppstartsPerioder: List<Periode>,
+    val fase: EtableringFase? = null,
+    val erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
+    val jobberBrukerAktivMedVirksomheten: Boolean? = null,
 ) : LøsningForPeriode {
     fun toEtableringEgenVirksomhetVurdering(avklaringsbehovKontekst: AvklaringsbehovKontekst) =
         toEtableringEgenVirksomhetVurdering(
@@ -43,6 +46,9 @@ data class EtableringEgenVirksomhetLøsningDto(
             fom = fom,
             tom = tom,
             virksomhetNavn = virksomhetNavn,
-            orgNr = orgNr
+            orgNr = orgNr,
+            fase = fase,
+            erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
+            jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten
         )
 }
