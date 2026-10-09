@@ -1,5 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 
+import no.nav.aap.behandlingsflyt.dokumentasjon.Blokker
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.Prosent as DokumentProsent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -29,6 +34,15 @@ data class ArbeidsevneVurdering(
     }
 
     override val opprettet: Instant = opprettetTid.atZone(ZoneId.of("Europe/Oslo")).toInstant()
+
+    override fun genererDokumentasjon(): Blokker {
+        return Div(
+            Fritekstfelt("Begrunnelse", begrunnelse),
+            Dict(
+                "Restarbeidsevne" to DokumentProsent(arbeidsevne),
+            )
+        )
+    }
 
     data class ArbeidsevneVurderingData(
         val begrunnelse: String,

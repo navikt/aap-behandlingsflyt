@@ -2,6 +2,11 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.dokumentasjon.Blokker
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.utils.Validation
@@ -24,6 +29,17 @@ data class ManuellVurderingForForutgåendeMedlemskap(
     override val tom: LocalDate? = null
 ) : PeriodisertVurdering {
     override val opprettet: Instant = vurdertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toInstant()
+
+    override fun genererDokumentasjon(): Blokker {
+        return Div(
+            Fritekstfelt("Begrunnelse", begrunnelse),
+            Dict(
+                "Har forutgående medlemskap" to JaNeiValg(harForutgåendeMedlemskap),
+                "Var medlem med nedsatt arbeidsevne" to JaNeiValg(varMedlemMedNedsattArbeidsevne),
+                "Unntak fra maks 5 år" to JaNeiValg(medlemMedUnntakAvMaksFemAar),
+            ),
+        )
+    }
 
     // NB! Denne tar ikke høyde for yrkesskade
     fun oppfyllerForutgåendeMedlemskap(): Boolean {

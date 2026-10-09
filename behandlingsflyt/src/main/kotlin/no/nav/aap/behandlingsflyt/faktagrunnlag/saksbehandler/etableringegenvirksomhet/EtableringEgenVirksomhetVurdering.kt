@@ -1,5 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
+import no.nav.aap.behandlingsflyt.dokumentasjon.Blokker
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
+import no.nav.aap.behandlingsflyt.dokumentasjon.PrettyEnum
+import no.nav.aap.behandlingsflyt.dokumentasjon.Tabell
+import no.nav.aap.behandlingsflyt.dokumentasjon.Tekst
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
@@ -22,7 +30,33 @@ data class EtableringEgenVirksomhetVurdering(
     override val vurdertIBehandling: BehandlingId,
     override val fom: LocalDate,
     override val tom: LocalDate?
-) : PeriodisertVurdering
+) : PeriodisertVurdering {
+    override fun genererDokumentasjon(): Blokker {
+        return Div(
+            Fritekstfelt("Begrunnelse", begrunnelse),
+            Dict(
+                "Virksomhetsnavn" to Tekst(virksomhetNavn),
+                "Org.nr." to Tekst(orgNr ?: "—"),
+                "Foreligger det en næringsfaglig vurdering?" to JaNeiValg(foreliggerFagligVurdering),
+                "Er virksomheten ny?" to JaNeiValg(virksomhetErNy),
+                "Eier bruker virksomheten?" to PrettyEnum(brukerEierVirksomheten),
+                "Antas det at etablering av virksomheten vil føre til at bruker blir selvforsørget?" to JaNeiValg(kanFøreTilSelvforsørget),
+            ),
+            Tabell(
+                kolonner = listOf(Tekst("Utviklingsfase")),
+                rader = utviklingsPerioder.map {
+                    listOf(no.nav.aap.behandlingsflyt.dokumentasjon.Periode(it))
+                }
+            ),
+            Tabell(
+                kolonner = listOf(Tekst("Oppstartsfase")),
+                rader = oppstartsPerioder.map {
+                    listOf(no.nav.aap.behandlingsflyt.dokumentasjon.Periode(it))
+                }
+            ),
+        )
+    }
+}
 
 enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,

@@ -1,5 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 
+import no.nav.aap.behandlingsflyt.dokumentasjon.Blokker
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
+import no.nav.aap.behandlingsflyt.dokumentasjon.Tekst
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -99,4 +105,14 @@ data class OppholdskravPeriodisertVurdering(
     val opprettetTid: LocalDateTime,
 ) : PeriodisertVurdering {
     override val opprettet: Instant = opprettetTid.atZone(ZoneId.of("Europe/Oslo")).toInstant()
+
+    override fun genererDokumentasjon(): Blokker {
+        return Div(
+            Fritekstfelt("Begrunnelse", begrunnelse),
+            Dict(
+                "Land" to Tekst(land ?: "—"),
+                "Oppfylt" to JaNeiValg(oppfylt),
+            )
+        )
+    }
 }

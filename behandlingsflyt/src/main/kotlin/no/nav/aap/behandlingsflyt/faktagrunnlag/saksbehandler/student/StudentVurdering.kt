@@ -1,6 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.dokumentasjon.Blokker
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dato
+import no.nav.aap.behandlingsflyt.dokumentasjon.Dict
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
+import no.nav.aap.behandlingsflyt.dokumentasjon.Fritekstfelt
+import no.nav.aap.behandlingsflyt.dokumentasjon.JaNeiValg
+import no.nav.aap.behandlingsflyt.dokumentasjon.Tekst
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -24,9 +31,24 @@ data class StudentVurdering(
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
     override val vurdertIBehandling: BehandlingId,
     val diagnose: Diagnose? = null,
-): PeriodisertVurdering {
+) : PeriodisertVurdering {
     override val opprettet: Instant = vurdertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toInstant()
-    
+
+    override fun genererDokumentasjon(): Blokker {
+        return Div(
+            Fritekstfelt("Begrunnelse", begrunnelse),
+            Dict(
+                "Avbrutt studie" to JaNeiValg(harAvbruttStudie),
+                "Dato for avbrutt studie" to (avbruttStudieDato?.let { Dato(it) } ?: Tekst("Ikke satt")),
+                "Godkjent av Lånekassen" to JaNeiValg(godkjentStudieAvLånekassen),
+                "Avbrutt pga sykdom/skade" to JaNeiValg(avbruttPgaSykdomEllerSkade),
+                "Avbrudd mer enn 6 måneder" to JaNeiValg(avbruddMerEnn6Måneder),
+                "Behov for behandling" to JaNeiValg(harBehovForBehandling),
+                // Bevisst valg å ikke ta med diagnose?
+            ),
+        )
+    }
+
     fun erOppfylt(): Boolean {
         return harAvbruttStudie &&
                 godkjentStudieAvLånekassen == true &&

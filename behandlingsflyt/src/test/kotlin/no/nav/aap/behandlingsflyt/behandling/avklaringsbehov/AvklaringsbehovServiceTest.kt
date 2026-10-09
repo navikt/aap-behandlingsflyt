@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
+import no.nav.aap.behandlingsflyt.dokumentasjon.Div
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
@@ -150,6 +151,7 @@ class AvklaringsbehovServiceTest {
                         override val vurdertIBehandling = revurdering.id
                         override val opprettet = Instant.now()
                         override val vurdertAv = Bruker("Z000")
+                        override fun genererDokumentasjon() = Div()
                     })
                 )
             }
@@ -1012,6 +1014,7 @@ class AvklaringsbehovServiceTest {
         override val vurdertIBehandling = vurdertIBehandling
         override val opprettet: Instant = Instant.now()
         override val vurdertAv = bruker
+        override fun genererDokumentasjon() = Div()
     }
 
     @Test
@@ -1295,6 +1298,7 @@ class AvklaringsbehovServiceTest {
         override val vurdertIBehandling = behandlingId
         override val opprettet: Instant = Instant.now()
         override val vurdertAv = bruker
+        override fun genererDokumentasjon() = Div()
     }
 
     private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): RelevantKrav {

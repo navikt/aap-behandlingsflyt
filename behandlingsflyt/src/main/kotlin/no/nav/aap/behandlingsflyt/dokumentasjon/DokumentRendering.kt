@@ -27,34 +27,34 @@ data class RenderKontekst(
 
 data class Seksjon(
     val tittel: LøpendeTekst,
-    val blokker: List<Blokk> = listOf(),
+    val blokker: Blokker = Div(),
     val subseksjoner: List<Seksjon> = listOf(),
     /* Ikke støtte for frittstående avsnitt etter subseksjonene. Det blir ikke noe
      * visuelt skille mellom siste avsnitt i siste subseksjon, og et hypotetisk
      * etterfølgende avsnitt som ikke er en del av subseksjonen.
      */
 ) {
-    constructor(tittel: String, vararg avsnitt: Blokk?) : this(
+    constructor(tittel: String, vararg avsnitt: Blokker?) : this(
         tittel = Tekst(tittel),
-        blokker = avsnitt.toList().filterNotNull(),
+        blokker = Div(avsnitt.toList().filterNotNull()),
         subseksjoner = emptyList(),
     )
 
-    constructor(tittel: LøpendeTekst, vararg avsnitt: Blokk?) : this(
+    constructor(tittel: LøpendeTekst, vararg avsnitt: Blokker?) : this(
         tittel = tittel,
-        blokker = avsnitt.toList().filterNotNull(),
+        blokker = Div(avsnitt.toList().filterNotNull()),
         subseksjoner = emptyList(),
     )
 
     constructor(tittel: String, vararg subseksjoner: Seksjon?) : this(
         tittel = Tekst(tittel),
-        blokker = emptyList(),
+        blokker = Div(),
         subseksjoner = subseksjoner.toList().filterNotNull(),
     )
 
     constructor(tittel: LøpendeTekst, vararg subseksjoner: Seksjon?) : this(
         tittel = tittel,
-        blokker = emptyList(),
+        blokker = Div(),
         subseksjoner = subseksjoner.toList().filterNotNull(),
     )
 
@@ -62,9 +62,7 @@ data class Seksjon(
         return buildList {
             add(DOM.Header(kontekst.overskriftsnivå, tittel.render(kontekst)))
 
-            for (blokk in blokker) {
-                addAll(blokk.render(kontekst))
-            }
+            addAll(blokker.render(kontekst))
 
             for (subseksjon in subseksjoner) {
                 addAll(subseksjon.render(kontekst.forSubseksjon()))
@@ -73,14 +71,24 @@ data class Seksjon(
     }
 }
 
-interface Blokk {
+interface Blokker {
     fun render(kontekst: RenderKontekst): List<DOM>
+}
+
+class Div(
+    val blokker: List<Blokker>
+): Blokker {
+    constructor(vararg blokker: Blokker?): this(blokker.toList().filterNotNull())
+
+    override fun render(kontekst: RenderKontekst): List<DOM> {
+        return blokker.flatMap { it.render(kontekst) }
+    }
 }
 
 data class Tabell(
     val kolonner: List<LøpendeTekst>,
     val rader: List<List<LøpendeTekst>>,
-) : Blokk {
+) : Blokker {
     override fun render(kontekst: RenderKontekst): List<DOM> = listOf(
         DOM.Tabell(
             kolonner = kolonner.map { it.render(kontekst) },
@@ -100,7 +108,7 @@ data class Tabell(
 
 data class Avsnitt(
     val elementer: List<LøpendeTekst>,
-) : Blokk {
+) : Blokker {
     constructor(vararg elementer: LøpendeTekst?) : this(elementer.toList().filterNotNull())
 
     override fun render(kontekst: RenderKontekst) = listOf(
@@ -108,7 +116,7 @@ data class Avsnitt(
     )
 }
 
-data class Fritekstfelt(val tittel: String?, val fritekst: String) : Blokk {
+data class Fritekstfelt(val tittel: String?, val fritekst: String) : Blokker {
     override fun render(kontekst: RenderKontekst): List<DOM> {
         val avsnitt = normaliserAvsnitt(fritekst)
         return if (tittel == null) {
@@ -142,9 +150,9 @@ data class Fritekstfelt(val tittel: String?, val fritekst: String) : Blokk {
 
 data class Dict(
     val valg: List<Pair<LøpendeTekst, LøpendeTekst>>,
-) : Blokk {
-    constructor(vararg valg: Pair<String, LøpendeTekst>) : this(
-        valg.map { (key, value) -> Tekst(key) to value }
+) : Blokker {
+    constructor(vararg valg: Pair<String, LøpendeTekst>?) : this(
+        valg.filterNotNull().map { (key, value) -> Tekst(key) to value }
     )
 
     override fun render(kontekst: RenderKontekst) = listOf(
@@ -186,21 +194,22 @@ data class ReferanseJournalpost(val journalpostId: JournalpostId) : LøpendeTeks
     override fun render(kontekst: RenderKontekst) = "Journalpost ${journalpostId.identifikator}"
 }
 
-internal fun formaterVedtaksdato(
-    behandlingId: BehandlingId,
-    kontekst: RenderKontekst,
-): String {
-    val vedtakstidspunkt = kontekst.vedtak.single { it.id == behandlingId }.vedtakstidspunkt
+class Vedtakstidspunkt(
+    val behandlingId: BehandlingId,
+): LøpendeTekst {
+    override fun render(kontekst: RenderKontekst): String {
+        val vedtakstidspunkt = kontekst.vedtak.single { it.id == behandlingId }.vedtakstidspunkt
 
-    val harFlereVedtakSammeDato = kontekst.vedtak
-        .filter { it.id != behandlingId }
-        .any { it.vedtakstidspunkt.toLocalDate() == vedtakstidspunkt.toLocalDate() }
+        val harFlereVedtakSammeDato = kontekst.vedtak
+            .filter { it.id != behandlingId }
+            .any { it.vedtakstidspunkt.toLocalDate() == vedtakstidspunkt.toLocalDate() }
 
-    return buildString {
-        append(Dato(vedtakstidspunkt.toLocalDate()).render(kontekst))
-        if (harFlereVedtakSammeDato) {
-            append(" ")
-            append(vedtakstidspunkt.toLocalTime())
+        return buildString {
+            append(Dato(vedtakstidspunkt.toLocalDate()).render(kontekst))
+            if (harFlereVedtakSammeDato) {
+                append(" ")
+                append(vedtakstidspunkt.toLocalTime())
+            }
         }
     }
 }
