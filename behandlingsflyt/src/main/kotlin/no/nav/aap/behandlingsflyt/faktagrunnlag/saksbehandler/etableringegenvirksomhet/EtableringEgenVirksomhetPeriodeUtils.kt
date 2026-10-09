@@ -8,6 +8,10 @@ import java.time.LocalDate
 internal const val MAKS_UTVIKLING_HVERDAGER = 131
 internal const val MAKS_OPPSTART_HVERDAGER = 66
 
+/**
+    * Justerer perioder slik at de ikke overlapper hverandre.
+    * Hvis en periode starter dagen etter en annen periode, vil den første perioden få tom satt til dagen før den andre perioden starter.
+*/
 fun justerEtableringPerioder(
     vurderinger: List<EtableringEgenVirksomhetVurdering>
 ): List<EtableringEgenVirksomhetVurdering> {
@@ -37,10 +41,7 @@ fun beregnTomForSistePeriode(
 ): LocalDate {
     val fase = requireNotNull(sisteVurdering.fase)
 
-    val maksHverdager = when (fase) {
-        EtableringFase.OPPSTART -> MAKS_OPPSTART_HVERDAGER
-        EtableringFase.UTVIKLING -> MAKS_UTVIKLING_HVERDAGER
-    }
+    val maksHverdager = fase.maksHveradager
     val brukteHverdager = vurderinger
         .filter {
             it.fase == fase &&
@@ -64,18 +65,19 @@ fun beregnTomForSistePeriode(
                 "Brukt: $brukteHverdager, maks: $maksHverdager"
     }
 
-    val tomEtterKvoten = Hverdager(gjenståendeHverdager)
+    //skal heller returne denne?
+    return Hverdager(gjenståendeHverdager)
         .fraOgMed(sisteVurdering.fom)
 
-    val tomEtterFaseperiode = when (fase) {
-        EtableringFase.OPPSTART ->
-            sisteVurdering.fom.plusMonths(3).minusDays(1)
+    //val tomEtterFaseperiode = when (fase) {
+    //    EtableringFase.OPPSTART ->
+    //        sisteVurdering.fom.plusMonths(3).minusDays(1)
 
-        EtableringFase.UTVIKLING ->
-            sisteVurdering.fom.plusMonths(6).minusDays(1)
-    }
+    //    EtableringFase.UTVIKLING ->
+    //        sisteVurdering.fom.plusMonths(6).minusDays(1)
+    //}
 
-    return minOf(tomEtterKvoten, tomEtterFaseperiode)
+    //return minOf(tomEtterKvoten, tomEtterFaseperiode)
 }
 
 private fun Pair<LocalDate, LocalDate>.tilPeriode(): Periode = Periode(first, second)
