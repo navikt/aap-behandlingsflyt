@@ -12,6 +12,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostLis
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
+import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
 import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
@@ -26,5 +27,6 @@ interface DokumentinnhentingGateway : Gateway {
     fun hentDialogmeldingerForSak(request: HentDialogmeldingerForSakParams): List<FellesDialogmeldingDto>
     fun hentDokumentoversiktForJournalpost(request: HentDokumentoversiktJournalpostParams, currentToken: OidcToken): HentDokumentoversiktJournalpostResponse
     fun hentDokumentoversiktForJournalpostListe(request: HentDokumentoversiktJournalpostListeParams, currentToken: OidcToken): HentDokumentoversiktJournalpostListeResponse
+    fun hentLegeerklæringForespørslerForSak(requestParams: HentLegeerklæringForespørslerForSakParams, currentToken: OidcToken): List<FellesDialogmeldingDto>
     fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto
 }

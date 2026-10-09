@@ -14,6 +14,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostLis
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
+import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
@@ -179,6 +180,25 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
 
         return requireNotNull(oboClient.post(uri = URI.create("$dokumenterUri/api/dokumenter/dokumentliste"), request))
+    }
+
+    override fun hentLegeerklæringForespørslerForSak(requestParams: HentLegeerklæringForespørslerForSakParams, currentToken: OidcToken): List<FellesDialogmeldingDto> {
+        val behandlingsReferanse = requestParams.behandlingsReferanse
+        val request = GetRequest(
+            additionalHeaders = listOf(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Accept", "application/json")
+            ),
+            currentToken = currentToken
+        )
+
+        return requireNotNull(
+            oboClient.get(
+                uri = URI.create("$dialogmeldingUri/$behandlingsReferanse/legeerklaeringer"),
+                request = request,
+                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+            )
+        )
     }
 
     override fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto {

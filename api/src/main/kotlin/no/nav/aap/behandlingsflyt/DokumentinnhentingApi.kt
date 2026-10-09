@@ -11,10 +11,13 @@ import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.`HentUbesvarteForespørslerLegeerklæringDto`
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingerResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.UbesvarteForespørslerLegeerklæringResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -41,6 +44,7 @@ import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -180,8 +184,23 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                         sakPathParam = SakPathParam("saksnummer")
                     )
                 ) { params ->
-                    val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
-                    respond(service.hentDialogForSak(params.saksnummer, token()).meldinger)
+                    val meldinger = dataSource.transaction(readOnly = true) { connection ->
+                        val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
+                        val mottattDokumentRepository =
+                            repositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
+                        val behandlingRepository =
+                            repositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                        val service = HentBehandlerDialogService(
+                            dokumentinnhentingGateway,
+                            sakRepository,
+                            mottattDokumentRepository,
+                            behandlingRepository
+                        )
+
+                        service.hentDialogForSak(params.saksnummer, token()).meldinger
+                    }
+
+                    respond(meldinger)
                 }
             }
 
@@ -193,9 +212,48 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                         sakPathParam = SakPathParam("saksnummer")
                     )
                 ) { params ->
-                    val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, repositoryRegistry)
-                    val meldinger = service.hentDialogForSak(params.saksnummer, token())
+                    val meldinger = dataSource.transaction(readOnly = true) { connection ->
+                        val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
+                        val mottattDokumentRepository =
+                            repositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
+                        val behandlingRepository =
+                            repositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                        val service = HentBehandlerDialogService(
+                            dokumentinnhentingGateway,
+                            sakRepository,
+                            mottattDokumentRepository,
+                            behandlingRepository
+                        )
+
+                        service.hentDialogForSak(params.saksnummer, token())
+                    }
                     respond(meldinger)
+                }
+            }
+
+            route("/dialogmeldinger/legeerklaering/{behandlingsReferanse}/ubesvarte-foresporsler") {
+                authorizedGet<HentUbesvarteForespørslerLegeerklæringDto, UbesvarteForespørslerLegeerklæringResponse>(
+                    AuthorizationParamPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        applicationsOnly = false,
+                        behandlingPathParam = BehandlingPathParam("behandlingsReferanse")
+                    )
+                ) { params ->
+                    val meldinger = dataSource.transaction(readOnly = true) { connection ->
+                        val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
+                        val mottattDokumentRepository = repositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
+                        val behandlingRepository = repositoryRegistry.provider(connection).provide<BehandlingRepository>()
+
+                        val service = HentBehandlerDialogService(
+                            dokumentinnhentingGateway,
+                            sakRepository,
+                            mottattDokumentRepository,
+                            behandlingRepository
+                        )
+                        service.hentUbesvarteForespørslerOmLegeerklæringer(params.behandlingsReferanse, token())
+                    }
+
+                    respond(UbesvarteForespørslerLegeerklæringResponse(meldinger))
                 }
             }
         }
