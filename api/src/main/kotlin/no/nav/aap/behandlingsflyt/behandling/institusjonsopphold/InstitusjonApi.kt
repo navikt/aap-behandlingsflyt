@@ -198,12 +198,17 @@ fun NormalOpenAPIRoute.institusjonApi(
                                 }
                             }
 
-                        mapVurderingerToDto(
+                        val vurderingerFraDatabase = mapVurderingerToDto(
                             nyeVurderingerForOpphold,
                             oppholdInfo,
                             vurdertAvService,
                             gatewayProvider.provide()
-                        ) + uavklarteDto
+                        )
+
+                        // Dedupliser på oppholdId - foretrekk dto-er som faktisk har vurderinger
+                        // (f.eks. historiske vurderinger uten reduksjonsberegning) fremfor den
+                        // tomme UAVKLART-plassholderen som ellers legges til for samme opphold.
+                        dedupliserPerOppholdId((vurderingerFraDatabase + uavklarteDto))
                     }
 
                     val oppholdSegmenter = grunnlag?.oppholdene?.opphold
@@ -212,7 +217,12 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     // Grupper i sammenhengende kjeder og beregn tidligste reduksjonsdato per kjede
                     val kjeder = grupperSammenhengendeOppholdSegmenter(oppholdSegmenter)
-                    val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(oppholdSegmenter)
+                    val harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { kjede ->
+                        kjede.elementer.any { segment ->
+                            vedtatteVurderingerForOpphold[segment.periode]?.any { it.giReduksjon() } == true
+                        }
+                    }
+                    val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(oppholdSegmenter, harInnvilgetReduksjon)
 
                     // Bygg opphold-liste med tidligsteReduksjonsdato
                     val oppholdMedReduksjonsdato = hentOppholdSomSkalVurderes(
@@ -288,6 +298,7 @@ fun mapVurderingerToDto(
 
     return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
         val kjede = alleKjeder.firstOrNull { it.periode.overlapper(vurderingPeriode) }
+            ?: finnNærmesteKjedeFør(alleKjeder, vurderingPeriode)
             ?: return@flatMap emptyList()
         val først = kjede.elementer.first()
 
@@ -306,13 +317,13 @@ fun mapVurderingerToDto(
                         forsoergerEktefelle = vurdering.forsoergerEktefelle,
                         harFasteUtgifter = vurdering.harFasteUtgifter,
                         periode = vurdering.periode,
+                        erHistoriskUtenReduksjonsberegning = vurdering.erHistoriskUtenReduksjonsberegning,
                         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
                             behandlingId = vurdering.vurdertIBehandling,
                             vurdertAv = vurdertAvService.medNavnOgEnhet(
                                 ident = vurdering.vurdertAv
                                     ?: Bruker("ukjent"),
-                                /* hacky, burdeikke kalle PDL med ukjent som ident */
                                 dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
                             ),
                         )
@@ -322,6 +333,25 @@ fun mapVurderingerToDto(
             )
         )
     }
+}
+
+private fun finnNærmesteKjedeFør(
+    kjeder: List<SammenhengendeOppholdGruppe>,
+    vurderingPeriode: Periode
+): SammenhengendeOppholdGruppe? {
+    return kjeder
+        .filter { it.periode.tom <= vurderingPeriode.fom }
+        .maxByOrNull { it.periode.tom }
+}
+
+// Public for testing
+fun dedupliserPerOppholdId(dtoer: List<HelseoppholdDto>): List<HelseoppholdDto> {
+    return dtoer
+        .groupBy { it.oppholdId }
+        .flatMap { (_, gruppe) ->
+            val medVurderinger = gruppe.filter { it.vurderinger?.isNotEmpty() == true }
+            medVurderinger.ifEmpty { gruppe.take(1) }
+        }
 }
 
 // Public for testing

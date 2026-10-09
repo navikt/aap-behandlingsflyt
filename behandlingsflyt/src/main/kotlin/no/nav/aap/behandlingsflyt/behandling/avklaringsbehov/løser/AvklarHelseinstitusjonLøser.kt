@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.SammenhengendeOppholdGruppe
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligsteReduksjonsdatoPerKjede
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.giReduksjon
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.grupperSammenhengendeOppholdSegmenter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -109,7 +110,9 @@ class AvklarHelseinstitusjonLøser(
                         harFasteUtgifter = it.harFasteUtgifter,
                         vurdertIBehandling = behandling.id,
                         vurdertAv = vurdertAv,
-                        vurdertTidspunkt = LocalDateTime.now()
+                        vurdertTidspunkt = LocalDateTime.now(),
+                        erHistoriskUtenReduksjonsberegning = it.erHistoriskUtenReduksjonsberegning,
+                        oppholdId = it.oppholdId,
                     )
                 )
             }).komprimer()
@@ -126,7 +129,9 @@ class AvklarHelseinstitusjonLøser(
                 periode = it.periode,
                 vurdertIBehandling = it.verdi.vurdertIBehandling,
                 vurdertAv = vurdertAv,
-                vurdertTidspunkt = it.verdi.vurdertTidspunkt
+                vurdertTidspunkt = it.verdi.vurdertTidspunkt,
+                erHistoriskUtenReduksjonsberegning = it.verdi.erHistoriskUtenReduksjonsberegning,
+                oppholdId = it.verdi.oppholdId
             )
         }
     }
@@ -144,7 +149,9 @@ class AvklarHelseinstitusjonLøser(
                     harFasteUtgifter = it.harFasteUtgifter,
                     vurdertIBehandling = it.vurdertIBehandling,
                     vurdertAv = it.vurdertAv,
-                    vurdertTidspunkt = it.vurdertTidspunkt
+                    vurdertTidspunkt = it.vurdertTidspunkt,
+                    erHistoriskUtenReduksjonsberegning = it.erHistoriskUtenReduksjonsberegning,
+                    oppholdId = it.oppholdId
                 )
             }.orEmpty()
 
@@ -187,24 +194,24 @@ class AvklarHelseinstitusjonLøser(
 
         val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
 
-        // Håndterer når vedtatte vurderinger finnes. Dette skjer i revurdering
-        val vurderingerPerKjede: Map<SammenhengendeOppholdGruppe, List<HelseinstitusjonVurderingDto>> =
-            kjeder.associateWith { kjede ->
-                nyeVurderinger
-                    .filter { v -> v.periode.fom >= kjede.periode.fom && v.periode.tom <= kjede.periode.tom }
-                    .sortedBy { it.periode }
-            }
+        val vurderingerPerKjede = kjeder.associateWith { kjede ->
+            nyeVurderinger
+                .filter { v -> v.periode.fom >= kjede.periode.fom && v.periode.tom <= kjede.periode.tom }
+                .sortedBy { it.periode }
+        }
 
-        val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(opphold)
+        // Avgjør om en kjede får innvilget reduksjon basert på de innsendte vurderingene i dette kallet
+        val harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { kjede ->
+            val vurderingerForKjede = vurderingerPerKjede[kjede].orEmpty()
+            førsteReduksjonsvurdering(vurderingerForKjede) != null
+        }
+
+        val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(opphold, harInnvilgetReduksjon)
 
         vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
             val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach
             val første = førsteReduksjonsvurdering(vurderinger)
-            val resultat = validerReduksjonsdato(
-                vurderinger,
-                første,
-                tidligsteReduksjonsdato
-            )
+            val resultat = validerReduksjonsdato(vurderinger, første, tidligsteReduksjonsdato)
             if (resultat != null) return resultat
         }
 
@@ -212,11 +219,8 @@ class AvklarHelseinstitusjonLøser(
     }
 
     private fun førsteReduksjonsvurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
-        return vurderinger.firstOrNull {
-            it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false
-        }
+        return vurderinger.firstOrNull { it.giReduksjon() }
     }
-
 
     private fun validerReduksjonsdato(
         vurderinger: List<HelseinstitusjonVurderingDto>,
@@ -245,6 +249,8 @@ class AvklarHelseinstitusjonLøser(
         val harFasteUtgifter: Boolean? = null,
         val vurdertIBehandling: BehandlingId,
         val vurdertAv: Bruker? = null,
-        val vurdertTidspunkt: LocalDateTime? = null
+        val vurdertTidspunkt: LocalDateTime? = null,
+        val erHistoriskUtenReduksjonsberegning: Boolean = false,
+        val oppholdId: String? = null,
     )
 }
