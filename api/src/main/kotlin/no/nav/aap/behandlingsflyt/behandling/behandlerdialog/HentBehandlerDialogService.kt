@@ -15,20 +15,18 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
-import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.repository.RepositoryRegistry
-import java.util.UUID
-import javax.sql.DataSource
+import java.util.*
 
 
 val DAGER_TIL_PÅMINNELSE = if (Miljø.erProd()) 22L else 1L
 
 class HentBehandlerDialogService(
-    private val dataSource: DataSource,
     private val dokumentinnhentingGateway: DokumentinnhentingGateway,
-    private val repositoryRegistry: RepositoryRegistry,
+    private val sakRepository: SakRepository,
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val behandlingRepository: BehandlingRepository,
 ) {
     fun hentDialogForSak(saksnummer: String, token: OidcToken): MeldingerResponse {
         val dialogmeldinger = hentDialogmeldingerFraDokumentinnhenting(saksnummer)
@@ -130,17 +128,12 @@ class HentBehandlerDialogService(
     }
 
     private fun hentLegeerklæringerForSakFraDatabase(saksnummer: String): Set<MottattDokument> {
-        return dataSource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val sak = repositoryProvider.provide<SakRepository>().hent(Saksnummer.fra(saksnummer))
+        val sak = sakRepository.hent(Saksnummer.fra(saksnummer))
 
-            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
-
-            mottattDokumentRepository.hentDokumenterAvType(
-                sak.id,
-                InnsendingType.LEGEERKLÆRING
-            )
-        }
+        return mottattDokumentRepository.hentDokumenterAvType(
+            sak.id,
+            InnsendingType.LEGEERKLÆRING
+        )
     }
 
     private fun hentBegrensetJournalposterFraDokumentinnhenting(
@@ -225,15 +218,9 @@ class HentBehandlerDialogService(
     }
 
     private fun hentSaksnummerFraBehandlingsReferanse(behandlingsReferanse: UUID): Saksnummer {
-        return dataSource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-
             val behandling = behandlingRepository.hent(BehandlingReferanse(behandlingsReferanse))
             val sak = sakRepository.hent(behandling.sakId)
-            return@transaction sak.saksnummer
-        }
+            return sak.saksnummer
     }
 
     private fun no.nav.aap.dokumentinnhenting.kontrakt.InnkommendeUtgående.tilResponseType(): InnkommendeUtgående {
