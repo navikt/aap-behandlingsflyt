@@ -41,7 +41,7 @@ fun beregnTomForSistePeriode(
 ): LocalDate {
     val fase = requireNotNull(sisteVurdering.fase)
 
-    val maksHverdager = fase.maksHveradager
+    val maksHverdager = fase.maksHverdager
     val brukteHverdager = vurderinger
         .filter {
             it.fase == fase &&
@@ -65,19 +65,9 @@ fun beregnTomForSistePeriode(
                 "Brukt: $brukteHverdager, maks: $maksHverdager"
     }
 
-    //skal heller returne denne?
     return Hverdager(gjenståendeHverdager)
         .fraOgMed(sisteVurdering.fom)
 
-    //val tomEtterFaseperiode = when (fase) {
-    //    EtableringFase.OPPSTART ->
-    //        sisteVurdering.fom.plusMonths(3).minusDays(1)
-
-    //    EtableringFase.UTVIKLING ->
-    //        sisteVurdering.fom.plusMonths(6).minusDays(1)
-    //}
-
-    //return minOf(tomEtterKvoten, tomEtterFaseperiode)
 }
 
 private fun Pair<LocalDate, LocalDate>.tilPeriode(): Periode = Periode(first, second)

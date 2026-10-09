@@ -121,5 +121,4 @@ private fun List<EtableringEgenVirksomhetVurdering>.antallHverdagerIFase(fase: E
         .somTidslinje { it }
         .komprimer()
         .segmenter()
-        .sumOf { it.periode.antallHverdager().asInt
-    }
+        .sumOf { it.periode.antallHverdager().asInt }

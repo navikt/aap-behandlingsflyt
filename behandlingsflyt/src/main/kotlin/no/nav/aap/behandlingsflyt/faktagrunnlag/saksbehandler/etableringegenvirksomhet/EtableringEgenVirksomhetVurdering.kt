@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvir
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
 import java.time.LocalDate
@@ -15,8 +14,6 @@ data class EtableringEgenVirksomhetVurdering(
     val virksomhetErNy: Boolean?,
     val brukerEierVirksomheten: EierVirksomhet?,
     val kanFøreTilSelvforsørget: Boolean?,
-    val utviklingsPerioder: List<Periode>?,
-    val oppstartsPerioder: List<Periode>?,
     override val vurdertAv: Bruker,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
@@ -33,7 +30,7 @@ enum class EierVirksomhet {
     NEI
 }
 
-enum class EtableringFase(val maksHveradager: Int) {
+enum class EtableringFase(val maksHverdager: Int) {
     UTVIKLING(MAKS_UTVIKLING_HVERDAGER),
     OPPSTART(MAKS_OPPSTART_HVERDAGER);
 }
@@ -49,8 +46,6 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.virksomhetErNy == b.virksomhetErNy &&
                 a.brukerEierVirksomheten == b.brukerEierVirksomheten &&
                 a.kanFøreTilSelvforsørget == b.kanFøreTilSelvforsørget &&
-                a.utviklingsPerioder == b.utviklingsPerioder &&
-                a.oppstartsPerioder == b.oppstartsPerioder &&
                 a.fom == b.fom &&
                 a.tom == b.tom &&
                 a.fase == b.fase &&

@@ -51,8 +51,8 @@ class EtableringEgenVirksomhetLøserTest {
         tom: LocalDate? = null,
     ): EtableringEgenVirksomhetLøsningDto {
         val beregnetTom = tom ?: when (fase) {
-            EtableringFase.UTVIKLING -> fom.plusMonths(6).minusDays(1)
-            EtableringFase.OPPSTART -> fom.plusMonths(3).minusDays(1)
+            EtableringFase.UTVIKLING -> fom.plusDays(131)
+            EtableringFase.OPPSTART -> fom.plusDays(66)
         }
 
         return EtableringEgenVirksomhetLøsningDto(
@@ -174,13 +174,15 @@ class EtableringEgenVirksomhetLøserTest {
             )
         )
 
+        val forventetTom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(vurderingFom)
+
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
                     fom = vurderingFom,
                     fase = EtableringFase.OPPSTART,
                     erRegistrertINødvendigeOffentligeRegister = true,
-                    tom = vurderingFom.plusMonths(3).minusDays(1),
+                    tom = forventetTom,
                 )
             )
         )
@@ -197,7 +199,8 @@ class EtableringEgenVirksomhetLøserTest {
         assertThat(lagredeVurderinger).hasSize(2)
         assertThat(gjeldendeVurdering.fase).isEqualTo(EtableringFase.OPPSTART)
         assertThat(gjeldendeVurdering.fom).isEqualTo(vurderingFom)
-        assertThat(gjeldendeVurdering.tom).isEqualTo(vurderingFom.plusMonths(3).minusDays(1))
+        // tom beregnes av beregnTomForSistePeriode ut fra virkedagskvoten, ikke kalendermåneder.
+        assertThat(gjeldendeVurdering.tom).isEqualTo(forventetTom)
     }
 
     @Test
@@ -332,7 +335,8 @@ class EtableringEgenVirksomhetLøserTest {
         oppfyllSykdomOgBistand(behandling)
 
         val fom = sak.rettighetsperiode.fom.plusDays(1)
-        val tom = fom.plusMonths(3).minusDays(1)
+        val tom = fom.plusMonths(3)
+        val forventetTom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(fom)
 
         val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
@@ -365,7 +369,7 @@ class EtableringEgenVirksomhetLøserTest {
         assertThat(lagretVurdering).isNotNull
         assertThat(lagretVurdering!!.fase).isEqualTo(EtableringFase.OPPSTART)
         assertThat(lagretVurdering.fom).isEqualTo(fom)
-        assertThat(lagretVurdering.tom).isEqualTo(tom)
+        assertThat(lagretVurdering.tom).isEqualTo(forventetTom)
         // Legacy-regel: oppstart ble alltid ansett som registrert i offentlige register i gammelt flyt
         assertThat(lagretVurdering.erRegistrertINødvendigeOffentligeRegister).isTrue()
     }

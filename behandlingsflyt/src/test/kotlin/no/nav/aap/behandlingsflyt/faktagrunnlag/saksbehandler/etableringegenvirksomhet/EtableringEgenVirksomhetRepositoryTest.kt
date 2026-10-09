@@ -41,7 +41,7 @@ class EtableringEgenVirksomhetRepositoryTest {
                 EtableringEgenVirksomhetVurdering(
                     begrunnelse = "test",
                     fom = LocalDate.now(),
-                    tom = LocalDate.now().plusMonths(3),
+                    tom = null,
                     vurdertAv = Bruker("1234"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = behandling.id,
@@ -51,8 +51,8 @@ class EtableringEgenVirksomhetRepositoryTest {
                     virksomhetErNy = true,
                     brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                     kanFøreTilSelvforsørget = true,
-                    erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.OPPSTART,
+                    erRegistrertINødvendigeOffentligeRegister = true,
                     jobberBrukerAktivMedVirksomheten = true
                 )
 
@@ -79,7 +79,7 @@ class EtableringEgenVirksomhetRepositoryTest {
                     EtableringEgenVirksomhetVurdering(
                         begrunnelse = "test",
                         fom = LocalDate.now(),
-                tom = LocalDate.now().plusMonths(3),
+                        tom = null,
                         vurdertAv = Bruker("1234"),
                         opprettet = Instant.now(),
                         vurdertIBehandling = behandling.id,
@@ -89,9 +89,9 @@ class EtableringEgenVirksomhetRepositoryTest {
                         virksomhetErNy = true,
                         brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                         kanFøreTilSelvforsørget = true,
-                erRegistrertINødvendigeOffentligeRegister = true,
-                fase = EtableringFase.OPPSTART,
-                jobberBrukerAktivMedVirksomheten = true
+                        fase = EtableringFase.OPPSTART,
+                        erRegistrertINødvendigeOffentligeRegister = true,
+                        jobberBrukerAktivMedVirksomheten = true
                     )
                 )
             )
