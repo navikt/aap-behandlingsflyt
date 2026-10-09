@@ -762,6 +762,7 @@ class BrevUtlederService(
                     samordningUføre != null ||
                     reduksjonArbeidsgiver.isNotEmpty() ||
                     refusjonskravTjenestepensjon != null ||
+                    refusjonskravNavKontor != null ||
                     sykestipend.isNotEmpty() ||
                     samordningBarnepensjon.isNotEmpty() ||
                     fradragAndreYtelser.isNotEmpty()
