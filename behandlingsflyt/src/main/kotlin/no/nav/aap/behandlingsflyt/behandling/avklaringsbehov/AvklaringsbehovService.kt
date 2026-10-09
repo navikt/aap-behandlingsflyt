@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVBRUTT
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.KVALITETSSIKRET
@@ -58,7 +59,25 @@ class AvklaringsbehovService(
         avklaringsbehovValidering = AvklaringsbehovValidering(repositoryProvider, gatewayProvider),
     )
 
-    // TODO: Håndter frivillige. Må ta inn gradBehov
+    fun oppdaterAvklaringsbehovMedGrad(
+        definisjon: Definisjon,
+        behov: () -> Behov,
+        erTilstrekkeligVurdert: () -> Boolean,
+        tilbakestillGrunnlag: () -> Unit,
+        kontekst: FlytKontekstMedPerioder
+    ) {
+        oppdaterAvklaringsbehov(
+            definisjon,
+            behov = behov,
+            perioderSomIkkeErTilstrekkeligVurdert = { null },
+            perioderVedtaketBehøverVurdering = { null },
+            erTilstrekkeligVurdert = erTilstrekkeligVurdert,
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            kontekst = kontekst
+        )
+    }
+
+    @Deprecated("Bruk oppdater")
     fun oppdaterAvklaringsbehov(
         definisjon: Definisjon,
         vedtakBehøverVurdering: () -> Boolean,
@@ -68,13 +87,32 @@ class AvklaringsbehovService(
     ) {
         oppdaterAvklaringsbehov(
             definisjon,
-            vedtakBehøverVurdering = vedtakBehøverVurdering,
+            behov = { Behov.fraVedtakebehøverVurdering(vedtakBehøverVurdering()) },
             perioderSomIkkeErTilstrekkeligVurdert = { null },
             perioderVedtaketBehøverVurdering = { null },
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
+    }
+
+    enum class Behov {
+        FRIVILLIG, PÅKREVD, INGEN_BEHOV;
+
+        fun tilGradBehov(): GradBehov? {
+            return when (this) {
+                PÅKREVD -> GradBehov.PÅKREVD
+                FRIVILLIG -> GradBehov.FRIVILLIG
+                INGEN_BEHOV -> null
+            }
+        }
+
+        companion object {
+            @Deprecated("Brukes i overgangfase til vi har behov()")
+            fun fraVedtakebehøverVurdering(vedtakBehøverVurdering: Boolean): Behov {
+                return if (vedtakBehøverVurdering) PÅKREVD else INGEN_BEHOV // Ikke noe konsept om frivillig her
+            }
+        }
     }
 
     /** Oppdater tilstanden på avklaringsbehovet [definisjon], slik at kvalitetssikring,
@@ -108,7 +146,7 @@ class AvklaringsbehovService(
          * @return Skal returnere `true` hvis behandlingen kommer til å inneholde
          * en menneskelig vurdering av [definisjon].
          */
-        vedtakBehøverVurdering: () -> Boolean,
+        behov: () -> Behov,
         perioderVedtaketBehøverVurdering: () -> Set<Periode>?,
 
         /** Er avklaringsbehovet [definisjon] tilstrekkelig vurdert for å fortsette behandlingen?
@@ -148,8 +186,8 @@ class AvklaringsbehovService(
                 avklaringsbehov
             ) || !(erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true)
         }
-
-        if (vedtakBehøverVurdering()) {
+        val behov = behov()
+        if (behov != Behov.INGEN_BEHOV) {
             if (avklaringsbehov == null) {
                 /* ønsket tilstand: OPPRETTET */
                 avklaringsbehovene.opprett(
@@ -158,7 +196,7 @@ class AvklaringsbehovService(
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
                     perioderKanVurderes = null, // TODO
-                    gradBehov = null 
+                    gradBehov = behov.tilGradBehov()
                 )
             } else if (harLøsning && !måLøsesPåNytt) {
                 /* ønsket tilstand: ... */
@@ -174,7 +212,7 @@ class AvklaringsbehovService(
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
                             perioderKanVurderes = null, // TODO
-                            gradBehov = null
+                            gradBehov = behov.tilGradBehov()
                         )
 
                     KVALITETSSIKRET,
@@ -198,7 +236,7 @@ class AvklaringsbehovService(
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
                             perioderKanVurderes = null, // TODO
-                            gradBehov = null
+                            gradBehov = behov.tilGradBehov()
                         )
 
                     }
@@ -210,7 +248,7 @@ class AvklaringsbehovService(
                         avklaringsbehov,
                         perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                         perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
-                        gradBehov = null
+                        gradBehov = behov.tilGradBehov()
                     )
                 }
             }
@@ -285,7 +323,7 @@ class AvklaringsbehovService(
         Definisjon.SAMORDNING_BARNEPENSJON,
         Definisjon.SAMORDNING_REFUSJONS_KRAV,
     )
-    
+
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
@@ -310,16 +348,16 @@ class AvklaringsbehovService(
 
         oppdaterAvklaringsbehov(
             definisjon = definisjon,
-            vedtakBehøverVurdering = {
+            behov = { // TODO: Håndter frivillig
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
                     VurderingType.REVURDERING,
                     VurderingType.MIGERING_FRA_ARENA -> {
                         when {
                             /* Felles guard: Har ikke avklaringsbehov for vilkår som ikke er relevante */
-                            perioderVilkåretErRelevant.segmenter().none { it.verdi } -> false
+                            perioderVilkåretErRelevant.segmenter().none { it.verdi } -> Behov.INGEN_BEHOV
 
-                            kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov } -> true
+                            kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov } -> Behov.PÅKREVD
 
                             /* For frivillige avklaringsbehov, så kan ikke Kelvin, ut fra opplysningene i saken, se om
                               * det er riktig at avklaringsbehovet ble løftet. Vi må bare stole på saksbehandler, og
@@ -332,11 +370,12 @@ class AvklaringsbehovService(
                                 val gjeldendeVurderinger = requireNotNull(gjeldendeVurderinger()) {
                                     "For at AvklaringsbehovService skal kunne håndtere frivillig avklaringsbehov $definisjon, må gjeldendeVurderinger sendes med."
                                 }
-                                gjeldendeVurderinger.segmenter()
-                                    .any { it.verdi.vurdertIBehandling == kontekst.behandlingId /* TODO: løstAv != Kelvin */ }
+                                if (gjeldendeVurderinger.segmenter()
+                                        .any { it.verdi.vurdertIBehandling == kontekst.behandlingId /* TODO: løstAv != Kelvin */ }
+                                ) Behov.PÅKREVD else Behov.INGEN_BEHOV
                             }
 
-                            else -> perioderSomBehøverManuellVurderingIDenneBehandlingen.isNotEmpty()
+                            else -> if (perioderSomBehøverManuellVurderingIDenneBehandlingen.isNotEmpty()) Behov.PÅKREVD else Behov.INGEN_BEHOV
                         }
                     }
 
@@ -348,7 +387,7 @@ class AvklaringsbehovService(
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.G_REGULERING,
-                    VurderingType.IKKE_RELEVANT -> false
+                    VurderingType.IKKE_RELEVANT -> Behov.INGEN_BEHOV
                 }
             },
             perioderVedtaketBehøverVurdering = { perioderSomBehøverManuellVurderingIDenneBehandlingen },
@@ -435,7 +474,7 @@ class AvklaringsbehovService(
         )
     }
 
-    /** Spesialtilfelle av [oppdaterAvklaringsbehov] for vilkår som er periodisert. Brukeren
+    /** Spesialtilfelle av [oppdaterAvklaringsbehovMedGrad] for vilkår som er periodisert. Brukeren
      * av funksjonen må fortelle hvilke perioder hvor vilkåret kan bli vurdert for ([nårVurderingErRelevant]).
      *
      * Hvis det er en periode som trenger vurdering som ikke trengte vurdering i forrige behandling, så løftes

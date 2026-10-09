@@ -37,7 +37,7 @@ import java.time.LocalDate
 class FasttrackMeldekortFlytTest :
     AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
-    val søknadsdato: LocalDate =  25 august 2025
+    val søknadsdato: LocalDate = 25 august 2025
     lateinit var sak: Sak
 
 
@@ -90,12 +90,12 @@ class FasttrackMeldekortFlytTest :
 
         åpenBehandling = åpenBehandling.løsBistand(revurderingGjelderFra)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev().bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 

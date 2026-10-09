@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
@@ -78,7 +79,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
         behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsSykdom(søknadsdato)
@@ -90,7 +91,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsBeregningstidspunkt()
             .løsOppholdskrav(søknadsdato)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
     }
 
@@ -122,7 +123,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
             .løsAndreStatligeYtelser()
@@ -216,7 +217,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
                     .doesNotContain(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAndreStatligeYtelser()
@@ -400,7 +401,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
             .løsAndreStatligeYtelser()
@@ -493,7 +494,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAvklaringsBehov(løsToHelseinstitusjonMedReduksjon(oppholdFom1, oppholdTom1, oppholdFom2, oppholdTom2))
             .løsAndreStatligeYtelser()
@@ -619,7 +620,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
         revurdering
             .medKontekst {
                 assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
             .løsAvklaringsBehov(løsHelseinstitusjonUtenReduksjon(fom, oppholdTom, "Omgjør: forsørger ektefelle"))
             .løsAndreStatligeYtelser()
@@ -771,7 +772,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
         revurdering
             .medKontekst {
                 assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
 
                 // Setter sluttdato for oppholdet
                 repositoryProvider.provide<InstitusjonsoppholdRepository>().lagreOpphold(

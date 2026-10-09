@@ -89,7 +89,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
                 assertThat(behandling.vurderingsbehov().map { it.type })
                     .contains(no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRERING_FRA_ARENA)
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
                 assertThat(behandling.status()).isEqualTo(AVSLUTTET)
                 behandling.assertRettighetstype(
                     Periode(startDato, startDato.plusMonths(6)) to RettighetsType.BISTANDSBEHOV
@@ -148,7 +148,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 
         migreringsbehandling
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.VURDER_KRAV)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).doesNotContain(Definisjon.VURDER_KRAV)
 
                 val kravRepository: KravRepository = repositoryProvider.provide()
                 val krav = kravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as MigrertKrav
