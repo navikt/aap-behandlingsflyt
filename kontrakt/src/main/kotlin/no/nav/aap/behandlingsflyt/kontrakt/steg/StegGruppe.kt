@@ -49,8 +49,4 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     AKTIVITETSPLIKT_11_7(true, true),
     AKTIVITETSPLIKT_11_9(true, true),
     AVBRYT_AKTIVITETSPLIKTBEHANDLING(true, false),
-    
-    // Deprekert
-    STUDENT(false, false), // TODO: Slett?
-    
 }
