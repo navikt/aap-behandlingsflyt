@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService.Tilstand
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -18,12 +19,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlems
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -39,7 +40,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
-import kotlin.lazy
 
 class VurderLovvalgSteg internal constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -77,11 +77,13 @@ class VurderLovvalgSteg internal constructor(
 
 
         // Finn ut om man skal lagre automatisk vurdering på nytt
-            // Hvis det ikke finnes en automatisk vurdering og vi trenger en vurdering, ... andre caser -> gjør en vurdering
-    
+        // Hvis det ikke finnes en automatisk vurdering og vi trenger en vurdering, ... andre caser -> gjør en vurdering
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(mittAvklaringsbehov)
-        
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            mittAvklaringsbehov
+        )
+
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
@@ -89,8 +91,39 @@ class VurderLovvalgSteg internal constructor(
             VurderingType.REVURDERING -> {
                 // TODO: Automatisk vurdering (og delvurderinger) bør egentlig være input til faktagrunnlaget, ikke motsatt
                 lagreAutomatiskVurdering(kontekst, hentFaktaGrunnlag(kontekst.sakId, kontekst.behandlingId))
-                
-                val tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
+
+                val relevant: Tidslinje<Unit> = TODO()
+
+                val tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov()
+                val tilstandPåVurderinger = relevant.outerJoin(
+                    grunnlag.value.medlemskapArbeidInntektGrunnlag?.vurderinger?.gjeldendeVurderinger().orEmpty()
+                ) { erRelevant, vurdering ->
+                    when {
+                        erRelevant != null && vurdering == null -> AvklaringsbehovService.VurderingTilstand.VURDERING_MANGLER
+                        vurdering?.erAutomatiskVurdert() == true /*&& nye_opplysninger_som_tilsier_at_vurderingen_er_feil */-> AvklaringsbehovService.VurderingTilstand.VURDERING_MANGLER
+                        vurdering?.erAutomatiskVurdert() == true -> AvklaringsbehovService.VurderingTilstand.VURDERING_OK
+                        else -> AvklaringsbehovService.VurderingTilstand.VURDERING_OK
+                    }
+                }
+
+                avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårNy(
+                    definisjon = TODO(),
+                    nårVurderingErRelevant = {
+                        TODO()
+                    },
+                    tilstandPåVurderinger = tilstandPåVurderinger,
+                    tvingStopp = when {
+                        /* TODO: Sjekk vurderingsbehov som skal tvinge */
+                        Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP in kontekst.vurderingsbehovRelevanteForSteg -> AvklaringsbehovService.Stoppunkt.STOPPUNKT
+                        else -> AvklaringsbehovService.Stoppunkt.IKKE_STOPPUNKT
+                    },
+                    behovForVurderingIDenneBehandlingen = TODO(),
+                    kontekst = TODO(),
+                    tilbakestillGrunnlag = TODO(),
+                    kanOverstyreAutomatiskeVurderinger = TODO(),
+                    gjeldendeVurderinger = TODO()
+                )
+
                 // Hva skal vi sende inn her? Automatiske vurderinger - og la avklaringsbehovservice avgjøre. Hva definierer om det er frivillig å overstyre?
                 avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
                     kontekst = kontekst,
@@ -100,7 +133,7 @@ class VurderLovvalgSteg internal constructor(
                     perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
                     tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
                 )
-                
+
                 // Hent grunnlag på nytt da det kan ha blitt tilbakestilt eller fått ny automatisk vurdering
                 val grunnlag = hentFaktaGrunnlag(kontekst.sakId, kontekst.behandlingId)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -124,12 +157,13 @@ class VurderLovvalgSteg internal constructor(
 
         return Fullført
     }
-    
-    
+
+
     fun behovForVurderingIDenneBehandlingen(kontekst: FlytKontekstMedPerioder): Tidslinje<AvklaringsbehovService.Behov> {
         val nårVurderingErRelevant = nårVurderingErRelevant(kontekst)
-        val automatiskeVurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeAutomatiskeVurderinger().orEmpty()
-        
+        val automatiskeVurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.gjeldendeAutomatiskeVurderinger().orEmpty()
+
         return Tidslinje.map2(nårVurderingErRelevant, automatiskeVurderinger) { relevant, automatiskVurdering ->
             if (relevant == true && automatiskVurdering == null) {
                 AvklaringsbehovService.Behov.PÅKREVD
@@ -139,7 +173,7 @@ class VurderLovvalgSteg internal constructor(
                 AvklaringsbehovService.Behov.INGEN_BEHOV
             }
         }
-        
+
     }
 
 
@@ -189,7 +223,7 @@ class VurderLovvalgSteg internal constructor(
 
     private fun kanVurderesAutomatisk(grunnlag: MedlemskapLovvalgFaktaGrunnlag, rettighetsperiode: Periode): Boolean {
         return grunnlag.nyeSoknadGrunnlag != null // Denne gir "ikke relevant" i vilkåret. Ikke så lett å se hvorfor
-             && MedlemskapLovvalgVurderingService()
+                && MedlemskapLovvalgVurderingService()
             .vurderTilhørighet(grunnlag, rettighetsperiode)
             .kanBehandlesAutomatisk
     }
@@ -199,7 +233,7 @@ class VurderLovvalgSteg internal constructor(
     ): Set<Periode> {
         val grunnlag = hentFaktaGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val relevantTidslinje = nårVurderingErRelevant(kontekst)
-        
+
         val automatiskVilkårsvurderingLovvalg =
             vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
 
@@ -300,7 +334,7 @@ class VurderLovvalgSteg internal constructor(
     }
 
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
-        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD)
+        setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
 
     private fun hentFaktaGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgFaktaGrunnlag {
         val medlemskapArbeidInntektGrunnlag =
@@ -337,6 +371,6 @@ class VurderLovvalgSteg internal constructor(
     }
 }
 
-class MittAvklaringsbehov: PeriodisertAvklaringsbehov {
+class MittAvklaringsbehov : PeriodisertAvklaringsbehov {
     ...
 }
