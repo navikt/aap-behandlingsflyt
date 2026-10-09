@@ -29,9 +29,9 @@ class EtableringEgenVirksomhetServiceTest {
             InMemorySykdomRepository
         )
 
-        val res = service.erVurderingerGyldig(behandling.id, emptyList())
+        val res = service.beregnOgValider(behandling.id, emptyList())
 
-        assertThat(res).isInstanceOf(VirksomhetEtableringGyldig::class.java)
+        assertThat(res).isInstanceOf(BeregningResultat.Gyldig::class.java)
     }
 
     @Test

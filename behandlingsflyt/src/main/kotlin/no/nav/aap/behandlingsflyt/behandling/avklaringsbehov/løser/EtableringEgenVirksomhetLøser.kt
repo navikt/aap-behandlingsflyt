@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.BeregningResultat
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringIkkeGyldig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -28,17 +28,21 @@ class EtableringEgenVirksomhetLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val nyeVurderinger = løsning.løsningerForPerioder.map { it.toEtableringEgenVirksomhetVurdering(kontekst) }
 
-        when (val evaluering = etableringEgenVirksomhetService.erVurderingerGyldig(behandling.id, nyeVurderinger)) {
-            is VirksomhetEtableringIkkeGyldig -> throw UgyldigForespørselException(evaluering.feilmelding)
-            else -> {}
+        val beregning = when (
+            val resultat = etableringEgenVirksomhetService.beregnOgValider(behandling.id, nyeVurderinger)
+        ) {
+            is BeregningResultat.Gyldig -> resultat.beregning
+            is BeregningResultat.Ugyldig -> throw UgyldigForespørselException(resultat.feilmelding)
         }
 
-        val gamleVurderinger =
-            behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+        val gamleVurderinger = behandling.forrigeBehandlingId?.let {
+            etableringEgenVirksomhetRepository.hentHvisEksisterer(it)?.vurderinger.orEmpty()
+        }.orEmpty()
+
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = gamleVurderinger + nyeVurderinger
+            etableringEgenvirksomhetVurderinger = gamleVurderinger + beregning.beregnedeVurderinger
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }

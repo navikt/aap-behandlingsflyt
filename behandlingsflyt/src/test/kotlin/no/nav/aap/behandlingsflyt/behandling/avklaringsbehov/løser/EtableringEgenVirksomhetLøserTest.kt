@@ -3,9 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.bistandsbehov.Bistandsvurdering
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.MAKS_OPPSTART_HVERDAGER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.MAKS_UTVIKLING_HVERDAGER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -42,21 +46,30 @@ class EtableringEgenVirksomhetLøserTest {
 
     private fun oppfyltVurdering(
         fom: LocalDate,
-        utviklingsPerioder: List<Periode> = emptyList(),
-        oppstartsPerioder: List<Periode> = emptyList()
-    ) = EtableringEgenVirksomhetLøsningDto(
-        begrunnelse = "meee",
-        fom = fom,
-        tom = null,
-        virksomhetNavn = "peppas peppers",
-        orgNr = null,
-        foreliggerFagligVurdering = true,
-        virksomhetErNy = true,
-        brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-        kanFøreTilSelvforsørget = true,
-        utviklingsPerioder = utviklingsPerioder,
-        oppstartsPerioder = oppstartsPerioder
-    )
+        fase: EtableringFase = EtableringFase.UTVIKLING,
+        erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
+        tom: LocalDate? = null,
+    ): EtableringEgenVirksomhetLøsningDto {
+        val beregnetTom = tom ?: when (fase) {
+            EtableringFase.UTVIKLING -> fom.plusDays(131)
+            EtableringFase.OPPSTART -> fom.plusDays(66)
+        }
+
+        return EtableringEgenVirksomhetLøsningDto(
+            begrunnelse = "meee",
+            fom = fom,
+            tom = beregnetTom,
+            virksomhetNavn = "peppas peppers",
+            orgNr = null,
+            foreliggerFagligVurdering = true,
+            virksomhetErNy = true,
+            brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+            kanFøreTilSelvforsørget = true,
+            jobberBrukerAktivMedVirksomheten = true,
+            fase = fase,
+            erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
+        )
+    }
 
     @Test
     fun `Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode`() {
@@ -68,8 +81,7 @@ class EtableringEgenVirksomhetLøserTest {
             listOf(oppfyltVurdering(fom = sak.rettighetsperiode.fom.plusDays(1)))
         )
 
-        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode")
+        assertDoesNotThrow { løser.løs(kontekst, løsning) }
     }
 
     @Test
@@ -82,12 +94,8 @@ class EtableringEgenVirksomhetLøserTest {
             listOf(
                 oppfyltVurdering(
                     fom = sak.rettighetsperiode.fom,
-                    utviklingsPerioder = listOf(
-                        Periode(sak.rettighetsperiode.fom.plusDays(1), sak.rettighetsperiode.fom.plusDays(4))
-                    ),
-                    oppstartsPerioder = listOf(
-                        Periode(sak.rettighetsperiode.fom.plusMonths(1), sak.rettighetsperiode.fom.plusMonths(2))
-                    )
+                    fase = EtableringFase.OPPSTART,
+                    erRegistrertINødvendigeOffentligeRegister = true,
                 )
             )
         )
@@ -98,47 +106,17 @@ class EtableringEgenVirksomhetLøserTest {
 
     @Test
     fun `Skal ikke kunne legge oppstartsperioder før utviklingsperioden`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
-        oppfyllSykdomOgBistand(behandling)
-
-        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
-        val løsning = EtableringEgenVirksomhetLøsning(
-            listOf(
-                oppfyltVurdering(
-                    fom = sak.rettighetsperiode.fom.plusDays(1),
-                    utviklingsPerioder = listOf(
-                        Periode(sak.rettighetsperiode.fom.plusMonths(1), sak.rettighetsperiode.fom.plusMonths(2))
-                    ),
-                    oppstartsPerioder = listOf(
-                        Periode(sak.rettighetsperiode.fom.plusDays(1), sak.rettighetsperiode.fom.plusDays(4))
-                    )
-                )
-            )
-        )
-
-        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
-    }
-
-    @Test
-    fun `Ny vurdering erstatter tidligere perioder med samme fom`() {
         val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
         oppfyllSykdomOgBistand(revurdering)
-        val vurderingFom = sak.rettighetsperiode.fom.plusDays(1)
-        val nyeUtviklingsperioder = listOf(
-            Periode(vurderingFom, vurderingFom.plusDays(6))
-        )
-        val nyeOppstartsperioder = listOf(
-            Periode(vurderingFom.plusDays(7), vurderingFom.plusDays(20))
-        )
 
+        val kontekst = avklaringsbehovKontekst { this.behandling = revurdering }
         InMemoryEtableringEgenVirksomRepository.lagre(
             førstegangsbehandling.id,
             listOf(
                 EtableringEgenVirksomhetVurdering(
-                    begrunnelse = "Opprinnelig vurdering",
-                    fom = vurderingFom,
-                    tom = null,
+                    begrunnelse = "Tidligere utvikling",
+                    fom = sak.rettighetsperiode.fom.plusDays(10),
+                    tom = sak.rettighetsperiode.fom.plusDays(30),
                     vurdertAv = Bruker("saks"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = førstegangsbehandling.id,
@@ -147,15 +125,9 @@ class EtableringEgenVirksomhetLøserTest {
                     virksomhetErNy = true,
                     brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                     kanFøreTilSelvforsørget = true,
-                    utviklingsPerioder = listOf(
-                        Periode(vurderingFom, vurderingFom.plusMonths(2))
-                    ),
-                    oppstartsPerioder = listOf(
-                        Periode(vurderingFom.plusMonths(2).plusDays(1), vurderingFom.plusMonths(3))
-                    ),
-                    fase = null,
-                    erRegistrertINødvendigeOffentligeRegister = null,
-                    jobberBrukerAktivMedVirksomheten = null
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    fase = EtableringFase.UTVIKLING,
+                    jobberBrukerAktivMedVirksomheten = true
                 )
             )
         )
@@ -163,9 +135,54 @@ class EtableringEgenVirksomhetLøserTest {
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
+                    fom = sak.rettighetsperiode.fom.plusDays(5),
+                    fase = EtableringFase.OPPSTART,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    tom = sak.rettighetsperiode.fom.plusDays(20),
+                )
+            )
+        )
+
+        val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
+        assertThat(feil.message).contains("Oppstartsperioden kan ikke være før utviklingsfase")
+    }
+
+    @Test
+    fun `Ny vurdering erstatter tidligere perioder med samme fom`() {
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
+        val vurderingFom = sak.rettighetsperiode.fom.plusDays(1)
+        InMemoryEtableringEgenVirksomRepository.lagre(
+            førstegangsbehandling.id,
+            listOf(
+                EtableringEgenVirksomhetVurdering(
+                    begrunnelse = "Opprinnelig vurdering",
                     fom = vurderingFom,
-                    utviklingsPerioder = nyeUtviklingsperioder,
-                    oppstartsPerioder = nyeOppstartsperioder,
+                    tom = vurderingFom.plusMonths(2).minusDays(1),
+                    vurdertAv = Bruker("saks"),
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = førstegangsbehandling.id,
+                    virksomhetNavn = "peppas peppers",
+                    foreliggerFagligVurdering = true,
+                    virksomhetErNy = true,
+                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                    kanFøreTilSelvforsørget = true,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    jobberBrukerAktivMedVirksomheten = true,
+                    fase = EtableringFase.OPPSTART
+                )
+            )
+        )
+
+        val forventetTom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(vurderingFom)
+
+        val løsning = EtableringEgenVirksomhetLøsning(
+            listOf(
+                oppfyltVurdering(
+                    fom = vurderingFom,
+                    fase = EtableringFase.OPPSTART,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    tom = forventetTom,
                 )
             )
         )
@@ -180,58 +197,97 @@ class EtableringEgenVirksomhetLøserTest {
         val gjeldendeVurdering = lagredeVurderinger.gjeldendeVurderinger().segmenter().single().verdi
 
         assertThat(lagredeVurderinger).hasSize(2)
-        assertThat(gjeldendeVurdering.utviklingsPerioder).isEqualTo(nyeUtviklingsperioder)
-        assertThat(gjeldendeVurdering.oppstartsPerioder).isEqualTo(nyeOppstartsperioder)
+        assertThat(gjeldendeVurdering.fase).isEqualTo(EtableringFase.OPPSTART)
+        assertThat(gjeldendeVurdering.fom).isEqualTo(vurderingFom)
+        // tom beregnes av beregnTomForSistePeriode ut fra virkedagskvoten, ikke kalendermåneder.
+        assertThat(gjeldendeVurdering.tom).isEqualTo(forventetTom)
     }
 
     @Test
     fun `Skal ikke kunne overstige oppstartsperiodens kvote på 66 dager`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
-        oppfyllSykdomOgBistand(behandling)
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
 
-        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
+        val kontekst = avklaringsbehovKontekst { this.behandling = revurdering }
+        val forrigeOppstartFom = sak.rettighetsperiode.fom.plusDays(1)
+        InMemoryEtableringEgenVirksomRepository.lagre(
+            førstegangsbehandling.id,
+            listOf(
+                EtableringEgenVirksomhetVurdering(
+                    begrunnelse = "Brukte opp hele oppstartskvoten",
+                    fom = forrigeOppstartFom,
+                    tom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(forrigeOppstartFom),
+                    vurdertAv = Bruker("saks"),
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = førstegangsbehandling.id,
+                    virksomhetNavn = "peppas peppers",
+                    foreliggerFagligVurdering = true,
+                    virksomhetErNy = true,
+                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                    kanFøreTilSelvforsørget = true,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    fase = EtableringFase.OPPSTART,
+                    jobberBrukerAktivMedVirksomheten = true
+                )
+            )
+        )
+
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
-                    fom = sak.rettighetsperiode.fom.plusDays(1),
-                    utviklingsPerioder = listOf(
-                        Periode(sak.rettighetsperiode.fom.plusDays(1), sak.rettighetsperiode.fom.plusDays(4))
-                    ),
-                    oppstartsPerioder = listOf(
-                        Periode(sak.rettighetsperiode.fom.plusMonths(1), sak.rettighetsperiode.fom.plusMonths(2)),
-                        Periode(sak.rettighetsperiode.fom.plusMonths(2), sak.rettighetsperiode.fom.plusMonths(5))
-                    )
+                    fase = EtableringFase.OPPSTART,
+                    fom = sak.rettighetsperiode.fom.plusMonths(6),
+                    tom = null,
+                    erRegistrertINødvendigeOffentligeRegister = true,
                 )
             )
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Oppsatte oppstartsdager overstiger gjenværende dager:")
+        assertThat(feil.message).contains("Kvoten for OPPSTART er brukt opp")
     }
 
     @Test
     fun `Skal ikke kunne overstige utviklingsperiodens kvote på 131 dager`() {
-        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
-        oppfyllSykdomOgBistand(behandling)
+        val (sak, førstegangsbehandling, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
 
-        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
+        val kontekst = avklaringsbehovKontekst { this.behandling = revurdering }
+        val forrigeUtviklingFom = sak.rettighetsperiode.fom.plusDays(1)
+        InMemoryEtableringEgenVirksomRepository.lagre(
+            førstegangsbehandling.id,
+            listOf(
+                EtableringEgenVirksomhetVurdering(
+                    begrunnelse = "Brukte opp hele utviklingskvoten",
+                    fom = forrigeUtviklingFom,
+                    tom = Hverdager(MAKS_UTVIKLING_HVERDAGER).fraOgMed(forrigeUtviklingFom),
+                    vurdertAv = Bruker("saks"),
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = førstegangsbehandling.id,
+                    virksomhetNavn = "peppas peppers",
+                    foreliggerFagligVurdering = true,
+                    virksomhetErNy = true,
+                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                    kanFøreTilSelvforsørget = true,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    fase = EtableringFase.UTVIKLING,
+                    jobberBrukerAktivMedVirksomheten = true
+                )
+            )
+        )
+
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
                 oppfyltVurdering(
-                    fom = sak.rettighetsperiode.fom.plusDays(1),
-                    utviklingsPerioder = listOf(
-                        Periode(sak.rettighetsperiode.fom.plusDays(1), sak.rettighetsperiode.fom.plusDays(4)),
-                        Periode(sak.rettighetsperiode.fom.plusMonths(1), sak.rettighetsperiode.fom.plusMonths(10))
-                    ),
-                    oppstartsPerioder = listOf(
-                        Periode(sak.rettighetsperiode.fom.plusMonths(11), sak.rettighetsperiode.fom.plusMonths(12))
-                    )
+                    fase = EtableringFase.UTVIKLING,
+                    fom = sak.rettighetsperiode.fom.plusMonths(10),
+                    tom = null,
                 )
             )
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Oppsatte utviklingsdager overstiger gjenværende dager:")
+        assertThat(feil.message).contains("Kvoten for UTVIKLING er brukt opp")
     }
 
     private fun oppfyllSykdomOgBistand(behandling: Behandling) {
@@ -272,4 +328,50 @@ class EtableringEgenVirksomhetLøserTest {
             )
         )
     }
+
+    @Test
+    fun `Legacy frontend uten fase skal fortsatt kunne vurdere virksomhet via oppstartsPerioder`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+
+        val fom = sak.rettighetsperiode.fom.plusDays(1)
+        val tom = fom.plusMonths(3)
+        val forventetTom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(fom)
+
+        val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
+        val løsning = EtableringEgenVirksomhetLøsning(
+            listOf(
+                EtableringEgenVirksomhetLøsningDto(
+                    begrunnelse = "legacy innsending",
+                    fom = fom,
+                    tom = tom,
+                    virksomhetNavn = "peppas peppers",
+                    orgNr = null,
+                    foreliggerFagligVurdering = true,
+                    virksomhetErNy = true,
+                    brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                    kanFøreTilSelvforsørget = true,
+                    jobberBrukerAktivMedVirksomheten = null,
+                    fase = null,
+                    erRegistrertINødvendigeOffentligeRegister = null,
+                    oppstartsPerioder = listOf(Periode(fom, tom)),
+                )
+            )
+        )
+
+        assertDoesNotThrow { løser.løs(kontekst, løsning) }
+
+        val lagretVurdering = InMemoryEtableringEgenVirksomRepository
+            .hentHvisEksisterer(behandling.id)
+            ?.vurderinger
+            ?.single()
+
+        assertThat(lagretVurdering).isNotNull
+        assertThat(lagretVurdering!!.fase).isEqualTo(EtableringFase.OPPSTART)
+        assertThat(lagretVurdering.fom).isEqualTo(fom)
+        assertThat(lagretVurdering.tom).isEqualTo(forventetTom)
+        // Legacy-regel: oppstart ble alltid ansett som registrert i offentlige register i gammelt flyt
+        assertThat(lagretVurdering.erRegistrertINødvendigeOffentligeRegister).isTrue()
+    }
+
 }

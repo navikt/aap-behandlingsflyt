@@ -21,7 +21,8 @@ data class EtableringEgenVirksomhetGrunnlagResponse(
     override val ikkeRelevantePerioder: List<Periode>,
     val vurderingerMeta: VurderingerMetaResponse,
     val bruktUtviklingsDager: Int?,
-    val bruktOppstartsdager: Int?
+    val bruktOppstartsdager: Int?,
+    val tom: LocalDate?
 ) : PeriodiserteVurderingerDto<EtableringEgenVirksomhetVurderingResponse>
 
 data class EtableringEgenVirksomhetVurderingResponse(
@@ -36,8 +37,8 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val virksomhetErNy: Boolean?,
     val brukerEierVirksomheten: EierVirksomhet?,
     val kanFøreTilSelvforsørget: Boolean?,
-    val utviklingsPeriode: List<Periode>,
-    val oppstartsPeriode: List<Periode>,
+    val utviklingsPeriode: List<Periode>?,
+    val oppstartsPeriode: List<Periode>?,
     val oppfylt: Boolean,
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
@@ -72,6 +73,16 @@ data class EtableringEgenVirksomhetVurderingResponse(
             fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
         ) = EtableringEgenVirksomhetVurderingResponse(
+            utviklingsPeriode = when {
+                etableringEgenVirksomhetVurdering.fase == EtableringFase.UTVIKLING && tom != null ->
+                    listOf(Periode(fom, tom))
+                else -> emptyList()
+            },
+            oppstartsPeriode = when {
+                etableringEgenVirksomhetVurdering.fase == EtableringFase.OPPSTART && tom != null ->
+                    listOf(Periode(fom, tom))
+                else -> emptyList()
+            },
             begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
             virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
             orgNr = etableringEgenVirksomhetVurdering.orgNr,
@@ -79,8 +90,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
             virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
             brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
             kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
-            utviklingsPeriode = etableringEgenVirksomhetVurdering.utviklingsPerioder,
-            oppstartsPeriode = etableringEgenVirksomhetVurdering.oppstartsPerioder,
             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                 behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,

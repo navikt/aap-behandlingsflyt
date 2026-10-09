@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -22,6 +24,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -64,14 +67,12 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         etableringEgenVirksomhetService.utledIkkeVurderbarePerioder(behandling.id)
 
                     val alleVurderinger =
-                        etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
+                        etableringEgenVirksomhetGrunnlag?.vurderinger ?:  forrigeGrunnlag.vurderinger
 
-                    val bruktUtviklingsDager =
-                        (alleVurderinger).flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
-                            .sumOf { it.periode.antallHverdager().asInt }
-                    val bruktOppstartsdager =
-                        (alleVurderinger).flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
-                            .sumOf { it.periode.antallHverdager().asInt }
+                    val bruktUtviklingsDager = alleVurderinger.antallHverdagerIFase(EtableringFase.UTVIKLING)
+                    val bruktOppstartsdager = alleVurderinger.antallHverdagerIFase(EtableringFase.OPPSTART)
+
+                    val tom = alleVurderinger.maxByOrNull { it.fom }?.tom
 
                     EtableringEgenVirksomhetGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
@@ -103,7 +104,8 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         ),
                         ikkeRelevantePerioder = ikkeVurderbarePerioder,
                         bruktUtviklingsDager = bruktUtviklingsDager,
-                        bruktOppstartsdager = bruktOppstartsdager
+                        bruktOppstartsdager = bruktOppstartsdager,
+                        tom = tom
                     )
                 }
             respond(
@@ -112,3 +114,11 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
         }
     }
 }
+
+private fun List<EtableringEgenVirksomhetVurdering>.antallHverdagerIFase(fase: EtableringFase): Int =
+    filter { it.fase == fase }
+        .mapNotNull { vurdering -> vurdering.tom?.let { tom -> Periode(vurdering.fom, tom) } }
+        .somTidslinje { it }
+        .komprimer()
+        .segmenter()
+        .sumOf { it.periode.antallHverdager().asInt }
