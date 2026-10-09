@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -37,7 +38,10 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val kanFøreTilSelvforsørget: Boolean?,
     val utviklingsPeriode: List<Periode>,
     val oppstartsPeriode: List<Periode>,
-    val oppfylt: Boolean
+    val oppfylt: Boolean,
+    val fase: EtableringFase?,
+    val erRegistrertINødvendigeOffentligeRegister: Boolean?,
+    val jobberBrukerAktivMedVirksomheten: Boolean?,
 ) : VurderingDto {
     companion object {
         fun fraDomene(
@@ -87,7 +91,10 @@ data class EtableringEgenVirksomhetVurderingResponse(
             ),
             fom = fom,
             tom = tom,
-            oppfylt = etableringEgenVirksomhetService.evaluerVirksomhetVurdering(etableringEgenVirksomhetVurdering)
+            oppfylt = etableringEgenVirksomhetService.evaluerVirksomhetVurdering(etableringEgenVirksomhetVurdering),
+            fase = etableringEgenVirksomhetVurdering.fase,
+            erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
+            jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten
         )
     }
 }

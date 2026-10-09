@@ -21,13 +21,21 @@ data class EtableringEgenVirksomhetVurdering(
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
     override val fom: LocalDate,
-    override val tom: LocalDate?
+    override val tom: LocalDate?,
+    val fase: EtableringFase?,
+    val erRegistrertINødvendigeOffentligeRegister: Boolean?,
+    val jobberBrukerAktivMedVirksomheten: Boolean?,
 ) : PeriodisertVurdering
 
 enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,
     EIER_MINST_50_PROSENT_MED_FLER,
     NEI
+}
+
+enum class EtableringFase {
+    OPPSTART,
+    UTVIKLING
 }
 
 fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<EtableringEgenVirksomhetVurdering>): Boolean {
@@ -44,6 +52,9 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.utviklingsPerioder == b.utviklingsPerioder &&
                 a.oppstartsPerioder == b.oppstartsPerioder &&
                 a.fom == b.fom &&
-                a.tom == b.tom
+                a.tom == b.tom &&
+                a.fase == b.fase &&
+                a.erRegistrertINødvendigeOffentligeRegister == b.erRegistrertINødvendigeOffentligeRegister &&
+                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten
     }
 }
