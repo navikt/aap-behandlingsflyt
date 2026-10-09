@@ -555,6 +555,12 @@ class BrevGateway : BrevbestillingGateway {
                     tilOgMed = tp.tilOgMed,
                 )
             },
+            refusjonskravSosialkontor = forholdTilAndreYtelser.refusjonskravNavKontor?.let { refusjonskrav ->
+                Faktagrunnlag.ForholdTilAndreYtelser.RefusjonskravSosialkontor(
+                    fraOgMed = refusjonskrav.fraOgMed,
+                    tilOgMed = refusjonskrav.tilOgMed,
+                )
+            },
             samordningAndreYtelser = forholdTilAndreYtelser.samordningAndreYtelser.map { samordning ->
                 Faktagrunnlag.ForholdTilAndreYtelser.SamordningYtelse(
                     ytelseNavn = samordning.ytelseNavn,
