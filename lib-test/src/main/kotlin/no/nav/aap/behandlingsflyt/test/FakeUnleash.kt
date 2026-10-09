@@ -76,7 +76,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
-        BehandlingsflytFeature.SaksbehandlerMeldekortKvitteringNyPdfgenerator to true,
         // --- Krav ---
         BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
