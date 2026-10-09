@@ -37,6 +37,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
@@ -118,7 +120,7 @@ class BrevUtlederServiceTest {
     val unleashGateway = BrevUtlederServiceTestUnleash
     val stansOpphørRepository = repositoryProvider.provide<StansOpphørRepository>()
     val tpRefusjonskravRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
-
+    val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
     val brevUtlederService = BrevUtlederService(
         repositoryProvider,
         gatewayProvider
@@ -1148,6 +1150,78 @@ class BrevUtlederServiceTest {
             assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
             assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed).isAfterOrEqualTo(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.fraOgMed)
         }
+    }
+
+    @Test
+    fun `utleder refusjonsperiode for NAV-kontor i innvilgelsesbrev`() {
+        val virkningstidspunkt = 5 september 2026
+        val vedtaksdato = virkningstidspunkt.plusDays(8)
+        val behandling = gittBehandling(
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            virkningstidspunkt = virkningstidspunkt,
+            vedtakstidspunkt = vedtaksdato.atStartOfDay(),
+        )
+        gittUnderveisGrunnlag(
+            behandling.id,
+            underveisperiode(
+                periode = Periode(virkningstidspunkt, virkningstidspunkt.plusDays(8)),
+                utfall = Utfall.OPPFYLT,
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+            ),
+        )
+        refusjonkravRepository.lagre(
+            behandling.sakId,
+            behandling.id,
+            listOf(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    navKontor = "Nav Løten",
+                    vurdertAv = Bruker("saksbehandler"),
+                ),
+            ),
+        )
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+        assertIs<Innvilgelse>(resultat)
+        assertThat(resultat.forholdTilAndreYtelser?.refusjonskravNavKontor?.fraOgMed)
+            .isEqualTo(virkningstidspunkt)
+        assertThat(resultat.forholdTilAndreYtelser?.refusjonskravNavKontor?.tilOgMed)
+            .isEqualTo(vedtaksdato.minusDays(1))
+    }
+
+    @Test
+    fun `utleder ikke refusjonsperiode for NAV-kontor uten etterbetaling`() {
+        val virkningstidspunkt = 5 september 2026
+        val behandling = gittBehandling(
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            virkningstidspunkt = virkningstidspunkt,
+            vedtakstidspunkt = virkningstidspunkt.atStartOfDay(),
+        )
+        gittUnderveisGrunnlag(
+            behandling.id,
+            underveisperiode(
+                periode = Periode(virkningstidspunkt, virkningstidspunkt.plusYears(1)),
+                utfall = Utfall.OPPFYLT,
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+            ),
+        )
+        refusjonkravRepository.lagre(
+            behandling.sakId,
+            behandling.id,
+            listOf(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    navKontor = "Nav Løten",
+                    vurdertAv = Bruker("saksbehandler"),
+                ),
+            ),
+        )
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+        assertIs<Innvilgelse>(resultat)
+        assertThat(resultat.forholdTilAndreYtelser?.refusjonskravNavKontor).isNull()
     }
 
     @Test

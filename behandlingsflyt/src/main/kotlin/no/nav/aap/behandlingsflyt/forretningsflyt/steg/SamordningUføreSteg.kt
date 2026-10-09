@@ -80,7 +80,7 @@ class SamordningUføreSteg(
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
         val tidligereVurderinger =
             kontekst.forrigeBehandlingId?.let { samordningUføreRepository.hentHvisEksisterer(it) }?.vurdering?.vurderingPerioder.orEmpty()
-        val uføreGrunnlag = hentVurderingPerioder(kontekst.behandlingId)?.vurderinger.orEmpty()
+        val uføreGrunnlag = hentVurderingPerioder(kontekst.behandlingId)?.vedtak.orEmpty()
         return uføreGrunnlag.any { uføre ->
             tidligereVurderinger.none { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt }
         }
@@ -98,7 +98,7 @@ class SamordningUføreSteg(
         val samordningUføreGrunnlag = samordningUføreRepository.hentHvisEksisterer(behandlingId)
         val vurderinger = samordningUføreGrunnlag?.vurdering?.vurderingPerioder
 
-        return uføreGrunnlag?.vurderinger.orEmpty()
+        return uføreGrunnlag?.vedtak.orEmpty()
             .filter { it.uføregradTom == null || it.uføregradTom >= rettighetsperiode.fom }
             .all { uføre ->
                 vurderinger?.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt } ?: false

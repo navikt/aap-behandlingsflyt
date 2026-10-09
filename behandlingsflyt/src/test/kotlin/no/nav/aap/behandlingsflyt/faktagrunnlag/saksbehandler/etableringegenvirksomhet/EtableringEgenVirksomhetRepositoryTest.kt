@@ -53,6 +53,9 @@ class EtableringEgenVirksomhetRepositoryTest {
                     kanFøreTilSelvforsørget = true,
                     utviklingsPerioder = emptyList(),
                     oppstartsPerioder = emptyList(),
+                    fase = null,
+                    erRegistrertINødvendigeOffentligeRegister = null,
+                    jobberBrukerAktivMedVirksomheten = null
                 )
 
             repository.lagre(behandling.id, listOf(vurdering))
@@ -90,6 +93,9 @@ class EtableringEgenVirksomhetRepositoryTest {
                         kanFøreTilSelvforsørget = true,
                         utviklingsPerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusMonths(5))),
                         oppstartsPerioder = listOf(Periode(LocalDate.now().plusMonths(6), LocalDate.now().plusMonths(9))),
+                        fase = null,
+                        erRegistrertINødvendigeOffentligeRegister = null,
+                        jobberBrukerAktivMedVirksomheten = null
                     )
                 )
             )

@@ -19,6 +19,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -35,6 +37,7 @@ import java.time.Year
 class UføreInformasjonskrav(
     private val sakService: SakService,
     private val uføreRepository: UføreRepository,
+    private val behandlingRepository: BehandlingRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val uføreRegisterGateway: UføreRegisterGateway,
@@ -43,6 +46,7 @@ class UføreInformasjonskrav(
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider, gatewayProvider),
         uføreRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
@@ -126,14 +130,25 @@ class UføreInformasjonskrav(
 
     override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
         val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return IKKE_ENDRET
+        val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
+
+        /**
+         * Skal kun flette inn uføreopplysninger fra atomære behandlinger opprettet som følge av et uførevedtak.
+         * Aktivitetspliktbehandlinger, meldekort osv skal ikke påvirke uføreopplysninger i den åpne behandlingen
+         * da disse kan bygge på utdatert informasjon
+         */
+        if (!forrigeBehandling.vurderingsbehov().any { it.type == Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS }) {
+            return IKKE_ENDRET
+        }
+
         val grunnlag = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)
         val forrigeGrunnlag = uføreRepository.hentHvisEksisterer(forrigeBehandlingId)
 
-        val forrigeVurderinger = forrigeGrunnlag?.vurderinger ?: return IKKE_ENDRET
-        val mergedVurderinger = grunnlag?.vurderinger.orEmpty() + forrigeVurderinger
+        val uføregraderForrigeBehandling = forrigeGrunnlag?.vedtak ?: return IKKE_ENDRET
+        val mergedUføregrader = grunnlag?.vedtak.orEmpty() + uføregraderForrigeBehandling
 
-        if (mergedVurderinger != grunnlag?.vurderinger) {
-            uføreRepository.lagre(kontekst.behandlingId, mergedVurderinger)
+        if (mergedUføregrader != grunnlag?.vedtak) {
+            uføreRepository.lagre(kontekst.behandlingId, mergedUføregrader)
             return ENDRET
         } else {
             return IKKE_ENDRET
@@ -208,7 +223,7 @@ class UføreInformasjonskrav(
             return if (eksisterende == null) {
                 uføregrader.isNotEmpty()
             } else {
-                uføregrader != eksisterende.vurderinger
+                uføregrader != eksisterende.vedtak
             }
         }
     }
