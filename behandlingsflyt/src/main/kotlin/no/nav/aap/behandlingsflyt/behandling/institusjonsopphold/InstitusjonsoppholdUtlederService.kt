@@ -62,21 +62,11 @@ class InstitusjonsoppholdUtlederService(
         val barnetillegg = input.barnetillegg
         val soningsvurderingTidslinje = byggSoningsvurderingTidslinje(input.soningsvurderinger)
 
-        // Fyll inn gaps med GODKJENT slik at de ikke krever vurdering.
-        // Bruk KJEDENE (sammenhengende opphold slått sammen), ikke de rå enkeltsegmentene,
-        // slik at en vurdering som dekker deler av en kjede matches mot HELE kjeden,
-        // og ikke feilaktig etterlater andre delsegmenter i kjeden som UAVKLART.
-        val helseoppholdPerioder =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
-                grupperSammenhengendeOppholdSegmenter(helseopphold).map { it.periode }
-            } else {
-                helseopphold.map { it.periode }
-            }
         val helseoppholdvurderinger = input.helsevurderinger
 
         val helsevurderingerTidslinje = byggHelsevurderingTidslinje(
             helseoppholdvurderinger,
-            helseoppholdPerioder
+            helseopphold
         )
 
         var perioderSomTrengerVurdering =
@@ -204,22 +194,57 @@ class InstitusjonsoppholdUtlederService(
 
     private fun byggHelsevurderingTidslinje(
         helsevurderinger: Helseoppholdvurderinger?,
-        oppholdPerioder: List<Periode>
+        helseopphold: List<Segment<Institusjon>>
     ): Tidslinje<HelseOpphold> {
-        // Første lag tidslinje fra saksbehandlers vurderinger
-        val vurderingTidslinje = helsevurderinger?.tilTidslinje().orEmpty().map {
-            HelseOpphold(
-                if (it.faarFriKostOgLosji && it.harFasteUtgifter == false && it.forsoergerEktefelle == false) {
-                    OppholdVurdering.AVSLÅTT
-                } else {
-                    OppholdVurdering.GODKJENT
-                },
-                umiddelbarReduksjon = true
-            )
-        }
+        val alleVurderinger = helsevurderinger?.vurderinger.orEmpty()
 
-        // Fyll inn gaps med GODKJENT for perioder som ikke er vurdert
-        val vurderingMedGaps = fyllInnGapsMedGodkjentForHelseopphold(vurderingTidslinje, oppholdPerioder)
+        val helseoppholdPerioder =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
+                grupperSammenhengendeOppholdSegmenter(helseopphold).map { it.periode }
+            } else {
+                helseopphold.map { it.periode }
+            }
+
+        val vurderingTidslinje = alleVurderinger
+            .filterNot { it.erHistoriskUtenReduksjonsberegning }
+            .let { Tidslinje(it.map { v -> Segment(v.periode, v) }) }
+            .map {
+                HelseOpphold(
+                    if (it.giReduksjon()) {
+                        OppholdVurdering.AVSLÅTT
+                    } else {
+                        OppholdVurdering.GODKJENT
+                    },
+                    umiddelbarReduksjon = true
+                )
+            }
+
+        // Historiske vurderinger matches eksplisitt til oppholdets faktiske periode via oppholdId,
+        // siden vurderingens egen periode kan ligge utenfor oppholdets varighet.
+        val historiskeSegmenter = alleVurderinger
+            .filter { it.erHistoriskUtenReduksjonsberegning }
+            .mapNotNull { vurdering ->
+                val matchendeOpphold = helseopphold.firstOrNull {
+                    lagOppholdId(it.verdi.navn, it.periode.fom) == vurdering.oppholdId
+                } ?: return@mapNotNull null
+
+                Segment(
+                    matchendeOpphold.periode,
+                    HelseOpphold(
+                        vurdering = OppholdVurdering.GODKJENT,
+                        umiddelbarReduksjon = false
+                    )
+                )
+            }
+
+        val kombinertTidslinje = vurderingTidslinje.kombiner(
+            Tidslinje(historiskeSegmenter),
+            StandardSammenslåere.prioriterVenstreSideCrossJoin()
+        )
+
+        val vurderingMedGaps = fyllInnGapsMedGodkjentForHelseopphold(
+            kombinertTidslinje, helseoppholdPerioder
+        )
 
         return vurderingMedGaps.komprimer()
     }
@@ -425,7 +450,10 @@ class InstitusjonsoppholdUtlederService(
         fun propagerEnGang(flagg: List<Boolean>): List<Boolean> =
             flagg.indices.map { i ->
                 flagg[i] ||
-                        (i > 0 && flagg[i - 1] && erInnenTreMånederEtterForrige(kjeder[i - 1].periode, kjeder[i].periode))
+                        (i > 0 && flagg[i - 1] && erInnenTreMånederEtterForrige(
+                            kjeder[i - 1].periode,
+                            kjeder[i].periode
+                        ))
             }
 
         val kjedeFlagget = generateSequence(startFlagg, ::propagerEnGang)

@@ -70,6 +70,7 @@ data class HelseinstitusjonVurderingDto(
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
     val vurderingerMeta: VurderingerMetaResponse,
+    val erHistoriskUtenReduksjonsberegning: Boolean = false,
 )
 
 data class SoningsGrunnlagDto(
