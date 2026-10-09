@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerFo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingerDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
@@ -24,18 +26,21 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -46,7 +51,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjonsoppholdUnleash::class) {
     @Test
     fun `Stopper opp på institusjonssteget i førstegangsbehandling når innleggelsesdato er mer enn 2 mnd siden`() {
         val søknadsdato = LocalDate.now()
@@ -800,6 +805,353 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             }
     }
 
+    @Test
+    fun `sammenhengende institusjonsopphold hos to institusjoner behandles som ett opphold ved reduksjon`() {
+        val oppholdFom1 = 1 januar 2025
+        val oppholdTom1 = 30 juni 2025
+        val oppholdFom2 = 1 juli 2025 // dagen etter opphold1 slutter -> sammenhengende
+        val oppholdTom2 = 31 desember 2025
+        val tidligsteReduksjonsdato = oppholdFom1.withDayOfMonth(1).plusMonths(4)
+
+        val person = TestPersoner.STANDARD_PERSON()
+            .medInstitusjonsopphold(
+                listOf(
+                    hsOpphold(startdato = oppholdFom1, sluttdato = oppholdTom1),
+                    hsOpphold(startdato = oppholdFom2, sluttdato = oppholdTom2),
+                )
+            )
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = oppholdFom1.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(oppholdFom1)
+            .løsBistand(oppholdFom1)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(oppholdFom1)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+            }
+            // Én vurdering som dekker hele den sammenhengende kjeden (begge institusjonene)
+            .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(oppholdFom1, oppholdTom2))
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+            .medKontekst {
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
+                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+                assertThat(tidslinje.isNotEmpty()).isTrue()
+
+                val periodeUtenReduksjon = Periode(oppholdFom1, tidligsteReduksjonsdato.minusDays(1))
+                val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom2)
+
+                assertTidslinje(
+                    tidslinje.begrensetTil(periodeUtenReduksjon),
+                    periodeUtenReduksjon to {
+                        assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
+                    }
+                )
+                assertTidslinje(
+                    tidslinje.begrensetTil(periodeMedReduksjon),
+                    periodeMedReduksjon to {
+                        assertThat(it.graderingGrunnlag.institusjonGradering)
+                            .`as`("Reduksjon skal gjelde over hele den sammenhengende kjeden, uavhengig av institusjonsbytte")
+                            .isEqualTo(Prosent.`50_PROSENT`)
+                    }
+                )
+            }
+    }
+
+    @Test
+    fun `to institusjonsopphold etter hverandre med kort mellomrom (innen 3 måneder) gir reduksjon fra og med måned etter på andre delen av kjeden`() {
+        val oppholdFom1 = 1 januar 2025
+        val oppholdTom1 = 1 august 2025
+        val oppholdFom2 = 1 oktober 2025 // 2 mnd gap fra opphold1 slutt -> innen 3-måneders-vinduet
+        val oppholdTom2 = 1 juli 2026
+
+        val tidligsteReduksjonsdato2 = oppholdFom2.withDayOfMonth(1).plusMonths(1)
+
+        val person = TestPersoner.STANDARD_PERSON()
+            .medInstitusjonsopphold(
+                listOf(
+                    hsOpphold(startdato = oppholdFom1, sluttdato = oppholdTom1),
+                    hsOpphold(startdato = oppholdFom2, sluttdato = oppholdTom2),
+                )
+            )
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = oppholdFom1.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(oppholdFom1)
+            .løsBistand(oppholdFom1)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(oppholdFom1)
+            .løsAvklaringsBehov(løsToHelseinstitusjonMedReduksjon(oppholdFom1, oppholdTom1, oppholdFom2, oppholdTom2))
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+            .medKontekst {
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
+                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+                // Andre opphold er innen 3 måneder etter at første opphold sluttet -> umiddelbar reduksjon fra oppholdFom2
+                val periodeMedUmiddelbarReduksjon = Periode(tidligsteReduksjonsdato2, oppholdTom2)
+                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedUmiddelbarReduksjon)
+                tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
+                    assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
+                        .`as`("Reduksjon kan starte umiddelbart siden opphold 2 er innen 3 måneder fra opphold 1")
+                        .isEqualTo(Prosent.`50_PROSENT`)
+                }
+            }
+    }
+
+    @Test
+    fun `barnetillegg midt i et sammenhengende opphold hindrer ikke at vurdering dekker hele kjeden`() {
+        // Ett sammenhengende opphold hos to institusjoner,
+        // men barnetillegget dekker en kort periode midt i oppholdet og splitter Boolean-
+        // tidslinjen uten barnetillegg i to deler. Steget skal likevel kunne fullføres med
+        // én vurdering som dekker hele kjeden.
+        val oppholdFom1 = 1 januar 2025
+        val oppholdTom1 = 30 juni 2025
+        val oppholdFom2 = 1 juli 2025 // dagen etter opphold1 slutter -> sammenhengende´
+        val oppholdTom2 = 31 desember 2025
+        val barnetilleggFom = 1 juni 2025
+        val barnetilleggTom = 1 august 2025
+        val barnFødselsdato = oppholdFom1.minusYears(5)
+        val tidligsteReduksjonsdato = oppholdFom1.withDayOfMonth(1).plusMonths(4)
+
+        val barn = lagBarn(barnFødselsdato)
+        val person = TestPersoner.STANDARD_PERSON()
+            .medBarn(listOf(barn))
+            .medInstitusjonsopphold(
+                listOf(
+                    hsOpphold(startdato = oppholdFom1, sluttdato = oppholdTom1),
+                    hsOpphold(startdato = oppholdFom2, sluttdato = oppholdTom2),
+                )
+            )
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = oppholdFom1.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(oppholdFom1)
+            .løsBistand(oppholdFom1)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(oppholdFom1)
+            .løsAvklaringsBehov(løsBarnetilleggFraOgTilDato(barn, barnetilleggFom, barnetilleggTom))
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+            }
+            // Én vurdering som dekker hele den sammenhengende kjeden, på tross av barnetillegg-splitten
+            .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(oppholdFom1, oppholdTom2))
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+            .medKontekst {
+                // Steget skal kunne fullføres uten UAVKLART-rest-segmenter - selve regresjonen vi fikset
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_HELSEINSTITUSJON)
+
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
+                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+                val periodeMedReduksjonFørBarnetillegg = Periode(tidligsteReduksjonsdato, barnetilleggFom.minusDays(1))
+                assertTidslinje(
+                    tidslinje.begrensetTil(periodeMedReduksjonFørBarnetillegg),
+                    periodeMedReduksjonFørBarnetillegg to {
+                        assertThat(it.graderingGrunnlag.institusjonGradering)
+                            .`as`("Reduksjon skal gjelde over hele kjeden før barnetillegget, uavhengig av splitten")
+                            .isEqualTo(Prosent.`50_PROSENT`)
+                    }
+                )
+                val periodeMedReduksjonEtterBarnetillegg = Periode(barnetilleggTom, oppholdTom2)
+                assertTidslinje(
+                    tidslinje.begrensetTil(periodeMedReduksjonEtterBarnetillegg),
+                    periodeMedReduksjonEtterBarnetillegg to {
+                        assertThat(it.graderingGrunnlag.institusjonGradering)
+                            .`as`("Reduksjon skal gjelde over hele kjeden etter barnetillegget, uavhengig av splitten")
+                            .isEqualTo(Prosent.`50_PROSENT`)
+                    }
+                )
+            }
+    }
+
+    @Test
+    fun `to korte sammenhengende opphold som til sammen ikke når 4 måneder gir ingen avklaringsbehov`() {
+        val oppholdFom1 = 1 januar 2025
+        val oppholdTom1 = 1 februar 2025
+        val oppholdFom2 = 2 februar 2025 // dagen etter opphold1 slutter -> sammenhengende
+        val oppholdTom2 = 1 april 2025 // til sammen kun 3 mnd, for kort for 4-mnd-kravet med forskyvning
+
+        val person = TestPersoner.STANDARD_PERSON()
+            .medInstitusjonsopphold(
+                listOf(
+                    hsOpphold(startdato = oppholdFom1, sluttdato = oppholdTom1),
+                    hsOpphold(startdato = oppholdFom2, sluttdato = oppholdTom2),
+                )
+            )
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = oppholdFom1.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(oppholdFom1)
+            .løsBistand(oppholdFom1)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(oppholdFom1)
+            .medKontekst {
+                // Kjeden er for kort til å trigge avklaringsbehov
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_HELSEINSTITUSJON)
+            }
+    }
+
+    @Test
+    fun `kort opphold med reelt gap mer enn 3 måneder fra forrige gir ingen avklaringsbehov for det korte oppholdet`() {
+        // Reproduserer det opprinnelige bug-scenarioet fra saksbehandler (Kysthaven/Hjertesone):
+        // opphold 1 for kort alene, opphold 2 for kort alene, reelt gap > 3 mnd -> ingen propagering.
+        val oppholdFom1 = 4 april 2026
+        val oppholdTom1 = 8 juni 2026
+        val oppholdFom2 = 1 juli 2026
+        val oppholdTom2 = 1 september 2026
+
+        val person = TestPersoner.STANDARD_PERSON()
+            .medInstitusjonsopphold(
+                listOf(
+                    hsOpphold(startdato = oppholdFom1, sluttdato = oppholdTom1),
+                    hsOpphold(startdato = oppholdFom2, sluttdato = oppholdTom2),
+                )
+            )
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = oppholdFom1.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(oppholdFom1)
+            .løsBistand(oppholdFom1)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(oppholdFom1)
+            .medKontekst {
+                // Ingen av oppholdene er lange nok alene, og gapet (23 dager) er for stort for
+                // ekte sammenhengende-kjeding, men innenfor 3 mnd slik at propagering ville
+                // skjedd om opphold1 var kvalifisert - men opphold1 er IKKE kvalifisert selv,
+                // så ingen propagering skjer. Steget skal vise ManglendeOpphold uten avklaringsbehov.
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_HELSEINSTITUSJON)
+            }
+    }
+
+    @Test
+    fun `revurdering legger til kort ikke-sammenhengende opphold som ikke alene krever vurdering`() {
+        // Førstegangsbehandling med ett opphold som ga reduksjon. I revurdering kommer et nytt,
+        // kort opphold med reelt gap (> 3 mnd) fra forrige - dette oppholdet skal IKKE dukke opp
+        // i perioderTilVurdering siden det verken er sammenhengende eller innen 3 mnd fra forrige.
+        // NB: AVKLAR_HELSEINSTITUSJON kan fortsatt være åpent generelt (siden opphold1 kan
+        // revurderes), så vi verifiserer heller direkte mot utlederServicen hvilke perioder
+        // som faktisk trenger vurdering.
+        val oppholdFom1 = LocalDate.now().minusMonths(11)
+        val oppholdTom1 = LocalDate.now().minusMonths(5)
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = TestPersoner.STANDARD_PERSON().medInstitusjonsopphold(
+                listOf(hsOpphold(startdato = oppholdFom1, sluttdato = oppholdTom1))
+            ),
+            mottattTidspunkt = oppholdFom1.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(oppholdFom1)
+            .løsBistand(oppholdFom1)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(oppholdFom1)
+            .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(oppholdFom1, oppholdTom1))
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        val revurdering = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD))
+        val nyttOppholdFom = LocalDate.now().minusMonths(1)
+        val nyttOppholdTom = LocalDate.now().plusMonths(1)
+
+        revurdering
+            .medKontekst {
+                repositoryProvider.provide<InstitusjonsoppholdRepository>().lagreOpphold(
+                    revurdering.id, listOf(
+                        Institusjonsopphold(
+                            startdato = oppholdFom1,
+                            sluttdato = oppholdTom1,
+                            institusjonstype = Institusjonstype.HS,
+                            institusjonsnavn = "Testinstitusjon",
+                            orgnr = "111222333",
+                            kategori = Oppholdstype.H
+                        ),
+                        Institusjonsopphold(
+                            startdato = nyttOppholdFom,
+                            sluttdato = nyttOppholdTom,
+                            institusjonstype = Institusjonstype.HS,
+                            institusjonsnavn = "Nytt sykehus",
+                            orgnr = "444555666",
+                            kategori = Oppholdstype.H
+                        )
+                    )
+                )
+            }
+            .medKontekst {
+                // AVKLAR_HELSEINSTITUSJON kan fortsatt være åpent generelt siden opphold1
+                // (som faktisk ga reduksjon) kan revurderes - det er forventet og korrekt.
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+
+                // Det er selve PERIODEN til det nye, korte oppholdet som IKKE skal trenge vurdering.
+                val utlederService = InstitusjonsoppholdUtlederService(repositoryProvider, gatewayProvider)
+                val behov = utlederService.utled(revurdering.id)
+
+                val perioderSomTrengerVurdering = behov.perioderTilVurdering.segmenter()
+                    .filter { it.verdi.helse?.vurdering == OppholdVurdering.UAVKLART }
+                    .map { it.periode }
+
+                val nyttOppholdPeriode = Periode(nyttOppholdFom, nyttOppholdTom)
+                assertThat(perioderSomTrengerVurdering.any { it.overlapper(nyttOppholdPeriode) })
+                    .`as`("Det nye, korte og ikke-sammenhengende oppholdet skal ikke trenge egen vurdering")
+                    .isFalse
+            }
+    }
 
 
     // -------------------------------------------------------------------------
@@ -1008,4 +1360,8 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::cla
             )
         )
     }
+
+    object SammenhengendeInstitusjonsoppholdUnleash : FakeUnleashBaseWithDefaultDisabled(
+        listOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)
+    )
 }

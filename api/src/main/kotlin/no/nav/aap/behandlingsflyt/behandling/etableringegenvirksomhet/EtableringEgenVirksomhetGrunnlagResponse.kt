@@ -39,10 +39,10 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val kanFøreTilSelvforsørget: Boolean?,
     val utviklingsPeriode: List<Periode>?,
     val oppstartsPeriode: List<Periode>?,
+    val oppfylt: Boolean,
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
-    val oppfylt: Boolean
 ) : VurderingDto {
     companion object {
         fun fraDomene(
@@ -90,9 +90,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
             virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
             brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
             kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
-            fase = etableringEgenVirksomhetVurdering.fase,
-            erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
-            jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten,
             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                 definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                 behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
@@ -103,7 +100,10 @@ data class EtableringEgenVirksomhetVurderingResponse(
             ),
             fom = fom,
             tom = tom,
-            oppfylt = etableringEgenVirksomhetService.evaluerVirksomhetVurdering(etableringEgenVirksomhetVurdering)
+            oppfylt = etableringEgenVirksomhetService.evaluerVirksomhetVurdering(etableringEgenVirksomhetVurdering),
+            fase = etableringEgenVirksomhetVurdering.fase,
+            erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
+            jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten
         )
     }
 }

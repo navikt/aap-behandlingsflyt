@@ -45,7 +45,7 @@ class BeregningService(
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
-        val uføregrad = uføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+        val uføregrad = uføreRepository.hentHvisEksisterer(behandlingId)?.vedtak.orEmpty()
         val yrkesskadevurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val registrerteYrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader
@@ -175,7 +175,7 @@ class BeregningService(
     fun årSomKreverManuellPeriodeinntekt(kontekst: FlytKontekstMedPerioder): Set<Year> {
         val ytterligereNedsattDato = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-        val uføregrader = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
+        val uføregrader = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vedtak.orEmpty()
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         if (ytterligereNedsattDato == null || uføregrader.isEmpty() || inntektGrunnlag == null) return emptySet()

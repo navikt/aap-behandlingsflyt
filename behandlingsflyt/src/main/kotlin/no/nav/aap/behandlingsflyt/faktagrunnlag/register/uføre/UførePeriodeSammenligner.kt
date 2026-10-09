@@ -38,11 +38,11 @@ class UførePeriodeSammenligner(private val uføreRepository: UføreRepository) 
 
         // Når gjeldende og tidligere er samme grunnlag så er alt nytt
         if (gjeldendeUføreGrunnlag != null && eldsteUføreGrunnlag == gjeldendeUføreGrunnlag) {
-            return gjeldendeUføreGrunnlag.vurderinger.medStatus(EndringStatus.NY)
+            return gjeldendeUføreGrunnlag.vedtak.medStatus(EndringStatus.NY)
         }
 
-        val gjeldendeVurderinger = gjeldendeUføreGrunnlag?.vurderinger.orEmpty()
-        val eldsteVurderinger = eldsteUføreGrunnlag?.vurderinger.orEmpty()
+        val gjeldendeVurderinger = gjeldendeUføreGrunnlag?.vedtak.orEmpty()
+        val eldsteVurderinger = eldsteUføreGrunnlag?.vedtak.orEmpty()
 
         val slettede = eldsteVurderinger.filterNot { it in gjeldendeVurderinger }.medStatus(EndringStatus.SLETTET)
         val nye = gjeldendeVurderinger.filterNot { it in eldsteVurderinger }.medStatus(EndringStatus.NY)

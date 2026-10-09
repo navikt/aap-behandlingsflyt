@@ -35,6 +35,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
@@ -55,7 +56,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
@@ -65,6 +68,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.G_REGULER
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
@@ -106,7 +111,11 @@ class BrevUtlederService(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val behandlingService: BehandlingService,
+    private val personOpplysningRepository: PersonopplysningRepository,
+    private val sakRepository: SakRepository,
+    private val personinfoBulkGateway: PersoninfoBulkGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -135,7 +144,11 @@ class BrevUtlederService(
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
+        personOpplysningRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        personinfoBulkGateway = gatewayProvider.provide(),
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -218,12 +231,16 @@ class BrevUtlederService(
                         MIGRER_RETTIGHETSPERIODE,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                        G_REGULERING
+                        G_REGULERING,
                     ).containsAll(
                         vurderingsbehov
                     )
                 ) {
                     return null
+                }
+
+                if (Miljø.erDev() && Vurderingsbehov.DØDSFALL_BRUKER in vurderingsbehov) {
+                    return brevBehovDødsfall(behandling)
                 }
 
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
@@ -253,6 +270,16 @@ class BrevUtlederService(
 
                 if (resultat == Resultat.INNVILGELSE) {
                     return brevBehovInnvilgelse(behandling)
+                }
+
+                if (
+                    resultat == Resultat.AVSLAG &&
+                    behandlingService.utledFaktiskBehandlingstype(behandling) == TypeBehandling.Førstegangsbehandling
+                ) {
+                    val avslagsbrev = brevBehovAvslag(behandling)
+                    if (avslagsbrev is AvslagBrev.AvslagSykdomsvilkåret) {
+                        return avslagsbrev
+                    }
                 }
 
                 return VedtakEndring
@@ -442,6 +469,20 @@ class BrevUtlederService(
             }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
+    }
+
+    private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
+
+        val behandling = behandlingRepository.hent(behandling.id)
+        val ident = sakRepository.hent(behandling.sakId).person.aktivIdent()
+
+        val dødsdato = personOpplysningRepository
+            .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
+            ?.dødsdato
+            ?: error("Mangler dødsdato for dødsfallsbrev i behandling ${behandling.id}")
+        val personinfo = personinfoBulkGateway.hentPersoninfoForIdenter(listOf(ident)).singleOrNull()
+            ?: error("Mangler personinfo for ident i behandling ${behandling.id}")
+        return VedtakEndringDødsfall(dødsdato.toLocalDate(), personinfo.fulltNavn())
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
