@@ -885,7 +885,7 @@ class BrevUtlederService(
             "Vedtak mangler virkningstidspunkt"
         }
         val vedtaksdato = vedtak.vedtakstidspunkt.toLocalDate()
-
+        log.info("Logger refusjonskrav: Vedtaksdato: $vedtaksdato, virkningstidspunkt: $virkningstidspunkt")
         if (!virkningstidspunkt.isBefore(vedtaksdato)) return null
 
         return RefusjonskravNavKontor(
