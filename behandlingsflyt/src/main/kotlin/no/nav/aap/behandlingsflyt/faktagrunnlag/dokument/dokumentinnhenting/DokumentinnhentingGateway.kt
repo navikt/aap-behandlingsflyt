@@ -27,6 +27,6 @@ interface DokumentinnhentingGateway : Gateway {
     fun hentDialogmeldingerForSak(request: HentDialogmeldingerForSakParams): List<FellesDialogmeldingDto>
     fun hentDokumentoversiktForJournalpost(request: HentDokumentoversiktJournalpostParams, currentToken: OidcToken): HentDokumentoversiktJournalpostResponse
     fun hentDokumentoversiktForJournalpostListe(request: HentDokumentoversiktJournalpostListeParams, currentToken: OidcToken): HentDokumentoversiktJournalpostListeResponse
-    fun hentLegeerklæringForespørslerForSak(requestParams: HentLegeerklæringForespørslerForSakParams, currentToken: OidcToken): List<FellesDialogmeldingDto>
+    fun hentLegeerklæringForespørslerForSak(requestParams: HentLegeerklæringForespørslerForSakParams): List<FellesDialogmeldingDto>
     fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto
 }

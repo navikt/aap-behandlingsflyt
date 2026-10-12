@@ -235,8 +235,8 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 authorizedGet<HentUbesvarteForespørslerLegeerklæringDto, UbesvarteForespørslerLegeerklæringResponse>(
                     AuthorizationParamPathConfig(
                         relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                        behandlingPathParam = BehandlingPathParam("behandlingsReferanse"),
                         applicationsOnly = false,
-                        behandlingPathParam = BehandlingPathParam("behandlingsReferanse")
                     )
                 ) { params ->
                     val meldinger = dataSource.transaction(readOnly = true) { connection ->
@@ -250,7 +250,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                             mottattDokumentRepository,
                             behandlingRepository
                         )
-                        service.hentUbesvarteForespørslerOmLegeerklæringer(params.behandlingsReferanse, token())
+                        service.hentUbesvarteForespørslerOmLegeerklæringer(params.behandlingsReferanse)
                     }
 
                     respond(UbesvarteForespørslerLegeerklæringResponse(meldinger))

@@ -182,18 +182,17 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         return requireNotNull(oboClient.post(uri = URI.create("$dokumenterUri/api/dokumenter/dokumentliste"), request))
     }
 
-    override fun hentLegeerklæringForespørslerForSak(requestParams: HentLegeerklæringForespørslerForSakParams, currentToken: OidcToken): List<FellesDialogmeldingDto> {
+    override fun hentLegeerklæringForespørslerForSak(requestParams: HentLegeerklæringForespørslerForSakParams): List<FellesDialogmeldingDto> {
         val behandlingsReferanse = requestParams.behandlingsReferanse
         val request = GetRequest(
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Accept", "application/json")
-            ),
-            currentToken = currentToken
+            )
         )
 
         return requireNotNull(
-            oboClient.get(
+            client.get(
                 uri = URI.create("$dialogmeldingUri/$behandlingsReferanse/legeerklaeringer"),
                 request = request,
                 mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }

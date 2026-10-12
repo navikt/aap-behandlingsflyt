@@ -155,12 +155,10 @@ class HentBehandlerDialogService(
     }
 
     fun hentUbesvarteForespørslerOmLegeerklæringer(
-        behandlingsReferanse: UUID,
-        currentToken: OidcToken
+        behandlingsReferanse: UUID
     ): List<MeldingDto> {
         val forespørslerLegeerklæring = hentForespørslerOmLegeerklæringFraDokumentinnhenting(
-            behandlingsReferanse = behandlingsReferanse,
-            currentToken = currentToken
+            behandlingsReferanse = behandlingsReferanse
         )
         val forespørslerMeldingDto = forespørslerLegeerklæring.map { it.tilMeldingDto() }
 
@@ -171,12 +169,10 @@ class HentBehandlerDialogService(
     }
 
     private fun hentForespørslerOmLegeerklæringFraDokumentinnhenting(
-        behandlingsReferanse: UUID,
-        currentToken: OidcToken
+        behandlingsReferanse: UUID
     ): List<FellesDialogmeldingDto> {
         return dokumentinnhentingGateway.hentLegeerklæringForespørslerForSak(
-            HentLegeerklæringForespørslerForSakParams(behandlingsReferanse),
-            currentToken
+            HentLegeerklæringForespørslerForSakParams(behandlingsReferanse)
         )
     }
 
