@@ -71,13 +71,13 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
-        BehandlingsflytFeature.SamordningFaktagrunnlagBrev to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.SaksbehandlerMeldekortKvitteringNyPdfgenerator to true,
+        BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
         // --- Krav ---
         BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
@@ -98,6 +98,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
         BehandlingsflytFeature.KlagePaaTilbakekreving to true,
         BehandlingsflytFeature.NySoknadTilApiIntern to true,
+        BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

@@ -32,7 +32,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    vurderinger = hentVurderinger(row.getLong("ufore_id"))
+                    vedtak = hentVurderinger(row.getLong("ufore_id"))
                 )
             }
         }
@@ -53,7 +53,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    vurderinger = hentVurderinger(row.getLong("ufore_id"))
+                    vedtak = hentVurderinger(row.getLong("ufore_id"))
                 )
             }
         }
@@ -118,7 +118,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
     override fun lagre(behandlingId: BehandlingId, uføre: Set<Uføre>) {
         val eksisterendeUføreGrunnlag = hentHvisEksisterer(behandlingId)
 
-        if (eksisterendeUføreGrunnlag?.vurderinger == uføre) return
+        if (eksisterendeUføreGrunnlag?.vedtak == uføre) return
 
         if (eksisterendeUføreGrunnlag != null) {
             deaktiverEksisterende(behandlingId)

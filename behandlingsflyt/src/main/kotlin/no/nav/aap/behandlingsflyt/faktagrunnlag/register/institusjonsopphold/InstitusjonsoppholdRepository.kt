@@ -7,12 +7,17 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Repository
 
-interface InstitusjonsoppholdRepository: Repository {
+interface InstitusjonsoppholdRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag?
     fun hent(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag
     fun lagreOpphold(behandlingId: BehandlingId, institusjonsopphold: List<Institusjonsopphold>)
     fun lagreSoningsVurdering(behandlingId: BehandlingId, vurdertAv: Bruker, soningsvurderinger: List<Soningsvurdering>)
-    fun lagreHelseVurdering(behandlingId: BehandlingId, helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>)
+    fun lagreHelseVurdering(
+        behandlingId: BehandlingId,
+        helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>,
+        sammenhengendeOppholdEnabled: Boolean = false
+    )
+
     fun hentVurderingerGruppertPerOpphold(behandlingId: BehandlingId): Map<Periode, List<HelseinstitusjonVurdering>>
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

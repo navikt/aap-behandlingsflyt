@@ -5,6 +5,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiodesyklusInformasjonskrav
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Gateway
 
@@ -14,4 +15,5 @@ interface ArenaOppslagGateway : Gateway {
     fun hentKravDataForSak(arenasaksnummer: String): KravResponse
     fun hentSykdomsvurdering(saksnummerArena: String): ArenaSykdomsvurderingResponse
     fun hentRefusjonskrav(saksnummerArena: String): ArenaRefusjonskravResponse
+    fun hentArenaMeldekortsyklus(ident: Ident): ArenaMeldeperiodesyklusInformasjonskrav.Registerdata
 }

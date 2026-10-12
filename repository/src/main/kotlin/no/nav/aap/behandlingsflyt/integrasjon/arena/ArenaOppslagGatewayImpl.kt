@@ -9,6 +9,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiodesyklusInformasjonskrav
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -16,6 +17,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
@@ -106,4 +108,25 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/${saksnummerArena}/refusjonskrav" }
         return response
     }
+
+    override fun hentArenaMeldekortsyklus(ident: Ident): ArenaMeldeperiodesyklusInformasjonskrav.Registerdata {
+        val response = restClient.post<ArenaMeldekortsyklusRequest, ArenaMeldekortsyklusResponse>(
+            uri.resolve("/api/person/meldekort/startuke"),
+            PostRequest(ArenaMeldekortsyklusRequest(ident.identifikator)),
+        )
+
+        val år = response?.aar
+        val ukenummer = response?.ukenummer
+        return if (år != null && ukenummer != null) {
+            ArenaMeldeperiodesyklusInformasjonskrav.HarSyklus(år = år, ukenummer = ukenummer.toLong())
+        } else {
+            ArenaMeldeperiodesyklusInformasjonskrav.IngenSyklus
+        }
+    }
+
+    @Suppress("unused")
+    private class ArenaMeldekortsyklusRequest(val personidentifikator: String)
+
+    private class ArenaMeldekortsyklusResponse( val aar: Int?, val ukenummer: Int?)
+
 }

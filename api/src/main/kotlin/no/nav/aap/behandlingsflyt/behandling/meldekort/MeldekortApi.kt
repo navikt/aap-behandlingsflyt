@@ -78,6 +78,31 @@ fun NormalOpenAPIRoute.meldekortApi(
             respond(response)
         }
 
+        route("registrer-meldedato").authorizedPost<SaksnummerParameter, OppdaterMeldekortResponse, RegistrerMeldedatoRequest>(
+            AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                sakPathParam = SakPathParam("saksnummer"),
+                operasjon = Operasjon.SAKSBEHANDLE,
+                påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL, Rolle.SAKSBEHANDLER_OPPFOLGING),
+            ),
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
+        ) { req, body ->
+            val response = dataSource.transaction { connection ->
+                val meldekortService =
+                    MeldekortService(repositoryRegistry.provider(connection), gatewayProvider, clock)
+                meldekortService.registrerMeldedato(
+                    RegistrerMeldedato(
+                        saksnummer = Saksnummer(req.saksnummer),
+                        meldedato = body.meldeDato,
+                        begrunnelse = body.begrunnelse,
+                        bruker = bruker()
+                    )
+                ).tilResponse()
+            }
+
+            respond(response)
+        }
+
         route("har-registrert-timer").authorizedGet<HarRegistrertTimerParameter, HarRegistrertTimerResponse>(
             AuthorizationParamPathConfig(
                 relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
@@ -130,6 +155,11 @@ data class OppdaterMeldekortRequest(
     val meldeDato: LocalDate,
     val begrunnelse: String,
     val dager: Set<DagDto>,
+)
+
+data class RegistrerMeldedatoRequest(
+    val meldeDato: LocalDate,
+    val begrunnelse: String,
 )
 
 data class HarRegistrertTimerParameter(

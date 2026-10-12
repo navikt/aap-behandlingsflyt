@@ -33,7 +33,7 @@ class JournalføringService(
 
     fun journalførMeldekort(
         sak: Sak,
-        meldeperiode: Periode,
+        meldeperiode: Periode?,
         meldekort: MeldekortV0,
         oppdatertAv: Bruker,
         enhet: String?,
@@ -75,6 +75,7 @@ class JournalføringService(
                 enhet = enhet ?: "9999",
                 pdf = pdf,
                 korrigert = korrigert,
+                meldedato = meldeDato,
             )
         )
     }

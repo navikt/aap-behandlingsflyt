@@ -202,7 +202,8 @@ class VarsleOppgaveOmHendelseJobbUtførerTest {
             opprettetTidspunkt = LocalDateTime.now(),
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = "1",
-            reserverTilPerAvklaringsbehov = emptyMap()
+            reserverTilPerAvklaringsbehov = emptyMap(),
+            aktivtAvklaringsbehov = null,
         )
 
     private fun avslagSykdomsvurdering() = Sykdomsvurdering(
