@@ -1,6 +1,6 @@
 [versions]
-komponenter = "2.0.173"
-tilgang = "1.0.242"
+komponenter = "2.0.185"
+tilgang = "1.0.243"
 utbetaling = "0.0.136"
 brev = "0.0.289"
 meldekort = "0.0.237"
