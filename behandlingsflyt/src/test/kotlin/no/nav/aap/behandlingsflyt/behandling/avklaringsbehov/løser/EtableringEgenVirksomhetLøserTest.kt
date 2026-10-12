@@ -153,6 +153,9 @@ class EtableringEgenVirksomhetLøserTest {
                     oppstartsPerioder = listOf(
                         Periode(vurderingFom.plusMonths(2).plusDays(1), vurderingFom.plusMonths(3))
                     ),
+                    fase = null,
+                    erRegistrertINødvendigeOffentligeRegister = null,
+                    jobberBrukerAktivMedVirksomheten = null
                 )
             )
         )

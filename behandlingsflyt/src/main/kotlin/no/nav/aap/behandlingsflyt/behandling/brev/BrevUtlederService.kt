@@ -35,6 +35,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
@@ -46,6 +47,7 @@ import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
@@ -55,7 +57,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
@@ -65,6 +69,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.G_REGULER
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
@@ -106,7 +112,12 @@ class BrevUtlederService(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val behandlingService: BehandlingService,
+    private val personOpplysningRepository: PersonopplysningRepository,
+    private val sakRepository: SakRepository,
+    private val refusjonkravRepository: RefusjonkravRepository,
+    private val personinfoBulkGateway: PersoninfoBulkGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -135,7 +146,12 @@ class BrevUtlederService(
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider)
+        personOpplysningRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
+        personinfoBulkGateway = gatewayProvider.provide(),
+        refusjonkravRepository = repositoryProvider.provide(),
+        avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
+        behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -218,12 +234,16 @@ class BrevUtlederService(
                         MIGRER_RETTIGHETSPERIODE,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                        G_REGULERING
+                        G_REGULERING,
                     ).containsAll(
                         vurderingsbehov
                     )
                 ) {
                     return null
+                }
+
+                if (Miljø.erDev() && Vurderingsbehov.DØDSFALL_BRUKER in vurderingsbehov) {
+                    return brevBehovDødsfall(behandling)
                 }
 
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
@@ -253,6 +273,16 @@ class BrevUtlederService(
 
                 if (resultat == Resultat.INNVILGELSE) {
                     return brevBehovInnvilgelse(behandling)
+                }
+
+                if (
+                    resultat == Resultat.AVSLAG &&
+                    behandlingService.utledFaktiskBehandlingstype(behandling) == TypeBehandling.Førstegangsbehandling
+                ) {
+                    val avslagsbrev = brevBehovAvslag(behandling)
+                    if (avslagsbrev is AvslagBrev.AvslagSykdomsvilkåret) {
+                        return avslagsbrev
+                    }
                 }
 
                 return VedtakEndring
@@ -442,6 +472,20 @@ class BrevUtlederService(
             }
         }
         return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
+    }
+
+    private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
+
+        val behandling = behandlingRepository.hent(behandling.id)
+        val ident = sakRepository.hent(behandling.sakId).person.aktivIdent()
+
+        val dødsdato = personOpplysningRepository
+            .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
+            ?.dødsdato
+            ?: error("Mangler dødsdato for dødsfallsbrev i behandling ${behandling.id}")
+        val personinfo = personinfoBulkGateway.hentPersoninfoForIdenter(listOf(ident)).singleOrNull()
+            ?: error("Mangler personinfo for ident i behandling ${behandling.id}")
+        return VedtakEndringDødsfall(dødsdato.toLocalDate(), personinfo.fulltNavn())
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
@@ -721,6 +765,7 @@ class BrevUtlederService(
         val samordningUføre = hentSisteSamordningUføre(behandlingId)
         val reduksjonArbeidsgiver = hentReduksjonArbeidsgiver(behandlingId)
         val refusjonskravTjenestepensjon = hentRefusjonskravTjenestepensjon(behandlingId, vedtak)
+        val refusjonskravNavKontor = hentRefusjonskravNavKontor(behandlingId, vedtak)
         val sykestipend = hentSykestipend(behandlingId)
         val samordningBarnepensjon = hentSamordningBarnepensjon(behandlingId)
         val fradragAndreYtelser = hentFradragAndreYtelser(behandlingId)
@@ -730,6 +775,7 @@ class BrevUtlederService(
                     samordningUføre != null ||
                     reduksjonArbeidsgiver.isNotEmpty() ||
                     refusjonskravTjenestepensjon != null ||
+                    refusjonskravNavKontor != null ||
                     sykestipend.isNotEmpty() ||
                     samordningBarnepensjon.isNotEmpty() ||
                     fradragAndreYtelser.isNotEmpty()
@@ -741,6 +787,7 @@ class BrevUtlederService(
             samordningUføre = listOfNotNull(samordningUføre),
             reduksjonArbeidsgiver = reduksjonArbeidsgiver,
             refusjonskravTjenestepensjon = refusjonskravTjenestepensjon,
+            refusjonskravNavKontor = refusjonskravNavKontor,
             sykestipend = sykestipend,
             samordningBarnepensjon = samordningBarnepensjon,
             fradragAndreYtelser = fradragAndreYtelser,
@@ -821,6 +868,30 @@ class BrevUtlederService(
                 )
             }
         }
+    }
+
+    private fun hentRefusjonskravNavKontor(
+        behandlingId: BehandlingId,
+        vedtak: Vedtak,
+    ): RefusjonskravNavKontor? {
+        val harRefusjonskrav = refusjonkravRepository
+            .hentHvisEksisterer(behandlingId)
+            .orEmpty()
+            .any { it.harKrav }
+
+        if (!harRefusjonskrav) return null
+
+        val virkningstidspunkt = checkNotNull(vedtak.virkningstidspunkt) {
+            "Vedtak mangler virkningstidspunkt"
+        }
+        val vedtaksdato = vedtak.vedtakstidspunkt.toLocalDate()
+
+        if (!virkningstidspunkt.isBefore(vedtaksdato)) return null
+
+        return RefusjonskravNavKontor(
+            fraOgMed = virkningstidspunkt,
+            tilOgMed = vedtaksdato.minusDays(1),
+        )
     }
 
     private fun hentSykestipend(behandlingId: BehandlingId): List<Sykestipend> {

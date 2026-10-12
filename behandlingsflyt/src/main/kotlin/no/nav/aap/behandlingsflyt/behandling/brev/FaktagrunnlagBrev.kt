@@ -45,6 +45,7 @@ data class ForholdTilAndreYtelser(
     val fradragAndreYtelser: List<FradragYtelse>,
     val reduksjonArbeidsgiver: List<ReduksjonArbeidsgiver>,
     val refusjonskravTjenestepensjon: RefusjonskravTjenestepensjon?,
+    val refusjonskravNavKontor: RefusjonskravNavKontor?,
     val samordningAndreYtelser: List<SamordningYtelse>,
     val samordningBarnepensjon: List<SamordningBarnepensjon>,
     val samordningUføre: List<SamordningUføre>,
@@ -72,6 +73,11 @@ data class RefusjonskravTjenestepensjon(
     val skalEtterbetalingHoldesIgjen: Boolean,
     val fraOgMed: LocalDate?,
     val tilOgMed: LocalDate?,
+)
+
+data class RefusjonskravNavKontor(
+    val fraOgMed: LocalDate,
+    val tilOgMed: LocalDate,
 )
 
 data class Sykestipend(

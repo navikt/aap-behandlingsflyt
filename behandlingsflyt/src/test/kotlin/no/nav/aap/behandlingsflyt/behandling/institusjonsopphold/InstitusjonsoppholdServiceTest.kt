@@ -1,20 +1,22 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBarnetilleggRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryInstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -31,7 +33,8 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         InMemoryBarnetilleggRepository,
         institusjonsoppholdRepository,
         InMemorySakRepository,
-        InMemoryBehandlingRepository
+        InMemoryBehandlingRepository,
+        FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
     )
 
     // --- Hjelpefunksjoner ---
@@ -944,7 +947,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
 
         val res = utlederService.utledBehov(input)
         // Første gir avklaring, andre er for kort og for langt unna
-        assertThat(res.perioderTilVurdering.segmenter()).hasSize(1)
+        assertThat(res.perioderTilVurdering.segmenter().toList()).hasSize(1)
     }
 
     @Test
@@ -971,7 +974,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         )
 
         val res = utlederService.utledBehov(input)
-        assertThat(res.perioderTilVurdering.segmenter()).hasSize(3)
+        assertThat(res.perioderTilVurdering.segmenter().toList()).hasSize(3)
     }
 
     @Test
@@ -1139,5 +1142,249 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         )
 
         assertThat(res.harBehovForAvklaring()).isFalse
+    }
+
+    // -------------------------------------------------------------------------
+    // Ekte sammenhengende opphold (0 dagers gap) - kjedes for varighetskravet
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `to korte sammenhengende opphold som til sammen ikke når 4 måneder gir ikke perioderSomTrengerVurdering`() {
+        // Opphold 1 og 2 er ekte sammenhengende (0 dagers gap), men til sammen kun 2 måneder -
+        // altfor kort til varighetskravet, og ingen nabo-kjede innen 3 mnd å smitte fra.
+        val fom1 = LocalDate.now().minusMonths(6)
+        val tom1 = fom1.plusMonths(1)
+        val fom2 = tom1.plusDays(1) // 0 dagers gap -> ekte sammenhengende
+        val tom2 = fom2.plusMonths(1)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "sykehus1")),
+                Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "sykehus2")),
+            ),
+            soningsvurderinger = null,
+            barnetillegg = emptyList(),
+            helsevurderinger = null,
+            rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.harBehovForAvklaring()).isFalse
+        assertThat(res.perioderTilVurdering.segmenter()).isEmpty()
+    }
+
+    @Test
+    fun `to sammenhengende opphold som til sammen når 4 måneder gir avklaring selv om hvert er for kort alene`() {
+        val fom1 = LocalDate.now().minusMonths(6)
+        val tom1 = fom1.plusMonths(2)
+        val fom2 = tom1.plusDays(1) // 0 dagers gap -> ekte sammenhengende
+        val tom2 = fom2.plusMonths(2)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "sykehus1")),
+                Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "sykehus2")),
+            ),
+            soningsvurderinger = null,
+            barnetillegg = emptyList(),
+            helsevurderinger = null,
+            rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.harBehovForAvklaring()).isTrue
+    }
+
+    // -------------------------------------------------------------------------
+    // Fixpoint-propagering mellom ikke-sammenhengende kjeder (naboskap innen 3 mnd)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `kort isolert opphold med kun en annen kort ikke-kvalifisert nabo innen 3 mnd blir IKKE flagget`() {
+        // To korte opphold (ikke sammenhengende, gap < 3 mnd),
+        // ingen av dem er lange nok alene, og ingen kjede rundt dem er kvalifisert -> ingen propagering.
+        val fom1 = LocalDate.now().minusMonths(5)
+        val tom1 = fom1.plusMonths(2)
+        val fom2 = tom1.plusMonths(1) // gap > 0 dager, men < 3 mnd
+        val tom2 = fom2.plusMonths(2)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "sykehus1")),
+                Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "sykehus2")),
+            ),
+            soningsvurderinger = null,
+            barnetillegg = emptyList(),
+            helsevurderinger = null,
+            rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.harBehovForAvklaring()).isFalse
+        assertThat(res.perioderTilVurdering.segmenter()).isEmpty()
+    }
+
+    @Test
+    fun `kvalifisert opphold smitter til kort nabo innen 3 mnd uavhengig av naboens egen varighet`() {
+        // Opphold 1 er langt nok alene (kvalifisert). Opphold 2 er kort (1 mnd) og ikke sammenhengende
+        // med opphold 1, men ligger innen 3 mnd -> skal smittes og flagges uavhengig av egen varighet.
+        val fom1 = LocalDate.now().minusMonths(10)
+        val tom1 = LocalDate.now().minusMonths(4)
+        val fom2 = tom1.plusMonths(1) // innen 3 mnd, men reelt gap (ikke 0 dager)
+        val tom2 = fom2.plusMonths(1)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "opphold1")),
+                Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "opphold2")),
+            ),
+            soningsvurderinger = null,
+            barnetillegg = emptyList(),
+            helsevurderinger = null,
+            rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.perioderTilVurdering.segmenter()).hasSize(2)
+    }
+
+    @Test
+    fun `smitte propagerer transitivt over flere ikke-sammenhengende kjeder (kjede-effekt)`() {
+        // opphold1 kvalifisert alene -> smitter opphold2 (innen 3mnd) -> smitter opphold3 (innen 3mnd fra opphold2)
+        // selv om opphold3 IKKE er innen 3mnd fra opphold1 direkte.
+        val fom1 = LocalDate.now().minusMonths(12)
+        val tom1 = LocalDate.now().minusMonths(6)
+        val fom2 = tom1.plusMonths(1)
+        val tom2 = fom2.plusMonths(1)
+        val fom3 = tom2.plusMonths(1)
+        val tom3 = fom3.plusDays(20)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "opphold1")),
+                Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "opphold2")),
+                Segment(Periode(fom3, tom3), Institusjon(Institusjonstype.HS, Oppholdstype.D, "789", "opphold3")),
+            ),
+            soningsvurderinger = null,
+            barnetillegg = emptyList(),
+            helsevurderinger = null,
+            rettighetsperiode = Periode(fom1.minusYears(1), tom3.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.perioderTilVurdering.segmenter()).hasSize(3)
+    }
+
+    // -------------------------------------------------------------------------
+    // Barnetillegg som splitter et fysisk sammenhengende opphold
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `barnetillegg midt i et sammenhengende opphold gir ikke falsk gap-avklaring for noen av delene`() {
+        // Ett fysisk sammenhengende institusjonsopphold, men barnetillegget dekker en kort periode
+        // midt i oppholdet og splitter Boolean-tidslinjen i to deler uten barnetillegg.
+        val oppholdFom = LocalDate.now().minusMonths(8)
+        val oppholdTom = oppholdFom.plusMonths(5)
+        val barnetilleggFom = oppholdFom.plusDays(32)
+        val barnetilleggTom = oppholdFom.plusMonths(3)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(hsOpphold(oppholdFom, oppholdTom)),
+            soningsvurderinger = null,
+            barnetillegg = listOf(barnPeriode(barnetilleggFom, barnetilleggTom)),
+            helsevurderinger = null,
+            rettighetsperiode = Periode(oppholdFom.minusYears(1), oppholdTom.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+
+        // Hele kjeden varer 5 mnd, lenger enn 4-måneders-kravet -> skal gi avklaring
+        // på delene som ikke dekkes av barnetillegg, uavhengig av barnetillegg-splitten.
+        assertThat(res.harBehovForAvklaring()).isTrue
+        val periodeTilVurdering = res.perioderTilVurdering.segmenter().map { it.periode }
+        assertThat(periodeTilVurdering).containsExactlyInAnyOrder(
+            Periode(oppholdFom, barnetilleggFom.minusDays(1)),
+            Periode(barnetilleggTom.plusDays(1), oppholdTom)
+        )
+        val vurderinger = res.perioderTilVurdering.segmenter().map { it.verdi.helse?.vurdering }
+        assertThat(vurderinger).contains(OppholdVurdering.UAVKLART)
+    }
+
+    @Test
+    fun `barnetillegg gjennom hele oppholdet gir ingen exception og ingen avklaringsbehov`() {
+        // Regresjonstest for NPE/exception ved tom oppholdUtenBarnetillegg-tidslinje
+        val fom = LocalDate.now().minusMonths(6)
+        val tom = fom.plusMonths(5)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(hsOpphold(fom, tom)),
+            soningsvurderinger = null,
+            barnetillegg = listOf(barnPeriode(fom.minusDays(1), tom.plusDays(1))),
+            helsevurderinger = null,
+            rettighetsperiode = Periode(fom.minusYears(1), tom.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.harBehovForAvklaring()).isFalse
+    }
+
+    // -------------------------------------------------------------------------
+    // Kjede-basert matching av helsevurdering (helseoppholdPerioder bruker kjeder)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `vurdering som kun overlapper siste del av en sammenhengende kjede dekker hele kjeden`() {
+        val fom1 = LocalDate.now().minusMonths(6)
+        val tom1 = fom1.plusMonths(2)
+        val fom2 = tom1.plusDays(1) // sammenhengende
+        val tom2 = fom2.plusMonths(3)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "sykehus1")),
+                Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "sykehus2")),
+            ),
+            soningsvurderinger = null,
+            barnetillegg = emptyList(),
+            // Vurderingen overlapper kun opphold 2 (den siste delen av kjeden)
+            helsevurderinger = listOf(
+                helsevurdering(
+                    fom2, tom2,
+                    faarFriKostOgLosji = true, forsoergerEktefelle = false, harFasteUtgifter = false
+                )
+            ),
+            rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+
+        val vurderinger = res.perioderTilVurdering.segmenter().map { it.verdi.helse?.vurdering }
+        assertThat(vurderinger).doesNotContain(OppholdVurdering.UAVKLART)
+    }
+
+    @Test
+    fun `to opphold med reelt gap - ingen opphold til avklaring`() {
+        val fom1 = LocalDate.now().minusMonths(8)
+        val tom1 = fom1.plusMonths(2)
+        val fom2 = tom1.plusMonths(4) // langt utenfor 3 mnd -> ikke sammenhengende, ikke naboeffekt
+        val tom2 = fom2.plusMonths(2)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(Periode(fom1, tom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "123", "sykehus1")),
+                Segment(Periode(fom2, tom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "456", "sykehus2")),
+            ),
+            soningsvurderinger = null,
+            barnetillegg = emptyList(),
+            helsevurderinger = null,
+            rettighetsperiode = Periode(fom1.minusYears(1), tom2.plusYears(2))
+        )
+
+        val res = utlederService.utledBehov(input)
+
+        // Opphold1 skal IKKE ha noen vurdering/segment siden det verken er kvalifisert
+        // alene eller smittet fra opphold2 (for langt unna)
+        val opphold1Segmenter = res.perioderTilVurdering.segmenter().filter { it.periode.fom < fom2 }
+        assertThat(opphold1Segmenter).isEmpty()
     }
 }

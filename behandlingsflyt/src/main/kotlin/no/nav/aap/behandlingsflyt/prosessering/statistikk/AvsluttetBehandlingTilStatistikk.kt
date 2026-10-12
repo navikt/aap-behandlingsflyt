@@ -381,10 +381,12 @@ class AvsluttetBehandlingTilStatistikk(
             }
 
             TypeBehandling.Revurdering -> {
-                resultatUtleder.utledRevurderingResultat(behandling.id).let {
+                resultatUtleder.utledRevurderingResultat(behandling.id)?.let {
                     when (it) {
                         Resultat.AVBRUTT -> ResultatKode.AVBRUTT
-                        else -> null
+                        Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+                        Resultat.AVSLAG -> ResultatKode.AVSLAG
+                        Resultat.TRUKKET -> ResultatKode.TRUKKET
                     }
                 }
             }

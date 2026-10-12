@@ -20,6 +20,7 @@ enum class BehandlingsflytFeature(
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
+    SynkroniserArenaMeldeperiodesyklus,
 
     // --- Krav ---
     BackfillKrav,
@@ -41,7 +42,8 @@ enum class BehandlingsflytFeature(
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
-    NySoknadTilApiIntern
+    NySoknadTilApiIntern,
+    SammenhengendeInstitusjonsopphold
     ;
 
     override fun key(): String = name

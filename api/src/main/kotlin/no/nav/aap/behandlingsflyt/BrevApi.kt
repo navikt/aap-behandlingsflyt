@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevGrunnlag.Brev.Mottaker
@@ -23,8 +23,8 @@ import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevmalPreviewResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevResponsDTO
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.BrevmalPreviewResponsDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -32,8 +32,12 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevdataDto
+import no.nav.aap.brev.kontrakt.IdentType
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevV2Request
+import no.nav.aap.brev.kontrakt.MottakerDto
+import no.nav.aap.brev.kontrakt.OppdaterMottakereRequest
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
@@ -194,10 +198,16 @@ fun NormalOpenAPIRoute.brevApi(
                                         no.nav.aap.brev.kontrakt.Status.FERDIGSTILT -> Status.FULLFØRT
                                         no.nav.aap.brev.kontrakt.Status.AVBRUTT -> Status.AVBRUTT
                                     },
-                                    mottaker = Mottaker(
-                                        navn = personinfo.fulltNavn(),
-                                        ident = personinfo.ident.identifikator
+                                    bruker = BrevGrunnlag.Brev.IdentOgNavn(
+                                        ident = personIdent.identifikator,
+                                        navn = personinfo.fulltNavn()
                                     ),
+                                    mottaker = brevbestillingResponse.mottaker?.tilMottaker() ?: Mottaker(
+                                        navn = personinfo.fulltNavn(),
+                                        ident = personIdent.identifikator,
+                                        identType = IdentType.FNR,
+                                    ),
+                                    kopimottaker = brevbestillingResponse.kopimottaker?.tilMottaker(),
                                     signaturer = signaturer,
                                     harTilgangTilÅSendeBrev = false, // nb. settes utenfor transaksjonen pga kall til tilgang som vi ønsker skal være async
                                 )
@@ -261,6 +271,16 @@ fun NormalOpenAPIRoute.brevApi(
             route("/{brevbestillingReferanse}/oppdater") {
                 authorizedPut<BrevbestillingReferanse, String, Brev>(authorizationParamPathConfig) { brevbestillingReferanse, brev ->
                     brevbestillingGateway.oppdater(brevbestillingReferanse, brev)
+                    respond("{}", HttpStatusCode.Accepted)
+                }
+            }
+            route("/{brevbestillingReferanse}/oppdater-mottakere") {
+                authorizedPut<BrevbestillingReferanse, String, OppdaterMottakereRequest>(authorizationParamPathConfig) { brevbestillingReferanse, request ->
+                    brevbestillingGateway.oppdaterMottakere(
+                        brevbestillingReferanse,
+                        request.mottaker,
+                        request.kopimottaker
+                    )
                     respond("{}", HttpStatusCode.Accepted)
                 }
             }
@@ -351,6 +371,14 @@ fun NormalOpenAPIRoute.brevApi(
                 respond(response, HttpStatusCode.Accepted)
             }
         }
+        route("/{brevbestillingReferanse}/v2/kan-distribuere-brev") {
+            authorizedPost<BrevbestillingReferanse, Boolean, KanDistribuereBrevV2Request>(
+                authorizationParamPathConfig
+            ) { brevbestillingReferanse, request ->
+                val response = brevbestillingGateway.kanDistribuereBrevV2(brevbestillingReferanse, request.mottakerId)
+                respond(response, HttpStatusCode.Accepted)
+            }
+        }
     }
 }
 
@@ -386,3 +414,11 @@ private suspend fun utledHarTilgangTilÅSendeBrev(
         else -> harTilgang(Definisjon.SKRIV_BREV)
     }
 }
+
+private fun MottakerDto.tilMottaker(): Mottaker =
+    Mottaker(
+        navn = this.navnOgAdresse?.navn,
+        ident = this.ident,
+        identType = this.identType,
+        navnOgAdresse = this.navnOgAdresse
+    )
