@@ -109,7 +109,7 @@ class FormkravSteg (
             return true
         } else if (erTilstrekkeligVurdertForhåndsvarsel(kontekst) && erTattAvVentFørFristenPåForhåndsvarsel( grunnlag, venteBehov)) {
             return false
-        } else if (erTilstrekkeligVurdertForhåndsvarsel(kontekst) && grunnlag.varsel != null && skalVentePåFristFraForhåndsvarsel(kontekst, grunnlag.varsel, grunnlag.vurdering, venteBehov )) {
+        } else if (erTilstrekkeligVurdertForhåndsvarsel(kontekst) && skalVentePåFristFraForhåndsvarsel(kontekst, grunnlag.varsel, grunnlag.vurdering, venteBehov )) {
             return false
         }
         return true
