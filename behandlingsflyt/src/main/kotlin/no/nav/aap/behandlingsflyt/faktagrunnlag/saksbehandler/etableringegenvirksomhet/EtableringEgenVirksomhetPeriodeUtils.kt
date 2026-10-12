@@ -5,9 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-internal const val MAKS_UTVIKLING_HVERDAGER = 131
-internal const val MAKS_OPPSTART_HVERDAGER = 66
-
 /**
     * Justerer perioder slik at de ikke overlapper hverandre.
     * Hvis en periode starter dagen etter en annen periode, vil den første perioden få tom satt til dagen før den andre perioden starter.
@@ -35,10 +32,15 @@ fun justerEtableringPerioder(
             .thenBy { it.fase?.name })
 }
 
+sealed interface TomBeregning {
+    data class Beregnet(val tom: LocalDate) : TomBeregning
+    data class Feil(val feilmelding: String) : TomBeregning
+}
+
 fun beregnTomForSistePeriode(
     vurderinger: List<EtableringEgenVirksomhetVurdering>,
     sisteVurdering: EtableringEgenVirksomhetVurdering
-): LocalDate {
+): TomBeregning {
     val fase = requireNotNull(sisteVurdering.fase)
 
     val maksHverdager = fase.maksHverdager
@@ -48,9 +50,7 @@ fun beregnTomForSistePeriode(
                     it.fom.isBefore(sisteVurdering.fom)
         }
         .sumOf {
-            val tom = requireNotNull(it.tom) {
-                "Tidligere vurdering må ha beregnet tom"
-            }
+            val tom = it.tom ?: return TomBeregning.Feil("Tidligere vurdering må ha beregnet tom")
 
             (it.fom to tom)
                 .tilPeriode()
@@ -60,14 +60,11 @@ fun beregnTomForSistePeriode(
 
 
     val gjenståendeHverdager = maksHverdager - brukteHverdager
-    require(gjenståendeHverdager > 0) {
-        "Kvoten for $fase er brukt opp. " +
-                "Brukt: $brukteHverdager, maks: $maksHverdager"
+    if (gjenståendeHverdager <= 0) {
+        return TomBeregning.Feil("Kvoten for $fase er brukt opp. Brukt: $brukteHverdager, maks: $maksHverdager")
     }
 
-    return Hverdager(gjenståendeHverdager)
-        .fraOgMed(sisteVurdering.fom)
-
+    return TomBeregning.Beregnet(Hverdager(gjenståendeHverdager).fraOgMed(sisteVurdering.fom))
 }
 
 private fun Pair<LocalDate, LocalDate>.tilPeriode(): Periode = Periode(first, second)

@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -23,6 +24,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -69,8 +71,9 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val alleVurderinger =
                         etableringEgenVirksomhetGrunnlag?.vurderinger ?:  forrigeGrunnlag.vurderinger
 
-                    val bruktUtviklingsDager = alleVurderinger.antallHverdagerIFase(EtableringFase.UTVIKLING)
-                    val bruktOppstartsdager = alleVurderinger.antallHverdagerIFase(EtableringFase.OPPSTART)
+                    val gjeldendeTidslinje = alleVurderinger.gjeldendeVurderinger()
+                    val bruktUtviklingsDager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.UTVIKLING)
+                    val bruktOppstartsdager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.OPPSTART)
 
                     val tom = alleVurderinger.maxByOrNull { it.fom }?.tom
 
@@ -115,10 +118,12 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
     }
 }
 
-private fun List<EtableringEgenVirksomhetVurdering>.antallHverdagerIFase(fase: EtableringFase): Int =
-    filter { it.fase == fase }
-        .mapNotNull { vurdering -> vurdering.tom?.let { tom -> Periode(vurdering.fom, tom) } }
-        .somTidslinje { it }
-        .komprimer()
-        .segmenter()
+private fun Tidslinje<EtableringEgenVirksomhetVurdering>.antallHverdagerIFase(fase: EtableringFase): Int =
+    segmenter()
+        .filter { it.verdi.fase == fase }
+        .onEach { segment ->
+            requireNotNull(segment.verdi.tom) {
+                "Vedtatt vurdering med fase=$fase mangler tom (vurdertIBehandling=${segment.verdi.vurdertIBehandling})"
+            }
+        }
         .sumOf { it.periode.antallHverdager().asInt }

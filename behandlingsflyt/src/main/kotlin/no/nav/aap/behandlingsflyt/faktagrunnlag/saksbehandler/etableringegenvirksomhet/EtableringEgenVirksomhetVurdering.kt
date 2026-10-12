@@ -31,8 +31,8 @@ enum class EierVirksomhet {
 }
 
 enum class EtableringFase(val maksHverdager: Int) {
-    UTVIKLING(MAKS_UTVIKLING_HVERDAGER),
-    OPPSTART(MAKS_OPPSTART_HVERDAGER);
+    UTVIKLING(maksHverdager = 131),
+    OPPSTART(maksHverdager = 66);
 }
 
 fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<EtableringEgenVirksomhetVurdering>): Boolean {

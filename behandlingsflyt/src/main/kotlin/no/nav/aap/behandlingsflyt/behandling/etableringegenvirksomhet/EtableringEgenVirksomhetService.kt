@@ -7,8 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.MAKS_OPPSTART_HVERDAGER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.MAKS_UTVIKLING_HVERDAGER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TomBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.justerEtableringPerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
@@ -83,11 +82,10 @@ class EtableringEgenVirksomhetService(
     fun beregnOgValider(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
-    ):BeregningResultat {
-        val beregning = try {
-            beregnVurderinger(behandlingId, nyeVurderinger)
-        } catch (e: IllegalArgumentException) {
-            return BeregningResultat.Ugyldig(e.message ?: "Ugyldig fase-/periode-konfigurasjon")
+    ): BeregningResultat {
+        val beregning = when (val resultat = beregnVurderinger(behandlingId, nyeVurderinger)) {
+            is BeregningResultat.Ugyldig -> return resultat
+            is BeregningResultat.Gyldig -> resultat.beregning
         }
 
         val feilmelding = validerBeregning(behandlingId, beregning)
@@ -103,7 +101,7 @@ class EtableringEgenVirksomhetService(
     private fun beregnVurderinger(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
-    ): Beregning {
+    ): BeregningResultat {
         val behandling = behandlingRepository.hent(behandlingId)
         val justerteVurderinger = justerEtableringPerioder(nyeVurderinger)
 
@@ -132,12 +130,16 @@ class EtableringEgenVirksomhetService(
             when {
                 vurdering !in skalValideres -> vurdering
                 vurdering.fase == null -> vurdering
-                vurdering in sisteVurderingPerFase -> vurdering.copy(
-                    tom = beregnTomForSistePeriode(
+                vurdering in sisteVurderingPerFase -> {
+                    val tom = when (val resultat = beregnTomForSistePeriode(
                         vurderinger = aktiveVurderingerForValidering,
                         sisteVurdering = vurdering
-                    )
-                )
+                    )) {
+                        is TomBeregning.Beregnet -> resultat.tom
+                        is TomBeregning.Feil -> return BeregningResultat.Ugyldig(resultat.feilmelding)
+                    }
+                    vurdering.copy(tom = tom)
+                }
 
                 else -> vurdering
             }
@@ -147,7 +149,7 @@ class EtableringEgenVirksomhetService(
             .gjeldendeVurderinger()
             .verdier().toSet()
 
-        return Beregning(gamleVurderinger, beregnedeVurderinger, gjeldendeVurderinger)
+        return BeregningResultat.Gyldig(Beregning(gamleVurderinger, beregnedeVurderinger, gjeldendeVurderinger))
     }
 
     private fun validerBeregning(
@@ -228,11 +230,11 @@ class EtableringEgenVirksomhetService(
             alleOppstartsPerioder.somTidslinje { it }.komprimer().segmenter()
                 .sumOf { it.periode.antallHverdager().asInt }
 
-        if (bruktUtviklingsDager > MAKS_UTVIKLING_HVERDAGER) {
-            return "Oppsatte utviklingsdager overstiger gjenværende dager: $bruktUtviklingsDager / $MAKS_UTVIKLING_HVERDAGER"
+        if (bruktUtviklingsDager > EtableringFase.UTVIKLING.maksHverdager) {
+            return "Oppsatte utviklingsdager overstiger gjenværende dager: $bruktUtviklingsDager / ${EtableringFase.UTVIKLING.maksHverdager}"
         }
-        if (bruktOppstartsdager > MAKS_OPPSTART_HVERDAGER) {
-            return "Oppsatte oppstartsdager overstiger gjenværende dager: $bruktOppstartsdager / $MAKS_OPPSTART_HVERDAGER"
+        if (bruktOppstartsdager > EtableringFase.OPPSTART.maksHverdager) {
+            return "Oppsatte oppstartsdager overstiger gjenværende dager: $bruktOppstartsdager / ${EtableringFase.OPPSTART.maksHverdager}"
         }
         return null
     }
@@ -286,12 +288,6 @@ class EtableringEgenVirksomhetService(
         )
     }
 }
-
-sealed interface VirksomhetEtableringResultat
-
-data class VirksomhetEtableringIkkeGyldig(val feilmelding: String) : VirksomhetEtableringResultat
-
-data object VirksomhetEtableringGyldig : VirksomhetEtableringResultat
 
 sealed interface BeregningResultat {
     data class Gyldig(val beregning: EtableringEgenVirksomhetService.Beregning) : BeregningResultat

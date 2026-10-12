@@ -8,8 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.MAKS_OPPSTART_HVERDAGER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.MAKS_UTVIKLING_HVERDAGER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -174,7 +172,7 @@ class EtableringEgenVirksomhetLøserTest {
             )
         )
 
-        val forventetTom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(vurderingFom)
+        val forventetTom = Hverdager(EtableringFase.OPPSTART.maksHverdager).fraOgMed(vurderingFom)
 
         val løsning = EtableringEgenVirksomhetLøsning(
             listOf(
@@ -216,7 +214,7 @@ class EtableringEgenVirksomhetLøserTest {
                 EtableringEgenVirksomhetVurdering(
                     begrunnelse = "Brukte opp hele oppstartskvoten",
                     fom = forrigeOppstartFom,
-                    tom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(forrigeOppstartFom),
+                    tom = Hverdager(EtableringFase.OPPSTART.maksHverdager).fraOgMed(forrigeOppstartFom),
                     vurdertAv = Bruker("saks"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = førstegangsbehandling.id,
@@ -260,7 +258,7 @@ class EtableringEgenVirksomhetLøserTest {
                 EtableringEgenVirksomhetVurdering(
                     begrunnelse = "Brukte opp hele utviklingskvoten",
                     fom = forrigeUtviklingFom,
-                    tom = Hverdager(MAKS_UTVIKLING_HVERDAGER).fraOgMed(forrigeUtviklingFom),
+                    tom = Hverdager(EtableringFase.UTVIKLING.maksHverdager).fraOgMed(forrigeUtviklingFom),
                     vurdertAv = Bruker("saks"),
                     opprettet = Instant.now(),
                     vurdertIBehandling = førstegangsbehandling.id,
@@ -336,7 +334,7 @@ class EtableringEgenVirksomhetLøserTest {
 
         val fom = sak.rettighetsperiode.fom.plusDays(1)
         val tom = fom.plusMonths(3)
-        val forventetTom = Hverdager(MAKS_OPPSTART_HVERDAGER).fraOgMed(fom)
+        val forventetTom = Hverdager(EtableringFase.OPPSTART.maksHverdager).fraOgMed(fom)
 
         val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
