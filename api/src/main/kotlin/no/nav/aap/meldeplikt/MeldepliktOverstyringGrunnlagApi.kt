@@ -1,0 +1,106 @@
+package no.nav.aap.meldeplikt
+
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.tilgang.BehandlingPathParam
+import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDate
+import javax.sql.DataSource
+
+fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
+    route("/api/behandling/{referanse}/grunnlag/meldeplikt-overstyring") {
+        getGrunnlag<BehandlingReferanse, MeldepliktOverstyringGrunnlagResponse>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            behandlingPathParam = BehandlingPathParam("referanse"),
+            påkrevdRolle = Definisjon.OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT.løsesAv,
+        ) { req ->
+            val meldepliktGrunnlag =
+                dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val overstyringMeldepliktRepository =
+                        repositoryProvider.provide<OverstyringMeldepliktRepository>()
+                    val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+
+                    val behandling: Behandling =
+                        BehandlingReferanseService(behandlingRepository).behandling(req)
+
+                    val grunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandling.id)
+
+                    val gjeldendeVedtatteVurdertePerioder = grunnlag
+                        ?.vurderinger
+                        ?.filter { it.vurdertIBehandling != behandling.referanse }
+                        ?.tilTidslinje()
+                        ?.tilVurderingResponse(ansattInfoService) ?: emptyList()
+
+                    val overstyringerFraDenneBehandlingen = grunnlag
+                        ?.vurderinger
+                        ?.filter { it.vurdertIBehandling == behandling.referanse }
+                        ?.tilTidslinje()
+                        ?.tilVurderingResponse(ansattInfoService) ?: emptyList()
+
+                    // Grunnlaget vil være tomt til underveis har kjørt, 
+                    // men siden det er frivillig overstyring der steget automatisk returnerer Fullført, er dette greit
+                    val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                    val now = LocalDate.now()
+
+                    MeldepliktOverstyringGrunnlagResponse(
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        perioderIkkeMeldt = underveisGrunnlag?.perioder
+                            ?.filter { it.meldePeriode.fom <= now }
+                            ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
+                            ?.map { it.meldePeriode }
+                            ?.distinctBy { it.fom }
+                            ?: emptyList(),
+                        gjeldendeVedtatteOversyringsvurderinger = gjeldendeVedtatteVurdertePerioder,
+                        overstyringsvurderinger = overstyringerFraDenneBehandlingen
+                    )
+                }
+
+            respond(meldepliktGrunnlag)
+        }
+    }
+}
+
+private fun Tidslinje<OverstyringMeldepliktData>.tilVurderingResponse(ansattInfoService: AnsattInfoService): List<MeldepliktOverstyringVurderingResponse> {
+    return this.segmenter()
+        .map { segment ->
+            MeldepliktOverstyringVurderingResponse(
+                begrunnelse = segment.verdi.begrunnelse,
+                vurderingsTidspunkt = segment.verdi.opprettetTid,
+                vurdertIBehandling = segment.verdi.vurdertIBehandling,
+                meldepliktOverstyringStatus = segment.verdi.meldepliktOverstyringStatus,
+                fraDato = segment.periode.fom,
+                tilDato = segment.periode.tom,
+                vurderingerMeta = VurderingerMetaResponse(
+                    vurdertAv = VurdertAvResponse.fraIdent(
+                        segment.verdi.vurdertAv,
+                        segment.verdi.opprettetTid.toLocalDate(),
+                        ansattInfoService,
+                    )
+                ),
+            )
+        }
+}

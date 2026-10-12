@@ -32,7 +32,7 @@ class AvklarSamordningGraderingLøser(
                     vurderingPerioder = it.value.map { vurdering ->
                         SamordningVurderingPeriode(
                             periode = vurdering.periode,
-                            gradering = vurdering.gradering?.let(::Prosent),
+                            gradering = vurdering.gradering.let(::Prosent),
                             manuell = vurdering.manuell
                         )
                     }.toSet()

@@ -37,11 +37,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -49,7 +54,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
@@ -59,7 +66,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -72,6 +79,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.util.ReadsSystemProperty
 import org.junit.jupiter.api.util.RestoreSystemProperties
@@ -88,6 +96,7 @@ import java.util.stream.Stream
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 @ReadsSystemProperty
@@ -95,6 +104,7 @@ class BrevUtlederServiceTest {
     val repositoryProvider = inMemoryRepositoryProvider
     val gatewayProvider = createGatewayProvider {
         register<BrevUtlederServiceTestUnleash>()
+        register<TestPersoninfoBulkGateway>()
     }
 
     val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
@@ -109,7 +119,8 @@ class BrevUtlederServiceTest {
     val overgangUføreRepository = repositoryProvider.provide<OvergangUføreRepository>()
     val unleashGateway = BrevUtlederServiceTestUnleash
     val stansOpphørRepository = repositoryProvider.provide<StansOpphørRepository>()
-
+    val tpRefusjonskravRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
+    val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
     val brevUtlederService = BrevUtlederService(
         repositoryProvider,
         gatewayProvider
@@ -1029,6 +1040,188 @@ class BrevUtlederServiceTest {
             assertIs<AvslagBrev.Avslag>(resultatFørstegangsbehandling, "første behandling gir avslag")
             assertIs<Innvilgelse>(resultatAndreBehandling, "revurdering er innvilgelse")
         }
+
+        @Test
+        fun `gir ikke datoer for refusjonskrav når utbetaling ikke skal holdes tilbake`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisGrunnlag(
+                behandling.id,
+                underveisperiode(
+                    periode = Periode(virkningstidspunkt, virkningstidspunkt.plusYears(1)),
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                ),
+            )
+            gittTjenestepensjonRefusjonskravVurdering(behandling.sakId, behandling.id)
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
+            assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.skalEtterbetalingHoldesIgjen).isFalse
+            assertNull(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.fraOgMed)
+            assertNull(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed)
+        }
+
+        @Test
+        fun `fra og med dato er lik virkningstidspunkt`() {
+            val virkningstidspunktet = 5 september 2026
+            val behandling = gittBehandling(
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                virkningstidspunkt = virkningstidspunktet,
+                vedtakstidspunkt = virkningstidspunktet.plusDays(8).atStartOfDay()
+            )
+            val kravdato = 14 juni 2026
+            gittUnderveisGrunnlag(
+                behandling.id,
+                underveisperiode(
+                    periode = Periode(virkningstidspunktet, virkningstidspunktet.plusDays(8)),
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                ),
+            )
+            gittTjenestepensjonRefusjonskravVurdering(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                harKrav = true,
+                fom = kravdato, // vurderingen lagrer ned kravdato
+                tom = null, // og setter ikke tom
+            )
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
+            assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.skalEtterbetalingHoldesIgjen).isTrue
+            assertNotEquals(kravdato, resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.fraOgMed)
+            assertEquals(virkningstidspunktet, resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.fraOgMed)
+        }
+
+        @Test
+        fun `til og med dato er lik vedtakstidspunkt - 1 dag`() {
+            val virkningstidspunktet = 5 september 2026
+            val vedtakstidspunkt = virkningstidspunktet.plusDays(8)
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling, virkningstidspunkt = virkningstidspunktet, vedtakstidspunkt = vedtakstidspunkt.atStartOfDay())
+            val kravdato = 14 juni 2026
+            gittUnderveisGrunnlag(
+                behandling.id,
+                underveisperiode(
+                    periode = Periode(virkningstidspunktet, virkningstidspunktet.plusDays(8)),
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                ),
+            )
+            gittTjenestepensjonRefusjonskravVurdering(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                harKrav = true,
+                fom = kravdato, // vurderingen lagrer ned kravdato
+                tom = null, // og setter ikke tom
+            )
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
+            assertEquals(
+                vedtakstidspunkt.minusDays(1),
+                resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed
+            )
+        }
+
+        @Test
+        fun `tilOgMed er alltid lik eller senere enn fraOgMed`() {
+            // dette betyr egentlig at det ikke er noe å holde tilbake, men tester på det uansett
+            val virkningstidspunktet = 5 september 2026
+            val vedtakstidspunkt = virkningstidspunktet
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling, virkningstidspunkt = virkningstidspunktet, vedtakstidspunkt = vedtakstidspunkt.atStartOfDay())
+            val kravdato = 14 juni 2026
+            gittUnderveisGrunnlag(
+                behandling.id,
+                underveisperiode(
+                    periode = Periode(virkningstidspunktet, virkningstidspunktet.plusYears(1)),
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                ),
+            )
+            gittTjenestepensjonRefusjonskravVurdering(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                harKrav = true,
+                fom = kravdato, // vurderingen lagrer ned kravdato
+                tom = null, // og setter ikke tom
+            )
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
+            assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed).isAfterOrEqualTo(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.fraOgMed)
+        }
+    }
+
+    @Test
+    fun `utleder refusjonsperiode for NAV-kontor i innvilgelsesbrev`() {
+        val virkningstidspunkt = 5 september 2026
+        val vedtaksdato = virkningstidspunkt.plusDays(8)
+        val behandling = gittBehandling(
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            virkningstidspunkt = virkningstidspunkt,
+            vedtakstidspunkt = vedtaksdato.atStartOfDay(),
+        )
+        gittUnderveisGrunnlag(
+            behandling.id,
+            underveisperiode(
+                periode = Periode(virkningstidspunkt, virkningstidspunkt.plusDays(8)),
+                utfall = Utfall.OPPFYLT,
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+            ),
+        )
+        refusjonkravRepository.lagre(
+            behandling.sakId,
+            behandling.id,
+            listOf(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    navKontor = "Nav Løten",
+                    vurdertAv = Bruker("saksbehandler"),
+                ),
+            ),
+        )
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+        assertIs<Innvilgelse>(resultat)
+        assertThat(resultat.forholdTilAndreYtelser?.refusjonskravNavKontor?.fraOgMed)
+            .isEqualTo(virkningstidspunkt)
+        assertThat(resultat.forholdTilAndreYtelser?.refusjonskravNavKontor?.tilOgMed)
+            .isEqualTo(vedtaksdato.minusDays(1))
+    }
+
+    @Test
+    fun `utleder ikke refusjonsperiode for NAV-kontor uten etterbetaling`() {
+        val virkningstidspunkt = 5 september 2026
+        val behandling = gittBehandling(
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            virkningstidspunkt = virkningstidspunkt,
+            vedtakstidspunkt = virkningstidspunkt.atStartOfDay(),
+        )
+        gittUnderveisGrunnlag(
+            behandling.id,
+            underveisperiode(
+                periode = Periode(virkningstidspunkt, virkningstidspunkt.plusYears(1)),
+                utfall = Utfall.OPPFYLT,
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+            ),
+        )
+        refusjonkravRepository.lagre(
+            behandling.sakId,
+            behandling.id,
+            listOf(
+                RefusjonkravVurdering(
+                    harKrav = true,
+                    navKontor = "Nav Løten",
+                    vurdertAv = Bruker("saksbehandler"),
+                ),
+            ),
+        )
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+        assertIs<Innvilgelse>(resultat)
+        assertThat(resultat.forholdTilAndreYtelser?.refusjonskravNavKontor).isNull()
     }
 
     @Test
@@ -1318,7 +1511,9 @@ class BrevUtlederServiceTest {
         sakId: SakId = SakId(Random.nextLong()),
         status: Status = Status.OPPRETTET,
         årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-        vurderingsbehov: List<Vurderingsbehov> = listOf(Vurderingsbehov.MOTTATT_SØKNAD)
+        vurderingsbehov: List<Vurderingsbehov> = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
+        virkningstidspunkt: LocalDate = this.virkningstidspunkt,
+        vedtakstidspunkt: LocalDateTime = virkningstidspunkt.atStartOfDay(),
     ): Behandling {
         val typeBehandling = typeBehandling
             ?: if (forrigeBehandlingId == null) TypeBehandling.Førstegangsbehandling else TypeBehandling.Revurdering
@@ -1337,7 +1532,7 @@ class BrevUtlederServiceTest {
         behandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
         vedtakRepository.lagre(
             behandlingId = behandling.id,
-            vedtakstidspunkt = virkningstidspunkt.atStartOfDay(),
+            vedtakstidspunkt = vedtakstidspunkt,
             virkningstidspunkt = virkningstidspunkt,
         )
 
@@ -1355,6 +1550,27 @@ class BrevUtlederServiceTest {
         )
 
         return underveisRepository.hent(behandlingId)
+    }
+
+    private fun gittTjenestepensjonRefusjonskravVurdering(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        harKrav: Boolean = false,
+        fom: LocalDate? = null,
+        tom: LocalDate? = null,
+        begrunnelse: String = "Grunn",
+    ): TjenestepensjonRefusjonskravVurdering {
+        tpRefusjonskravRepository.lagre(
+            sakId,
+            behandlingId,
+            TjenestepensjonRefusjonskravVurdering(
+                harKrav = harKrav,
+                fom = fom,
+                tom = tom,
+                begrunnelse = begrunnelse,
+            ),
+        )
+        return tpRefusjonskravRepository.hent(behandlingId)
     }
 
     private fun underveisperiode(
@@ -1499,7 +1715,17 @@ class BrevUtlederServiceTest {
 }
 
 object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(
-        BehandlingsflytFeature.SamordningFaktagrunnlagBrev
-    )
+    enabledFlags = emptyList()
 )
+
+object TestPersoninfoBulkGateway : PersoninfoBulkGateway {
+    override fun hentPersoninfoForIdenter(identer: List<Ident>): List<Personinfo> =
+        identer.map { ident ->
+            Personinfo(
+                ident = ident,
+                fornavn = "Test",
+                mellomnavn = null,
+                etternavn = "Person"
+            )
+        }
+}

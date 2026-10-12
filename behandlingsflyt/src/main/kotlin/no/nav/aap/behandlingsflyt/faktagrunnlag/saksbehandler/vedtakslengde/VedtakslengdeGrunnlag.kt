@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.erSystembruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -55,7 +56,7 @@ data class VedtakslengdeVurdering(
     val begrunnelse: String,
 ) {
     val vurdertManuelt: Boolean get() = !vurdertAutomatisk
-    val vurdertAutomatisk: Boolean get() = vurdertAv == SYSTEMBRUKER
+    val vurdertAutomatisk: Boolean get() = vurdertAv.erSystembruker()
 }
 
 enum class VedtakslengdeÅrsak {

@@ -56,7 +56,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
             return
         }
-        val behandlingFørMigrering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+        val behandlingFørMigrering = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
         if (behandlingFørMigrering.status().erÅpen()) {
             throw IllegalArgumentException("Kan ikke migrere sak når det finnes en åpen behandling")
@@ -79,7 +79,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (Miljø.erDev()) {
             return
         }
-        val behandlingEtterMigrering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+        val behandlingEtterMigrering = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
         validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
         validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering, sak)

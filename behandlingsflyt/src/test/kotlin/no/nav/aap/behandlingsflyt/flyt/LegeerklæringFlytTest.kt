@@ -180,5 +180,4 @@ class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::
             assertThat(legeerklæringBestillingVenteBehov).isEmpty()
         }
     }
-
 }

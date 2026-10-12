@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.TilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørDelvisUfør
 import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørFullUfør
+import no.nav.aap.behandlingsflyt.behandling.brev.VedtakEndringDødsfall
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
 import no.nav.aap.behandlingsflyt.behandling.brev.YrkesskadeBeregningBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
@@ -19,7 +20,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
@@ -398,6 +399,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27 -> Brevtype.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_27
         TypeBrev.VEDTAK_11_18_OPPHØR_FULL_UFØR -> Brevtype.VEDTAK_11_18_OPPHØR_FULL_UFØR
         TypeBrev.VEDTAK_11_18_OPPHØR_DELVIS_UFØR -> Brevtype.VEDTAK_11_18_OPPHØR_DELVIS_UFØR
+        TypeBrev.VEDTAK_ENDRING_DODSFALL -> Brevtype.VEDTAK_ENDRING_DODSFALL
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
@@ -471,6 +473,9 @@ class BrevGateway : BrevbestillingGateway {
                     )
                 }
             }
+
+            is VedtakEndringDødsfall ->
+                setOf(Faktagrunnlag.Dødsfall(brevBehov.dødsdato, brevBehov.navn))
 
             else -> emptySet()
         }
@@ -574,6 +579,12 @@ class BrevGateway : BrevbestillingGateway {
                     skalEtterbetalingHoldesIgjen = tp.skalEtterbetalingHoldesIgjen,
                     fraOgMed = tp.fraOgMed,
                     tilOgMed = tp.tilOgMed,
+                )
+            },
+            refusjonskravNavkontor = forholdTilAndreYtelser.refusjonskravNavKontor?.let { refusjonskrav ->
+                Faktagrunnlag.ForholdTilAndreYtelser.RefusjonskravNavkontor(
+                    fraOgMed = refusjonskrav.fraOgMed,
+                    tilOgMed = refusjonskrav.tilOgMed,
                 )
             },
             samordningAndreYtelser = forholdTilAndreYtelser.samordningAndreYtelser.map { samordning ->

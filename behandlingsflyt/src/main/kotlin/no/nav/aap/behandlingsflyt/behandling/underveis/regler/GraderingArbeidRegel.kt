@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -12,6 +11,7 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import no.nav.aap.meldeplikt.helligdagsunntakFritaksUtbetalingDato
 
 /*
 

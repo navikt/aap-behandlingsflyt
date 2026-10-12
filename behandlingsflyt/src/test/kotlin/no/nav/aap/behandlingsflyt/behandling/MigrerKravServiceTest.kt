@@ -108,7 +108,7 @@ class MigrerKravServiceTest {
             InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(etterOppdatering.overstyrMuligRettFra).isNotNull
         assertThat(etterOppdatering.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
-        assertThat(etterOppdatering.overstyrMuligRettFra!!.årsak).isEqualTo(OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere)
+        assertThat(etterOppdatering.overstyrMuligRettFra.årsak).isEqualTo(OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere)
 
         val reverserVurdering = lagRettighetsperiodeVurdering(
             harRett = RettighetsperiodeHarRett.Nei,

@@ -50,7 +50,7 @@ fun NormalOpenAPIRoute.beregningVurderingApi(
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
                     // Dette er logikk, burde i egen service
-                    val uføreTidslinje = uføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.tilTidslinje()
+                    val uføreTidslinje = uføreRepository.hentHvisEksisterer(behandling.id)?.vedtak?.tilTidslinje()
                     val skalVurdereUføre = uføreTidslinje?.isNotEmpty() == true
                             && uføreTidslinje.segment(sak.rettighetsperiode.fom) != null
 

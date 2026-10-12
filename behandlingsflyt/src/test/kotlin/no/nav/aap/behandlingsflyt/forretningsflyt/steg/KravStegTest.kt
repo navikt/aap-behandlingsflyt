@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import io.mockk.verify
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
@@ -156,7 +157,7 @@ class KravStegTest {
         assertThat(krav.arenaSaksnummer).isEqualTo(fraArena.arenaSaksnummer)
         assertThat(krav.rettighetstype).isEqualTo(MigrertRettighetstype.ORDINÆR)
         assertThat(krav.resterendeKvoteOrdinær).isEqualTo(fraArena.gjenståendeKvoteOrdinær)
-        assertThat(krav.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(krav.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
         assertThat(krav.vurdertIBehandling).isEqualTo(behandling.id)
     }
 

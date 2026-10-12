@@ -12,6 +12,7 @@ data class VurdertAvResponse(
     val ansattnavn: String? = null,
     val enhetsnavn: String? = null,
     val erRetur: Boolean? = null,
+    val kilde: VurderingKilde = VurderingKilde.fraIdent(ident),
 ) {
     companion object {
         fun fraIdent(

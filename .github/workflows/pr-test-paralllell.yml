@@ -29,12 +29,12 @@ jobs:
                     distribution: 'temurin'
 
             - name: Setup Gradle for a non-wrapper project
-              uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+              uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
               with:
                   gradle-version: wrapper
             - name: Bygg og test (${{matrix.gradle_args}})
               run: ./gradlew ${{matrix.gradle_args}} --continue --stacktrace
-            - uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+            - uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
               if: success() || failure()
               with:
                 name: test
@@ -42,7 +42,7 @@ jobs:
                 reporter: java-junit
                 token: ${{ secrets.GITHUB_TOKEN }}
             - name: Publish Test Report
-              uses: mikepenz/action-junit-report@a9170d5795813c01ab4901ffb045b52bab4ab09d # v6.5.0
+              uses: mikepenz/action-junit-report@b7b80d7ac5b1da46d6aaff9fb57ad50d8453bcb3 # v6.6.0
               if: success() || failure() # always run even if the previous step fails
               with:
                 report_paths: '**/build/test-results/test/TEST-*.xml'

@@ -750,7 +750,7 @@ private fun hentSisteBehandlingForSak(sakId: SakId, gatewayProvider: GatewayProv
             gatewayProvider
         )
 
-        val behandling = sbService.finnSisteYtelsesbehandlingFor(sakId)
+        val behandling = sbService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
         requireNotNull(behandling) { "Finner ikke behandling for sakId: $sakId" }
         behandling
     }

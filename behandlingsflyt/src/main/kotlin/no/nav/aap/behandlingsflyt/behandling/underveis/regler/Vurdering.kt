@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.meldeplikt.MeldepliktVurdering
 
 data class Vurdering(
     internal val fårAapEtter: RettighetsType? = null,

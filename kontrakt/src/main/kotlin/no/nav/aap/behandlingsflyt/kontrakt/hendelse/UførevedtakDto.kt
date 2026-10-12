@@ -4,19 +4,19 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResul
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import java.time.LocalDate
 
-data class UførevedtakDto (
+public data class UførevedtakDto (
     val resultat: UførevedtakResultatDto,
     val virkningsdato: LocalDate
 )
 
-enum class UførevedtakResultatDto {
+public enum class UførevedtakResultatDto {
     OPPHØR,
     INNVILGELSE,
     AVSLAG,
     ENDRET
 }
 
-fun UførevedtakV0.tilUføreVedtakDto(): UførevedtakDto {
+public fun UførevedtakV0.tilUføreVedtakDto(): UførevedtakDto {
     return UførevedtakDto(
         resultat = this.resultat.tilDto(),
         virkningsdato = this.virkningsdato,
