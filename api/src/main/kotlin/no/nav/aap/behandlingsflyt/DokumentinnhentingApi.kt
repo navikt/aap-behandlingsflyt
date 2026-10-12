@@ -234,7 +234,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
             route("/dialogmeldinger/legeerklaering/{behandlingsReferanse}/ubesvarte-foresporsler") {
                 authorizedGet<HentUbesvarteForespørslerLegeerklæringDto, UbesvarteForespørslerLegeerklæringResponse>(
                     AuthorizationParamPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                         applicationsOnly = false,
                         behandlingPathParam = BehandlingPathParam("behandlingsReferanse")
                     )
