@@ -24,6 +24,7 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
     private val sakstatusDatadelingService: SakstatusDatadelingService,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val behandlingVisningDatadelingService: BehandlingVisningDatadelingService,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -38,6 +39,12 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
         apiInternGateway.sendSakStatus(
             personIdent.identifikator,
             sakstatus,
+        )
+
+        val behandlingerVisning = behandlingVisningDatadelingService.utledBehandlingerVisning(sak.id)
+        apiInternGateway.sendBehandlingVisning(
+            personIdent.identifikator,
+            behandlingerVisning,
         )
 
         if (trukketSøknadService.søknadErTrukket(behandling.id)) {
@@ -71,6 +78,7 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
                 sakstatusDatadelingService = SakstatusDatadelingService(repositoryProvider, gatewayProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+                behandlingVisningDatadelingService = BehandlingVisningDatadelingService(repositoryProvider, gatewayProvider)
             )
         }
     }

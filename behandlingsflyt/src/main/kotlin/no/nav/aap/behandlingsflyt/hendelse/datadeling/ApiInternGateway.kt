@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.datadeling
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.datadeling.BehandlingVisning
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
@@ -52,5 +53,5 @@ interface ApiInternGateway : Gateway {
     )
 
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
-
+    fun sendBehandlingVisning(ident: String, behandlingVisning: List<BehandlingVisning>)
 }

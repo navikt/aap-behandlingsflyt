@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.datadeling.BehandlingVisning
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
@@ -80,4 +81,10 @@ class FakeApiInternGateway : ApiInternGateway {
         // No-op
     }
 
+    override fun sendBehandlingVisning(
+        ident: String,
+        behandlingVisning: List<BehandlingVisning>
+    ) {
+        // No-op
+    }
 }
