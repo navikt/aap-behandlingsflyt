@@ -35,6 +35,9 @@ enum class BehandlingsflytFeature(
     MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
 
+    // --- Utbetaling ---
+    FjerneAvventUtbetalingForSamordningArbeidsgiver,
+
     // ------
     Avslag11_27,
     MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
