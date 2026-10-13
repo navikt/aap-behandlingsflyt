@@ -114,7 +114,7 @@ class BrevUtlederService(
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avslag11_27Repository: Avslag11_27Repository
+    private val avslag11_27Repository: Avslag11_27Repository,
     private val behandlingService: BehandlingService,
     private val personOpplysningRepository: PersonopplysningRepository,
     private val sakRepository: SakRepository,
