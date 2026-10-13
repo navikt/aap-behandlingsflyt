@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Instant
 
 class KravSteg(
@@ -47,13 +48,8 @@ class KravSteg(
     private val sakService: SakService,
     private val arenaMigreringService: ArenaMigreringService
 ) : BehandlingSteg {
-
-    /**
-     * Backfill:
-     * Alle saker må backfilles til at første søknad er første krav
-     * Mer komplisert: Første søknad etter "rent avslag" bør være nytt krav
-     * For "resten": Alle søknader er ikke et eget "krav". Opphør/stans og gjeninntreden kan trolig holdes unna for backfill
-     */
+    private val log = LoggerFactory.getLogger(javaClass)
+    
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Migreringssaker har egne krav, kunne vært i den normale switch-casen, men vi ønsker at disse alltid
         // skal gå gjennom selv om feature-toggelen under er skrudd av så lenge krav-steget er skrudd på
@@ -181,8 +177,7 @@ class KravSteg(
     private fun vurderHelautomatisk(kontekst: FlytKontekstMedPerioder) {
         val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        // Early return: Forrige behandling er ikke migrert – BackfillKrav håndterer den.
-        if (kravGrunnlag == null && kontekst.forrigeBehandlingId != null) return
+        if (kravGrunnlag == null && kontekst.forrigeBehandlingId != null) log.warn("Fant ikke krav for vedtatt behandling")
 
         val søknaderMottattIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)

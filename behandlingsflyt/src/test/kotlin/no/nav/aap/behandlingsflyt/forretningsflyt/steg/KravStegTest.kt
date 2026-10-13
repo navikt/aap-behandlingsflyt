@@ -499,20 +499,7 @@ class KravStegTest {
         assertThat(vurderinger).hasSize(1)
         assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
     }
-
-    @Test
-    fun `historisk revurdering uten migrert grunnlag skippes – BackfillKrav håndterer den`() {
-        val sak = opprettInMemorySak()
-        val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
-        val behandling = opprettRevurdering(sak.id, forrigeBehandling.id)
-        leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 5, 1).atStartOfDay())
-
-        // Ingen kopier-kall – simulerer at forrige behandling ikke er migrert ennå
-        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
-
-        assertThat(InMemoryKravRepository.hentHvisEksisterer(behandling.id)).isNull()
-    }
-
+    
     @Test
     fun `søknad før legeerklæring – søknad er krav, legeerklæring ignoreres`() {
         val sak = opprettInMemorySak()
