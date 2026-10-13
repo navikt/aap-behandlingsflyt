@@ -443,9 +443,16 @@ class BrevGateway : BrevbestillingGateway {
                 }
             }
 
-            is AvslagBrev -> {
-                buildSet {
-                    brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
+            is AvslagBrev.Avslag -> buildSet {
+                brevBehov.sykdomsvurdering?.let {
+                    add(Faktagrunnlag.Sykdomsvurdering(it))
+                }
+                addAll(avslagsårsakTilFaktagrunnlag(brevBehov.avslagsårsak))
+            }
+
+            is AvslagBrev -> buildSet {
+                brevBehov.sykdomsvurdering?.let {
+                    add(Faktagrunnlag.Sykdomsvurdering(it))
                 }
             }
 
@@ -478,19 +485,6 @@ class BrevGateway : BrevbestillingGateway {
 
             is VedtakEndringDødsfall ->
                 setOf(Faktagrunnlag.Dødsfall(brevBehov.dødsdato, brevBehov.navn))
-
-            is AvslagBrev.Avslag -> buildSet {
-                brevBehov.sykdomsvurdering?.let {
-                    add(Faktagrunnlag.Sykdomsvurdering(it))
-                }
-                addAll(avslagsHjemlerTilFaktagrunnlag(brevBehov.avslagsårsaker))
-            }
-
-            is AvslagBrev -> buildSet {
-                brevBehov.sykdomsvurdering?.let {
-                    add(Faktagrunnlag.Sykdomsvurdering(it))
-                }
-            }
 
             else -> emptySet()
         }
@@ -674,49 +668,24 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakYtterligereNedsatt.ANNET, null -> null
         }
 
-    private fun avslagsHjemlerTilFaktagrunnlag(
-        avslagsårsaker: Set<Avslagsårsak>,
-    ): Set<Faktagrunnlag> = buildSet {
-        if (avslagsårsaker.any {
-                it == Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE
-            }
-        ) {
-            add(
-                Faktagrunnlag.AvslagAarsak(
-                    Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_2
-                )
-            )
-        }
+    private fun avslagsårsakTilFaktagrunnlag(
+        avslagsårsak: Avslagsårsak?,
+    ): Faktagrunnlag.AvslagAarsak? =
+        when (avslagsårsak) {
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_2)
 
-        if (avslagsårsaker.any {
-                it in setOf(
-                    Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS,
-                    Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
-                    Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR,
-                )
-            }
-        ) {
-            add(
-                Faktagrunnlag.AvslagAarsak(
-                    Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_3
-                )
-            )
-        }
+            Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_3)
 
-        if (avslagsårsaker.any {
-                it in setOf(
-                    Avslagsårsak.BRUKER_UNDER_18,
-                    Avslagsårsak.BRUKER_OVER_67,
-                    Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON,
-                )
-            }
-        ) {
-            add(
-                Faktagrunnlag.AvslagAarsak(
-                    Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_4
-                )
-            )
+            Avslagsårsak.BRUKER_UNDER_18,
+            Avslagsårsak.BRUKER_OVER_67,
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_4)
+
+            else -> null
         }
-    }
 
 }
