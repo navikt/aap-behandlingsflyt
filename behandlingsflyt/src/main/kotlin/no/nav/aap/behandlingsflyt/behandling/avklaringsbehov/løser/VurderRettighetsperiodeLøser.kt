@@ -81,9 +81,7 @@ class VurderRettighetsperiodeLøser(
                 startDato = nyStartDato,
                 sluttDato = Tid.MAKS
             )
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav)) {
-                migrerKravService.oppdaterKravForOverstyrtMuligRett(kontekst.sakId(), kontekst.behandlingId(), vurdering)
-            }
+            migrerKravService.oppdaterKravForOverstyrtMuligRett(kontekst.sakId(), kontekst.behandlingId(), vurdering)
         } else if (!løsning.rettighetsperiodeVurdering.harRett.harOverstyrt()) {
             val søknadsdato = finnSøknadsdatoForSak(sak.id)
                 ?: throw UgyldigForespørselException("Forsøker å tilbakestille rettighetsperioden, men finner ingen søknadsdato for saken")
@@ -94,9 +92,7 @@ class VurderRettighetsperiodeLøser(
                     startDato = søknadsdato,
                     sluttDato = Tid.MAKS
                 )
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav)) {
-                    migrerKravService.reverserKravForOverstyrtMuligRett(kontekst.behandlingId(), vurdering)
-                }
+                migrerKravService.reverserKravForOverstyrtMuligRett(kontekst.behandlingId(), vurdering)
             }
         }
 
@@ -114,6 +110,6 @@ class VurderRettighetsperiodeLøser(
     override fun forBehov(): Definisjon {
         return Definisjon.VURDER_RETTIGHETSPERIODE
     }
-    
+
 }
 
