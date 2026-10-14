@@ -1,14 +1,12 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -103,16 +101,13 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
         assertThat(etableringGrunnlag?.vurderinger?.size).isEqualTo(2)
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        dataSource.transaction {
-            val service = EtableringEgenVirksomhetService(
-                postgresRepositoryRegistry.provider(it)
-            )
-            val oppfylt = service.evaluerVirksomhetVurdering(etableringGrunnlag?.vurderinger?.first()!!)
-            val ikkeOppfyltVurdering = service.evaluerVirksomhetVurdering(etableringGrunnlag.vurderinger.last())
 
-            assertThat(oppfylt).isEqualTo(true)
-            assertThat(ikkeOppfyltVurdering).isEqualTo(false)
-        }
+        val oppfylt = etableringGrunnlag?.vurderinger?.first()!!.evaluerVirksomhetVurdering()
+        val ikkeOppfyltVurdering = etableringGrunnlag.vurderinger.last().evaluerVirksomhetVurdering()
+
+        assertThat(oppfylt).isEqualTo(true)
+        assertThat(ikkeOppfyltVurdering).isEqualTo(false)
+
     }
 
     @Test
