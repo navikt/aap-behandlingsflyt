@@ -227,7 +227,7 @@ class VurderLovvalgSteg internal constructor(
                     alleVurderingerUnntattAutomatiskVurderingIDenneBehandlingen
                 )
             }
-            else -> if (automatiskVurderingIDenneBehandlingen == null || erAutomatiskVurderingLike(automatiskVurdering, automatiskVurderingIDenneBehandlingen)) {
+            else -> if (automatiskVurderingIDenneBehandlingen == null || !erAutomatiskVurderingLike(automatiskVurdering, automatiskVurderingIDenneBehandlingen)) {
                 medlemskapArbeidInntektRepository.lagreVurderinger(
                     kontekst.behandlingId,
                     alleVurderingerUnntattAutomatiskVurderingIDenneBehandlingen + automatiskVurdering
