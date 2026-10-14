@@ -23,7 +23,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdfgenerator.PdfGeneratorGatewayIm
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlBarnGateway
+import no.nav.aap.barnetillegg.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonopplysningGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
