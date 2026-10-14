@@ -217,6 +217,7 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
         )
 
         assertThat(ubesvarteForespørslerPåSak.size).isEqualTo(1)
+        assertThat(ubesvarteForespørslerPåSak[0].journalpostId).isEqualTo(journalpostIdEtterSisteLegeerklæring)
     }
 
     private fun lagLegeerklæring(journalpostId: String, sak: Sak, behandling: Behandling): MottattDokument {

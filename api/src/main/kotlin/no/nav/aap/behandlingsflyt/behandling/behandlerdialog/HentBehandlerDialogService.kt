@@ -214,9 +214,9 @@ class HentBehandlerDialogService(
     }
 
     private fun hentSaksnummerFraBehandlingsReferanse(behandlingsReferanse: UUID): Saksnummer {
-            val behandling = behandlingRepository.hent(BehandlingReferanse(behandlingsReferanse))
-            val sak = sakRepository.hent(behandling.sakId)
-            return sak.saksnummer
+        val behandling = behandlingRepository.hent(BehandlingReferanse(behandlingsReferanse))
+        val sak = sakRepository.hent(behandling.sakId)
+        return sak.saksnummer
     }
 
     private fun no.nav.aap.dokumentinnhenting.kontrakt.InnkommendeUtgående.tilResponseType(): InnkommendeUtgående {
