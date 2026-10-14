@@ -5,7 +5,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode

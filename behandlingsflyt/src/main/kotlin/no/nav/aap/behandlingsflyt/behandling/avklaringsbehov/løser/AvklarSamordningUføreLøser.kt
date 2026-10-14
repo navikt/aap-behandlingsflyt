@@ -69,7 +69,7 @@ class AvklarSamordningUføreLøser(
         val vurderinger = løsning.samordningUføreVurdering.vurderingPerioder
         val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
 
-        val harVurdertAllePerioder = uføreGrunnlag?.vurderinger.orEmpty()
+        val harVurdertAllePerioder = uføreGrunnlag?.vedtak.orEmpty()
             .filter { it.uføregradTom == null || it.uføregradTom >= rettighetsperiode.fom }
             .all { uføre ->
                 vurderinger.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt }

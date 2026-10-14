@@ -5,10 +5,12 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar as ArenaVilkarKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose as ArenaDiagnoseKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiodesyklusInformasjonskrav
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Factory
 import java.time.DayOfWeek
@@ -57,6 +59,10 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
         )
     }
 
+    override fun hentRefusjonskrav(saksnummerArena: String): ArenaRefusjonskravResponse {
+        return ArenaRefusjonskravResponse(refusjonskrav = null)
+    }
+
     override fun hentSykdomsvurdering(saksnummerArena: String): ArenaSykdomsvurderingResponse {
         return ArenaSykdomsvurderingResponse(
             vedtakId = 1,
@@ -96,5 +102,9 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 )
             )
         )
+    }
+
+    override fun hentArenaMeldekortsyklus(ident: Ident): ArenaMeldeperiodesyklusInformasjonskrav.Registerdata {
+        return ArenaMeldeperiodesyklusInformasjonskrav.IngenSyklus
     }
 }

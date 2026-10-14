@@ -60,7 +60,7 @@ enum class Vurderingsbehov {
     FASTSATT_PERIODE_PASSERT,
 
     /**
-     * Blir trigget av [no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingFritakMeldepliktJobbUtfører].
+     * Blir trigget av [no.nav.aap.meldeplikt.OpprettBehandlingFritakMeldepliktJobbUtfører].
      */
     FRITAK_MELDEPLIKT,
 

@@ -12,6 +12,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.meldeplikt.OpprettJobbForFritakMeldepliktJobbUtfører
 
 class OpprettJobbForFritakMeldepliktJobbUtførerTest {
     private val sakId = SakId(12345L)

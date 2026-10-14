@@ -1,0 +1,62 @@
+package no.nav.aap.bistandsbehov
+
+import no.nav.aap.behandlingsflyt.VurderingDto
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import java.time.LocalDate
+
+data class BistandVurderingResponse(
+    val begrunnelse: String,
+    val erBehovForAktivBehandling: Boolean,
+    val erBehovForArbeidsrettetTiltak: Boolean,
+    val erBehovForAnnenOppfølging: Boolean?,
+    val overgangBegrunnelse: String?,
+    val skalVurdereAapIOvergangTilArbeid: Boolean?,
+    override val fom: LocalDate,
+    override val tom: LocalDate?,
+    override val vurderingerMeta: VurderingerMetaResponse,
+) : VurderingDto {
+    companion object {
+        fun fraDomene(
+            tidslinje: Tidslinje<Bistandsvurdering>,
+            vurdertAvService: VurdertAvService,
+        ): List<BistandVurderingResponse> {
+            val segmenter = tidslinje.segmenter().toList()
+            return segmenter
+                .mapIndexed { index, segment ->
+                    fraDomene(
+                        bistandsvurdering = segment.verdi,
+                        vurdertAvService = vurdertAvService,
+                        fom = segment.fom(),
+                        tom = if (index == segmenter.size - 1)
+                            segment.verdi.tom
+                        else
+                            segment.tom(),
+                    )
+                }
+        }
+
+        fun fraDomene(
+            bistandsvurdering: Bistandsvurdering,
+            vurdertAvService: VurdertAvService,
+            fom: LocalDate = bistandsvurdering.fom,
+            tom: LocalDate? = null
+        ) = BistandVurderingResponse(
+            begrunnelse = bistandsvurdering.begrunnelse,
+            erBehovForAktivBehandling = bistandsvurdering.erBehovForAktivBehandling,
+            erBehovForArbeidsrettetTiltak = bistandsvurdering.erBehovForArbeidsrettetTiltak,
+            erBehovForAnnenOppfølging = bistandsvurdering.erBehovForAnnenOppfølging,
+            fom = fom,
+            tom = tom,
+            skalVurdereAapIOvergangTilArbeid = bistandsvurdering.skalVurdereAapIOvergangTilArbeid,
+            overgangBegrunnelse = bistandsvurdering.overgangBegrunnelse,
+            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
+                behandlingId = bistandsvurdering.vurdertIBehandling,
+                vurdertAv = vurdertAvService.medNavnOgEnhet(bistandsvurdering.vurdertAv, bistandsvurdering.opprettet),
+            ),
+        )
+    }
+}

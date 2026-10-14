@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.prosessering.statistikk.ResendStatistikkJobbUt
 import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.SendFagsysteminfoBehovTilTilbakekrevingUtfører
 import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.meldeplikt.OpprettBehandlingFritakMeldepliktJobbUtfører
+import no.nav.aap.meldeplikt.OpprettJobbForFritakMeldepliktJobbUtfører
 import no.nav.aap.motor.JobbSpesifikasjon
 
 object ProsesseringsJobber {

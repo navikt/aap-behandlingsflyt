@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
@@ -29,7 +29,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadReposi
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser

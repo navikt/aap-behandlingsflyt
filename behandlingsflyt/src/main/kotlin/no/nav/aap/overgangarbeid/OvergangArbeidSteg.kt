@@ -77,7 +77,7 @@ class OvergangArbeidSteg internal constructor(
             .orEmpty()
 
         val uføreTidslinje =
-            uføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.tilTidslinje().orEmpty()
+            uføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vedtak?.tilTidslinje().orEmpty()
 
         val forutgåendeRettBistandsbehov =
             utfall.mapValue { it is TidligereVurderinger.PotensieltOppfylt && it.rettighetstype == RettighetsType.BISTANDSBEHOV }

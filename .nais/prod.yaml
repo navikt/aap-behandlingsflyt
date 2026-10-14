@@ -250,6 +250,8 @@ spec:
       value: 785e7a77-8976-4e4e-b620-d7b3731076aa
     - name: INTEGRASJON_SAKSBEHANDLING_AZP
       value: 10269c6f-313a-44d0-9145-c4ba26177928
+    - name: INTEGRASJON_SAKSBEHANDLING_URL
+      value: https://kelvin.intern.nav.no
     - name: INTEGRASJON_NOM_URL
       value: http://nom-api.nom/graphql
     - name: INTEGRASJON_NOM_SCOPE

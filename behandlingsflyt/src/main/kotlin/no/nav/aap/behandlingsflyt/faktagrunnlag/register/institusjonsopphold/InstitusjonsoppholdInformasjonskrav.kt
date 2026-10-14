@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.finnRelevanteInnenforPeriode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -19,8 +20,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
@@ -82,11 +86,12 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     }
 
     private fun hentInstitusjonsopphold(sak: Sak): List<Institusjonsopphold> {
-        return institusjonsoppholdRegisterGateway
+        val gyldigeOpphold = institusjonsoppholdRegisterGateway
             .innhent(sak.person)
             .filter {
                 try {
-                    it.periode().overlapper(sak.rettighetsperiode)
+                    it.periode()
+                    true
                 } catch (e: IllegalArgumentException) {
                     logger.error(
                         "Ugyldig periode for institusjonsopphold funnet i sak ${sak.id} og ignoreres (startdato=${it.startdato}, sluttdato=${it.sluttdato}",
@@ -95,6 +100,12 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
                     false
                 }
             }
+
+        return if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
+            finnRelevanteOpphold(gyldigeOpphold, sak.rettighetsperiode)
+        } else {
+            gyldigeOpphold.filter { it.periode().overlapper(sak.rettighetsperiode) }
+        }
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
@@ -135,6 +146,18 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         ): Boolean {
             val oppholdeneFraRegister = Oppholdene(opphold = institusjonsopphold.map { it.tilInstitusjonSegment() })
             return eksisterendeGrunnlag == null || eksisterendeGrunnlag.oppholdene != oppholdeneFraRegister
+        }
+
+        fun finnRelevanteOpphold(
+            alleOpphold: List<Institusjonsopphold>,
+            rettighetsperiode: Periode
+        ): List<Institusjonsopphold> {
+            return finnRelevanteInnenforPeriode(
+                alleOpphold,
+                rettighetsperiode,
+                { it.startdato },
+                { it.sluttdato ?: Tid.MAKS }
+            ) { periode, nesteFom -> !nesteFom.isAfter(periode.tom) }
         }
     }
 }

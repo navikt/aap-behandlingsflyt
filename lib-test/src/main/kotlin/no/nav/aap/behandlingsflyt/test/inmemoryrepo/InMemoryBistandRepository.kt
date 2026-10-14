@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.bistandsbehov.BistandGrunnlag
+import no.nav.aap.bistandsbehov.BistandRepository
+import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap

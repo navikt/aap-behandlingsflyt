@@ -4,10 +4,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.meldeplikt.MeldeperiodeRepository
+import no.nav.aap.meldeplikt.Fritaksvurdering
+import no.nav.aap.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.meldeplikt.OpprettBehandlingFritakMeldepliktJobbUtfører
 import no.nav.aap.motor.JobbInput
 import java.time.LocalDate
 import java.time.LocalDateTime
