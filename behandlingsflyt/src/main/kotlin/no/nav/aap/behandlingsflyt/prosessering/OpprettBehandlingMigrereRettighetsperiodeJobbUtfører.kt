@@ -21,7 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Tid
@@ -225,19 +225,23 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     ) {
         val tilkjentYtelseEffektivDagsatsFør =
             tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)
-                ?.somTidslinje({ it.periode }, {
+                .orEmpty()
+                .map { periode, tilkjent ->
                     // Tidligere i Kelvin ble dagsats satt til en verdi frem i tid, dette er feil og skjer ikke lenger.
                     // Da må vi sammenligne med det som BURDE vært dagsats
-                    if (it.periode.fom > LocalDate.now()) Beløp(0) else it.tilkjent.redusertDagsats()
-                })?.komprimer()
-                ?.segmenter()?.toList()
-                ?: emptyList()
+                    if (periode.fom > LocalDate.now()) Beløp(0) else tilkjent.redusertDagsats()
+                }
+                .komprimer()
+                .segmenter()
+                .toList()
         // Før fikk man satt dagsats i tilkjent ytelse frem i tid - dette bør ikke skje
         val tilkjentYtelseEffektivDagsatsEtter =
             tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)
-                ?.somTidslinje({ it.periode }, { it.tilkjent.redusertDagsats() })?.komprimer()
-                ?.segmenter()?.toList()
-                ?: emptyList()
+                .orEmpty()
+                .map { tilkjent -> tilkjent.redusertDagsats() }
+                .komprimer()
+                .segmenter()
+                .toList()
         secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseEffektivDagsatsFør og etter=$tilkjentYtelseEffektivDagsatsEtter")
         if (skalIgnorereTilkjentYtelseSjekk(sak)) {
             return

@@ -3,7 +3,6 @@ package no.nav.aap.barnetillegg
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.BarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.PeriodeMedBeløp
@@ -11,6 +10,7 @@ import no.nav.aap.behandlingsflyt.hendelse.datadeling.utledBarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -29,8 +29,8 @@ class BarnMedBarnetilleggTest {
     fun `barn med ident får riktig gradert beløp for hele perioden når periodene er like`() {
         val periode = Periode(1 januar 2024, 31 januar 2024)
         val sats = Beløp(38)
-        val tilkjentYtelse = listOf(
-            TilkjentYtelsePeriode(periode, tilkjent(gradering = Prosent.`50_PROSENT`, barnetilleggsats = sats))
+        val tilkjentYtelse = tidslinjeOf(
+            periode to tilkjent(gradering = Prosent.`50_PROSENT`, barnetilleggsats = sats)
         )
         val grunnlag = BarnetilleggGrunnlag(listOf(BarnetilleggPeriode(periode, setOf(barnMedIdent))))
 
@@ -61,9 +61,9 @@ class BarnMedBarnetilleggTest {
         val januarPeriode = Periode(1 januar 2024, 31 januar 2024)
         val februarPeriode = Periode(1 februar 2024, 29 februar 2024)
 
-        val tilkjentYtelse = listOf(
-            TilkjentYtelsePeriode(januarPeriode, tilkjent(gradering = Prosent.`100_PROSENT`)),
-            TilkjentYtelsePeriode(februarPeriode, tilkjent(gradering = Prosent.`50_PROSENT`)),
+        val tilkjentYtelse = tidslinjeOf(
+            januarPeriode to tilkjent(gradering = Prosent.`100_PROSENT`),
+            februarPeriode to tilkjent(gradering = Prosent.`50_PROSENT`),
         )
         val grunnlag = BarnetilleggGrunnlag(
             listOf(BarnetilleggPeriode(heleRettighetsperioden, setOf(barnMedIdent)))
@@ -105,8 +105,8 @@ class BarnMedBarnetilleggTest {
         val januarPeriode = Periode(1 januar 2024, 31 januar 2024)
         val februarPeriode = Periode(1 februar 2024, 29 februar 2024)
 
-        val tilkjentYtelse = listOf(
-            TilkjentYtelsePeriode(heleTilkjentPerioden, tilkjent())
+        val tilkjentYtelse = tidslinjeOf(
+            heleTilkjentPerioden to tilkjent()
         )
         val grunnlag = BarnetilleggGrunnlag(
             listOf(
@@ -159,9 +159,9 @@ class BarnMedBarnetilleggTest {
         val februarPeriode = Periode(1 februar 2024, 29 februar 2024)
         val heleRettighetsperioden = Periode(1 januar 2024, 29 februar 2024)
 
-        val tilkjentYtelse = listOf(
-            TilkjentYtelsePeriode(januarPeriode, tilkjent(redusertDagsats = Beløp(0))),
-            TilkjentYtelsePeriode(februarPeriode, tilkjent(redusertDagsats = Beløp(100))),
+        val tilkjentYtelse = tidslinjeOf(
+            januarPeriode to tilkjent(redusertDagsats = Beløp(0)),
+            februarPeriode to tilkjent(redusertDagsats = Beløp(100)),
         )
         val grunnlag = BarnetilleggGrunnlag(listOf(BarnetilleggPeriode(heleRettighetsperioden, setOf(barnMedIdent))))
 
@@ -212,4 +212,3 @@ class BarnMedBarnetilleggTest {
         redusertDagsats = redusertDagsats
     )
 }
-

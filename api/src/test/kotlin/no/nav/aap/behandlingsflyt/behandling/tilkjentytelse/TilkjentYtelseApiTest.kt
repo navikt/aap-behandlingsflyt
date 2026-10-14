@@ -27,6 +27,8 @@ import no.nav.aap.behandlingsflyt.utils.diff.Endret
 import no.nav.aap.behandlingsflyt.utils.diff.Fjernet
 import no.nav.aap.behandlingsflyt.utils.diff.LagtTil
 import no.nav.aap.behandlingsflyt.utils.diff.Uendret
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -67,9 +69,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiode.fom)
 
-            val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->
+            val tilkjentYtelsePerioder = Tidslinje(perioder.mapIndexed { index, periode ->
                 lagTilkjentYtelsePeriode(periode, tilkjentYtelseVerdi, index)
-            }
+            })
 
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
@@ -181,9 +183,9 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             InMemoryMeldeperiodeRepository.lagreFastsattDag(behandling.id, perioder.first().fom)
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiode.fom)
-            val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->
+            val tilkjentYtelsePerioder = Tidslinje(perioder.mapIndexed { index, periode ->
                 lagTilkjentYtelsePeriode(periode, tilkjentYtelseVerdi, index)
-            }
+            })
 
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
@@ -233,17 +235,17 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiodeB1.fom)
 
-            val tilkjentYtelsePerioderFørsteBehandling = perioderFørsteBehandling.mapIndexed { index, periode ->
+            val tilkjentYtelsePerioderFørsteBehandling = Tidslinje(perioderFørsteBehandling.mapIndexed { index, periode ->
                 lagTilkjentYtelsePeriode(
                     periode,
                     tilkjentYtelseVerdi,
                     (index + 1) * (index + 1)
                 )  // Hack for at første periode skal bli uendret til neste behandling, men andre periode endres
-            }
+            })
 
-            val tilkjentYtelsePerioderAndreBehandling = perioderAndreBehandling.mapIndexed { index, periode ->
+            val tilkjentYtelsePerioderAndreBehandling = Tidslinje(perioderAndreBehandling.mapIndexed { index, periode ->
                 lagTilkjentYtelsePeriode(periode, tilkjentYtelseVerdi, index)
-            }
+            })
 
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
@@ -449,12 +451,12 @@ class TilkjentYtelseApiTest : BaseApiTest() {
         periode: Periode,
         tilkjentYtelseVerdi: Tilkjent,
         index: Int
-    ): TilkjentYtelsePeriode = TilkjentYtelsePeriode(
+    ): Segment<Tilkjent> = Segment(
         Periode(
             fom = periode.fom,
             tom = periode.tom,
         ),
-        tilkjent = tilkjentYtelseVerdi.copy(
+        tilkjentYtelseVerdi.copy(
             dagsats = Beløp(400 + index * 100.00.toLong()),
             redusertDagsats = null
         )
