@@ -1,37 +1,38 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentForRedusertDagsatsBackfill
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
     private data class LagretTilkjentYtelse(
         val id: Long,
-        val periode: TilkjentYtelsePeriode,
+        val tilkjent: Tilkjent,
     )
 
-    private val tilkjentYtelse = ConcurrentHashMap<BehandlingId, List<LagretTilkjentYtelse>>()
+    private val tilkjentYtelse = ConcurrentHashMap<BehandlingId, Tidslinje<LagretTilkjentYtelse>>()
     private val tilkjentPeriodeId = AtomicLong()
     private val lock = Any()
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TilkjentYtelsePeriode>? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): Tidslinje<Tilkjent>? {
         synchronized(lock) {
-            return tilkjentYtelse[behandlingId]?.map { it.periode }
+            return tilkjentYtelse[behandlingId]?.map { it.tilkjent }
         }
     }
 
     override fun hentTilkjentUtenRedusertDagsats(behandlingId: BehandlingId): List<TilkjentForRedusertDagsatsBackfill> {
         synchronized(lock) {
             return tilkjentYtelse[behandlingId].orEmpty()
-                .filter { it.periode.tilkjent.redusertDagsatsOrNull() == null }
-                .map { lagret ->
-                    val tilkjent = lagret.periode.tilkjent
+                .filter { (_, lagretTilkjent) -> lagretTilkjent.tilkjent.redusertDagsatsOrNull() == null }
+                .map { (id, tilkjent) ->
                     TilkjentForRedusertDagsatsBackfill(
-                        tilkjentPeriodeId = lagret.id,
+                        tilkjentPeriodeId = id,
                         dagsats = tilkjent.dagsats,
                         barnetillegg = tilkjent.barnetillegg,
                         barnepensjonDagsats = tilkjent.barnepensjonDagsats,
@@ -39,12 +40,13 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
                         redusertDagsats = tilkjent.redusertDagsatsOrNull()
                     )
                 }
+                .verdier().toList()
         }
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
-        tilkjent: List<TilkjentYtelsePeriode>,
+        tilkjent: Tidslinje<Tilkjent>,
         faktagrunnlag: TilkjentYtelseGrunnlag,
         versjon: String
     ) {
@@ -65,12 +67,10 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
                     if (kandidat == null) {
                         eksisterende
                     } else {
-                        val periode = eksisterende.periode
-                        val oppdatertTilkjent = periode.tilkjent.copy(
+                        val oppdatertTilkjent = eksisterende.tilkjent.copy(
                             redusertDagsats = kandidat.redusertDagsats
                         )
-                        val oppdatertPeriode = periode.copy(tilkjent = oppdatertTilkjent)
-                        eksisterende.copy(periode = oppdatertPeriode)
+                        eksisterende.copy(tilkjent = oppdatertTilkjent)
                     }
                 }
                 tilkjentYtelse[behandlingId] = oppdatertePerioder

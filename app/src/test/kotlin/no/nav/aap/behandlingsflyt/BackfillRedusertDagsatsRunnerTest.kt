@@ -6,7 +6,6 @@ import ch.qos.logback.core.read.ListAppender
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -23,6 +22,7 @@ import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -154,23 +154,20 @@ class BackfillRedusertDagsatsRunnerTest {
     ) {
         TilkjentYtelseRepositoryImpl(connection).lagre(
             behandlingId,
-            listOf(
-                TilkjentYtelsePeriode(
-                    periode = Periode(dato, dato.plusDays(30)),
-                    tilkjent = Tilkjent(
-                        dagsats = Beløp(1000),
-                        gradering = Prosent.`100_PROSENT`,
-                        graderingGrunnlag = graderingUtenReduksjon(),
-                        barnetillegg = Beløp(0),
-                        grunnlagsfaktor = GUnit("1.0"),
-                        grunnbeløp = Beløp(1000),
-                        antallBarn = 0,
-                        barnetilleggsats = Beløp(0),
-                        barnepensjonDagsats = Beløp(0),
-                        utbetalingsdato = dato.plusDays(14),
-                        minsteSats = Minstesats.IKKE_MINSTESATS,
-                        redusertDagsats = null,
-                    )
+            tidslinjeOf(
+                Periode(dato, dato.plusDays(30)) to Tilkjent(
+                    dagsats = Beløp(1000),
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = graderingUtenReduksjon(),
+                    barnetillegg = Beløp(0),
+                    grunnlagsfaktor = GUnit("1.0"),
+                    grunnbeløp = Beløp(1000),
+                    antallBarn = 0,
+                    barnetilleggsats = Beløp(0),
+                    barnepensjonDagsats = Beløp(0),
+                    utbetalingsdato = dato.plusDays(14),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = null,
                 )
             ),
             tomtTilkjentYtelseGrunnlag,

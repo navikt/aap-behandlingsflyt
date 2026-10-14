@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -110,7 +109,7 @@ class BeregnTilkjentYtelseSteg private constructor(
 
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,
-            tilkjent = beregnetTilkjentYtelse.segmenter().map { TilkjentYtelsePeriode(it.periode, it.verdi) },
+            tilkjent = beregnetTilkjentYtelse,
             faktagrunnlag = grunnlag,
             versjon = ApplikasjonsVersjon.versjon,
         )

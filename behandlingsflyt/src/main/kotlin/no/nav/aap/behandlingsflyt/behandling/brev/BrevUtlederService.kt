@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
@@ -564,7 +563,7 @@ class BrevUtlederService(
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
         // TODO: tilkjentYtelseRepository kalles også i utledTilkjentYtelse — trekk hentingen opp til kallstedet og send ned til begge
         val minstesats = if (Miljø.erDev()) dato?.let {
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje()?.segment(it)?.verdi?.minsteSats
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.segment(it)?.verdi?.minsteSats
         } else null
 
         return when (grunnlag) {
@@ -709,7 +708,7 @@ class BrevUtlederService(
          */
 
         val tilkjentYtelseTidslinje =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje() ?: return null
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId) ?: return null
         val underveidGrunnlag = underveisRepository.hent(behandlingId)
         val underveisTidslinje = Tidslinje(underveidGrunnlag.perioder.map { Segment(it.periode, it) })
 
