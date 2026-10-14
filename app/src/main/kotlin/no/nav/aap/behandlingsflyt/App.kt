@@ -253,6 +253,7 @@ internal fun Application.server(
     TilgangGateway.initialiserPrometheus(prometheus)
 
     BackfillStansOpphør(fellesDataSource, gatewayProvider).kjør()
+    BackfillRedusertDagsats(fellesDataSource, gatewayProvider).kjør()
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
