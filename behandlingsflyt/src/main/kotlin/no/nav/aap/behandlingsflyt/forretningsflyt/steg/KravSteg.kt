@@ -49,12 +49,12 @@ class KravSteg(
     private val arenaMigreringService: ArenaMigreringService
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
-    
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         // Migreringssaker har egne krav, kunne vært i den normale switch-casen, men vi ønsker at disse alltid
         // skal gå gjennom selv om feature-toggelen under er skrudd av så lenge krav-steget er skrudd på
         // så midlertidig legges koden fort sette her for å være utenfor feature-toggelen.
-        if(kontekst.erMigreringFraArena()) {
+        if (kontekst.erMigreringFraArena()) {
             val migrerKravAutomatisk = unleashGateway.isEnabled(BehandlingsflytFeature.MigrererKravFraArenaAutomatisk)
             if (migrerKravAutomatisk) {
                 migrerStegFraArena(kontekst)
@@ -74,9 +74,7 @@ class KravSteg(
             "saksnummer"
         ) { sakRepository.hent(kontekst.sakId).saksnummer }
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.KravAutomatiskVurdering)
-            && !erManuellVurderingAktivertForSak
-        ) {
+        if (!erManuellVurderingAktivertForSak) {
             vurderHelautomatisk(kontekst)
         }
 
@@ -181,7 +179,7 @@ class KravSteg(
 
         val søknaderMottattIBehandling =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
-        
+
         val alleDokumenter = (søknaderMottattIBehandling)
             .sortedBy { it.mottattTidspunkt }
 
@@ -213,7 +211,7 @@ class KravSteg(
 
         val vurderinger = alleDokumenter.mapIndexedNotNull { index, dokument ->
             val erNyttKrav = dokumentSomOvertarSomKrav?.referanse == dokument.referanse
-                || (gjeldendeKravFraForrige == null && index == 0)
+                    || (gjeldendeKravFraForrige == null && index == 0)
             when {
                 erNyttKrav -> nyttKrav(kontekst.behandlingId, dokument, gjeldendeOverstyring)
                 else -> tilleggsopplysning(kontekst.behandlingId, dokument)
