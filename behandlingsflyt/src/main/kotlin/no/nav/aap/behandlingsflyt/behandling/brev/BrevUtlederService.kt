@@ -473,7 +473,8 @@ class BrevUtlederService(
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
         }
-        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
+        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering, avslagsårsak = avslagsårsak,
+            avslagsårsaker = alleAvslagsårsaker)
     }
 
     private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
