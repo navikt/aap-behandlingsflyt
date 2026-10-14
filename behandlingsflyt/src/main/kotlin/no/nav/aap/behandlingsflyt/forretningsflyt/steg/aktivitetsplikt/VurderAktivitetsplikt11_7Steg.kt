@@ -32,7 +32,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class VurderAktivitetsplikt11_7Steg(
-    private val unleashGateway: UnleashGateway,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val behandlingRepository: BehandlingRepository,
@@ -47,11 +46,12 @@ class VurderAktivitetsplikt11_7Steg(
             aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
         val venteBehov =
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
+        val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.VURDER_BRUDD_11_7,
             vedtakBehøverVurdering = { vedtakBehøver11_7Vurdering(kontekst) },
-            erTilstrekkeligVurdert = { er11_7TilstrekkeligVurdert(kontekst, vurderingForBehandling, venteBehov) },
+            erTilstrekkeligVurdert = { er11_7TilstrekkeligVurdert(kontekst, vurderingForBehandling, venteBehov, varsel) },
             tilbakestillGrunnlag = { },
             kontekst = kontekst
         )
@@ -64,7 +64,6 @@ class VurderAktivitetsplikt11_7Steg(
             kontekst = kontekst
         )
 
-        val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
         if (skalVentePåFristFraForhåndsvarsel(kontekst, varsel, vurderingForBehandling, venteBehov)) {
             return FantVentebehov(opprettVentebehov(varsel))
 
@@ -137,13 +136,16 @@ class VurderAktivitetsplikt11_7Steg(
     private fun er11_7TilstrekkeligVurdert(
         kontekst: FlytKontekstMedPerioder,
         vurderingForBehandling: Aktivitetsplikt11_7Vurdering?,
-        venteBehov: Avklaringsbehov?
+        venteBehov: Avklaringsbehov?,
+        varsel: Aktivitetsplikt11_7Varsel?
     ): Boolean {
         if (vurderingForBehandling == null) {
             return false
         } else if (vurderingForBehandling.erOppfylt) {
             return true
         } else if (erForhåndsvarselTilstrekkeligVurdert(kontekst)  && erTattAvVentFørFristenPåForhåndsvarsel(kontekst, vurderingForBehandling, venteBehov)) {
+            return false
+        } else if (erForhåndsvarselTilstrekkeligVurdert(kontekst) && skalVentePåFristFraForhåndsvarsel(kontekst, varsel, vurderingForBehandling, venteBehov )) {
             return false
         }
         return true
@@ -214,7 +216,6 @@ class VurderAktivitetsplikt11_7Steg(
             gatewayProvider: GatewayProvider
         ): VurderAktivitetsplikt11_7Steg {
             return VurderAktivitetsplikt11_7Steg(
-                unleashGateway = gatewayProvider.provide(),
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 aktivitetsplikt11_7Repository = repositoryProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
