@@ -74,8 +74,6 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
                 tilkjent = tilkjentYtelsePerioder,
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = ""
             )
 
             InMemoryMeldekortRepository.lagre(
@@ -188,8 +186,6 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
                 tilkjent = tilkjentYtelsePerioder,
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = ""
             )
 
             InMemoryUnderveisRepository.lagre(
@@ -248,15 +244,11 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
                 tilkjent = tilkjentYtelsePerioderFørsteBehandling,
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = ""
             )
 
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling2.id,
                 tilkjent = tilkjentYtelsePerioderAndreBehandling,
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = ""
             )
 
             val meldekortPeriode = Periode(

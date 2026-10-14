@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
@@ -238,8 +237,6 @@ class UnderveisRepositoryImplGJusteringTest {
                         grunnbeløp = nyttGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -275,8 +272,6 @@ class UnderveisRepositoryImplGJusteringTest {
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -315,8 +310,6 @@ class UnderveisRepositoryImplGJusteringTest {
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -354,8 +347,6 @@ class UnderveisRepositoryImplGJusteringTest {
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -392,8 +383,6 @@ class UnderveisRepositoryImplGJusteringTest {
                         grunnbeløp = nyttGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 

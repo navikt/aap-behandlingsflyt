@@ -1,13 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
-import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -816,8 +814,6 @@ class BrevUtlederServiceTest {
                         tilkjentYtelseDto(Beløp("1000.00"), periode.tom).copy(minsteSats = minstesats)
                     )
                 ),
-                mockk<TilkjentYtelseGrunnlag>(),
-                ""
             )
             return behandling
         }
@@ -962,8 +958,6 @@ class BrevUtlederServiceTest {
             tilkjentYtelseRepository.lagre(
                 behandling.id,
                 stubTilkjentYtelse(dagsats),
-                mockk<TilkjentYtelseGrunnlag>(),
-                ""
             )
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
