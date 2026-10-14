@@ -39,8 +39,8 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker) {
-        if (definisjon.erFrivillig() && definisjon in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov) {
+    fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker, legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>) {
+        if (definisjon.erFrivillig() && definisjon in legacyAutomatiskFrivillgeAvklaringsbehov) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
                 leggTil(
@@ -452,10 +452,16 @@ class Avklaringsbehovene(
         return "Behov[${avklaringsbehovene.joinToString { it.toString() }}. For ID $behandlingId.]"
     }
 
-    fun allePlussFrivillige(behandling: Behandling): List<Avklaringsbehov> {
+    fun allePlussFrivillige(
+        behandling: Behandling,
+        legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>
+    ): List<Avklaringsbehov> {
         val eksisterendeBehov = alle()
         val flyt = behandling.flyt()
-        val list = flyt.frivilligeAvklaringsbehovRelevantForFlyten(behandling.aktivtSteg())
+        val list = flyt.frivilligeAvklaringsbehovRelevantForFlyten(
+            behandling.aktivtSteg(),
+            legacyAutomatiskFrivillgeAvklaringsbehov
+        )
             .filter { definisjon -> eksisterendeBehov.none { behov -> behov.definisjon == definisjon } }
             .map { definisjon ->
                 Avklaringsbehov(

@@ -116,7 +116,14 @@ fun NormalOpenAPIRoute.flytApi(
 
                     val vurdertStegPair =
                         utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
-                    val alleAvklaringsbehov = avklaringsbehovene.allePlussFrivillige(behandling)
+                    
+                    val legacyFrivillige = if (unleashGateway.isEnabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
+                        Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov + Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND
+                    } else {
+                        Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
+                    }
+                    
+                    val alleAvklaringsbehov = avklaringsbehovene.allePlussFrivillige(behandling, legacyFrivillige)
                     val resultatKode = when {
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
                             behandling

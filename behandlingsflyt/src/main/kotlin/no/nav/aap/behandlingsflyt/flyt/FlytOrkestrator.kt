@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -337,8 +338,15 @@ class FlytOrkestrator(
 
     private fun opprettAvklaringsbehovHvisMangler(behovDefinisjon: Definisjon, kontekst: FlytKontekst, bruker: Bruker) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        val legacyFrivillige = if (unleashGateway.isEnabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
+            Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov + Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND
+        } else {
+            Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
+        }
+
         if (avklaringsbehovene.hentBehovForDefinisjon(behovDefinisjon) == null) {
-            avklaringsbehovene.leggTilFrivilligHvisMangler(behovDefinisjon, bruker)
+            avklaringsbehovene.leggTilFrivilligHvisMangler(behovDefinisjon, bruker, legacyFrivillige)
             avklaringsbehovene.leggTilOverstyringHvisMangler(behovDefinisjon, bruker)
         }
     }

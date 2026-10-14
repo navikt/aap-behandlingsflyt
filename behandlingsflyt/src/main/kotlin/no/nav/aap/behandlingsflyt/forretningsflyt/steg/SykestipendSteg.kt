@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -26,6 +28,7 @@ class SykestipendSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårService: VilkårService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -34,27 +37,72 @@ class SykestipendSteg private constructor(
     ) : this(
         studentRepository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
         tidligereVurderinger = tidligereVurderinger,
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         vilkårService = VilkårService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        avklaringsbehovService.oppdaterAvklaringsbehovMedGrad(
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
+            avklaringsbehovService.oppdaterAvklaringsbehovMedGrad(
+                definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
+                behov = { utledBehov(kontekst) },
+                erTilstrekkeligVurdert = {
+                    sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null
+                },
+                tilbakestillGrunnlag = {
+                    // Manuelt frivillige skal ikke tilbakestilles
+                },
+                kontekst
+            )
+
+        } else {
+            avklaringsbehovServiceGammel(kontekst)
+        }
+
+        vurderSamordningAnnenLovgivningVilkår(kontekst)
+
+        return Fullført
+    }
+
+    private fun avklaringsbehovServiceGammel(kontekst: FlytKontekstMedPerioder) {
+        avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
-            behov = { utledBehov(kontekst) },
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA -> {
+                        val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                                && (studentGrunnlag.skalVurdereStudent() || studentGrunnlag?.gjeldendeStudentvurderinger()
+                            ?.any { it.erOppfylt() } == true)
+                    }
+
+                    VurderingType.REVURDERING ->
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                                && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
+                    VurderingType.MELDEKORT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.AUTOMATISK_BREV,
+                    VurderingType.G_REGULERING,
+                    VurderingType.OVERGANG_UFORE_STANS,
+                    VurderingType.IKKE_RELEVANT ->
+                        false
+                }
+            },
             erTilstrekkeligVurdert = {
-                sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null
+                val sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId)
+                sykestipendGrunnlag != null
             },
             tilbakestillGrunnlag = {
                 // Manuelt frivillige skal ikke tilbakestilles
             },
             kontekst
         )
-
-        vurderSamordningAnnenLovgivningVilkår(kontekst)
-
-        return Fullført
     }
 
     // Bør kanskje inn i et eget steg?
