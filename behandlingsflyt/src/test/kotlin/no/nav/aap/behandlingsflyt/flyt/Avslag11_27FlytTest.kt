@@ -418,6 +418,5 @@ object Avslag11_27FlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.IngenValidering,
         BehandlingsflytFeature.Avslag11_27,
         BehandlingsflytFeature.KravSteg,
-        BehandlingsflytFeature.KravAutomatiskVurdering,
     )
 )

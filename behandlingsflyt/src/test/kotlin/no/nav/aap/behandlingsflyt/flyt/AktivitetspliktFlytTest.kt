@@ -126,7 +126,9 @@ class AktivitetspliktFlytTest :
                 )
             }
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov).hasSize(2).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VURDER_BRUDD_11_7)
+                assertThat(åpneAvklaringsbehov).hasSize(2).last().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
             }
             .løsAvklaringsBehov(avklaringsBehovLøsning = VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning())

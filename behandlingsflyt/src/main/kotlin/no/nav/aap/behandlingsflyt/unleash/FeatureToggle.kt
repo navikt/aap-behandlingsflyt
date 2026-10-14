@@ -24,16 +24,17 @@ enum class BehandlingsflytFeature(
     SynkroniserArenaMeldeperiodesyklus,
 
     // --- Krav ---
-    BackfillKrav,
     KravSteg, // Visning
-    LagreVurderRettighetsperiodeSomKrav, // Double write
-    KravAutomatiskVurdering, // Double write
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
 
     // --- Migrering ---
     MigererSykdomFraArenaAutomatisk,
+    MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
+
+    // --- Utbetaling ---
+    FjerneAvventUtbetalingForSamordningArbeidsgiver,
 
     // ------
     Avslag11_27,

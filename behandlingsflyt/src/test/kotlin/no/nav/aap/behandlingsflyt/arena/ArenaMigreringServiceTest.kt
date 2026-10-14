@@ -49,6 +49,12 @@ class ArenaMigreringServiceTest {
     }
 
     @Test
+    fun `hentRefusjonskrav returnerer svaret fra Arena`() {
+        val respons = service.hentRefusjonskrav(sakId)
+        assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentRefusjonskrav("2018-123456").tilDomene())
+    }
+
+    @Test
     fun `hentKravDataForSak returnerer svaret fra Arena`() {
         val respons = service.hentKravDataForSak(sakId)
         assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentKravDataForSak("2018-123456").tilDomene())
