@@ -95,6 +95,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringsdataRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.test.TestAutomatiskMeldekortSakRepositoryImpl
+import no.nav.aap.etterlevelse.sporing.SporingRepositoryImpl
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 
@@ -195,3 +196,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<ArenaMaksdatoRepositoryImpl>()
     .register<KandidatForPåminnelseRepositoryImpl>()
     .register<LovvalgDelvurderingRepositoryImpl>()
+    .register<SporingRepositoryImpl>()
