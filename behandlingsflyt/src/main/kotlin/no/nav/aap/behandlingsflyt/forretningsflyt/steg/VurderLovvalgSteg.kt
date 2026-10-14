@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService.Tilstand
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -40,6 +39,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
+import kotlin.collections.isNotEmpty
+import kotlin.collections.orEmpty
 
 class VurderLovvalgSteg internal constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -84,13 +85,17 @@ class VurderLovvalgSteg internal constructor(
             mittAvklaringsbehov
         )
 
+
+        /**
+         *
+         */
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING -> {
                 // TODO: Automatisk vurdering (og delvurderinger) bør egentlig være input til faktagrunnlaget, ikke motsatt
-                lagreAutomatiskVurdering(kontekst, hentFaktaGrunnlag(kontekst.sakId, kontekst.behandlingId))
+                automatiskVurdering(kontekst, hentFaktaGrunnlag(kontekst.sakId, kontekst.behandlingId))
 
                 val relevant: Tidslinje<Unit> = TODO()
 
@@ -100,7 +105,7 @@ class VurderLovvalgSteg internal constructor(
                 ) { erRelevant, vurdering ->
                     when {
                         erRelevant != null && vurdering == null -> AvklaringsbehovService.VurderingTilstand.VURDERING_MANGLER
-                        vurdering?.erAutomatiskVurdert() == true /*&& nye_opplysninger_som_tilsier_at_vurderingen_er_feil */-> AvklaringsbehovService.VurderingTilstand.VURDERING_MANGLER
+                        vurdering?.erAutomatiskVurdert() == true /*&& nye_opplysninger_som_tilsier_at_vurderingen_er_feil */ -> AvklaringsbehovService.VurderingTilstand.VURDERING_MANGLER
                         vurdering?.erAutomatiskVurdert() == true -> AvklaringsbehovService.VurderingTilstand.VURDERING_OK
                         else -> AvklaringsbehovService.VurderingTilstand.VURDERING_OK
                     }
@@ -183,7 +188,7 @@ class VurderLovvalgSteg internal constructor(
      *
      * Kjører ikke automatisk hvis vi har en manuell vurdering.  
      */
-    private fun lagreAutomatiskVurdering(kontekst: FlytKontekstMedPerioder, grunnlag: MedlemskapLovvalgFaktaGrunnlag) {
+    private fun automatiskVurdering(kontekst: FlytKontekstMedPerioder, grunnlag: MedlemskapLovvalgFaktaGrunnlag) {
         val eksisterende = grunnlag.medlemskapArbeidInntektGrunnlag
 
         // Kjører ikke automatisk vurdering hvis det finnes manuell vurdering
@@ -191,12 +196,16 @@ class VurderLovvalgSteg internal constructor(
         if (eksisterende?.manuelleVurderinger().orEmpty().isNotEmpty()) return
 
         val rettighetsperiode = kontekst.rettighetsperiode
+        val alleVurderingerUnntattAutomatiskVurderingIDenneBehandlingen =
+            eksisterende?.vurderinger?.filterNot { it.vurdertIBehandling == kontekst.behandlingId && it.erAutomatiskVurdert() }
+                .orEmpty()
+        val automatiskVurderingIDenneBehandlingen =
+            eksisterende?.vurderinger?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId && it.erAutomatiskVurdert() }
 
         // TODO: Bør her lagre ned delvurderingene. Disse bør også sendes med i grunnlagApi slik at de ikke utledes på nytt
-        if (!kanVurderesAutomatisk(grunnlag, rettighetsperiode)) return
 
         val begrunnelse = "Automatisk vurdert av Kelvin"
-        val automatiskVurdering = LovvalgMedlemskapVurdering(
+        val automatiskVurdering = if (kanVurderesAutomatisk(grunnlag, rettighetsperiode)) LovvalgMedlemskapVurdering(
             lovvalg = LovvalgDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR), // Litt rart at dto er del av vurdering
             medlemskap = MedlemskapDto(
                 begrunnelse,
@@ -207,22 +216,43 @@ class VurderLovvalgSteg internal constructor(
             fom = rettighetsperiode.fom,
             tom = rettighetsperiode.tom.takeIf { it != Tid.MAKS },
             vurdertIBehandling = kontekst.behandlingId,
-        )
-
-        val vurderingerUtenomIkkeVedtatteAutomatiskeVurderinger =
-            eksisterende?.vurderinger?.filterNot { it.vurdertIBehandling == kontekst.behandlingId && it.erAutomatiskVurdert() }
-                .orEmpty()
+        ) else null
 
         // TODO: Lagrer automatiske vurderinger på nytt, selv om vi finner samme resultat som forrige behandling. 
         //  Ønsker vi å gjøre det?
-        medlemskapArbeidInntektRepository.lagreVurderinger(
-            kontekst.behandlingId,
-            vurderingerUtenomIkkeVedtatteAutomatiskeVurderinger + automatiskVurdering
-        )
+        when (automatiskVurdering) {
+            null -> if (automatiskVurderingIDenneBehandlingen != null) {
+                medlemskapArbeidInntektRepository.lagreVurderinger(
+                    kontekst.behandlingId,
+                    alleVurderingerUnntattAutomatiskVurderingIDenneBehandlingen
+                )
+            }
+            else -> if (automatiskVurderingIDenneBehandlingen == null || erAutomatiskVurderingLike(automatiskVurdering, automatiskVurderingIDenneBehandlingen)) {
+                medlemskapArbeidInntektRepository.lagreVurderinger(
+                    kontekst.behandlingId,
+                    alleVurderingerUnntattAutomatiskVurderingIDenneBehandlingen + automatiskVurdering
+                )
+            }
+        }
+
+    }
+
+    /**
+     * Sjekker om automatisk vurdering er lik den som allerede finnes i denne behandlingen.
+     * Vurdert dato kan være forskjellig, men er ikke relevant for om vurderingen er lik.
+     */
+    private fun erAutomatiskVurderingLike(
+        automatiskVurdering: LovvalgMedlemskapVurdering,
+        automatiskVurderingIDenneBehandlingen: LovvalgMedlemskapVurdering
+    ): Boolean {
+        return automatiskVurdering.copy(vurdertDato = automatiskVurderingIDenneBehandlingen.vurdertDato) == automatiskVurderingIDenneBehandlingen
     }
 
     private fun kanVurderesAutomatisk(grunnlag: MedlemskapLovvalgFaktaGrunnlag, rettighetsperiode: Periode): Boolean {
-        return grunnlag.nyeSoknadGrunnlag != null // Denne gir "ikke relevant" i vilkåret. Ikke så lett å se hvorfor
+
+        return grunnlag.medlemskapArbeidInntektGrunnlag?.manuelleVurderinger().orEmpty().isEmpty() &&
+
+        grunnlag.nyeSoknadGrunnlag != null // Denne gir "ikke relevant" i vilkåret. Ikke så lett å se hvorfor
                 && MedlemskapLovvalgVurderingService()
             .vurderTilhørighet(grunnlag, rettighetsperiode)
             .kanBehandlesAutomatisk
