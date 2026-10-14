@@ -912,7 +912,9 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov).hasSize(2).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov).hasSize(2).last().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
             }
             // Ta av vent manuelt
@@ -1416,8 +1418,11 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(åpneAvklaringsbehov).hasSize(2).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(åpneAvklaringsbehov).hasSize(2).last().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
+
             }
 
         // Tilbakedater svarfrist for å kunne gå videre
