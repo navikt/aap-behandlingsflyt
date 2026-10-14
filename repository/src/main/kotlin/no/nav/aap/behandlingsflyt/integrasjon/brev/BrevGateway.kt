@@ -447,7 +447,7 @@ class BrevGateway : BrevbestillingGateway {
                 brevBehov.sykdomsvurdering?.let {
                     add(Faktagrunnlag.Sykdomsvurdering(it))
                 }
-                addAll(avslagsårsakTilFaktagrunnlag(brevBehov.avslagsårsak))
+                addAll(brevBehov.avslagsårsaker.mapNotNull { avslagsårsakTilFaktagrunnlag(it) })
             }
 
             is AvslagBrev -> buildSet {
