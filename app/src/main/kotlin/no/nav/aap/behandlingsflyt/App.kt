@@ -253,6 +253,7 @@ internal fun Application.server(
 
     BackfillStansOpphør(fellesDataSource, gatewayProvider).kjør()
     BackfillEtableringVurderinger(fellesDataSource, dryRun = true).kjør()
+    BackfillRedusertDagsats(fellesDataSource, gatewayProvider).kjør()
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")

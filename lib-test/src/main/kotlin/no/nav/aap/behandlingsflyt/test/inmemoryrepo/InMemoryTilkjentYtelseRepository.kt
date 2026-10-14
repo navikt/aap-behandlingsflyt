@@ -16,6 +16,12 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
         }
     }
 
+    override fun hentPerioderUtenRedusertDagsats(behandlingId: BehandlingId): List<TilkjentYtelsePeriode> {
+        synchronized(lock) {
+            return tilkjentYtelse[behandlingId].orEmpty().filter { it.tilkjent.redusertDagsatsOrNull() == null }
+        }
+    }
+
     override fun lagre(
         behandlingId: BehandlingId,
         tilkjent: List<TilkjentYtelsePeriode>,

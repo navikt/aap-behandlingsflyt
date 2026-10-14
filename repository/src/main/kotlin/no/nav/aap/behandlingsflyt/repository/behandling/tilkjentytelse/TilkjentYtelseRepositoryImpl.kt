@@ -213,4 +213,54 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
 
         lagre(tilBehandling, eksisterendeGrunnlag, faktaOgVersjon?.first, faktaOgVersjon?.second)
     }
+
+    override fun hentPerioderUtenRedusertDagsats(behandlingId: BehandlingId): List<TilkjentYtelsePeriode> {
+        return connection.queryList(
+            """
+            SELECT tp.*
+            FROM TILKJENT_PERIODE tp
+            JOIN TILKJENT_YTELSE ty ON ty.ID = tp.TILKJENT_YTELSE_ID
+            WHERE ty.BEHANDLING_ID = ?
+              AND tp.REDUSERT_DAGSATS IS NULL
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                TilkjentYtelsePeriode(
+                    periode = it.getPeriode("PERIODE"),
+                    Tilkjent(
+                        dagsats = Beløp(it.getInt("DAGSATS")),
+                        gradering = Prosent(it.getInt("GRADERING")),
+                        graderingGrunnlag = GraderingGrunnlag(
+                            samordningUføregradering = it.getIntOrNull("SAMORDNING_UFORE_GRADERING")
+                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            samordningArbeidsgiverGradering = it.getIntOrNull("SAMORDNING_ARBEIDSGIVER_GRADERING")
+                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")
+                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")
+                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) }
+                                ?: `0_PROSENT`,
+                            meldepliktGradering = it.getIntOrNull("MELDEPLIKT_GRADERING")
+                                ?.let { result -> Prosent(result) }
+                                ?: `0_PROSENT`,
+                        ),
+                        barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
+                        grunnlagsfaktor = GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
+                        antallBarn = it.getInt("ANTALL_BARN"),
+                        barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
+                        grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
+                        utbetalingsdato = it.getLocalDate("UTBETALINGSDATO"),
+                        minsteSats = it.getStringOrNull("MINSTESATS")?.let { Minstesats.valueOf(it) }
+                            ?: Minstesats.IKKE_MINSTESATS,
+                        redusertDagsats = it.getBigDecimalOrNull("redusert_dagsats")?.let(::Beløp),
+                        barnepensjonDagsats = Beløp(it.getBigDecimal("barnepensjon_dagsats"))
+                    )
+                )
+            }
+        }
+    }
 }
