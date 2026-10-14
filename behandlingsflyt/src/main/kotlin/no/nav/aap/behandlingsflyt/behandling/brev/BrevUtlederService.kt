@@ -391,6 +391,7 @@ class BrevUtlederService(
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
         )
         return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
