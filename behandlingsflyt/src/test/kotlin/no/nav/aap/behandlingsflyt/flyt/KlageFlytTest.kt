@@ -38,7 +38,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.svarfraandreinstans.SvarFraAndreinstansKonsekvens
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.Fagsystem
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -913,7 +912,9 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(2).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(2).last().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
             }
             // Ta av vent manuelt
@@ -1417,7 +1418,9 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                 )
             )
             .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(2).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(2).last().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
             }
 

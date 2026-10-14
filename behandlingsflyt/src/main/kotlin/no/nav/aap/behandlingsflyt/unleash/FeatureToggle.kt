@@ -26,8 +26,6 @@ enum class BehandlingsflytFeature(
 
     // --- Krav ---
     KravSteg, // Visning
-    LagreVurderRettighetsperiodeSomKrav, // Double write
-    KravAutomatiskVurdering, // Double write
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
 

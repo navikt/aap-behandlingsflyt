@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -127,8 +126,9 @@ class AktivitetspliktFlytTest :
                 )
             }
             .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).hasSize(1).first()
-                    .extracting(Avklaringsbehov::definisjon)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(2).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VURDER_BRUDD_11_7)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(2).last().extracting(Avklaringsbehov::definisjon)
                     .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
             }
             .løsAvklaringsBehov(avklaringsBehovLøsning = VentePåFristForhåndsvarselAktivitetsplikt11_7Løsning())

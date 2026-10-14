@@ -495,6 +495,9 @@ class FormkravStegTest {
         val resultat = steg.utfør(kontekst)
 
         assertThat(resultat).isInstanceOf(FantVentebehov::class.java)
+        val avklaringsbehovFormkrav = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
+            .hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV) ?: error("Fant ikke avklaringsbehov for formkrav")
+        assertThat(avklaringsbehovFormkrav.status()).isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET)
     }
 
     @Test

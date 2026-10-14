@@ -85,7 +85,7 @@ class KravStegTest {
             arenaOppslagGateway = FakeArenaOppslagGateway(),
         )
         steg = KravSteg(
-            unleashGateway = KravAutomatiskVurderingUnleash,
+            unleashGateway = AlleAvskruddUnleash,
             kravRepository = InMemoryKravRepository,
             mottattDokumentRepository = InMemoryMottattDokumentRepository,
             avklaringsbehovService = mockk(relaxed = true),
@@ -646,14 +646,7 @@ class KravStegTest {
         overstyrMuligRettFra = overstyrMuligRettFra,
         muligRettFra = overstyrMuligRettFra?.dato ?: mottattDato,
     )
-
-    private object KravAutomatiskVurderingUnleash : FakeUnleashBaseWithDefaultDisabled(
-        listOf(
-            BehandlingsflytFeature.KravSteg,
-            BehandlingsflytFeature.KravAutomatiskVurdering,
-        )
-    )
-
+    
     private object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(emptyList())
 
     private object KravMigreringAutomatiskUnleash : FakeUnleashBaseWithDefaultDisabled(

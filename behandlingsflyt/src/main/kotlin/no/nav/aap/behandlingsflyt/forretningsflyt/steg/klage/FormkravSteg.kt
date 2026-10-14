@@ -100,7 +100,7 @@ class FormkravSteg (
         grunnlag: FormkravGrunnlag?,
         venteBehov: Avklaringsbehov?,
     ): Boolean {
-        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+        if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             return true
         }
         if (grunnlag == null) {
@@ -108,6 +108,8 @@ class FormkravSteg (
         } else if (grunnlag.vurdering.erOppfylt()) {
             return true
         } else if (erTilstrekkeligVurdertForhåndsvarsel(kontekst) && erTattAvVentFørFristenPåForhåndsvarsel( grunnlag, venteBehov)) {
+            return false
+        } else if (erTilstrekkeligVurdertForhåndsvarsel(kontekst) && skalVentePåFristFraForhåndsvarsel(kontekst, grunnlag.varsel, grunnlag.vurdering, venteBehov )) {
             return false
         }
         return true
