@@ -227,9 +227,9 @@ object FakeServers : AutoCloseable {
         System.setProperty("UNLEASH_SERVER_API_TOKEN", "token-behandlingsflyt-unleash")
 
         //Azp
-        System.setProperty("INTEGRASJON_TILGANG_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_BREV_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_AZP", java.util.UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_TILGANG_AZP", UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_BREV_AZP", UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_AZP", UUID.randomUUID().toString())
 
         // Også hardkodet i aap-postmottak-backend
         System.setProperty(
@@ -237,8 +237,8 @@ object FakeServers : AutoCloseable {
             UUID.fromString("c62cff74-505a-4858-ac15-16061c2e8290").toString()
         )
 
-        System.setProperty("INTEGRASJON_SAKSBEHANDLING_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP", java.util.UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_SAKSBEHANDLING_AZP", UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP", UUID.randomUUID().toString())
 
         // Norg
         System.setProperty("INTEGRASJON_NORG_URL", "http://localhost:${norg.port()}")
