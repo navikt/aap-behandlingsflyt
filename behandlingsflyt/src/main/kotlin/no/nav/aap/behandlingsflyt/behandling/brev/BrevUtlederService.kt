@@ -77,6 +77,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
@@ -450,8 +451,9 @@ class BrevUtlederService(
     }
 
     private fun hentAvslagsårsaker(behandlingId: BehandlingId): Set<Avslagsårsak> {
-        val sykdomstidslinje = sykdomRepository.hent(behandlingId)
-            .somSykdomsvurderingstidslinje()
+        val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(behandlingId)
+            ?.somSykdomsvurderingstidslinje()
+            .orEmpty()
 
         // Denne snedige logikken sjekker på om §11_5 ikke er oppfylt på bakgrunn av spørsmålene svart på i sykdomsvilkåret,
         // ikke hva som er utledet i SykdomsvilkårUtenVissVarighet.kt, hvor den også sjekker på bistandsbehovet.
