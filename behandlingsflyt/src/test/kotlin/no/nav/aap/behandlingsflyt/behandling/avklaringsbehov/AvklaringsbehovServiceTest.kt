@@ -132,7 +132,7 @@ class AvklaringsbehovServiceTest {
         val (sak, _, revurdering) = opprettInMemorySakOgRevurdering()
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, revurdering.id)
 
-        avklaringsbehovene.leggTilFrivilligHvisMangler(Definisjon.FRITAK_MELDEPLIKT, Bruker("Z000"))
+        avklaringsbehovene.leggTilFrivilligHvisMangler(Definisjon.FRITAK_MELDEPLIKT, Bruker("Z000"), Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov)
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FRITAK_MELDEPLIKT, "løsning fra intet", Bruker("Z000"))
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(

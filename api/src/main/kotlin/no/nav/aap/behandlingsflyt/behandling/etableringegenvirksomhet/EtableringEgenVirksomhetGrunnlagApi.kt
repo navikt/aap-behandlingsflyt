@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
@@ -44,7 +43,6 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val etableringEgenVirksomhetRepository =
                         repositoryProvider.provide<EtableringEgenVirksomhetRepository>()
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val etableringEgenVirksomhetService = EtableringEgenVirksomhetService(repositoryProvider)
@@ -52,8 +50,6 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
                     val sak = sakRepository.hent(behandling.sakId)
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-
                     val etableringEgenVirksomhetGrunnlag =
                         etableringEgenVirksomhetRepository.hentHvisEksisterer(behandling.id)
                     val forrigeGrunnlag =
@@ -80,8 +76,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         ),
                         sisteVedtatteVurderinger = EtableringEgenVirksomhetVurderingResponse.fraDomene(
                             tidslinje = forrigeGrunnlag.gjeldendeVurderingerSomTidslinje(),
-                            vurdertAvService = vurdertAvService,
-                            etableringEgenVirksomhetService = etableringEgenVirksomhetService
+                            vurdertAvService = vurdertAvService
 
                         ),
                         nyeVurderinger = etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty()
@@ -89,8 +84,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             .map {
                                 EtableringEgenVirksomhetVurderingResponse.fraDomene(
                                     it,
-                                    vurdertAvService,
-                                    etableringEgenVirksomhetService
+                                    vurdertAvService
                                 )
                             },
                         kanVurderes = listOf(sak.rettighetsperiode),

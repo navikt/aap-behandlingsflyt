@@ -17,8 +17,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 
-object SykdomsvilkårUtenVissVarighet :
-    Vilkårsvurderer<SykdomsFaktagrunnlag> {
+object SykdomsvilkårUtenVissVarighet : Vilkårsvurderer<SykdomsFaktagrunnlag> {
     override val vilkårtype: Vilkårtype = Vilkårtype.SYKDOMSVILKÅRET
 
     override fun vurder(faktagrunnlag: SykdomsFaktagrunnlag): Tidslinje<Vilkårsvurdering> {

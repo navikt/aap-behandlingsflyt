@@ -77,6 +77,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.SaksbehandlerMeldekortKvitteringNyPdfgenerator to true,
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
+        BehandlingsflytFeature.DynamiskFrivilligSykestipend to true,
+        
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
