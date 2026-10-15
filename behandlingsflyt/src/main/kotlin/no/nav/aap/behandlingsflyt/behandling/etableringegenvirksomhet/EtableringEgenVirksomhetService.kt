@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.bistandsbehov.Bistandsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
@@ -65,7 +64,7 @@ class EtableringEgenVirksomhetService(
 
         val førsteMuligeDato = gyldighetPeriode.first().fom
 
-        if (nyeVurderinger.any { evaluerVirksomhetVurdering(it) && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
+        if (nyeVurderinger.any { it.evaluerVirksomhetVurdering() && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
             return VirksomhetEtableringIkkeGyldig(
                 "Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode"
             )
@@ -103,13 +102,6 @@ class EtableringEgenVirksomhetService(
             )
 
         return VirksomhetEtableringGyldig
-    }
-
-    fun evaluerVirksomhetVurdering(vurdering: EtableringEgenVirksomhetVurdering): Boolean {
-        return vurdering.virksomhetErNy == true && vurdering.kanFøreTilSelvforsørget == true && vurdering.foreliggerFagligVurdering && vurdering.brukerEierVirksomheten in listOf(
-            EierVirksomhet.EIER_MINST_50_PROSENT,
-            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-        )
     }
 
     fun utledGyldighetsPeriode(
