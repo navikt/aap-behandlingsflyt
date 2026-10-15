@@ -96,7 +96,6 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKa
 import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
-import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
@@ -253,6 +252,7 @@ internal fun Application.server(
     TilgangGateway.initialiserPrometheus(prometheus)
 
     BackfillStansOpphør(fellesDataSource, gatewayProvider).kjør()
+    BackfillEtableringVurderinger(fellesDataSource).kjør()
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -271,6 +271,7 @@ internal fun Application.server(
     verifiserTidssone(fellesDataSource)
     val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
     val motorLeseRoller=  if (Miljø.erProd()) listOf(DriftLes.id) else emptyList()
+
 
     routing {
         authenticate(IdentityProvider.ENTRA_ID.value) {
@@ -449,8 +450,7 @@ private fun Application.startKafkakonsumenter(
                 dataSource = dataSource,
                 repositoryRegistry = repositoryRegistry,
                 closeTimeout = AppConfig.stansArbeidTimeout,
-                gatewayProvider = gatewayProvider,
-                institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
+                gatewayProvider = gatewayProvider
             )
         )
         startKonsument(
