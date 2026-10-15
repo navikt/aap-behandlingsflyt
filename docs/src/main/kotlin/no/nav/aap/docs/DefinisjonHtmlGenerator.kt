@@ -3,15 +3,15 @@
 package no.nav.aap.docs
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import java.io.File
 
 private data class StegRad(
     val indeks: Int,
     val type: String,
-    val klassenavn: String,
+    val navn: String,
     val vurderingsbehov: List<String>,
-    val gjelderAlle: Boolean,
-    val inkludererGRegulering: Boolean,
 )
 
 fun main(args: Array<String>) {
@@ -27,15 +27,9 @@ fun main(args: Array<String>) {
 private fun genererOversiktHtml(): String {
     val steg = finnRevurderingSteg()
     val stegPerType = steg.associateBy { it.type }
-    val alleVurderingsbehov = finnAlleVurderingsbehov()
+    val alleVurderingsbehov = Vurderingsbehov.entries.map { it.name }
     val definisjonerPerSteg = Definisjon.entries.groupBy { it.løsesISteg.name }
-    val vurderingsbehovPerSteg = steg.associate { rad ->
-        rad.type to if (rad.gjelderAlle) {
-            alleVurderingsbehov.filter { rad.inkludererGRegulering || it != "G_REGULERING" }
-        } else {
-            rad.vurderingsbehov
-        }
-    }
+    val vurderingsbehovPerSteg = steg.associate { it.type to it.vurderingsbehov }
 
     val definisjonRader = genererDefinisjonRader(stegPerType, vurderingsbehovPerSteg)
     val stegRader = genererStegRader(steg, definisjonerPerSteg, vurderingsbehovPerSteg)
@@ -56,7 +50,7 @@ private fun genererDefinisjonRader(
     val deprecatedClass = if (erDeprecated(definisjon)) " deprecated" else ""
     val stegType = definisjon.løsesISteg.name
     val steg = stegPerType[stegType]
-    val stegVisning = steg?.klassenavn?.removeSuffix("Steg")?.tilLesbarTittel() ?: stegType.tilLesbarTittel()
+    val stegVisning = steg?.navn ?: stegType.tilLesbarTittel()
     val behov = vurderingsbehovPerSteg[stegType].orEmpty()
     val søkeverdier = listOf(definisjon.name, stegType) + behov
 
@@ -79,11 +73,11 @@ private fun genererStegRader(
 ): String = steg.joinToString("\n") { rad ->
     val definisjoner = definisjonerPerSteg[rad.type].orEmpty()
     val behov = vurderingsbehovPerSteg[rad.type].orEmpty()
-    val søkeverdier = listOf(rad.type, rad.klassenavn) + definisjoner.map { it.name } + behov
+    val søkeverdier = listOf(rad.type, rad.navn) + definisjoner.map { it.name } + behov
 
     """        <tr id="${anchor("steg", rad.type)}" class="data-row" data-values="${dataValues(søkeverdier)}">
           <td>${rad.indeks}</td>
-          <td>${rad.klassenavn.removeSuffix("Steg").tilLesbarTittel()}<small>${rad.type}</small></td>
+          <td>${rad.navn}<small>${rad.type}</small></td>
           <td>${chipsForDefinisjoner(definisjoner)}</td>
           <td>${chips("vurderingsbehov", behov)}</td>
         </tr>"""
@@ -101,7 +95,7 @@ private fun genererVurderingsbehovRader(
 
     """        <tr id="${anchor("vurderingsbehov", behov)}" class="data-row" data-values="${dataValues(søkeverdier)}">
           <td>${behov.tilLesbarTittel()}<small>$behov</small></td>
-          <td>${relevanteSteg.joinToString(" ") { relasjonslenke("steg", it.type, it.klassenavn.removeSuffix("Steg").tilLesbarTittel()) }}</td>
+          <td>${relevanteSteg.joinToString(" ") { relasjonslenke("steg", it.type, it.navn) }}</td>
           <td>${chipsForDefinisjoner(definisjoner)}</td>
         </tr>"""
 }
@@ -284,111 +278,15 @@ private fun chipsForDefinisjoner(definisjoner: List<Definisjon>): String =
     }
 
 private fun finnRevurderingSteg(): List<StegRad> {
-    val sourceText = requireNotNull(
-        finnKildeFil(
-            "behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/forretningsflyt/behandlingstyper/Revurdering.kt"
-        )
-    ).readText()
-
-    return finnMedStegBlokker(sourceText).mapIndexedNotNull { indeks, block ->
-        val klassenavn = Regex("""\bsteg\s*=\s*([\p{L}\p{N}_]+)""").find(block)?.groupValues?.get(1)
-            ?: return@mapIndexedNotNull null
-        val expression = hentArgumentExpression(block, "vurderingsbehovRelevanteForSteg")
-            ?: return@mapIndexedNotNull null
-        val stegType = finnStegType(klassenavn) ?: klassenavn.removeSuffix("Steg").toStegTypeNavn()
-        val vurderingsbehov = Regex("""Vurderingsbehov\.([\p{L}0-9_]+)""")
-            .findAll(expression)
-            .map { it.groupValues[1] }
-            .toList()
-
+    val flyt = Revurdering.flyt()
+    return flyt.stegene().mapIndexed { indeks, stegType ->
         StegRad(
             indeks = indeks + 1,
-            type = stegType,
-            klassenavn = klassenavn,
-            vurderingsbehov = vurderingsbehov,
-            gjelderAlle = expression.contains("Vurderingsbehov.alle"),
-            inkludererGRegulering = expression.contains("alleInklusivGRegulering"),
+            type = stegType.name,
+            navn = stegType.name.tilLesbarTittel(),
+            vurderingsbehov = flyt.vurderingsbehovRelevantForSteg(stegType).map { it.name },
         )
     }
-}
-
-private fun finnStegType(klassenavn: String): String? {
-    val file = finnKildeFil(
-        "behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/forretningsflyt/steg/$klassenavn.kt",
-        required = false,
-    ) ?: return null
-    return Regex("""StegType\.([\p{L}0-9_]+)""").find(file.readText())?.groupValues?.get(1)
-}
-
-private fun finnAlleVurderingsbehov(): List<String> {
-    val text = requireNotNull(
-        finnKildeFil(
-            "behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/sakogbehandling/flyt/Vurderingsbehov.kt"
-        )
-    ).readText()
-    val enumBody = text.substringAfter("enum class Vurderingsbehov {").substringBefore("companion object")
-
-    return enumBody.lines()
-        .map { it.substringBefore("//").trim() }
-        .filter { it.matches(Regex("""[\p{L}0-9_]+,?""")) }
-        .map { it.removeSuffix(",") }
-        .filterNot { it.isBlank() }
-}
-
-private fun finnKildeFil(relativePath: String, required: Boolean = true): File? {
-    val candidates = listOf(File(relativePath), File("../$relativePath"))
-    val file = candidates.firstOrNull { it.exists() }
-    if (file == null && required) error("Fant ikke $relativePath i forventede plasseringer")
-    return file
-}
-
-private fun finnMedStegBlokker(text: String): List<String> {
-    val blocks = mutableListOf<String>()
-    var searchIndex = 0
-    while (searchIndex < text.length) {
-        val medStegIndex = text.indexOf(".medSteg(", searchIndex)
-        if (medStegIndex == -1) return blocks
-        val (block, nextIndex) = finnParentesBlokk(text, medStegIndex) ?: return blocks
-        blocks.add(block)
-        searchIndex = nextIndex
-    }
-    return blocks
-}
-
-private fun finnParentesBlokk(text: String, startIndex: Int): Pair<String, Int>? {
-    val start = text.indexOf('(', startIndex)
-    if (start == -1) return null
-    var depth = 0
-    for (index in start until text.length) {
-        when (text[index]) {
-            '(' -> depth++
-            ')' -> {
-                depth--
-                if (depth == 0) return text.substring(start + 1, index) to (index + 1)
-            }
-        }
-    }
-    return null
-}
-
-private fun hentArgumentExpression(block: String, argumentName: String): String? {
-    val argumentStart = block.indexOf(argumentName)
-    if (argumentStart == -1) return null
-    val assignmentIndex = block.indexOf('=', argumentStart)
-    if (assignmentIndex == -1) return null
-    var index = assignmentIndex + 1
-    while (index < block.length && block[index].isWhitespace()) index++
-    val start = index
-    var depth = 0
-    while (index < block.length) {
-        when (block[index]) {
-            '(', '[', '{' -> depth++
-            ')', ']', '}' -> if (depth > 0) depth--
-            ',' -> if (depth == 0) break
-        }
-        index++
-    }
-    return block.substring(start, index).trim()
 }
 
 private fun erDeprecated(definisjon: Definisjon): Boolean =
@@ -401,13 +299,6 @@ private fun anchor(type: String, verdi: String): String =
 
 private fun dataValues(verdier: List<String>): String =
     htmlEscape(verdier.joinToString(" ") { it.replace("_", " ") })
-
-private fun String.toStegTypeNavn(): String = buildString {
-    this@toStegTypeNavn.forEachIndexed { index, char ->
-        if (char.isUpperCase() && index > 0 && this@toStegTypeNavn[index - 1].isLowerCase()) append('_')
-        append(char.uppercaseChar())
-    }
-}
 
 private fun String.tilLesbarTittel(): String =
     split("_").joinToString(" ") { token ->
