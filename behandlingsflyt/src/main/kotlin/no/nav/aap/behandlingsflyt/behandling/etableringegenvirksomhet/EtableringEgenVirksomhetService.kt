@@ -84,12 +84,8 @@ class EtableringEgenVirksomhetService(
             return VirksomhetEtableringIkkeGyldig("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
         }
 
-        val bruktUtviklingsDager =
-            gjeldendeVurderinger.flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
-                .sumOf { it.periode.antallHverdager().asInt }
-        val bruktOppstartsdager =
-            gjeldendeVurderinger.flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
-                .sumOf { it.periode.antallHverdager().asInt }
+        val bruktUtviklingsDager = tellDager(gjeldendeVurderinger) { it.utviklingsPerioder }
+        val bruktOppstartsdager = tellDager(gjeldendeVurderinger) { it.oppstartsPerioder }
 
         if (bruktUtviklingsDager > maksUtviklingsdager) {
             return VirksomhetEtableringIkkeGyldig(
@@ -102,6 +98,14 @@ class EtableringEgenVirksomhetService(
             )
 
         return VirksomhetEtableringGyldig
+    }
+
+    fun tellDager(
+        gjeldendeVurderinger: Set<EtableringEgenVirksomhetVurdering>,
+        selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
+    ): Int {
+        return gjeldendeVurderinger.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+            .sumOf { it.periode.antallHverdager().asInt }
     }
 
     fun utledGyldighetsPeriode(
