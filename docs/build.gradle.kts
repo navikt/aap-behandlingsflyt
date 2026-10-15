@@ -9,6 +9,7 @@ dependencies {
         dokka(project(":" + subproject.name))
     }
     implementation(project(":kontrakt"))
+    implementation(project(":behandlingsflyt"))
     implementation(libs.tilgangKontrakt)
 }
 
