@@ -222,12 +222,8 @@ class EtableringEgenVirksomhetService(
         alleUtviklingsPerioder: List<Periode>,
         alleOppstartsPerioder: List<Periode>
     ): String? {
-        val bruktUtviklingsDager =
-            alleUtviklingsPerioder.somTidslinje { it }.komprimer().segmenter()
-                .sumOf { it.periode.antallHverdager().asInt }
-        val bruktOppstartsdager =
-            alleOppstartsPerioder.somTidslinje { it }.komprimer().segmenter()
-                .sumOf { it.periode.antallHverdager().asInt }
+        val bruktUtviklingsDager = tellDager(alleUtviklingsPerioder)
+        val bruktOppstartsdager = tellDager(alleOppstartsPerioder)
 
         if (bruktUtviklingsDager > EtableringFase.UTVIKLING.maksHverdager) {
             return "Oppsatte utviklingsdager overstiger gjenværende dager: $bruktUtviklingsDager / ${EtableringFase.UTVIKLING.maksHverdager}"
@@ -240,6 +236,11 @@ class EtableringEgenVirksomhetService(
 
     private fun Collection<EtableringEgenVirksomhetVurdering>.perioderForFase(fase: EtableringFase): List<Periode> =
         mapNotNull { vurdering -> if (vurdering.fase == fase) vurdering.tom?.let { Periode(vurdering.fom, it) } else null }
+
+    fun tellDager(perioder: List<Periode>): Int {
+        return perioder.somTidslinje { it }.komprimer().segmenter()
+            .sumOf { it.periode.antallHverdager().asInt }
+    }
 
     fun utledGyldighetsPeriode(
         behandlingId: BehandlingId
