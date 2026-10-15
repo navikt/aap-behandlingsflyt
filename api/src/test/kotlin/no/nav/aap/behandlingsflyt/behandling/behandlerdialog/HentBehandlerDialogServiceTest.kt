@@ -15,10 +15,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository.opprettBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.dokumentinnhenting.kontrakt.AvsenderMottakerDto
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetDokumentInfoDto
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetJournalpostDto
@@ -39,8 +39,9 @@ import java.util.*
 class HentBehandlerDialogServiceTest : BaseApiTest() {
 
     private val dokumentinnhentingGateway = mockk<DokumentinnhentingGateway>()
-    private val dataSource = MockDataSource()
-    private val service = HentBehandlerDialogService(dataSource, dokumentinnhentingGateway, inMemoryRepositoryRegistry)
+    private val service = HentBehandlerDialogService(
+        dokumentinnhentingGateway, InMemorySakRepository, InMemoryMottattDokumentRepository, InMemoryBehandlingRepository
+    )
 
     @Test
     fun `hente ut dialogmeldinger og legeerklæring`() {
@@ -162,11 +163,61 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
             )
         )
 
-
-
         val kommendeMeldinger = service.hentDialogForSak(sak.saksnummer.toString(), token).kommendeMeldinger
         assertThat(kommendeMeldinger.size).isEqualTo(1)
         assertThat(kommendeMeldinger[0].bestillingId).isEqualTo(bestillingId1)
+    }
+
+    @Test
+    fun `Hent ubesvarte forespørsler om legeerklæring for behandling`() {
+        val riktigBestillingId = UUID.randomUUID()
+
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(
+            sak = sak,
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            forrigeBehandlingId = null
+        )
+        val journalpostIdFørSisteLegeerklæring = "123"
+        val journalpostIdEtterSisteLegeerklæring = "456"
+
+        val legeerklæringerForespørsler = listOf(
+            FellesDialogmeldingDto(
+                dialogmeldingReferanse = riktigBestillingId,
+                innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
+                meldingFraNavn = "Saksbehandler hos NAV",
+                opprettetTidspunkt = LocalDateTime.now().minusDays(21),
+                dokumentasjonsType = DokumentasjonType.L40,
+                tekst = "Hei, kan dere sende over legeerklæring for bruker?",
+                meldingStatus = MeldingStatusDto.LEVERT,
+                journalpostId = journalpostIdFørSisteLegeerklæring
+            ),
+            FellesDialogmeldingDto(
+                dialogmeldingReferanse = riktigBestillingId,
+                innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
+                meldingFraNavn = "Saksbehandler hos NAV",
+                opprettetTidspunkt = LocalDateTime.now().minusDays(1),
+                dokumentasjonsType = DokumentasjonType.L40,
+                tekst = "Hei, kan du som vikarlege sende på legeerklæring for bruker?",
+                meldingStatus = MeldingStatusDto.LEVERT,
+                journalpostId = journalpostIdEtterSisteLegeerklæring
+            )
+        )
+
+        InMemoryMottattDokumentRepository.lagre(
+            lagLegeerklæring("2345", sak, behandling)
+        )
+
+        every {
+            dokumentinnhentingGateway.hentLegeerklæringForespørslerForSak(any())
+        } returns legeerklæringerForespørsler
+
+        val ubesvarteForespørslerPåSak = service.hentUbesvarteForespørslerOmLegeerklæringer(
+            behandling.referanse.referanse
+        )
+
+        assertThat(ubesvarteForespørslerPåSak.size).isEqualTo(1)
+        assertThat(ubesvarteForespørslerPåSak[0].journalpostId).isEqualTo(journalpostIdEtterSisteLegeerklæring)
     }
 
     private fun lagLegeerklæring(journalpostId: String, sak: Sak, behandling: Behandling): MottattDokument {
