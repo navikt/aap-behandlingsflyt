@@ -88,18 +88,18 @@ class YrkesskadeRepositoryImpl(private val connection: DBConnection) : Yrkesskad
         registerYrkesskader: Yrkesskader?,
         oppgittYrkesskadeISøknad: Boolean?
     ) {
+        val nyeYrkesskader = registerYrkesskader?.takeIf { it.yrkesskader.isNotEmpty() }
         val gamleData = hentHvisEksisterer(behandlingId)
-        if (gamleData?.yrkesskader == registerYrkesskader &&
-            gamleData?.oppgittYrkesskadeISøknad == oppgittYrkesskadeISøknad
+        if (gamleData != null &&
+            gamleData.yrkesskader.yrkesskader == nyeYrkesskader?.yrkesskader.orEmpty() &&
+            gamleData.oppgittYrkesskadeISøknad == oppgittYrkesskadeISøknad
         ) return
 
         if (eksistererGrunnlag(behandlingId)) {
             deaktiverEksisterende(behandlingId)
         }
 
-        val yrkesskadeId: Long? = registerYrkesskader
-            ?.yrkesskader
-            ?.takeIf { it.isNotEmpty() }
+        val yrkesskadeId: Long? = nyeYrkesskader
             ?.let { connection.executeReturnKey("INSERT INTO YRKESSKADE DEFAULT VALUES") }
 
         // Grunnlag kobler de to — begge kan være null uavhengig av hverandre

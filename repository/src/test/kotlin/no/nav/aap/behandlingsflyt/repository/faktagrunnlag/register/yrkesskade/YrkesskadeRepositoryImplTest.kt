@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
@@ -517,6 +518,164 @@ class YrkesskadeRepositoryImplTest {
                         skadedato = 4 mai 2019
                     )
                 )
+        }
+    }
+
+    private fun yrkesskadeForLagring(skadedato: LocalDate = LocalDate.of(2019, 6, 4)) = Yrkesskade(
+        ref = "ref",
+        saksnummer = 123,
+        kildesystem = "INFOTRYGD",
+        skadedato = skadedato,
+        vedtaksdato = LocalDate.of(2020, 5, 1),
+        skadeart = "Arbeidsulykke",
+        diagnose = "Lumbago",
+        skadekombinasjoner = emptyList(),
+        skadekombinasjonerTekst = null,
+    )
+
+    private fun grunnlagRader(connection: DBConnection, behandlingId: BehandlingId): List<Pair<Long, Boolean>> =
+        connection.queryList(
+            "SELECT ID, AKTIV FROM YRKESSKADE_GRUNNLAG WHERE BEHANDLING_ID = ? ORDER BY ID"
+        ) {
+            setParams { setLong(1, behandlingId.toLong()) }
+            setRowMapper { it.getLong("ID") to it.getBoolean("AKTIV") }
+        }
+
+    @Test
+    fun `lagrer grunnlag uten yrkesskader når register er null`() {
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak(connection))
+            val repository = YrkesskadeRepositoryImpl(connection)
+
+            repository.lagre(behandling.id, registerYrkesskader = null, oppgittYrkesskadeISøknad = false)
+
+            val grunnlag = repository.hentHvisEksisterer(behandling.id)
+            assertThat(grunnlag).isNotNull
+            assertThat(grunnlag!!.yrkesskader.yrkesskader).isEmpty()
+            assertThat(grunnlag.oppgittYrkesskadeISøknad).isFalse()
+        }
+    }
+
+    @Test
+    fun `tom Yrkesskader behandles likt som null`() {
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak(connection))
+            val repository = YrkesskadeRepositoryImpl(connection)
+
+            repository.lagre(behandling.id, registerYrkesskader = Yrkesskader(emptyList()), oppgittYrkesskadeISøknad = false)
+
+            val grunnlag = repository.hentHvisEksisterer(behandling.id)
+            assertThat(grunnlag).isNotNull
+            assertThat(grunnlag!!.yrkesskader.yrkesskader).isEmpty()
+        }
+    }
+
+    @Test
+    fun `null etterfulgt av tom liste med samme søknadsverdi lager ikke nytt grunnlag`() {
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak(connection))
+            val repository = YrkesskadeRepositoryImpl(connection)
+
+            repository.lagre(behandling.id, registerYrkesskader = null, oppgittYrkesskadeISøknad = false)
+            val førsteId = repository.hentHvisEksisterer(behandling.id)!!.id
+
+            repository.lagre(behandling.id, registerYrkesskader = Yrkesskader(emptyList()), oppgittYrkesskadeISøknad = false)
+            repository.lagre(behandling.id, registerYrkesskader = null, oppgittYrkesskadeISøknad = false)
+
+            assertThat(repository.hentHvisEksisterer(behandling.id)!!.id).isEqualTo(førsteId)
+            assertThat(grunnlagRader(connection, behandling.id)).containsExactly(førsteId to true)
+        }
+    }
+
+    @Test
+    fun `samme yrkesskader lagret to ganger lager ikke nytt grunnlag`() {
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak(connection))
+            val repository = YrkesskadeRepositoryImpl(connection)
+            val yrkesskader = Yrkesskader(listOf(yrkesskadeForLagring()))
+
+            repository.lagre(behandling.id, yrkesskader, oppgittYrkesskadeISøknad = true)
+            val førsteId = repository.hentHvisEksisterer(behandling.id)!!.id
+
+            repository.lagre(behandling.id, yrkesskader, oppgittYrkesskadeISøknad = true)
+
+            assertThat(repository.hentHvisEksisterer(behandling.id)!!.id).isEqualTo(førsteId)
+            assertThat(grunnlagRader(connection, behandling.id)).hasSize(1)
+        }
+    }
+
+    @Test
+    fun `endret oppgittYrkesskadeISøknad lager nytt grunnlag og deaktiverer det gamle`() {
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak(connection))
+            val repository = YrkesskadeRepositoryImpl(connection)
+
+            repository.lagre(behandling.id, registerYrkesskader = null, oppgittYrkesskadeISøknad = false)
+            val førsteId = repository.hentHvisEksisterer(behandling.id)!!.id
+
+            repository.lagre(behandling.id, registerYrkesskader = null, oppgittYrkesskadeISøknad = true)
+
+            val nytt = repository.hentHvisEksisterer(behandling.id)!!
+            assertThat(nytt.id).isNotEqualTo(førsteId)
+            assertThat(nytt.oppgittYrkesskadeISøknad).isTrue()
+            assertThat(grunnlagRader(connection, behandling.id)).containsExactly(førsteId to false, nytt.id to true)
+        }
+    }
+
+    @Test
+    fun `yrkesskader som erstattes av tom liste lager nytt grunnlag uten yrkesskader`() {
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak(connection))
+            val repository = YrkesskadeRepositoryImpl(connection)
+
+            repository.lagre(behandling.id, Yrkesskader(listOf(yrkesskadeForLagring())), oppgittYrkesskadeISøknad = false)
+            val førsteId = repository.hentHvisEksisterer(behandling.id)!!.id
+
+            repository.lagre(behandling.id, Yrkesskader(emptyList()), oppgittYrkesskadeISøknad = false)
+
+            val nytt = repository.hentHvisEksisterer(behandling.id)!!
+            assertThat(nytt.id).isNotEqualTo(førsteId)
+            assertThat(nytt.yrkesskader.yrkesskader).isEmpty()
+            assertThat(grunnlagRader(connection, behandling.id)).containsExactly(førsteId to false, nytt.id to true)
+        }
+    }
+
+    @Test
+    fun `tom liste som erstattes av yrkesskader lager nytt grunnlag med yrkesskader`() {
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak(connection))
+            val repository = YrkesskadeRepositoryImpl(connection)
+
+            repository.lagre(behandling.id, Yrkesskader(emptyList()), oppgittYrkesskadeISøknad = false)
+            val førsteId = repository.hentHvisEksisterer(behandling.id)!!.id
+
+            repository.lagre(behandling.id, Yrkesskader(listOf(yrkesskadeForLagring())), oppgittYrkesskadeISøknad = false)
+
+            val nytt = repository.hentHvisEksisterer(behandling.id)!!
+            assertThat(nytt.id).isNotEqualTo(førsteId)
+            assertThat(nytt.yrkesskader.yrkesskader).hasSize(1)
+            assertThat(nytt.yrkesskader.yrkesskader.single().skadedato).isEqualTo(LocalDate.of(2019, 6, 4))
+        }
+    }
+
+    @Test
+    fun `endret skadedato lager nytt grunnlag`() {
+        dataSource.transaction { connection ->
+            val behandling = finnEllerOpprettBehandling(connection, sak(connection))
+            val repository = YrkesskadeRepositoryImpl(connection)
+
+            repository.lagre(behandling.id, Yrkesskader(listOf(yrkesskadeForLagring())), oppgittYrkesskadeISøknad = false)
+            val førsteId = repository.hentHvisEksisterer(behandling.id)!!.id
+
+            repository.lagre(
+                behandling.id,
+                Yrkesskader(listOf(yrkesskadeForLagring(LocalDate.of(2019, 5, 4)))),
+                oppgittYrkesskadeISøknad = false
+            )
+
+            val nytt = repository.hentHvisEksisterer(behandling.id)!!
+            assertThat(nytt.id).isNotEqualTo(førsteId)
+            assertThat(nytt.yrkesskader.yrkesskader.single().skadedato).isEqualTo(LocalDate.of(2019, 5, 4))
         }
     }
 }
