@@ -26,11 +26,8 @@ data class AvklaringsbehovDTO(
             Definisjon.BehovType.MANUELT_PÅKREVD ->
                 GradBehovDTO.PÅKREVD
 
-            Definisjon.BehovType.MANUELT_FRIVILLIG
-                if avklaringsbehov.definisjon !in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
-                -> avklaringsbehov.gradBehov()?.let { GradBehovDTO.fraDomene(it) }
-
-            Definisjon.BehovType.MANUELT_FRIVILLIG,
+            Definisjon.BehovType.MANUELT_FRIVILLIG ->
+                avklaringsbehov.gradBehov()?.let { GradBehovDTO.fraDomene(it) }
             Definisjon.BehovType.OVERSTYR,
             Definisjon.BehovType.BREV,
             Definisjon.BehovType.BREV_VENTEPUNKT,
