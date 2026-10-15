@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import java.time.LocalDate
@@ -43,6 +44,12 @@ data class ArenaDiagnose(
     val opprettet: LocalDate
 )
 
+data class ArenaRefusjonskrav(
+    val aarsak: String,
+    val fraDato: LocalDate?,
+    val tilDato: LocalDate?,
+)
+
 fun KravResponse.tilDomene(): ArenaKrav {
     val arenaSaksnummer = "$aar-$lopenr"
     return ArenaKrav(
@@ -82,5 +89,14 @@ fun ArenaSykdomsvurderingResponse.tilDomene(): ArenaSykdomsvurdering = ArenaSykd
         )
     },
 )
+
+fun ArenaRefusjonskravResponse.tilDomene(): ArenaRefusjonskrav? =
+    refusjonskrav?.let {
+        ArenaRefusjonskrav(
+            aarsak = it.aarsak,
+            fraDato = it.fraDato,
+            tilDato = it.tilDato
+        )
+    }
 
 fun HarHistorikkResponse.tilDomene(): ArenaHistorikk = ArenaHistorikk(harHistorikk = harHistorikk)

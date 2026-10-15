@@ -4,7 +4,7 @@
 plugins {
     base
     `maven-publish`
-    id("org.cyclonedx.bom") version "3.4.1"
+    id("org.cyclonedx.bom") version "3.5.0"
     id("aap.conventions")
 }
 

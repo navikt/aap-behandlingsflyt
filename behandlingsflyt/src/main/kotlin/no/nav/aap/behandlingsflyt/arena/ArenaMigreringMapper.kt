@@ -1,18 +1,22 @@
 package no.nav.aap.behandlingsflyt.arena
 
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf("INNTNEDS", "SYKSKADLYT", "AAARBEVNE")
+private const val REFUSJONSKRAV_SOSIALHJELP = "REFKRAVSOS"
 
 /**
  * Migreringsgruppe 1 støtter kun ordinær AAP. Dette er oppfylt når alle disse
@@ -124,6 +128,22 @@ object ArenaMigreringMapper {
             vurdertAv = ARENA_MIGRERING_BRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
+        )
+    }
+
+    /**
+     * Refusjonskrav av typen REFKRAVSOS støttes ikke i migreringsgruppe 1 og gir feil. Hvis det ikke finnes
+     * refusjonskrav, eller kravet har en annen årsak, svares "nei" på om det finnes refusjonskrav.
+     */
+    fun mapRefusjonskravVurdering(arenaRefusjonskrav: ArenaRefusjonskrav?): RefusjonkravVurdering {
+        require(arenaRefusjonskrav?.aarsak != REFUSJONSKRAV_SOSIALHJELP) {
+            "Kan ikke migrere refusjonskrav fra Arena fordi det finnes refusjonskrav av typen $REFUSJONSKRAV_SOSIALHJELP"
+        }
+        return RefusjonkravVurdering(
+            harKrav = false,
+            navKontor = null,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            opprettetTid = LocalDateTime.now()
         )
     }
 }

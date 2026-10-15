@@ -2,14 +2,15 @@ package no.nav.aap.behandlingsflyt.integrasjon.arena
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
-import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
-import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
-import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiodesyklusInformasjonskrav
+import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -98,10 +99,15 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
         return response
     }
 
-    @Suppress("unused")
-    private class ArenaMeldekortsyklusRequest(val personidentifikator: String)
-
-    private class ArenaMeldekortsyklusResponse( val aar: Int?, val ukenummer: Int?)
+    override fun hentRefusjonskrav(saksnummerArena: String): ArenaRefusjonskravResponse {
+        val response: ArenaRefusjonskravResponse? = restClient.get(
+            uri.resolve("/api/migrering/${saksnummerArena}/refusjonskrav"),
+            GetRequest(timeout = Duration.ofSeconds(5)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/${saksnummerArena}/refusjonskrav" }
+        return response
+    }
 
     override fun hentArenaMeldekortsyklus(ident: Ident): ArenaMeldeperiodesyklusInformasjonskrav.Registerdata {
         val response = restClient.post<ArenaMeldekortsyklusRequest, ArenaMeldekortsyklusResponse>(
@@ -117,4 +123,10 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             ArenaMeldeperiodesyklusInformasjonskrav.IngenSyklus
         }
     }
+
+    @Suppress("unused")
+    private class ArenaMeldekortsyklusRequest(val personidentifikator: String)
+
+    private class ArenaMeldekortsyklusResponse( val aar: Int?, val ukenummer: Int?)
+
 }

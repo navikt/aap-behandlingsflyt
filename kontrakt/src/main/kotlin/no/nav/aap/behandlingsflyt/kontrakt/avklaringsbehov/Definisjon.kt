@@ -679,7 +679,6 @@ public enum class Definisjon(
         public val legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon> = setOf(
             ARBEIDSOPPTRAPPING,
             AVKLAR_SAMORDNING_GRADERING,
-            AVKLAR_SAMORDNING_SYKESTIPEND,
             AVKLAR_SAMORDNING_UFØRE,
             AVKLAR_VEDTAKSLENGDE,
             ETABLERING_EGEN_VIRKSOMHET,

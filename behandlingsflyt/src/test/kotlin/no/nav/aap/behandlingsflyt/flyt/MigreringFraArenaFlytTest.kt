@@ -89,7 +89,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
                 assertThat(behandling.vurderingsbehov().map { it.type })
                     .contains(no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRERING_FRA_ARENA)
-                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
                 assertThat(behandling.status()).isEqualTo(AVSLUTTET)
                 behandling.assertRettighetstype(
                     Periode(startDato, startDato.plusMonths(6)) to RettighetsType.BISTANDSBEHOV
@@ -99,7 +99,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 
     @Test
     fun `skal automatisk legge inn sykdom- og bistandsvurdering basert på sykdomsvurdering fra Arena i behandlingen`() {
-        unleash = MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash::class
+        unleash = MigreringFraArenaMedAutomatiskSykdomFlytTestUnleash::class
 
         val (sak, migreringsbehandling) = migrerFraArena()
         val startDato = sak.rettighetsperiode.fom
@@ -139,6 +139,32 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
     }
 
     @Test
+    fun `skal automatisk legge inn vurderinger fra veileder i behandlingen`() {
+        unleash = MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash::class
+
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+
+        migreringsbehandling
+            .løsLovvalg(startDato, medlem = true)
+            .medKontekst {
+                val medlemskapArbeidInntektRepository: SykdomRepository = repositoryProvider.provide()
+                val vurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
+
+                assertThat(behandling.aktivtSteg()).isEqualTo(StegType.FASTSETT_BEREGNINGSTIDSPUNKT)
+
+                assertThat(vurderinger).hasSize(1)
+                val vurdering = vurderinger!!.single()
+                assertThat(vurdering.erSkadeSykdomEllerLyteVesentligdel).isTrue
+                assertThat(vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten).isTrue
+                assertThat(vurdering.harSkadeSykdomEllerLyte).isTrue
+                assertThat(vurdering.harNedsattArbeidsevne).isEqualTo(ArbeidsevneNedsattValg.JA)
+                assertThat(vurdering.fom).isEqualTo(sak.rettighetsperiode.fom)
+                assertThat(vurdering.tom).isNull()
+            }
+    }
+
+    @Test
     fun `skal automatisk legge inn krav basert på kravdata fra Arena i behandlingen`() {
         unleash = MigreringFraArenaMedAutomatiskKravFlytTestUnleash::class
 
@@ -148,7 +174,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 
         migreringsbehandling
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).doesNotContain(Definisjon.VURDER_KRAV)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).doesNotContain(Definisjon.VURDER_KRAV)
 
                 val kravRepository: KravRepository = repositoryProvider.provide()
                 val krav = kravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as MigrertKrav
@@ -195,9 +221,17 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
 
 }
 
-object MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+object MigreringFraArenaMedAutomatiskSykdomFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk,
+    )
+)
+
+object MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.MigrererKravFraArenaAutomatisk,
+        BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk,
+        BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk,
     )
 )
 

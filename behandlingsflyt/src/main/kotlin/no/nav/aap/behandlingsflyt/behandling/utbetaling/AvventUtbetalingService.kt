@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjo
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
@@ -22,6 +24,7 @@ class AvventUtbetalingService(
     private val samordningArbeidsgiverYtelserRepository: SamordningArbeidsgiverRepository,
     private val vedtakService: VedtakService,
     private val behandlingRepository: BehandlingRepository,
+    private val unleashGateway: UnleashGateway,
 ) {
 
     fun finnEventuellAvventUtbetaling(
@@ -41,7 +44,11 @@ class AvventUtbetalingService(
         val avventUtbetalingPgaSamordningAndreStatligeYtelser =
             overlapperMedSamordningAndreStatligeYtelser(behandling.id, førsteVedtaksdato)
         val avventUtbetalingPgaSamordningArbeidsgiver =
-            overlapperMedSamordningArbeidsgiver(behandling.id, førsteVedtaksdato, tilkjentYtelseHelePerioden)
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.FjerneAvventUtbetalingForSamordningArbeidsgiver)) {
+                null
+            } else {
+                overlapperMedSamordningArbeidsgiver(behandling.id, førsteVedtaksdato, tilkjentYtelseHelePerioden)
+            }
 
         return avventUtbetalingPgaSosialRefusjonskrav
             ?: (avventUtbetalingPgaTjenestepensjonRefusjon

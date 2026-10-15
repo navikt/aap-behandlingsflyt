@@ -87,8 +87,11 @@ class YrkesskadeInformasjonskrav internal constructor(
 
         val nyeData = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
-        return if (nyeData == gamleData) IKKE_ENDRET else ENDRET
+        return if (nyeData.innhold() == gamleData.innhold()) IKKE_ENDRET else ENDRET
     }
+
+    private fun YrkesskadeGrunnlag?.innhold() =
+        this?.yrkesskader?.yrkesskader.orEmpty() to this?.oppgittYrkesskadeISøknad
 
     private fun harOppgittYrkesskade(mottattDokumenter: Set<MottattDokument>): Boolean {
         return mottattDokumenter.any { dokument ->

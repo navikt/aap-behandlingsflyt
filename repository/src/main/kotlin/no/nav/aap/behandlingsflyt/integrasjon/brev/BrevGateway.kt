@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGatew
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
@@ -441,9 +443,18 @@ class BrevGateway : BrevbestillingGateway {
                 }
             }
 
-            is AvslagBrev -> {
-                buildSet {
-                    brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
+            is AvslagBrev.Avslag -> buildSet {
+                brevBehov.sykdomsvurdering?.let {
+                    add(Faktagrunnlag.Sykdomsvurdering(it))
+                }
+                brevBehov.avslagsårsak
+                    ?.let(::avslagsårsakTilFaktagrunnlag)
+                    ?.let { add(it) }
+            }
+
+            is AvslagBrev -> buildSet {
+                brevBehov.sykdomsvurdering?.let {
+                    add(Faktagrunnlag.Sykdomsvurdering(it))
                 }
             }
 
@@ -657,6 +668,26 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakYtterligereNedsatt.HENVIST_TIL_BEHANDLING -> null
 
             ÅrsakYtterligereNedsatt.ANNET, null -> null
+        }
+
+    private fun avslagsårsakTilFaktagrunnlag(
+        avslagsårsak: Avslagsårsak?,
+    ): Faktagrunnlag.AvslagAarsak? =
+        when (avslagsårsak) {
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_2)
+
+            Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_3)
+
+            Avslagsårsak.BRUKER_UNDER_18,
+            Avslagsårsak.BRUKER_OVER_67,
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_4)
+
+            else -> null
         }
 
 }

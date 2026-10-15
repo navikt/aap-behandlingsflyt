@@ -25,7 +25,14 @@ data class EtableringEgenVirksomhetVurdering(
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
-) : PeriodisertVurdering
+) : PeriodisertVurdering {
+    fun evaluerVirksomhetVurdering(): Boolean {
+        return this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
+            EierVirksomhet.EIER_MINST_50_PROSENT,
+            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+        )
+    }
+}
 
 enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,

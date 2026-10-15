@@ -116,7 +116,14 @@ fun NormalOpenAPIRoute.flytApi(
 
                     val vurdertStegPair =
                         utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
-                    val alleAvklaringsbehov = avklaringsbehovene.allePlussFrivillige(behandling)
+                    
+                    val legacyFrivillige = if (unleashGateway.isEnabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
+                        Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov + Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND
+                    } else {
+                        Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
+                    }
+                    
+                    val alleAvklaringsbehov = avklaringsbehovene.allePlussFrivillige(behandling, legacyFrivillige)
                     val resultatKode = when {
                         ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
                             behandling
@@ -218,7 +225,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(request)
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val åpentAvklaringsbehov = avklaringsbehovene.åpne().filterNot { it.erVentepunkt() }
+                    val avklaringsbehovSomMåLøses = avklaringsbehovene.måLøses().filterNot { it.erVentepunkt() }
                         .sortedWith(behandling.flyt().avklaringsbehovComparator).first().definisjon
                     val relevanteIdenter = runBlocking {
                         relevanteIdenterForBehandlingResolver(
@@ -226,7 +233,7 @@ fun NormalOpenAPIRoute.flytApi(
                             dataSource
                         ).resolve(request.referanse.toString())
                     }
-                    Pair(åpentAvklaringsbehov, relevanteIdenter)
+                    Pair(avklaringsbehovSomMåLøses, relevanteIdenter)
                 }
                 sjekkTilgangTilSettPåVent(
                     åpentAvklaringsbehov = åpentAvklaringsbehov,
