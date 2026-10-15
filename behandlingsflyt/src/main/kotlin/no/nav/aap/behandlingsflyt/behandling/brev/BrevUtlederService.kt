@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -76,6 +77,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
@@ -391,6 +393,7 @@ class BrevUtlederService(
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
         )
         return prioritertRekkefølge.firstOrNull { it in avslagsårsaker }
     }
@@ -448,10 +451,28 @@ class BrevUtlederService(
     }
 
     private fun hentAvslagsårsaker(behandlingId: BehandlingId): Set<Avslagsårsak> {
+        val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(behandlingId)
+            ?.somSykdomsvurderingstidslinje()
+            .orEmpty()
+
+        // Denne snedige logikken sjekker på om §11_5 ikke er oppfylt på bakgrunn av spørsmålene svart på i sykdomsvilkåret,
+        // ikke hva som er utledet i SykdomsvilkårUtenVissVarighet.kt, hvor den også sjekker på bistandsbehovet.
         return vilkårsresultatRepository.hent(behandlingId)
             .alle()
-            .flatMap { it.vilkårsperioder() }
-            .mapNotNull { it.avslagsårsak }
+            .flatMap { vilkår ->
+                Tidslinje.map2(
+                    vilkår.tidslinje(),
+                    sykdomstidslinje
+                ) { vilkårsvurdering, sykdomsvurdering ->
+                    val avslagsårsak = vilkårsvurdering?.avslagsårsak
+                    val erFallbackFraBistandsvilkåret =
+                        vilkår.type == Vilkårtype.SYKDOMSVILKÅRET &&
+                                avslagsårsak == Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE &&
+                                sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == true
+
+                    if (erFallbackFraBistandsvilkåret) null else avslagsårsak
+                }.segmenter().mapNotNull { it.verdi }
+            }
             .toSet()
     }
 
@@ -466,12 +487,14 @@ class BrevUtlederService(
             }*/
             if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
-                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
+                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL ||
+                avslagsårsak == Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             ) {
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
         }
-        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering)
+        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering, avslagsårsak = avslagsårsak,
+            avslagsårsaker = alleAvslagsårsaker)
     }
 
     private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {

@@ -167,7 +167,7 @@ class SignaturService(
     ): SignaturGrunnlag {
         val behandling = behandlingRepository.hent(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        val avklaringsbehov = avklaringsbehovene.åpne().sistEndret()
+        val avklaringsbehov = avklaringsbehovene.måLøses().sistEndret()
         val enhet = if (avklaringsbehov != null) {
             val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
             enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)
@@ -234,7 +234,7 @@ class SignaturService(
         oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): UtledetSignatur? {
-        return avklaringsbehovForRolle(avklaringsbehovene, rolle).filter { it.erÅpent() }
+        return avklaringsbehovForRolle(avklaringsbehovene, rolle).filter { it.måLøses() }
             .sistEndret()
             ?.let { avklaringsbehov ->
                 val enhet = enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)

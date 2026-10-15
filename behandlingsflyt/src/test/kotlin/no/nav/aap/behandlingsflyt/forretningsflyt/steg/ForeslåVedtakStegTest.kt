@@ -27,7 +27,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -142,7 +141,7 @@ class ForeslåVedtakStegTest {
         val resultat = steg.utfør(kontekstMedPerioder)
 
         assertThat(resultat).isEqualTo(Fullført)
-        assertThat(avklaringsbehovene.åpne().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+        assertThat(avklaringsbehovene.måLøses().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 
     @Test
@@ -178,7 +177,7 @@ class ForeslåVedtakStegTest {
         val resultat = steg.utfør(kontekstMedPerioder)
 
         assertThat(resultat).isEqualTo(Fullført)
-        assertThat(avklaringsbehovene.åpne().map { it.definisjon }).doesNotContain(Definisjon.FORESLÅ_VEDTAK)
+        assertThat(avklaringsbehovene.måLøses().map { it.definisjon }).doesNotContain(Definisjon.FORESLÅ_VEDTAK)
     }
 
     @Test
@@ -209,7 +208,7 @@ class ForeslåVedtakStegTest {
         val resultat = steg.utfør(kontekstMedPerioder)
 
         assertThat(resultat).isEqualTo(Fullført)
-        assertThat(avklaringsbehovene.åpne().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+        assertThat(avklaringsbehovene.måLøses().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 
     @Test
@@ -247,7 +246,7 @@ class ForeslåVedtakStegTest {
         val resultatFørTilbakehopp = steg.utfør(kontekstMedPerioder)
         assertThat(resultatFørTilbakehopp).isEqualTo(Fullført)
         avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-        assertThat(avklaringsbehovene.åpne()).isEmpty()
+        assertThat(avklaringsbehovene.måLøses()).isEmpty()
 
         // Gjør om på et NAY-avklaringsbehov
         avklaringsbehovene.løsAvklaringsbehov(
@@ -259,6 +258,6 @@ class ForeslåVedtakStegTest {
         val resultatEtterTilbakehopp = steg.utfør(kontekstMedPerioder)
         assertThat(resultatEtterTilbakehopp).isEqualTo(Fullført)
         avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-        assertThat(avklaringsbehovene.åpne().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+        assertThat(avklaringsbehovene.måLøses().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 }

@@ -83,7 +83,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
             }
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
             .medKontekst {
@@ -117,11 +117,11 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
             }
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
 
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(revurderingInnskrenking.id)
+        val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(revurderingInnskrenking.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
 
         val oppdatertSak = hentSak(ident, søknadsdato)
@@ -176,7 +176,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsRettighetsperiode(nyStartDato)
             .medKontekst {
                 // Vi har ikke vurdert lovvalg og medlemskap for den utvidede perioden enda, så vi forventer et avklaringsbehov her
-                assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP).isTrue() }
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { behov -> assertThat(behov.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP).isTrue() }
             }
             .løsAvklaringsBehov(
                 AvklarPeriodisertLovvalgMedlemskapLøsning(
@@ -216,7 +216,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             mottattTidspunkt = søknadsdato.atStartOfDay(),
         )
 
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
+        val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
             .isEqualTo(Definisjon.AVKLAR_SYKDOM)
 
@@ -306,7 +306,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 rettighetsperiodeVurdering.third
             )
             .medKontekst {
-                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+                val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(oppdatertBehandling.id)
                 assertThat(åpneAvklaringsbehov).hasSize(2)
                 assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM)
 
@@ -349,7 +349,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdom(nyStartDato)
             .løsBistand(nyStartDato)
             .medKontekst {
-                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+                val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(oppdatertBehandling.id)
                 assertThat(åpneAvklaringsbehov).anySatisfy {
                     assertThat(it.definisjon).isEqualTo(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
                 }
@@ -357,9 +357,9 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
             .bekreftVurderinger()
             .medKontekst {
-                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
-                assertThat(åpneAvklaringsbehov).hasSize(2)
-                assertThat(åpneAvklaringsbehov).anySatisfy {
+                val avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(oppdatertBehandling.id)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(2)
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy {
                     assertThat(it.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING)
                 }
             }
@@ -372,7 +372,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
 
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+        val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(oppdatertBehandling.id)
         assertThat(åpneAvklaringsbehov).isEmpty()
 
         val oppdatertSak = hentSak(ident, søknadsdato = sak.rettighetsperiode.fom)

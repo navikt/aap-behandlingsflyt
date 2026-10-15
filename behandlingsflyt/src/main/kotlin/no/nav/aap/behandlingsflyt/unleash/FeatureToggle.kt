@@ -22,6 +22,7 @@ enum class BehandlingsflytFeature(
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     SaksbehandlerMeldekortKvitteringNyPdfgenerator,
     SynkroniserArenaMeldeperiodesyklus,
+    DynamiskFrivilligSykestipend,
 
     // --- Krav ---
     KravSteg, // Visning
