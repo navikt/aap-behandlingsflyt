@@ -143,7 +143,7 @@ class Driftfunksjoner(
         taSkriveLåsRepository.withLåstBehandling(behandling.id) {
             val stegType = StegType.VURDER_LOVVALG
             val sak = sakRepository.hent(behandling.sakId)
-            val avklaringsbehovFørEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()
+            val avklaringsbehovFørEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).måLøses()
             validerGyldigTilstandFørUtvidelseAvRettighetsperiode(behandling, stegType)
 
             log.info("Utvider rettighetsperiode til Tid.MAKS og setter aktivt steg fra ${behandling.aktivtSteg()} til $stegType")
@@ -158,7 +158,7 @@ class Driftfunksjoner(
             flytOrkestratorUtenSavepoints.prosesserBehandling(behandling.flytKontekst())
 
             val nyttAktivtSteg = behandlingRepository.hent(behandling.id).aktivtSteg()
-            val avklaringsbehovEtterEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).åpne()
+            val avklaringsbehovEtterEndring = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id).måLøses()
             validerGyldigTilstandEtterUtvidelseAvRettighetsperiode(
                 nyttAktivtSteg,
                 behandling,

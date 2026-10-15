@@ -1,14 +1,13 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -83,7 +82,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                 )
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.ETABLERING_EGEN_VIRKSOMHET }
+                assertThat(avklaringsbehovSomMåLøses).noneMatch { it.definisjon == Definisjon.ETABLERING_EGEN_VIRKSOMHET }
             }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
@@ -108,14 +107,8 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
         val ikkeOppfyltVurdering = requireNotNull(etableringGrunnlag?.vurderinger)
             .single { it.virksomhetErNy == false }
 
-        dataSource.transaction {
-            val service = EtableringEgenVirksomhetService(
-                postgresRepositoryRegistry.provider(it)
-            )
-
-            assertThat(service.evaluerVirksomhetVurdering(oppfyltVurdering)).isEqualTo(true)
-            assertThat(service.evaluerVirksomhetVurdering(ikkeOppfyltVurdering)).isEqualTo(false)
-        }
+        assertThat(oppfyltVurdering.evaluerVirksomhetVurdering()).isEqualTo(true)
+        assertThat(ikkeOppfyltVurdering.evaluerVirksomhetVurdering()).isEqualTo(false)
     }
 
     @Test

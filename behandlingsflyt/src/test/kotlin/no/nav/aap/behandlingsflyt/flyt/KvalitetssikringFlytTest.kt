@@ -94,8 +94,8 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .løsSykdom(fom)
             .bekreftVurderinger()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1)
-                assertThat(åpneAvklaringsbehov.first().definisjon)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(1)
+                assertThat(avklaringsbehovSomMåLøses.first().definisjon)
                     .describedAs { "Kvalitetssikring skal gjenåpnes etter ny løsning av underkjent behov" }
                     .isEqualTo(Definisjon.KVALITETSSIKRING)
             }
@@ -116,7 +116,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             )
             .medKontekst {
                 val avklaringsbehovSomKreverKvalitetssikring =
-                    åpneAvklaringsbehov.filter { it.kreverKvalitetssikring() }
+                    avklaringsbehovSomMåLøses.filter { it.kreverKvalitetssikring() }
 
                 assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV))
                     .matches { it?.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
@@ -184,7 +184,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .bekreftVurderinger()
             .fattVedtak()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(1)
                     .first().extracting("definisjon").isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
             }
     }
@@ -211,8 +211,8 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).hasSize(1)
-                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+                assertThat(avklaringsbehovSomMåLøses).hasSize(1)
+                assertThat(avklaringsbehovSomMåLøses.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
             }
     }
 
@@ -305,7 +305,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
-        assertThat(hentÅpneAvklaringsbehov(behandlingMedAvslag)).isEmpty()
+        assertThat(hentAvklaringsbehovSomMåLøses(behandlingMedAvslag)).isEmpty()
 
         val revurdering = sak.sendInnSøknad(TestSøknader.STANDARD_SØKNAD)
         revurdering.løsSykdom(fom)
@@ -313,7 +313,7 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger().medKontekst {
-                assertThat(hentÅpneAvklaringsbehov(revurdering).map { it.definisjon }).describedAs(
+                assertThat(hentAvklaringsbehovSomMåLøses(revurdering).map { it.definisjon }).describedAs(
                     "Revurdering etter avslag skal innom kvalitetssikring"
                 ).containsOnly(Definisjon.KVALITETSSIKRING)
             }

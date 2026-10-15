@@ -48,7 +48,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
         fun fraDomene(
             tidslinje: Tidslinje<EtableringEgenVirksomhetVurdering>,
             vurdertAvService: VurdertAvService,
-            etableringEgenVirksomhetService: EtableringEgenVirksomhetService,
         ): List<EtableringEgenVirksomhetVurderingResponse> {
             val segmenter = tidslinje.segmenter().toList()
             return segmenter
@@ -56,7 +55,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
                     fraDomene(
                         etableringEgenVirksomhetVurdering = segment.verdi,
                         vurdertAvService = vurdertAvService,
-                        etableringEgenVirksomhetService = etableringEgenVirksomhetService,
                         fom = segment.verdi.fom,
                         tom = if (index == segmenter.size - 1)
                             segment.verdi.tom
@@ -69,7 +67,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
         fun fraDomene(
             etableringEgenVirksomhetVurdering: EtableringEgenVirksomhetVurdering,
             vurdertAvService: VurdertAvService,
-            etableringEgenVirksomhetService: EtableringEgenVirksomhetService,
             fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
         ) = EtableringEgenVirksomhetVurderingResponse(
@@ -100,7 +97,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
             ),
             fom = fom,
             tom = tom,
-            oppfylt = etableringEgenVirksomhetService.evaluerVirksomhetVurdering(etableringEgenVirksomhetVurdering),
+            oppfylt = etableringEgenVirksomhetVurdering.evaluerVirksomhetVurdering(),
             fase = etableringEgenVirksomhetVurdering.fase,
             erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
             jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten

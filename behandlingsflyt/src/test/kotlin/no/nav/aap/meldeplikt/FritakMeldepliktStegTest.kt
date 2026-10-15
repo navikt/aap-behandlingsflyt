@@ -133,7 +133,7 @@ class FritakMeldepliktStegTest {
         )
 
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
-        avklaringsbehovene.leggTilFrivilligHvisMangler(Definisjon.FRITAK_MELDEPLIKT, bruker = Bruker("SAKSBEHANDLER"))
+        avklaringsbehovene.leggTilFrivilligHvisMangler(Definisjon.FRITAK_MELDEPLIKT, bruker = Bruker("SAKSBEHANDLER"), Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov)
         avklaringsbehovene.løsAvklaringsbehov(
             Definisjon.FRITAK_MELDEPLIKT,
             begrunnelse = "...",

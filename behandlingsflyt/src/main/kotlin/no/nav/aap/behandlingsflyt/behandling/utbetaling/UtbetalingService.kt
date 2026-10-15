@@ -70,6 +70,7 @@ class UtbetalingService(
             samordningArbeidsgiverYtelserRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
             vedtakService = VedtakService(repositoryProvider, gatewayProvider),
             behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+            unleashGateway = gatewayProvider.provide()
         ),
         meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>(),
     )

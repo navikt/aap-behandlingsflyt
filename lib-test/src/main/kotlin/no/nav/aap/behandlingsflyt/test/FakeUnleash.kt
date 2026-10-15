@@ -73,21 +73,24 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerStansOgOpphor to true,
         BehandlingsflytFeature.GReguleringUtplukkJobb to true,
         BehandlingsflytFeature.BackfillStansOpphor to true,
-        BehandlingsflytFeature.LagreVurderRettighetsperiodeSomKrav to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.SaksbehandlerMeldekortKvitteringNyPdfgenerator to true,
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
+        BehandlingsflytFeature.DynamiskFrivilligSykestipend to true,
+        
         // --- Krav ---
-        BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
-        BehandlingsflytFeature.KravAutomatiskVurdering to true,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
 
         // --- Migrering ---
         BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererKravFraArenaAutomatisk to true,
+
+        // --- Utbetaling ---
+        BehandlingsflytFeature.FjerneAvventUtbetalingForSamordningArbeidsgiver to false,
 
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
@@ -106,10 +109,6 @@ object LokalUnleash : FakeUnleashBase(
                 BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
                 "saksnumre"
             ) -> "LoCAL_4LDW2A8"
-            Pair(
-                BehandlingsflytFeature.BackfillKrav,
-                "backfill-saker-ider"
-            ) -> "2,3" //LoCAL_4LDSUJK,LoCAL_4LDRRYo
             else -> "1,100"
         }
     }

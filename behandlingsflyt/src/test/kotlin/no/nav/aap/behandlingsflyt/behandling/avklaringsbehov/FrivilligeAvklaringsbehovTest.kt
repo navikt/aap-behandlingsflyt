@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -19,6 +20,6 @@ class FrivilligeAvklaringsbehovTest {
 
         behandling.oppdaterSteg(StegTilstand(stegStatus = StegStatus.START, stegType = StegType.VURDER_SYKEPENGEERSTATNING))
 
-        assertThat(avklaringsbehovene.allePlussFrivillige(behandling)).isNotEmpty
+        assertThat(avklaringsbehovene.allePlussFrivillige(behandling, Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov)).isNotEmpty
     }
 }

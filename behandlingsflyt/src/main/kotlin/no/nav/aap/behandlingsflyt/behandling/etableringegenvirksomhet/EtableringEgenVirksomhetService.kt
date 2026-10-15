@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.bistandsbehov.Bistandsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
@@ -241,13 +240,6 @@ class EtableringEgenVirksomhetService(
 
     private fun Collection<EtableringEgenVirksomhetVurdering>.perioderForFase(fase: EtableringFase): List<Periode> =
         mapNotNull { vurdering -> if (vurdering.fase == fase) vurdering.tom?.let { Periode(vurdering.fom, it) } else null }
-
-    fun evaluerVirksomhetVurdering(vurdering: EtableringEgenVirksomhetVurdering): Boolean {
-        return vurdering.fase != null && vurdering.jobberBrukerAktivMedVirksomheten == true && vurdering.virksomhetErNy == true && vurdering.kanFøreTilSelvforsørget == true && vurdering.foreliggerFagligVurdering && vurdering.brukerEierVirksomheten in listOf(
-            EierVirksomhet.EIER_MINST_50_PROSENT,
-            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-        )
-    }
 
     fun utledGyldighetsPeriode(
         behandlingId: BehandlingId
