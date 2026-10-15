@@ -83,7 +83,7 @@ class FakeApiInternGateway : ApiInternGateway {
 
     override fun sendBehandlingVisning(
         ident: String,
-        behandlingVisning: List<BehandlingVisning>
+        behandlingVisning: BehandlingVisning
     ) {
         // No-op
     }

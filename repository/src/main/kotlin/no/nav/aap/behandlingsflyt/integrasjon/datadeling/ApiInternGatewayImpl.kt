@@ -274,11 +274,11 @@ class ApiInternGatewayImpl : ApiInternGateway {
     }
 
 
-    override fun sendBehandlingVisning(ident: String, behandlingVisning: List<BehandlingVisning>) {
+    override fun sendBehandlingVisning(ident: String, behandlingVisning: BehandlingVisning) {
         restClient.post(
             uri = uri.resolve("/api/insert/behandling-visning"),
             request = PostRequest(
-                body = BehandlingVisningDto(ident = ident, behandlinger = behandlingVisning)
+                body = BehandlingVisningDto(ident = ident, behandling = behandlingVisning)
             ),
             mapper = { _, _ -> }
         )

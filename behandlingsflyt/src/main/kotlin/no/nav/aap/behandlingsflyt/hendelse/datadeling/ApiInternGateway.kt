@@ -53,5 +53,5 @@ interface ApiInternGateway : Gateway {
     )
 
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
-    fun sendBehandlingVisning(ident: String, behandlingVisning: List<BehandlingVisning>)
+    fun sendBehandlingVisning(ident: String, behandlingVisning: BehandlingVisning)
 }

@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
@@ -30,11 +31,10 @@ class BehandlingVisningDatadelingServiceTest {
 
         val service = BehandlingVisningDatadelingService(inMemoryRepositoryProvider, testGatewayProvider())
 
-        val res = service.utledBehandlingerVisning(behandling.sakId)
-        val behandlingVisning = res.first()
+        val behandlingVisning = service.utledBehandlingVisning(behandling)
 
-        assertThat(res.size).isEqualTo(1)
-        assertThat(behandlingVisning.avsluttet).isEqualTo(false)
+        assertThat(behandlingVisning).isNotNull
+        assertThat(behandlingVisning!!.avsluttet).isEqualTo(false)
         assertThat(behandlingVisning.hendelser.find { it.navn == BehandlingHendelseNavn.SØKNAD_MOTTATT }?.status).isEqualTo(
             BehandlingHendelseStatus.FULLFØRT
         )
@@ -63,11 +63,10 @@ class BehandlingVisningDatadelingServiceTest {
 
         val service = BehandlingVisningDatadelingService(inMemoryRepositoryProvider, testGatewayProvider())
 
-        val res = service.utledBehandlingerVisning(behandling.sakId)
-        val behandlingVisning = res.first()
+        val behandlingVisning = service.utledBehandlingVisning(behandling)
 
-        assertThat(res.size).isEqualTo(1)
-        assertThat(behandlingVisning.avsluttet).isEqualTo(false)
+        assertThat(behandlingVisning).isNotNull
+        assertThat(behandlingVisning!!.avsluttet).isEqualTo(false)
         assertThat(behandlingVisning.hendelser.find { it.navn == BehandlingHendelseNavn.SØKNAD_MOTTATT }?.status).isEqualTo(
             BehandlingHendelseStatus.FULLFØRT
         )
@@ -81,8 +80,7 @@ class BehandlingVisningDatadelingServiceTest {
         val behandling = opprettBehandlingMedVentepunkter()
 
         val behandlingVisning = BehandlingVisningDatadelingService(inMemoryRepositoryProvider, testGatewayProvider())
-            .utledBehandlingerVisning(behandling.sakId)
-            .single()
+            .utledBehandlingVisning(behandling)!!
 
         assertThat(behandlingVisning.hendelser.map { it.navn }).containsExactlyInAnyOrder(
             BehandlingHendelseNavn.SØKNAD_MOTTATT,
@@ -103,8 +101,7 @@ class BehandlingVisningDatadelingServiceTest {
         )
 
         val behandlingVisning = BehandlingVisningDatadelingService(inMemoryRepositoryProvider, testGatewayProvider())
-            .utledBehandlingerVisning(behandling.sakId)
-            .single()
+            .utledBehandlingVisning(behandling)!!
 
         assertThat(behandlingVisning.hendelser.map { it.navn }).containsExactlyInAnyOrder(
             BehandlingHendelseNavn.SØKNAD_MOTTATT,
@@ -122,13 +119,28 @@ class BehandlingVisningDatadelingServiceTest {
             .avbryt(Definisjon.MANUELT_SATT_PÅ_VENT)
 
         val behandlingVisning = BehandlingVisningDatadelingService(inMemoryRepositoryProvider, testGatewayProvider())
-            .utledBehandlingerVisning(behandling.sakId)
-            .single()
+            .utledBehandlingVisning(behandling)!!
 
         assertThat(behandlingVisning.hendelser.map { it.navn }).containsExactlyInAnyOrder(
             BehandlingHendelseNavn.SØKNAD_MOTTATT,
             BehandlingHendelseNavn.UNDER_BEHANDLING,
         )
+    }
+
+    @Test
+    fun `behandling som ikke er opprettet fra søknad gir ingen visning`() {
+        val sak = sak(inMemoryRepositoryProvider)
+        val behandling = finnEllerOpprettBehandling(
+            repositoryProvider = inMemoryRepositoryProvider,
+            gatewayProvider = testGatewayProvider(),
+            saksnummer = sak.saksnummer,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+        )
+
+        val behandlingVisning = BehandlingVisningDatadelingService(inMemoryRepositoryProvider, testGatewayProvider())
+            .utledBehandlingVisning(behandling)
+
+        assertThat(behandlingVisning).isNull()
     }
 
     /**

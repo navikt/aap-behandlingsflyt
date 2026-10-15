@@ -10,23 +10,16 @@ import no.nav.aap.behandlingsflyt.datadeling.BehandlingVisning
 import no.nav.aap.behandlingsflyt.datadeling.ventepunktTilehandlingHendelseNavn
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.ZoneId
 
 class BehandlingVisningDatadelingService(
-    private val sakRepository: SakRepository,
-    private val behandlingService: BehandlingService,
     private val trukketSøknadService: TrukketSøknadService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        repositoryProvider.provide(),
-        BehandlingService(repositoryProvider, gatewayProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
     )
@@ -89,17 +82,15 @@ class BehandlingVisningDatadelingService(
         return hendelser.sortedBy { it.tidsstempel }
     }
 
-    fun utledBehandlingerVisning(sakId: SakId): List<BehandlingVisning> {
-        val sak = sakRepository.hent(sakId)
-        val ytelsesBehandlinger = behandlingService.alleYtelsesbehandlinger(sakId = sak.id)
-        val søknadsBehandlinger = ytelsesBehandlinger.filter { it.årsakTilOpprettelse == ÅrsakTilOpprettelse.SØKNAD }
-        return søknadsBehandlinger.map {
-            BehandlingVisning(
-                behandlingReferanse = it.referanse,
-                avsluttet = it.status().erAvsluttet(),
+    fun utledBehandlingVisning(behandling: Behandling): BehandlingVisning? {
+        if(behandling.erYtelsesbehandling() && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.SØKNAD){
+            return BehandlingVisning(
+                behandlingReferanse = behandling.referanse,
+                avsluttet = behandling.status().erAvsluttet(),
                 behandlingType = BehandlingHendelseType.SØKNAD,
-                hendelser = utledBehandlingVisningHendelser(it),
+                hendelser = utledBehandlingVisningHendelser(behandling),
             )
         }
+        return null
     }
 }

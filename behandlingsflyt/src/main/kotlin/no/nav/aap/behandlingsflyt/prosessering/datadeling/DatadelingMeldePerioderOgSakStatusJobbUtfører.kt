@@ -41,11 +41,13 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
             sakstatus,
         )
 
-        val behandlingerVisning = behandlingVisningDatadelingService.utledBehandlingerVisning(sak.id)
-        apiInternGateway.sendBehandlingVisning(
-            personIdent.identifikator,
-            behandlingerVisning,
-        )
+        val behandlingVisning = behandlingVisningDatadelingService.utledBehandlingVisning(behandling)
+        if (behandlingVisning != null) {
+            apiInternGateway.sendBehandlingVisning(
+                personIdent.identifikator,
+                behandlingVisning,
+            )
+        }
 
         if (trukketSøknadService.søknadErTrukket(behandling.id)) {
             log.info("Søknad er trukket, sender tom liste til api-intern")
