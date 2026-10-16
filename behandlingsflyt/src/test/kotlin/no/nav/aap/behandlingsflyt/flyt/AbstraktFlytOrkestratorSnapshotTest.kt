@@ -47,7 +47,7 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
 ) : AbstraktFlytOrkestratorTest(unleashGateway) {
 
     private lateinit var snapshot: DatabaseSnapshot
-    private var motorForTest: ManuellMotorImpl? = null
+    private var motorForTest: FlytTestMotor? = null
 
     data class TestData(var person: TestPerson?)
 
@@ -91,12 +91,15 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
     /**
      * Motor re-initialiseres lazy per test slik at den alltid bruker gjeldende [dataSource].
      */
-    override val motor: ManuellMotorImpl
-        get() = motorForTest ?: ManuellMotorImpl(
+    override val motor: FlytTestMotor
+        get() = motorForTest ?: FlytTestMotor(
             dataSource,
-            jobber = ProsesseringsJobber.alle(),
-            repositoryRegistry = postgresRepositoryRegistry,
-            gatewayProvider = gatewayProvider,
+            ManuellMotorImpl(
+                dataSource,
+                jobber = ProsesseringsJobber.alle(),
+                repositoryRegistry = postgresRepositoryRegistry,
+                gatewayProvider = gatewayProvider,
+            )
         ).also { motorForTest = it }
 
     @AfterAll

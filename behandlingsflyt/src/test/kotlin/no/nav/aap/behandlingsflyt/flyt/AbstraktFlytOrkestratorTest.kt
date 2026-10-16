@@ -211,12 +211,15 @@ open class AbstraktFlytOrkestratorTest(
         }
     }
 
-    protected open val motor: ManuellMotorImpl by lazy {
-        ManuellMotorImpl(
+    protected open val motor: FlytTestMotor by lazy {
+        FlytTestMotor(
             dataSource,
-            jobber = ProsesseringsJobber.alle(),
-            repositoryRegistry = postgresRepositoryRegistry,
-            gatewayProvider = gatewayProvider
+            ManuellMotorImpl(
+                dataSource,
+                jobber = ProsesseringsJobber.alle(),
+                repositoryRegistry = postgresRepositoryRegistry,
+                gatewayProvider = gatewayProvider
+            )
         )
     }
 
