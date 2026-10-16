@@ -880,6 +880,103 @@ class InstitusjonApiTest {
         }
     }
 
+    @Test
+    fun `historisk vurdering med innhold foretrekkes over tom UAVKLART-plassholder for samme opphold`() {
+        val sykehusA = Institusjon(Institusjonstype.HS, Oppholdstype.H, "111000111", "Sykehus A")
+        val oppholdFom = 1 desember 2025
+        val oppholdTom = 1 februar 2026
+        val oppholdInfo: Tidslinje<Institusjon> =
+            listOf(Periode(oppholdFom, oppholdTom) to sykehusA).somTidslinje({ it.first }, { it.second })
+
+        val nyeVurderinger = mapOf(
+            Periode(oppholdFom, oppholdTom) to listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "historisk",
+                    periode = Periode(1 april 2026, 1 april 2026),
+                    erHistoriskUtenReduksjonsberegning = true,
+                    oppholdId = lagOppholdId(sykehusA.navn, oppholdFom)
+                )
+            )
+        )
+
+        val resultat = mapVurderingerToDto(
+            nyeVurderinger,
+            oppholdInfo,
+            vurdertAvService = mockk(relaxed = true),
+            unleashGatewayMedFeaturePåslått
+        )
+
+        assertThat(resultat).hasSize(1)
+        assertThat(resultat.first().vurderinger?.first()?.erHistoriskUtenReduksjonsberegning).isTrue
+    }
+
+    @Test
+    fun `dedupliserPerOppholdId foretrekker dto med innhold over tom plassholder for samme oppholdId`() {
+        val oppholdId = lagOppholdId("Sykehus A", 1 desember 2025)
+
+        val tomPlassholder = HelseoppholdDto(
+            periode = Periode(1 desember 2025, 1 februar 2026),
+            oppholdId = oppholdId,
+            vurderinger = emptyList(),
+            status = OppholdVurderingDto.UAVKLART
+        )
+        val medInnhold = HelseoppholdDto(
+            periode = Periode(1 april 2026, 1 april 2026),
+            oppholdId = oppholdId,
+            vurderinger = listOf(
+                HelseinstitusjonVurderingDto(
+                    oppholdId = oppholdId,
+                    begrunnelse = "historisk",
+                    faarFriKostOgLosji = true,
+                    periode = Periode(1 april 2026, 1 april 2026),
+                    vurderingerMeta = mockk(relaxed = true),
+                    erHistoriskUtenReduksjonsberegning = true
+                )
+            ),
+            status = OppholdVurderingDto.UAVKLART
+        )
+
+        val resultat = dedupliserPerOppholdId(listOf(tomPlassholder, medInnhold))
+
+        assertThat(resultat).hasSize(1)
+        assertThat(resultat.first().vurderinger).isNotEmpty
+        assertThat(resultat.first().vurderinger?.first()?.erHistoriskUtenReduksjonsberegning).isTrue
+    }
+
+    @Test
+    fun `dedupliserPerOppholdId beholder tom plassholder når ingen dto for oppholdId har innhold`() {
+        val oppholdId = lagOppholdId("Sykehus A", 1 desember 2025)
+        val tomPlassholder = HelseoppholdDto(
+            periode = Periode(1 desember 2025, 1 februar 2026),
+            oppholdId = oppholdId,
+            vurderinger = emptyList(),
+            status = OppholdVurderingDto.UAVKLART
+        )
+
+        val resultat = dedupliserPerOppholdId(listOf(tomPlassholder))
+
+        assertThat(resultat).hasSize(1)
+        assertThat(resultat.first().vurderinger).isEmpty()
+    }
+
+    private fun lagHelseinstitusjonVurdering(
+        begrunnelse: String,
+        periode: Periode,
+        erHistoriskUtenReduksjonsberegning: Boolean,
+        oppholdId: String
+    ): HelseinstitusjonVurdering = HelseinstitusjonVurdering(
+        begrunnelse = begrunnelse,
+        faarFriKostOgLosji = true,
+        forsoergerEktefelle = false,
+        harFasteUtgifter = false,
+        periode = periode,
+        vurdertIBehandling = BehandlingId(1L),
+        vurdertAv = null,
+        vurdertTidspunkt = null,
+        erHistoriskUtenReduksjonsberegning = erHistoriskUtenReduksjonsberegning,
+        oppholdId = oppholdId
+    )
+
     private fun lagSegment(
         fom: LocalDate,
         tom: LocalDate,

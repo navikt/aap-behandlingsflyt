@@ -4,7 +4,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.SammenhengendeOppholdGruppe
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.beregnTidligsteReduksjonsdatoPerKjede
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.giReduksjon
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.grupperSammenhengendeOppholdSegmenter
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.lagOppholdId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
@@ -34,6 +36,7 @@ class AvklarHelseinstitusjonLøser(
     private val helseinstitusjonRepository: InstitusjonsoppholdRepository,
     private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
+    private val enManedsregelEnabled get() = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -50,7 +53,11 @@ class AvklarHelseinstitusjonLøser(
 
         validerReduksjonsdatoForInstitusjonsopphold(
             behandling,
-            løsning.helseinstitusjonVurdering.vurderinger
+            if (enManedsregelEnabled) {
+                løsning.helseinstitusjonVurdering.vurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
+            } else {
+                løsning.helseinstitusjonVurdering.vurderinger
+            }
         ).throwOnInvalid {
             UgyldigForespørselException(it.errorMessage)
         }
@@ -80,56 +87,117 @@ class AvklarHelseinstitusjonLøser(
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
         val nåværendeGrunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
 
+        val (nyeHistoriske, nyePeriodiserte) =
+            if (enManedsregelEnabled) nyeVurderinger.partition { it.erHistoriskUtenReduksjonsberegning }
+            else emptyList<HelseinstitusjonVurderingDto>() to nyeVurderinger
+
+        val nåværendeOpphold = nåværendeGrunnlag?.oppholdene?.opphold.orEmpty()
+        val historiskeOppholdPerioder = nyeHistoriske.mapNotNull { historisk ->
+            nåværendeOpphold.firstOrNull { lagOppholdId(it.verdi.navn, it.periode.fom) == historisk.oppholdId }
+                ?: nåværendeOpphold.firstOrNull { it.periode.overlapper(historisk.periode) }
+        }.map { it.periode }
+
         val eksisterendeTidslinje =
             byggTidslinjeForHelseoppholdvurderingerBegrensetTilOpphold(forrigeGrunnlag, nåværendeGrunnlag)
+                .fjernReduksjonIPerioder(historiskeOppholdPerioder)
 
-        if (nyeVurderinger.isEmpty()) {
-            return eksisterendeTidslinje.segmenter().map {
-                HelseinstitusjonVurdering(
-                    begrunnelse = it.verdi.begrunnelse,
-                    faarFriKostOgLosji = it.verdi.faarFriKostOgLosji,
-                    forsoergerEktefelle = it.verdi.forsoergerEktefelle,
-                    harFasteUtgifter = it.verdi.harFasteUtgifter,
-                    periode = it.periode,
-                    vurdertIBehandling = it.verdi.vurdertIBehandling,
-                    vurdertAv = it.verdi.vurdertAv,
-                    vurdertTidspunkt = it.verdi.vurdertTidspunkt
-                )
+        val oppholdIderMedNyInput = nyeVurderinger.mapNotNull { it.oppholdId }.toSet()
+        val eksisterendeHistoriske = forrigeGrunnlag?.helseoppholdvurderinger?.historiskeVurderinger.orEmpty()
+            .filter { it.oppholdId !in oppholdIderMedNyInput }
+
+        val periodiserte = if (nyePeriodiserte.isEmpty()) {
+            eksisterendeTidslinje.segmenter().map { it.tilVurdering(it.verdi.vurdertAv) }
+        } else {
+            val nyTidslinje = Tidslinje(nyePeriodiserte.sortedBy { it.periode }
+                .map {
+                    Segment(
+                        it.periode,
+                        HelseoppholdVurderingData(
+                            begrunnelse = it.begrunnelse,
+                            faarFriKostOgLosji = it.faarFriKostOgLosji,
+                            forsoergerEktefelle = it.forsoergerEktefelle,
+                            harFasteUtgifter = it.harFasteUtgifter,
+                            vurdertIBehandling = behandling.id,
+                            vurdertAv = vurdertAv,
+                            vurdertTidspunkt = LocalDateTime.now(),
+                            erHistoriskUtenReduksjonsberegning = false,
+                            oppholdId = it.oppholdId,
+                        )
+                    )
+                }).komprimer()
+
+            eksisterendeTidslinje.kombiner(nyTidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+                .komprimer()
+                .segmenter()
+                .map { it.tilVurdering(vurdertAv) }
+        }
+
+        val historiske = eksisterendeHistoriske + nyeHistoriske.map {
+            HelseinstitusjonVurdering(
+                begrunnelse = it.begrunnelse,
+                faarFriKostOgLosji = it.faarFriKostOgLosji,
+                forsoergerEktefelle = it.forsoergerEktefelle,
+                harFasteUtgifter = it.harFasteUtgifter,
+                periode = it.periode,
+                vurdertIBehandling = behandling.id,
+                vurdertAv = vurdertAv,
+                vurdertTidspunkt = LocalDateTime.now(),
+                erHistoriskUtenReduksjonsberegning = true,
+                oppholdId = it.oppholdId,
+            )
+        }
+
+        return periodiserte + historiske
+    }
+
+    private fun Tidslinje<HelseoppholdVurderingData>.fjernReduksjonIPerioder(
+        perioder: List<Periode>
+    ): Tidslinje<HelseoppholdVurderingData> {
+        if (perioder.isEmpty()) return this
+
+        val gjenværende = segmenter().flatMap { segment ->
+            if (!segment.verdi.girReduksjon()) {
+                listOf(segment)
+            } else {
+                segment.periode.trekkFra(perioder).map { Segment(it, segment.verdi) }
             }
         }
 
-        val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.periode }
-            .map {
-                Segment(
-                    it.periode,
-                    HelseoppholdVurderingData(
-                        begrunnelse = it.begrunnelse,
-                        faarFriKostOgLosji = it.faarFriKostOgLosji,
-                        forsoergerEktefelle = it.forsoergerEktefelle,
-                        harFasteUtgifter = it.harFasteUtgifter,
-                        vurdertIBehandling = behandling.id,
-                        vurdertAv = vurdertAv,
-                        vurdertTidspunkt = LocalDateTime.now()
-                    )
-                )
-            }).komprimer()
-
-        return eksisterendeTidslinje.kombiner(
-            nyeVurderingerTidslinje,
-            StandardSammenslåere.prioriterHøyreSideCrossJoin()
-        ).komprimer().segmenter().map {
-            HelseinstitusjonVurdering(
-                begrunnelse = it.verdi.begrunnelse,
-                faarFriKostOgLosji = it.verdi.faarFriKostOgLosji,
-                forsoergerEktefelle = it.verdi.forsoergerEktefelle,
-                harFasteUtgifter = it.verdi.harFasteUtgifter,
-                periode = it.periode,
-                vurdertIBehandling = it.verdi.vurdertIBehandling,
-                vurdertAv = vurdertAv,
-                vurdertTidspunkt = it.verdi.vurdertTidspunkt
-            )
-        }
+        return Tidslinje(gjenværende.sortedBy { it.periode })
     }
+
+    private fun HelseoppholdVurderingData.girReduksjon(): Boolean =
+        !erHistoriskUtenReduksjonsberegning &&
+                faarFriKostOgLosji &&
+                forsoergerEktefelle == false &&
+                harFasteUtgifter == false
+
+    private fun Periode.trekkFra(andre: List<Periode>): List<Periode> =
+        andre.sortedBy { it.fom }.fold(listOf(this)) { rest, fjern ->
+            rest.flatMap { p ->
+                if (!p.overlapper(fjern)) {
+                    listOf(p)
+                } else {
+                    listOfNotNull(
+                        if (p.fom < fjern.fom) Periode(p.fom, fjern.fom.minusDays(1)) else null,
+                        if (p.tom > fjern.tom) Periode(fjern.tom.plusDays(1), p.tom) else null,
+                    )
+                }
+            }
+        }
+
+    private fun Segment<HelseoppholdVurderingData>.tilVurdering(vurdertAv: Bruker?) = HelseinstitusjonVurdering(
+        begrunnelse = verdi.begrunnelse,
+        faarFriKostOgLosji = verdi.faarFriKostOgLosji,
+        forsoergerEktefelle = verdi.forsoergerEktefelle,
+        harFasteUtgifter = verdi.harFasteUtgifter,
+        periode = periode,
+        vurdertIBehandling = verdi.vurdertIBehandling,
+        vurdertAv = vurdertAv,
+        vurdertTidspunkt = verdi.vurdertTidspunkt,
+        erHistoriskUtenReduksjonsberegning = false,
+        oppholdId = verdi.oppholdId,
+    )
 
     private fun byggTidslinjeForHelseoppholdvurderingerBegrensetTilOpphold(
         forrigeGrunnlag: InstitusjonsoppholdGrunnlag?,
@@ -144,7 +212,9 @@ class AvklarHelseinstitusjonLøser(
                     harFasteUtgifter = it.harFasteUtgifter,
                     vurdertIBehandling = it.vurdertIBehandling,
                     vurdertAv = it.vurdertAv,
-                    vurdertTidspunkt = it.vurdertTidspunkt
+                    vurdertTidspunkt = it.vurdertTidspunkt,
+                    erHistoriskUtenReduksjonsberegning = it.erHistoriskUtenReduksjonsberegning,
+                    oppholdId = it.oppholdId
                 )
             }.orEmpty()
 
@@ -187,24 +257,24 @@ class AvklarHelseinstitusjonLøser(
 
         val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
 
-        // Håndterer når vedtatte vurderinger finnes. Dette skjer i revurdering
-        val vurderingerPerKjede: Map<SammenhengendeOppholdGruppe, List<HelseinstitusjonVurderingDto>> =
-            kjeder.associateWith { kjede ->
-                nyeVurderinger
-                    .filter { v -> v.periode.fom >= kjede.periode.fom && v.periode.tom <= kjede.periode.tom }
-                    .sortedBy { it.periode }
-            }
+        val vurderingerPerKjede = kjeder.associateWith { kjede ->
+            nyeVurderinger
+                .filter { v -> v.periode.fom >= kjede.periode.fom && v.periode.tom <= kjede.periode.tom }
+                .sortedBy { it.periode }
+        }
 
-        val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(opphold)
+        // Avgjør om en kjede får innvilget reduksjon basert på de innsendte vurderingene i dette kallet
+        val harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { kjede ->
+            val vurderingerForKjede = vurderingerPerKjede[kjede].orEmpty()
+            førsteReduksjonsvurdering(vurderingerForKjede) != null
+        }
+
+        val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(opphold, harInnvilgetReduksjon)
 
         vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
             val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach
             val første = førsteReduksjonsvurdering(vurderinger)
-            val resultat = validerReduksjonsdato(
-                vurderinger,
-                første,
-                tidligsteReduksjonsdato
-            )
+            val resultat = validerReduksjonsdato(vurderinger, første, tidligsteReduksjonsdato)
             if (resultat != null) return resultat
         }
 
@@ -212,11 +282,8 @@ class AvklarHelseinstitusjonLøser(
     }
 
     private fun førsteReduksjonsvurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
-        return vurderinger.firstOrNull {
-            it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false
-        }
+        return vurderinger.firstOrNull { it.giReduksjon() }
     }
-
 
     private fun validerReduksjonsdato(
         vurderinger: List<HelseinstitusjonVurderingDto>,
@@ -245,6 +312,8 @@ class AvklarHelseinstitusjonLøser(
         val harFasteUtgifter: Boolean? = null,
         val vurdertIBehandling: BehandlingId,
         val vurdertAv: Bruker? = null,
-        val vurdertTidspunkt: LocalDateTime? = null
+        val vurdertTidspunkt: LocalDateTime? = null,
+        val erHistoriskUtenReduksjonsberegning: Boolean = false,
+        val oppholdId: String? = null,
     )
 }
