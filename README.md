@@ -54,6 +54,10 @@ En ny test som bruker Docker uten tag feiler i `coreTest` med en melding om hvil
 forblir raske og kan kjøres uten Docker. `coreTest` er et alias for `test` med filter og kan ikke kombineres med
 `test`/`check`/`build` i samme kommando.
 
+Testdatabasene kjører uten fsync (`lib-test/src/main/resources/flyway/beforeMigrate__*.sql`), siden de kastes etter
+hver kjøring. Antall parallelle test-JVM-er lokalt er 4; `-PtestForks=8` gjør `:behandlingsflyt:test` ca. 20 %
+raskere, men med alle moduler samtidig tåler ikke Docker Desktop flere containere enn 4 per modul.
+
 ### Code quality
 
 Prosjektet bruker [detekt](https://detekt.dev/) for statisk kodeanalyse. Detekt er automatisk aktivert på alle moduler.

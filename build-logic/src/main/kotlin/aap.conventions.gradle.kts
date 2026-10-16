@@ -72,6 +72,8 @@ tasks.named("check").configure {
 }
 
 private fun bestemAntallTestTråder(): Int {
+    // Overstyr med -PtestForks=N, f.eks. når bare én modul testes på en maskin med mange kjerner
+    providers.gradleProperty("testForks").orNull?.let { return it.toInt() }
     val isCiBuild =
         providers.environmentVariable("CI").isPresent || providers.environmentVariable("GITHUB_ACTIONS").isPresent
     val processors = Runtime.getRuntime().availableProcessors()
