@@ -9,6 +9,9 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.String
 
+/**
+ * @property fase Kan være null om vilkåret ikke er oppfylt.
+ */
 data class EtableringEgenVirksomhetLøsningDto(
     override val begrunnelse: String,
     override val fom: LocalDate,
