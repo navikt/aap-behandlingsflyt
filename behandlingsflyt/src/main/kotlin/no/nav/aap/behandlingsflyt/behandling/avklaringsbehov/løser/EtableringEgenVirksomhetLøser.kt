@@ -32,7 +32,7 @@ class EtableringEgenVirksomhetLøser(
             val resultat = etableringEgenVirksomhetService.beregnOgValider(behandling.id, nyeVurderinger)
         ) {
             is VirksomhetEtableringResultat.Gyldig -> resultat.beregning
-            is VirksomhetEtableringResultat.Ugyldig -> throw UgyldigForespørselException(resultat.feilmelding)
+            is VirksomhetEtableringResultat.Ugyldig -> throw UgyldigForespørselException(resultat.melding)
         }
 
         val gamleVurderinger = behandling.forrigeBehandlingId?.let {

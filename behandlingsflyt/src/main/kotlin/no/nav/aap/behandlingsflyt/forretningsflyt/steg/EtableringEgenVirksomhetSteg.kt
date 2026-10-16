@@ -56,7 +56,7 @@ class EtableringEgenVirksomhetSteg(
     private fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
-        val relevantPeriode = etableringEgenVirksomhetService.utledGyldighetsPeriode(
+        val relevantPeriode = etableringEgenVirksomhetService.utledPerioderMedSykdomOgBistand(
             kontekst.behandlingId
         ).somTidslinje { it }
       
