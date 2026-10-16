@@ -88,7 +88,7 @@ data class AvsluttaTilbakekrevingsbehandlingDto(
                 typeBehandling = TypeBehandling.Tilbakekreving,
                 opprettetTidspunkt = tilbakekrevingsbehandling.sakOpprettet,
                 vedtaksdato = tilbakekrevingsbehandling.vedtaksdato,
-                eksternSaksbehandlingUrl = tilbakekrevingsbehandling.saksbehandlingURL?.toString()
+                eksternSaksbehandlingUrl = tilbakekrevingsbehandling.saksbehandlingURL.toString()
             )
         }
     }

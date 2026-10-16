@@ -103,9 +103,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         tom = tom
                     )
                 }
-            respond(
-                response
-            )
+            respond(response)
         }
     }
 }
