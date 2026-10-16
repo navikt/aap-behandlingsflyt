@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.BeregningResultat
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class EtableringEgenVirksomhetSteg(
@@ -91,8 +90,8 @@ class EtableringEgenVirksomhetSteg(
 
         return Tidslinje(
             kontekst.rettighetsperiode, when (evaluering) {
-                is BeregningResultat.Gyldig -> true
-                is BeregningResultat.Ugyldig -> false
+                is VirksomhetEtableringResultat.Gyldig -> true
+                is VirksomhetEtableringResultat.Ugyldig -> false
             }
         )
     }

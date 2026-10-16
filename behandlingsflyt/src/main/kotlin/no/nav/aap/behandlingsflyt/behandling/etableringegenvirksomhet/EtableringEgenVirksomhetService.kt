@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -81,14 +80,14 @@ class EtableringEgenVirksomhetService(
     fun beregnOgValider(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
-    ): BeregningResultat {
+    ): VirksomhetEtableringResultat {
         val beregning = when (val resultat = beregnVurderinger(behandlingId, nyeVurderinger)) {
-            is BeregningResultat.Ugyldig -> return resultat
-            is BeregningResultat.Gyldig -> resultat.beregning
+            is VirksomhetEtableringResultat.Ugyldig -> return resultat
+            is VirksomhetEtableringResultat.Gyldig -> resultat.beregning
         }
 
         val feilmelding = validerBeregning(behandlingId, beregning)
-        return if (feilmelding == null) BeregningResultat.Gyldig(beregning) else BeregningResultat.Ugyldig(feilmelding)
+        return if (feilmelding == null) VirksomhetEtableringResultat.Gyldig(beregning) else VirksomhetEtableringResultat.Ugyldig(feilmelding)
     }
 
     data class Beregning(
@@ -100,7 +99,7 @@ class EtableringEgenVirksomhetService(
     private fun beregnVurderinger(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
-    ): BeregningResultat {
+    ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
         val justerteVurderinger = justerEtableringPerioder(nyeVurderinger)
 
@@ -135,7 +134,7 @@ class EtableringEgenVirksomhetService(
                         sisteVurdering = vurdering
                     )) {
                         is TomBeregning.Beregnet -> resultat.tom
-                        is TomBeregning.Feil -> return BeregningResultat.Ugyldig(resultat.feilmelding)
+                        is TomBeregning.Feil -> return VirksomhetEtableringResultat.Ugyldig(resultat.feilmelding)
                     }
                     vurdering.copy(tom = tom)
                 }
@@ -148,7 +147,7 @@ class EtableringEgenVirksomhetService(
             .gjeldendeVurderinger()
             .verdier().toSet()
 
-        return BeregningResultat.Gyldig(Beregning(gamleVurderinger, beregnedeVurderinger, gjeldendeVurderinger))
+        return VirksomhetEtableringResultat.Gyldig(Beregning(gamleVurderinger, beregnedeVurderinger, gjeldendeVurderinger))
     }
 
     private fun validerBeregning(
@@ -282,7 +281,7 @@ class EtableringEgenVirksomhetService(
     }
 }
 
-sealed interface BeregningResultat {
-    data class Gyldig(val beregning: EtableringEgenVirksomhetService.Beregning) : BeregningResultat
-    data class Ugyldig(val feilmelding: String) : BeregningResultat
+sealed interface VirksomhetEtableringResultat {
+    data class Gyldig(val beregning: EtableringEgenVirksomhetService.Beregning) : VirksomhetEtableringResultat
+    data class Ugyldig(val feilmelding: String) : VirksomhetEtableringResultat
 }

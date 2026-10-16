@@ -31,7 +31,7 @@ class EtableringEgenVirksomhetServiceTest {
 
         val res = service.beregnOgValider(behandling.id, emptyList())
 
-        assertThat(res).isInstanceOf(BeregningResultat.Gyldig::class.java)
+        assertThat(res).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
     }
 
     @Test

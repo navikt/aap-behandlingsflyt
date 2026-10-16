@@ -49,8 +49,8 @@ class EtableringEgenVirksomhetLøserTest {
         tom: LocalDate? = null,
     ): EtableringEgenVirksomhetLøsningDto {
         val beregnetTom = tom ?: when (fase) {
-            EtableringFase.UTVIKLING -> fom.plusDays(131)
-            EtableringFase.OPPSTART -> fom.plusDays(66)
+            EtableringFase.UTVIKLING -> fom.plusDays(EtableringFase.UTVIKLING.maksHverdager.toLong())
+            EtableringFase.OPPSTART -> fom.plusDays(EtableringFase.OPPSTART.maksHverdager.toLong())
         }
 
         return EtableringEgenVirksomhetLøsningDto(

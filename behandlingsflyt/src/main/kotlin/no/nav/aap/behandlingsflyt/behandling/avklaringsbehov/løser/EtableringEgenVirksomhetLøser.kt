@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.BeregningResultat
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -31,8 +31,8 @@ class EtableringEgenVirksomhetLøser(
         val beregning = when (
             val resultat = etableringEgenVirksomhetService.beregnOgValider(behandling.id, nyeVurderinger)
         ) {
-            is BeregningResultat.Gyldig -> resultat.beregning
-            is BeregningResultat.Ugyldig -> throw UgyldigForespørselException(resultat.feilmelding)
+            is VirksomhetEtableringResultat.Gyldig -> resultat.beregning
+            is VirksomhetEtableringResultat.Ugyldig -> throw UgyldigForespørselException(resultat.feilmelding)
         }
 
         val gamleVurderinger = behandling.forrigeBehandlingId?.let {
