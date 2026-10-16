@@ -47,6 +47,10 @@ class Avklaringsbehov(
         }
         return kreverToTrinn == true
     }
+    
+    fun kreverToTrinnsvurdering(): Boolean {
+        return erTotrinn() && aktivHistorikk.any { it.status == Status.AVSLUTTET }
+    }
 
     fun brukere(): List<Bruker> {
         return historikk.filter { it.status == Status.AVSLUTTET }.map { it.endretAv }
@@ -328,7 +332,7 @@ class Avklaringsbehov(
     }
 
     fun kreverKvalitetssikring(): Boolean {
-        return definisjon.kvalitetssikres
+        return definisjon.kvalitetssikres && aktivHistorikk.any { it.status == Status.AVSLUTTET }
     }
 
     fun erAutomatisk(): Boolean {
