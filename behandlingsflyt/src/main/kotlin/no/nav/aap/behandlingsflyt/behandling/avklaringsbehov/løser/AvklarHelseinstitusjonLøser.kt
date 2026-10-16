@@ -36,6 +36,7 @@ class AvklarHelseinstitusjonLøser(
     private val helseinstitusjonRepository: InstitusjonsoppholdRepository,
     private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
+    private val enManedsregelEnabled get() = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -52,7 +53,11 @@ class AvklarHelseinstitusjonLøser(
 
         validerReduksjonsdatoForInstitusjonsopphold(
             behandling,
-            løsning.helseinstitusjonVurdering.vurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
+            if (enManedsregelEnabled) {
+                løsning.helseinstitusjonVurdering.vurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
+            } else {
+                løsning.helseinstitusjonVurdering.vurderinger
+            }
         ).throwOnInvalid {
             UgyldigForespørselException(it.errorMessage)
         }
@@ -82,7 +87,9 @@ class AvklarHelseinstitusjonLøser(
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
         val nåværendeGrunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
 
-        val (nyeHistoriske, nyePeriodiserte) = nyeVurderinger.partition { it.erHistoriskUtenReduksjonsberegning }
+        val (nyeHistoriske, nyePeriodiserte) =
+            if (enManedsregelEnabled) nyeVurderinger.partition { it.erHistoriskUtenReduksjonsberegning }
+            else emptyList<HelseinstitusjonVurderingDto>() to nyeVurderinger
 
         val nåværendeOpphold = nåværendeGrunnlag?.oppholdene?.opphold.orEmpty()
         val historiskeOppholdPerioder = nyeHistoriske.mapNotNull { historisk ->

@@ -22,11 +22,32 @@ fun HelseinstitusjonVurderingDto.giReduksjon(): Boolean =
             harFasteUtgifter == false
 
 
+/**
+ * Grupperer opphold i sammenhengende kjeder og beregner tidligste reduksjonsdato per kjede.
+ * Sammenhengende opphold (jf. [grupperSammenhengendeOppholdSegmenter]) behandles som ett opphold
+ * med kjedens fulle periode (fra første til siste segment) når reduksjonsdatoen beregnes,
+ * slik at f.eks. to korte opphold som til sammen varer 3 måneder ikke feilaktig gir umiddelbar
+ * reduksjon for et senere opphold innenfor 3-månedersgrensen.
+ */
 fun beregnTidligsteReduksjonsdatoPerKjede(
     opphold: List<Segment<Institusjon>>,
-    harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { false }
+    harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { false },
+    enManedsregelEnabled: Boolean = true
 ): Map<SammenhengendeOppholdGruppe, LocalDate> {
     if (opphold.isEmpty()) return emptyMap()
+
+    if (!enManedsregelEnabled) {
+        val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
+        // Ett representant-segment per kjede: kjedens fulle periode (første fom - siste tom)
+        val kjedeTilRepresentant = kjeder.associateWith { kjede ->
+            Segment(kjede.periode, kjede.elementer.first().verdi)
+        }
+        val tidligsteReduksjonsdatoPerRepresentant =
+            beregnTidligsteReduksjonsdatoPerOpphold(kjedeTilRepresentant.values.toList())
+        return kjedeTilRepresentant.mapNotNull { (kjede, representant) ->
+            tidligsteReduksjonsdatoPerRepresentant[representant]?.let { kjede to it }
+        }.toMap()
+    }
 
     val kjeder = grupperSammenhengendeOppholdSegmenter(opphold).sortedBy { it.periode.fom }
     val result = mutableMapOf<SammenhengendeOppholdGruppe, LocalDate>()

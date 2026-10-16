@@ -197,6 +197,7 @@ class InstitusjonsoppholdUtlederService(
         helseopphold: List<Segment<Institusjon>>
     ): Tidslinje<HelseOpphold> {
         val alleVurderinger = helsevurderinger?.vurderinger.orEmpty()
+        val enManedsregelEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
         val helseoppholdPerioder =
             if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
@@ -205,8 +206,10 @@ class InstitusjonsoppholdUtlederService(
                 helseopphold.map { it.periode }
             }
 
-        val vurderingTidslinje = alleVurderinger
-            .filterNot { it.erHistoriskUtenReduksjonsberegning }
+        val periodiserteVurderinger =
+            if (enManedsregelEnabled) alleVurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning } else alleVurderinger
+
+        val vurderingTidslinje = periodiserteVurderinger
             .let { Tidslinje(it.map { v -> Segment(v.periode, v) }) }
             .map {
                 HelseOpphold(
@@ -222,7 +225,7 @@ class InstitusjonsoppholdUtlederService(
         // Historiske vurderinger matches eksplisitt til oppholdets faktiske periode via oppholdId,
         // siden vurderingens egen periode kan ligge utenfor oppholdets varighet.
         val historiskeSegmenter = alleVurderinger
-            .filter { it.erHistoriskUtenReduksjonsberegning }
+            .filter { enManedsregelEnabled && it.erHistoriskUtenReduksjonsberegning }
             .mapNotNull { vurdering ->
                 val matchendeOpphold = helseopphold.firstOrNull {
                     lagOppholdId(it.verdi.navn, it.periode.fom) == vurdering.oppholdId
