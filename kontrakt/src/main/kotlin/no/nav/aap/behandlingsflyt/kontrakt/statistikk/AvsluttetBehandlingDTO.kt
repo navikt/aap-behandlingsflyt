@@ -229,7 +229,7 @@ public data class VilkårsPeriodeDTO(
 
 
 /**
- * Felter fra BeregningsGrunnlag-interfacet ([no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag]),
+ * Felter fra BeregningsGrunnlag-interfacet [Beregningsgrunnlag](https://github.com/navikt/aap-behandlingsflyt/blob/main/behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnlag/delvurdering/beregning/Beregningsgrunnlag.kt),
  * er alltid med. Minst én av grunnlag11_19dto, grunnlagYrkesskade, grunnlagUføre er ikke-null.
  */
 public data class BeregningsgrunnlagDTO(
