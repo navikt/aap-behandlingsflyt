@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -57,10 +56,10 @@ class EtableringEgenVirksomhetSteg(
     private fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
-        val relevantPeriode = etableringEgenVirksomhetService.utledGyldighetsPeriode(
+        val relevantPeriode = etableringEgenVirksomhetService.utledPerioderMedSykdomOgBistand(
             kontekst.behandlingId
         ).somTidslinje { it }
-      
+
         val grunnlag = etableringEgenVirksomhetRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return Tidslinje.map2(tidligereVurderingsutfall, relevantPeriode) { utfall, relevantPeriode ->
@@ -83,7 +82,7 @@ class EtableringEgenVirksomhetSteg(
         }
 
         val evaluering = grunnlag.vurderinger.let {
-            etableringEgenVirksomhetService.erVurderingerGyldig(
+            etableringEgenVirksomhetService.beregnOgValider(
                 behandlingId = kontekst.behandlingId,
                 nyeVurderinger = it
             )
@@ -91,7 +90,7 @@ class EtableringEgenVirksomhetSteg(
 
         return Tidslinje(
             kontekst.rettighetsperiode, when (evaluering) {
-                VirksomhetEtableringGyldig -> true
+                is VirksomhetEtableringResultat.Gyldig -> true
                 is VirksomhetEtableringResultat.Ugyldig -> false
             }
         )

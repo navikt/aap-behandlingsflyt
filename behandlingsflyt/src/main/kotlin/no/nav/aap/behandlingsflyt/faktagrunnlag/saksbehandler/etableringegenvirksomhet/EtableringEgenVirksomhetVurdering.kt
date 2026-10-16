@@ -17,8 +17,6 @@ data class EtableringEgenVirksomhetVurdering(
     val virksomhetErNy: Boolean?,
     val brukerEierVirksomheten: EierVirksomhet?,
     val kanFøreTilSelvforsørget: Boolean?,
-    val utviklingsPerioder: List<Periode>,
-    val oppstartsPerioder: List<Periode>,
     override val vurdertAv: Bruker,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
@@ -29,7 +27,7 @@ data class EtableringEgenVirksomhetVurdering(
     val jobberBrukerAktivMedVirksomheten: Boolean?,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
-        return this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
+        return this.fase != null && this.jobberBrukerAktivMedVirksomheten == true && this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
             EierVirksomhet.EIER_MINST_50_PROSENT,
             EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
         )
@@ -64,8 +62,6 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.virksomhetErNy == b.virksomhetErNy &&
                 a.brukerEierVirksomheten == b.brukerEierVirksomheten &&
                 a.kanFøreTilSelvforsørget == b.kanFøreTilSelvforsørget &&
-                a.utviklingsPerioder == b.utviklingsPerioder &&
-                a.oppstartsPerioder == b.oppstartsPerioder &&
                 a.fom == b.fom &&
                 a.tom == b.tom &&
                 a.fase == b.fase &&

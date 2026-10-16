@@ -3,11 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -20,6 +23,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -59,10 +63,13 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         etableringEgenVirksomhetService.utledIkkeVurderbarePerioder(behandling.id)
 
                     val alleVurderinger =
-                        etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
+                        etableringEgenVirksomhetGrunnlag?.vurderinger ?:  forrigeGrunnlag.vurderinger
 
-                    val bruktUtviklingsDager = alleVurderinger.tellDager { it.utviklingsPerioder }
-                    val bruktOppstartsdager = alleVurderinger.tellDager { it.oppstartsPerioder }
+                    val gjeldendeTidslinje = alleVurderinger.gjeldendeVurderinger()
+                    val bruktUtviklingsDager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.UTVIKLING)
+                    val bruktOppstartsdager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.OPPSTART)
+
+                    val tom = alleVurderinger.maxByOrNull { it.fom }?.tom
 
                     EtableringEgenVirksomhetGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
@@ -92,10 +99,21 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         ),
                         ikkeRelevantePerioder = ikkeVurderbarePerioder,
                         bruktUtviklingsDager = bruktUtviklingsDager,
-                        bruktOppstartsdager = bruktOppstartsdager
+                        bruktOppstartsdager = bruktOppstartsdager,
+                        tom = tom
                     )
                 }
             respond(response)
         }
     }
 }
+
+private fun Tidslinje<EtableringEgenVirksomhetVurdering>.antallHverdagerIFase(fase: EtableringFase): Int =
+    segmenter()
+        .filter { it.verdi.fase == fase }
+        .onEach { segment ->
+            requireNotNull(segment.verdi.tom) {
+                "Vedtatt vurdering med fase=$fase mangler tom (vurdertIBehandling=${segment.verdi.vurdertIBehandling})"
+            }
+        }
+        .sumOf { it.periode.antallHverdager().asInt }
