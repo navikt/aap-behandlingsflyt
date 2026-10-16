@@ -58,6 +58,10 @@ Testdatabasene kjører uten fsync (`lib-test/src/main/resources/flyway/beforeMig
 hver kjøring. Antall parallelle test-JVM-er lokalt er 4; `-PtestForks=8` gjør `:behandlingsflyt:test` ca. 20 %
 raskere, men med alle moduler samtidig tåler ikke Docker Desktop flere containere enn 4 per modul.
 
+Lokalt kjører testene uten Ryuk (Testcontainers sin opprydder), fordi den har feilet under last i Docker Desktop.
+Containerne stoppes da når test-JVM-en avslutter. Blir det likevel liggende igjen containere (f.eks. etter `kill -9`):
+`docker rm -f $(docker ps -aq --filter label=org.testcontainers)`.
+
 ### Code quality
 
 Prosjektet bruker [detekt](https://detekt.dev/) for statisk kodeanalyse. Detekt er automatisk aktivert på alle moduler.

@@ -116,6 +116,16 @@ tasks {
         testLogging {
             events("passed", "skipped", "failed")
         }
+        // Ryuk (Testcontainers sin opprydder) feiler lokalt under last i Docker Desktop: testene får ikke kontakt med
+        // den, eller den stopper containerne midt i kjøringen. Uten Ryuk stopper Testcontainers containerne når
+        // test-JVM-en avslutter. CI beholder Ryuk; lokalt kan den skrus på igjen med TESTCONTAINERS_RYUK_DISABLED=false.
+        val erCiBygg = providers.environmentVariable("CI").isPresent || providers.environmentVariable("GITHUB_ACTIONS").isPresent
+        if (!erCiBygg) {
+            environment(
+                "TESTCONTAINERS_RYUK_DISABLED",
+                providers.environmentVariable("TESTCONTAINERS_RYUK_DISABLED").getOrElse("true")
+            )
+        }
         if (kjørerCoreTest) {
             useJUnitPlatform {
                 excludeTags(*dockerTagger)
