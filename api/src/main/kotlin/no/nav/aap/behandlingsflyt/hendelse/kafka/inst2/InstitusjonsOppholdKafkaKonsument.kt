@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
@@ -25,7 +24,6 @@ class InstitusjonsOppholdKafkaKonsument(
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
     private val gatewayProvider: GatewayProvider,
-    val institusjonsoppholdKlient: InstitusjonsoppholdGateway,
 ) : KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding>(
     topic = INSTITUSJONSOPPHOLD_EVENT_TOPIC,
     config = config,
