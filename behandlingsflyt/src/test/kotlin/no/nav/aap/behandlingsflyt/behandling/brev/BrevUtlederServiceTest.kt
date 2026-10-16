@@ -66,6 +66,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -1150,6 +1151,40 @@ class BrevUtlederServiceTest {
             assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
             assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed).isAfterOrEqualTo(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.fraOgMed)
         }
+
+        @Test
+        fun `tilOgMed går ikke utover innvilget periode`() {
+            val virkningstidspunktet = 1 juni 2026
+            val vedtakstidspunkt = 16 oktober 2026
+            val mnd_bruker_fyller_67 = 31 august 2026
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling, virkningstidspunkt = virkningstidspunktet, vedtakstidspunkt = vedtakstidspunkt.atStartOfDay())
+            val kravdato = 14 juni 2026
+            gittUnderveisGrunnlag(
+                behandling.id,
+                underveisperiode(
+                    periode = Periode(virkningstidspunktet, mnd_bruker_fyller_67),
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                ),
+                underveisperiode(
+                    periode = Periode(mnd_bruker_fyller_67.plusDays(1), LocalDate.MAX),
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV
+                )
+            )
+            gittTjenestepensjonRefusjonskravVurdering(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                harKrav = true,
+                fom = kravdato, // vurderingen lagrer ned kravdato
+                tom = null, // og setter ikke tom
+            )
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
+            assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed).isEqualTo(mnd_bruker_fyller_67)
+        }
+
     }
 
     @Test
