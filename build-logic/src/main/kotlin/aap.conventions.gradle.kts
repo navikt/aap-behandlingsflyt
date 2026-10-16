@@ -88,6 +88,24 @@ private fun bestemAntallTestTråder(): Int {
     return antallTråder
 }
 
+/**
+ * Tagger på testklasser som trenger Docker (Testcontainers). Klasser uten disse taggene er kjernetester.
+ * - db: Postgres via TestDataSource eller postgreSQLContainer()
+ * - kafka: Kafka-container
+ * - flyt: ende-til-ende-tester av flyten (AbstraktFlytOrkestratorTest og subklasser, også db)
+ */
+val dockerTagger = arrayOf("db", "kafka", "flyt")
+
+/**
+ * `./gradlew coreTest` (eller `:behandlingsflyt:coreTest`) kjører `test` uten testene som trenger Docker, og er ment
+ * å kjøres etter hver endring. Den er et alias og ikke en egen Test-task, slik at IntelliJ bare ser `test` og ikke
+ * spør hvilken task som skal kjøres når man kjører en enkelt test.
+ */
+val kjørerCoreTest = gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "coreTest" }
+if (kjørerCoreTest && gradle.startParameter.taskNames.any { it.substringAfterLast(':') in setOf("test", "check", "build") }) {
+    throw GradleException("coreTest gjør om test til bare kjernetester, og kan ikke kjøres sammen med test, check eller build")
+}
+
 tasks {
     test {
         useJUnitPlatform()
@@ -96,6 +114,19 @@ tasks {
         testLogging {
             events("passed", "skipped", "failed")
         }
+        if (kjørerCoreTest) {
+            useJUnitPlatform {
+                excludeTags(*dockerTagger)
+            }
+            // Får en test uten tag til å feile med en forklaring i stedet for å starte en container
+            environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
+        }
+    }
+
+    register("coreTest") {
+        description = "Kjører testene som ikke trenger Docker (alt uten taggene ${dockerTagger.joinToString()})."
+        group = LifecycleBasePlugin.VERIFICATION_GROUP
+        dependsOn(test)
     }
 
     (findByName("jar") as? Jar)?.apply {

@@ -44,12 +44,15 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
+@Tag("db")
+@Tag("kafka")
 class KabalKafkaKonsumentTest {
     companion object {
         private val repositoryRegistry = postgresRepositoryRegistry

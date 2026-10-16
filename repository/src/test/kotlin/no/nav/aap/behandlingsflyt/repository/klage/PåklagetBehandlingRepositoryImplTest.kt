@@ -21,12 +21,14 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.Tag
 import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Instant
 import java.util.UUID
 
+@Tag("db")
 internal class PåklagetBehandlingRepositoryImplTest {
     companion object {
         private val søknadsdato = LocalDate.now()

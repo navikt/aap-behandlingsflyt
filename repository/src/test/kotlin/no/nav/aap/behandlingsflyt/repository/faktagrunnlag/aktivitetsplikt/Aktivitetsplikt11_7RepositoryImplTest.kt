@@ -20,11 +20,13 @@ import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
+@Tag("db")
 @Suppress("ClassName")
 internal class Aktivitetsplikt11_7RepositoryImplTest {
 
