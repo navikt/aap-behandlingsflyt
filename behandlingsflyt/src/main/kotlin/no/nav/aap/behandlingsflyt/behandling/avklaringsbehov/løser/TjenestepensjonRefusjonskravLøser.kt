@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class TjenestepensjonRefusjonskravLøser(
@@ -48,11 +49,11 @@ class TjenestepensjonRefusjonskravLøser(
             val refusjonTomDato = løsning.samordningRefusjonskrav.tom
 
             if (refusjonFomDato.isBefore(kravDato)) {
-                throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato")
+                throw UgyldigForespørselException("Refusjonsdato kan ikke være før kravdato")
             }
 
             if (refusjonTomDato != null && refusjonTomDato.isBefore(refusjonFomDato)) {
-                throw IllegalArgumentException("Refusjonsdato kan ikke være før refusjonsdato eller null")
+                throw UgyldigForespørselException("Refusjonsdato kan ikke være før refusjonsdato eller null")
             }
 
             return TjenestepensjonRefusjonskravVurdering(
