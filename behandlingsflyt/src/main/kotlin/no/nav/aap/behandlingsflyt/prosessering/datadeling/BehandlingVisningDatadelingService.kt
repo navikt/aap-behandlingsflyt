@@ -50,45 +50,45 @@ class BehandlingVisningDatadelingService(
                 }
             }
 
-        var hendelser = mutableListOf(
-            BehandlingHendelseDto(
-                navn = BehandlingHendelseNavn.SØKNAD_MOTTATT,
-                tidsstempel = behandling.opprettetTidspunkt,
-                status = BehandlingHendelseStatus.FULLFØRT
-            )
-        )
-        hendelser.addAll(ventehendelser)
-        hendelser.add(
-            BehandlingHendelseDto(
-                navn = BehandlingHendelseNavn.UNDER_BEHANDLING,
-                // TODO: hva er riktig tidspunkt for 'under behandling'
-                tidsstempel = behandling.opprettetTidspunkt,
-                status = if (behandling.status().erAvsluttet()) {
-                    BehandlingHendelseStatus.FULLFØRT
-                } else {
-                    BehandlingHendelseStatus.AKTIV
-                }
-            )
-        )
-        if (søknadErTrukketVurdering != null) {
-            hendelser.add(
+        return buildList {
+            add(
                 BehandlingHendelseDto(
-                    navn = BehandlingHendelseNavn.SØKNAD_TRUKKET,
-                    tidsstempel = søknadErTrukketVurdering.vurdert.atZone(ZoneId.of("Europe/Oslo")).toLocalDateTime(),
+                    navn = BehandlingHendelseNavn.SØKNAD_MOTTATT,
+                    tidsstempel = behandling.opprettetTidspunkt,
                     status = BehandlingHendelseStatus.FULLFØRT
                 )
             )
-        } else if (behandling.status().erAvsluttet() && vedtakFattetAvklaringsbehov != null) {
-            hendelser.add(
+            addAll(ventehendelser)
+            add(
                 BehandlingHendelseDto(
-                    navn = BehandlingHendelseNavn.FERDIG_BEHANDLET,
-                    tidsstempel = vedtakFattetAvklaringsbehov.sistAvsluttet(),
-                    status = BehandlingHendelseStatus.FULLFØRT
+                    navn = BehandlingHendelseNavn.UNDER_BEHANDLING,
+                    // TODO: hva er riktig tidspunkt for 'under behandling'
+                    tidsstempel = behandling.opprettetTidspunkt,
+                    status = if (behandling.status().erAvsluttet()) {
+                        BehandlingHendelseStatus.FULLFØRT
+                    } else {
+                        BehandlingHendelseStatus.AKTIV
+                    }
                 )
             )
-        }
-
-        return hendelser.sortedBy { it.tidsstempel }
+            if (søknadErTrukketVurdering != null) {
+                add(
+                    BehandlingHendelseDto(
+                        navn = BehandlingHendelseNavn.SØKNAD_TRUKKET,
+                        tidsstempel = søknadErTrukketVurdering.vurdert.atZone(ZoneId.of("Europe/Oslo")).toLocalDateTime(),
+                        status = BehandlingHendelseStatus.FULLFØRT
+                    )
+                )
+            } else if (behandling.status().erAvsluttet() && vedtakFattetAvklaringsbehov != null) {
+                add(
+                    BehandlingHendelseDto(
+                        navn = BehandlingHendelseNavn.FERDIG_BEHANDLET,
+                        tidsstempel = vedtakFattetAvklaringsbehov.sistAvsluttet(),
+                        status = BehandlingHendelseStatus.FULLFØRT
+                    )
+                )
+            }
+        }.sortedBy { it.tidsstempel }
     }
 
     fun utledBehandlingVisning(behandling: Behandling): BehandlingVisningDto? {
