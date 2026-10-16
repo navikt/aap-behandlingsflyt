@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
@@ -12,6 +13,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.MigrerVurderingFraArena
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -21,6 +25,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderOppholdskravSteg private constructor(
@@ -28,16 +34,25 @@ class VurderOppholdskravSteg private constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
-) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+    private val unleashGateway: UnleashGateway,
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder, MigrerVurderingFraArena {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårService = VilkårService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.erMigreringFraArena() && unleashGateway.isEnabled(BehandlingsflytFeature.MigrererOppholdskravFraArenaAutomatisk)) {
+            val harRelevantePerioderForMigrering = nårVurderingErRelevant(kontekst).any { it }
+            if (harRelevantePerioderForMigrering) {
+                migrerVurderingFraArena(kontekst)
+            }
+        }
+
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
@@ -47,6 +62,7 @@ class VurderOppholdskravSteg private constructor(
             ),
             nårVurderingErRelevant = { nyKontekst -> nårVurderingErRelevant(nyKontekst) },
             nårVurderingErGyldig = { nårVurderingErGyldig(kontekst) },
+            gjeldendeVurderinger = { hentGjeldendeVurderinger(kontekst) },
             tilbakestillGrunnlag = {
                 oppholdskravGrunnlagRepository.tilbakestillGrunnlag(
                     kontekst.behandlingId,
@@ -97,11 +113,33 @@ class VurderOppholdskravSteg private constructor(
         }
     }
 
+    private fun hentGjeldendeVurderinger(kontekst: FlytKontekstMedPerioder): Tidslinje<PeriodisertVurdering> {
+        return oppholdskravGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somPeriodiserteVurderinger()
+            ?.gjeldendeVurderinger()
+            ?.mapValue { it as PeriodisertVurdering }
+            .orEmpty()
+    }
+
     private fun nårVurderingErGyldig(
         kontekst: FlytKontekstMedPerioder,
     ): Tidslinje<Boolean> {
         val grunnlag = oppholdskravGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         return grunnlag?.vurderinger?.tilTidslinje().orEmpty().mapValue { true }
+    }
+
+    override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
+        require(kontekst.erMigreringFraArena()) {
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
+        }
+
+        oppholdskravGrunnlagRepository.lagre(
+            behandlingId = kontekst.behandlingId,
+            oppholdskravVurdering = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
+                behandlingId = kontekst.behandlingId,
+                fom = kontekst.rettighetsperiode.fom,
+            ),
+        )
     }
 
     override val stegType = type()
