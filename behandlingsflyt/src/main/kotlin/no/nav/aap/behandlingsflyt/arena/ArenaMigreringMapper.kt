@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.arena
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.bistandsbehov.Bistandsvurdering
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
@@ -102,6 +104,28 @@ object ArenaMigreringMapper {
             vurdertAv = ARENA_MIGRERING_BRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
+        )
+    }
+
+    /**
+     * Oppholdskravet må være oppfylt for at saken skal kunne migreres fra Arena, så vi henter ikke noe derfra.
+     */
+    fun mapOppfyltOppholdskravVurdering(
+        behandlingId: BehandlingId,
+        fom: LocalDate,
+    ): OppholdskravVurdering {
+        return OppholdskravVurdering(
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            vurdertIBehandling = behandlingId,
+            perioder = listOf(
+                OppholdskravPeriode(
+                    fom = fom,
+                    tom = null,
+                    land = null,
+                    oppfylt = true,
+                    begrunnelse = "Ikke vurdert i Arena, men oppfylles automatisk fordi oppholdskravet må være oppfylt for at saken skal kunne migreres",
+                )
+            ),
         )
     }
 
