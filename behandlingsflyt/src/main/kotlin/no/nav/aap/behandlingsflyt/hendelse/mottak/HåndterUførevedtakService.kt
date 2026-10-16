@@ -28,7 +28,6 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.collections.orEmpty
 
@@ -138,6 +137,5 @@ class HåndterUførevedtakService(
 
         return innvilgetEtter11_18
                 && uførevedtak.resultat == UførevedtakResultat.INNV
-                && uførevedtak.virkningsdato.isAfter(LocalDate.now()) // Må endres i senere tid for del 2
     }
 }
