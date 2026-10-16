@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
@@ -110,8 +109,6 @@ class GrunnbeløpInformasjonskravTest {
                 lagTilkjentYtelsePeriode(periode1Fom, periode1Tom, gForPeriode1),
                 lagTilkjentYtelsePeriode(periode2Fom, periode2Tom, utdatertG),
             ),
-            tomtTilkjentYtelseGrunnlag,
-            ""
         )
         lagreOppfyltUnderveis(kontekst, periode1Fom, periode2Tom)
 
@@ -225,8 +222,6 @@ class GrunnbeløpInformasjonskravTest {
         InMemoryTilkjentYtelseRepository.lagre(
             kontekst.behandlingId,
             listOf(lagTilkjentYtelsePeriode(fom, tom, grunnbeløp)),
-            tomtTilkjentYtelseGrunnlag,
-            ""
         )
     }
 
