@@ -40,56 +40,64 @@ class BackfillEtableringVurderingerTest {
         fun tearDown() = dataSource.close()
     }
 
-    private val utviklingsperiode1 = Periode(1 januar 2025, 10 januar 2025)
-    private val utviklingsperiode2 = Periode(11 januar 2025, 20 januar 2025)
-    private val oppstartsperiode = Periode(1 februar 2025, 10 februar 2025)
-
     @Test
     fun `splitter hver periode i egen vurdering med fase`() {
-        //                   |des      |jan      |feb      |mar
-        // fom               F
-        // utvikling 1                 UUUU
-        // utvikling 2                    UUUU
-        // oppstart                              OOOO
-        // => utvikling 1              UUUU
-        // => utvikling 2                 UUUU
-        // => oppstart                           OOOO
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // fom                   F
+        // utvikling 1                       UUUU
+        // utvikling 2                           UUUU
+        // oppstart                                   OOOO
+
+        // ETTER
+        // => utvikling 1                    UUUU
+        // => utvikling 2                        UUUU
+        // => oppstart                                OOOO
         // F=fom, U=utvikling, O=oppstart
+        val utvikling1 = Periode(6 januar 2025, 15 januar 2025)
+        val utvikling2 = Periode(20 januar 2025, 29 januar 2025)
+        val oppstart = Periode(3 februar 2025, 12 februar 2025)
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
             behandlingId,
             fom = 1 desember 2024,
-            utviklingsPerioder = listOf(utviklingsperiode1, utviklingsperiode2),
-            oppstartsPerioder = listOf(oppstartsperiode),
+            utviklingsPerioder = listOf(utvikling1, utvikling2),
+            oppstartsPerioder = listOf(oppstart),
         )
         lagre(behandlingId, legacy)
 
         migrer(behandlingId)
 
         assertThat(hentVurderinger(behandlingId)).containsExactlyInAnyOrder(
-            legacy.somUtvikling(utviklingsperiode1),
-            legacy.somUtvikling(utviklingsperiode2),
-            legacy.somOppstart(oppstartsperiode),
+            legacy.somUtvikling(utvikling1),
+            legacy.somUtvikling(utvikling2),
+            legacy.somOppstart(oppstart),
         )
     }
 
     @Test
     fun `migrering er idempotent`() {
-        //                   |des      |jan      |feb      |mar
-        // fom                         F
-        // utvikling 1                 UUUU
-        // utvikling 2                    UUUU
-        // oppstart                              OOOO
-        // => utvikling 1              UUUU
-        // => utvikling 2                 UUUU
-        // => oppstart                           OOOO
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // fom                             F
+        // utvikling 1                     UUUU
+        // utvikling 2                         UUUUU
+        // oppstart                                        OOOO
+
+        // ETTER
+        // => utvikling 1                  UUUU
+        // => utvikling 2                      UUUUU
+        // => oppstart                                     OOOO
         // F=fom, U=utvikling, O=oppstart
+        val utvikling1 = Periode(2 januar 2025, 9 januar 2025)
+        val utvikling2 = Periode(13 januar 2025, 24 januar 2025)
+        val oppstart = Periode(17 februar 2025, 28 februar 2025)
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
             behandlingId,
-            fom = 1 januar 2025,
-            utviklingsPerioder = listOf(utviklingsperiode1, utviklingsperiode2),
-            oppstartsPerioder = listOf(oppstartsperiode),
+            fom = 2 januar 2025,
+            utviklingsPerioder = listOf(utvikling1, utvikling2),
+            oppstartsPerioder = listOf(oppstart),
         )
         lagre(behandlingId, legacy)
         val idererFørMigrering = hentVurderingIder(behandlingId)
@@ -108,86 +116,105 @@ class BackfillEtableringVurderingerTest {
 
     @Test
     fun `bruker periodens fom selv om perioden starter før vurderingens fom`() {
-        //                   |des      |jan      |feb      |mar
-        // fom                          F
-        // utvikling 1                 UUUU
-        // utvikling 2                    UUUU
-        // => utvikling 1              UUUU
-        // => utvikling 2                 UUUU
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // fom                                  F
+        // utvikling 1                       UUUUU
+        // utvikling 2                              UUUU
+
+        // ETTER
+        // => utvikling 1                    UUUUU
+        // => utvikling 2                           UUUU
         // F=fom, U=utvikling, O=oppstart
+        val utvikling1 = Periode(6 januar 2025, 20 januar 2025)
+        val utvikling2 = Periode(27 januar 2025, 5 februar 2025)
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
             behandlingId,
-            fom = 5 januar 2025,
-            utviklingsPerioder = listOf(utviklingsperiode1, utviklingsperiode2),
+            fom = 15 januar 2025,
+            utviklingsPerioder = listOf(utvikling1, utvikling2),
         )
         lagre(behandlingId, legacy)
 
         migrer(behandlingId)
 
         assertThat(hentVurderinger(behandlingId)).containsExactlyInAnyOrder(
-            legacy.somUtvikling(utviklingsperiode1),
-            legacy.somUtvikling(utviklingsperiode2),
+            legacy.somUtvikling(utvikling1),
+            legacy.somUtvikling(utvikling2),
         )
     }
 
     @Test
     fun `bruker periodens fom selv om vurderingens fom er før andre periode`() {
-        //                   |des      |jan      |feb      |mar
-        // fom                         F
-        // utvikling 1                 UUUU
-        // utvikling 2                    UUUU
-        // oppstart                              OOOO
-        // => utvikling 1              UUUU
-        // => utvikling 2                 UUUU
-        // => oppstart                           OOOO
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // fom                                F
+        // utvikling 1                        UUUU
+        // utvikling 2                             UUUU
+        // oppstart                                     OOOO
+
+        // ETTER
+        // => utvikling 1                     UUUU
+        // => utvikling 2                          UUUU
+        // => oppstart                                  OOOO
         // F=fom, U=utvikling, O=oppstart
+        val utvikling1 = Periode(10 januar 2025, 19 januar 2025)
+        val utvikling2 = Periode(24 januar 2025, 2 februar 2025)
+        val oppstart = Periode(10 februar 2025, 19 februar 2025)
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
             behandlingId,
-            fom = 1 januar 2025,
-            utviklingsPerioder = listOf(utviklingsperiode1, utviklingsperiode2),
-            oppstartsPerioder = listOf(oppstartsperiode),
+            fom = 10 januar 2025,
+            utviklingsPerioder = listOf(utvikling1, utvikling2),
+            oppstartsPerioder = listOf(oppstart),
         )
         lagre(behandlingId, legacy)
 
         migrer(behandlingId)
 
         assertThat(hentVurderinger(behandlingId)).containsExactlyInAnyOrder(
-            legacy.somUtvikling(utviklingsperiode1),
-            legacy.somUtvikling(utviklingsperiode2),
-            legacy.somOppstart(oppstartsperiode),
+            legacy.somUtvikling(utvikling1),
+            legacy.somUtvikling(utvikling2),
+            legacy.somOppstart(oppstart),
         )
     }
 
     @Test
     fun `bruker periodens fom og tom selv om vurderingen har tom som ikke samsvarer med periodene`() {
-        //                   |des      |jan      |feb      |mar
-        // fom-tom           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        // oppstart                              OOOO
-        // => oppstart                           OOOO
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // fom-tom               FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        // oppstart                                      OOOO
+
+        // ETTER
+        // => oppstart                                   OOOO
         // F=fom, U=utvikling, O=oppstart
+        val oppstart = Periode(12 februar 2025, 21 februar 2025)
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
             behandlingId,
             fom = 1 desember 2024,
             tom = 31 mars 2025,
-            oppstartsPerioder = listOf(oppstartsperiode),
+            oppstartsPerioder = listOf(oppstart),
         )
         lagre(behandlingId, legacy)
 
         migrer(behandlingId)
 
-        assertThat(hentVurderinger(behandlingId)).containsExactly(legacy.somOppstart(oppstartsperiode))
+        assertThat(hentVurderinger(behandlingId)).containsExactly(legacy.somOppstart(oppstart))
     }
 
     @Test
     fun `lar vurdering uten perioder være uendret`() {
-        //                   |des      |jan      |feb      |mar
-        // fom                         F
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // fom                                   F
+
+        // ETTER
+        // => uendret                            F
         // F=fom, U=utvikling, O=oppstart
         val behandlingId = opprettBehandling()
-        val utenPerioder = vurdering(behandlingId, fom = 1 januar 2025)
+        val utenPerioder = vurdering(behandlingId, fom = 20 januar 2025)
         lagre(behandlingId, utenPerioder)
         val idererFør = hentVurderingIder(behandlingId)
 
@@ -199,24 +226,28 @@ class BackfillEtableringVurderingerTest {
 
     @Test
     fun `rører ikke vurderinger som allerede har fase`() {
-        //                   |des      |jan      |feb      |mar
-        // migrert utvikling           UUUU
-        // legacy fom                            F
-        // legacy oppstart                       OOOO
-        // => oppstart                           OOOO
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // migrert utvikling                 UUUU
+        // legacy fom                                 F
+        // legacy oppstart                              OOOO
+        // ETTER
+        // => oppstart                                  OOOO
         // F=fom, U=utvikling, O=oppstart
+        val migrertUtvikling = Periode(8 januar 2025, 17 januar 2025)
+        val legacyOppstart = Periode(10 februar 2025, 19 februar 2025)
         val behandlingId = opprettBehandling()
         val alleredeMigrert = vurdering(
             behandlingId,
-            fom = utviklingsperiode1.fom,
-            tom = utviklingsperiode1.tom,
-            utviklingsPerioder = listOf(utviklingsperiode1),
+            fom = migrertUtvikling.fom,
+            tom = migrertUtvikling.tom,
+            utviklingsPerioder = listOf(migrertUtvikling),
             fase = EtableringFase.UTVIKLING,
         )
         val legacy = vurdering(
             behandlingId,
-            fom = 1 februar 2025,
-            oppstartsPerioder = listOf(oppstartsperiode),
+            fom = 3 februar 2025,
+            oppstartsPerioder = listOf(legacyOppstart),
             virksomhetNavn = "Legacy",
         )
         lagre(behandlingId, alleredeMigrert, legacy)
@@ -226,28 +257,32 @@ class BackfillEtableringVurderingerTest {
 
         assertThat(hentVurderinger(behandlingId)).containsExactlyInAnyOrder(
             alleredeMigrert,
-            legacy.somOppstart(oppstartsperiode),
+            legacy.somOppstart(legacyOppstart),
         )
         assertThat(hentVurderingIder(behandlingId)).contains(idTilAlleredeMigrert)
     }
 
     @Test
     fun `total varighet er uendret for en behandling`() {
-        //                   |des      |jan      |feb      |mar
-        // fom                         F
-        // utvikling 1                 UUUU
-        // utvikling 2                    UUUU
-        // oppstart                              OOOO
-        // => utvikling 1              UUUU
-        // => utvikling 2                 UUUU
-        // => oppstart                           OOOO
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // fom                             F
+        // utvikling 1                       UUUU
+        // utvikling 2                           UUUUU
+        // oppstart                                   OOOOO
+        // ETTER
+        // => utvikling 1                    UUUU
+        // => utvikling 2                        UUUUU
+        // => oppstart                                OOOOO
         // F=fom, U=utvikling, O=oppstart
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
             behandlingId,
             fom = 1 januar 2025,
-            utviklingsPerioder = listOf(utviklingsperiode1, utviklingsperiode2),
-            oppstartsPerioder = listOf(oppstartsperiode),
+            utviklingsPerioder = listOf(
+                Periode(6 januar 2025, 17 januar 2025), Periode(20 januar 2025, 31 januar 2025)
+            ),
+            oppstartsPerioder = listOf(Periode(3 februar 2025, 14 februar 2025)),
         )
 
         assertThat(varighet(migrert(legacy))).isEqualTo(varighet(listOf(legacy)))
@@ -255,18 +290,24 @@ class BackfillEtableringVurderingerTest {
 
     @Test
     fun `total varighet er uendret når senere vurdering overstyrer deler av en eldre`() {
-        //                   |des      |jan      |feb      |mar
-        // eldre fom                   F
-        // eldre utvikling 1           UUUU
-        // eldre utvikling 2                               UUUU
-        // nyere fom                             F
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // eldre fom                       F
+        // eldre utvikling 1                 UUUU
+        // eldre utvikling 2                                   UUUU
+        // nyere fom                                 F
+
+        // ETTER
+        // => utvikling 1                    UUUU
+        // => utvikling 2                                      UUUU
+        // => nyere (uten perioder)                    F
         // F=fom, U=utvikling, O=oppstart
         val førsteBehandling = opprettBehandling()
         val andreBehandling = opprettBehandling()
         val eldre = vurdering(
             førsteBehandling,
             fom = 1 januar 2025,
-            utviklingsPerioder = listOf(utviklingsperiode1, Periode(1 mars 2025, 10 mars 2025)),
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 15 januar 2025), Periode(3 mars 2025, 12 mars 2025)),
         )
         val nyere = vurdering(andreBehandling, fom = 1 februar 2025, opprettet = Instant.parse("2025-02-01T00:00:00Z"))
 
@@ -275,35 +316,42 @@ class BackfillEtableringVurderingerTest {
 
     @Test
     fun `total varighet og evaluering er uendret for liste med både oppfylte og ikke-oppfylte vurderinger`() {
-        //                   |des      |jan      |feb      |mar
-        // oppfylt fom                 F
-        // oppfylt utvikling 1          UUUU
-        // oppfylt utvikling 2             UUUU
-        // ikke oppfylt fom                      F
-        // ikke oppfylt oppstart                    OOOO
-        // uten perioder fom                               F
+        //                       |des      |jan      |feb      |mar
+        // FØR
+        // oppfylt fom                     F
+        // oppfylt utvikling 1               UUUU
+        // oppfylt utvikling 2                   UUUUU
+        // ikke oppfylt fom                           F
+        // ikke oppfylt oppstart                        OOOO
+        // uten perioder fom                                   F
+        // ETTER
+        // => oppfylt utv. 1                 UUUU
+        // => oppfylt utv. 2                     UUUUU
+        // => ikke oppfylt oppstart                       OOOO
+        // => uten perioder                                    F
         // F=fom, U=utvikling, O=oppstart
         val behandlingId = opprettBehandling()
         val oppfylt = vurdering(
             behandlingId,
-            fom = 1 januar 2025,
-            utviklingsPerioder = listOf(utviklingsperiode1, utviklingsperiode2),
+            fom = 2 januar 2025,
+            utviklingsPerioder = listOf(
+                Periode(6 januar 2025, 17 januar 2025), Periode(20 januar 2025, 31 januar 2025)
+            ),
             virksomhetErNy = true,
         )
         val ikkeOppfylt = vurdering(
             behandlingId,
-            fom = 1 februar 2025,
-            oppstartsPerioder = listOf(oppstartsperiode),
+            fom = 3 februar 2025,
+            oppstartsPerioder = listOf(Periode(10 februar 2025, 19 februar 2025)),
             virksomhetErNy = false,
         )
-        val utenPerioder = vurdering(behandlingId, fom = 1 mars 2025, virksomhetErNy = false)
+        val utenPerioder = vurdering(behandlingId, fom = 3 mars 2025, virksomhetErNy = false)
         val før = listOf(oppfylt, ikkeOppfylt, utenPerioder)
         val etter = før.flatMap { migrert(it) }
 
         assertThat(evalueringer(før)).containsExactly(true, false, false)
         assertThat(varighet(etter)).isEqualTo(varighet(før))
-        assertThat(etter.map { it.evaluerVirksomhetVurdering() })
-            .containsExactlyInAnyOrder(true, true, false, false)
+        assertThat(etter.map { it.evaluerVirksomhetVurdering() }).containsExactlyInAnyOrder(true, true, false, false)
     }
 
     private fun evalueringer(vurderinger: List<EtableringEgenVirksomhetVurdering>) =
@@ -369,8 +417,7 @@ class BackfillEtableringVurderingerTest {
 
     private fun lagre(behandlingId: BehandlingId, vararg vurderinger: EtableringEgenVirksomhetVurdering) {
         dataSource.transaction { connection ->
-            postgresRepositoryRegistry.provider(connection)
-                .provide<EtableringEgenVirksomhetRepository>()
+            postgresRepositoryRegistry.provider(connection).provide<EtableringEgenVirksomhetRepository>()
                 .lagre(behandlingId, vurderinger.toList())
         }
     }
@@ -384,20 +431,16 @@ class BackfillEtableringVurderingerTest {
 
     private fun hentVurderinger(behandlingId: BehandlingId): List<EtableringEgenVirksomhetVurdering> =
         dataSource.transaction { connection ->
-            postgresRepositoryRegistry.provider(connection)
-                .provide<EtableringEgenVirksomhetRepository>()
-                .hentHvisEksisterer(behandlingId)
-                ?.vurderinger
-                .orEmpty()
+            postgresRepositoryRegistry.provider(connection).provide<EtableringEgenVirksomhetRepository>()
+                .hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
         }
 
-    private fun hentVurderingIder(behandlingId: BehandlingId): List<Long> =
-        dataSource.transaction { connection ->
-            connection.queryList(
-                "SELECT id FROM etablering_egen_virksomhet_vurdering WHERE vurdert_i_behandling = ? ORDER BY id"
-            ) {
-                setParams { setLong(1, behandlingId.toLong()) }
-                setRowMapper { row -> row.getLong("id") }
-            }
+    private fun hentVurderingIder(behandlingId: BehandlingId): List<Long> = dataSource.transaction { connection ->
+        connection.queryList(
+            "SELECT id FROM etablering_egen_virksomhet_vurdering WHERE vurdert_i_behandling = ? ORDER BY id"
+        ) {
+            setParams { setLong(1, behandlingId.toLong()) }
+            setRowMapper { row -> row.getLong("id") }
         }
+    }
 }
