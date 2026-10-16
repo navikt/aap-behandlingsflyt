@@ -44,8 +44,9 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
         val behandlingVisning = behandlingVisningDatadelingService.utledBehandlingVisning(behandling)
         if (behandlingVisning != null) {
             apiInternGateway.sendBehandlingVisning(
-                personIdent.identifikator,
-                behandlingVisning,
+                ident = personIdent.identifikator,
+                saksnummer = sak.saksnummer,
+                behandlingVisning = behandlingVisning,
             )
         }
 

@@ -3,11 +3,11 @@ package no.nav.aap.behandlingsflyt.prosessering.datadeling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
-import no.nav.aap.behandlingsflyt.datadeling.BehandlingHendelseNavn
-import no.nav.aap.behandlingsflyt.datadeling.BehandlingHendelseStatus
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelseNavn
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelseStatus
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse

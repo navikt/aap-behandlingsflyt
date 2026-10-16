@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.hendelse.datadeling
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
-import no.nav.aap.behandlingsflyt.datadeling.BehandlingVisning
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingVisningDto
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
@@ -53,5 +53,5 @@ interface ApiInternGateway : Gateway {
     )
 
     fun oppdaterIdenter(saksnummer: Saksnummer, identer: List<Ident>)
-    fun sendBehandlingVisning(ident: String, behandlingVisning: BehandlingVisning)
+    fun sendBehandlingVisning(ident: String, saksnummer: Saksnummer, behandlingVisning: BehandlingVisningDto)
 }

@@ -5,7 +5,6 @@ import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
 import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
-import no.nav.aap.behandlingsflyt.datadeling.BehandlingVisning
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
@@ -15,13 +14,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.BarnMedBarnetillegg
-import no.nav.aap.behandlingsflyt.hendelse.datadeling.BehandlingVisningDto
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenaVedtaksvariantDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenavedtakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.AvslagsårsakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BarnMedBarnetilleggDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingVisningDto
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingVisningRequest
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphørDTO
@@ -274,11 +274,11 @@ class ApiInternGatewayImpl : ApiInternGateway {
     }
 
 
-    override fun sendBehandlingVisning(ident: String, behandlingVisning: BehandlingVisning) {
+    override fun sendBehandlingVisning(ident: String, saksnummer: Saksnummer, behandlingVisning: BehandlingVisningDto) {
         restClient.post(
             uri = uri.resolve("/api/insert/behandling-visning"),
             request = PostRequest(
-                body = BehandlingVisningDto(ident = ident, behandling = behandlingVisning)
+                body = BehandlingVisningRequest(ident = ident, saksnummer = saksnummer.toString(), behandling = behandlingVisning)
             ),
             mapper = { _, _ -> }
         )
