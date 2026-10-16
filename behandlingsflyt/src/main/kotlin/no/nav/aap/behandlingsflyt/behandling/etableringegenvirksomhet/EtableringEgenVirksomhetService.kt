@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -84,8 +83,8 @@ class EtableringEgenVirksomhetService(
             return VirksomhetEtableringIkkeGyldig("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
         }
 
-        val bruktUtviklingsDager = tellDager(gjeldendeVurderinger) { it.utviklingsPerioder }
-        val bruktOppstartsdager = tellDager(gjeldendeVurderinger) { it.oppstartsPerioder }
+        val bruktUtviklingsDager = gjeldendeVurderinger.tellDager { it.utviklingsPerioder }
+        val bruktOppstartsdager = gjeldendeVurderinger.tellDager { it.oppstartsPerioder }
 
         if (bruktUtviklingsDager > maksUtviklingsdager) {
             return VirksomhetEtableringIkkeGyldig(
@@ -98,14 +97,6 @@ class EtableringEgenVirksomhetService(
             )
 
         return VirksomhetEtableringGyldig
-    }
-
-    fun tellDager(
-        gjeldendeVurderinger: Set<EtableringEgenVirksomhetVurdering>,
-        selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
-    ): Int {
-        return gjeldendeVurderinger.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
-            .sumOf { it.periode.antallHverdager().asInt }
     }
 
     fun utledGyldighetsPeriode(
