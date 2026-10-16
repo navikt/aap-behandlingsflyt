@@ -38,6 +38,12 @@ class SamGatewayImpl : SamGateway {
     private val uri = URI.create(requiredConfigForKey("INTEGRASJON_SAM_URL"))
 
     override fun varsleVedtak(request: SamordneVedtakRequest): SamordneVedtakRespons? {
+        /**
+         * Når man samordner vedtak via REST-endepunktet tar SAM seg av logikk for å generere hendelser, inkludert
+         * logikk for å kreve at det finnes en aktiv TP-ytelse.
+         * (om vi hadde lagt hendelser på Kafka, måtte vi ha sjekket selv)
+         * Se Slack-samtale: https://nav-it.slack.com/archives/CQ08JC3UG/p1791800810497339?thread_ts=1791546862.381909&cid=CQ08JC3UG
+         */
         return restClient.post<SamordneVedtakRequest, SamordneVedtakRespons>(
             uri = uri.resolve("/api/vedtak/samordne"),
             request = PostRequest(body = request),

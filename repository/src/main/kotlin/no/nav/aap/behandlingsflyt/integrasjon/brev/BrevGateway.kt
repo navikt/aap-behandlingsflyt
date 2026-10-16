@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGatew
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
@@ -40,9 +42,11 @@ import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevV2Request
 import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.OppdaterBrevmalRequest
+import no.nav.aap.brev.kontrakt.OppdaterMottakereRequest
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -162,6 +166,18 @@ class BrevGateway : BrevbestillingGateway {
         }
 
         return true
+    }
+
+    override fun oppdaterMottakere(
+        referanse: BrevbestillingReferanse,
+        mottaker: MottakerDto,
+        kopimottaker: MottakerDto?
+    ) {
+        val url = baseUri.resolve("/api/bestilling/$referanse/oppdater-mottakere")
+
+        val request = PutRequest(body = OppdaterMottakereRequest(mottaker, kopimottaker))
+
+        client.put<_, Unit>(url, request)
     }
 
     override fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse {
@@ -344,6 +360,18 @@ class BrevGateway : BrevbestillingGateway {
         return response.mottakereDistStatus
     }
 
+    override fun kanDistribuereBrevV2(
+        brevbestillingReferanse: BrevbestillingReferanse,
+        mottakerId: String
+    ): Boolean {
+        return requireNotNull(
+            client.post<KanDistribuereBrevV2Request, Boolean?>(
+                uri = baseUri.resolve("/api/$brevbestillingReferanse/v2/kan-distribuere-brev"),
+                request = PostRequest(KanDistribuereBrevV2Request(mottakerId))
+            )
+        )
+    }
+
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER -> Brevtype.AVSLAG_UNDER_17_AAR_9_MAANEDER
@@ -415,9 +443,18 @@ class BrevGateway : BrevbestillingGateway {
                 }
             }
 
-            is AvslagBrev -> {
-                buildSet {
-                    brevBehov.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
+            is AvslagBrev.Avslag -> buildSet {
+                brevBehov.sykdomsvurdering?.let {
+                    add(Faktagrunnlag.Sykdomsvurdering(it))
+                }
+                brevBehov.avslagsårsak
+                    ?.let(::avslagsårsakTilFaktagrunnlag)
+                    ?.let { add(it) }
+            }
+
+            is AvslagBrev -> buildSet {
+                brevBehov.sykdomsvurdering?.let {
+                    add(Faktagrunnlag.Sykdomsvurdering(it))
                 }
             }
 
@@ -555,6 +592,12 @@ class BrevGateway : BrevbestillingGateway {
                     tilOgMed = tp.tilOgMed,
                 )
             },
+            refusjonskravNavkontor = forholdTilAndreYtelser.refusjonskravNavKontor?.let { refusjonskrav ->
+                Faktagrunnlag.ForholdTilAndreYtelser.RefusjonskravNavkontor(
+                    fraOgMed = refusjonskrav.fraOgMed,
+                    tilOgMed = refusjonskrav.tilOgMed,
+                )
+            },
             samordningAndreYtelser = forholdTilAndreYtelser.samordningAndreYtelser.map { samordning ->
                 Faktagrunnlag.ForholdTilAndreYtelser.SamordningYtelse(
                     ytelseNavn = samordning.ytelseNavn,
@@ -584,6 +627,7 @@ class BrevGateway : BrevbestillingGateway {
             },
         )
     }
+
     private fun aarsakTidspunktVurderingTilFaktagrunnlag(
         grunnlag: GrunnlagBeregning
     ): Faktagrunnlag.AarsakTidspunktVurdering? {
@@ -608,7 +652,7 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakBeregningstidspunkt.DATO_PAA_LEGEERKLÆRING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.DATO_PAA_LEGEERKLAERING
             ÅrsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.HENVIST_TIL_BEHANDLING
             ÅrsakBeregningstidspunkt.SEKSTEN_ÅR_SOM_BEREGNINGSTIDSPUNKT -> Faktagrunnlag.AarsakTidspunktVurdering.AarsakBeregningstidspunkt.SEKSTEN_AAR_SOM_BEREGNINGSTIDSPUNKT
-            ÅrsakBeregningstidspunkt.ANNET,  ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT,  null -> null
+            ÅrsakBeregningstidspunkt.ANNET, ÅrsakBeregningstidspunkt.UFØRETIDSPUNKT, null -> null
         }
 
     private fun ÅrsakYtterligereNedsatt?.tilKontrakt():
@@ -622,7 +666,28 @@ class BrevGateway : BrevbestillingGateway {
             ÅrsakYtterligereNedsatt.KRAVDATO,
             ÅrsakYtterligereNedsatt.DATO_PAA_LEGEERKLÆRING,
             ÅrsakYtterligereNedsatt.HENVIST_TIL_BEHANDLING -> null
+
             ÅrsakYtterligereNedsatt.ANNET, null -> null
+        }
+
+    private fun avslagsårsakTilFaktagrunnlag(
+        avslagsårsak: Avslagsårsak?,
+    ): Faktagrunnlag.AvslagAarsak? =
+        when (avslagsårsak) {
+            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_2)
+
+            Avslagsårsak.IKKE_OPPFYLT_OPPHOLDSKRAV_EØS,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_3)
+
+            Avslagsårsak.BRUKER_UNDER_18,
+            Avslagsårsak.BRUKER_OVER_67,
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON ->
+                Faktagrunnlag.AvslagAarsak(Faktagrunnlag.AvslagsHjemmel.AVSLAG_11_4)
+
+            else -> null
         }
 
 }

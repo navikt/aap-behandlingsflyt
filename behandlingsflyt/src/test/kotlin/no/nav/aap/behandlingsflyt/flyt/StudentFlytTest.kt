@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
@@ -20,30 +21,16 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedClass
-import org.junit.jupiter.params.provider.MethodSource
-import kotlin.reflect.KClass
 
-@ParameterizedClass
-@MethodSource("studentV2UnleashDataSource")
-class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
-
-    companion object {
-        @Suppress("unused")
-        @JvmStatic
-        fun studentV2UnleashDataSource() = listOf(
-            org.junit.jupiter.params.provider.Arguments.of(LokalUnleash::class),
-        )
-    }
-
+class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
+    
     @Test
-    fun `innvilge som student V2`() {
+    fun `innvilge som student`() {
         val fom = 24 november 2025
         val sykestipendPeriode = Periode(fom, fom.plusDays(14))
         val person = TestPersoner.STANDARD_PERSON()
@@ -58,18 +45,13 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
         val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
 
         behandling = behandling
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .describedAs { "AVKLAR_STUDENT (V1) skal ikke opprettes når StudentV2 er påskrudd" }
-                    .doesNotContain(Definisjon.AVKLAR_STUDENT)
-            }
             .løsSykdomSomPotensieltOppfyltStudent(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .describedAs { "AVKLAR_STUDENT_V2 skal opprettes etter sykdom er løst med NEI_MEN_STUDENT og kvalitetssikring er gjort" }
                     .contains(Definisjon.AVKLAR_STUDENT_V2)
             }
@@ -105,6 +87,11 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             }
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).extracting<Pair<Definisjon, GradBehov?>> { it.definisjon to it.gradBehov() }
+                    .describedAs { "Det er påkrevd å løse sykestipend når studentvilkåret er oppfylt" }
+                    .contains(Pair(Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND, GradBehov.PÅKREVD))
+            }
             .løsSykestipend(listOf(sykestipendPeriode))
             .medKontekst {
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
@@ -175,7 +162,7 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                 AvklarStudentLøsningV2(løsningerForPerioder = emptyList())
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.AVKLAR_STUDENT_V2)
             }
     }
@@ -306,7 +293,8 @@ class StudentV2FlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                     StegType.VURDER_SYKEPENGEERSTATNING
                 )
 
-                val utfall = tidligereVurderinger.behandlingsutfall(kontekstMedPerioder, StegType.VURDER_SYKEPENGEERSTATNING)
+                val utfall =
+                    tidligereVurderinger.behandlingsutfall(kontekstMedPerioder, StegType.VURDER_SYKEPENGEERSTATNING)
 
                 assertThat(utfall.segmenter()).anySatisfy {
                     assertThat(it.verdi).isInstanceOf(TidligereVurderinger.UunngåeligAvslag::class.java)

@@ -158,14 +158,17 @@ class BehandlingFlyt private constructor(
         return flyt.map { it.steg.type() }
     }
 
-    fun frivilligeAvklaringsbehovRelevantForFlyten(aktivtSteg: StegType): List<Definisjon> {
+    fun frivilligeAvklaringsbehovRelevantForFlyten(
+        aktivtSteg: StegType,
+        legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>
+    ): List<Definisjon> {
         val stegene = stegene()
         return Definisjon.entries
             .filter { def ->
                 stegene.contains(def.løsesISteg) &&
                         def.erFrivillig() &&
                         stegene.indexOf(aktivtSteg) >= stegene.indexOf(def.løsesISteg) &&
-                        def in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
+                        def in legacyAutomatiskFrivillgeAvklaringsbehov
             }
     }
 

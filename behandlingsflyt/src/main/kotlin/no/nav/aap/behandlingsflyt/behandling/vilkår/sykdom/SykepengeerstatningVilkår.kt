@@ -13,8 +13,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import org.slf4j.LoggerFactory
 
-object SykepengeerstatningVilkår :
-    Vilkårsvurderer<SykepengerErstatningFaktagrunnlag> {
+object SykepengeerstatningVilkår : Vilkårsvurderer<SykepengerErstatningFaktagrunnlag> {
     private val log = LoggerFactory.getLogger(javaClass)
     override val vilkårtype: Vilkårtype = Vilkårtype.SYKEPENGEERSTATNING
 

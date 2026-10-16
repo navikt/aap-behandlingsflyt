@@ -115,6 +115,51 @@ class ArenaMigreringsdataRepositoryImplTest {
     }
 
     @Test
+    fun `null lagres som NULL og dedupliseres`() {
+        val behandlingId = opprettBehandling()
+        val først = Instant.parse("2024-06-15T12:00:00Z")
+
+        dataSource.transaction {
+            val repo = ArenaMigreringsdataRepositoryImpl(it)
+            repo.lagre(behandlingId, StegType.REFUSJON_KRAV, null, først)
+            repo.lagre(behandlingId, StegType.REFUSJON_KRAV, null, først.plusSeconds(3600))
+        }
+
+        val (hentet, antall) = dataSource.transaction { connection ->
+            val hentet = ArenaMigreringsdataRepositoryImpl(connection)
+                .hentAktivHvisEksisterer(behandlingId, StegType.REFUSJON_KRAV)
+            hentet to antallRader(connection, behandlingId).first
+        }
+
+        assertThat(hentet).isNotNull
+        assertThat(hentet!!.data).isNull()
+        assertThat(hentet.hentetTidspunkt).isEqualTo(først)
+        assertThat(antall).isEqualTo(1)
+    }
+
+    @Test
+    fun `overgang mellom null og data gir ny aktiv rad`() {
+        val behandlingId = opprettBehandling()
+
+        dataSource.transaction {
+            val repo = ArenaMigreringsdataRepositoryImpl(it)
+            repo.lagre(behandlingId, StegType.REFUSJON_KRAV, null, Instant.now())
+            repo.lagre(behandlingId, StegType.REFUSJON_KRAV, Testdata("Krav", emptyList()), Instant.now())
+            repo.lagre(behandlingId, StegType.REFUSJON_KRAV, null, Instant.now())
+        }
+
+        val (hentet, antall) = dataSource.transaction { connection ->
+            val hentet = ArenaMigreringsdataRepositoryImpl(connection)
+                .hentAktivHvisEksisterer(behandlingId, StegType.REFUSJON_KRAV)
+            hentet to antallRader(connection, behandlingId)
+        }
+
+        assertThat(hentet!!.data).isNull()
+        assertThat(antall.first).isEqualTo(3)
+        assertThat(antall.second).isEqualTo(1)
+    }
+
+    @Test
     fun `hentAktivHvisEksisterer returnerer null når ingenting er lagret`() {
         val behandlingId = opprettBehandling()
 

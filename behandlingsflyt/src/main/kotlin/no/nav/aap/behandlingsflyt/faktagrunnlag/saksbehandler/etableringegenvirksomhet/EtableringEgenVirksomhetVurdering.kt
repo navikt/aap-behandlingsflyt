@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
@@ -25,7 +27,20 @@ data class EtableringEgenVirksomhetVurdering(
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
-) : PeriodisertVurdering
+) : PeriodisertVurdering {
+    fun evaluerVirksomhetVurdering(): Boolean {
+        return this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
+            EierVirksomhet.EIER_MINST_50_PROSENT,
+            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+        )
+    }
+}
+fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
+    selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
+): Int {
+    return this.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+        .sumOf { it.periode.antallHverdager().asInt }
+}
 
 enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,

@@ -10,9 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.meldeplikt.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
@@ -27,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.meldeplikt.MeldeperiodeRepository
 import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
@@ -67,9 +66,9 @@ class UtbetalingService(
             refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>(),
             tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
             samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
-            samordningArbeidsgiverYtelserRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
             vedtakService = VedtakService(repositoryProvider, gatewayProvider),
             behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+            unleashGateway = gatewayProvider.provide()
         ),
         meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>(),
     )
