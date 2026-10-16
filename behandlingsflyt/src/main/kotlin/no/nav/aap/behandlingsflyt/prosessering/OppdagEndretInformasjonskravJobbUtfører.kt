@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
@@ -32,7 +33,6 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val klokke: Clock = Clock.systemDefaultZone(),
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -46,6 +46,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
             SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
+            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
         val sisteBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
@@ -75,7 +76,6 @@ class OppdagEndretInformasjonskravJobbUtfører(
                     VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
                 )
                 log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
-                secureLogger.info("" + vurderingsbehov)
                 prosesserBehandlingService.triggProsesserBehandling(revurdering)
             } else {
                 log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")

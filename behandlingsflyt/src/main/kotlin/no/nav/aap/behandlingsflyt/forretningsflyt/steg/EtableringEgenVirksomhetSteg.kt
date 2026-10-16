@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
@@ -59,7 +59,7 @@ class EtableringEgenVirksomhetSteg(
         val relevantPeriode = etableringEgenVirksomhetService.utledPerioderMedSykdomOgBistand(
             kontekst.behandlingId
         ).somTidslinje { it }
-      
+
         val grunnlag = etableringEgenVirksomhetRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return Tidslinje.map2(tidligereVurderingsutfall, relevantPeriode) { utfall, relevantPeriode ->

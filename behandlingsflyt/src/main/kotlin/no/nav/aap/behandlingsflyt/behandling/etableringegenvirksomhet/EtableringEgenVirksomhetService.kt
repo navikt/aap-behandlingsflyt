@@ -1,8 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
+
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
-import no.nav.aap.bistandsbehov.BistandRepository
-import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
@@ -14,6 +13,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.bistandsbehov.BistandRepository
+import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -294,6 +295,7 @@ class EtableringEgenVirksomhetService(
 
 sealed interface VirksomhetEtableringResultat {
     data class Gyldig(val beregning: EtableringEgenVirksomhetService.Beregning) : VirksomhetEtableringResultat
+
     sealed interface Ugyldig : VirksomhetEtableringResultat {
         val melding: String
 
@@ -323,7 +325,8 @@ sealed interface VirksomhetEtableringResultat {
         }
 
         data object MåOppgiRegistrertIOffentligeRegister : Ugyldig {
-            override val melding: String = "Må ha satt om virksomheten er registrert i nødvendige offentlige register for oppstartsfasen."
+            override val melding: String =
+                "Må ha satt om virksomheten er registrert i nødvendige offentlige register for oppstartsfasen."
         }
 
         data object MåHaTilOgMedDato : Ugyldig {
