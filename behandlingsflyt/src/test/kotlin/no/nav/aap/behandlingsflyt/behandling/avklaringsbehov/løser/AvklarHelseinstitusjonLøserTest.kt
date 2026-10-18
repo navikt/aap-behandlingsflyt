@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.giReduksjon
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.lagOppholdId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -55,9 +56,19 @@ class AvklarHelseinstitusjonLøserTest {
         AvklarHelseinstitusjonLøser(
             behandlingRepository,
             helseinstitusjonRepository,
-            FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
+            unleash()
         )
     }
+
+    private fun unleash(
+        sammenhengende: Boolean = true,
+        enManedsregel: Boolean = true,
+    ) = FakeUnleashBase(
+        mapOf(
+            BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to sammenhengende,
+            BehandlingsflytFeature.Helseinstitusjon1Manedsregel to enManedsregel,
+        )
+    )
 
     @Test
     fun `forBehov returnerer AVKLAR_HELSEINSTITUSJON`() {
@@ -1026,7 +1037,12 @@ class AvklarHelseinstitusjonLøserTest {
         helseinstitusjonRepository.lagreOpphold(
             nåværendeBehandlingId, listOf(
                 lagInstitusjonsopphold(fra = 17 desember 2025, til = oppholdATom),
-                lagInstitusjonsopphold(fra = oppholdBFom, til = oppholdBTom, orgnr = "999", institusjonsnavn = "Sykehus B")
+                lagInstitusjonsopphold(
+                    fra = oppholdBFom,
+                    til = oppholdBTom,
+                    orgnr = "999",
+                    institusjonsnavn = "Sykehus B"
+                )
             )
         )
 
@@ -1158,7 +1174,12 @@ class AvklarHelseinstitusjonLøserTest {
             helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
 
         // Opphold 1 skal beholde gammel vurdering
-        assertThat(lagrede.any { it.periode == Periode(1 juni 2025, 1 august 2025) && it.vurdertIBehandling == forrigeBehandlingId }).isTrue()
+        assertThat(lagrede.any {
+            it.periode == Periode(
+                1 juni 2025,
+                1 august 2025
+            ) && it.vurdertIBehandling == forrigeBehandlingId
+        }).isTrue()
 
         // Opphold 2 skal IKKE ha noen vurdering (helt nytt, ingen historikk å arve)
         assertThat(lagrede.none { it.periode.fom >= 1 november 2025 }).isTrue()
@@ -1257,7 +1278,8 @@ class AvklarHelseinstitusjonLøserTest {
 
         // InMemoryInstitusjonsoppholdRepository lagrer vurderingene uansett flagg-verdi,
         // så vi bekrefter indirekte at kallet gikk gjennom uten feil og vurderingen faktisk ble lagret
-        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        val lagrede =
+            helseinstitusjonRepository.hentHvisEksisterer(behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
         assertThat(lagrede).hasSize(1)
         assertThat(lagrede[0].begrunnelse).isEqualTo("Reduksjon")
     }
@@ -1270,7 +1292,7 @@ class AvklarHelseinstitusjonLøserTest {
         val løserUtenToggle = AvklarHelseinstitusjonLøser(
             behandlingRepository,
             helseinstitusjonRepository,
-            FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to false))
+            unleash(sammenhengende = false)
         )
 
         // To sammenhengende opphold (B starter dagen etter A slutter) - men med toggle AV
@@ -1311,7 +1333,7 @@ class AvklarHelseinstitusjonLøserTest {
         val løserUtenToggle = AvklarHelseinstitusjonLøser(
             behandlingRepository,
             helseinstitusjonRepository,
-            FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to false))
+            unleash(sammenhengende = false)
         )
 
         lagreOppholdMedTomVurdering(
@@ -1329,7 +1351,8 @@ class AvklarHelseinstitusjonLøserTest {
             )
         )
 
-        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        val lagrede =
+            helseinstitusjonRepository.hentHvisEksisterer(behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
         assertThat(lagrede).hasSize(1)
         assertThat(lagrede[0].begrunnelse).isEqualTo("Reduksjon")
     }
@@ -1949,6 +1972,128 @@ class AvklarHelseinstitusjonLøserTest {
                 )
             )
         }
+    }
+
+    @Test
+    fun `delvis beholdt reduksjon i forrige opphold gir 1-månedsregel for neste opphold`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val nåværendeBehandlingId = revurdering.id
+
+        val kysthavenFom = 1 februar 2025
+        val kysthavenTom = 1 september 2025
+        val solglottFom = 1 november 2025
+        val solglottTom = 1 februar 2026
+
+        listOf(forrigeBehandlingId, nåværendeBehandlingId).forEach { id ->
+            helseinstitusjonRepository.lagreOpphold(
+                id, listOf(
+                    lagInstitusjonsopphold(
+                        fra = kysthavenFom, til = kysthavenTom,
+                        orgnr = "12345", institusjonsnavn = "Kysthaven Helseinstitusjon"
+                    ),
+                    lagInstitusjonsopphold(
+                        fra = solglottFom, til = solglottTom,
+                        orgnr = "37890", institusjonsnavn = "Solgløtt Rehabiliteringssenter"
+                    ),
+                )
+            )
+        }
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon Kysthaven",
+                    periode = Periode(1 juni 2025, kysthavenTom),
+                    behandlingId = forrigeBehandlingId,
+                ),
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon Solgløtt",
+                    periode = Periode(1 desember 2025, solglottTom),
+                    behandlingId = forrigeBehandlingId,
+                ),
+            )
+        )
+
+        assertDoesNotThrow {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = revurdering },
+                lagLøsning(
+                    lagDto(
+                        begrunnelse = "ikke reduksjon Kysthaven fra 15. juni",
+                        periode = Periode(15 juni 2025, kysthavenTom),
+                        faarFriKostOgLosji = false,
+                        oppholdId = lagOppholdId("Kysthaven Helseinstitusjon", kysthavenFom),
+                    ),
+                    lagDto(
+                        begrunnelse = "reduksjon Solgløtt",
+                        periode = Periode(1 desember 2025, solglottTom),
+                        oppholdId = lagOppholdId("Solgløtt Rehabiliteringssenter", solglottFom),
+                    ),
+                )
+            )
+        }
+
+        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)
+            ?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        assertThat(lagrede.filter { it.giReduksjon() }.map { it.periode }).contains(
+            Periode(1 juni 2025, 14 juni 2025),
+            Periode(1 desember 2025, solglottTom),
+        )
+    }
+
+    @Test
+    fun `fjernet reduksjon i forrige opphold gir 3-månedersregel for neste opphold`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+
+        val kysthavenFom = 1 februar 2025
+        val kysthavenTom = 1 september 2025
+        val solglottFom = 1 november 2025
+        val solglottTom = 1 februar 2026
+
+        listOf(forrigeBehandlingId, revurdering.id).forEach { id ->
+            helseinstitusjonRepository.lagreOpphold(
+                id, listOf(
+                    lagInstitusjonsopphold(
+                        fra = kysthavenFom, til = kysthavenTom,
+                        orgnr = "12345", institusjonsnavn = "Kysthaven Helseinstitusjon"
+                    ),
+                    lagInstitusjonsopphold(
+                        fra = solglottFom, til = solglottTom,
+                        orgnr = "37890", institusjonsnavn = "Solgløtt Rehabiliteringssenter"
+                    ),
+                )
+            )
+        }
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon Kysthaven",
+                    periode = Periode(1 juni 2025, kysthavenTom),
+                    behandlingId = forrigeBehandlingId,
+                ),
+            )
+        )
+
+        val exception = assertThrows<UgyldigForespørselException> {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = revurdering },
+                lagLøsning(
+                    lagDto(
+                        begrunnelse = "ikke reduksjon Kysthaven fra 1. juni",
+                        periode = Periode(1 juni 2025, kysthavenTom),
+                        faarFriKostOgLosji = false,
+                        oppholdId = lagOppholdId("Kysthaven Helseinstitusjon", kysthavenFom),
+                    ),
+                    lagDto(
+                        begrunnelse = "reduksjon Solgløtt",
+                        periode = Periode(1 desember 2025, solglottTom),
+                        oppholdId = lagOppholdId("Solgløtt Rehabiliteringssenter", solglottFom),
+                    ),
+                )
+            )
+        }
+        assertThat(exception.message).contains("Skal ikke starte før 01.03.2026")
     }
 
 

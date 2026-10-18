@@ -34,7 +34,12 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         institusjonsoppholdRepository,
         InMemorySakRepository,
         InMemoryBehandlingRepository,
-        FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
+        FakeUnleashBase(
+            mapOf(
+                BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
+                BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true,
+            )
+        )
     )
 
     // --- Hjelpefunksjoner ---
@@ -65,6 +70,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                 vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
+
             else -> error("Uventet type for soningsvurderinger")
         },
         barnetillegg = barnetillegg,
@@ -76,6 +82,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                 vurderinger = vurderinger.filterIsInstance<HelseinstitusjonVurdering>(),
                 vurdertTidspunkt = LocalDateTime.now()
             )
+
             else -> error("Uventet type for helsevurderinger")
         },
         rettighetsperiode = rettighetsperiode
@@ -323,7 +330,8 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         assertThat(res.harBehovForAvklaring()).isFalse
         val vurderinger = res.perioderTilVurdering.segmenter().map { it.verdi.helse?.vurdering }
         assertThat(vurderinger).doesNotContain(OppholdVurdering.UAVKLART)
-        val gapMedGodkjent = res.perioderTilVurdering.segmenter().first { it.periode.fom == oppholdFom && it.periode.tom == vurderingFom.minusDays(1) }
+        val gapMedGodkjent = res.perioderTilVurdering.segmenter()
+            .first { it.periode.fom == oppholdFom && it.periode.tom == vurderingFom.minusDays(1) }
         assertThat(gapMedGodkjent.verdi.helse?.vurdering).isEqualTo(OppholdVurdering.GODKJENT)
     }
 

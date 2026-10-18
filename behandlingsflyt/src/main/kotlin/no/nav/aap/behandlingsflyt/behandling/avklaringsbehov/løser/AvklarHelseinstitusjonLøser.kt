@@ -51,23 +51,24 @@ class AvklarHelseinstitusjonLøser(
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
         val vurdertAv = kontekst.bruker
 
-        validerReduksjonsdatoForInstitusjonsopphold(
-            behandling,
-            if (enManedsregelEnabled) {
-                løsning.helseinstitusjonVurdering.vurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
-            } else {
-                løsning.helseinstitusjonVurdering.vurderinger
-            }
-        ).throwOnInvalid {
-            UgyldigForespørselException(it.errorMessage)
-        }
-
         val oppdaterteVurderinger =
             slåSammenMedNyeVurderinger(
                 løsning.helseinstitusjonVurdering.vurderinger,
                 behandling,
                 vurdertAv
             )
+
+        validerReduksjonsdatoForInstitusjonsopphold(
+            behandling,
+            if (enManedsregelEnabled) {
+                løsning.helseinstitusjonVurdering.vurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
+            } else {
+                løsning.helseinstitusjonVurdering.vurderinger
+            },
+            oppdaterteVurderinger
+        ).throwOnInvalid {
+            UgyldigForespørselException(it.errorMessage)
+        }
 
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
@@ -249,7 +250,8 @@ class AvklarHelseinstitusjonLøser(
 
     private fun validerReduksjonsdatoForInstitusjonsopphold(
         behandling: Behandling,
-        nyeVurderinger: List<HelseinstitusjonVurderingDto>
+        nyeVurderinger: List<HelseinstitusjonVurderingDto>,
+        oppdaterteVurderinger: List<HelseinstitusjonVurdering>
     ): Validation<List<HelseinstitusjonVurderingDto>> {
         val grunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
@@ -263,13 +265,13 @@ class AvklarHelseinstitusjonLøser(
                 .sortedBy { it.periode }
         }
 
-        // Avgjør om en kjede får innvilget reduksjon basert på de innsendte vurderingene i dette kallet
+        // Avgjør om en kjede får innvilget reduksjon basert på sammenslåtte vurderinger (nye + beholdt fra forrige behandling)
         val harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { kjede ->
-            val vurderingerForKjede = vurderingerPerKjede[kjede].orEmpty()
-            førsteReduksjonsvurdering(vurderingerForKjede) != null
+            oppdaterteVurderinger.any { it.giReduksjon() && it.periode.overlapper(kjede.periode) }
         }
 
-        val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(opphold, harInnvilgetReduksjon)
+        val tidligsteReduksjonsdatoPerKjede =
+            beregnTidligsteReduksjonsdatoPerKjede(opphold, harInnvilgetReduksjon, enManedsregelEnabled)
 
         vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
             val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach
