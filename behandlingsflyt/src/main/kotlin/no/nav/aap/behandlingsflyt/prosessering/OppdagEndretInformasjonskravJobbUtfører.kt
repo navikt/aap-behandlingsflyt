@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
@@ -46,7 +45,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
             SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
-            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
+//            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
         val sisteBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
