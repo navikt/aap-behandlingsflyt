@@ -871,6 +871,10 @@ class BrevUtlederService(
         behandlingId: BehandlingId,
         vedtak: Vedtak,
     ): RefusjonskravTjenestepensjon? {
+        val sisteDagMedYtelse = underveisRepository.hentHvisEksisterer(behandlingId)?.sisteDagMedYtelse()
+        checkNotNull(sisteDagMedYtelse) {
+            "Vedtak mangler siste dag med ytelse"
+        }
         return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
             if (!vurdering.harKrav) {
                 RefusjonskravTjenestepensjon(
@@ -882,7 +886,7 @@ class BrevUtlederService(
                 val fraOgMed = checkNotNull(vedtak.virkningstidspunkt) {
                     "Vedtak mangler virkningstidspunkt"
                 }
-                val tilOgMed = vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt)
+                val tilOgMed = vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt).coerceAtMost(sisteDagMedYtelse)
 
                 RefusjonskravTjenestepensjon(
                     skalEtterbetalingHoldesIgjen = true,
