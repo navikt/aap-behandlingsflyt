@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.Instant
 import java.time.LocalDate
 
@@ -35,6 +36,55 @@ data class EtableringEgenVirksomhetVurdering(
         )
     }
 }
+
+fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgenVirksomhetVurdering> {
+    return this.flatMap { vurdering ->
+
+        if (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty()) return@flatMap listOf(
+            vurdering
+        )
+
+        val utviklingsvurderinger = vurdering.utviklingsPerioder.map { utviklingsperiode ->
+            vurdering.copy(
+                utviklingsPerioder = emptyList(),
+                oppstartsPerioder = emptyList(),
+                fase = EtableringFase.UTVIKLING,
+                fom = utviklingsperiode.fom,
+                tom = utviklingsperiode.tom,
+            )
+        }
+
+        val oppstartsvurderinger = vurdering.oppstartsPerioder.map { oppstartsperioder ->
+            vurdering.copy(
+                utviklingsPerioder = emptyList(),
+                oppstartsPerioder = emptyList(),
+                fase = EtableringFase.OPPSTART,
+                fom = oppstartsperioder.fom,
+                tom = oppstartsperioder.tom,
+            )
+        }
+
+        utviklingsvurderinger + oppstartsvurderinger
+    }
+}
+
+fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomhetVurdering {
+    return this.copy(
+        oppstartsPerioder = if (this.fase == EtableringFase.OPPSTART) listOf(
+            Periode(
+                this.fom,
+                this.tom ?: Tid.MAKS
+            )
+        ) else emptyList(),
+        utviklingsPerioder = if (this.fase == EtableringFase.UTVIKLING) listOf(
+            Periode(
+                this.fom,
+                this.tom ?: Tid.MAKS
+            )
+        ) else emptyList(),
+    )
+}
+
 fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
     selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
 ): Int {
