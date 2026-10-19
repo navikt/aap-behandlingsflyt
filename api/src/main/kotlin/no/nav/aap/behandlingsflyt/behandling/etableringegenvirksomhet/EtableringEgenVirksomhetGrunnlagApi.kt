@@ -3,11 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -62,12 +61,8 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val alleVurderinger =
                         etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
 
-                    val bruktUtviklingsDager =
-                        (alleVurderinger).flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
-                            .sumOf { it.periode.antallHverdager().asInt }
-                    val bruktOppstartsdager =
-                        (alleVurderinger).flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
-                            .sumOf { it.periode.antallHverdager().asInt }
+                    val bruktUtviklingsDager = alleVurderinger.tellDager { it.utviklingsPerioder }
+                    val bruktOppstartsdager = alleVurderinger.tellDager { it.oppstartsPerioder }
 
                     EtableringEgenVirksomhetGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
@@ -100,9 +95,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         bruktOppstartsdager = bruktOppstartsdager
                     )
                 }
-            respond(
-                response
-            )
+            respond(response)
         }
     }
 }

@@ -3,13 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.utbetaling
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -21,7 +19,6 @@ class AvventUtbetalingService(
     private val refusjonskravRepository: RefusjonkravRepository,
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
-    private val samordningArbeidsgiverYtelserRepository: SamordningArbeidsgiverRepository,
     private val vedtakService: VedtakService,
     private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
@@ -43,17 +40,10 @@ class AvventUtbetalingService(
             overlapperMedTjenestepensjonRefusjon(behandling.id, førsteVedtaksdato, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaSamordningAndreStatligeYtelser =
             overlapperMedSamordningAndreStatligeYtelser(behandling.id, førsteVedtaksdato)
-        val avventUtbetalingPgaSamordningArbeidsgiver =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.FjerneAvventUtbetalingForSamordningArbeidsgiver)) {
-                null
-            } else {
-                overlapperMedSamordningArbeidsgiver(behandling.id, førsteVedtaksdato, tilkjentYtelseHelePerioden)
-            }
 
         return avventUtbetalingPgaSosialRefusjonskrav
             ?: (avventUtbetalingPgaTjenestepensjonRefusjon
-                ?: avventUtbetalingPgaSamordningAndreStatligeYtelser
-                ?: avventUtbetalingPgaSamordningArbeidsgiver)
+                ?: avventUtbetalingPgaSamordningAndreStatligeYtelser)
     }
 
     fun finnTidligesteVirkningstidspunktFraTidligereBehandlinger(
@@ -159,49 +149,6 @@ class AvventUtbetalingService(
             årsak = AvventÅrsak.AVVENT_AVREGNING,
             feilregistrering = false
         )
-    }
-
-    private fun overlapperMedSamordningArbeidsgiver(
-        behandlingId: BehandlingId,
-        førsteVedtaksdato: LocalDate,
-        tilkjentYtelseHelePerioden: Periode
-    ): TilkjentYtelseAvventDto? {
-        val samordningArbeidsgiverYtelser = samordningArbeidsgiverYtelserRepository.hentHvisEksisterer(behandlingId)
-        if (samordningArbeidsgiverYtelser?.vurdering == null) {
-            return null
-        }
-        val perioder = samordningArbeidsgiverYtelser.vurdering.perioder
-
-        val harKrav = perioder.any { tilkjentYtelseHelePerioden.overlapper(tilPeriode(it.fom, it.tom)) }
-
-        if (harKrav) {
-            val overføres = førsteVedtaksdato.plusDays(42)
-
-            val periodeMedKravFom = perioder
-                .map { it.fom }
-                .minOf { it }
-            val periodeMedKravTom = perioder
-                .map { it.tom }
-                .maxOf { it }
-            val tom = periodeMedKravTom
-                .coerceAtMost(førsteVedtaksdato.minusDays(1))
-                ?: førsteVedtaksdato.minusDays(1)
-                    .coerceAtLeast(periodeMedKravFom)
-
-
-            return TilkjentYtelseAvventDto(
-                fom = periodeMedKravFom,
-                tom = tom
-                    .coerceAtMost(førsteVedtaksdato.minusDays(1))
-                    .coerceAtLeast(periodeMedKravFom),
-                overføres = overføres,
-                årsak = AvventÅrsak.AVVENT_AVREGNING,
-                feilregistrering = false
-            )
-
-        }
-
-        return null
     }
 
     private fun tilPeriode(fom: LocalDate?, tom: LocalDate?) = Periode(fom ?: LocalDate.MIN, tom ?: Tid.MAKS)

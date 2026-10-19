@@ -117,7 +117,7 @@ class EtableringEgenVirksomhetLøserTest {
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
+        assertThat(feil.message).contains("Oppstartsperiode kan ikke ligge før en utviklingsperiode.")
     }
 
     @Test

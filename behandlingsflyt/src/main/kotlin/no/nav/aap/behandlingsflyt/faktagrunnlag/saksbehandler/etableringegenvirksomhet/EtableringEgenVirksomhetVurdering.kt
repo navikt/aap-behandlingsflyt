@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.Instant
@@ -33,6 +35,12 @@ data class EtableringEgenVirksomhetVurdering(
         )
     }
 }
+fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
+    selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
+): Int {
+    return this.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+        .sumOf { it.periode.antallHverdager().asInt }
+}
 
 enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,
@@ -40,9 +48,9 @@ enum class EierVirksomhet {
     NEI
 }
 
-enum class EtableringFase {
-    OPPSTART,
-    UTVIKLING
+enum class EtableringFase(val maksHverdager: Int) {
+    UTVIKLING(maksHverdager = 131),
+    OPPSTART(maksHverdager = 66);
 }
 
 fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<EtableringEgenVirksomhetVurdering>): Boolean {

@@ -57,7 +57,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
-            erTilstrekkeligVurdert = { true },
+            erTilstrekkeligVurdert = { tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(kontekst.behandlingId) != null },
             tilbakestillGrunnlag = {
                 kontekst.forrigeBehandlingId
                     ?.let { tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(it) }

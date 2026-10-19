@@ -20,7 +20,6 @@ enum class BehandlingsflytFeature(
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
-    SaksbehandlerMeldekortKvitteringNyPdfgenerator,
     SynkroniserArenaMeldeperiodesyklus,
     DynamiskFrivilligSykestipend,
 
@@ -47,6 +46,7 @@ enum class BehandlingsflytFeature(
     KlagePaaTilbakekreving,
     NySoknadTilApiIntern,
     SammenhengendeInstitusjonsopphold,
+    DatadelingBehandlingVisning,
     Helseinstitusjon1Manedsregel
     ;
 
