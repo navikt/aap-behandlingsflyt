@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
@@ -46,6 +47,7 @@ class BackfillRedusertDagsatsServiceTest {
             mottattDokumentRepository = InMemoryMottattDokumentRepository,
             rettighetsperiodeRepository = rettighetsperiodeRepository,
             trukketSøknadService = TrukketSøknadService(InMemoryTrukketSøknadRepository),
+            tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository,
         )
     }
 

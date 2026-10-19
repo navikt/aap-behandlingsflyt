@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentForRedusertDagsatsBackfill
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -16,7 +17,7 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
         }
     }
 
-    override fun hentPerioderUtenRedusertDagsats(behandlingId: BehandlingId): List<TilkjentYtelsePeriode> {
+    override fun hentTilkjentUtenRedusertDagsats(behandlingId: BehandlingId): List<TilkjentForRedusertDagsatsBackfill> {
         synchronized(lock) {
             return tilkjentYtelse[behandlingId].orEmpty().filter { it.tilkjent.redusertDagsatsOrNull() == null }
         }
@@ -31,6 +32,10 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
         synchronized(lock) {
             tilkjentYtelse[behandlingId] = tilkjent
         }
+    }
+
+    override fun backfillRedusertDagsats(tilkjentBackfillKandidater: List<TilkjentForRedusertDagsatsBackfill>) {
+        TODO("Not yet implemented")
     }
 
     override fun slett(behandlingId: BehandlingId) {
