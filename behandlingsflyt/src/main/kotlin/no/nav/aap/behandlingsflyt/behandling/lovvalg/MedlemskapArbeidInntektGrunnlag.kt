@@ -17,7 +17,15 @@ data class MedlemskapLovvalgGrunnlag(
     val personopplysning: Personopplysning?,
     val nyeSoknadGrunnlag: UtenlandsOppholdData?,
     val vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
-) : Faktagrunnlag
+) : Faktagrunnlag {
+    fun utenManuelleVurderinger(): MedlemskapLovvalgGrunnlag {
+        return this.copy(
+            medlemskapArbeidInntektGrunnlag = this.medlemskapArbeidInntektGrunnlag?.copy(
+                vurderinger = emptyList()
+            )
+        )
+    }
+}
 
 data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,

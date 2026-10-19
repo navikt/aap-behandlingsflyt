@@ -8,13 +8,26 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 import kotlin.String
 
+data class LovvalgDelvurderingerGrunnlag(
+    val kanBehandlesAutomatisk: Boolean,
+    val tilhørighetVurdering: List<TilhørighetVurdering>,
+    val periode: Periode,
+    val delvurderingId: Long
+) {
+    fun vurdering(): KanBehandlesAutomatiskVurdering = KanBehandlesAutomatiskVurdering(kanBehandlesAutomatisk, tilhørighetVurdering, periode)
+
+    fun vurderingTidslinje(): Tidslinje<Boolean> = Tidslinje(periode, kanBehandlesAutomatisk)
+}
+
 data class KanBehandlesAutomatiskVurdering(
     val kanBehandlesAutomatisk: Boolean,
-    val tilhørighetVurdering: List<TilhørighetVurdering>
+    val tilhørighetVurdering: List<TilhørighetVurdering>,
+    val periode: Periode
 )
 
 data class TilhørighetVurdering(

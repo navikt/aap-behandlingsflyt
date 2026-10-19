@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovvalgVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -38,6 +40,7 @@ class VurderLovvalgSteg private constructor(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val lovvalgDelvurderingRepository: LovvalgDelvurderingRepository,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -46,11 +49,13 @@ class VurderLovvalgSteg private constructor(
         medlemskapArbeidInntektRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        lovvalgDelvurderingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
+        opprettDelvurderinger(kontekst, grunnlag)
 
         val tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
@@ -70,6 +75,7 @@ class VurderLovvalgSteg private constructor(
                 // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
                 val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                // TODO: Bruke delvurderingene for å vurdere vilkåeret
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, kontekst.vurderingType)
                     .vurder(grunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
@@ -91,6 +97,31 @@ class VurderLovvalgSteg private constructor(
         return Fullført
     }
 
+    private fun opprettDelvurderinger(
+        kontekst: FlytKontekstMedPerioder,
+        grunnlag: Lazy<MedlemskapLovvalgGrunnlag>
+    ) {
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.MIGERING_FRA_ARENA,
+            VurderingType.REVURDERING -> {
+                val grunnlagUtenManuellVurdering = grunnlag.value.utenManuelleVurderinger()
+
+                val tilhørighetVurdering = MedlemskapLovvalgVurderingService().vurderTilhørighet(
+                    grunnlagUtenManuellVurdering,
+                    kontekst.rettighetsperiode,
+                    kontekst.vurderingType
+                )
+                lovvalgDelvurderingRepository.lagre(kontekst.behandlingId, tilhørighetVurdering)
+            }
+
+            else -> {
+                /* noop */
+            }
+        }
+    }
+
 
     private fun perioderSomIkkeErTilstrekkeligVurdert (
         kontekst: FlytKontekstMedPerioder,
@@ -108,9 +139,8 @@ class VurderLovvalgSteg private constructor(
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
 
-        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
+        val lovvalgDelvurderingTidslinje = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderingTidslinje() ?: Tidslinje.empty()
 
         val forrigeHaddeAvslagPåLovvalg = kontekst.forrigeBehandlingId?.let { forrigeId ->
             vilkårsresultatRepository.hent(forrigeId)
@@ -123,9 +153,9 @@ class VurderLovvalgSteg private constructor(
             it in vurderingsbehovSomGjørAtRevurderingSkalTvinges()
         } || (forrigeHaddeAvslagPåLovvalg && Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg)
 
-        return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
+        return Tidslinje.zip2(tidligereVurderingsutfall, lovvalgDelvurderingTidslinje)
             .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
-                val automatiskIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
+                val automatiskIkkeOppfylt = automatiskVilkårsvurderingLovvalg != true
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.IkkeBehandlingsgrunnlag -> false

@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunn
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovvalgVurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -48,6 +49,11 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandling =
                         repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
+                    val lagretVurdering = repositoryProvider.provide<LovvalgDelvurderingRepository>()
+                        .hentHvisEksisterer(behandling.id)
+                    if (lagretVurdering != null) {
+                        return@transaction lagretVurdering.vurdering()
+                    }
                     val medlemskapArbeidInntektRepository =
                         repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
@@ -56,8 +62,8 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                         repositoryProvider.provide<PersonopplysningRepository>()
                             .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
                     if (brukerPersonopplysning == null) {
-                        // Steget har ikke fått kjørt enda, så
-                        return@transaction null
+                        // Steget har ikke fått kjørt enda, så ingen vurdering kan gis ut
+                        return@transaction KanBehandlesAutomatiskVurdering(false, emptyList(), sak.rettighetsperiode)
                     }
                     val medlemskapArbeidInntektGrunnlag =
                         repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
@@ -80,11 +86,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                         sak.rettighetsperiode
                     )
                 }
-                if (vurdering == null) {
-                    respond(KanBehandlesAutomatiskVurdering(false, emptyList()))
-                } else {
-                    respond(vurdering)
-                }
+                respond(vurdering)
             }
         }
         route("/forutgaaendevurdering/{referanse}") {
@@ -109,7 +111,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                         .hentHvisEksisterer(behandling.id)
                     if (personopplysningGrunnlag == null) {
                         // Steget har ikke fått kjørt enda, så
-                        return@transaction null
+                        return@transaction KanBehandlesAutomatiskVurdering(false, emptyList(), sak.rettighetsperiode)
                     }
 
                     val medlemskapArbeidInntektGrunnlag =
@@ -128,11 +130,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                         sak.rettighetsperiode
                     )
                 }
-                if (vurdering == null) {
-                    respond(KanBehandlesAutomatiskVurdering(false, emptyList()))
-                } else {
-                    respond(vurdering)
-                }
+                respond(vurdering)
             }
         }
     }

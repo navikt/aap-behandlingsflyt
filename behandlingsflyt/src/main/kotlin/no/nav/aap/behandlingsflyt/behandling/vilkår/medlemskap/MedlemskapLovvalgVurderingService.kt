@@ -69,7 +69,8 @@ class MedlemskapLovvalgVurderingService {
 
         return KanBehandlesAutomatiskVurdering(
             kanBehandlesAutomatisk,
-            førsteDelVurderinger + andreDelVurdering
+            førsteDelVurderinger + andreDelVurdering,
+            periode = rettighetsPeriode
         )
     }
 
