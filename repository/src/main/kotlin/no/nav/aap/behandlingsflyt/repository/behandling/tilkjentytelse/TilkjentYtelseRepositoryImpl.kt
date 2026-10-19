@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentForRedusertDagsatsBackfill
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -83,6 +84,21 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         versjon: String,
     ) {
         return lagre(behandlingId, tilkjent, faktagrunnlag.hent(), versjon)
+    }
+
+    override fun backfillRedusertDagsats (
+        tilkjentBackfillKandidater: List<TilkjentForRedusertDagsatsBackfill>
+    ) {
+        val sql = "UPDATE TILKJENT_PERIODE SET REDUSERT_DAGSATS = ? WHERE ID = ?"
+        connection.executeBatch(
+            sql,
+            tilkjentBackfillKandidater
+        ) {
+            setParams { tilkjentBackfillKandidater ->
+                setBigDecimal(1, tilkjentBackfillKandidater.redusertDagsats?.verdi)
+                setLong(2, tilkjentBackfillKandidater.tilkjentPeriodeId)
+            }
+        }
     }
 
     private fun lagre(
@@ -214,7 +230,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         lagre(tilBehandling, eksisterendeGrunnlag, faktaOgVersjon?.first, faktaOgVersjon?.second)
     }
 
-    override fun hentPerioderUtenRedusertDagsats(behandlingId: BehandlingId): List<TilkjentYtelsePeriode> {
+    override fun hentTilkjentUtenRedusertDagsats(behandlingId: BehandlingId): List<TilkjentForRedusertDagsatsBackfill> {
         return connection.queryList(
             """
             SELECT tp.*
@@ -228,37 +244,13 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                TilkjentYtelsePeriode(
-                    periode = it.getPeriode("PERIODE"),
-                    Tilkjent(
-                        dagsats = Beløp(it.getInt("DAGSATS")),
-                        gradering = Prosent(it.getInt("GRADERING")),
-                        graderingGrunnlag = GraderingGrunnlag(
-                            samordningUføregradering = it.getIntOrNull("SAMORDNING_UFORE_GRADERING")
-                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            samordningArbeidsgiverGradering = it.getIntOrNull("SAMORDNING_ARBEIDSGIVER_GRADERING")
-                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")
-                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")
-                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) }
-                                ?: `0_PROSENT`,
-                            meldepliktGradering = it.getIntOrNull("MELDEPLIKT_GRADERING")
-                                ?.let { result -> Prosent(result) }
-                                ?: `0_PROSENT`,
-                        ),
-                        barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
-                        grunnlagsfaktor = GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
-                        antallBarn = it.getInt("ANTALL_BARN"),
-                        barnetilleggsats = Beløp(it.getInt("BARNETILLEGGSATS")),
-                        grunnbeløp = Beløp(it.getInt("GRUNNBELOP")),
-                        utbetalingsdato = it.getLocalDate("UTBETALINGSDATO"),
-                        minsteSats = it.getStringOrNull("MINSTESATS")?.let { Minstesats.valueOf(it) }
-                            ?: Minstesats.IKKE_MINSTESATS,
-                        redusertDagsats = it.getBigDecimalOrNull("redusert_dagsats")?.let(::Beløp),
-                        barnepensjonDagsats = Beløp(it.getBigDecimal("barnepensjon_dagsats"))
-                    )
+                TilkjentForRedusertDagsatsBackfill(
+                    tilkjentPeriodeId = it.getLong("ID"),
+                    dagsats = Beløp(it.getInt("DAGSATS")),
+                    barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
+                    barnepensjonDagsats = Beløp(it.getBigDecimal("barnepensjon_dagsats")),
+                    gradering = Prosent(it.getInt("GRADERING")),
+                    redusertDagsats = it.getBigDecimalOrNull("redusert_dagsats")?.let(::Beløp)
                 )
             }
         }
