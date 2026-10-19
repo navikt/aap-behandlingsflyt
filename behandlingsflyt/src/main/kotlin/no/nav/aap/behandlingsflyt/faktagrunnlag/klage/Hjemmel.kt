@@ -79,9 +79,10 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_5,
             FOLKETRYGDLOVEN_11_6,
             FOLKETRYGDLOVEN_11_10_FRITAK,
-            FOLKETRYGDLOVEN_11_13, // TODO: Få vurderingsbehov for 11-13 til å funke dersom 11-5 og 11-6 er i "feil tilstand" for at 11-13 er relevant (se 11-18 og 11-17)
             FOLKETRYGDLOVEN_11_23_UUTNYTTET_ARB_EVNE
                 -> listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+
+            FOLKETRYGDLOVEN_11_13 -> listOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
 
             FOLKETRYGDLOVEN_11_10_MELDEPLIKT -> listOf(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN)
 

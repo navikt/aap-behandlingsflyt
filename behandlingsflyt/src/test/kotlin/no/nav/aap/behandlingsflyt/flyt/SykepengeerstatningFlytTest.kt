@@ -142,6 +142,27 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
     }
 
+        @Test
+    fun `revurdere 11-13 på ordinær AAP skal først kreve ny vurdering av 11-5 og 11-6`() {
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
+
+        sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .containsExactly(Definisjon.AVKLAR_SYKDOM)
+            }
+            .løsSykdom(sak.rettighetsperiode.fom)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .containsExactly(Definisjon.AVKLAR_BISTANDSBEHOV)
+            }
+            .løsBistand(sak.rettighetsperiode.fom)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .doesNotContain(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+            }
+    }
+
     @Test
     fun `ikke sykdom viss varighet, men skal få innvilget 11-13 sykepengererstatning`() {
         val søknadsdato = LocalDate.now()

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMeta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -100,13 +101,17 @@ class VurderSykdomSteg(
             kontekst,
             type()
         )
+        val revurdererSykepengeerstatning =
+            Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING in kontekst.vurderingsbehovRelevanteForSteg
 
         return tidligereVurderingsutfall.mapValue { behandlingsutfall ->
             when (behandlingsutfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    behandlingsutfall.rettighetstype == null
+                    behandlingsutfall.rettighetstype == null ||
+                        (revurdererSykepengeerstatning &&
+                            behandlingsutfall.rettighetstype == RettighetsType.BISTANDSBEHOV)
                 }
             }
         }
