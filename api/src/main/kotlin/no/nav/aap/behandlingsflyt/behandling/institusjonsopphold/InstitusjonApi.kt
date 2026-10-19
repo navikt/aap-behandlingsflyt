@@ -127,7 +127,8 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val institusjonsoppholdRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
                     val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
                     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-                    val enManedsregelEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
+                    val enManedsregelEnabled =
+                        unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
                     val utlederService = InstitusjonsoppholdUtlederService(
                         barnetilleggRepository,
@@ -221,11 +222,16 @@ fun NormalOpenAPIRoute.institusjonApi(
                     // Grupper i sammenhengende kjeder og beregn tidligste reduksjonsdato per kjede
                     val kjeder = grupperSammenhengendeOppholdSegmenter(oppholdSegmenter)
                     val harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { kjede ->
-                        kjede.elementer.any { segment ->
-                            vedtatteVurderingerForOpphold[segment.periode]?.any { it.giReduksjon() } == true
-                        }
+                        val kjedeOppholdIder =
+                            kjede.elementer.map { lagOppholdId(it.verdi.navn, it.periode.fom) }.toSet()
+                        vedtatteVurderingerForOpphold.values.flatten()
+                            .any { it.giReduksjon() && it.oppholdId in kjedeOppholdIder }
                     }
-                    val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(oppholdSegmenter, harInnvilgetReduksjon, enManedsregelEnabled)
+                    val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(
+                        oppholdSegmenter,
+                        harInnvilgetReduksjon,
+                        enManedsregelEnabled
+                    )
 
                     // Bygg opphold-liste med tidligsteReduksjonsdato
                     val oppholdMedReduksjonsdato = hentOppholdSomSkalVurderes(
@@ -298,13 +304,12 @@ fun mapVurderingerToDto(
     }
 
     val alleKjeder = grupperSammenhengendeOppholdSegmenter(oppholdInfo.segmenter().toList())
+    val enManedsregelEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
     return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
         val kjede = alleKjeder.firstOrNull { it.periode.overlapper(vurderingPeriode) }
-            ?: finnNærmesteKjedeFør(alleKjeder, vurderingPeriode).takeIf {
-                unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
-            }
-    ?: return@flatMap emptyList()
+            ?: (if (enManedsregelEnabled) finnNærmesteKjedeFør(alleKjeder, vurderingPeriode) else null)
+            ?: return@flatMap emptyList()
         val først = kjede.elementer.first()
 
         listOf(

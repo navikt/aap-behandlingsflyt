@@ -6,14 +6,14 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDateTime
 
 data class HelseinstitusjonVurdering(
-    val periode: Periode,
     val begrunnelse: String,
     val faarFriKostOgLosji: Boolean,
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
-    val erHistoriskUtenReduksjonsberegning: Boolean = false,
+    val periode: Periode,
     val vurdertIBehandling: BehandlingId,
-    val vurdertAv: Bruker?,
+    val vurdertAv: Bruker? = null,
     val vurdertTidspunkt: LocalDateTime?,
+    val erHistoriskUtenReduksjonsberegning: Boolean = false,
     val oppholdId: String? = null,
 )

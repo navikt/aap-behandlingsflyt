@@ -365,36 +365,42 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                      AND INSTITUSJONSTYPE = 'HS'
                      AND PERIODE && ? ::daterange
                      ORDER BY PERIODE
-                     LIMIT 1),
-                    (SELECT ID FROM OPPHOLD 
-                     WHERE OPPHOLD_PERSON_ID = ?  
-                     AND INSTITUSJONSTYPE = 'HS'
-                     ORDER BY PERIODE DESC
                      LIMIT 1)
                 ), 
                 ?, ?, ?, ?, ? ::daterange, ?, ?, ?)
          """.trimIndent()
+
+        val hsOppholdPerPerson = mutableMapOf<Long, List<HsOpphold>>()
 
         connection.executeBatch(query, helseoppholdVurderinger) {
             setParams { vurdering ->
                 val relevanteOppholdPersonId = hentOppholdPersonIdForBehandling(vurdering.vurdertIBehandling)
                     ?: oppholdPersonId
 
-                val eksplisittOppholdId = finnOppholdIdForVurdering(relevanteOppholdPersonId, vurdering.oppholdId)
+                val hsOpphold = hsOppholdPerPerson.getOrPut(relevanteOppholdPersonId) {
+                    hentHsOpphold(relevanteOppholdPersonId)
+                }
+                val eksplisittOppholdId =
+                    hsOpphold.firstOrNull { lagOppholdId(it.navn, it.periode.fom) == vurdering.oppholdId }?.id
+                        ?: if (vurdering.erHistoriskUtenReduksjonsberegning) {
+                            (hsOpphold.firstOrNull { it.periode.overlapper(vurdering.periode) }
+                                ?: hsOpphold.maxByOrNull { it.periode.fom })?.id
+                        } else {
+                            null
+                        }
 
                 setLong(1, vurderingerId)
                 setLong(2, eksplisittOppholdId)
                 setLong(3, relevanteOppholdPersonId)
                 setPeriode(4, vurdering.periode)
-                setLong(5, relevanteOppholdPersonId)
-                setBoolean(6, vurdering.faarFriKostOgLosji)
-                setBoolean(7, vurdering.forsoergerEktefelle)
-                setBoolean(8, vurdering.harFasteUtgifter)
-                setString(9, vurdering.begrunnelse)
-                setPeriode(10, vurdering.periode)
-                setLong(11, vurdering.vurdertIBehandling.toLong())
-                setBruker(12, vurdering.vurdertAv)
-                setBoolean(13, vurdering.erHistoriskUtenReduksjonsberegning)
+                setBoolean(5, vurdering.faarFriKostOgLosji)
+                setBoolean(6, vurdering.forsoergerEktefelle)
+                setBoolean(7, vurdering.harFasteUtgifter)
+                setString(8, vurdering.begrunnelse)
+                setPeriode(9, vurdering.periode)
+                setLong(10, vurdering.vurdertIBehandling.toLong())
+                setBruker(11, vurdering.vurdertAv)
+                setBoolean(12, vurdering.erHistoriskUtenReduksjonsberegning)
             }
         }
 
@@ -430,20 +436,6 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
                 setLong(4, vurderingerId)
             }
         }
-    }
-
-    private fun finnOppholdIdForVurdering(oppholdPersonId: Long, vurderingOppholdId: String?): Long? {
-        if (vurderingOppholdId == null) return null
-
-        return connection.queryList(
-            """SELECT ID, INSTITUSJONSNAVN, LOWER(PERIODE) AS FOM FROM OPPHOLD 
-               WHERE OPPHOLD_PERSON_ID = ? AND INSTITUSJONSTYPE = 'HS'""".trimIndent()
-        ) {
-            setParams { setLong(1, oppholdPersonId) }
-            setRowMapper {
-                Triple(it.getLong("ID"), it.getString("INSTITUSJONSNAVN"), it.getLocalDate("FOM"))
-            }
-        }.firstOrNull { (_, navn, fom) -> lagOppholdId(navn, fom) == vurderingOppholdId }?.first
     }
 
     private fun hentOppholdPersonIdForBehandling(behandlingId: BehandlingId): Long? {
@@ -642,4 +634,15 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
     )
 
     internal data class Keychain(val oppholdId: Long?, val soningvurderingId: Long?, val helsevurderingId: Long?)
+
+    private data class HsOpphold(val id: Long, val navn: String, val periode: Periode)
+
+    private fun hentHsOpphold(oppholdPersonId: Long): List<HsOpphold> =
+        connection.queryList(
+            """SELECT ID, INSTITUSJONSNAVN, PERIODE FROM OPPHOLD 
+           WHERE OPPHOLD_PERSON_ID = ? AND INSTITUSJONSTYPE = 'HS'""".trimIndent()
+        ) {
+            setParams { setLong(1, oppholdPersonId) }
+            setRowMapper { HsOpphold(it.getLong("ID"), it.getString("INSTITUSJONSNAVN"), it.getPeriode("PERIODE")) }
+        }
 }

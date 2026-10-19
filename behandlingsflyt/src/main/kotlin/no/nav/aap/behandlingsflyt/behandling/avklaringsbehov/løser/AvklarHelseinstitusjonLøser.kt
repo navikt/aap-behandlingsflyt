@@ -51,9 +51,16 @@ class AvklarHelseinstitusjonLøser(
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
         val vurdertAv = kontekst.bruker
 
+        val innsendteVurderinger =
+            if (enManedsregelEnabled) {
+                løsning.helseinstitusjonVurdering.vurderinger
+            } else {
+                løsning.helseinstitusjonVurdering.vurderinger.map { it.copy(erHistoriskUtenReduksjonsberegning = false) }
+            }
+
         val oppdaterteVurderinger =
             slåSammenMedNyeVurderinger(
-                løsning.helseinstitusjonVurdering.vurderinger,
+                innsendteVurderinger,
                 behandling,
                 vurdertAv
             )
@@ -61,11 +68,12 @@ class AvklarHelseinstitusjonLøser(
         validerReduksjonsdatoForInstitusjonsopphold(
             behandling,
             if (enManedsregelEnabled) {
-                løsning.helseinstitusjonVurdering.vurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
+                innsendteVurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
             } else {
-                løsning.helseinstitusjonVurdering.vurderinger
+                innsendteVurderinger
             },
-            oppdaterteVurderinger
+            oppdaterteVurderinger,
+            løsning.helseinstitusjonVurdering.vurderinger
         ).throwOnInvalid {
             UgyldigForespørselException(it.errorMessage)
         }
@@ -95,7 +103,11 @@ class AvklarHelseinstitusjonLøser(
         val nåværendeOpphold = nåværendeGrunnlag?.oppholdene?.opphold.orEmpty()
         val historiskeOppholdPerioder = nyeHistoriske.mapNotNull { historisk ->
             nåværendeOpphold.firstOrNull { lagOppholdId(it.verdi.navn, it.periode.fom) == historisk.oppholdId }
-                ?: nåværendeOpphold.firstOrNull { it.periode.overlapper(historisk.periode) }
+                ?: if (historisk.oppholdId == null) {
+                    nåværendeOpphold.firstOrNull { it.periode.overlapper(historisk.periode) }
+                } else {
+                    null
+                }
         }.map { it.periode }
 
         val eksisterendeTidslinje =
@@ -103,8 +115,10 @@ class AvklarHelseinstitusjonLøser(
                 .fjernReduksjonIPerioder(historiskeOppholdPerioder)
 
         val oppholdIderMedNyInput = nyeVurderinger.mapNotNull { it.oppholdId }.toSet()
+        val nåværendeOppholdIder = nåværendeOpphold.map { lagOppholdId(it.verdi.navn, it.periode.fom) }.toSet()
         val eksisterendeHistoriske = forrigeGrunnlag?.helseoppholdvurderinger?.historiskeVurderinger.orEmpty()
             .filter { it.oppholdId !in oppholdIderMedNyInput }
+            .filter { nåværendeOpphold.isEmpty() || it.oppholdId in nåværendeOppholdIder }
 
         val periodiserte = if (nyePeriodiserte.isEmpty()) {
             eksisterendeTidslinje.segmenter().map { it.tilVurdering(it.verdi.vurdertAv) }
@@ -251,11 +265,14 @@ class AvklarHelseinstitusjonLøser(
     private fun validerReduksjonsdatoForInstitusjonsopphold(
         behandling: Behandling,
         nyeVurderinger: List<HelseinstitusjonVurderingDto>,
-        oppdaterteVurderinger: List<HelseinstitusjonVurdering>
+        oppdaterteVurderinger: List<HelseinstitusjonVurdering>,
+        alleInnsendte: List<HelseinstitusjonVurderingDto>
     ): Validation<List<HelseinstitusjonVurderingDto>> {
         val grunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
         val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
-        if (opphold.isEmpty() || nyeVurderinger.isEmpty()) return Validation.Valid(nyeVurderinger)
+        if (opphold.isEmpty() || (nyeVurderinger.isEmpty() && alleInnsendte.isEmpty())) {
+            return Validation.Valid(nyeVurderinger)
+        }
 
         val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
 
@@ -272,6 +289,25 @@ class AvklarHelseinstitusjonLøser(
 
         val tidligsteReduksjonsdatoPerKjede =
             beregnTidligsteReduksjonsdatoPerKjede(opphold, harInnvilgetReduksjon, enManedsregelEnabled)
+
+        if (enManedsregelEnabled) {
+            val feilaktigHistoriske = alleInnsendte
+                .filter { it.erHistoriskUtenReduksjonsberegning }
+                .filter { it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false }
+                .filter { historisk ->
+                    val kjede = kjeder.firstOrNull { k ->
+                        k.elementer.any { lagOppholdId(it.verdi.navn, it.periode.fom) == historisk.oppholdId }
+                    }
+                    val tidligste = kjede?.let { tidligsteReduksjonsdatoPerKjede[it] }
+                    kjede != null && tidligste != null && !tidligste.isAfter(kjede.periode.tom)
+                }
+            if (feilaktigHistoriske.isNotEmpty()) {
+                return Validation.Invalid(
+                    alleInnsendte,
+                    "Reduksjon kan ikke lagres som historikk når den rekker innenfor oppholdet"
+                )
+            }
+        }
 
         vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
             val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach

@@ -2096,6 +2096,158 @@ class AvklarHelseinstitusjonLøserTest {
         assertThat(exception.message).contains("Skal ikke starte før 01.03.2026")
     }
 
+    @Test
+    fun `toggle av - historisk flagg ignoreres og vurderingen valideres mot tidligste reduksjonsdato`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val løserUtenToggle = AvklarHelseinstitusjonLøser(
+            behandlingRepository, helseinstitusjonRepository, unleash(enManedsregel = false)
+        )
+        lagreOppholdMedTomVurdering(
+            behandling.id,
+            lagInstitusjonsopphold(fra = 1 januar 2025, til = 31 desember 2025)
+        )
+
+        val exception = assertThrows<UgyldigForespørselException> {
+            løserUtenToggle.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                lagLøsning(
+                    lagDto(
+                        begrunnelse = "Historisk, men toggle er av",
+                        periode = Periode(1 februar 2025, 1 februar 2025),
+                        historisk = true,
+                    )
+                )
+            )
+        }
+        assertThat(exception.message).contains("Reduksjonsvurdering starter for tidlig.")
+    }
+
+    @Test
+    fun `toggle av - historisk vurdering lagres som periodisert`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val løserUtenToggle = AvklarHelseinstitusjonLøser(
+            behandlingRepository, helseinstitusjonRepository, unleash(enManedsregel = false)
+        )
+
+        løserUtenToggle.løs(
+            avklaringsbehovKontekst { this.behandling = behandling },
+            lagLøsning(
+                lagDto(
+                    begrunnelse = "Historisk",
+                    periode = Periode(1 mai 2025, 1 august 2025),
+                    historisk = true,
+                )
+            )
+        )
+
+        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
+            ?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].erHistoriskUtenReduksjonsberegning).isFalse()
+    }
+
+    @Test
+    fun `toggle av - fjernet reduksjon i forrige opphold gir fortsatt gammel regel uten feil`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val løserUtenToggle = AvklarHelseinstitusjonLøser(
+            behandlingRepository, helseinstitusjonRepository, unleash(enManedsregel = false)
+        )
+        val kysthavenFom = 1 februar 2025
+        val kysthavenTom = 1 september 2025
+        val solglottFom = 1 november 2025
+        val solglottTom = 1 februar 2026
+
+        listOf(forrigeBehandlingId, revurdering.id).forEach { id ->
+            helseinstitusjonRepository.lagreOpphold(
+                id, listOf(
+                    lagInstitusjonsopphold(
+                        fra = kysthavenFom, til = kysthavenTom,
+                        orgnr = "12345", institusjonsnavn = "Kysthaven Helseinstitusjon"
+                    ),
+                    lagInstitusjonsopphold(
+                        fra = solglottFom, til = solglottTom,
+                        orgnr = "37890", institusjonsnavn = "Solgløtt Rehabiliteringssenter"
+                    ),
+                )
+            )
+        }
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "reduksjon Kysthaven",
+                    periode = Periode(1 juni 2025, kysthavenTom),
+                    behandlingId = forrigeBehandlingId,
+                )
+            )
+        )
+
+        // Gammel regel: tidligste dato for Solgløtt er innleggelsesdatoen, uavhengig av reduksjon i Kysthaven
+        assertDoesNotThrow {
+            løserUtenToggle.løs(
+                avklaringsbehovKontekst { this.behandling = revurdering },
+                lagLøsning(
+                    lagDto(
+                        begrunnelse = "ikke reduksjon Kysthaven fra 1. juni",
+                        periode = Periode(1 juni 2025, kysthavenTom),
+                        faarFriKostOgLosji = false,
+                        oppholdId = lagOppholdId("Kysthaven Helseinstitusjon", kysthavenFom),
+                    ),
+                    lagDto(
+                        begrunnelse = "reduksjon Solgløtt",
+                        periode = Periode(1 desember 2025, solglottTom),
+                        oppholdId = lagOppholdId("Solgløtt Rehabiliteringssenter", solglottFom),
+                    ),
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `historisk flagg på reduksjon som rekker innenfor oppholdet avvises`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        lagreOppholdMedTomVurdering(
+            behandling.id,
+            lagInstitusjonsopphold(fra = 1 januar 2025, til = 31 desember 2025, institusjonsnavn = "Solgløtt")
+        )
+
+        assertThrows<UgyldigForespørselException> {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                lagLøsning(
+                    lagDto(
+                        begrunnelse = "Feilaktig historisk",
+                        periode = Periode(1 mai 2025, 31 desember 2025),
+                        historisk = true,
+                        oppholdId = lagOppholdId("Solgløtt", 1 januar 2025),
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `historisk flagg på reduksjon som ikke rekker innenfor oppholdet godtas`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        lagreOppholdMedTomVurdering(
+            behandling.id,
+            lagInstitusjonsopphold(fra = 1 desember 2025, til = 1 februar 2026, institusjonsnavn = "Solgløtt")
+        )
+
+        assertDoesNotThrow {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                lagLøsning(
+                    lagDto(
+                        begrunnelse = "Reell historikk",
+                        periode = Periode(1 april 2026, 1 april 2026),
+                        historisk = true,
+                        oppholdId = lagOppholdId("Solgløtt", 1 desember 2025),
+                    )
+                )
+            )
+        }
+    }
 
     // -------------------------------------------------------------------------
     // Hjelpemetoder
