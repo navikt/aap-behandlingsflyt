@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt
 
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -98,10 +100,12 @@ class BackfillEtableringVurderinger(
         return hentAlleGrunnlag(connection, behandlingId)
             .map { grunnlagId ->
                 val vurderinger = vurderinger(connection, grunnlagId)
-                val oppdaterte = vurderinger.map { oppdaterVurdering(it) }
-                val splittede = oppdaterte.filter { nye -> nye.any { it.first == null } }
+                val oppdaterte = vurderinger.map { oppdaterVurdering(it.second) }
+                val splittede = oppdaterte.filter { it.isNotEmpty() }
                 val før = vurderinger.map { it.second }
-                val etter = oppdaterte.flatMap { nye -> nye.map { it.second } }
+                val etter = før.zip(oppdaterte).flatMap { (opprinnelig, nye) ->
+                    nye.ifEmpty { listOf(opprinnelig) }
+                }
                 Resultat(
                     antallVurderingerSomSplittes = splittede.size,
                     antallNyeVurderinger = splittede.sumOf { it.size },
@@ -204,23 +208,29 @@ class BackfillEtableringVurderinger(
         }
     }
 
-    fun oppdaterVurdering(vurderingMedId: Pair<Long, EtableringEgenVirksomhetVurdering>): List<Pair<Long?, EtableringEgenVirksomhetVurdering>> {
-        val (id, vurdering) = vurderingMedId
+    fun oppdaterVurdering(vurdering: EtableringEgenVirksomhetVurdering): List<EtableringEgenVirksomhetVurdering> {
         // Gammelt format har alltid perioder, nytt format har aldri perioder
         if (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty()) {
-            return listOf(id to vurdering)
+            return emptyList()
         }
-        return listOf(vurdering).tilNyttFormat().map { null to it }
+        return listOf(vurdering).tilNyttFormat()
     }
 
     fun migrerBehandling(connection: DBConnection, behandlingId: BehandlingId) {
         val alleGrunnlag = hentAlleGrunnlag(connection, behandlingId)
+        val service = EtableringEgenVirksomhetService(postgresRepositoryRegistry.provider(connection))
 
         alleGrunnlag.forEach { grunnlagId ->
             val vurderinger = this.vurderinger(connection, grunnlagId)
+            val før = vurderinger.map { (_, vurdering) ->
+                if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
+            }
+            val varighetFør = varighet(før)
+            val valideringsresultatFør = service.erVurderingerGyldig(behandlingId, før)
             vurderinger.forEach { (vurderingId, vurdering) ->
-                val oppdaterteVurderinger = oppdaterVurdering(vurderingId to vurdering)
-                if (oppdaterteVurderinger.none { it.first == vurderingId }) {
+                val oppdaterteVurderinger = oppdaterVurdering(vurdering)
+
+                if (oppdaterteVurderinger.isNotEmpty()) {
                     val vurderingerGruppeId: Long = connection.queryFirstOrNull(
                         """
                             SELECT vurderinger_id
@@ -232,11 +242,20 @@ class BackfillEtableringVurderinger(
                         setRowMapper { it.getLong("vurderinger_id") }
                     } ?: error("Fant ikke vurderingsgruppe for vurdering $vurderingId")
 
-                    oppdaterteVurderinger.forEach { (_, oppdatertVurdering) ->
+                    oppdaterteVurderinger.forEach { oppdatertVurdering ->
                         lagreVurdering(connection, vurderingerGruppeId, oppdatertVurdering)
                     }
                     slettVurdering(connection, vurderingId)
                 }
+            }
+            val etter = this.vurderinger(connection, grunnlagId).map { (_, vurdering) ->
+                if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
+            }
+            check(varighetFør == varighet(etter)) {
+                "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
+            }
+            check(valideringsresultatFør == service.erVurderingerGyldig(behandlingId, etter)) {
+                "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
         }
     }

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -11,6 +12,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryEtableringEgenVirkso
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.bistandsbehov.Bistandsvurdering
+import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
@@ -31,6 +33,7 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -90,6 +93,9 @@ class BackfillEtableringVurderingerTest {
 
     @Test
     fun `dry run endrer ikke databasen og rapporterer hva som ville blitt migrert`() {
+        val resultatFør = dataSource.transaction { connection ->
+            BackfillEtableringVurderinger(dataSource, dryRun = true).migrer(connection)
+        }
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
             behandlingId,
@@ -107,9 +113,145 @@ class BackfillEtableringVurderingerTest {
 
         assertThat(hentVurderinger(behandlingId)).isEqualTo(vurderingerFør)
         assertThat(hentVurderingIder(behandlingId)).isEqualTo(iderFør)
-        assertThat(resultat.antallVurderingerSomSplittes).isEqualTo(1)
-        assertThat(resultat.antallNyeVurderinger).isEqualTo(3)
-        assertThat(resultat.antallMedAvvikIVarighet).isEqualTo(0)
+        assertThat(resultat.antallVurderingerSomSplittes).isEqualTo(resultatFør.antallVurderingerSomSplittes + 1)
+        assertThat(resultat.antallNyeVurderinger).isEqualTo(resultatFør.antallNyeVurderinger + 3)
+        assertThat(resultat.antallMedAvvikIVarighet).isEqualTo(resultatFør.antallMedAvvikIVarighet)
+    }
+
+    @Test
+    fun `avvik i lagret varighet avbryter og ruller tilbake migreringen`() {
+        val behandlingId = opprettBehandling()
+        val legacy = vurdering(
+            behandlingId,
+            fom = 1 januar 2025,
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 15 januar 2025)),
+        )
+        lagre(behandlingId, legacy)
+        val iderFør = hentVurderingIder(behandlingId)
+
+        assertThatThrownBy {
+            dataSource.transaction { connection ->
+                connection.execute(
+                    """
+                    CREATE FUNCTION endre_migrert_fase() RETURNS trigger AS ${'$'}${'$'}
+                    BEGIN
+                        NEW.fase := 'OPPSTART';
+                        RETURN NEW;
+                    END;
+                    ${'$'}${'$'} LANGUAGE plpgsql
+                    """.trimIndent()
+                )
+                connection.execute(
+                    """
+                    CREATE TRIGGER endre_migrert_fase
+                    BEFORE INSERT ON etablering_egen_virksomhet_vurdering
+                    FOR EACH ROW EXECUTE FUNCTION endre_migrert_fase()
+                    """.trimIndent()
+                )
+
+                BackfillEtableringVurderinger(dataSource, dryRun = false).migrerBehandling(connection, behandlingId)
+                connection.execute("DROP TRIGGER endre_migrert_fase ON etablering_egen_virksomhet_vurdering")
+                connection.execute("DROP FUNCTION endre_migrert_fase()")
+            }
+        }.isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("Varighet")
+            .hasMessageContaining(behandlingId.id.toString())
+
+        assertThat(hentVurderinger(behandlingId)).containsExactly(legacy)
+        assertThat(hentVurderingIder(behandlingId)).isEqualTo(iderFør)
+    }
+
+    @Test
+    fun `endret valideringsresultat ruller tilbake selv om varigheten er uendret`() {
+        val behandlingId = opprettBehandling()
+        val legacy = vurdering(
+            behandlingId,
+            fom = 7 januar 2025,
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 15 januar 2025)),
+            virksomhetErNy = true,
+        )
+        lagre(behandlingId, legacy)
+        val iderFør = hentVurderingIder(behandlingId)
+        dataSource.transaction { connection ->
+            val provider = postgresRepositoryRegistry.provider(connection)
+            provider.provide<SykdomRepository>().lagre(
+                behandlingId, listOf(
+                    Sykdomsvurdering(
+                        begrunnelse = "...",
+                        vurderingenGjelderFra = 6 januar 2025,
+                        vurderingenGjelderTil = null,
+                        harSkadeSykdomEllerLyte = true,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                        yrkesskadeBegrunnelse = null,
+                        diagnose = null,
+                        vurdertIBehandling = behandlingId,
+                        opprettet = Instant.now(),
+                        vurdertAv = Bruker("saks"),
+                    )
+                )
+            )
+            provider.provide<BistandRepository>().lagre(
+                behandlingId, listOf(
+                    Bistandsvurdering(
+                        begrunnelse = "...",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = true,
+                        erBehovForAnnenOppfølging = false,
+                        overgangBegrunnelse = null,
+                        skalVurdereAapIOvergangTilArbeid = false,
+                        vurdertAv = Bruker("saks"),
+                        fom = 6 januar 2025,
+                        tom = null,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = behandlingId,
+                    )
+                )
+            )
+            assertThat(EtableringEgenVirksomhetService(provider).erVurderingerGyldig(behandlingId, listOf(legacy)))
+                .isEqualTo(VirksomhetEtableringGyldig)
+        }
+        assertThat(varighet(migrert(legacy))).isEqualTo(varighet(listOf(legacy)))
+
+        assertThatThrownBy { migrer(behandlingId) }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("Valideringsresultat")
+            .hasMessageContaining(behandlingId.id.toString())
+
+        assertThat(hentVurderinger(behandlingId)).containsExactly(legacy)
+        assertThat(hentVurderingIder(behandlingId)).isEqualTo(iderFør)
+    }
+
+    @Test
+    fun `analyse teller bare vurderinger som splittes og beholder varighet for uendrede vurderinger`() {
+        val behandlingId = opprettBehandling()
+        val alleredeMigrert = vurdering(
+            behandlingId,
+            fom = 8 januar 2025,
+            tom = 17 januar 2025,
+            fase = EtableringFase.UTVIKLING,
+        )
+        val legacy = vurdering(
+            behandlingId,
+            fom = 3 februar 2025,
+            oppstartsPerioder = listOf(Periode(10 februar 2025, 19 februar 2025)),
+        )
+        lagre(behandlingId, alleredeMigrert, legacy)
+
+        val resultat = dataSource.transaction { connection ->
+            BackfillEtableringVurderinger(dataSource, dryRun = true).analyserBehandling(connection, behandlingId)
+        }
+
+        assertThat(resultat).usingRecursiveComparison().isEqualTo(
+            BackfillEtableringVurderinger.Resultat(
+                antallBehandlinger = 1,
+                antallVurderingerSomSplittes = 1,
+                antallNyeVurderinger = 1,
+                antallMedAvvikIVarighet = 0,
+            )
+        )
     }
 
     @Test
@@ -457,7 +599,8 @@ class BackfillEtableringVurderingerTest {
         vurderinger.map { it.evaluerVirksomhetVurdering() }
 
     private fun migrert(vurdering: EtableringEgenVirksomhetVurdering) =
-        BackfillEtableringVurderinger(dataSource, dryRun = false).oppdaterVurdering(1L to vurdering).map { it.second }
+        BackfillEtableringVurderinger(dataSource, dryRun = false).oppdaterVurdering(vurdering)
+            .ifEmpty { listOf(vurdering) }
 
     private fun varighet(vurderinger: List<EtableringEgenVirksomhetVurdering>): Pair<Int, Int> {
         val gjeldende = vurderinger.map { if (it.fase != null) it.tilGammeltFormat() else it }.gjeldendeVurderinger().verdier().toSet()
