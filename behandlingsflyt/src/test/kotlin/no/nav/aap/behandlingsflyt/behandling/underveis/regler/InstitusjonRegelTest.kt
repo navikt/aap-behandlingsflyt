@@ -27,12 +27,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.meldeplikt.MeldepliktVurdering
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import no.nav.aap.meldeplikt.MeldepliktVurdering
 
 @Fakes
 class InstitusjonRegelTest {
@@ -42,7 +42,12 @@ class InstitusjonRegelTest {
         InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
         BehandlingRepositoryImpl(mockConnection),
-        FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
+        FakeUnleashBase(
+            mapOf(
+                BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
+                BehandlingsflytFeature.Helseinstitusjon1Manedsregel to false
+            )
+        )
     )
 
     val regel = InstitusjonRegel()
