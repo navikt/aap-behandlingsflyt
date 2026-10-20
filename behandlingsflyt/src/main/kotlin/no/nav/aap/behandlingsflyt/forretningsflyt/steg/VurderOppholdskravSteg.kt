@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
+import no.nav.aap.behandlingsflyt.arena.erOppfyltEllerIkkeVurdert
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
@@ -34,6 +36,7 @@ class VurderOppholdskravSteg private constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
+    private val arenaMigreringService: ArenaMigreringService,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder, MigrerVurderingFraArena {
 
@@ -42,6 +45,7 @@ class VurderOppholdskravSteg private constructor(
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         vilkårService = VilkårService(repositoryProvider),
+        arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide(),
     )
 
@@ -133,12 +137,18 @@ class VurderOppholdskravSteg private constructor(
             "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
         }
 
+        val oppholdskrav = arenaMigreringService.hentOppholdskrav(kontekst.sakId)
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, oppholdskrav)
+
+        val vurdering = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
+            fraArena = oppholdskrav,
+            behandlingId = kontekst.behandlingId,
+            fom = kontekst.rettighetsperiode.fom,
+        )
+
         oppholdskravGrunnlagRepository.lagre(
             behandlingId = kontekst.behandlingId,
-            oppholdskravVurdering = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
-                behandlingId = kontekst.behandlingId,
-                fom = kontekst.rettighetsperiode.fom,
-            ),
+            oppholdskravVurdering = vurdering,
         )
     }
 

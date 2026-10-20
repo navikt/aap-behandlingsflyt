@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringsdataRepository
+import no.nav.aap.behandlingsflyt.arena.ArenaOppholdskrav
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -30,6 +32,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -230,6 +233,16 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(periode.fom).isEqualTo(startDato)
                 assertThat(periode.tom).isNull()
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OPPHOLDSKRAV)
+
+                val migreringsdataRepository: ArenaMigreringsdataRepository = repositoryProvider.provide()
+                val migreringsdata = migreringsdataRepository.hentAktivHvisEksisterer(
+                    behandlingId = behandling.id,
+                    steg = StegType.VURDER_OPPHOLDSKRAV,
+                )
+                assertThat(migreringsdata).isNotNull
+                val lagretOppholdskrav =
+                    DefaultJsonMapper.fromJson<ArenaOppholdskrav>(migreringsdata!!.data!!)
+                assertThat(lagretOppholdskrav.vilkar?.status).isEqualTo("V")
             }
     }
 

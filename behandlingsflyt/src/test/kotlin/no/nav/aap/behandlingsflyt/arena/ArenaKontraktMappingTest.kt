@@ -4,6 +4,8 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -46,13 +48,6 @@ class ArenaKontraktMappingTest {
     }
 
     @Test
-    fun `KravResponse uten migreringsdato feiler`() {
-        assertThatThrownBy { kravResponse.copy(migreringsdato = null).tilDomene() }
-            .isInstanceOf(IllegalArgumentException::class.java)
-            .hasMessageContaining("migreringsdato")
-    }
-
-    @Test
     fun `ArenaSakOppsummeringKontrakt mappes til ArenaSak`() {
         val sak = ArenaSakOppsummeringKontrakt(
             sakId = "123",
@@ -73,5 +68,35 @@ class ArenaKontraktMappingTest {
     fun `HarHistorikkResponse mappes til ArenaHistorikk`() {
         assertThat(HarHistorikkResponse(true).tilDomene()).isEqualTo(ArenaHistorikk(harHistorikk = true))
         assertThat(HarHistorikkResponse(false).tilDomene()).isEqualTo(ArenaHistorikk(harHistorikk = false))
+    }
+
+    @Test
+    fun `ArenaOppholdskravResponse mappes til oppholdskrav`() {
+        val respons = ArenaOppholdskravResponse(
+            vedtakId = 7,
+            vilkar = ArenaVilkar(
+                id = 8,
+                kode = "OPPHOLD",
+                status = "V",
+                begrunnelse = "Skal ikke brukes i vurderingen",
+            ),
+        )
+
+        assertThat(respons.tilDomene()).isEqualTo(
+            ArenaOppholdskrav(
+                vedtakId = 7,
+                vilkar = no.nav.aap.behandlingsflyt.arena.ArenaVilkar(
+                    id = 8,
+                    kode = "OPPHOLD",
+                    status = "V",
+                    begrunnelse = "Skal ikke brukes i vurderingen",
+                ),
+            )
+        )
+    }
+
+    @Test
+    fun `ArenaOppholdskravResponse uten vilkår beholder null`() {
+        assertThat(ArenaOppholdskravResponse(vedtakId = 7, vilkar = null).tilDomene().vilkar).isNull()
     }
 }

@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.arena
 
-import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
-import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
@@ -13,12 +11,22 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.bistandsbehov.Bistandsvurdering
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf("INNTNEDS", "SYKSKADLYT", "AAARBEVNE")
-private const val REFUSJONSKRAV_SOSIALHJELP = "REFKRAVSOS"
+private const val VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP = "REFKRAVSOS"
+private const val VILKÅRKODE_OPPHOLD_I_NORGE = "AOINORGE3"
+private const val VILKÅRKODE_INNTEKT_NEDSATT = "INNTNEDS"
+private const val VILKÅRKODE_SYKDOM_SKADE_LYTE = "SYKSKADLYT"
+private const val VILKÅRKODE_ARBEIDSEVNE = "AAARBEVNE"
+
+private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf(
+    VILKÅRKODE_INNTEKT_NEDSATT,
+    VILKÅRKODE_SYKDOM_SKADE_LYTE,
+    VILKÅRKODE_ARBEIDSEVNE
+)
 
 /**
  * Migreringsgruppe 1 støtter kun ordinær AAP. Dette er oppfylt når alle disse
@@ -29,6 +37,10 @@ fun ArenaSykdomsvurdering.erOrdinærAap(): Boolean {
     return PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP.all { påkrevdKode ->
         vilkar.any { it.kode == påkrevdKode && it.status == "J" }
     }
+}
+
+fun ArenaOppholdskrav.erOppfyltEllerIkkeVurdert(): Boolean {
+    return vilkar?.kode == VILKÅRKODE_OPPHOLD_I_NORGE && vilkar.status in setOf("J", "V")
 }
 
 /**
@@ -108,12 +120,25 @@ object ArenaMigreringMapper {
     }
 
     /**
-     * Oppholdskravet må være oppfylt for at saken skal kunne migreres fra Arena, så vi henter ikke noe derfra.
+     * Oppholdskravet er enten oppfylt eller ikke vurdert i Arena. I migrering gjør vi antagelse om at det oppfylles da
+     * det er et krav for å få innvilget AAP i Arena.
      */
     fun mapOppfyltOppholdskravVurdering(
+        fraArena: ArenaOppholdskrav,
         behandlingId: BehandlingId,
         fom: LocalDate,
     ): OppholdskravVurdering {
+        require(fraArena.erOppfyltEllerIkkeVurdert()) {
+            "Kan ikke mappe oppholdskrav med vilkårkode ${fraArena.vilkar?.kode} og status ${fraArena.vilkar?.status}"
+        }
+        val status = fraArena.vilkar?.status
+        val begrunnelse = when (status) {
+            "J" -> "Oppholdskravet er oppfylt i Arena"
+            "V" -> "Oppholdskravet er ikke vurdert i Arena, " +
+                    "men oppfylles automatisk fordi det må være oppfylt for at vedtaket skal være innvilget i Arena"
+            else -> error("Uventet status etter validering: $status")
+        }
+
         return OppholdskravVurdering(
             vurdertAv = ARENA_MIGRERING_BRUKER,
             vurdertIBehandling = behandlingId,
@@ -123,7 +148,7 @@ object ArenaMigreringMapper {
                     tom = null,
                     land = null,
                     oppfylt = true,
-                    begrunnelse = "Ikke vurdert i Arena, men oppfylles automatisk fordi oppholdskravet må være oppfylt for at saken skal kunne migreres",
+                    begrunnelse = begrunnelse,
                 )
             ),
         )
@@ -160,8 +185,8 @@ object ArenaMigreringMapper {
      * refusjonskrav, eller kravet har en annen årsak, svares "nei" på om det finnes refusjonskrav.
      */
     fun mapRefusjonskravVurdering(arenaRefusjonskrav: ArenaRefusjonskrav?): RefusjonkravVurdering {
-        require(arenaRefusjonskrav?.aarsak != REFUSJONSKRAV_SOSIALHJELP) {
-            "Kan ikke migrere refusjonskrav fra Arena fordi det finnes refusjonskrav av typen $REFUSJONSKRAV_SOSIALHJELP"
+        require(arenaRefusjonskrav?.aarsak != VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP) {
+            "Kan ikke migrere refusjonskrav fra Arena fordi det finnes refusjonskrav av typen $VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP"
         }
         return RefusjonkravVurdering(
             harKrav = false,
