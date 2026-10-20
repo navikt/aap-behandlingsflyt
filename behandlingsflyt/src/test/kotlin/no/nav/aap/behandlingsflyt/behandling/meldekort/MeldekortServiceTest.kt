@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.DokumentRekkefølge
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
@@ -23,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
@@ -53,6 +55,47 @@ class MeldekortServiceTest {
     private val saksnummer = Saksnummer("1")
     private val behandlingId = BehandlingId(42L)
     private val meldeperiode = Periode(6 januar 2025, 19 januar 2025)
+
+    @Test
+    fun `meldedato er første innsending i meldeperioden`() {
+        val meldedatoer = setOf(10 januar 2025, 12 januar 2025)
+
+        assertThat(meldedatoForMeldeperiode(meldedatoer, meldeperiode)).isEqualTo(10 januar 2025)
+    }
+
+    @Test
+    fun `meldedato utledes også fra meldekort uten timer`() {
+        val meldedato = 20 januar 2025
+        val meldekort = Meldekort(
+            journalpostId = JournalpostId("uten-timer"),
+            timerArbeidPerPeriode = emptySet(),
+            mottattTidspunkt = meldedato.atStartOfDay(),
+            opprettetTidspunkt = meldedato.atStartOfDay(),
+        )
+        val meldekortGrunnlag = MeldekortGrunnlag(
+            meldekortene = setOf(meldekort),
+            rekkefølge = setOf(
+                DokumentRekkefølge(
+                    referanse = InnsendingReferanse(meldekort.journalpostId),
+                    mottattTidspunkt = meldedato.atStartOfDay(),
+                )
+            ),
+        )
+
+        assertThat(
+            meldedatoForMeldeperiode(
+                meldekortGrunnlag.innsendingsdatoPerMelding().keys,
+                Periode(meldedato, meldedato.plusDays(13)),
+            )
+        ).isEqualTo(meldedato)
+    }
+
+    @Test
+    fun `meldedato er null når ingen innsending finnes for meldeperioden`() {
+        val meldedatoer = setOf(5 januar 2025, 20 januar 2025)
+
+        assertThat(meldedatoForMeldeperiode(meldedatoer, meldeperiode)).isNull()
+    }
 
     private val meldekortRepository = mockk<MeldekortRepository>()
     private val underveisRepository = mockk<UnderveisRepository>()

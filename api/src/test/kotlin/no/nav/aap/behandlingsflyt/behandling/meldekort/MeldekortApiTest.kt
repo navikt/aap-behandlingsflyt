@@ -157,7 +157,13 @@ class MeldekortApiTest : BaseApiTest() {
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
-            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            underveisperioder = listOf(
+                underveisperiode(Utfall.OPPFYLT, meldeperiode),
+                underveisperiode(
+                    Utfall.OPPFYLT,
+                    Periode(20 januar 2025, 2 februar 2025),
+                ),
+            ),
             input = object : Faktagrunnlag {}
         )
 
@@ -187,10 +193,12 @@ class MeldekortApiTest : BaseApiTest() {
 
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val body = response.body<MeldeperioderMedMeldekortResponse>()
-            assertThat(body.meldeperioderMedMeldekort).hasSize(1)
+            assertThat(body.meldeperioderMedMeldekort).hasSize(2)
 
-            val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
+            val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort
+                .single { it.meldeperiode == meldeperiode }
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
+            assertThat(meldeperiodeMedMeldekort.meldedato).isNull()
             val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
             assertThat(meldekortDto.journalpostId).isEqualTo(meldekort.journalpostId.identifikator)
             assertThat(meldekortDto.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
@@ -200,6 +208,11 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldekortDto.dager.map { it.dato }).containsExactlyInAnyOrder(dag1, dag2)
             assertThat(meldekortDto.dager.map { it.timerArbeidet }).containsExactlyInAnyOrder(7.5, 3.0)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).isEmpty()
+
+            val meldeperiodeMedMeldedato = body.meldeperioderMedMeldekort
+                .single { it.meldeperiode == Periode(20 januar 2025, 2 februar 2025) }
+            assertThat(meldeperiodeMedMeldedato.meldekort).isNull()
+            assertThat(meldeperiodeMedMeldedato.meldedato).isEqualTo(20 januar 2025)
         }
     }
 

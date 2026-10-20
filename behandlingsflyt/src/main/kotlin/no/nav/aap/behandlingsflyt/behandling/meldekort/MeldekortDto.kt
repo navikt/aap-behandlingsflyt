@@ -28,6 +28,7 @@ data class MeldeperiodeMedMeldekortDto(
     val meldekort: MeldekortDto?,
     val tidligereMeldekort: List<MeldekortDto> = emptyList(),
     val meldepliktStatus: Set<MeldepliktStatus>,
+    val meldedato: LocalDate?,
 )
 
 data class MeldekortDto(
@@ -65,7 +66,7 @@ data class OppdaterMeldekort(
                     timerArbeid = it.timerArbeidet,
                 )
             }.sortedBy { it.fraOgMedDato }
-    )
+        )
 
     fun meldekortMedTimerRegistrert() = dager.isNotEmpty()
 }
@@ -130,6 +131,7 @@ fun toMeldeperiodeMedMeldekortDto(
     nyesteMeldekort: Meldekort?,
     tidligereMeldekort: List<Meldekort>,
     mottatteDokumenter: Map<InnsendingReferanse, MottattDokument>,
+    meldedato: LocalDate?,
 ): MeldeperiodeMedMeldekortDto {
     val meldefrist = helligdagsunntakjustertMeldefrist(meldeperiode.tom.plusDays(8))
     if (nyesteMeldekort == null) {
@@ -139,6 +141,7 @@ fun toMeldeperiodeMedMeldekortDto(
             meldefrist = meldefrist,
             meldepliktStatus = oppfyltMeldeperiodeMedMeldepliktStatus.meldepliktStatus,
             meldekort = null,
+            meldedato = meldedato,
         )
     }
 
@@ -153,10 +156,11 @@ fun toMeldeperiodeMedMeldekortDto(
         tidligereMeldekort = tidligereMeldekort
             .sortedByDescending { it.mottattTidspunkt }
             .map { tidligereMeldekort ->
-            tidligereMeldekort.toDto(
-                meldekortData = mottatteDokumenter.metadataFor(tidligereMeldekort)
-            )
-        },
+                tidligereMeldekort.toDto(
+                    meldekortData = mottatteDokumenter.metadataFor(tidligereMeldekort)
+                )
+            },
+        meldedato = meldedato,
     )
 }
 

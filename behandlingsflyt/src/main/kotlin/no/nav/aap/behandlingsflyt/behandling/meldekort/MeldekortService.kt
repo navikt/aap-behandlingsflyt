@@ -82,6 +82,7 @@ class MeldekortService(
 
             val meldeperioder = hentAktuelleMeldeperioderMedMeldepliktStatus(underveisGrunnlag)
             val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandling.id)
+            val innsendingsdatoer = meldekortGrunnlag?.innsendingsdatoPerMelding()?.keys.orEmpty()
             val mottatteDokumenter = mottattDokumentRepository
                 .hentDokumenterAvType(sak.id, InnsendingType.MELDEKORT)
                 .associateBy { it.referanse }
@@ -93,6 +94,7 @@ class MeldekortService(
                     nyesteMeldekort = meldekortGrunnlag?.nyesteForMeldeperiode(meldeperiode),
                     tidligereMeldekort = meldekortGrunnlag?.tidligereForMeldeperiode(meldeperiode).orEmpty(),
                     mottatteDokumenter = mottatteDokumenter,
+                    meldedato = meldedatoForMeldeperiode(innsendingsdatoer, meldeperiode),
                 )
             }
         }
@@ -313,6 +315,10 @@ class MeldekortService(
                 )
             }
     }
+}
+
+internal fun meldedatoForMeldeperiode(innsendingsdatoer: Set<LocalDate>, meldeperiode: Periode): LocalDate? {
+    return innsendingsdatoer.filter(meldeperiode::inneholder).minOrNull()
 }
 
 private fun tilInnsending(
