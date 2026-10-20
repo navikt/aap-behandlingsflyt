@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
@@ -32,6 +33,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -2247,6 +2249,119 @@ class AvklarHelseinstitusjonLøserTest {
                 )
             )
         }
+    }
+
+    @Test
+    fun `vedtatt reduksjon som starter etter oppholdets nye sluttdato følger ikke med`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val nåværendeBehandlingId = revurdering.id
+        val oppholdFom = 1 november 2025
+        val løpendeTom = Tid.MAKS
+        val nyTom = 1 februar 2026
+
+        helseinstitusjonRepository.lagreOpphold(
+            forrigeBehandlingId, listOf(lagInstitusjonsopphold(fra = oppholdFom, til = løpendeTom, institusjonsnavn = "Solgløtt"))
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "vedtatt reduksjon",
+                    periode = Periode(1 mars 2026, løpendeTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+        helseinstitusjonRepository.lagreOpphold(
+            nåværendeBehandlingId, listOf(lagInstitusjonsopphold(fra = oppholdFom, til = nyTom, institusjonsnavn = "Solgløtt"))
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(nåværendeBehandlingId, emptyList())
+
+        løser.løs(avklaringsbehovKontekst { this.behandling = revurdering }, lagLøsning())
+
+        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)
+            ?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        assertThat(lagrede).isEmpty()
+    }
+
+    @Test
+    fun `vedtatt reduksjon etter nye sluttdato erstattes av kun den historiske vurderingen`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val nåværendeBehandlingId = revurdering.id
+        val oppholdFom = 1 november 2025
+        val løpendeTom = 1 januar 2999
+        val nyTom = 1 februar 2026
+
+        helseinstitusjonRepository.lagreOpphold(
+            forrigeBehandlingId, listOf(lagInstitusjonsopphold(fra = oppholdFom, til = løpendeTom, institusjonsnavn = "Solgløtt"))
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "vedtatt reduksjon",
+                    periode = Periode(1 mars 2026, løpendeTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+        helseinstitusjonRepository.lagreOpphold(
+            nåværendeBehandlingId, listOf(lagInstitusjonsopphold(fra = oppholdFom, til = nyTom, institusjonsnavn = "Solgløtt"))
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(nåværendeBehandlingId, emptyList())
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            lagLøsning(
+                lagDto(
+                    begrunnelse = "ikke reduksjon (historikk)",
+                    periode = Periode(1 mars 2026, 1 mars 2026),
+                    historisk = true,
+                    oppholdId = lagOppholdId("Solgløtt", oppholdFom),
+                )
+            )
+        )
+
+        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)
+            ?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].erHistoriskUtenReduksjonsberegning).isTrue()
+        assertThat(lagrede.none { it.giReduksjon() }).isTrue()
+        assertThat(lagrede.none { it.vurdertIBehandling == forrigeBehandlingId }).isTrue()
+    }
+
+    @Test
+    fun `vedtatt reduksjon som starter innenfor nye sluttdato klippes og beholdes`() {
+        val (_, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        val forrigeBehandlingId = behandling.id
+        val nåværendeBehandlingId = revurdering.id
+        val oppholdFom = 1 november 2025
+        val løpendeTom = 1 januar 2999
+        val nyTom = 1 april 2026
+
+        helseinstitusjonRepository.lagreOpphold(
+            forrigeBehandlingId, listOf(lagInstitusjonsopphold(fra = oppholdFom, til = løpendeTom, institusjonsnavn = "Solgløtt"))
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(
+            forrigeBehandlingId, listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "vedtatt reduksjon",
+                    periode = Periode(1 mars 2026, løpendeTom),
+                    behandlingId = forrigeBehandlingId
+                )
+            )
+        )
+        helseinstitusjonRepository.lagreOpphold(
+            nåværendeBehandlingId, listOf(lagInstitusjonsopphold(fra = oppholdFom, til = nyTom, institusjonsnavn = "Solgløtt"))
+        )
+        helseinstitusjonRepository.lagreHelseVurdering(nåværendeBehandlingId, emptyList())
+
+        løser.løs(avklaringsbehovKontekst { this.behandling = revurdering }, lagLøsning())
+
+        val lagrede = helseinstitusjonRepository.hentHvisEksisterer(nåværendeBehandlingId)
+            ?.helseoppholdvurderinger?.vurderinger.orEmpty()
+        assertThat(lagrede).hasSize(1)
+        assertThat(lagrede[0].periode).isEqualTo(Periode(1 mars 2026, nyTom))
     }
 
     // -------------------------------------------------------------------------
