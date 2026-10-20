@@ -97,7 +97,7 @@ class BackfillRedusertDagsats(
             }
 
             try {
-                log.info("Backfiller krav for sak ${sak.id} - ${sak.saksnummer}")
+                log.info("Backfiller redusertDagsats for sak ${sak.id} - ${sak.saksnummer}")
                 var sakenErFerdigBackfilled = false
                 for (behandling in behandlinger) {
                     if (sakenErFerdigBackfilled) break
@@ -112,7 +112,7 @@ class BackfillRedusertDagsats(
                             BackfillBehandlingResultat.AlleredeBackfilled -> {
                                 log.info(
                                     "Behandling ${behandling.id.toLong()} i sak ${sak.id.toLong()} " +
-                                            "hadde allerede krav – stopper backfill for saken"
+                                            "hadde allerede redusertDagsats – stopper backfill for saken"
                                 )
                                 sakenErFerdigBackfilled = true
                             }
@@ -120,7 +120,7 @@ class BackfillRedusertDagsats(
                             BackfillBehandlingResultat.Backfilled -> {
                                 antallBackfillUtført++
                                 if (antallBackfillUtført % 1000 == 0) {
-                                    log.info("Backfilled krav for {} behandlinger", antallBackfillUtført)
+                                    log.info("Backfilled redusertDagsats for {} behandlinger", antallBackfillUtført)
                                 }
                             }
                         }
