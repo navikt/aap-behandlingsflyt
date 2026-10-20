@@ -268,59 +268,89 @@ class AvklarHelseinstitusjonLøser(
         oppdaterteVurderinger: List<HelseinstitusjonVurdering>,
         alleInnsendte: List<HelseinstitusjonVurderingDto>
     ): Validation<List<HelseinstitusjonVurderingDto>> {
-        val grunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
-        val opphold = grunnlag?.oppholdene?.opphold ?: emptyList()
+        val opphold = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)?.oppholdene?.opphold.orEmpty()
         if (opphold.isEmpty() || (nyeVurderinger.isEmpty() && alleInnsendte.isEmpty())) {
             return Validation.Valid(nyeVurderinger)
         }
 
         val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
+        val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(
+            opphold,
+            harInnvilgetReduksjon(oppdaterteVurderinger),
+            enManedsregelEnabled
+        )
 
-        val vurderingerPerKjede = kjeder.associateWith { kjede ->
-            nyeVurderinger
-                .filter { v -> v.periode.fom >= kjede.periode.fom && v.periode.tom <= kjede.periode.tom }
-                .sortedBy { it.periode }
-        }
-
-        // Avgjør om en kjede får innvilget reduksjon basert på sammenslåtte vurderinger (nye + beholdt fra forrige behandling)
-        val harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { kjede ->
-            oppdaterteVurderinger.any { it.giReduksjon() && it.periode.overlapper(kjede.periode) }
-        }
-
-        val tidligsteReduksjonsdatoPerKjede =
-            beregnTidligsteReduksjonsdatoPerKjede(opphold, harInnvilgetReduksjon, enManedsregelEnabled)
-
-        if (enManedsregelEnabled) {
-            val feilaktigHistoriske = alleInnsendte
-                .filter { it.erHistoriskUtenReduksjonsberegning }
-                .filter { it.faarFriKostOgLosji && it.forsoergerEktefelle == false && it.harFasteUtgifter == false }
-                .filter { historisk ->
-                    val kjede = kjeder.firstOrNull { k ->
-                        k.elementer.any { lagOppholdId(it.verdi.navn, it.periode.fom) == historisk.oppholdId }
-                    }
-                    val tidligste = kjede?.let { tidligsteReduksjonsdatoPerKjede[it] }
-                    kjede != null && tidligste != null && !tidligste.isAfter(kjede.periode.tom)
-                }
-            if (feilaktigHistoriske.isNotEmpty()) {
-                return Validation.Invalid(
-                    alleInnsendte,
-                    "Reduksjon kan ikke lagres som historikk når den rekker innenfor oppholdet"
-                )
-            }
-        }
-
-        vurderingerPerKjede.entries.forEach { (kjede, vurderinger) ->
-            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach
-            val første = førsteReduksjonsvurdering(vurderinger)
-            val resultat = validerReduksjonsdato(vurderinger, første, tidligsteReduksjonsdato)
-            if (resultat != null) return resultat
-        }
+        validerHistoriskeVurderinger(alleInnsendte, kjeder, tidligsteReduksjonsdatoPerKjede)?.let { return it }
+        validerReduksjonsdatoerPerKjede(nyeVurderinger, kjeder, tidligsteReduksjonsdatoPerKjede)?.let { return it }
 
         return Validation.Valid(nyeVurderinger)
     }
 
+    private fun harInnvilgetReduksjon(
+        oppdaterteVurderinger: List<HelseinstitusjonVurdering>
+    ): (SammenhengendeOppholdGruppe) -> Boolean = { kjede ->
+        oppdaterteVurderinger.any { it.giReduksjon() && it.periode.overlapper(kjede.periode) }
+    }
+
     private fun førsteReduksjonsvurdering(vurderinger: List<HelseinstitusjonVurderingDto>): HelseinstitusjonVurderingDto? {
         return vurderinger.firstOrNull { it.giReduksjon() }
+    }
+
+    private fun validerHistoriskeVurderinger(
+        alleInnsendte: List<HelseinstitusjonVurderingDto>,
+        kjeder: List<SammenhengendeOppholdGruppe>,
+        tidligsteReduksjonsdatoPerKjede: Map<SammenhengendeOppholdGruppe, LocalDate>
+    ): Validation<List<HelseinstitusjonVurderingDto>>? {
+        if (!enManedsregelEnabled) return null
+
+        val harFeilaktigHistorisk = alleInnsendte
+            .filter { it.erHistoriskUtenReduksjonsberegning && it.girReduksjonUtenHistorikk() }
+            .any { rekkerInnenforOppholdet(it, kjeder, tidligsteReduksjonsdatoPerKjede) }
+
+        return if (harFeilaktigHistorisk) {
+            Validation.Invalid(
+                alleInnsendte,
+                "Reduksjon kan ikke lagres som historikk når den rekker innenfor oppholdet"
+            )
+        } else {
+            null
+        }
+    }
+
+    private fun HelseinstitusjonVurderingDto.girReduksjonUtenHistorikk(): Boolean =
+        faarFriKostOgLosji && forsoergerEktefelle == false && harFasteUtgifter == false
+
+    private fun rekkerInnenforOppholdet(
+        vurdering: HelseinstitusjonVurderingDto,
+        kjeder: List<SammenhengendeOppholdGruppe>,
+        tidligsteReduksjonsdatoPerKjede: Map<SammenhengendeOppholdGruppe, LocalDate>
+    ): Boolean {
+        val kjede = kjeder.firstOrNull { it.inneholderOpphold(vurdering.oppholdId) } ?: return false
+        val tidligste = tidligsteReduksjonsdatoPerKjede[kjede] ?: return false
+        return !tidligste.isAfter(kjede.periode.tom)
+    }
+
+    private fun SammenhengendeOppholdGruppe.inneholderOpphold(oppholdId: String?): Boolean =
+        elementer.any { lagOppholdId(it.verdi.navn, it.periode.fom) == oppholdId }
+
+    private fun validerReduksjonsdatoerPerKjede(
+        nyeVurderinger: List<HelseinstitusjonVurderingDto>,
+        kjeder: List<SammenhengendeOppholdGruppe>,
+        tidligsteReduksjonsdatoPerKjede: Map<SammenhengendeOppholdGruppe, LocalDate>
+    ): Validation<List<HelseinstitusjonVurderingDto>>? {
+        kjeder.forEach { kjede ->
+            val tidligsteReduksjonsdato = tidligsteReduksjonsdatoPerKjede[kjede] ?: return@forEach
+            val vurderingerForKjede = nyeVurderinger
+                .filter { it.periode.fom >= kjede.periode.fom && it.periode.tom <= kjede.periode.tom }
+                .sortedBy { it.periode }
+            val resultat = validerReduksjonsdato(
+                vurderingerForKjede,
+                førsteReduksjonsvurdering(vurderingerForKjede),
+                tidligsteReduksjonsdato
+            )
+            if (resultat != null) return resultat
+        }
+        return null
     }
 
     private fun validerReduksjonsdato(
