@@ -142,7 +142,7 @@ class EtableringEgenVirksomhetLøserTest {
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Oppstartsperioden kan ikke være før utviklingsfase")
+        assertThat(feil.message).contains("Oppstartsperiode kan ikke ligge før en utviklingsperiode.")
     }
 
     @Test
@@ -234,7 +234,7 @@ class EtableringEgenVirksomhetLøserTest {
             listOf(
                 oppfyltVurdering(
                     fase = EtableringFase.OPPSTART,
-                    fom = sak.rettighetsperiode.fom.plusMonths(6),
+                    fom = sak.rettighetsperiode.fom.plusMonths(7),
                     tom = null,
                     erRegistrertINødvendigeOffentligeRegister = true,
                 )
@@ -242,7 +242,7 @@ class EtableringEgenVirksomhetLøserTest {
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Kvoten for OPPSTART er brukt opp")
+        assertThat(feil.message).contains("Oppsatte oppstartsdager overstiger gjenværende dager: 66 / 66")
     }
 
     @Test
@@ -285,7 +285,7 @@ class EtableringEgenVirksomhetLøserTest {
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Kvoten for UTVIKLING er brukt opp")
+        assertThat(feil.message).contains("Oppsatte utviklingsdager overstiger gjenværende dager: 131 / 131")
     }
 
     private fun oppfyllSykdomOgBistand(behandling: Behandling) {
