@@ -23,6 +23,8 @@ data class EtableringEgenVirksomhetVurdering(
     override val vurdertIBehandling: BehandlingId,
     override val fom: LocalDate,
     override val tom: LocalDate?,
+    val utviklingsPerioder: List<Periode> = emptyList(),
+    val oppstartsPerioder: List<Periode> = emptyList(),
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
