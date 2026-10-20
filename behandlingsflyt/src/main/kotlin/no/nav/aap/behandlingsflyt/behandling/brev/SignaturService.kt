@@ -10,6 +10,10 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhet
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVBRYT_AKTIVITETSPLIKTBEHANDING
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVBRYT_REVURDERING
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VURDER_TREKK_AV_KLAGE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VURDER_TREKK_AV_SØKNAD
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -25,6 +29,13 @@ class SignaturService(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
+    private val ekskluderteAvklaringsbehov: Set<Definisjon> = setOf(
+        AVBRYT_REVURDERING,
+        AVBRYT_AKTIVITETSPLIKTBEHANDING,
+        VURDER_TREKK_AV_KLAGE,
+        VURDER_TREKK_AV_SØKNAD,
+    )
+
     constructor(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
@@ -125,7 +136,7 @@ class SignaturService(
     private fun definisjonerSomLøsesAv(rolle: Rolle): List<Definisjon> {
         return Definisjon.entries
             .filter { rolle in it.løsesAv }
-            .filterNot { it.erVentebehov() || it in Definisjon.avklaringsbehovForTrekkEllerAvbryt }
+            .filterNot { it.erVentebehov() || it in ekskluderteAvklaringsbehov }
     }
 
     private fun utledSignaturerForVedtak(

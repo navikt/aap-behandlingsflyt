@@ -690,13 +690,6 @@ public enum class Definisjon(
             SAMORDNING_REFUSJONS_KRAV,
         )
 
-        public val avklaringsbehovForTrekkEllerAvbryt: Set<Definisjon> = setOf(
-            AVBRYT_REVURDERING,
-            AVBRYT_AKTIVITETSPLIKTBEHANDING,
-            VURDER_TREKK_AV_KLAGE,
-            VURDER_TREKK_AV_SØKNAD,
-        )
-
         init {
             val unikeKoder =
                 Arrays.stream(entries.toTypedArray())
