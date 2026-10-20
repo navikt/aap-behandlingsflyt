@@ -46,7 +46,8 @@ enum class BehandlingsflytFeature(
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
     NySoknadTilApiIntern,
-    SammenhengendeInstitusjonsopphold
+    SammenhengendeInstitusjonsopphold,
+    DatadelingBehandlingVisning
     ;
 
     override fun key(): String = name
