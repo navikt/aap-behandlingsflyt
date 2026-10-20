@@ -5,7 +5,7 @@ import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -76,8 +76,7 @@ class EtableringEgenVirksomhetService(
             return VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling
         }
 
-        val bruktUtviklingsDager = gjeldendeVurderinger.tellDager { it.utviklingsPerioder }
-        val bruktOppstartsdager = gjeldendeVurderinger.tellDager { it.oppstartsPerioder }
+        val (bruktUtviklingsDager, bruktOppstartsdager) = (gamleVurderinger + nyeVurderinger).brukteDager()
 
         if (bruktUtviklingsDager > maksUtviklingsdager) {
             return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.UTVIKLING, bruktUtviklingsDager)
