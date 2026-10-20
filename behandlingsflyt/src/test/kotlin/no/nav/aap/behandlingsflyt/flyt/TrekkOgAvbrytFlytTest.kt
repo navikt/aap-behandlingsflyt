@@ -15,221 +15,238 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class TrekkOgAvbrytFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
-    @Test
-    fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
-        val fom = LocalDate.now()
+class TrekkOgAvbrytFlytTest {
+    @Nested
+    inner class SøknadUtenMedlemskap : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        private val fom = LocalDate.now()
+        private lateinit var sak: Sak
+        private lateinit var behandling: Behandling
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = fom.atStartOfDay(),
-            søknad = SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
-            )
-        )
-
-        behandling.medKontekst {
-            assertTrue(avklaringsbehovSomMåLøses.all { Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP == it.definisjon })
-        }
-            // Løs lovvalg
-            .løsLovvalg(fom)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .containsExactly(Definisjon.AVKLAR_SYKDOM)
-            }
-            // Trekk søknad
-            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
-            }
-            .løsAvklaringsBehov(
-                TrekkSøknadLøsning(
-                    begrunnelse = "trekker søknaden",
-                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+        @BeforeAll
+        fun settOppSøknad() = snapshotEtterSetup {
+            val person = TestPersoner.STANDARD_PERSON()
+            this.person = person
+            sak = sendInnFørsteSøknad(
+                person = person,
+                mottattTidspunkt = fom.atStartOfDay(),
+                søknad = SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
                 )
-            )
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).isEmpty()
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-                dataSource.transaction {
-                    assertThat(VedtakRepositoryImpl(it).hent(this.behandling.id)).isNull()
+            ).first
+        }
+
+        @BeforeEach
+        fun hentBehandlingFraSnapshot() {
+            behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+        }
+
+        @Test
+        fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
+            val behandling = this.behandling
+            behandling.medKontekst {
+                assertTrue(avklaringsbehovSomMåLøses.all { Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP == it.definisjon })
+            }
+                // Løs lovvalg
+                .løsLovvalg(fom)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .containsExactly(Definisjon.AVKLAR_SYKDOM)
                 }
-            }
-    }
-
-    @Test
-    fun `kan trekke søknad som har passert forutgående medlemskap`() {
-        val fom = LocalDate.now()
-
-        val (_, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = fom.atStartOfDay(),
-            søknad = SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
-            )
-        )
-
-        behandling
-            .løsLovvalg(fom)
-            // Løs fram til forutgående
-            .løsFramTilForutgåendeMedlemskap(fom)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses)
-                    .extracting<Definisjon> { it.definisjon }
-                    .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
-            }
-            // Løs forutgående
-            .løsForutgåendeMedlemskap(fom)
-            .løsOppholdskrav(fom)
-            // Trekk søknad
-            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses)
-                    .extracting<Definisjon> { it.definisjon }
-                    .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
-            }
-            .løsAvklaringsBehov(
-                TrekkSøknadLøsning(
-                    begrunnelse = "trekker søknaden",
-                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+                // Trekk søknad
+                .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
+                }
+                .løsAvklaringsBehov(
+                    TrekkSøknadLøsning(
+                        begrunnelse = "trekker søknaden",
+                        aarsak = AarsakTilTrekkSoknadDto.ANNET
+                    )
                 )
-            )
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).isEmpty()
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-            }
-    }
-
-    @Test
-    fun `trukket søknad blokkerer nye ytelsesbehandlinger`() {
-        // Sender inn en søknad
-        val (sak, behandling) = sendInnFørsteSøknad()
-
-        behandling.løsSykdom(sak.rettighetsperiode.fom)
-            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses)
-                    .extracting<Definisjon> { it.definisjon }
-                    .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
-            }
-            .løsAvklaringsBehov(
-                TrekkSøknadLøsning(
-                    begrunnelse = "trekker søknaden",
-                    aarsak = AarsakTilTrekkSoknadDto.ANNET
-                )
-            )
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).isEmpty()
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-            }
-
-        val revurdering = sak.sendInnSøknad(
-            SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei),
-                yrkesskade = "NEI",
-                oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            ),
-        )
-
-        assertThat(revurdering.forrigeBehandlingId).isNull()
-        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
-    }
-
-    @Test
-    fun `Teste AvbrytRevurderingFlyt`() {
-        // Førstegangsbehandling
-        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
-        val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
-
-        // Revurdering 1 - skal bli avbrutt
-        val revurdering1 = sak.opprettManuellRevurdering(
-            listOf(
-                no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD
-            )
-        )
-            .medKontekst {
-                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsSykdom(sak.rettighetsperiode.fom)
-
-        assertThat(revurdering1.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        assertThat(revurdering1.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
-
-        // Avbryt revurdering 1
-        revurdering1.leggTilVurderingsbehov(
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
-        ).medKontekst {
-            assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                .contains(Definisjon.AVBRYT_REVURDERING)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).isEmpty()
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                    dataSource.transaction {
+                        assertThat(VedtakRepositoryImpl(it).hent(this.behandling.id)).isNull()
+                    }
+                }
         }
-            .løsAvklaringsBehov(
-                AvbrytRevurderingLøsning(
-                    vurdering = AvbrytRevurderingVurderingDto(
-                        årsak = AvbrytRevurderingÅrsakDto.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
-                        begrunnelse = "Fordi den ikke er aktuell lenger"
-                    ),
+
+        @Test
+        fun `kan trekke søknad som har passert forutgående medlemskap`() {
+            val behandling = this.behandling
+
+            behandling
+                .løsLovvalg(fom)
+                // Løs fram til forutgående
+                .løsFramTilForutgåendeMedlemskap(fom)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses)
+                        .extracting<Definisjon> { it.definisjon }
+                        .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+                }
+                // Løs forutgående
+                .løsForutgåendeMedlemskap(fom)
+                .løsOppholdskrav(fom)
+                // Trekk søknad
+                .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses)
+                        .extracting<Definisjon> { it.definisjon }
+                        .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
+                }
+                .løsAvklaringsBehov(
+                    TrekkSøknadLøsning(
+                        begrunnelse = "trekker søknaden",
+                        aarsak = AarsakTilTrekkSoknadDto.ANNET
+                    )
                 )
-            )
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-                assertThat(avklaringsbehovSomMåLøses).isEmpty()
-
-                val avklaringsbehovene: List<Avklaringsbehov> = hentAlleAvklaringsbehov(revurdering1)
-                assertStatusForDefinisjon(
-                    avklaringsbehovene,
-                    Definisjon.AVBRYT_REVURDERING,
-                    AvklaringsbehovStatus.AVSLUTTET
-                )
-                assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
-                assertStatusForDefinisjon(
-                    avklaringsbehovene,
-                    Definisjon.AVKLAR_BISTANDSBEHOV,
-                    AvklaringsbehovStatus.AVBRUTT
-                )
-
-                assertThat(hentVedtakHvisEksisterer())
-                    .describedAs("Skal ikke lagre vedtak for avbrutt revurdering")
-                    .isNull()
-            }
-
-        // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
-        val revurdering2 = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
-        )
-            .medKontekst {
-                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-
-        assertThat(revurdering2.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
-
-        // Verifiser at data er kopiert fra førstegangsbehandling
-        val vilkårsresultat1 = hentVilkårsresultat(førstegangsbehandling.id)
-        val vilkårsresultat2 = hentVilkårsresultat(revurdering2.id)
-
-        assertThat(vilkårsresultat2).usingRecursiveComparison()
-            .ignoringFields(
-                "id",
-                "faktagrunnlag",
-                "vilkår.vilkårTidslinje",
-                "vilkår.vurdertTidspunkt",
-                "vilkår.faktagrunnlag",
-                "vilkår.vilkårTidslinje",
-                "vilkår.vurdertTidspunkt"
-            )
-            .isEqualTo(vilkårsresultat1)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).isEmpty()
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                }
+        }
     }
 
+    @Nested
+    inner class NyeYtelsesbehandlinger : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+
+        @Test
+        fun `trukket søknad blokkerer nye ytelsesbehandlinger`() {
+            // Sender inn en søknad
+            val (sak, behandling) = sendInnFørsteSøknad()
+
+            behandling.løsSykdom(sak.rettighetsperiode.fom)
+                .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses)
+                        .extracting<Definisjon> { it.definisjon }
+                        .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
+                }
+                .løsAvklaringsBehov(
+                    TrekkSøknadLøsning(
+                        begrunnelse = "trekker søknaden",
+                        aarsak = AarsakTilTrekkSoknadDto.ANNET
+                    )
+                )
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).isEmpty()
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                }
+
+            val revurdering = sak.sendInnSøknad(
+                SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei),
+                    yrkesskade = "NEI",
+                    oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                ),
+            )
+
+            assertThat(revurdering.forrigeBehandlingId).isNull()
+            assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+        }
+
+        @Test
+        fun `Teste AvbrytRevurderingFlyt`() {
+            // Førstegangsbehandling
+            val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
+            val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+
+            // Revurdering 1 - skal bli avbrutt
+            val revurdering1 = sak.opprettManuellRevurdering(
+                listOf(
+                    no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD
+                )
+            )
+                .medKontekst {
+                    assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .løsSykdom(sak.rettighetsperiode.fom)
+
+            assertThat(revurdering1.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+            assertThat(revurdering1.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
+
+            // Avbryt revurdering 1
+            revurdering1.leggTilVurderingsbehov(
+                no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+            ).medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVBRYT_REVURDERING)
+            }
+                .løsAvklaringsBehov(
+                    AvbrytRevurderingLøsning(
+                        vurdering = AvbrytRevurderingVurderingDto(
+                            årsak = AvbrytRevurderingÅrsakDto.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
+                            begrunnelse = "Fordi den ikke er aktuell lenger"
+                        ),
+                    )
+                )
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                    assertThat(avklaringsbehovSomMåLøses).isEmpty()
+
+                    val avklaringsbehovene: List<Avklaringsbehov> = hentAlleAvklaringsbehov(revurdering1)
+                    assertStatusForDefinisjon(
+                        avklaringsbehovene,
+                        Definisjon.AVBRYT_REVURDERING,
+                        AvklaringsbehovStatus.AVSLUTTET
+                    )
+                    assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_SYKDOM, AvklaringsbehovStatus.AVBRUTT)
+                    assertStatusForDefinisjon(
+                        avklaringsbehovene,
+                        Definisjon.AVKLAR_BISTANDSBEHOV,
+                        AvklaringsbehovStatus.AVBRUTT
+                    )
+
+                    assertThat(hentVedtakHvisEksisterer())
+                        .describedAs("Skal ikke lagre vedtak for avbrutt revurdering")
+                        .isNull()
+                }
+
+            // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
+            val revurdering2 = sak.opprettManuellRevurdering(
+                listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
+            )
+                .medKontekst {
+                    assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
+
+            assertThat(revurdering2.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
+
+            // Verifiser at data er kopiert fra førstegangsbehandling
+            val vilkårsresultat1 = hentVilkårsresultat(førstegangsbehandling.id)
+            val vilkårsresultat2 = hentVilkårsresultat(revurdering2.id)
+
+            assertThat(vilkårsresultat2).usingRecursiveComparison()
+                .ignoringFields(
+                    "id",
+                    "faktagrunnlag",
+                    "vilkår.vilkårTidslinje",
+                    "vilkår.vurdertTidspunkt",
+                    "vilkår.faktagrunnlag",
+                    "vilkår.vilkårTidslinje",
+                    "vilkår.vurdertTidspunkt"
+                )
+                .isEqualTo(vilkårsresultat1)
+        }
+    }
 }

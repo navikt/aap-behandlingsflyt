@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class KvoteOgVarighetFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class KvoteOgVarighetFlytTest: AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
     @Test
     fun `manglende meldekort tolkes som reduksjon`() {
         val kravdato = 20 januar 2025 /* mandag */

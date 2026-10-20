@@ -40,6 +40,8 @@ import kotlin.reflect.KClass
  *
  * Hvert test-metode får sin egen uavhengige database som er en klon av tilstanden etter
  * [snapshotEtterSetup]-blokken. Tests kan derfor endre databasen uten å påvirke hverandre.
+ * Uten et felles oppsett tas et snapshot av den tomme, migrerte databasen før første test,
+ * slik at også tester med forskjellige grunnlag slipper å tømme tabellene mellom hver test.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstraktFlytOrkestratorSnapshotTest(
@@ -68,6 +70,7 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
             (dataSource as AutoCloseable).close()
             dataSource = TestDataSource()
         }
+        testData = TestData(person = null)
         testData.block()
         snapshot = (dataSource as TestDataSource).createSnapshot()
     }
@@ -79,7 +82,12 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
      */
     @BeforeEach
     override fun beforeEachClearDatabase() {
+        if (!::snapshot.isInitialized) {
+            super.beforeEachClearDatabase()
+            snapshotEtterSetup {}
+        }
         motorForTest = null
+        resetGatewayProvider()
         (dataSource as AutoCloseable).close()
         dataSource = snapshot.newDataSource()
         // Re-register person that was registered during setup
@@ -100,5 +108,9 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
         ).also { motorForTest = it }
 
     @AfterAll
-    fun lukkSnapshot() = snapshot.close()
+    fun lukkSnapshot() {
+        if (::snapshot.isInitialized) {
+            snapshot.close()
+        }
+    }
 }

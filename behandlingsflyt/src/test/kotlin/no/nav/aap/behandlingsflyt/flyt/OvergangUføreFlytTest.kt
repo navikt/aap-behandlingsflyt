@@ -47,8 +47,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -60,13 +62,21 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTestUnleash::class) {
+class OvergangUføreFlytTest : AbstraktFlytOrkestratorSnapshotTest(OvergangUføreFlytTestUnleash::class) {
+    private val hendelser
+        get() = OvergangUføreHendelser(
+            { motor.kjørJobber() },
+            { hentSisteOpprettedeBehandlingForSak(it) },
+            { prosesserBehandling(it) }
+        )
 
     @Test
     fun `11-18 uføre underveis i en behandling`() {
@@ -283,7 +293,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
 
-        val (melding, revurdering) = opprettUførevedtakshendelse(sak, behandling, virkningsdato = ikkeLengerSykDato)
+        val (melding, revurdering) = hendelser.opprettUførevedtakshendelse(sak, behandling, virkningsdato = ikkeLengerSykDato)
         assertThat(revurdering.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
 
         dataSource.transaction { connection ->
@@ -350,18 +360,37 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .kvalitetssikre()
             .fattVedtak()
 
-        val (_, revurdering) = opprettUførevedtakshendelse(sak, behandling)
+        val (_, revurdering) = hendelser.opprettUførevedtakshendelse(sak, behandling)
         assertThat(revurdering.årsakTilOpprettelse).isNotEqualTo(ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
         assertThat(revurdering.id).isEqualTo(behandling.id)
     }
+}
 
-    @Test
-    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering som kan revurderes manuelt`() {
-        val overgangUførDato = LocalDate.now().plusMonths(1)
-        val virkningsdato = LocalDate.now()
-        val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = virkningsdato.atStartOfDay())
+class OvergangUføreFlytTestAutomatiskStans :
+    AbstraktFlytOrkestratorSnapshotTest(OvergangUføreFlytTestUnleash::class) {
+    private val virkningsdato = LocalDate.now()
+    private val overgangUførDato = LocalDate.now().plusMonths(1)
+    private lateinit var person: TestPerson
+    private lateinit var sak: Sak
+    private lateinit var sisteBehandling: Behandling
+    private val hendelser
+        get() = OvergangUføreHendelser(
+            { motor.kjørJobber() },
+            { hentSisteOpprettedeBehandlingForSak(it) },
+            { prosesserBehandling(it) }
+        )
 
-        sisteBehandling
+    @BeforeAll
+    fun settOppOvergangUføre() = snapshotEtterSetup {
+        val person = TestPersoner.STANDARD_PERSON()
+        this.person = person
+        this@OvergangUføreFlytTestAutomatiskStans.person = person
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = virkningsdato.atStartOfDay()
+        )
+        this@OvergangUføreFlytTestAutomatiskStans.sak = sak
+        behandling
             .løsSykdom(virkningsdato, erOppfylt = true)
             .løsBistand(virkningsdato, erOppfylt = false)
             .løsOvergangUføre(
@@ -379,8 +408,19 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
+    }
 
-        val (_, revurdering) = opprettUførevedtakshendelse(
+    @BeforeEach
+    fun hentBehandlingFraSnapshot() {
+        person.dødsdato = null
+        person.uføre = null
+        person.uføreHistorikk = emptyList()
+        sisteBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+    }
+
+    @Test
+    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering som kan revurderes manuelt`() {
+        val (_, revurdering) = hendelser.opprettUførevedtakshendelse(
             sak = sak,
             behandling = sisteBehandling,
             virkningsdato = overgangUførDato,
@@ -469,6 +509,64 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
     }
 
     @Test
+    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18, men bruker dør før dato`() {
+        val dødsdato = LocalDate.now().plusDays(5)
+
+        val (_, revurdering) = hendelser.opprettUførevedtakshendelse(
+            sak = sak,
+            behandling = sisteBehandling,
+            virkningsdato = overgangUførDato,
+            resultat = UførevedtakResultat.INNV,
+            avslag12_5 = false,
+        )
+
+        assertThat(hentAlleAvklaringsbehov(revurdering).map { it.definisjon }).doesNotContain(Definisjon.KVALITETSSIKRING)
+
+        dataSource.transaction { connection ->
+            val automatiskVurdering = OvergangUføreRepositoryImpl(connection)
+                .hentHvisEksisterer(revurdering.id)
+                ?.vurderinger
+                ?.singleOrNull { it.erAutomatiskVurdert() && it.fom == overgangUførDato }
+
+            assertThat(automatiskVurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
+            assertThat(automatiskVurdering.fom).isEqualTo(overgangUførDato)
+        }
+
+        person.medDødsdato(dødsdato)
+        person.medUføre(Prosent.`50_PROSENT`, virkningsdato, virkningsdato.minusDays(1))
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.UFØRE, sak.id)
+        nullstillInformasjonskravOppdatert(InformasjonskravNavn.PERSONOPPLYSNING, sak.id)
+        val revurderingDødsfall = hendelser.opprettDødshendelse(sak)
+
+        assertThat(revurderingDødsfall.status()).isEqualTo(Status.UTREDES)
+            revurderingDødsfall.løsSykdom(
+                vurderingGjelderFra = dødsdato,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                erOppfylt = false,
+                vissVarighet = false
+            )
+                .løsBistand(dødsdato, false)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .løsSamordningUføre(dødsdato)
+                .foreslåVedtak()
+                .fattVedtak()
+        dataSource.transaction { connection ->
+            val oppdatertRevurdering = BehandlingRepositoryImpl(connection).hent(revurderingDødsfall.id)
+            assertThat(oppdatertRevurdering.status().erAvsluttet()).isTrue()
+        }
+    }
+}
+
+class OvergangUføreFlytTestØvrige : AbstraktFlytOrkestratorSnapshotTest(OvergangUføreFlytTestUnleash::class) {
+    private val hendelser
+        get() = OvergangUføreHendelser(
+            { motor.kjørJobber() },
+            { hentSisteOpprettedeBehandlingForSak(it) },
+            { prosesserBehandling(it) }
+        )
+
+    @Test
     fun `innvilget uførevedtak fram i tid bruker uføregateway for å utlede full innvilgelse`() {
         val overgangUførDato = LocalDate.now().plusMonths(1)
         val virkningsdato = LocalDate.now()
@@ -511,7 +609,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
 
-        val (_, revurdering) = opprettUførevedtakshendelse(
+        val (_, revurdering) = hendelser.opprettUførevedtakshendelse(
             sak = sak,
             behandling = sisteBehandling,
             virkningsdato = overgangUførDato,
@@ -528,82 +626,6 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
         }
     }
-
-    @Test
-    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18, men bruker dør før dato`() {
-        val overgangUførDato = LocalDate.now().plusMonths(1)
-        val dødsdato = LocalDate.now().plusDays(5)
-        val virkningsdato = LocalDate.now()
-        val person = TestPersoner.STANDARD_PERSON()
-        val (sak, sisteBehandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = virkningsdato.atStartOfDay()
-        )
-
-        sisteBehandling
-            .løsSykdom(virkningsdato, erOppfylt = true)
-            .løsBistand(virkningsdato, erOppfylt = false)
-            .løsOvergangUføre(
-                fom = virkningsdato,
-                brukerHarSøktOmUføretrygd = true,
-                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
-                brukerHarRettPåAap = true
-            )
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(virkningsdato)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-
-        val (_, revurdering) = opprettUførevedtakshendelse(
-            sak = sak,
-            behandling = sisteBehandling,
-            virkningsdato = overgangUførDato,
-            resultat = UførevedtakResultat.INNV,
-            avslag12_5 = false,
-        )
-
-        assertThat(hentAlleAvklaringsbehov(revurdering).map { it.definisjon }).doesNotContain(Definisjon.KVALITETSSIKRING)
-
-        dataSource.transaction { connection ->
-            val automatiskVurdering = OvergangUføreRepositoryImpl(connection)
-                .hentHvisEksisterer(revurdering.id)
-                ?.vurderinger
-                ?.singleOrNull { it.erAutomatiskVurdert() && it.fom == overgangUførDato }
-
-            assertThat(automatiskVurdering!!.begrunnelse).isEqualTo("Automatisk opphør på grunn av vedtak om uføre")
-            assertThat(automatiskVurdering.fom).isEqualTo(overgangUførDato)
-        }
-
-        person.medDødsdato(dødsdato)
-        person.medUføre(Prosent.`50_PROSENT`, virkningsdato, virkningsdato.minusDays(1))
-        nullstillInformasjonskravOppdatert(InformasjonskravNavn.UFØRE, sak.id)
-        nullstillInformasjonskravOppdatert(InformasjonskravNavn.PERSONOPPLYSNING, sak.id)
-        val revurderingDødsfall = opprettDødshendelse(sak)
-
-        assertThat(revurderingDødsfall.status()).isEqualTo(Status.UTREDES)
-            revurderingDødsfall.løsSykdom(
-                vurderingGjelderFra = dødsdato,
-                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
-                erOppfylt = false,
-                vissVarighet = false
-            )
-                .løsBistand(dødsdato, false)
-                .løsSykdomsvurderingBrev()
-                .bekreftVurderinger()
-                .løsSamordningUføre(dødsdato)
-                .foreslåVedtak()
-                .fattVedtak()
-        dataSource.transaction { connection ->
-            val oppdatertRevurdering = BehandlingRepositoryImpl(connection).hent(revurderingDødsfall.id)
-            assertThat(oppdatertRevurdering.status().erAvsluttet()).isTrue()
-        }
-    }
-
 
     @Test
     fun `UunngåeligAvslag for OVERGANG_UFORE inneholder riktig vilkårtype når vilkåret ikke er oppfylt`() {
@@ -630,84 +652,6 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                         .isEqualTo(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 }
             }
-    }
-
-    @Suppress("FunctionParameterNaming")
-    private fun opprettUførevedtakshendelse(
-        sak: Sak,
-        behandling: Behandling,
-        virkningsdato: LocalDate = LocalDate.now(),
-        resultat: UførevedtakResultat = UførevedtakResultat.AVSL,
-        avslag12_5: Boolean = true,
-    ): Pair<UførevedtakV0, Behandling> {
-        val dokumentReferanse = UUID.randomUUID().toString()
-        val melding = UførevedtakKafkaMelding(
-            personId = sak.person.aktivIdent().toString(),
-            virkningsdato = virkningsdato,
-            resultat = resultat,
-            avslag12_5 = avslag12_5,
-        ).tilUføreVedtakV0() as UførevedtakV0
-        dataSource.transaction { connection ->
-            val flytJobbRepository = FlytJobbRepository(connection)
-            flytJobbRepository.leggTil(
-                HendelseMottattHåndteringJobbUtfører.nyJobb(
-                    sakId = behandling.sakId,
-                    dokumentReferanse = InnsendingReferanse(
-                        InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID,
-                        dokumentReferanse
-                    ),
-                    brevkategori = InnsendingType.UFØRE_VEDTAK_HENDELSE,
-                    kanal = Kanal.DIGITAL,
-                    mottattTidspunkt = LocalDateTime.now(),
-                    melding = melding
-                )
-            )
-        }
-        motor.kjørJobber()
-
-        var revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
-        if (!revurdering.status().erAvsluttet()) {
-            revurdering = prosesserBehandling(revurdering)
-        }
-        return Pair(melding, revurdering)
-    }
-
-    private fun opprettDødshendelse(
-        sak: Sak,
-    ): Behandling {
-        val dokumentReferanse = UUID.randomUUID().toString()
-        val personidenter = listOf(sak.person.aktivIdent().identifikator)
-        val innsending = PdlPersonHendelse(
-            hendelseId = UUID.randomUUID().toString(),
-            personidenter = personidenter,
-            master = "FREG",
-            opprettet = Instant.now(),
-            opplysningstype = Opplysningstype.DOEDSFALL_V1,
-            endringstype = Endringstype.OPPRETTET,
-            ).tilInnsendingDødsfallBruker(sak.saksnummer, null, personidenter)
-        dataSource.transaction { connection ->
-            val flytJobbRepository = FlytJobbRepository(connection)
-            flytJobbRepository.leggTil(
-                HendelseMottattHåndteringJobbUtfører.nyJobb(
-                    sakId = sak.id,
-                    dokumentReferanse = InnsendingReferanse(
-                        InnsendingReferanse.Type.PDL_HENDELSE_ID,
-                        dokumentReferanse
-                    ),
-                    brevkategori = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
-                    kanal = Kanal.DIGITAL,
-                    mottattTidspunkt = LocalDateTime.now(),
-                    melding = innsending.melding
-                )
-            )
-        }
-        motor.kjørJobber()
-
-        var revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
-        if (!revurdering.status().erAvsluttet()) {
-            revurdering = prosesserBehandling(revurdering)
-        }
-        return revurdering
     }
 
     @Test
@@ -793,6 +737,90 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .medKontekst {
                 assertThat(behandling.aktivtSteg()).isIn(StegType.START_BEHANDLING, StegType.OVERGANG_UFORE)
             }
+    }
+}
+
+private class OvergangUføreHendelser(
+    private val kjørJobber: () -> Unit,
+    private val hentSisteOpprettedeBehandlingForSak: (SakId) -> Behandling,
+    private val prosesserBehandling: (Behandling) -> Behandling,
+) {
+    @Suppress("FunctionParameterNaming")
+    fun opprettUførevedtakshendelse(
+        sak: Sak,
+        behandling: Behandling,
+        virkningsdato: LocalDate = LocalDate.now(),
+        resultat: UførevedtakResultat = UførevedtakResultat.AVSL,
+        avslag12_5: Boolean = true,
+    ): Pair<UførevedtakV0, Behandling> {
+        val dokumentReferanse = UUID.randomUUID().toString()
+        val melding = UførevedtakKafkaMelding(
+            personId = sak.person.aktivIdent().toString(),
+            virkningsdato = virkningsdato,
+            resultat = resultat,
+            avslag12_5 = avslag12_5,
+        ).tilUføreVedtakV0() as UførevedtakV0
+        AbstraktFlytOrkestratorTest.dataSource.transaction { connection ->
+            val flytJobbRepository = FlytJobbRepository(connection)
+            flytJobbRepository.leggTil(
+                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                    sakId = behandling.sakId,
+                    dokumentReferanse = InnsendingReferanse(
+                        InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID,
+                        dokumentReferanse
+                    ),
+                    brevkategori = InnsendingType.UFØRE_VEDTAK_HENDELSE,
+                    kanal = Kanal.DIGITAL,
+                    mottattTidspunkt = LocalDateTime.now(),
+                    melding = melding
+                )
+            )
+        }
+        kjørJobber()
+
+        var revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
+        if (!revurdering.status().erAvsluttet()) {
+            revurdering = prosesserBehandling(revurdering)
+        }
+        return Pair(melding, revurdering)
+    }
+
+    fun opprettDødshendelse(
+        sak: Sak,
+    ): Behandling {
+        val dokumentReferanse = UUID.randomUUID().toString()
+        val personidenter = listOf(sak.person.aktivIdent().identifikator)
+        val innsending = PdlPersonHendelse(
+            hendelseId = UUID.randomUUID().toString(),
+            personidenter = personidenter,
+            master = "FREG",
+            opprettet = Instant.now(),
+            opplysningstype = Opplysningstype.DOEDSFALL_V1,
+            endringstype = Endringstype.OPPRETTET,
+            ).tilInnsendingDødsfallBruker(sak.saksnummer, null, personidenter)
+        AbstraktFlytOrkestratorTest.dataSource.transaction { connection ->
+            val flytJobbRepository = FlytJobbRepository(connection)
+            flytJobbRepository.leggTil(
+                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                    sakId = sak.id,
+                    dokumentReferanse = InnsendingReferanse(
+                        InnsendingReferanse.Type.PDL_HENDELSE_ID,
+                        dokumentReferanse
+                    ),
+                    brevkategori = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
+                    kanal = Kanal.DIGITAL,
+                    mottattTidspunkt = LocalDateTime.now(),
+                    melding = innsending.melding
+                )
+            )
+        }
+        kjørJobber()
+
+        var revurdering = hentSisteOpprettedeBehandlingForSak(sak.id)
+        if (!revurdering.status().erAvsluttet()) {
+            revurdering = prosesserBehandling(revurdering)
+        }
+        return revurdering
     }
 }
 

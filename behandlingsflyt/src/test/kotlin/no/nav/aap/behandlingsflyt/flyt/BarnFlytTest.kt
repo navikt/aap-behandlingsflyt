@@ -59,7 +59,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.test.assertTrue
 
-class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class BarnFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
     @Test
     fun `barnetillegg gis fram til 18 år`() {
         val fom = LocalDate.of(2025, 12, 15).minusMonths(3)

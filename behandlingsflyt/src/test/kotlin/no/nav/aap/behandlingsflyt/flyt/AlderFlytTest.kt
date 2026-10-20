@@ -17,7 +17,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class AlderFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class AlderFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Ikke oppfylt på grunn av alder på søknadstidspunkt`() {
         val (_, behandling) = sendInnFørsteSøknad(person = TestPersoner.PERSON_FOR_UNG())

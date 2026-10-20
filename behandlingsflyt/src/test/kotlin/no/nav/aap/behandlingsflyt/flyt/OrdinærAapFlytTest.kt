@@ -21,244 +21,281 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
 @ParameterizedClass
-@MethodSource("unleashTestDataSource")
-class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
-    @Test
-    fun `happy case førstegangsbehandling + revurder førstegangssøknad, nei på viss varighet, nei på 11-13 - avslag`() {
-        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
-        val behandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, false)
+@MethodSource("no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest#unleashTestDataSource")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class OrdinærAapFlytTest {
 
-        behandling
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
-                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-            }
-            // Vi svarer nei på rett til sykepengererstatning
-            .løsSykepengeerstatning(sak.rettighetsperiode.fom to false)
-            .medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .medKontekst {
-                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>()
-                    .hent(this.behandling.id)
+    @field:Parameter
+    lateinit var unleashGateway: KClass<out UnleashGateway>
 
-                assertThat(underveisGrunnlag.perioder).isNotEmpty
-                assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
-                    .describedAs("Ingen perioder skal være oppfylt.")
-                    .allSatisfy { rettighetsType ->
-                        assertThat(rettighetsType).isEqualTo(null)
-                    }
-            }
-    }
+    @Nested
+    inner class UlikeFørstegangsbehandlinger : AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@OrdinærAapFlytTest.unleashGateway
 
-    @Test
-    fun `ved avslag på 11-5 hoppes det rett til beslutter-steget`() {
-        val fom = LocalDate.now().minusMonths(3)
+        @Test
+        fun `happy case førstegangsbehandling + revurder førstegangssøknad, nei på viss varighet, nei på 11-13 - avslag`() {
+            val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
+            val behandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, false)
 
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+            behandling
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
+                        .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+                }
+                // Vi svarer nei på rett til sykepengererstatning
+                .løsSykepengeerstatning(sak.rettighetsperiode.fom to false)
+                .medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+                }
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .medKontekst {
+                    val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>()
+                        .hent(this.behandling.id)
 
-        behandling.medKontekst {
-            assertThat(this.avklaringsbehovSomMåLøses).isNotEmpty()
-            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                    assertThat(underveisGrunnlag.perioder).isNotEmpty
+                    assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
+                        .describedAs("Ingen perioder skal være oppfylt.")
+                        .allSatisfy { rettighetsType ->
+                            assertThat(rettighetsType).isEqualTo(null)
+                        }
+                }
         }
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    løsningerForPerioder = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er ikke syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
-                            harSkadeSykdomEllerLyte = false,
-                            harNedsattArbeidsevne = null,
-                            erSkadeSykdomEllerLyteVesentligdel = null,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            yrkesskadeBegrunnelse = null,
-                            fom = fom,
-                            tom = null,
+
+        @Test
+        fun `ved avslag på 11-5 hoppes det rett til beslutter-steget`() {
+            val fom = LocalDate.now().minusMonths(3)
+
+            val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+
+            behandling.medKontekst {
+                assertThat(this.avklaringsbehovSomMåLøses).isNotEmpty()
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+                .løsAvklaringsBehov(
+                    AvklarSykdomLøsning(
+                        løsningerForPerioder = listOf(
+                            SykdomsvurderingLøsningDto(
+                                begrunnelse = "Er ikke syk nok",
+                                dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
+                                harSkadeSykdomEllerLyte = false,
+                                harNedsattArbeidsevne = null,
+                                erSkadeSykdomEllerLyteVesentligdel = null,
+                                erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                                yrkesskadeBegrunnelse = null,
+                                fom = fom,
+                                tom = null,
+                            )
                         )
-                    )
-                ),
-            )
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .medKontekst {
+                    ),
+                )
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .medKontekst {
+                    if (toggleForHoppOverBeslutter()) {
+                        assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                            .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
+                        assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                    } else {
+                        assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                        assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                    }
+                }
+
+            val behandlingMedFattetVedtak =
                 if (toggleForHoppOverBeslutter()) {
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                        .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
-                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                    behandling
                 } else {
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                    behandling.fattVedtak()
                 }
-            }
+            behandlingMedFattetVedtak
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-        val behandlingMedFattetVedtak =
-            if (toggleForHoppOverBeslutter()) {
-                behandling
-            } else {
-                behandling.fattVedtak()
-            }
-        behandlingMedFattetVedtak
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-
-                val vedtak = hentVedtak()
-                assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+                    val vedtak = hentVedtak()
+                    assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
 
-                val resultat = ResultatUtleder(
-                    repositoryProvider,
-                    minimalGatewayProvider()
-                ).utledResultatFørstegangsBehandling(behandling.id)
+                    val resultat = ResultatUtleder(
+                        repositoryProvider,
+                        minimalGatewayProvider()
+                    ).utledResultatFørstegangsBehandling(behandling.id)
 
-                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-            }
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-
-                // Verifiserer at sykdomsvilkåret ikke er oppfylt
-                val vilkårsresultat = hentVilkårsresultat()
-                val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
-                    .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
-
-                // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
-                assertThat(avklaringsbehovSomMåLøses).isEmpty()
-            }
-    }
-
-    private fun toggleForHoppOverBeslutter(): Boolean {
-        return gatewayProvider.provide<UnleashGateway>()
-            .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
-    }
-
-    @Test
-    fun `ved førstegangsbehandling i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav er løst og før kvalitetsvurdering`() {
-        val (sak, førstegangsbehandling) = sendInnFørsteSøknad()
-
-        førstegangsbehandling
-            .medKontekst {
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .løsRefusjonskrav()
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).anySatisfy {
-                    assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                    assertThat(resultat).isEqualTo(Resultat.AVSLAG)
                 }
-            }
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(sak.rettighetsperiode.fom)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-            }
-    }
+                .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
-    @Test
-    fun `ved revurdering i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(periode.fom, person, sendMeldekort = false)
+                    // Verifiserer at sykdomsvilkåret ikke er oppfylt
+                    val vilkårsresultat = hentVilkårsresultat()
+                    val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        val revurdering = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
-        )
-            .medKontekst {
-                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
-            }
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger() // Krever ikke kvalitetskontroll i revurdering
-            .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+                    assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
+                        .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
 
-        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
-    }
-
-    @Test
-    fun `Blir satt på vent for etterspørring av informasjon`() {
-        val (sak, behandling) = sendInnFørsteSøknad()
-        behandling.medKontekst {
-            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_SYKDOM)
+                    // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
+                    assertThat(avklaringsbehovSomMåLøses).isEmpty()
+                }
         }
 
-        settBehandlingPåVent(
-            behandling.id,
-            BehandlingSattPåVent(
-                frist = null,
-                begrunnelse = "Avventer dokumentasjon",
-                bruker = SYSTEMBRUKER,
-                behandlingVersjon = behandling.versjon,
-                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER
+        private fun toggleForHoppOverBeslutter(): Boolean {
+            return gatewayProvider.provide<UnleashGateway>()
+                .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
+        }
+
+        @Test
+        fun `ved revurdering i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav`() {
+            val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+            val person = TestPersoner.STANDARD_PERSON()
+            val sak = happyCaseFørstegangsbehandling(periode.fom, person, sendMeldekort = false)
+
+            val revurdering = sak.opprettManuellRevurdering(
+                listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
             )
-        )
+                .medKontekst {
+                    assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                    assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .løsSykdom(sak.rettighetsperiode.fom)
+                .løsBistand(sak.rettighetsperiode.fom)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV) }
+                }
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger() // Krever ikke kvalitetskontroll i revurdering
+                .fattVedtak()
+                .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
 
-        behandling.medKontekst {
-            val frist = avklaringsbehovSomMåLøses.first { it.erVentepunkt() }.frist()
-            assertThat(frist).isNotNull
+            assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+        }
+    }
 
-            assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                .hasSize(2)
-                .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
+    @Nested
+    inner class StandardSøknad : AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@OrdinærAapFlytTest.unleashGateway
 
+        private lateinit var sak: Sak
+        private lateinit var behandling: Behandling
+
+        @BeforeAll
+        fun settOppSøknad() = snapshotEtterSetup {
+            val person = TestPersoner.STANDARD_PERSON()
+            this.person = person
+            sak = sendInnFørsteSøknad(person = person).first
         }
 
-        sak.sendInnSøknad(
-            SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
-            ),
-        ).medKontekst {
-            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+        @BeforeEach
+        fun hentBehandlingFraSnapshot() {
+            behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+        }
 
-            if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                    .containsExactlyInAnyOrder(
-                        Definisjon.VURDER_KRAV,
-                        Definisjon.MANUELT_SATT_PÅ_VENT,
-                        Definisjon.AVKLAR_SYKDOM
-                    )
-            } else {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                    .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
+        @Test
+        fun `ved førstegangsbehandling i steget for sykdom skal sykdomsvurdering for brev vises etter refusjonskrav er løst og før kvalitetsvurdering`() {
+            val førstegangsbehandling = behandling
+
+            førstegangsbehandling
+                .medKontekst {
+                    assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .løsSykdom(sak.rettighetsperiode.fom)
+                .løsBistand(sak.rettighetsperiode.fom)
+                .løsRefusjonskrav()
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).anySatisfy {
+                        assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                    }
+                }
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsOppholdskrav(sak.rettighetsperiode.fom)
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev()
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                }
+        }
+
+        @Test
+        fun `Blir satt på vent for etterspørring av informasjon`() {
+            val behandling = this.behandling
+            behandling.medKontekst {
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_SYKDOM)
             }
 
+            settBehandlingPåVent(
+                behandling.id,
+                BehandlingSattPåVent(
+                    frist = null,
+                    begrunnelse = "Avventer dokumentasjon",
+                    bruker = SYSTEMBRUKER,
+                    behandlingVersjon = behandling.versjon,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER
+                )
+            )
+
+            behandling.medKontekst {
+                val frist = avklaringsbehovSomMåLøses.first { it.erVentepunkt() }.frist()
+                assertThat(frist).isNotNull
+
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .hasSize(2)
+                    .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
+
+            }
+
+            sak.sendInnSøknad(
+                SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
+                ),
+            ).medKontekst {
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.KravSteg)) {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                        .containsExactlyInAnyOrder(
+                            Definisjon.VURDER_KRAV,
+                            Definisjon.MANUELT_SATT_PÅ_VENT,
+                            Definisjon.AVKLAR_SYKDOM
+                        )
+                } else {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                        .containsExactlyInAnyOrder(Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.AVKLAR_SYKDOM)
+                }
+
+            }
         }
     }
 }

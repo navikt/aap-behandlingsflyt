@@ -29,6 +29,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -41,7 +43,10 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.BeforeParameterizedClassInvocation
+import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
@@ -50,8 +55,11 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
-    AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class YrkesskadeFlytTest :
+    AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+    @field:Parameter
+    lateinit var unleashGateway: KClass<UnleashGateway>
+
     @Test
     fun `skal ikke vise avklaringsbehov for yrkesskade ved avslag i tidligere steg`() {
         val personMedYrkesskade = TestPersoner.PERSON_MED_YRKESSKADE()
@@ -86,19 +94,34 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
     }
+}
 
-    @Test
-    fun `ved revurdering med yrkesskade og årsakssammenheng må både beregningstidspunkt og yrkesskadeinntekt avklares ved revurdering av beregning`() {
-        val søknadsdato = LocalDate.now()
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class YrkesskadeFlytTestRevurdering :
+    AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+    @field:Parameter
+    lateinit var unleashGateway: KClass<UnleashGateway>
+
+    private val søknadsdato = LocalDate.now()
+    private lateinit var person: TestPerson
+    private lateinit var sak: Sak
+    private lateinit var oppdatertBehandling: Behandling
+
+    @BeforeParameterizedClassInvocation(injectArguments = false)
+    fun settOppYrkesskade() = snapshotEtterSetup {
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
+        this.person = person
+        this@YrkesskadeFlytTestRevurdering.person = person
         // Sender inn en søknad
         val (sak, behandling) = sendInnFørsteSøknad(
             mottattTidspunkt = søknadsdato.atStartOfDay(),
             person = person,
             søknad = TestSøknader.STANDARD_SØKNAD
         )
+        this@YrkesskadeFlytTestRevurdering.sak = sak
 
-        val oppdatertBehandling = behandling
+        behandling
             .løsSykdom(søknadsdato)
             .løsBistand(søknadsdato)
             .løsRefusjonskrav()
@@ -127,7 +150,15 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_INNVILGELSE)
+    }
 
+    @BeforeEach
+    fun hentBehandlingFraSnapshot() {
+        oppdatertBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+    }
+
+    @Test
+    fun `ved revurdering med yrkesskade og årsakssammenheng må både beregningstidspunkt og yrkesskadeinntekt avklares ved revurdering av beregning`() {
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
         val revurdering = sak.opprettManuellRevurdering(
@@ -145,46 +176,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
     @Test
     fun `ved revurdering med yrkesskade skal både årsakssammenheng og yrkesskadeinntekt avklares hvis årsak revurder yrkesskade`() {
-        val søknadsdato = LocalDate.now()
-
-        val person = TestPersoner.PERSON_MED_YRKESSKADE()
-        // Sender inn en søknad
-        val (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = søknadsdato.atStartOfDay(),
-            person = person,
-            søknad = TestSøknader.STANDARD_SØKNAD
-        )
-
-        val oppdatertBehandling = behandling
-            .løsSykdom(søknadsdato)
-            .løsBistand(søknadsdato)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "Veldig relevante",
-                        relevanteYrkesskadeSaker = person.yrkesskade.map {
-                            YrkesskadeSakDto(
-                                it.saksreferanse,
-                                null,
-                            )
-                        },
-                        andelAvNedsettelsen = 50,
-                        erÅrsakssammenheng = true
-                    )
-                )
-            )
-            .løsBeregningstidspunkt()
-            .løsYrkesskadeInntekt(person.yrkesskade)
-            .løsOppholdskrav(søknadsdato)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_INNVILGELSE)
-
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
         val revurdering = sak.opprettManuellRevurdering(
@@ -213,6 +204,14 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
         assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
     }
+}
+
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class YrkesskadeFlytTestØvrige :
+    AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+    @field:Parameter
+    lateinit var unleashGateway: KClass<UnleashGateway>
 
     @Test
     fun `ved revurdering med yrkesskade hvor yrkesskade fjernes må forutgående medlemskap vurderes da den igjen er aktuell`() {

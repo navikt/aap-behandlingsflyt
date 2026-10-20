@@ -1,13 +1,14 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertFritakMeldepliktLøsning
-import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest
+import no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorSnapshotTest
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
@@ -15,8 +16,12 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class FritakMeldepliktFlytTest(val unleashGateway: KClass<UnleashGateway>) :
-    AbstraktFlytOrkestratorTest(unleashGateway) {
+class FritakMeldepliktFlytTest : AbstraktFlytOrkestratorSnapshotTest() {
+
+    @field:Parameter
+    lateinit var unleashGateway: KClass<out UnleashGateway>
+
+    override fun unleashGateway() = unleashGateway
 
     @Test
     fun `kan løse frivillig behov i revurdering`() {

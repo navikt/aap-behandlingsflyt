@@ -24,6 +24,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -31,238 +33,135 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
 @ParameterizedClass
-@MethodSource("unleashTestDataSource")
-class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
-    AbstraktFlytOrkestratorTest(unleashGateway) {
-    @Test
-    fun `Sykepengeerstatning med yrkesskade`() {
-        val søknadsdato = 1 april 2025
-        val person = TestPersoner.PERSON_MED_YRKESSKADE()
-        var (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = søknadsdato.atStartOfDay(),
-        )
+@MethodSource("no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest#unleashTestDataSource")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class SykepengeerstatningFlytTest {
 
-        behandling = behandling.medKontekst {
-            assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
-            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-        }
-            .løsSykdom(
-                sak.rettighetsperiode.fom,
-                vissVarighet = false,
-                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true
+    @field:Parameter
+    lateinit var unleashGateway: KClass<out UnleashGateway>
+
+    @Nested
+    inner class Yrkesskade : AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@SykepengeerstatningFlytTest.unleashGateway
+
+        @Test
+        fun `Sykepengeerstatning med yrkesskade`() {
+            val søknadsdato = 1 april 2025
+            val person = TestPersoner.PERSON_MED_YRKESSKADE()
+            var (sak, behandling) = sendInnFørsteSøknad(
+                person = person,
+                mottattTidspunkt = søknadsdato.atStartOfDay(),
             )
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
-                    "Bistandsbehov skal ikke vurderes hvis viss varighet er nei"
-                ).doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV)
-                validerAtSykdomsvurderingHarSattNedsattArbeidsevneMedForbigåendeValg(behandling.id)
+
+            behandling = behandling.medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
-                    "Person med yrkesskade skal gi avklaringsbehov for yrkesskade"
-                ).containsExactly(Definisjon.AVKLAR_YRKESSKADE)
-            }
-            .løsYrkesskade(person)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
-                    "Viss varighet false skal gi avklaringsbehov for sykepengeerstatning"
-                ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-            }
-            .løsSykepengeerstatning(søknadsdato to true)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
-                    "Forutgående medlemskap skal ikke vurderes for yrkesskade"
-                ).doesNotContain(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
-            }
-            .løsBeregningstidspunkt(søknadsdato)
-            .løsYrkesskadeInntekt(person.yrkesskade)
-            .løsOppholdskrav(søknadsdato)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .assertRettighetstype(
-                Periode(
+                .løsSykdom(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1),
-                ) to RettighetsType.SYKEPENGEERSTATNING,
-            )
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-
-                val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
-                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-            }
-
-    }
-
-    private fun validerAtSykdomsvurderingHarSattNedsattArbeidsevneMedForbigåendeValg(id: BehandlingId) {
-        dataSource.transaction { connection ->
-            val sykdomsgrunnlag = SykdomRepositoryImpl(connection).hent(id)
-            val vurderinger = sykdomsgrunnlag.sykdomsvurderinger
-            assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger.first().harNedsattArbeidsevne).isEqualTo(ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER)
-        }
-    }
-
-    @Test
-    fun `revurdere sykepengeerstatning - skal ikke trigge 11-13 om gjelderFra ikke er kravdato`() {
-        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
-        val gjelderFra = sak.rettighetsperiode.fom.plusMonths(1)
-
-        revurdereFramTilOgMedSykdom(sak, gjelderFra)
-            .løsBistand(gjelderFra)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
-                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)  // ingen avklaringsbehov løst av NAY, gå rett til fatte vedtak
-            }
-            .fattVedtak()
-            .medKontekst {
-                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id)
-
-                assertThat(underveisGrunnlag.perioder).isNotEmpty
-                assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
-                    .allSatisfy { rettighetsType ->
-                        assertThat(rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
-                    }
-            }
-    }
-
-    @Test
-    fun `ikke sykdom viss varighet, men skal få innvilget 11-13 sykepengererstatning`() {
-        val søknadsdato = LocalDate.now()
-
-        // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadsdato.atStartOfDay())
-
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = behandling.løsAvklaringsBehov(
-            AvklarSykdomLøsning(
-                løsningerForPerioder = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        // Nei på denne gir mulighet til å innvilge på 11-13
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
-                        yrkesskadeBegrunnelse = null,
-                        fom = sak.rettighetsperiode.fom,
-                        tom = null,
-                    )
+                    vissVarighet = false,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true
                 )
-            ),
-        )
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .contains(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-            }
-            .løsSykepengeerstatning(søknadsdato to true)
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(søknadsdato)
-            .løsAndreStatligeYtelser()
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).anySatisfy { avklaringsbehov ->
-                    assertThat(avklaringsbehov.definisjon).isEqualTo(
-                        Definisjon.FORESLÅ_VEDTAK
-                    )
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
+                        "Bistandsbehov skal ikke vurderes hvis viss varighet er nei"
+                    ).doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV)
+                    validerAtSykdomsvurderingHarSattNedsattArbeidsevneMedForbigåendeValg(behandling.id)
                 }
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
+                        "Person med yrkesskade skal gi avklaringsbehov for yrkesskade"
+                    ).containsExactly(Definisjon.AVKLAR_YRKESSKADE)
+                }
+                .løsYrkesskade(person)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
+                        "Viss varighet false skal gi avklaringsbehov for sykepengeerstatning"
+                    ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+                }
+                .løsSykepengeerstatning(søknadsdato to true)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
+                        "Forutgående medlemskap skal ikke vurderes for yrkesskade"
+                    ).doesNotContain(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+                }
+                .løsBeregningstidspunkt(søknadsdato)
+                .løsYrkesskadeInntekt(person.yrkesskade)
+                .løsOppholdskrav(søknadsdato)
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .assertRettighetstype(
+                    Periode(
+                        sak.rettighetsperiode.fom,
+                        sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1),
+                    ) to RettighetsType.SYKEPENGEERSTATNING,
+                )
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+                    val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
+                    assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+                }
+
+        }
+
+        private fun validerAtSykdomsvurderingHarSattNedsattArbeidsevneMedForbigåendeValg(id: BehandlingId) {
+            dataSource.transaction { connection ->
+                val sykdomsgrunnlag = SykdomRepositoryImpl(connection).hent(id)
+                val vurderinger = sykdomsgrunnlag.sykdomsvurderinger
+                assertThat(vurderinger).hasSize(1)
+                assertThat(vurderinger.first().harNedsattArbeidsevne).isEqualTo(ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER)
             }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning()).medKontekst {
-                // Saken står til To-trinnskontroll hos beslutter
-                assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .fattVedtak()
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+        }
+    }
 
-                val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
-                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-            }
-            .løsVedtaksbrev()
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+    @Nested
+    inner class SøknadMottattIDag : AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@SykepengeerstatningFlytTest.unleashGateway
 
-                val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-                val sykepengeerstatningvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
+        private val søknadsdato = LocalDate.now()
+        private lateinit var sak: Sak
+        private lateinit var behandling: Behandling
 
-                assertThat(sykepengeerstatningvilkåret.vilkårsperioder()).hasSize(1).first()
-                    .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
-                    .containsExactly(true, null)
+        @BeforeAll
+        fun settOppSøknad() = snapshotEtterSetup {
+            val person = TestPersoner.STANDARD_PERSON()
+            this.person = person
+            sak = sendInnFørsteSøknad(
+                person = person,
+                mottattTidspunkt = søknadsdato.atStartOfDay()
+            ).first
+        }
 
-                val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
+        @BeforeEach
+        fun hentBehandlingFraSnapshot() {
+            behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+        }
 
-                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-            }
-            .assertRettighetstype(
-                Periode(
-                    sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1)
-                ) to RettighetsType.SYKEPENGEERSTATNING
-            )
+        @Test
+        fun `ikke sykdom viss varighet, men skal få innvilget 11-13 sykepengererstatning`() {
+            var behandling = this.behandling
 
-        // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
-        val revurderingFom = søknadsdato.plusMonths(1)
-        val revurdering = sak.opprettManuellRevurdering(
-            listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
-        )
-            .løsSykdom(vurderingGjelderFra = revurderingFom)
-            .løsBistand(revurderingFom)
-            .medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
-            }
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-            }
-            .fattVedtak()
-            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
-            .assertRettighetstype(
-                Periode(
-                    søknadsdato,
-                    søknadsdato.plusMonths(1).minusDays(1)
-                ) to RettighetsType.SYKEPENGEERSTATNING,
-                Periode(
-                    revurderingFom,
-                    søknadsdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                ) to RettighetsType.BISTANDSBEHOV
-            )
+            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        // Revurdering nr 2, innvilger sp-erstatning på nytt
-        val førstePeriodeSykepengeerstatning = Periode(søknadsdato, søknadsdato.plusMonths(1).minusDays(1))
-
-        val revurdering2Fom = søknadsdato.plusMonths(2)
-        sak.opprettManuellRevurdering(
-            listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
-        )
-            .medKontekst {
-                assertThat(this.behandling.id).isNotEqualTo(revurdering.id)
-            }
-            .løsAvklaringsBehov(
+            behandling = behandling.løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
                         SykdomsvurderingLøsningDto(
@@ -271,74 +170,159 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
                             erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            // Nei på denne gir mulighet til å innvilge på 11-13
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                             yrkesskadeBegrunnelse = null,
-                            fom = revurdering2Fom,
+                            fom = sak.rettighetsperiode.fom,
                             tom = null,
                         )
                     )
+                ),
+            )
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .contains(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+                }
+                .løsSykepengeerstatning(søknadsdato to true)
+                .løsBeregningstidspunkt()
+                .løsOppholdskrav(søknadsdato)
+                .løsAndreStatligeYtelser()
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).anySatisfy { avklaringsbehov ->
+                        assertThat(avklaringsbehov.definisjon).isEqualTo(
+                            Definisjon.FORESLÅ_VEDTAK
+                        )
+                    }
+                    assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .løsAvklaringsBehov(ForeslåVedtakLøsning()).medKontekst {
+                    // Saken står til To-trinnskontroll hos beslutter
+                    assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                    assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .fattVedtak()
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+                    val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
+                    assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+                }
+                .løsVedtaksbrev()
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+
+                    val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+                    val sykepengeerstatningvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
+
+                    assertThat(sykepengeerstatningvilkåret.vilkårsperioder()).hasSize(1).first()
+                        .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
+                        .containsExactly(true, null)
+
+                    val resultat = ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(behandling.id)
+
+                    assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+                }
+                .assertRettighetstype(
+                    Periode(
+                        sak.rettighetsperiode.fom,
+                        sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1)
+                    ) to RettighetsType.SYKEPENGEERSTATNING
                 )
+
+            // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
+            val revurderingFom = søknadsdato.plusMonths(1)
+            val revurdering = sak.opprettManuellRevurdering(
+                listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
             )
-            .løsBistand(revurdering2Fom, true)
-            .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, søknadsdato)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .løsSykepengeerstatning(søknadsdato.plusMonths(2) to true)
-            .assertRettighetstype(
-                førstePeriodeSykepengeerstatning to
-                        RettighetsType.SYKEPENGEERSTATNING,
-                Periode(søknadsdato.plusMonths(1), søknadsdato.plusMonths(2).minusDays(1)) to
-                        RettighetsType.BISTANDSBEHOV,
-                Periode(
-                    søknadsdato.plusMonths(2),
-                    søknadsdato.plusMonths(2).plusHverdager(
-                        Hverdager(131) - førstePeriodeSykepengeerstatning.antallHverdager()
-                    ).minusDays(1)
-                ) to
-                        RettighetsType.SYKEPENGEERSTATNING,
+                .løsSykdom(vurderingGjelderFra = revurderingFom)
+                .løsBistand(revurderingFom)
+                .medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+                }
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                }
+                .fattVedtak()
+                .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+                .assertRettighetstype(
+                    Periode(
+                        søknadsdato,
+                        søknadsdato.plusMonths(1).minusDays(1)
+                    ) to RettighetsType.SYKEPENGEERSTATNING,
+                    Periode(
+                        revurderingFom,
+                        søknadsdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    ) to RettighetsType.BISTANDSBEHOV
+                )
+
+            // Revurdering nr 2, innvilger sp-erstatning på nytt
+            val førstePeriodeSykepengeerstatning = Periode(søknadsdato, søknadsdato.plusMonths(1).minusDays(1))
+
+            val revurdering2Fom = søknadsdato.plusMonths(2)
+            sak.opprettManuellRevurdering(
+                listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
             )
-    }
-
-
-    @Test
-    fun `ikke sykdom viss varighet, endrer rettighetsperiode etter 11-5 - skal ikke få spørsmål om 11-6`() {
-        val søknadsdato = LocalDate.now()
-
-        // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadsdato.atStartOfDay())
-
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        val nyStartDato = søknadsdato.minusDays(7)
-        behandling.løsAvklaringsBehov(
-            AvklarSykdomLøsning(
-                løsningerForPerioder = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er syk nok 1",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        // Nei på denne gir mulighet til å innvilge på 11-13
-                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
-                        yrkesskadeBegrunnelse = null,
-                        fom = sak.rettighetsperiode.fom,
-                        tom = null,
+                .medKontekst {
+                    assertThat(this.behandling.id).isNotEqualTo(revurdering.id)
+                }
+                .løsAvklaringsBehov(
+                    AvklarSykdomLøsning(
+                        løsningerForPerioder = listOf(
+                            SykdomsvurderingLøsningDto(
+                                begrunnelse = "Er syk nok",
+                                dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                                harSkadeSykdomEllerLyte = true,
+                                erSkadeSykdomEllerLyteVesentligdel = true,
+                                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                                harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
+                                yrkesskadeBegrunnelse = null,
+                                fom = revurdering2Fom,
+                                tom = null,
+                            )
+                        )
                     )
                 )
-            ),
-        )
-        behandling = sak.opprettManuellRevurdering(
-            vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
-        )
-        behandling.løsRettighetsperiode(nyStartDato)
-            .løsAvklaringsBehov(
+                .løsBistand(revurdering2Fom, true)
+                .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, søknadsdato)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .løsSykepengeerstatning(søknadsdato.plusMonths(2) to true)
+                .assertRettighetstype(
+                    førstePeriodeSykepengeerstatning to
+                            RettighetsType.SYKEPENGEERSTATNING,
+                    Periode(søknadsdato.plusMonths(1), søknadsdato.plusMonths(2).minusDays(1)) to
+                            RettighetsType.BISTANDSBEHOV,
+                    Periode(
+                        søknadsdato.plusMonths(2),
+                        søknadsdato.plusMonths(2).plusHverdager(
+                            Hverdager(131) - førstePeriodeSykepengeerstatning.antallHverdager()
+                        ).minusDays(1)
+                    ) to
+                            RettighetsType.SYKEPENGEERSTATNING,
+                )
+        }
+
+
+        @Test
+        fun `ikke sykdom viss varighet, endrer rettighetsperiode etter 11-5 - skal ikke få spørsmål om 11-6`() {
+            var behandling = this.behandling
+
+            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+            val nyStartDato = søknadsdato.minusDays(7)
+            behandling.løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
                         SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok 2",
+                            begrunnelse = "Er syk nok 1",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
@@ -347,45 +331,105 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                             // Nei på denne gir mulighet til å innvilge på 11-13
                             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
                             yrkesskadeBegrunnelse = null,
-                            fom = nyStartDato,
+                            fom = sak.rettighetsperiode.fom,
                             tom = null,
                         )
                     )
                 ),
-            ).medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV)
-            }
-
-    }
-
-    @Test
-    fun `happy case førstegangsbehandling + revurder førstegangssøknad, gi sykepengererstatning hele perioden`() {
-        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
-
-        revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = false)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
-                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-            }
-            .løsSykepengeerstatning(sak.rettighetsperiode.fom to true)
-            .medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .assertRettighetstype(
-                Periode(
-                    sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1)
-                ) to
-                        RettighetsType.SYKEPENGEERSTATNING
             )
+            behandling = sak.opprettManuellRevurdering(
+                vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+            )
+            behandling.løsRettighetsperiode(nyStartDato)
+                .løsAvklaringsBehov(
+                    AvklarSykdomLøsning(
+                        løsningerForPerioder = listOf(
+                            SykdomsvurderingLøsningDto(
+                                begrunnelse = "Er syk nok 2",
+                                dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                                harSkadeSykdomEllerLyte = true,
+                                erSkadeSykdomEllerLyteVesentligdel = true,
+                                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                                // Nei på denne gir mulighet til å innvilge på 11-13
+                                harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
+                                yrkesskadeBegrunnelse = null,
+                                fom = nyStartDato,
+                                tom = null,
+                            )
+                        )
+                    ),
+                ).medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV)
+                }
+
+        }
     }
 
+    @Nested
+    inner class InnvilgetFørstegangsbehandling : AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@SykepengeerstatningFlytTest.unleashGateway
+
+        private lateinit var sak: Sak
+
+        @BeforeAll
+        fun settOppFørstegangsbehandling() = snapshotEtterSetup {
+            val person = TestPersoner.STANDARD_PERSON()
+            this.person = person
+            sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
+        }
+
+        @Test
+        fun `revurdere sykepengeerstatning - skal ikke trigge 11-13 om gjelderFra ikke er kravdato`() {
+            val gjelderFra = sak.rettighetsperiode.fom.plusMonths(1)
+
+            revurdereFramTilOgMedSykdom(sak, gjelderFra)
+                .løsBistand(gjelderFra)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .describedAs("Siden vurderingenGjelderFra ikke er lik kravdato (rettighetsperiode.fom), så skal man ikke vurdere 11-13")
+                        .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)  // ingen avklaringsbehov løst av NAY, gå rett til fatte vedtak
+                }
+                .fattVedtak()
+                .medKontekst {
+                    val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id)
+
+                    assertThat(underveisGrunnlag.perioder).isNotEmpty
+                    assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
+                        .allSatisfy { rettighetsType ->
+                            assertThat(rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
+                        }
+                }
+        }
+
+        @Test
+        fun `happy case førstegangsbehandling + revurder førstegangssøknad, gi sykepengererstatning hele perioden`() {
+            revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = false)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .describedAs("Siden vurderingenGjelderFra er lik kravdato (rettighetsperiode.fom), så kan man revurdere 11-13")
+                        .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+                }
+                .løsSykepengeerstatning(sak.rettighetsperiode.fom to true)
+                .medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+                }
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .assertRettighetstype(
+                    Periode(
+                        sak.rettighetsperiode.fom,
+                        sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1)
+                    ) to
+                            RettighetsType.SYKEPENGEERSTATNING
+                )
+        }
+    }
 
 }

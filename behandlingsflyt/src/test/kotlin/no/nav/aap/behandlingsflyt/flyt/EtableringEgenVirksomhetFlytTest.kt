@@ -8,22 +8,40 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 
-class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+    private lateinit var sak: Sak
+    private lateinit var behandling: Behandling
+
+    @BeforeAll
+    fun settOppSykdom() = snapshotEtterSetup {
+        val person = TestPersoner.STANDARD_PERSON()
+        this.person = person
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
+        this@EtableringEgenVirksomhetFlytTest.sak = sak
+        behandling.løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
+    }
+
+    @BeforeEach
+    fun hentBehandlingFraSnapshot() {
+        behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+    }
+
     @Test
     fun `Skal kunne løse normalt og få gyldige perioder`() {
-        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
-
         val oppdatertBehandling = behandling
-            .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
             .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
             .løsAvklaringsBehov(
                 EtableringEgenVirksomhetLøsning(
@@ -112,9 +130,58 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
     }
 
     @Test
-    fun `Skal kunne revurdere uten tidligere vurdering`() {
-        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
+    fun `Ikke oppfylt om ikke 11-5 & 11-6b er oppfylt`() {
+        val feil = assertThrows<UgyldigForespørselException> {
+            behandling
+                .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = false)
+                .løsAvklaringsBehov(
+                    EtableringEgenVirksomhetLøsning(
+                        listOf(
+                            EtableringEgenVirksomhetLøsningDto(
+                                begrunnelse = "meee",
+                                fom = sak.rettighetsperiode.fom.plusDays(1),
+                                tom = null,
+                                virksomhetNavn = "peppas peppers",
+                                orgNr = null,
+                                foreliggerFagligVurdering = true,
+                                virksomhetErNy = true,
+                                brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+                                kanFøreTilSelvforsørget = true,
+                                utviklingsPerioder = listOf(
+                                    Periode(
+                                        sak.rettighetsperiode.fom.plusDays(1),
+                                        sak.rettighetsperiode.fom.plusDays(4)
+                                    ),
+                                    Periode(
+                                        sak.rettighetsperiode.fom.plusMonths(1),
+                                        sak.rettighetsperiode.fom.plusMonths(10)
+                                    )
+                                ),
+                                oppstartsPerioder = listOf(
+                                    Periode(
+                                        sak.rettighetsperiode.fom.plusMonths(11),
+                                        sak.rettighetsperiode.fom.plusMonths(12)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+        }
+        assertThat(feil.message).contains("11-5 & 11-6b må være oppfylt i minst én periode")
+    }
+}
 
+class EtableringEgenVirksomhetFlytTestRevurdering :
+    AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+    private lateinit var sak: Sak
+
+    @BeforeAll
+    fun settOppFørstegangsbehandling() = snapshotEtterSetup {
+        val person = TestPersoner.STANDARD_PERSON()
+        this.person = person
+        val (sak, behandling) = sendInnFørsteSøknad(person = person)
+        this@EtableringEgenVirksomhetFlytTestRevurdering.sak = sak
         behandling
             .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
             .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
@@ -128,7 +195,10 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
             .løsForeslåVedtak()
             .fattVedtak()
             .løsVedtaksbrev()
+    }
 
+    @Test
+    fun `Skal kunne revurdere uten tidligere vurdering`() {
         val revurdering = sak.opprettManuellRevurdering(
             listOf(Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET)
         )
@@ -197,22 +267,6 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
 
     @Test
     fun `Skal kunne sende inn tom etablering-vurdering i revurdering`() {
-        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
-
-        behandling
-            .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
-            .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = true)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(sak.rettighetsperiode.fom)
-            .løsAndreStatligeYtelser()
-            .løsForeslåVedtak()
-            .fattVedtak()
-            .løsVedtaksbrev()
-
         assertDoesNotThrow {
             sak.opprettManuellRevurdering(
                 listOf(Vurderingsbehov.ETABLERING_EGEN_VIRKSOMHET)
@@ -221,48 +275,4 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
         }
     }
 
-    @Test
-    fun `Ikke oppfylt om ikke 11-5 & 11-6b er oppfylt`() {
-        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON())
-
-        val feil = assertThrows<UgyldigForespørselException> {
-            behandling
-                .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erOppfylt = true)
-                .løsBistand(fom = sak.rettighetsperiode.fom, erOppfylt = true, erBehovForArbeidsrettetTiltak = false)
-                .løsAvklaringsBehov(
-                    EtableringEgenVirksomhetLøsning(
-                        listOf(
-                            EtableringEgenVirksomhetLøsningDto(
-                                begrunnelse = "meee",
-                                fom = sak.rettighetsperiode.fom.plusDays(1),
-                                tom = null,
-                                virksomhetNavn = "peppas peppers",
-                                orgNr = null,
-                                foreliggerFagligVurdering = true,
-                                virksomhetErNy = true,
-                                brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-                                kanFøreTilSelvforsørget = true,
-                                utviklingsPerioder = listOf(
-                                    Periode(
-                                        sak.rettighetsperiode.fom.plusDays(1),
-                                        sak.rettighetsperiode.fom.plusDays(4)
-                                    ),
-                                    Periode(
-                                        sak.rettighetsperiode.fom.plusMonths(1),
-                                        sak.rettighetsperiode.fom.plusMonths(10)
-                                    )
-                                ),
-                                oppstartsPerioder = listOf(
-                                    Periode(
-                                        sak.rettighetsperiode.fom.plusMonths(11),
-                                        sak.rettighetsperiode.fom.plusMonths(12)
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-        }
-        assertThat(feil.message).contains("11-5 & 11-6b må være oppfylt i minst én periode")
-    }
 }

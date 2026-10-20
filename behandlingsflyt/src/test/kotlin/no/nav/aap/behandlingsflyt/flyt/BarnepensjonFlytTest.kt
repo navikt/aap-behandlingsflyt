@@ -34,7 +34,7 @@ import java.math.BigDecimal
 import java.time.YearMonth
 import  no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
+class BarnepensjonFlytTest : AbstraktFlytOrkestratorSnapshotTest(LokalUnleash::class) {
 
     @Test
     fun `Barnepensjon skal samordnes krone mot krone`() {

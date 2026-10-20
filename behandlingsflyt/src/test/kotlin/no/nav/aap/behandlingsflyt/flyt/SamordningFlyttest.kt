@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -44,11 +45,13 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 
-class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class SamordningFlyttest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
@@ -223,12 +226,16 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 
-    @Test
-    fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
-        val søknadsdato = LocalDate.now().minusYears(1)
+}
 
-        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
+class SamordningFlyttestRevurdering : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+    private val søknadsdato = LocalDate.now().minusYears(1)
+    private val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
+    private lateinit var person: TestPerson
+    private lateinit var sak: Sak
 
+    @BeforeAll
+    fun settOppSamordning() = snapshotEtterSetup {
         val person = TestPersoner.STANDARD_PERSON().medSykepenger(
             listOf(
                 TestPerson.Sykepenger(
@@ -236,9 +243,20 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
                 )
             )
         )
+        this.person = person
+        this@SamordningFlyttestRevurdering.person = person
         val behandling = opprettSamordning(person, søknadsdato, sykePengerPeriode)
-        val sak = hentSak(behandling)
+        sak = hentSak(behandling)
+    }
 
+    @BeforeEach
+    fun hentSakFraSnapshot() {
+        person.medInstitusjonsopphold(emptyList())
+        sak = hentSak(hentSisteOpprettedeBehandlingForSak(sak.id))
+    }
+
+    @Test
+    fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
         sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
         // Opprett manuell revurdering før ta av vent
@@ -265,19 +283,6 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
 
     @Test
     fun `ny informasjon i tidligere steg skal tilbakeføre behandling som er på samordning`() {
-        val fom = LocalDate.now().minusYears(1)
-
-        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-
-        val person = TestPersoner.STANDARD_PERSON().medSykepenger(
-            listOf(
-                TestPerson.Sykepenger(
-                    grad = 50, periode = sykePengerPeriode
-                )
-            )
-        )
-        val behandling = opprettSamordning(person, fom, sykePengerPeriode)
-        val sak = hentSak(behandling)
         val revurdering =
             sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
@@ -413,7 +418,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
         motor.kjørJobber()
         return nyesteBehandling
     }
+}
 
+class SamordningFlyttestMeldekort : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Godkjent vedtak med meldekort og revurdering med samordning skal sette riktig utbetalingsdato selv om revurderingen skjer etter at meldekort er sendt inn og før meldeplikten har utløpt`() {
 

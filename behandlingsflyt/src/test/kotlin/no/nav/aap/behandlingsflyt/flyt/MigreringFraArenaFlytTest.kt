@@ -32,18 +32,24 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
 
-class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
     private val clock = fixedClock(1 desember 2025)
 
     // Overstyrbar per test - default matcher konstruktørparameteren over
     private var unleash: KClass<out UnleashGateway> = AlleAvskruddUnleash::class
     override fun unleashGateway() = unleash
+
+    @BeforeEach
+    fun nullstillUnleash() {
+        unleash = AlleAvskruddUnleash::class
+    }
 
     @Test
     fun `skal kunne gjennomføre en migrering hvor stegene i en ordinær flyt må settes manuelt`() {

@@ -15,7 +15,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class UtledArenavedtakFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class UtledArenavedtakFlytTest: AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `sender komprimert arena-vedtak til api-intern`() {
