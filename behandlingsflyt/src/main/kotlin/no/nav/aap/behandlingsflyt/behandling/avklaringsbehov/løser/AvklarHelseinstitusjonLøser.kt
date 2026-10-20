@@ -117,6 +117,7 @@ class AvklarHelseinstitusjonLøser(
         val oppholdIderMedNyInput = nyeVurderinger.mapNotNull { it.oppholdId }.toSet()
         val nåværendeOppholdIder = nåværendeOpphold.map { lagOppholdId(it.verdi.navn, it.periode.fom) }.toSet()
         val eksisterendeHistoriske = forrigeGrunnlag?.helseoppholdvurderinger?.historiskeVurderinger.orEmpty()
+            .filter { enManedsregelEnabled }
             .filter { it.oppholdId !in oppholdIderMedNyInput }
             .filter { nåværendeOpphold.isEmpty() || it.oppholdId in nåværendeOppholdIder }
 

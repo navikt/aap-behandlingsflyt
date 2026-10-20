@@ -304,6 +304,6 @@ class InstitusjonsoppholdUtilTest {
 
     @Test
     fun `tom liste gir tomt resultat for beregnTidligsteReduksjonsdatoPerKjede`() {
-        assertThat(beregnTidligsteReduksjonsdatoPerKjede(emptyList())).isEmpty()
+        assertThat(beregnTidligsteReduksjonsdatoPerKjede(emptyList(), enManedsregelEnabled = true)).isEmpty()
     }
 }

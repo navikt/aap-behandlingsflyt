@@ -32,7 +32,7 @@ fun HelseinstitusjonVurderingDto.giReduksjon(): Boolean =
 fun beregnTidligsteReduksjonsdatoPerKjede(
     opphold: List<Segment<Institusjon>>,
     harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { false },
-    enManedsregelEnabled: Boolean = true
+    enManedsregelEnabled: Boolean
 ): Map<SammenhengendeOppholdGruppe, LocalDate> {
     if (opphold.isEmpty()) return emptyMap()
 
