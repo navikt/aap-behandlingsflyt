@@ -26,6 +26,9 @@ class MedlemskapLovvalgVurderingService {
         rettighetsPeriode: Periode,
         type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
+        /**
+         * TODO: Har delvurderinger lagt inn? Bruk disse?
+         */
         val førsteDelVurderinger = vurderFørsteDelKriterier(grunnlag, rettighetsPeriode)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
 

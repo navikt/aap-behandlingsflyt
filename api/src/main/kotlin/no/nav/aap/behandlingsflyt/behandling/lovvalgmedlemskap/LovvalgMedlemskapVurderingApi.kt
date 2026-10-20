@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapAr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -23,6 +24,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -49,42 +51,10 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandling =
                         repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
-                    val lagretVurdering = repositoryProvider.provide<LovvalgDelvurderingRepository>()
+                    val lagretDelvurdering = repositoryProvider.provide<LovvalgDelvurderingRepository>()
                         .hentHvisEksisterer(behandling.id)
-                    if (lagretVurdering != null) {
-                        return@transaction lagretVurdering.vurdering()
-                    }
-                    val medlemskapArbeidInntektRepository =
-                        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-                    val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
-
-                    val brukerPersonopplysning =
-                        repositoryProvider.provide<PersonopplysningRepository>()
-                            .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
-                    if (brukerPersonopplysning == null) {
-                        // Steget har ikke fått kjørt enda, så ingen vurdering kan gis ut
-                        return@transaction KanBehandlesAutomatiskVurdering(false, emptyList(), sak.rettighetsperiode)
-                    }
-                    val medlemskapArbeidInntektGrunnlag =
-                        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-                            .hentHvisEksisterer(behandling.id)
-
-                    val oppgittUtenlandsOppholdGrunnlag =
-                        medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
-                            ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
-                                sak.id
-                            )
-
-                    MedlemskapLovvalgVurderingService().vurderTilhørighet(
-                        MedlemskapLovvalgGrunnlag(
-                            medlemskapArbeidInntektGrunnlag,
-                            brukerPersonopplysning,
-                            oppgittUtenlandsOppholdGrunnlag,
-                            vurderBosattStatusOgNorskStatsborgerskap =
-                                unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp),
-                        ),
-                        sak.rettighetsperiode
-                    )
+                    lagretDelvurdering?.vurdering()
+                        ?: utledFallbackKanBehandlesAutomatiskVurdering(repositoryProvider, behandling, unleashGateway)
                 }
                 respond(vurdering)
             }
@@ -134,4 +104,42 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
             }
         }
     }
+}
+
+private fun utledFallbackKanBehandlesAutomatiskVurdering(
+    repositoryProvider: RepositoryProvider,
+    behandling: Behandling,
+    unleashGateway: UnleashGateway
+): KanBehandlesAutomatiskVurdering {
+    val medlemskapArbeidInntektRepository =
+        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+    val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
+
+    val brukerPersonopplysning =
+        repositoryProvider.provide<PersonopplysningRepository>()
+            .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
+    if (brukerPersonopplysning == null) {
+        // Steget har ikke fått kjørt enda, så ingen vurdering kan gis ut
+        return KanBehandlesAutomatiskVurdering(false, emptyList(), sak.rettighetsperiode)
+    }
+    val medlemskapArbeidInntektGrunnlag =
+        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+            .hentHvisEksisterer(behandling.id)
+
+    val oppgittUtenlandsOppholdGrunnlag =
+        medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+            ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+                sak.id
+            )
+
+    return MedlemskapLovvalgVurderingService().vurderTilhørighet(
+        MedlemskapLovvalgGrunnlag(
+            medlemskapArbeidInntektGrunnlag,
+            brukerPersonopplysning,
+            oppgittUtenlandsOppholdGrunnlag,
+            vurderBosattStatusOgNorskStatsborgerskap =
+                unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp),
+        ),
+        sak.rettighetsperiode
+    )
 }

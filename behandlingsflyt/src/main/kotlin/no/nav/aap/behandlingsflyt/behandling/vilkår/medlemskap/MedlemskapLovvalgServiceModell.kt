@@ -21,7 +21,7 @@ data class LovvalgDelvurderingerGrunnlag(
 ) {
     fun vurdering(): KanBehandlesAutomatiskVurdering = KanBehandlesAutomatiskVurdering(kanBehandlesAutomatisk, tilhørighetVurdering, periode)
 
-    fun vurderingTidslinje(): Tidslinje<Boolean> = Tidslinje(periode, kanBehandlesAutomatisk)
+    fun kanVurderesAutomatiskTidslinje(): Tidslinje<Boolean> = Tidslinje(periode, kanBehandlesAutomatisk)
 }
 
 data class KanBehandlesAutomatiskVurdering(

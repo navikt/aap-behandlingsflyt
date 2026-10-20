@@ -8,9 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovvalgVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
@@ -75,6 +73,7 @@ class VurderLovvalgSteg private constructor(
                 // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
                 val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                val lovvalgDelvurderinger = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
                 // TODO: Bruke delvurderingene for å vurdere vilkåeret
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, kontekst.vurderingType)
                     .vurder(grunnlag)
@@ -128,19 +127,17 @@ class VurderLovvalgSteg private constructor(
     ): Set<Periode> {
         val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val relevantTidslinje = nårVurderingErRelevant(kontekst)
-        val automatiskVilkårsvurderingLovvalg =
-            vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
+        val kanVurderesAutomatiskTidslinje = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)?.kanVurderesAutomatiskTidslinje() ?: Tidslinje.empty()
         val manuelleVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger()
 
-        return Tidslinje.map3(relevantTidslinje, manuelleVurderinger.orEmpty(), automatiskVilkårsvurderingLovvalg) { relevant, manuellVurdering, automatiskVurdering ->
+        return Tidslinje.map3(relevantTidslinje, manuelleVurderinger.orEmpty(), kanVurderesAutomatiskTidslinje) { relevant, manuellVurdering, automatiskVurdering ->
             relevant == true && manuellVurdering == null && automatiskVurdering != true
         }.filter { it.verdi }.perioder().toSet()
     }
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val lovvalgDelvurderingTidslinje = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderingTidslinje() ?: Tidslinje.empty()
+        val kanVurderesAutomatiskTidslinje = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)?.kanVurderesAutomatiskTidslinje() ?: Tidslinje.empty()
 
         val forrigeHaddeAvslagPåLovvalg = kontekst.forrigeBehandlingId?.let { forrigeId ->
             vilkårsresultatRepository.hent(forrigeId)
@@ -153,7 +150,7 @@ class VurderLovvalgSteg private constructor(
             it in vurderingsbehovSomGjørAtRevurderingSkalTvinges()
         } || (forrigeHaddeAvslagPåLovvalg && Vurderingsbehov.MOTTATT_SØKNAD in kontekst.vurderingsbehovRelevanteForSteg)
 
-        return Tidslinje.zip2(tidligereVurderingsutfall, lovvalgDelvurderingTidslinje)
+        return Tidslinje.zip2(tidligereVurderingsutfall, kanVurderesAutomatiskTidslinje)
             .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
                 val automatiskIkkeOppfylt = automatiskVilkårsvurderingLovvalg != true
                 when (behandlingsutfall) {
@@ -172,23 +169,6 @@ class VurderLovvalgSteg private constructor(
             Vurderingsbehov.REVURDER_LOVVALG,
             Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
         )
-
-    private fun vilkårsvurderingLovvalgUtenManuelleVurderinger(
-        kontekst: FlytKontekstMedPerioder,
-        grunnlag: MedlemskapLovvalgGrunnlag,
-    ): Tidslinje<Vilkårsvurdering> {
-        val vilkårsresultat = Vilkårsresultat()
-        val grunnlagUtenManuellVurdering = grunnlag.copy(
-            medlemskapArbeidInntektGrunnlag = grunnlag.medlemskapArbeidInntektGrunnlag?.copy(
-                vurderinger = emptyList()
-            )
-        )
-
-        Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
-            .vurder(grunnlagUtenManuellVurdering)
-
-        return vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).tidslinje()
-    }
 
     private fun tilbakestillVurderinger(
         kontekst: FlytKontekstMedPerioder,
