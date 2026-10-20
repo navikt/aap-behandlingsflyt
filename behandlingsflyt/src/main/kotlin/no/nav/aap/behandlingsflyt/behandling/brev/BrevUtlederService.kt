@@ -484,7 +484,11 @@ class BrevUtlederService(
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
         val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id)
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
-
+        log.info(
+            "Brevvalg avslagsårsak: alleAvslagsårsaker={}, prioritertAvslagsårsak={}",
+            alleAvslagsårsaker,
+            avslagsårsak
+        )
         if (Miljø.erDev() && avslagsårsak != null) {
             /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
                 return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
