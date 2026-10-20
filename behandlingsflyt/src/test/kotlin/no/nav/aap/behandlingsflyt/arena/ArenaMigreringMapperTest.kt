@@ -42,6 +42,61 @@ class ArenaMigreringMapperTest {
     private val fom: LocalDate = 1 januar 2024
 
     @Test
+    fun `oppholdskrav godtar oppfylt og ikke vurdert fra Arena`() {
+        listOf("J", "V").forEach { status ->
+            assertThat(oppholdskrav(status).erOppfyltEllerIkkeVurdert()).isTrue()
+        }
+    }
+
+    @Test
+    fun `oppholdskrav avviser andre statuser og manglende vilkår`() {
+        listOf("N", "U").forEach { status ->
+            assertThat(oppholdskrav(status).erOppfyltEllerIkkeVurdert()).isFalse()
+        }
+        assertThat(ArenaOppholdskrav(vedtakId = 1, vilkar = null).erOppfyltEllerIkkeVurdert()).isFalse()
+    }
+
+    @Test
+    fun `oppholdskrav avviser riktig status med feil vilkårkode`() {
+        assertThat(oppholdskrav(status = "J", kode = "ANNET").erOppfyltEllerIkkeVurdert()).isFalse()
+        assertThat(oppholdskrav(status = "V", kode = "ANNET").erOppfyltEllerIkkeVurdert()).isFalse()
+    }
+
+    @Test
+    fun `mapOppfyltOppholdskravVurdering skiller mellom oppfylt og ikke vurdert`() {
+        val oppfylt = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
+            fraArena = oppholdskrav("J"),
+            behandlingId = behandlingId,
+            fom = fom,
+        )
+        val ikkeVurdert = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
+            fraArena = oppholdskrav("V"),
+            behandlingId = behandlingId,
+            fom = fom,
+        )
+
+        assertThat(oppfylt.perioder.single().oppfylt).isTrue()
+        assertThat(oppfylt.perioder.single().begrunnelse).contains("oppfylt i Arena")
+        assertThat(ikkeVurdert.perioder.single().oppfylt).isTrue()
+        assertThat(ikkeVurdert.perioder.single().begrunnelse).contains("ikke vurdert i Arena")
+        assertThat(oppfylt.perioder.single().begrunnelse).doesNotContain("fritekst fra Arena")
+        assertThat(ikkeVurdert.perioder.single().begrunnelse).doesNotContain("fritekst fra Arena")
+    }
+
+    private fun oppholdskrav(
+        status: String,
+        kode: String = "AOINORGE3",
+    ) = ArenaOppholdskrav(
+        vedtakId = 1,
+        vilkar = ArenaVilkar(
+            id = 1,
+            kode = kode,
+            status = status,
+            begrunnelse = "fritekst fra Arena",
+        ),
+    )
+
+    @Test
     fun `ArenaMigreringMapper mapper alle felter korrekt til Sykdomsvurdering fra Arena-respons`() {
         val vurdering = ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(
             fraArena = fraArena,

@@ -32,6 +32,7 @@ enum class BehandlingsflytFeature(
     MigererSykdomFraArenaAutomatisk,
     MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
+    MigrererOppholdskravFraArenaAutomatisk,
 
     // --- Utbetaling ---
     FjerneAvventUtbetalingForSamordningArbeidsgiver,

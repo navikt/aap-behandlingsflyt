@@ -7,6 +7,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiodesyklusInformasjonskrav
@@ -96,6 +97,16 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/${saksnummerArena}/sykdom" }
+        return response
+    }
+
+    override fun hentOppholdskrav(saksnummerArena: String): ArenaOppholdskravResponse {
+        val response: ArenaOppholdskravResponse? = restClient.get(
+            uri.resolve("/api/migrering/$saksnummerArena/oppholdskrav"),
+            GetRequest(timeout = Duration.ofSeconds(5)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$saksnummerArena/oppholdskrav" }
         return response
     }
 

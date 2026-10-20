@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringsdataRepository
+import no.nav.aap.behandlingsflyt.arena.ArenaOppholdskrav
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
@@ -29,6 +32,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -189,6 +193,59 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
             }
     }
 
+    @Test
+    fun `skal automatisk legge inn oppfylt oppholdskrav i migreringsbehandlingen`() {
+        unleash = MigreringFraArenaMedAutomatiskOppholdskravFlytTestUnleash::class
+
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+
+        migreringsbehandling
+            .løsAvklaringsBehov(
+                VurderKravLøsning(
+                    kravVurderinger = setOf(
+                        MigrertKravLøsningDto(
+                            begrunnelse = "en begrunnelse",
+                            virkningstidspunktArena = startDato.minusMonths(5),
+                            muligRettFra = startDato,
+                            arenaSaksnummer = "2016-123456",
+                            rettighetstype = MigrertRettighetstype.ORDINÆR,
+                            resterendeKvoteOrdinær = 300,
+                        )
+                    )
+                )
+            )
+            .løsLovvalg(startDato, medlem = true)
+            .løsSykdom(startDato, erOppfylt = true)
+            .løsBistand(startDato, erOppfylt = true)
+            .løsRefusjonskrav()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsFastsettManuellInntekt()
+            .løsForutgåendeMedlemskap(startDato)
+            .medKontekst {
+                val oppholdskravRepository: OppholdskravGrunnlagRepository = repositoryProvider.provide()
+                val vurdering = oppholdskravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single()
+                assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+                val periode = vurdering.perioder.single()
+                assertThat(periode.oppfylt).isTrue
+                assertThat(periode.fom).isEqualTo(startDato)
+                assertThat(periode.tom).isNull()
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_OPPHOLDSKRAV)
+
+                val migreringsdataRepository: ArenaMigreringsdataRepository = repositoryProvider.provide()
+                val migreringsdata = migreringsdataRepository.hentAktivHvisEksisterer(
+                    behandlingId = behandling.id,
+                    steg = StegType.VURDER_OPPHOLDSKRAV,
+                )
+                assertThat(migreringsdata).isNotNull
+                val lagretOppholdskrav =
+                    DefaultJsonMapper.fromJson<ArenaOppholdskrav>(migreringsdata!!.data!!)
+                assertThat(lagretOppholdskrav.vilkar?.status).isEqualTo("V")
+            }
+    }
+
     private fun migrerFraArena(
         person: TestPerson = TestPersoner.STANDARD_PERSON(),
         mottattTidspunkt: LocalDateTime = LocalDateTime.now(clock),
@@ -232,6 +289,12 @@ object MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash : FakeUnleashBa
         BehandlingsflytFeature.MigrererKravFraArenaAutomatisk,
         BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk,
         BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk,
+    )
+)
+
+object MigreringFraArenaMedAutomatiskOppholdskravFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.MigrererOppholdskravFraArenaAutomatisk,
     )
 )
 
