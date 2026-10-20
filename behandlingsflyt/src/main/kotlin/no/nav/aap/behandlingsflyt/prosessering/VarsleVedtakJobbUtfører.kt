@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.SamVarsling
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamVarslingRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -39,6 +40,7 @@ class VarsleVedtakJobbUtfører(
     private val behandlingService: BehandlingService,
     private val samGateway: SamGateway,
     private val samVarslingRepository: SamVarslingRepository,
+    private val tjenestePensjonGateway: TjenestePensjonGateway
 ) : JobbUtfører {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -51,6 +53,7 @@ class VarsleVedtakJobbUtfører(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         samGateway = gatewayProvider.provide(),
         samVarslingRepository = repositoryProvider.provide(),
+        tjenestePensjonGateway = gatewayProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -97,9 +100,13 @@ class VarsleVedtakJobbUtfører(
             nåværendeUnderveisGrunnlag
         )
 
-        val tpYtelser =
+        val tpYtelserFraRepo =
             tjenestePensjonRepository.hentHvisEksisterer(behandling.id).orEmpty()
                 .flatMap { it.ytelser }
+
+        val ident = sak.person.aktivIdent()
+
+        val tpYtelser by lazy { tjenestePensjonGateway.hentTjenestePensjon(ident.identifikator).flatMap { it.ytelser } }
 
         val relevantEndring =
             listOf(
@@ -112,6 +119,10 @@ class VarsleVedtakJobbUtfører(
 
         val respons = if (skalVarsle) {
             log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}")
+            if (tpYtelserFraRepo.size != tpYtelser.size) {
+                log.info("Ikke lagret ned samme tp-ytelser som fra register. Behandling: ${behandling.referanse}. Sak: ${sak.saksnummer}.")
+            }
+
             samGateway.varsleVedtak(request).also {
                 log.info("SAM varslet for behandling med referanse ${behandling.referanse}, saksnummer ${sak.saksnummer} og vedtakId $vedtakId. ventPaaSvar=${it?.ventPaaSvar}")
             }

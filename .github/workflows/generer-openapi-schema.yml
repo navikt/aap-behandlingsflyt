@@ -33,6 +33,13 @@ jobs:
             -   name: Bygg & test
                 run: ./gradlew genererOpenApiJson
 
+            -   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+                id: artifact-upload-step
+                with:
+                    name: openapi
+                    path: ./openapi.json
+                    overwrite: 'true'
+
             # Varsler aap-saksbehandling om at openapi.json er oppdatert, slik at
             # frontend-typene kan bli regenerert automatisk (yarn gentypes:behandlingsflyt).
             - uses: navikt/github-app-token-generator@b96ff604b2300989cd1105e3fad09199fca56681 # v1.2.1
