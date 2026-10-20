@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 
 class TjenestepensjonRefusjonskravSteg private constructor(
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
@@ -38,6 +39,8 @@ class TjenestepensjonRefusjonskravSteg private constructor(
         behandlingRepository = repositoryProvider.provide(),
     )
 
+    private val log = LoggerFactory.getLogger(TjenestepensjonRefusjonskravSteg::class.java)
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.SAMORDNING_REFUSJONS_KRAV,
@@ -52,10 +55,16 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                         val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
                         val årsakTilOpprettelse = behandling.årsakTilOpprettelse
 
+                        log.info("Avklaringsbehovene: $avklaringsbehovene. Vurderingsbehovene: $vurderingsbehov. Årsak til opprettelse: $årsakTilOpprettelse.")
+
                         val bleOpprettetKunPgaInformasjonkrav =
                             avklaringsbehovene.size == 1 && avklaringsbehovene.single().definisjon == Definisjon.SAMORDNING_REFUSJONS_KRAV
                                     && årsakTilOpprettelse == ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
                                     && vurderingsbehov.size == 1 && vurderingsbehov.single() == Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON
+
+                        if (bleOpprettetKunPgaInformasjonkrav) {
+                            Avklaringsbehovene(avklaringsbehovRepository, kontekst.behandlingId).avbryt(Definisjon.SAMORDNING_REFUSJONS_KRAV)
+                        }
 
                         when {
                             bleOpprettetKunPgaInformasjonkrav -> false
