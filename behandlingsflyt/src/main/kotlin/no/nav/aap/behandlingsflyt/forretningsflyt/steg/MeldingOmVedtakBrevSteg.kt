@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
@@ -22,8 +23,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -46,6 +49,7 @@ class MeldingOmVedtakBrevSteg(
     private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val avklaringsbehovOperasjonerRepository: AvklaringsbehovOperasjonerRepository,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -57,6 +61,7 @@ class MeldingOmVedtakBrevSteg(
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
+        avklaringsbehovOperasjonerRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
 
@@ -67,6 +72,30 @@ class MeldingOmVedtakBrevSteg(
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
         log.info("Har brevbehov " + brevBehov?.typeBrev)
         val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
+
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovOperasjonerRepository, kontekst.behandlingId)
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val vurderingsbehov = behandling.vurderingsbehov().map { it.type }
+        val årsakTilOpprettelse = behandling.årsakTilOpprettelse
+
+        val refKravStegAvbrutt =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SAMORDNING_REFUSJONS_KRAV)?.status() == Status.AVBRUTT
+
+        val bleOpprettetKunPgaInformasjonkrav = årsakTilOpprettelse == ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
+                && vurderingsbehov.size == 1 && vurderingsbehov.single() == Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON
+
+        if (bleOpprettetKunPgaInformasjonkrav && refKravStegAvbrutt) {
+            if (avklaringsbehovene.alle().map { it.definisjon }.contains(Definisjon.SKRIV_VEDTAKSBREV))
+                avklaringsbehovene.avbryt(Definisjon.SKRIV_VEDTAKSBREV)
+            if (brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)) {
+                val bestillinger =
+                    brevbestillingService.hentBestillinger(kontekst.behandlingId, TypeBrev.VEDTAK_INNVILGELSE)
+                bestillinger.forEach {
+                    brevbestillingService.avbryt(kontekst.behandlingId, it.referanse)
+                }
+            }
+            return Fullført
+        }
 
         listOf(
             Definisjon.SKRIV_VEDTAKSBREV,
