@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.hendelse.mottak.opphørsdato
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -118,7 +119,7 @@ class OvergangUføreSteg private constructor(
         val uførevedtak = mottattUførevedtak.vedtak
         if (uførevedtak.resultat != UførevedtakResultat.INNV) return false
 
-        val opphørsdato = maxOf(uførevedtak.virkningsdato, mottattUførevedtak.mottattDato)
+        val opphørsdato = uførevedtak.opphørsdato(mottattUførevedtak.mottattDato)
         val sakId = kontekst.sakId
         val behandlingId = kontekst.behandlingId
         log.info("Lagrer automatisk 11-18 for sak $sakId i behandling $behandlingId")

@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
@@ -16,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.prosessering.OppdagEndretInformasjonskravJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -29,6 +31,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.time.LocalDate
 import kotlin.collections.orEmpty
 
 class HåndterUførevedtakService(
@@ -39,7 +42,7 @@ class HåndterUførevedtakService(
     private val prosesserBehandlingService: ProsesserBehandlingService,
     private val flytJobbRepository: FlytJobbRepository,
     private val unleashGateway: UnleashGateway,
-    private val underveisRepository: UnderveisRepository,
+    private val overgangUføreRepository: OvergangUføreRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
@@ -49,7 +52,7 @@ class HåndterUførevedtakService(
         prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         flytJobbRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
-        underveisRepository = repositoryProvider.provide()
+        overgangUføreRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -77,8 +80,13 @@ class HåndterUførevedtakService(
                     .begrensetTil(aktuellPeriode)
             val kanHaRettPåAapEtterVirkningsdato =
                 rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
+            val opphørsdato = uførevedtak.opphørsdato(mottattTidspunkt.toLocalDate())
 
-            if (skalOppretteAutomatiskOpphør11_18(uførevedtak, rettighetstypeTidslinje, sisteYtelsesBehandling.id)) {
+            if (opphørErAlleredeVurdert(uførevedtak, opphørsdato, sisteYtelsesBehandling)) {
+                log.info("Gjeldende vurderinger dekker allerede uførevedtaket for sak $sakId, oppretter ikke ny behandling")
+            } else if (skalOppretteAutomatiskOpphør11_18(
+                    uførevedtak, rettighetstypeTidslinje, opphørsdato, mottattTidspunkt.toLocalDate()
+                )) {
                 log.info("Oppretter atomær 11_18 behandling for mottatt uførevedtak for sak $sakId")
                 val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
                 val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
@@ -125,17 +133,41 @@ class HåndterUførevedtakService(
     }
 
     private fun skalOppretteAutomatiskOpphør11_18(
-        uførevedtak: UførevedtakV0, rettighetstypeTidslinje: Tidslinje<RettighetsType>, behandlingId: BehandlingId
+        uførevedtak: UførevedtakV0,
+        rettighetstypeTidslinje: Tidslinje<RettighetsType>,
+        opphørsdato: LocalDate,
+        mottattDato: LocalDate,
     ): Boolean {
-        val perioder = underveisRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
-        val oppfylteRettighetsperioder = perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
-        val oppfylteRettighetstypeTidslinje =
-            rettighetstypeTidslinje.filter { it.verdi.hjemmel == RettighetsType.VURDERES_FOR_UFØRETRYGD.hjemmel }
-                .isNotEmpty()
-
-        val innvilgetEtter11_18 = oppfylteRettighetsperioder || oppfylteRettighetstypeTidslinje
-
-        return innvilgetEtter11_18
+        return rettighetstypeTidslinje.segment(opphørsdato)?.verdi == RettighetsType.VURDERES_FOR_UFØRETRYGD
                 && uførevedtak.resultat == UførevedtakResultat.INNV
+                && (uførevedtak.virkningsdato.isAfter(mottattDato) ||
+                unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende))
+    }
+
+    private fun opphørErAlleredeVurdert(
+        uførevedtak: UførevedtakV0,
+        opphørsdato: LocalDate,
+        behandling: Behandling,
+    ): Boolean {
+        if (uførevedtak.resultat != UførevedtakResultat.INNV) return false
+
+        val vedtatteVurderinger = behandling.forrigeBehandlingId
+            ?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+        val aktiveVurderinger = overgangUføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
+        val vurderinger = OvergangUføreGrunnlag((vedtatteVurderinger + aktiveVurderinger).distinct())
+            .somOvergangUforevurderingstidslinje()
+            .filter {
+                val vurdering = it.verdi
+                vurdering.fom >= uførevedtak.virkningsdato &&
+                        vurdering.brukerRettPåAAP == false &&
+                        vurdering.brukerHarFåttVedtakOmUføretrygd in setOf(
+                    UføreSøknadVedtakResultat.JA_INNVILGET_FULL,
+                    UføreSøknadVedtakResultat.JA_INNVILGET_GRADERT,
+                )
+            }
+            .begrensetTil(Periode(opphørsdato, Tid.MAKS))
+            .map { true }
+            .komprimer()
+        return vurderinger.segment(opphørsdato)?.tom() == Tid.MAKS
     }
 }
