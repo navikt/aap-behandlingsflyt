@@ -4,6 +4,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.modeller.Periode
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
 import org.assertj.core.api.Assertions.assertThat
@@ -19,6 +20,7 @@ class ArenaKontraktMappingTest {
         soknadsdato = LocalDate.of(2025, 1, 15),
         migreringsdato = LocalDate.of(2025, 12, 1),
         gjenstaaendeKvote = GjenstaaendeKvote(ordinaer = 150),
+        sisteFerdigBehandledeMeldekortperiode = Periode(LocalDate.of(2025, 11, 17), LocalDate.of(2025, 11, 30)),
     )
 
     @Test
@@ -29,6 +31,7 @@ class ArenaKontraktMappingTest {
                 søknadsdato = LocalDate.of(2025, 1, 15),
                 migreringsdato = LocalDate.of(2025, 12, 1),
                 gjenståendeKvoteOrdinær = 150,
+                sisteFerdigBehandledeMeldekortTilDato = LocalDate.of(2025, 11, 30),
             )
         )
     }
@@ -38,6 +41,21 @@ class ArenaKontraktMappingTest {
         val krav = kravResponse.copy(gjenstaaendeKvote = GjenstaaendeKvote(ordinaer = null)).tilDomene()
 
         assertThat(krav.gjenståendeKvoteOrdinær).isNull()
+    }
+
+    @Test
+    fun `KravResponse uten siste meldekortperiode mappes til null`() {
+        val krav = kravResponse.copy(sisteFerdigBehandledeMeldekortperiode = null).tilDomene()
+
+        assertThat(krav.sisteFerdigBehandledeMeldekortTilDato).isNull()
+    }
+
+    @Test
+    fun `KravResponse med siste meldekortperiode uten tilOgMedDato mappes til null`() {
+        val periode = Periode(LocalDate.of(2025, 11, 17), null)
+        val krav = kravResponse.copy(sisteFerdigBehandledeMeldekortperiode = periode).tilDomene()
+
+        assertThat(krav.sisteFerdigBehandledeMeldekortTilDato).isNull()
     }
 
     @Test
