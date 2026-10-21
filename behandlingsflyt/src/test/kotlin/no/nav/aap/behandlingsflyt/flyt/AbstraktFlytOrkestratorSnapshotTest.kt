@@ -20,21 +20,32 @@ import kotlin.reflect.KClass
  *
  * Bruk:
  * ```kotlin
- * @TestInstance(PER_CLASS)   // arves fra denne klassen
- * class MinTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+ * class MinFlytTest {
+ *     @Nested
+ *     inner class InnvilgetFørstegangsbehandling : AbstraktFlytOrkestratorSnapshotTest() {
+ *         private lateinit var sak: Sak
+ *         private lateinit var behandling: Behandling
  *
- *     @BeforeAll
- *     fun settOppFGB() = snapshotEtterSetup {
- *         val (sak, behandling) = sendInnFørsteSøknad(...)
- *         behandling.løsSykdom(fom)...fattVedtak().løsVedtaksbrev()
- *         // dataSource peker nå på den ferdige FGB-databasen
+ *         @BeforeAll
+ *         fun settOppFGB() = snapshotEtterSetup {
+ *             val person = TestPersoner.STANDARD_PERSON()
+ *             this.person = person
+ *             val (sak, behandling) = sendInnFørsteSøknad(person = person)
+ *             this@InnvilgetFørstegangsbehandling.sak = sak
+ *             behandling.løsSykdom(fom)...fattVedtak().løsVedtaksbrev()
+ *         }
+ *
+ *         @BeforeEach
+ *         fun hentBehandlingFraSnapshot() {
+ *             behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+ *         }
+ *
+ *         @Test
+ *         fun `revurdering test 1`() { ... }
+ *
+ *         @Test
+ *         fun `revurdering test 2`() { ... }
  *     }
- *
- *     @Test
- *     fun `revurdering test 1`() { ... }  // starter alltid fra ferdig FGB
- *
- *     @Test
- *     fun `revurdering test 2`() { ... }  // uavhengig kopi av det samme snapshotet
  * }
  * ```
  *
@@ -42,6 +53,15 @@ import kotlin.reflect.KClass
  * [snapshotEtterSetup]-blokken. Tests kan derfor endre databasen uten å påvirke hverandre.
  * Uten et felles oppsett tas et snapshot av den tomme, migrerte databasen før første test,
  * slik at også tester med forskjellige grunnlag slipper å tømme tabellene mellom hver test.
+ *
+ * Flere felles grunnlag i samme flyttest grupperes i `@Nested inner class`-er som arver
+ * denne klassen. Den ytre testklassen skal ikke arve orkestratortestklassene: bare de
+ * nestede gruppene skal eie database- og snapshot-livssyklusen. Hver gruppe oppretter
+ * sitt grunnlag i `@BeforeAll` og henter mutable behandlingsobjekter på nytt i `@BeforeEach`.
+ *
+ * Snapshotet isolerer databasen, ikke Kotlin-objekter. `PER_CLASS` beholder feltene mellom
+ * testene, og [TestData.person] re-registrerer samme mutable person. Personendringer må
+ * derfor nullstilles mellom tester, eller gjøres på nye testpersonobjekter.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstraktFlytOrkestratorSnapshotTest(

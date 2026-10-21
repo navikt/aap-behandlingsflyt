@@ -47,150 +47,103 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 
-class SamordningFlyttest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+class SamordningFlyttest {
+    @Nested
+    inner class SykepengerMedUkjentMaksdato :
+        AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
-    @Test
-    fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
-        val søknadsdato = LocalDate.now()
-        val sykePengerPeriode = Periode(søknadsdato.minusMonths(1), søknadsdato.plusMonths(1))
+        @Test
+        fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
+            val søknadsdato = LocalDate.now()
+            val sykePengerPeriode = Periode(søknadsdato.minusMonths(1), søknadsdato.plusMonths(1))
 
-        // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = søknadsdato.atStartOfDay(),
-            søknad = SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei),
-                yrkesskade = "NEI",
-                oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            ),
-        )
-
-        sak.sendInnMeldekort(Periode(søknadsdato, søknadsdato.plusYears(3)).dager().associateWith { 0.0 })
-
-        behandling
-            .medKontekst {
-                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsSykdom(søknadsdato)
-            .løsBistand(søknadsdato)
-            .løsRefusjonskrav()
-            .løsFritakMeldeplikt(søknadsdato)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(søknadsdato)
-            .løsAndreStatligeYtelser()
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
-            }
-            .løsAvklaringsBehov(
-                AvklarSamordningGraderingLøsning(
-                    vurderingerForSamordning = VurderingerForSamordning(
-                        vurderteSamordningerData = listOf(
-                            SamordningVurderingData(
-                                ytelseType = Ytelse.SYKEPENGER,
-                                periode = sykePengerPeriode,
-                                gradering = 100,
-                            )
-                        ),
-                        begrunnelse = "Samordning vurdert",
-                    ),
+            // Sender inn en søknad
+            var (sak, behandling) = sendInnFørsteSøknad(
+                mottattTidspunkt = søknadsdato.atStartOfDay(),
+                søknad = SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei),
+                    yrkesskade = "NEI",
+                    oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
                 ),
             )
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
 
-                // Vilkår skal ikke være oppfylt med 100% gradert samordning
-                val vilkår = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-                assertThat(vilkår.vilkårsperioder()).hasSize(1)
-                    .first()
-                    .extracting(Vilkårsperiode::utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-            }
-            .løsAvklaringsBehov(
-                AvklarSamordningGraderingLøsning(
-                    vurderingerForSamordning = VurderingerForSamordning(
-                        vurderteSamordningerData = listOf(
-                            SamordningVurderingData(
-                                ytelseType = Ytelse.SYKEPENGER,
-                                periode = sykePengerPeriode,
-                                gradering = 50,
-                            ),
-                            SamordningVurderingData(
-                                ytelseType = Ytelse.PLEIEPENGER,
-                                periode = sykePengerPeriode,
-                                gradering = 50,
-                            )
-                        ),
-                        begrunnelse = "Samordning vurdert",
-                    ),
-                ),
-            )
-            .medKontekst {
-                // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
-                val vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-                assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
-                assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_VURDERT)
+            sak.sendInnMeldekort(Periode(søknadsdato, søknadsdato.plusYears(3)).dager().associateWith { 0.0 })
 
-            }
-            // Setter samordningen til 100 sykepenger og ikke oppfylt for å verifisere opprettelse av revurdering
-            .løsAvklaringsBehov(
-                AvklarSamordningGraderingLøsning(
-                    vurderingerForSamordning = VurderingerForSamordning(
-                        vurderteSamordningerData = listOf(
-                            SamordningVurderingData(
-                                ytelseType = Ytelse.SYKEPENGER,
-                                periode = sykePengerPeriode,
-                                gradering = 100,
-                            )
-                        ),
-                        begrunnelse = "En god begrunnelse",
-                    ),
-                ),
-            )
-            .medKontekst {
-                // Vilkår skal være ikke oppfylt når samordningen har 100% gradering
-                val vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-                assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
-                    .extracting(Vilkårsperiode::utfall)
-                    .containsExactly(tuple(Utfall.IKKE_OPPFYLT))
-            }.løsArbeidsgiver(listOf(Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))))
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-
-        val uthentetTilkjentYtelse =
-            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
-            { "Tilkjent ytelse skal være beregnet her." }
-
-        val periodeMedFullSamordning =
-            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.graderingGrunnlag.samordningGradering) }
-                .let(::Tidslinje)
-                .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
-
-        // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning.fom).isEqualTo(søknadsdato)
-        assertThat(periodeMedFullSamordning.tom).isEqualTo(sykePengerPeriode.tom)
-
-        val behandlingReferanse = behandling.referanse
-        behandling = behandling.løsVedtaksbrev()
-
-        // Skal ikke lage ny revurdering automatisk
-        val sisteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
-        assertThat(sisteBehandling.referanse).isEqualTo(behandlingReferanse)
-
-        val revurdering =
-            sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+            behandling
                 .medKontekst {
-                    assertThat(this.behandling.id).isNotEqualTo(sisteBehandling.id)
-                    assertThat(this.behandling.id).isNotEqualTo(behandling.id)
+                    assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                    assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
+                    assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 }
-                // Avklar samordning i revurdering
+                .løsSykdom(søknadsdato)
+                .løsBistand(søknadsdato)
+                .løsRefusjonskrav()
+                .løsFritakMeldeplikt(søknadsdato)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsOppholdskrav(søknadsdato)
+                .løsAndreStatligeYtelser()
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+                }
+                .løsAvklaringsBehov(
+                    AvklarSamordningGraderingLøsning(
+                        vurderingerForSamordning = VurderingerForSamordning(
+                            vurderteSamordningerData = listOf(
+                                SamordningVurderingData(
+                                    ytelseType = Ytelse.SYKEPENGER,
+                                    periode = sykePengerPeriode,
+                                    gradering = 100,
+                                )
+                            ),
+                            begrunnelse = "Samordning vurdert",
+                        ),
+                    ),
+                )
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
+
+                    // Vilkår skal ikke være oppfylt med 100% gradert samordning
+                    val vilkår = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+                    assertThat(vilkår.vilkårsperioder()).hasSize(1)
+                        .first()
+                        .extracting(Vilkårsperiode::utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                }
+                .løsAvklaringsBehov(
+                    AvklarSamordningGraderingLøsning(
+                        vurderingerForSamordning = VurderingerForSamordning(
+                            vurderteSamordningerData = listOf(
+                                SamordningVurderingData(
+                                    ytelseType = Ytelse.SYKEPENGER,
+                                    periode = sykePengerPeriode,
+                                    gradering = 50,
+                                ),
+                                SamordningVurderingData(
+                                    ytelseType = Ytelse.PLEIEPENGER,
+                                    periode = sykePengerPeriode,
+                                    gradering = 50,
+                                )
+                            ),
+                            begrunnelse = "Samordning vurdert",
+                        ),
+                    ),
+                )
+                .medKontekst {
+                    // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
+                    val vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+                    assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
+                    assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_VURDERT)
+
+                }
+                // Setter samordningen til 100 sykepenger og ikke oppfylt for å verifisere opprettelse av revurdering
                 .løsAvklaringsBehov(
                     AvklarSamordningGraderingLøsning(
                         vurderingerForSamordning = VurderingerForSamordning(
@@ -205,165 +158,312 @@ class SamordningFlyttest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnlea
                         ),
                     ),
                 )
-                .løsAndreStatligeYtelser()
+                .medKontekst {
+                    // Vilkår skal være ikke oppfylt når samordningen har 100% gradering
+                    val vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+                    assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
+                        .extracting(Vilkårsperiode::utfall)
+                        .containsExactly(tuple(Utfall.IKKE_OPPFYLT))
+                }.løsArbeidsgiver(listOf(Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))))
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
 
-        val tilkjentYtelse =
-            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }) { "Tilkjent ytelse skal være beregnet her." }
+            val uthentetTilkjentYtelse =
+                requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
+                { "Tilkjent ytelse skal være beregnet her." }
 
-        assertTidslinje(
-            tilkjentYtelse.tilTidslinje(),
-            sykePengerPeriode.overlapp(Periode(søknadsdato, søknadsdato.plusYears(3)))!! to {
-                assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
-                assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
-            },
-            Periode(sykePengerPeriode.tom.plusDays(1), tilkjentYtelse.tilTidslinje().helePerioden().tom) to {
-                assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
-                assertThat(it.redusertDagsats()).isNotEqualTo(Beløp(0))
-            }
-        )
+            val periodeMedFullSamordning =
+                uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.graderingGrunnlag.samordningGradering) }
+                    .let(::Tidslinje)
+                    .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
-        val åpneAvklaringsbehovPåNyBehandling = hentAvklaringsbehovSomMåLøses(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
-    }
+            // Verifiser at samordningen ble fanget opp
+            assertThat(periodeMedFullSamordning.fom).isEqualTo(søknadsdato)
+            assertThat(periodeMedFullSamordning.tom).isEqualTo(sykePengerPeriode.tom)
 
-}
+            val behandlingReferanse = behandling.referanse
+            behandling = behandling.løsVedtaksbrev()
 
-class SamordningFlyttestRevurdering : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
-    private val søknadsdato = LocalDate.now().minusYears(1)
-    private val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-    private lateinit var person: TestPerson
-    private lateinit var sak: Sak
+            // Skal ikke lage ny revurdering automatisk
+            val sisteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
+            assertThat(sisteBehandling.referanse).isEqualTo(behandlingReferanse)
 
-    @BeforeAll
-    fun settOppSamordning() = snapshotEtterSetup {
-        val person = TestPersoner.STANDARD_PERSON().medSykepenger(
-            listOf(
-                TestPerson.Sykepenger(
-                    grad = 50, periode = sykePengerPeriode
-                )
+            val revurdering =
+                sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+                    .medKontekst {
+                        assertThat(this.behandling.id).isNotEqualTo(sisteBehandling.id)
+                        assertThat(this.behandling.id).isNotEqualTo(behandling.id)
+                    }
+                    // Avklar samordning i revurdering
+                    .løsAvklaringsBehov(
+                        AvklarSamordningGraderingLøsning(
+                            vurderingerForSamordning = VurderingerForSamordning(
+                                vurderteSamordningerData = listOf(
+                                    SamordningVurderingData(
+                                        ytelseType = Ytelse.SYKEPENGER,
+                                        periode = sykePengerPeriode,
+                                        gradering = 100,
+                                    )
+                                ),
+                                begrunnelse = "En god begrunnelse",
+                            ),
+                        ),
+                    )
+                    .løsAndreStatligeYtelser()
+
+            val tilkjentYtelse =
+                requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }) { "Tilkjent ytelse skal være beregnet her." }
+
+            assertTidslinje(
+                tilkjentYtelse.tilTidslinje(),
+                sykePengerPeriode.overlapp(Periode(søknadsdato, søknadsdato.plusYears(3)))!! to {
+                    assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
+                    assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
+                },
+                Periode(sykePengerPeriode.tom.plusDays(1), tilkjentYtelse.tilTidslinje().helePerioden().tom) to {
+                    assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
+                    assertThat(it.redusertDagsats()).isNotEqualTo(Beløp(0))
+                }
             )
-        )
-        this.person = person
-        this@SamordningFlyttestRevurdering.person = person
-        val behandling = opprettSamordning(person, søknadsdato, sykePengerPeriode)
-        sak = hentSak(behandling)
+
+            val åpneAvklaringsbehovPåNyBehandling = hentAvklaringsbehovSomMåLøses(revurdering.id)
+            assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+        }
+
     }
 
-    @BeforeEach
-    fun hentSakFraSnapshot() {
-        person.medInstitusjonsopphold(emptyList())
-        sak = hentSak(hentSisteOpprettedeBehandlingForSak(sak.id))
-    }
+    @Nested
+    inner class RevurderingMedSykepenger :
+        AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        private val søknadsdato = LocalDate.now().minusYears(1)
+        private val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
+        private lateinit var person: TestPerson
+        private lateinit var sak: Sak
 
-    @Test
-    fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
-        sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
-
-        // Opprett manuell revurdering før ta av vent
-        var revurdering = sak.opprettManuellRevurdering(listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
-        assertThat(revurdering.vurderingsbehov().map { it.type }).describedAs("Ny årsak skal være lagt til")
-            .contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
-
-        assertThat(revurdering.aktivtSteg()).describedAs("Forventer at behandlingen ligger på sykdom nå.")
-            .isEqualTo(StegType.AVKLAR_SYKDOM)
-
-        var åpneAvklaringsbehovPåNyBehandling = hentAvklaringsbehovSomMåLøses(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
-
-        assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Sykdom skal være åpent avklaringsbehov.")
-            .extracting(Avklaringsbehov::definisjon).contains(tuple(Definisjon.AVKLAR_SYKDOM))
-
-        // Prøve å løse sykdomsvilkåret på nytt
-        revurdering = revurdering.løsSykdom(sak.rettighetsperiode.fom)
-        åpneAvklaringsbehovPåNyBehandling = hentAvklaringsbehovSomMåLøses(revurdering.id)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
-        assertThat(
-            åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_BISTANDSBEHOV)
-    }
-
-    @Test
-    fun `ny informasjon i tidligere steg skal tilbakeføre behandling som er på samordning`() {
-        val revurdering =
-            sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
-
-
-        // Nytt institusjonsopphold
-        person.medInstitusjonsopphold(
-            listOf(
-                InstitusjonsoppholdJSON(
-                    startdato = LocalDate.now().minusMonths(5),
-                    forventetSluttdato = LocalDate.now().plusMonths(4),
-                    institusjonstype = "FO",
-                    institusjonsnavn = "institusjon",
-                    organisasjonsnummer = "2334",
-                    kategori = "S",
-                )
-            )
-        )
-
-
-        // prosesser på nytt
-        nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
-        prosesserBehandling(revurdering)
-            .medKontekst {
-                // Behandlingen tilbakeføres til EtAnnetStedSteg
-                assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
-            }
-    }
-
-
-    private fun opprettSamordning(
-        person: TestPerson,
-        søknadsdato: LocalDate,
-        sykePengerPeriode: Periode
-    ): Behandling {
-        // Sender inn en søknad
-        var behandling = sendInnFørsteSøknad(
-            søknad = SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei),
-                yrkesskade = "NEI",
-                oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            ),
-            person = person,
-            mottattTidspunkt = søknadsdato.atStartOfDay(),
-        ).second
-            .medKontekst {
-                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsSykdom(søknadsdato)
-            .løsBistand(søknadsdato)
-            .løsAvklaringsBehov(
-                RefusjonkravLøsning(
-                    listOf(
-                        RefusjonkravVurderingDto(
-                            harKrav = true, navKontor = "",
-                        )
+        @BeforeAll
+        fun settOppSamordning() = snapshotEtterSetup {
+            val person = TestPersoner.STANDARD_PERSON().medSykepenger(
+                listOf(
+                    TestPerson.Sykepenger(
+                        grad = 50, periode = sykePengerPeriode
                     )
                 )
             )
-            .løsFritakMeldeplikt(søknadsdato)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsAvklaringsBehov(
-                FastsettBeregningstidspunktLøsning(
-                    beregningVurdering = BeregningstidspunktVurderingDto(
-                        begrunnelse = "Trenger hjelp fra Nav",
-                        nedsattArbeidsevneDato = LocalDate.now(),
-                        ytterligereNedsattArbeidsevneDato = null,
-                        ytterligereNedsattBegrunnelse = null
-                    ),
-                ),
+            this.person = person
+            this@RevurderingMedSykepenger.person = person
+            val behandling = opprettSamordning(person, søknadsdato, sykePengerPeriode)
+            sak = hentSak(behandling)
+        }
+
+        @BeforeEach
+        fun hentSakFraSnapshot() {
+            person.medInstitusjonsopphold(emptyList())
+            sak = hentSak(hentSisteOpprettedeBehandlingForSak(sak.id))
+        }
+
+        @Test
+        fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
+            sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+
+            // Opprett manuell revurdering før ta av vent
+            var revurdering = sak.opprettManuellRevurdering(listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+            assertThat(revurdering.vurderingsbehov().map { it.type }).describedAs("Ny årsak skal være lagt til")
+                .contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+
+            assertThat(revurdering.aktivtSteg()).describedAs("Forventer at behandlingen ligger på sykdom nå.")
+                .isEqualTo(StegType.AVKLAR_SYKDOM)
+
+            var åpneAvklaringsbehovPåNyBehandling = hentAvklaringsbehovSomMåLøses(revurdering.id)
+            assertThat(åpneAvklaringsbehovPåNyBehandling.filter { it.erVentepunkt() }).isEmpty()
+
+            assertThat(åpneAvklaringsbehovPåNyBehandling).describedAs("Sykdom skal være åpent avklaringsbehov.")
+                .extracting(Avklaringsbehov::definisjon).contains(tuple(Definisjon.AVKLAR_SYKDOM))
+
+            // Prøve å løse sykdomsvilkåret på nytt
+            revurdering = revurdering.løsSykdom(sak.rettighetsperiode.fom)
+            åpneAvklaringsbehovPåNyBehandling = hentAvklaringsbehovSomMåLøses(revurdering.id)
+            assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
+            assertThat(
+                åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_BISTANDSBEHOV)
+        }
+
+        @Test
+        fun `ny informasjon i tidligere steg skal tilbakeføre behandling som er på samordning`() {
+            val revurdering =
+                sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+
+
+            // Nytt institusjonsopphold
+            person.medInstitusjonsopphold(
+                listOf(
+                    InstitusjonsoppholdJSON(
+                        startdato = LocalDate.now().minusMonths(5),
+                        forventetSluttdato = LocalDate.now().plusMonths(4),
+                        institusjonstype = "FO",
+                        institusjonsnavn = "institusjon",
+                        organisasjonsnummer = "2334",
+                        kategori = "S",
+                    )
+                )
             )
-            .løsOppholdskrav(søknadsdato)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-            }
-            .løsAvklaringsBehov(
+
+
+            // prosesser på nytt
+            nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
+            prosesserBehandling(revurdering)
+                .medKontekst {
+                    // Behandlingen tilbakeføres til EtAnnetStedSteg
+                    assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
+                }
+        }
+
+
+        private fun opprettSamordning(
+            person: TestPerson,
+            søknadsdato: LocalDate,
+            sykePengerPeriode: Periode
+        ): Behandling {
+            // Sender inn en søknad
+            var behandling = sendInnFørsteSøknad(
+                søknad = SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei),
+                    yrkesskade = "NEI",
+                    oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+                ),
+                person = person,
+                mottattTidspunkt = søknadsdato.atStartOfDay(),
+            ).second
+                .medKontekst {
+                    assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                    assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .løsSykdom(søknadsdato)
+                .løsBistand(søknadsdato)
+                .løsAvklaringsBehov(
+                    RefusjonkravLøsning(
+                        listOf(
+                            RefusjonkravVurderingDto(
+                                harKrav = true, navKontor = "",
+                            )
+                        )
+                    )
+                )
+                .løsFritakMeldeplikt(søknadsdato)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsAvklaringsBehov(
+                    FastsettBeregningstidspunktLøsning(
+                        beregningVurdering = BeregningstidspunktVurderingDto(
+                            begrunnelse = "Trenger hjelp fra Nav",
+                            nedsattArbeidsevneDato = LocalDate.now(),
+                            ytterligereNedsattArbeidsevneDato = null,
+                            ytterligereNedsattBegrunnelse = null
+                        ),
+                    ),
+                )
+                .løsOppholdskrav(søknadsdato)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+                }
+                .løsAvklaringsBehov(
+                    AvklarSamordningGraderingLøsning(
+                        vurderingerForSamordning = VurderingerForSamordning(
+                            vurderteSamordningerData = listOf(
+                                SamordningVurderingData(
+                                    ytelseType = Ytelse.SYKEPENGER,
+                                    periode = sykePengerPeriode,
+                                    gradering = 100,
+                                )
+                            ),
+                            begrunnelse = "En god begrunnelse",
+                        ),
+                    ),
+                )
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER)
+                }
+                .løsAvklaringsBehov(
+                    AvklarSamordningAndreStatligeYtelserLøsning(
+                        samordningAndreStatligeYtelserVurdering = SamordningAndreStatligeYtelserVurderingDto(
+                            begrunnelse = "Ingen",
+                            vurderingPerioder = listOf()
+
+                        )
+                    )
+                )
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+
+            val uthentetTilkjentYtelse =
+                requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
+
+            val periodeMedFullSamordning =
+                uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.graderingGrunnlag.samordningGradering) }
+                    .let(::Tidslinje)
+                    .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
+
+            // Verifiser at samordningen ble fanget opp
+            assertThat(periodeMedFullSamordning).isEqualTo(
+                Periode(
+                    fom = sykePengerPeriode.fom,
+                    tom = minOf(sykePengerPeriode.tom, uthentetTilkjentYtelse.maxOf { it.periode.tom })
+                )
+            )
+            behandling = behandling.løsVedtaksbrev()
+
+            val nyesteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
+            val behandlingReferanse = behandling.referanse
+
+            // Skal ikke opprette automatisk revurdering ved ukjent samordning
+            assertThat(nyesteBehandling.referanse).isEqualTo(behandlingReferanse)
+
+            motor.kjørJobber()
+            return nyesteBehandling
+        }
+    }
+
+    @Nested
+    inner class UtbetalingsdatoVedMeldekort :
+        AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        @Test
+        fun `Godkjent vedtak med meldekort og revurdering med samordning skal sette riktig utbetalingsdato selv om revurderingen skjer etter at meldekort er sendt inn og før meldeplikten har utløpt`() {
+
+            val fom = LocalDate.now().minusDays(15)
+            val periode = Periode(fom, Tid.MAKS)
+            val sykePengerPeriode = Periode(fom, fom.plusMonths(1))
+
+            // Sender inn en søknad
+            val (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+
+
+            behandling
+                .løsSykdom(periode.fom)
+                .løsBistand(periode.fom)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsOppholdskrav(fom)
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev()
+
+
+            val meldekortInnsendingsdato = LocalDate.now().atStartOfDay()
+            sak.sendInnMeldekort(
+                timerArbeidet = Periode(periode.fom, periode.fom.plusDays(14)).dager().associateWith { 0.0 },
+                mottattTidspunkt = meldekortInnsendingsdato
+            )
+            val revurdering = sak.opprettManuellRevurdering(
+                vurderingsbehov = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
+            )
+            revurdering.løsAvklaringsBehov(
                 AvklarSamordningGraderingLøsning(
                     vurderingerForSamordning = VurderingerForSamordning(
                         vurderteSamordningerData = listOf(
@@ -373,110 +473,19 @@ class SamordningFlyttestRevurdering : AbstraktFlytOrkestratorSnapshotTest(AlleAv
                                 gradering = 100,
                             )
                         ),
-                        begrunnelse = "En god begrunnelse",
+                        begrunnelse = "Samordning vurdert",
                     ),
                 ),
             )
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER)
-            }
-            .løsAvklaringsBehov(
-                AvklarSamordningAndreStatligeYtelserLøsning(
-                    samordningAndreStatligeYtelserVurdering = SamordningAndreStatligeYtelserVurderingDto(
-                        begrunnelse = "Ingen",
-                        vurderingPerioder = listOf()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
 
-                    )
-                )
-            )
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
+            val tilkjentYtelse =
+                dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }
 
-        val uthentetTilkjentYtelse =
-            requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
+            assertThat(tilkjentYtelse?.first()?.tilkjent?.utbetalingsdato).isEqualTo(meldekortInnsendingsdato.toLocalDate())
 
-        val periodeMedFullSamordning =
-            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.graderingGrunnlag.samordningGradering) }
-                .let(::Tidslinje)
-                .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
-
-        // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning).isEqualTo(
-            Periode(
-                fom = sykePengerPeriode.fom,
-                tom = minOf(sykePengerPeriode.tom, uthentetTilkjentYtelse.maxOf { it.periode.tom })
-            )
-        )
-        behandling = behandling.løsVedtaksbrev()
-
-        val nyesteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
-        val behandlingReferanse = behandling.referanse
-
-        // Skal ikke opprette automatisk revurdering ved ukjent samordning
-        assertThat(nyesteBehandling.referanse).isEqualTo(behandlingReferanse)
-
-        motor.kjørJobber()
-        return nyesteBehandling
-    }
-}
-
-class SamordningFlyttestMeldekort : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
-    @Test
-    fun `Godkjent vedtak med meldekort og revurdering med samordning skal sette riktig utbetalingsdato selv om revurderingen skjer etter at meldekort er sendt inn og før meldeplikten har utløpt`() {
-
-        val fom = LocalDate.now().minusDays(15)
-        val periode = Periode(fom, Tid.MAKS)
-        val sykePengerPeriode = Periode(fom, fom.plusMonths(1))
-
-        // Sender inn en søknad
-        val (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-
-
-        behandling
-            .løsSykdom(periode.fom)
-            .løsBistand(periode.fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
-
-
-        val meldekortInnsendingsdato = LocalDate.now().atStartOfDay()
-        sak.sendInnMeldekort(
-            timerArbeidet = Periode(periode.fom, periode.fom.plusDays(14)).dager().associateWith { 0.0 },
-            mottattTidspunkt = meldekortInnsendingsdato
-        )
-        val revurdering = sak.opprettManuellRevurdering(
-            vurderingsbehov = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
-        )
-        revurdering.løsAvklaringsBehov(
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                        )
-                    ),
-                    begrunnelse = "Samordning vurdert",
-                ),
-            ),
-        )
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
-
-        val tilkjentYtelse =
-            dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }
-
-        assertThat(tilkjentYtelse?.first()?.tilkjent?.utbetalingsdato).isEqualTo(meldekortInnsendingsdato.toLocalDate())
-
+        }
     }
 }
