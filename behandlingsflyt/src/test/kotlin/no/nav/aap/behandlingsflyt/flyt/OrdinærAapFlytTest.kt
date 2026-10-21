@@ -144,7 +144,7 @@ class OrdinærAapFlytTest {
 
                     val resultat = ResultatUtleder(
                         repositoryProvider,
-                        minimalGatewayProvider()
+                        minimalGatewayProvider(unleashGateway())
                     ).utledResultatFørstegangsBehandling(behandling.id)
 
                     assertThat(resultat).isEqualTo(Resultat.AVSLAG)

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -17,6 +18,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.In
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKravLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -31,9 +35,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -60,11 +64,18 @@ import kotlin.reflect.KClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class YrkesskadeFlytTest {
     @field:Parameter
-    lateinit var unleashGateway: KClass<UnleashGateway>
+    lateinit var unleashGateway: KClass<out UnleashGateway>
 
     @Nested
     inner class AvslagFørYrkesskadevurdering :
-        AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@YrkesskadeFlytTest.unleashGateway
+
+        @BeforeEach
+        fun verifiserToggleVariant() {
+            assertThat(gatewayProvider.provide<UnleashGateway>())
+                .isExactlyInstanceOf(this@YrkesskadeFlytTest.unleashGateway.java)
+        }
 
         @Test
         fun `skal ikke vise avklaringsbehov for yrkesskade ved avslag i tidligere steg`() {
@@ -95,7 +106,7 @@ class YrkesskadeFlytTest {
                 .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
                 .kvalitetssikre()
-                .fattVedtak()
+                .fattVedtakEtterAvslagSykdom()
                 .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
             assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
@@ -104,7 +115,8 @@ class YrkesskadeFlytTest {
 
     @Nested
     inner class InnvilgetYrkesskadeMedÅrsakssammenheng :
-        AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@YrkesskadeFlytTest.unleashGateway
 
         private val søknadsdato = LocalDate.now()
         private lateinit var person: TestPerson
@@ -157,6 +169,8 @@ class YrkesskadeFlytTest {
 
         @BeforeEach
         fun hentBehandlingFraSnapshot() {
+            assertThat(gatewayProvider.provide<UnleashGateway>())
+                .isExactlyInstanceOf(this@YrkesskadeFlytTest.unleashGateway.java)
             oppdatertBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
         }
 
@@ -211,7 +225,14 @@ class YrkesskadeFlytTest {
 
     @Nested
     inner class YrkesskadevurderingOgRevurdering :
-        AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@YrkesskadeFlytTest.unleashGateway
+
+        @BeforeEach
+        fun verifiserToggleVariant() {
+            assertThat(gatewayProvider.provide<UnleashGateway>())
+                .isExactlyInstanceOf(this@YrkesskadeFlytTest.unleashGateway.java)
+        }
 
         @Test
         fun `ved revurdering med yrkesskade hvor yrkesskade fjernes må forutgående medlemskap vurderes da den igjen er aktuell`() {
@@ -629,14 +650,37 @@ class YrkesskadeFlytTest {
             val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
             assertThat(åpneAvklaringsbehov).isEmpty()
 
+            val mottattTidspunkt = LocalDateTime.now().minusMonths(3)
             sak.sendInnSøknad(
                 søknad = TestSøknader.STANDARD_SØKNAD,
-                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
+                mottattTidspunkt = mottattTidspunkt,
                 journalpostId = JournalpostId("299"),
             ).medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.KravSteg)) {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.VURDER_KRAV)
+                    this.behandling.løsAvklaringsBehov(
+                        VurderKravLøsning(
+                            kravVurderinger = setOf(
+                                RelevantKravLøsningDto(
+                                    journalpostId = JournalpostId("299"),
+                                    begrunnelse = "Ny søknad",
+                                    søknadsdato = Søknadsdato(
+                                        dato = mottattTidspunkt.toLocalDate(),
+                                        årsak = SøknadsdatoÅrsak.SøknadMottatt,
+                                        begrunnelse = "Ny søknad"
+                                    ),
+                                    overstyrMuligRettFra = null
+                                )
+                            )
+                        )
+                    )
+                }
             }
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_SYKDOM)
+                }
                 .løsAvklaringsBehov(
                     AvklarSykdomLøsning(
                         løsningerForPerioder = listOf(
@@ -698,12 +742,7 @@ class YrkesskadeFlytTest {
                 .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
                 .kvalitetssikre()
-                .medKontekst {
-                    // Saken står til To-trinnskontroll hos beslutter
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-                }
-                .fattVedtak()
+                .fattVedtakEtterAvslagSykdom()
                 .medKontekst {
                     assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
@@ -754,12 +793,7 @@ class YrkesskadeFlytTest {
                         )
                 }
                 .kvalitetssikre()
-                .medKontekst {
-                    // Saken står til To-trinnskontroll hos beslutter
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-                }
-                .fattVedtak()
+                .fattVedtakEtterAvslagSykdom()
                 .medKontekst {
                     assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
                 }

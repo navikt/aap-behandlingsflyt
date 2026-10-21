@@ -109,7 +109,7 @@ class SykdomUungåligAvslagTest {
                     assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
                     val resultat =
-                        ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                        ResultatUtleder(repositoryProvider, minimalGatewayProvider(unleashGateway())).utledResultatFørstegangsBehandling(
                             behandling.id
                         )
 
@@ -196,7 +196,7 @@ class SykdomUungåligAvslagTest {
                     assertThat(hentVedtak().vedtakstidspunkt.toLocalDate()).isToday
 
                     val resultat =
-                        ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                        ResultatUtleder(repositoryProvider, minimalGatewayProvider(unleashGateway())).utledResultatFørstegangsBehandling(
                             behandling.id
                         )
 
@@ -293,7 +293,7 @@ class SykdomUungåligAvslagTest {
                     assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
                     val resultat =
-                        ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                        ResultatUtleder(repositoryProvider, minimalGatewayProvider(unleashGateway())).utledResultatFørstegangsBehandling(
                             behandling.id
                         )
 
@@ -374,7 +374,7 @@ class SykdomUungåligAvslagTest {
             val resultat = dataSource.transaction {
                 ResultatUtleder(
                     postgresRepositoryRegistry.provider(it),
-                    minimalGatewayProvider()
+                    minimalGatewayProvider(unleashGateway())
                 ).utledResultatFørstegangsBehandling(behandling.id)
             }
             assertThat(resultat).isEqualTo(Resultat.AVSLAG)
