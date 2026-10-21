@@ -100,7 +100,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         vurderingsbehovOgÅrsaker.map { it.copy(opprettetAv = it.opprettetAv?.let { ident -> navnPerIdent[ident] ?: ident }) }
                     }
 
-                    val legacyFrivillige = if (unleashGateway.isEnabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
+                    val legacyFrivillige = if (unleashGateway.isDisabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
                         Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov + Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND
                     } else {
                         Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
