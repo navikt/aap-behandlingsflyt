@@ -126,6 +126,9 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
                     val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
+                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+                    val enManedsregelEnabled =
+                        unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
                     val utlederService = InstitusjonsoppholdUtlederService(
                         barnetilleggRepository,
@@ -198,12 +201,18 @@ fun NormalOpenAPIRoute.institusjonApi(
                                 }
                             }
 
-                        mapVurderingerToDto(
+                        val vurderingerFraDatabase = mapVurderingerToDto(
                             nyeVurderingerForOpphold,
                             oppholdInfo,
                             vurdertAvService,
                             gatewayProvider.provide()
-                        ) + uavklarteDto
+                        )
+
+                        // Dedupliser på oppholdId - foretrekk dto-er som faktisk har vurderinger
+                        // (f.eks. historiske vurderinger uten reduksjonsberegning) fremfor den
+                        // tomme UAVKLART-plassholderen som ellers legges til for samme opphold.
+                        if (enManedsregelEnabled) dedupliserPerOppholdId(vurderingerFraDatabase + uavklarteDto)
+                        else vurderingerFraDatabase + uavklarteDto
                     }
 
                     val oppholdSegmenter = grunnlag?.oppholdene?.opphold
@@ -212,7 +221,17 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     // Grupper i sammenhengende kjeder og beregn tidligste reduksjonsdato per kjede
                     val kjeder = grupperSammenhengendeOppholdSegmenter(oppholdSegmenter)
-                    val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(oppholdSegmenter)
+                    val harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { kjede ->
+                        val kjedeOppholdIder =
+                            kjede.elementer.map { lagOppholdId(it.verdi.navn, it.periode.fom) }.toSet()
+                        vedtatteVurderingerForOpphold.values.flatten()
+                            .any { it.giReduksjon() && it.oppholdId in kjedeOppholdIder }
+                    }
+                    val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(
+                        oppholdSegmenter,
+                        harInnvilgetReduksjon,
+                        enManedsregelEnabled
+                    )
 
                     // Bygg opphold-liste med tidligsteReduksjonsdato
                     val oppholdMedReduksjonsdato = hentOppholdSomSkalVurderes(
@@ -285,9 +304,11 @@ fun mapVurderingerToDto(
     }
 
     val alleKjeder = grupperSammenhengendeOppholdSegmenter(oppholdInfo.segmenter().toList())
+    val enManedsregelEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
     return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
         val kjede = alleKjeder.firstOrNull { it.periode.overlapper(vurderingPeriode) }
+            ?: (if (enManedsregelEnabled) finnNærmesteKjedeFør(alleKjeder, vurderingPeriode) else null)
             ?: return@flatMap emptyList()
         val først = kjede.elementer.first()
 
@@ -306,6 +327,7 @@ fun mapVurderingerToDto(
                         forsoergerEktefelle = vurdering.forsoergerEktefelle,
                         harFasteUtgifter = vurdering.harFasteUtgifter,
                         periode = vurdering.periode,
+                        erHistoriskUtenReduksjonsberegning = vurdering.erHistoriskUtenReduksjonsberegning,
                         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
                             behandlingId = vurdering.vurdertIBehandling,
@@ -322,6 +344,25 @@ fun mapVurderingerToDto(
             )
         )
     }
+}
+
+private fun finnNærmesteKjedeFør(
+    kjeder: List<SammenhengendeOppholdGruppe>,
+    vurderingPeriode: Periode
+): SammenhengendeOppholdGruppe? {
+    return kjeder
+        .filter { it.periode.tom <= vurderingPeriode.fom }
+        .maxByOrNull { it.periode.tom }
+}
+
+// Public for testing
+fun dedupliserPerOppholdId(dtoer: List<HelseoppholdDto>): List<HelseoppholdDto> {
+    return dtoer
+        .groupBy { it.oppholdId }
+        .flatMap { (_, gruppe) ->
+            val medVurderinger = gruppe.filter { it.vurderinger?.isNotEmpty() == true }
+            medVurderinger.ifEmpty { gruppe.take(1) }
+        }
 }
 
 // Public for testing
