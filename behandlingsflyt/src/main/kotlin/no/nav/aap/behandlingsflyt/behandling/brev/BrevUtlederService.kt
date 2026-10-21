@@ -389,11 +389,7 @@ class BrevUtlederService(
 
     private fun prioriterAvslagsårsakAvslagsBrevType(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
         val prioritertRekkefølge = listOf(
-            Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT,
-            Avslagsårsak.IKKE_MEDLEM,
-            Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE,
             Avslagsårsak.BRUKER_UNDER_18,
-            Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
@@ -489,7 +485,7 @@ class BrevUtlederService(
             alleAvslagsårsaker,
             avslagsårsak
         )
-        if (Miljø.erDev() && avslagsårsak != null) {
+        if (Miljø.erDev() && avslagsårsak != null && !sykdomsvurdering.isNullOrBlank()) {
             /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
                 return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
             }*/
