@@ -15,6 +15,7 @@ import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.modeller.Periode
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
@@ -108,15 +109,20 @@ class ArenaoppslagFake : FakeServer() {
                 call.respond(ArenaRefusjonskravResponse(refusjonskrav = null))
             }
             get("/api/migrering/{saksnummer}/krav") {
+                val migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)).minusWeeks(1)
                 call.respond(
                     KravResponse(
                         lopenr = 123456,
                         aar = 2016,
                         soknadsdato = LocalDate.now().minusYears(1),
-                        migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)),
+                        migreringsdato = migreringsdato,
                         gjenstaaendeKvote = GjenstaaendeKvote(
                             ordinaer = 150
-                        )
+                        ),
+                        sisteFerdigBehandledeMeldekortperiode = Periode(
+                            migreringsdato.minusWeeks(2),
+                            migreringsdato.minusDays(1)
+                        ),
                     )
                 )
             }

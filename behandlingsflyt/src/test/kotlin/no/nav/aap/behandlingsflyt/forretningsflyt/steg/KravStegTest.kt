@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import io.mockk.verify
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.modeller.Periode
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
@@ -291,12 +292,59 @@ class KravStegTest {
         assertThat(InMemoryKravRepository.hent(behandling.id).vurderinger.single()).isEqualTo(kravEtterFørsteKjøring)
     }
 
-    private fun kravResponse(søknadsdato: LocalDate, migreringsdato: LocalDate, kvote: Int) = KravResponse(
+    @Test
+    fun `migrering fra Arena - feiler når siste ferdig behandlede meldekortperiode mangler`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returns kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+            sisteMeldekortperiode = null,
+        )
+
+        assertThatThrownBy {
+            stegMedAutomatiskMigrering(arenaOppslagGateway = arenaOppslagGateway).utfør(migreringKontekst(behandling))
+        }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("ingen ferdig behandlet meldekortperiode")
+    }
+
+    @Test
+    fun `migrering fra Arena - feiler når migreringsdato ikke er dagen etter siste ferdig behandlede meldekortperiode`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returns kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+            sisteMeldekortperiode = Periode(LocalDate.of(2026, 9, 7), LocalDate.of(2026, 9, 20)),
+        )
+
+        assertThatThrownBy {
+            stegMedAutomatiskMigrering(arenaOppslagGateway = arenaOppslagGateway).utfør(migreringKontekst(behandling))
+        }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("2026-09-28")
+            .hasMessageContaining("2026-09-20")
+    }
+
+    private fun kravResponse(
+        søknadsdato: LocalDate,
+        migreringsdato: LocalDate,
+        kvote: Int,
+        sisteMeldekortperiode: Periode? = Periode(migreringsdato.minusDays(14), migreringsdato.minusDays(1)),
+    ) = KravResponse(
         lopenr = 123456,
         aar = 2016,
         soknadsdato = søknadsdato,
         migreringsdato = migreringsdato,
         gjenstaaendeKvote = GjenstaaendeKvote(ordinaer = kvote),
+        sisteFerdigBehandledeMeldekortperiode = sisteMeldekortperiode,
     )
 
     private fun stegMedAutomatiskMigrering(
