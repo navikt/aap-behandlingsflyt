@@ -8,6 +8,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar as ArenaVilkarKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose as ArenaDiagnoseKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
@@ -73,6 +74,14 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 status = "V",
                 begrunnelse = null,
             ),
+        )
+    }
+
+    override fun hentVedtaksperiode(saksnummerArena: String): ArenaVedtaksperiodeResponse {
+        return ArenaVedtaksperiodeResponse(
+            vedtakId = 1,
+            fraDato = LocalDate.now().minusYears(1),
+            tilDato = LocalDate.now().plusYears(1),
         )
     }
 

@@ -48,6 +48,11 @@ class ArenaMigreringService(
         return oppholdskrav.tilDomene()
     }
 
+    fun hentVedtaksperiode(sakId: SakId): ArenaVedtaksperiode {
+        logger.info("Henter vedtaksperiode fra Arena for sak $sakId.")
+        return arenaOppslagGateway.hentVedtaksperiode(hentSaksnummerArena(sakId)).tilDomene()
+    }
+
     fun hentRefusjonskrav(sakId: SakId): ArenaRefusjonskrav? {
         logger.info("Henter refusjonskrav fra Arena for sak $sakId.")
         val refusjonskrav = arenaOppslagGateway.hentRefusjonskrav(hentSaksnummerArena(sakId))

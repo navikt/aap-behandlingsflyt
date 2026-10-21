@@ -5,6 +5,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -68,6 +69,12 @@ class ArenaKontraktMappingTest {
     fun `HarHistorikkResponse mappes til ArenaHistorikk`() {
         assertThat(HarHistorikkResponse(true).tilDomene()).isEqualTo(ArenaHistorikk(harHistorikk = true))
         assertThat(HarHistorikkResponse(false).tilDomene()).isEqualTo(ArenaHistorikk(harHistorikk = false))
+    }
+
+    @Test
+    fun `ArenaVedtaksperiodeResponse mappes til vedtaksperiode`() {
+        assertThat(ArenaVedtaksperiodeResponse(7, LocalDate.of(2024, 1, 1), null).tilDomene())
+            .isEqualTo(ArenaVedtaksperiode(7, LocalDate.of(2024, 1, 1), null))
     }
 
     @Test

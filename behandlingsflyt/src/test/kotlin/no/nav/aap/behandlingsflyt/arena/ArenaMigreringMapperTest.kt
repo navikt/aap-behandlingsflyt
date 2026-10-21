@@ -2,15 +2,17 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
-import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskrav as ArenaRefusjonskravKontrakt
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskrav as ArenaRefusjonskravKontrakt
 
 class ArenaMigreringMapperTest {
 
@@ -261,4 +263,35 @@ class ArenaMigreringMapperTest {
 
         assertThat(ArenaMigreringMapper.mapMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)
     }
+
+    @Test
+    fun `mapVedtakslengdeVurdering lager automatisk vurdering med sluttdato fra Arena`() {
+        val vurdering = ArenaMigreringMapper.mapVedtakslengdeVurdering(
+            fraArena = vedtaksperiode(fraDato = 1 januar 2023, tilDato = 1 januar 2025),
+            behandlingId = behandlingId,
+        )
+
+        assertThat(vurdering.sluttdato).isEqualTo(1 januar 2025)
+        assertThat(vurdering.utvidetMed).isEqualTo(ÅrMedHverdager.FØRSTE_ÅR)
+        assertThat(vurdering.årsaker).containsExactly(VedtakslengdeÅrsak.MAKS_ETT_ÅR)
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+        assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
+        assertThat(vurdering.vurdertAutomatisk).isTrue()
+    }
+
+    @Test
+    fun `mapVedtakslengdeVurdering feiler uten tilDato`() {
+        assertThatThrownBy {
+            mapVedtakslengde(vedtaksperiode(fraDato = 1 januar 2023, tilDato = null))
+        }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("tilDato")
+    }
+
+    private fun vedtaksperiode(fraDato: LocalDate?, tilDato: LocalDate?) =
+        ArenaVedtaksperiode(vedtakId = 1, fraDato = fraDato, tilDato = tilDato)
+
+    private fun mapVedtakslengde(vedtaksperiode: ArenaVedtaksperiode) =
+        ArenaMigreringMapper.mapVedtakslengdeVurdering(
+            fraArena = vedtaksperiode,
+            behandlingId = behandlingId,
+        )
 }
