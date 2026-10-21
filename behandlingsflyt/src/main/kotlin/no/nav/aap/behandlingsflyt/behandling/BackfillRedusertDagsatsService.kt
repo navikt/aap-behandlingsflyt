@@ -1,13 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -15,23 +9,10 @@ private val log = LoggerFactory.getLogger(BackfillRedusertDagsatsService::class.
 
 class BackfillRedusertDagsatsService(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
-    private val kravRepository: KravRepository,
-    private val stønadsperiodeRepository: StønadsperiodeRepository,
-    private val mottattDokumentRepository: MottattDokumentRepository,
-    private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
-    private val trukketSøknadService: TrukketSøknadService,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         tilkjentYtelseRepository = repositoryProvider.provide(),
-        kravRepository = repositoryProvider.provide(),
-        stønadsperiodeRepository = repositoryProvider.provide(),
-        mottattDokumentRepository = repositoryProvider.provide(),
-        rettighetsperiodeRepository = repositoryProvider.provide(),
-        trukketSøknadService = TrukketSøknadService(repositoryProvider),
     )
-
-    fun erTrukketSøknadSak(behandlinger: List<Behandling>): Boolean =
-        behandlinger.filter { it.status().erAvsluttet() }.any { trukketSøknadService.søknadErTrukket(it.id) }
 
     /**
      * Backfiller redusertDagsats for én behandling.
@@ -39,7 +20,7 @@ class BackfillRedusertDagsatsService(
      * Returnerer [BackfillBehandlingResultat.AlleredeBackfilled] dersom behandlingen allerede hadde redusertDagsats –
      * løkken i runner skal da bryte ut av saken, da resten er nyere og allerede har sine vurderinger.
      */
-    fun backfillBehandling(sak: Sak, behandlinger: List<Behandling>, behandling: Behandling, erNyesteBehandling: Boolean): BackfillBehandlingResultat {
+    fun backfillBehandling(behandling: Behandling): BackfillBehandlingResultat {
         // TODO: 1. finn alle tilkjentYtelsePerioder som mangler redusertDagsats
         val tilkjentBackfillKandidater = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandling.id)
         if (tilkjentBackfillKandidater.isEmpty()) {
