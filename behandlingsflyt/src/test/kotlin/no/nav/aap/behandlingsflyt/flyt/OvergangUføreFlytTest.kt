@@ -60,6 +60,8 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -467,11 +469,16 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             }
     }
 
-    @Test
-    fun `innvilget uførevedtak med virkningsdato tilbake i tid opphører fra mottattdato`() {
-        val mottattDato = LocalDate.now().minusDays(1)
+    @ParameterizedTest
+    @CsvSource("-10, 1", "0, 0", "1, 1", "10, 10")
+    fun `automatisk opphør tar hensyn til virkningsdato og mottattdato`(
+        dagerTilVirkningsdato: Long,
+        dagerTilOpphør: Long,
+    ) {
+        val mottattDato = LocalDate.now().minusDays(3)
         val vurderingsdato = mottattDato.minusDays(20)
-        val uføreVirkningsdato = mottattDato.minusDays(10)
+        val uføreVirkningsdato = mottattDato.plusDays(dagerTilVirkningsdato)
+        val opphørsdato = mottattDato.plusDays(dagerTilOpphør)
         val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = vurderingsdato.atStartOfDay())
 
         sisteBehandling
@@ -509,21 +516,21 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 ?.singleOrNull { it.erAutomatiskVurdert() }
 
             assertThat(automatiskVurdering).isNotNull
-            assertThat(automatiskVurdering!!.fom).isEqualTo(mottattDato)
+            assertThat(automatiskVurdering!!.fom).isEqualTo(opphørsdato)
 
             val vilkår = VilkårsresultatRepositoryImpl(connection)
                 .hent(revurdering.id)
                 .finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 .tidslinje()
 
-            assertThat(vilkår.segment(mottattDato.minusDays(1))!!.verdi.utfall)
+            assertThat(vilkår.segment(opphørsdato.minusDays(1))!!.verdi.utfall)
                 .isNotEqualTo(Utfall.IKKE_OPPFYLT)
-            assertThat(vilkår.segment(mottattDato)!!.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+            assertThat(vilkår.segment(opphørsdato)!!.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
         }
     }
 
     @Test
-    fun `innvilget uførevedtak fram i tid bruker uføregateway for å utlede full innvilgelse`() {
+    fun `uførevedtak oppretter ikke automatisk opphør når full samordning allerede har fjernet retten til AAP`() {
         val overgangUførDato = LocalDate.now().plusMonths(1)
         val virkningsdato = LocalDate.now()
         val person = TestPersoner.STANDARD_PERSON().medUføre(
@@ -578,8 +585,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
                 ?.singleOrNull { it.erAutomatiskVurdert() && it.fom == overgangUførDato }
-            assertThat(vurdering).isNotNull
-            assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
+            assertThat(vurdering).isNull()
         }
     }
 
@@ -853,6 +859,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
 object OvergangUføreFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
-        BehandlingsflytFeature.IngenValidering
+        BehandlingsflytFeature.IngenValidering,
+        BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende,
     )
 )
