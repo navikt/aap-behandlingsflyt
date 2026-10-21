@@ -27,33 +27,49 @@ class BackfillRedusertDagsats(
         Thread.ofVirtual()
             .name("backfillRedusertDagsats")
             .start {
-                var forrigeFraTil: List<Long>? = null
+                var forrigeSakIdUtvalg: List<Long>? = null
                 while (true) {
-                    if (isLeader(log) && unleashGateway.isEnabled(BehandlingsflytFeature.BackfillRedusertDagsats)) {
-                        val sakIder = unleashGateway.getVariantValue(
-                            BehandlingsflytFeature.BackfillRedusertDagsats,
-                            "backfill-saker-ider"
-                        ).split(",").map(String::toLong)
-
-                        if (forrigeFraTil != sakIder) {
-                            try {
-                                backfillRedusertDagsatsLoop(sakIder)
-                                forrigeFraTil = sakIder
-                            } catch (e: Exception) {
-                                log.warn("BackfillRedusertDagsats: uncaughtException {}, se secure / team log", e.javaClass.name)
-                                teamLogs.warn(
-                                    "BackfillRedusertDagsats: uncaughtException {}: {}",
-                                    e.javaClass.name,
-                                    e.message,
-                                    e
-                                )
+                    try {
+                        if (erForutsetningerOppfylt()) {
+                            val sakIdUtvalg = hentSakIdUtvalg()
+                            if (erSakIdUtvalgEndret(forrigeSakIdUtvalg, sakIdUtvalg)) {
+                                backfillRedusertDagsatsLoop(sakIdUtvalg)
+                                forrigeSakIdUtvalg = sakIdUtvalg
                             }
                         }
+                    } catch (e: Exception) {
+                        log.warn(
+                            "BackfillRedusertDagsats: uncaughtException {}, se secure / team log",
+                            e.javaClass.name
+                        )
+                        teamLogs.warn(
+                            "BackfillRedusertDagsats: uncaughtException {}: {}",
+                            e.javaClass.name,
+                            e.message,
+                            e
+                        )
                     }
                     Thread.sleep(Duration.ofMinutes(5))
                 }
             }
     }
+
+    private fun hentSakIdUtvalg(): List<Long> = unleashGateway.getVariantValue(
+        BehandlingsflytFeature.BackfillRedusertDagsats,
+        "backfill-saker-ider"
+    ).split(",").map(String::toLong)
+
+    /**
+     * Backfill rutiner skal kun kjøre på leader pod instansen i gcp og kun når unleash toggle er på
+     */
+    private fun erForutsetningerOppfylt(): Boolean {
+        return isLeader(log) && unleashGateway.isEnabled(BehandlingsflytFeature.BackfillRedusertDagsats)
+    }
+
+    private fun erSakIdUtvalgEndret(
+        forrigeSakIdUtvalg: List<Long>?,
+        sakIder: List<Long>
+    ): Boolean = forrigeSakIdUtvalg == null || forrigeSakIdUtvalg != sakIder
 
     private var antallBackfillUtført = 0
 
