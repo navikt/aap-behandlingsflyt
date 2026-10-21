@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.arena
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
@@ -10,8 +11,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.bistandsbehov.Bistandsvurdering
+import no.nav.aap.komponenter.type.Periode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -193,6 +197,25 @@ object ArenaMigreringMapper {
             navKontor = null,
             vurdertAv = ARENA_MIGRERING_BRUKER,
             opprettetTid = LocalDateTime.now()
+        )
+    }
+
+    fun mapVedtakslengdeVurdering(
+        fraArena: ArenaVedtaksperiode,
+        behandlingId: BehandlingId,
+    ): VedtakslengdeVurdering {
+        val tilDato = requireNotNull(fraArena.tilDato) {
+            "Kan ikke migrere vedtakslengde fra Arena fordi vedtaksperioden mangler tilDato"
+        }
+
+        return VedtakslengdeVurdering(
+            sluttdato = tilDato,
+            utvidetMed = ÅrMedHverdager.FØRSTE_ÅR, // Gyldig for migreringsgruppe 1
+            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),  // Gyldig for migreringsgruppe 1
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            begrunnelse = "Sluttdato for vedtaket er migrert fra Arena",
         )
     }
 }

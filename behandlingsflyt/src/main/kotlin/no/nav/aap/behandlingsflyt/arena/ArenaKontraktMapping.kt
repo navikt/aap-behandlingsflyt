@@ -5,6 +5,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import java.time.LocalDate
 
@@ -34,6 +35,12 @@ data class ArenaSykdomsvurdering(
 data class ArenaOppholdskrav(
     val vedtakId: Int,
     val vilkar: ArenaVilkar?,
+)
+
+data class ArenaVedtaksperiode(
+    val vedtakId: Int,
+    val fraDato: LocalDate?,
+    val tilDato: LocalDate?,
 )
 
 data class ArenaVilkar(
@@ -106,6 +113,12 @@ fun ArenaOppholdskravResponse.tilDomene(): ArenaOppholdskrav = ArenaOppholdskrav
             begrunnelse = it.begrunnelse,
         )
     },
+)
+
+fun ArenaVedtaksperiodeResponse.tilDomene(): ArenaVedtaksperiode = ArenaVedtaksperiode(
+    vedtakId = vedtakId,
+    fraDato = fraDato,
+    tilDato = tilDato,
 )
 
 fun ArenaRefusjonskravResponse.tilDomene(): ArenaRefusjonskrav? =

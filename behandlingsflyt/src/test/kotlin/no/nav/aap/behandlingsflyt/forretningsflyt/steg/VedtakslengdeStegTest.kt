@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
@@ -58,6 +60,7 @@ class VedtakslengdeStegTest {
     private val behandlingRepository = InMemoryBehandlingRepository
     private val gatewayProvider = createGatewayProvider {
         register<AlleAvskruddUnleash>()
+        register<FakeArenaOppslagGateway>()
     }
 
     @Test
@@ -125,6 +128,8 @@ class VedtakslengdeStegTest {
             ),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
             tidligereVurderinger = FakeTidligereVurderinger(),
+            arenaMigreringService = ArenaMigreringService(inMemoryRepositoryProvider, gatewayProvider),
+            unleashGateway = gatewayProvider.provide(),
         )
 
         steg.utfør(kontekst)
