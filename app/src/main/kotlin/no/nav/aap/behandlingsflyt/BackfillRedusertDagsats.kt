@@ -6,16 +6,23 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature.BackfillRedusertDagsats
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import javax.sql.DataSource
+import kotlin.collections.component1
 
 private val log = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.BackfillRedusertDagsats")
 private val teamLogs = LoggerFactory.getLogger("team-logs")
+
+enum class UnleashVariant(val unleashNavn: String) {
+    LISTE("inkluder-sakId-liste"),
+    INTERVALL("inkluder-sakId-intervall");
+}
 
 class BackfillRedusertDagsats(
     private val dataSource: DataSource,
@@ -23,6 +30,15 @@ class BackfillRedusertDagsats(
 ) {
     private val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
+    /**
+     * Backfill kjører kontinuerlig, vær obs ved toggle bruk
+     *
+     * UnleashVariant-ene vil kun trigge nye runder med backfill hvis saksId-ene
+     * endres i input til toggle
+     *
+     * OBS! Uansett utvalgsmetode i unleash vil app restart/deploy trigge ny kjøring
+     * Men kun kandidater som fortsatt mangler redusertDagsats vil backfilles
+     */
     fun kjør() {
         Thread.ofVirtual()
             .name("backfillRedusertDagsats")
@@ -30,7 +46,7 @@ class BackfillRedusertDagsats(
                 var forrigeSakIdUtvalg: List<Long>? = null
                 while (true) {
                     try {
-                        if (erForutsetningerOppfylt()) {
+                        if (erBackfillForutsetningerOppfylt()) {
                             val sakIdUtvalg = hentSakIdUtvalg()
                             if (erSakIdUtvalgEndret(forrigeSakIdUtvalg, sakIdUtvalg)) {
                                 backfillRedusertDagsatsLoop(sakIdUtvalg)
@@ -54,16 +70,77 @@ class BackfillRedusertDagsats(
             }
     }
 
-    private fun hentSakIdUtvalg(): List<Long> = unleashGateway.getVariantValue(
-        BehandlingsflytFeature.BackfillRedusertDagsats,
-        "backfill-saker-ider"
-    ).split(",").map(String::toLong)
+    private fun hentSakIdUtvalg(): List<Long> {
+        for (variant in UnleashVariant.entries) {
+            if (erUnleashVariantPå(variant.unleashNavn)) {
+                return when (variant) {
+                    UnleashVariant.LISTE -> hentSakIdUtvalgForVariant(UnleashVariant.LISTE)
+                    UnleashVariant.INTERVALL -> hentSakIdUtvalgForVariant(UnleashVariant.INTERVALL)
+                }
+            }
+        }
+        return emptyList()
+    }
+
+    private fun hentSakIdUtvalgForVariant(variant: UnleashVariant): List<Long> {
+        val inkluderSakIder = hentSakIdUtvalgFraUnleashVariant(variant)
+        if (inkluderSakIder.any { it == null }) {
+            log.warn(
+                "Ugyldig verdi i unleash variant '$variant'. Avbryter backfill av redusertDagsats"
+            )
+            return emptyList()
+        }
+        return inkluderSakIder.filterNotNull()
+    }
+
+    private fun erUnleashVariantPå(variantNavn: String): Boolean =
+        unleashGateway.isVariantEnabled(BackfillRedusertDagsats, variantNavn)
+
+    private fun hentSakIdUtvalgFraUnleashVariant(variant: UnleashVariant): List<Long?> {
+        val utvalg = unleashGateway.getVariantValue(
+            BackfillRedusertDagsats,
+            variant.unleashNavn
+        )
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .map(SakId::fromStringOrNull)
+            .map { it?.toLong() }
+            .toList()
+        when(variant) {
+            UnleashVariant.LISTE -> return utvalg
+            UnleashVariant.INTERVALL -> {
+                if (!erGyldigIntervall(utvalg)) return listOf(null)
+                val (første, siste) = utvalg.filterNotNull()
+                var utvalgFraIntervall = buildList {
+                    for (id in første..siste) {
+                        add(id)
+                    }
+                }
+                return utvalgFraIntervall
+            }
+        }
+    }
+
+    private fun erGyldigIntervall(intervallUtvalg: List<Long?>): Boolean {
+        if (intervallUtvalg.size != 2) {
+            return false
+        }
+        if (intervallUtvalg.any { it == null }) {
+            return false
+        }
+        val (første, siste) = intervallUtvalg.filterNotNull()
+        if (første >= siste) {
+            return false
+        }
+        return true
+    }
 
     /**
      * Backfill rutiner skal kun kjøre på leader pod instansen i gcp og kun når unleash toggle er på
      */
-    private fun erForutsetningerOppfylt(): Boolean {
-        return isLeader(log) && unleashGateway.isEnabled(BehandlingsflytFeature.BackfillRedusertDagsats)
+    private fun erBackfillForutsetningerOppfylt(): Boolean {
+        return isLeader(log) && unleashGateway.isEnabled(BackfillRedusertDagsats)
     }
 
     private fun erSakIdUtvalgEndret(
@@ -95,6 +172,7 @@ class BackfillRedusertDagsats(
 
             val behandlingService =
                 BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            // TODO : alleYtelsesbehandlinger dropper avbrutte.. er det greit for backfill varianten vår?
             val behandlinger = behandlingService.alleYtelsesbehandlinger(sak.id)
 
             val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
@@ -108,14 +186,6 @@ class BackfillRedusertDagsats(
                     taSkriveLåsRepository.withLåstBehandling(behandling.id) {
                         val resultat = backfillService.backfillBehandling(behandling)
                         when (resultat) {
-                            BackfillBehandlingResultat.AlleredeBackfilled -> {
-                                log.info(
-                                    "Behandling ${behandling.id.toLong()} i sak ${sak.id.toLong()} " +
-                                            "hadde allerede redusertDagsats – stopper backfill for saken"
-                                )
-                                sakenErFerdigBackfilled = true
-                            }
-
                             BackfillBehandlingResultat.Backfilled -> {
                                 antallBackfillUtført++
                                 if (antallBackfillUtført % 1000 == 0) {
