@@ -12,12 +12,12 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørDelvisUfør
 import no.nav.aap.behandlingsflyt.behandling.brev.Vedtak11_18OpphørFullUfør
 import no.nav.aap.behandlingsflyt.behandling.brev.VedtakEndringDødsfall
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
+import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygdV2
 import no.nav.aap.behandlingsflyt.behandling.brev.YrkesskadeBeregningBrev
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
@@ -432,6 +432,28 @@ class BrevGateway : BrevbestillingGateway {
                         aarsakTidspunktVurderingTilFaktagrunnlag(grunnlag)?.let { add(it) }
                     }
                     brevBehov.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
+                }
+            }
+
+            is VurderesForUføretrygdV2 -> {
+                buildSet {
+                    brevBehov.ordinærAAP?.let { ordinær ->
+                        add(Faktagrunnlag.AapFomDato(ordinær.virkningstidspunkt))
+                        add(Faktagrunnlag.SisteDagMedYtelse(ordinær.sisteDagMedYtelse))
+                        ordinær.tilkjentYtelse?.let { add(tilkjentYtelseTilFaktagrunnlag(it)) }
+                        ordinær.grunnlagBeregning?.let { grunnlag ->
+                            add(grunnlagBeregningTilFaktagrunnlag(grunnlag))
+                            aarsakTidspunktVurderingTilFaktagrunnlag(grunnlag)?.let { add(it) }
+                        }
+                        ordinær.sykdomsvurdering?.let { add(Faktagrunnlag.Sykdomsvurdering(it)) }
+                        ordinær.foreldreansvarVurderinger?.let { add(foreldreansvarVurderingerTilFaktaGrunnlag(it)) }
+                        ordinær.forholdTilAndreYtelser?.let { add(forholdTilAndreYtelserTilFaktagrunnlag(it)) }
+                        ordinær.yrkesskadeBeregning?.let { add(yrkesskadeBeregningTilFaktagrunnlag(it)) }
+                        ordinær.yrkesSkadeISøknadIkkeIRegister?.let { add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it)) }
+                        ordinær.meldepliktGrunnlag?.let { add(fritakmeldepliktTilFaktagrunnlag(it)) }
+                    }
+                    brevBehov.uføreVurdering.sisteDagMedYtelse.let { add(Faktagrunnlag.SisteDagMedYtelse(it)) }
+                    brevBehov.uføreVurdering.kravdatoUføretrygd.let { add(Faktagrunnlag.KravdatoUføretrygd(it))}
                 }
             }
 
