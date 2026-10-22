@@ -83,8 +83,6 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
         """.trimIndent(), etableringEgenvirksomhetVurderinger
         ) {
             setParams {
-                setLong(8, lagreUtviklingsperiode(it.utviklingsPerioder))
-                setLong(9, lagreOppstartsperiode(it.oppstartsPerioder))
                 setString(1, it.begrunnelse)
                 setBoolean(2, it.foreliggerFagligVurdering)
                 setBoolean(3, it.virksomhetErNy)

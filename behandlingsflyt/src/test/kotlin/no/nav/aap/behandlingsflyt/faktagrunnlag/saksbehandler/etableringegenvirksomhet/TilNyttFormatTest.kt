@@ -120,13 +120,9 @@ class TilNyttFormatTest {
     fun `mapper alle vurderinger når listen har flere elementer`() {
         val gammel = listOf(
             konstruerVurdering {
-                fom = 1 januar 2026
-                tom = 31 januar 2026
                 utviklingsperioder = listOf((1 februar 2026) to (1 mars 2026))
             },
             konstruerVurdering {
-                fom = 1 mars 2026
-                tom = 31 mars 2026
                 oppstartsperioder = listOf((2 mars 2026) to (10 mars 2026))
             },
             konstruerVurdering {
