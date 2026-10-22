@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettRevurdering
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
@@ -568,18 +569,36 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `finner behandlinger som mangler redusert dagsats`() {
+    fun `finn behandlinger som mangler redusert dagsats returnerer korrekt behandling`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val behandlingUtenDagsats = opprettKlagebehandling(connection, sak)
-            val behandlingMedDagsats = finnEllerOpprettBehandling(connection, sak)
-            lagreTilkjentYtelse(connection, behandlingUtenDagsats, manglerRedusertDagsats = true)
-            lagreTilkjentYtelse(connection, behandlingMedDagsats.id, manglerRedusertDagsats = false)
+            val behandlingUtenRedusertDagsats = opprettKlagebehandling(connection, sak)
+            val behandlingMedRedusertDagsats = finnEllerOpprettBehandling(connection, sak)
+            lagreTilkjentYtelse(connection, behandlingUtenRedusertDagsats, manglerRedusertDagsats = true)
+            lagreTilkjentYtelse(connection, behandlingMedRedusertDagsats.id, manglerRedusertDagsats = false)
 
             val behandlinger = BehandlingRepositoryImpl(connection)
                 .finnBehandlingerSomManglerRedusertDagsats(sak.id)
 
-            assertThat(behandlinger).containsExactly(behandlingUtenDagsats)
+            assertThat(behandlinger).containsExactly(behandlingUtenRedusertDagsats)
+        }
+    }
+
+    @Test
+    fun `finn behandlinger som mangler redusert dagsats returnerer alle relevante for gitt sak`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val førsteBehandling = finnEllerOpprettBehandling(connection, sak)
+            val revurdering = opprettRevurdering(connection, sak)
+            val klage = opprettKlagebehandling(connection, sak)
+            lagreTilkjentYtelse(connection, førsteBehandling.id, manglerRedusertDagsats = true)
+            lagreTilkjentYtelse(connection, revurdering.id, manglerRedusertDagsats = true)
+            lagreTilkjentYtelse(connection, klage, manglerRedusertDagsats = false)
+
+            val behandlinger = BehandlingRepositoryImpl(connection)
+                .finnBehandlingerSomManglerRedusertDagsats(sak.id)
+
+            assertThat(behandlinger).containsExactlyInAnyOrder(førsteBehandling.id, revurdering.id)
         }
     }
 
