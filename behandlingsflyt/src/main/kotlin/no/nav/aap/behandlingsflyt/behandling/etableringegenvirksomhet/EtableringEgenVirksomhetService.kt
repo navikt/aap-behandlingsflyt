@@ -1,13 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.justerEtableringPerioder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -93,7 +92,7 @@ class EtableringEgenVirksomhetService(
     data class Beregning(
         val gamleVurderinger: List<EtableringEgenVirksomhetVurdering>,
         val beregnedeVurderinger: List<EtableringEgenVirksomhetVurdering>,
-        val gjeldendeVurderinger: Set<EtableringEgenVirksomhetVurdering>
+        val gjeldendeVurderinger: Tidslinje<EtableringEgenVirksomhetVurdering>
     )
 
     private fun beregnVurderinger(
@@ -101,56 +100,41 @@ class EtableringEgenVirksomhetService(
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
-        val justerteVurderinger = justerEtableringPerioder(nyeVurderinger)
-
-        val gamleVurderinger =
-            justerEtableringPerioder(
-                behandling.forrigeBehandlingId
-                    ?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }
-                    ?.vurderinger
-                    .orEmpty())
+        val gamleVurderinger = behandling.forrigeBehandlingId
+            ?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }
+            ?.vurderinger
+            .orEmpty()
 
         val gamleVurderingerUtenOverstyrte = gamleVurderinger.filterNot { gammel ->
-            justerteVurderinger.any { ny -> ny.fase == gammel.fase && ny.fom == gammel.fom }
+            nyeVurderinger.any { ny -> ny.fase == gammel.fase && ny.fom == gammel.fom }
         }
 
-        val aktiveVurderingerForValidering = (gamleVurderingerUtenOverstyrte + justerteVurderinger)
-
-        val skalValideres = justerteVurderinger.filter { it.vurdertIBehandling == behandlingId }.toSet()
-
-        val sisteVurderingPerFase = aktiveVurderingerForValidering
-            .filter { it.fase != null }
-            .groupBy { it.fase }
-            .mapNotNull { (_, vurderinger) -> vurderinger.maxByOrNull { it.fom } }
-            .toSet()
-
-        val beregnedeVurderinger = aktiveVurderingerForValidering.map { vurdering ->
-            when {
-                vurdering !in skalValideres -> vurdering
-                vurdering.fase == null -> vurdering
-                vurdering in sisteVurderingPerFase -> {
-                    val tom = when (val resultat = beregnTomForSistePeriode(
-                        vurderinger = aktiveVurderingerForValidering,
-                        sisteVurdering = vurdering
-                    )) {
-                        is TilOgMedBeregning.Beregnet -> resultat.tom
-                        is TilOgMedBeregning.Feil -> return resultat.feilObjekt
-                    }
-                    vurdering.copy(tom = tom)
-                }
-
-                else -> vurdering
+        val beregnedeVurderinger = (gamleVurderingerUtenOverstyrte + nyeVurderinger).toMutableList()
+        val vurderingerSomSkalBeregnes = beregnedeVurderinger.indices
+            .filter { index ->
+                val vurdering = beregnedeVurderinger[index]
+                vurdering.vurdertIBehandling == behandlingId && vurdering.fase != null
             }
+            .sortedBy { beregnedeVurderinger[it].fom }
+
+        for (index in vurderingerSomSkalBeregnes) {
+            val vurdering = beregnedeVurderinger[index]
+            val tom = when (val resultat = beregnTomForSistePeriode(
+                vurderinger = beregnedeVurderinger,
+                sisteVurdering = vurdering
+            )) {
+                is TilOgMedBeregning.Beregnet -> resultat.tom
+                is TilOgMedBeregning.Feil -> return resultat.feilObjekt
+            }
+            beregnedeVurderinger[index] = vurdering.copy(tom = tom)
         }
 
-        val gjeldendeVurderinger = (gamleVurderingerUtenOverstyrte + beregnedeVurderinger)
-            .gjeldendeVurderinger()
-            .verdier().toSet()
+        val gjeldendeVurderinger = beregnedeVurderinger.gjeldendeVurderinger()
 
         return VirksomhetEtableringResultat.Gyldig(
             Beregning(
                 gamleVurderinger,
-                beregnedeVurderinger,
+                beregnedeVurderinger.toList(),
                 gjeldendeVurderinger
             )
         )
@@ -172,7 +156,7 @@ class EtableringEgenVirksomhetService(
             ?: validerInnenforGyldighetsperiode(gyldighetPeriode, beregning.beregnedeVurderinger)
             ?: validerFaseOgPerioderForAlle(beregning)
             ?: validerOppstartEtterUtvikling(alleUtviklingsPerioder, alleOppstartsPerioder)
-            ?: validerDagkvoter(beregning.gjeldendeVurderinger.toList())
+            ?: validerDagkvoter(beregning.gjeldendeVurderinger)
     }
 
     private fun validerGyldighetsperiodeFinnes(gyldighetPeriode: List<Periode>): VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfylt? {
@@ -204,8 +188,9 @@ class EtableringEgenVirksomhetService(
 
     private fun validerFaseOgPerioderForAlle(beregning: Beregning): VirksomhetEtableringResultat.Ugyldig? =
         beregning.beregnedeVurderinger.firstNotNullOfOrNull { vurdering ->
-            val historikk = (beregning.gamleVurderinger + beregning.beregnedeVurderinger)
-                .filter { it != vurdering }
+            val historikk = beregning.gjeldendeVurderinger.segmenter()
+                .filter { it.verdi != vurdering }
+                .map { it.verdi.copy(fom = it.periode.fom, tom = it.periode.tom) }
             validerFaseOgPeriode(vurdering, historikk)
         }
 
@@ -214,16 +199,19 @@ class EtableringEgenVirksomhetService(
         alleOppstartsPerioder: List<Periode>
     ): VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling? {
         val sisteUtviklingsPeriodeTom = alleUtviklingsPerioder.maxOfOrNull { it.tom } ?: return null
-        if (alleOppstartsPerioder.any { it.fom.isBefore(sisteUtviklingsPeriodeTom) }) {
+        if (alleOppstartsPerioder.any { !it.fom.isAfter(sisteUtviklingsPeriodeTom) }) {
             return VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling
         }
         return null
     }
 
     private fun validerDagkvoter(
-        alleVurderinger: List<EtableringEgenVirksomhetVurdering>
+        alleVurderinger: Tidslinje<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter? {
-        val (bruktUtviklingsDager, bruktOppstartsdager) = alleVurderinger.brukteDager()
+        val bruktUtviklingsDager = alleVurderinger.perioderForFase(EtableringFase.UTVIKLING)
+            .sumOf { it.antallHverdager().asInt }
+        val bruktOppstartsdager = alleVurderinger.perioderForFase(EtableringFase.OPPSTART)
+            .sumOf { it.antallHverdager().asInt }
 
         if (bruktUtviklingsDager > EtableringFase.UTVIKLING.maksHverdager) {
             return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.UTVIKLING, bruktUtviklingsDager)
@@ -234,15 +222,10 @@ class EtableringEgenVirksomhetService(
         return null
     }
 
-    private fun Collection<EtableringEgenVirksomhetVurdering>.perioderForFase(fase: EtableringFase): List<Periode> =
-        mapNotNull { vurdering ->
-            if (vurdering.fase == fase) vurdering.tom?.let {
-                Periode(
-                    vurdering.fom,
-                    it
-                )
-            } else null
-        }
+    private fun Tidslinje<EtableringEgenVirksomhetVurdering>.perioderForFase(fase: EtableringFase): List<Periode> =
+        segmenter()
+            .filter { it.verdi.fase == fase }
+            .map { it.periode }
 
     fun utledPerioderMedSykdomOgBistand(
         behandlingId: BehandlingId

@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -538,7 +539,7 @@ class BackfillEtableringVurderingerTest {
         val før = listOf(oppfylt, ikkeOppfylt, utenPerioder)
         val etter = før.flatMap { migrert(it) }
 
-        assertThat(evalueringer(før)).containsExactly(true, false, false)
+        assertThat(evalueringer(før.tilNyttFormat())).containsExactly(true, true, false, false)
         assertThat(varighet(etter)).isEqualTo(varighet(før))
         assertThat(etter.map { it.evaluerVirksomhetVurdering() }).containsExactlyInAnyOrder(true, true, false, false)
         assertValideringUendret(før, etter)
@@ -716,6 +717,8 @@ class BackfillEtableringVurderingerTest {
         fase = EtableringFase.UTVIKLING,
         fom = periode.fom,
         tom = periode.tom,
+        erRegistrertINødvendigeOffentligeRegister = null,
+        jobberBrukerAktivMedVirksomheten = true
     )
 
     private fun EtableringEgenVirksomhetVurdering.somOppstart(periode: Periode) = copy(
@@ -724,6 +727,8 @@ class BackfillEtableringVurderingerTest {
         fase = EtableringFase.OPPSTART,
         fom = periode.fom,
         tom = periode.tom,
+        erRegistrertINødvendigeOffentligeRegister = true,
+        jobberBrukerAktivMedVirksomheten = true
     )
 
     private fun vurdering(
@@ -736,6 +741,7 @@ class BackfillEtableringVurderingerTest {
         virksomhetNavn: String = "Trout&Tractor",
         opprettet: Instant = Instant.parse("2025-01-01T00:00:00Z"),
         virksomhetErNy: Boolean = false,
+        erRegistrert: Boolean? = null,
     ) = EtableringEgenVirksomhetVurdering(
         begrunnelse = "Historisk vurdering",
         virksomhetNavn = virksomhetNavn,
@@ -752,8 +758,8 @@ class BackfillEtableringVurderingerTest {
         fom = fom,
         tom = tom,
         fase = fase,
-        erRegistrertINødvendigeOffentligeRegister = null,
-        jobberBrukerAktivMedVirksomheten = null,
+        erRegistrertINødvendigeOffentligeRegister = erRegistrert,
+        jobberBrukerAktivMedVirksomheten = true,
     )
 
     private fun opprettBehandling(): BehandlingId = dataSource.transaction { connection ->

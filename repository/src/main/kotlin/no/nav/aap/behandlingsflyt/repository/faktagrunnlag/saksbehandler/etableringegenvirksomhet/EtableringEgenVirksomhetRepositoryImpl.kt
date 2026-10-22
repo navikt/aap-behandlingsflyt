@@ -83,14 +83,8 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
         """.trimIndent(), etableringEgenvirksomhetVurderinger
         ) {
             setParams {
-                val gammeltFormat = it.tilGammeltFormat()
-                val utviklingsperioder =
-                    if (it.tom == null) emptyList() else gammeltFormat.utviklingsPerioder
-                val oppstartsperioder =
-                    if (it.tom == null) emptyList() else gammeltFormat.oppstartsPerioder
-
-                setLong(8, lagreUtviklingsperiode(utviklingsperioder))
-                setLong(9, lagreOppstartsperiode(oppstartsperioder))
+                setLong(8, lagreUtviklingsperiode(it.utviklingsPerioder))
+                setLong(9, lagreOppstartsperiode(it.oppstartsPerioder))
                 setString(1, it.begrunnelse)
                 setBoolean(2, it.foreliggerFagligVurdering)
                 setBoolean(3, it.virksomhetErNy)
@@ -98,8 +92,8 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setBoolean(5, it.kanFøreTilSelvforsørget)
                 setString(6, it.virksomhetNavn)
                 setString(7, it.orgNr)
-                setLong(8, lagreUtviklingsperiode(utviklingsperioder))
-                setLong(9, lagreOppstartsperiode(oppstartsperioder))
+                setLong(8, lagreUtviklingsperiode(it.utviklingsPerioder))
+                setLong(9, lagreOppstartsperiode(it.oppstartsPerioder))
                 setLong(10, vurderingerId)
                 setLong(11, it.vurdertIBehandling.id)
                 setString(12, it.vurdertAv.ident)
@@ -181,7 +175,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET")
                 )
             }
-        }.tilNyttFormat()
+        }
     }
 
     private fun hentVirksomhetUtviklingsperioder(utviklingsperioderId: Long?): List<Periode> {
