@@ -1,21 +1,18 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -25,7 +22,6 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import kotlin.collections.all
 
 class SjekkInstitusjonsOppholdJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
@@ -33,7 +29,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
     private val institusjonsOppholdRepository: InstitusjonsoppholdRepository,
     private val behandlingService: BehandlingService,
     private val trukketSøknadService: TrukketSøknadService,
-    private val behandlingRepository: BehandlingRepository,
     private val underveisgrunnlagRepository: UnderveisRepository,
 ) : JobbUtfører {
 
@@ -142,7 +137,6 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                 institusjonsOppholdRepository = repositoryProvider.provide(),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
-                behandlingRepository = repositoryProvider.provide(),
                 underveisgrunnlagRepository = repositoryProvider.provide(),
             )
         }
