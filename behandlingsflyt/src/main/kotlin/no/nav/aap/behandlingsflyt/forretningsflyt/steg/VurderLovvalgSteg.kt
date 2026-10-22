@@ -2,7 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgVurderingsgrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
@@ -10,8 +11,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovval
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -27,7 +30,6 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.lazy
@@ -52,8 +54,8 @@ class VurderLovvalgSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
-        opprettDelvurderinger(kontekst, grunnlag)
+        val registerGrunnlag = lazy { hentRegisterGrunnlag(kontekst.sakId, kontekst.behandlingId) }
+        opprettDelvurderinger(kontekst, registerGrunnlag)
 
         val tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov()  // med MOTTATT_SØKNAD
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
@@ -62,7 +64,7 @@ class VurderLovvalgSteg private constructor(
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
-            tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
+            tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst) },
         )
 
         when (kontekst.vurderingType) {
@@ -70,13 +72,15 @@ class VurderLovvalgSteg private constructor(
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING -> {
-                // Hent grunnlag på nytt da det kan ha blitt tilbakestilt
-                val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                val lovvalgDelvurderinger = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
-                // TODO: Bruke delvurderingene for å vurdere vilkåeret
-                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, kontekst.vurderingType)
-                    .vurder(grunnlag)
+                // Manuelle vurderinger hentes på nytt da de kan ha blitt tilbakestilt
+                val vurderingsgrunnlag = MedlemskapLovvalgVurderingsgrunnlag(
+                    register = registerGrunnlag.value,
+                    delvurdering = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId),
+                    manuelleVurderinger = hentManuelleVurderinger(kontekst.behandlingId),
+                )
+                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
+                    .vurder(vurderingsgrunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
 
@@ -98,17 +102,15 @@ class VurderLovvalgSteg private constructor(
 
     private fun opprettDelvurderinger(
         kontekst: FlytKontekstMedPerioder,
-        grunnlag: Lazy<MedlemskapLovvalgGrunnlag>
+        registerGrunnlag: Lazy<MedlemskapLovvalgRegisterGrunnlag>
     ) {
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING -> {
-                val grunnlagUtenManuellVurdering = grunnlag.value.utenManuelleVurderinger()
-
                 val tilhørighetVurdering = MedlemskapLovvalgVurderingService().vurderTilhørighet(
-                    grunnlagUtenManuellVurdering,
+                    registerGrunnlag.value,
                     kontekst.rettighetsperiode,
                     kontekst.vurderingType
                 )
@@ -125,12 +127,11 @@ class VurderLovvalgSteg private constructor(
     private fun perioderSomIkkeErTilstrekkeligVurdert (
         kontekst: FlytKontekstMedPerioder,
     ): Set<Periode> {
-        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val relevantTidslinje = nårVurderingErRelevant(kontekst)
         val kanVurderesAutomatiskTidslinje = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)?.kanVurderesAutomatiskTidslinje() ?: Tidslinje.empty()
-        val manuelleVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger()
+        val manuelleVurderinger = hentManuelleVurderinger(kontekst.behandlingId).gjeldendeVurderinger()
 
-        return Tidslinje.map3(relevantTidslinje, manuelleVurderinger.orEmpty(), kanVurderesAutomatiskTidslinje) { relevant, manuellVurdering, automatiskVurdering ->
+        return Tidslinje.map3(relevantTidslinje, manuelleVurderinger, kanVurderesAutomatiskTidslinje) { relevant, manuellVurdering, automatiskVurdering ->
             relevant == true && manuellVurdering == null && automatiskVurdering != true
         }.filter { it.verdi }.perioder().toSet()
     }
@@ -172,14 +173,13 @@ class VurderLovvalgSteg private constructor(
 
     private fun tilbakestillVurderinger(
         kontekst: FlytKontekstMedPerioder,
-        grunnlag: MedlemskapLovvalgGrunnlag
     ) {
         val forrigeVurderinger = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
             medlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
                 ?.vurderinger
         } ?: emptyList()
 
-        if (forrigeVurderinger.toSet() != grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.toSet()) {
+        if (forrigeVurderinger.toSet() != hentManuelleVurderinger(kontekst.behandlingId).toSet()) {
             medlemskapArbeidInntektRepository.lagreVurderinger(
                 kontekst.behandlingId,
                 forrigeVurderinger,
@@ -190,7 +190,11 @@ class VurderLovvalgSteg private constructor(
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
         setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD)
 
-    private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgGrunnlag {
+    private fun hentManuelleVurderinger(behandlingId: BehandlingId): List<ManuellVurderingForLovvalgMedlemskap> {
+        return medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+    }
+
+    private fun hentRegisterGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgRegisterGrunnlag {
         val medlemskapArbeidInntektGrunnlag =
             medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)
         val oppgittUtenlandsOppholdGrunnlag =
@@ -199,14 +203,13 @@ class VurderLovvalgSteg private constructor(
 
         val brukerPersonopplysning = personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandlingId)
 
-        val grunnlag = MedlemskapLovvalgGrunnlag(
+        return MedlemskapLovvalgRegisterGrunnlag.fra(
             medlemskapArbeidInntektGrunnlag,
             brukerPersonopplysning,
             oppgittUtenlandsOppholdGrunnlag,
             vurderBosattStatusOgNorskStatsborgerskap =
                 unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp),
         )
-        return grunnlag
     }
 
     override val stegType = type()

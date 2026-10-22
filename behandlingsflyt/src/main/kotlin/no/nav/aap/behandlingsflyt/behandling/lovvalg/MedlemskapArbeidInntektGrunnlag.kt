@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
@@ -12,18 +13,45 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-data class MedlemskapLovvalgGrunnlag(
-    val medlemskapArbeidInntektGrunnlag: MedlemskapArbeidInntektGrunnlag?,
+/**
+ * Registerdata og søknadsdata som delvurderingene av lovvalg og medlemskap utledes fra.
+ * Inneholder ingen vurderinger.
+ */
+data class MedlemskapLovvalgRegisterGrunnlag(
+    val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
+    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val personopplysning: Personopplysning?,
     val nyeSoknadGrunnlag: UtenlandsOppholdData?,
     val vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
-) : Faktagrunnlag {
-    fun utenManuelleVurderinger(): MedlemskapLovvalgGrunnlag {
-        return this.copy(
-            medlemskapArbeidInntektGrunnlag = this.medlemskapArbeidInntektGrunnlag?.copy(
-                vurderinger = emptyList()
-            )
+) {
+    companion object {
+        fun fra(
+            medlemskapArbeidInntektGrunnlag: MedlemskapArbeidInntektGrunnlag?,
+            personopplysning: Personopplysning?,
+            nyeSoknadGrunnlag: UtenlandsOppholdData?,
+            vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
+        ) = MedlemskapLovvalgRegisterGrunnlag(
+            medlemskapGrunnlag = medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag,
+            inntekterINorgeGrunnlag = medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag.orEmpty(),
+            arbeiderINorgeGrunnlag = medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag.orEmpty(),
+            personopplysning = personopplysning,
+            nyeSoknadGrunnlag = nyeSoknadGrunnlag,
+            vurderBosattStatusOgNorskStatsborgerskap = vurderBosattStatusOgNorskStatsborgerskap,
         )
+    }
+}
+
+/**
+ * Grunnlaget for Medlemskapvilkåret: registerdata, lagret delvurdering og manuelle vurderinger.
+ */
+data class MedlemskapLovvalgVurderingsgrunnlag(
+    val register: MedlemskapLovvalgRegisterGrunnlag,
+    val delvurdering: LovvalgDelvurderingerGrunnlag?,
+    val manuelleVurderinger: List<ManuellVurderingForLovvalgMedlemskap>,
+) : Faktagrunnlag {
+    fun gjeldendeManuelleVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
+        return manuelleVurderinger.gjeldendeVurderinger()
     }
 }
 
