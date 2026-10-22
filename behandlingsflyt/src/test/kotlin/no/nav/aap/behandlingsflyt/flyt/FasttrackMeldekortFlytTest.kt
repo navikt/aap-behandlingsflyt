@@ -43,7 +43,9 @@ class FasttrackMeldekortFlytTest :
 
     @BeforeAll
     fun settOppFGB() = snapshotEtterSetup {
-        sak = happyCaseFørstegangsbehandling(fom = søknadsdato)
+        val person = TestPersoner.STANDARD_PERSON()
+        this.person = person
+        sak = happyCaseFørstegangsbehandling(fom = søknadsdato, person = person)
     }
 
     @Test

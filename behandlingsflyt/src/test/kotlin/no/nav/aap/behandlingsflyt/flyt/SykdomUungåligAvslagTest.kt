@@ -21,6 +21,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -29,347 +31,43 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
 @ParameterizedClass
-@MethodSource("unleashTestDataSource")
-class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
-    AbstraktFlytOrkestratorTest(unleashGateway) {
+@MethodSource("no.nav.aap.behandlingsflyt.flyt.AbstraktFlytOrkestratorTest#unleashTestDataSource")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class SykdomUungåligAvslagTest {
 
-    @Test
-    fun `Oppfyller ikke 11-5`() {
-        val fom = LocalDate.now().minusMonths(3)
+    @field:Parameter
+    lateinit var unleashGateway: KClass<out UnleashGateway>
 
-        val person = TestPersoner.STANDARD_PERSON()
+    @Nested
+    inner class AndreSykdomsvurderinger : AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@SykdomUungåligAvslagTest.unleashGateway
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-        )
+        @Test
+        fun `Oppfyller ikke 11-5`() {
+            val fom = LocalDate.now().minusMonths(3)
 
-        behandling.løsAvklaringsBehov(
-            AvklarSykdomLøsning(
-                løsningerForPerioder = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er ikke syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                        harSkadeSykdomEllerLyte = false,
-                        erSkadeSykdomEllerLyteVesentligdel = null,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = null,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        harNedsattArbeidsevne = null,
-                        yrkesskadeBegrunnelse = null,
-                        fom = fom,
-                        tom = null
-                    )
-                )
-            ),
-        ).løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .medKontekst {
-                if (toggleForHoppOverBeslutter()) {
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                        .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
-                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-                } else {
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-                }
-            }
-        val behandlingMedFattetVedtak =
-            if (toggleForHoppOverBeslutter()) {
-                behandling
-            } else {
-                behandling.fattVedtak()
-            }
-        behandlingMedFattetVedtak
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+            val person = TestPersoner.STANDARD_PERSON()
 
-                val vedtak = hentVedtak()
-                assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
-
-                val resultat =
-                    ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
-                        behandling.id
-                    )
-
-                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-            }
-            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-            }
-
-        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
-            .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
-
-        behandling.medKontekst {
-            assertThat(avklaringsbehovSomMåLøses).isEmpty()
-        }
-    }
-
-    @Test
-    fun `Oppfyller ikke 11-5, men vil vurderes for 11-13, men få nei`() {
-        val person = TestPersoner.STANDARD_PERSON()
-
-        // Sender inn en søknad
-        val søknadsdato = LocalDate.now()
-        var (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = søknadsdato.atStartOfDay()
-        )
-
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = behandling.løsAvklaringsBehov(
-            AvklarSykdomLøsning(
-                løsningerForPerioder = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Er syk nok",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        // Nei på denne gir mulighet til å innvilge på 11-13
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
-                        yrkesskadeBegrunnelse = null,
-                        fom = sak.rettighetsperiode.fom,
-                        tom = null,
-                    )
-                )
-            ),
-        )
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
-                    "Viss varighet false skal gi avklaringsbehov for sykepengeerstatning"
-                ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-            }
-            .løsSykepengeerstatning(søknadsdato to false)
-            .medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-
-                val vedtak = hentVedtak()
-                assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
-
-                val resultat =
-                    ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
-                        behandling.id
-                    )
-
-                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-            }
-            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-            }
-
-        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
-            .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
-
-        behandling.medKontekst {
-            assertThat(avklaringsbehovSomMåLøses).isEmpty()
-        }
-    }
-
-
-    @Suppress("DANGEROUS_CHARACTERS")
-    @Test
-    fun `Oppfyller 11-5 med YS og kun 30% nedsatt, 11-6 OK, 11-22 YS ikke årsaksammenhengende`() {
-        val søknadsdato = 1 april 2025
-        val person = TestPersoner.PERSON_MED_YRKESSKADE()
-        sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = søknadsdato.atStartOfDay(),
-        )
-            .second
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
-                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    løsningerForPerioder = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-                            yrkesskadeBegrunnelse = "Skadd på jobb",
-                            fom = søknadsdato,
-                            tom = null,
-                        )
-                    )
-                ),
-            ).løsBistand(søknadsdato, true)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "Veldig relevante",
-                        relevanteYrkesskadeSaker = person.yrkesskade.map {
-                            YrkesskadeSakDto(
-                                it.saksreferanse,
-                                null,
-                            )
-                        },
-                        andelAvNedsettelsen = 50,
-                        erÅrsakssammenheng = false
-                    )
-                )
-            ).medKontekst {
-                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
-            }
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-
-                assertThat(hentVedtak().vedtakstidspunkt.toLocalDate()).isToday
-
-                val resultat =
-                    ResultatUtleder(repositoryProvider, minimalGatewayProvider()).utledResultatFørstegangsBehandling(
-                        behandling.id
-                    )
-
-                assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-            }
-            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
-            .medKontekst {
-                assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
-
-                val vilkårsresultat = hentVilkårsresultat()
-                val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
-                    .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
-
-                assertThat(avklaringsbehovSomMåLøses).isEmpty()
-            }
-    }
-
-    @Test
-    fun `Oppfyller 11-5, ikke oppfyller 11-6,ikke oppfyller 11-18,ikke oppfyller 11-17 - Skal gi avslag`() {
-
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = periode.fom.atStartOfDay())
-        behandling
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    løsningerForPerioder = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-                            yrkesskadeBegrunnelse = null,
-                            fom = periode.fom,
-                            tom = null
-                        )
-                    )
-                ),
-            )// Nei på 11-6
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    løsningerForPerioder = listOf(
-                        BistandLøsningDto(
-                            begrunnelse = "Overgang uføre",
-                            erBehovForAktivBehandling = false,
-                            erBehovForArbeidsrettetTiltak = false,
-                            erBehovForAnnenOppfølging = false,
-                            skalVurdereAapIOvergangTilArbeid = null,
-                            overgangBegrunnelse = "Yep",
-                            fom = periode.fom,
-                            tom = null
-                        )
-                    ),
-                ),
+            val (_, behandling) = sendInnFørsteSøknad(
+                person = person,
+                mottattTidspunkt = fom.atStartOfDay(),
             )
-            .løsOvergangUføre(fom = periode.fom)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .fattVedtak()
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-            }
 
-        val vedtak = hentVedtak(behandling.id)
-        assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
-
-        val resultat = dataSource.transaction {
-            ResultatUtleder(
-                postgresRepositoryRegistry.provider(it),
-                minimalGatewayProvider()
-            ).utledResultatFørstegangsBehandling(behandling.id)
-        }
-        assertThat(resultat).isEqualTo(Resultat.AVSLAG)
-    }
-
-    @Test
-    fun `Har periode med oppfylt 11-5 i en kort periode, men ikke etter - oppfyller 11-6 - Oppfyller ikke 11-17 - Skal gi avslag`() {
-        val periode115 = Periode(LocalDate.now(), LocalDate.now().plusMonths(1))
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = periode.fom.atStartOfDay())
-        behandling
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsAvklaringsBehov(
+            behandling.løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-                            yrkesskadeBegrunnelse = null,
-                            fom = periode115.fom,
-                            tom = periode115.tom
-                        ),
                         SykdomsvurderingLøsningDto(
                             begrunnelse = "Er ikke syk nok",
                             dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
@@ -379,66 +77,400 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                             harNedsattArbeidsevne = null,
                             yrkesskadeBegrunnelse = null,
-                            fom = periode115.tom.plusDays(1),
+                            fom = fom,
+                            tom = null
+                        )
+                    )
+                ),
+            ).løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .medKontekst {
+                    if (toggleForHoppOverBeslutter()) {
+                        assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                            .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
+                        assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                    } else {
+                        assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                        assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                    }
+                }
+            val behandlingMedFattetVedtak =
+                if (toggleForHoppOverBeslutter()) {
+                    behandling
+                } else {
+                    behandling.fattVedtak()
+                }
+            behandlingMedFattetVedtak
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+                    val vedtak = hentVedtak()
+                    assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+                    val resultat =
+                        ResultatUtleder(repositoryProvider, minimalGatewayProvider(unleashGateway())).utledResultatFørstegangsBehandling(
+                            behandling.id
+                        )
+
+                    assertThat(resultat).isEqualTo(Resultat.AVSLAG)
+                }
+                .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                }
+
+            val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+            val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+            assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
+                .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
+
+            behandling.medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
+            }
+        }
+
+        @Suppress("DANGEROUS_CHARACTERS")
+        @Test
+        fun `Oppfyller 11-5 med YS og kun 30% nedsatt, 11-6 OK, 11-22 YS ikke årsaksammenhengende`() {
+            val søknadsdato = 1 april 2025
+            val person = TestPersoner.PERSON_MED_YRKESSKADE()
+            sendInnFørsteSøknad(
+                person = person,
+                mottattTidspunkt = søknadsdato.atStartOfDay(),
+            )
+                .second
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
+                    assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .løsAvklaringsBehov(
+                    AvklarSykdomLøsning(
+                        løsningerForPerioder = listOf(
+                            SykdomsvurderingLøsningDto(
+                                begrunnelse = "Er syk nok",
+                                dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                                harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                                harSkadeSykdomEllerLyte = true,
+                                erSkadeSykdomEllerLyteVesentligdel = true,
+                                erNedsettelseIArbeidsevneMerEnnHalvparten = false,
+                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                                yrkesskadeBegrunnelse = "Skadd på jobb",
+                                fom = søknadsdato,
+                                tom = null,
+                            )
+                        )
+                    ),
+                ).løsBistand(søknadsdato, true)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsAvklaringsBehov(
+                    AvklarYrkesskadeLøsning(
+                        yrkesskadesvurdering = YrkesskadevurderingDto(
+                            begrunnelse = "Veldig relevante",
+                            relevanteYrkesskadeSaker = person.yrkesskade.map {
+                                YrkesskadeSakDto(
+                                    it.saksreferanse,
+                                    null,
+                                )
+                            },
+                            andelAvNedsettelsen = 50,
+                            erÅrsakssammenheng = false
+                        )
+                    )
+                ).medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+                }
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+
+                    assertThat(hentVedtak().vedtakstidspunkt.toLocalDate()).isToday
+
+                    val resultat =
+                        ResultatUtleder(repositoryProvider, minimalGatewayProvider(unleashGateway())).utledResultatFørstegangsBehandling(
+                            behandling.id
+                        )
+
+                    assertThat(resultat).isEqualTo(Resultat.AVSLAG)
+                }
+                .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
+                .medKontekst {
+                    assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+
+                    val vilkårsresultat = hentVilkårsresultat()
+                    val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+                    assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
+                        .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
+
+                    assertThat(avklaringsbehovSomMåLøses).isEmpty()
+                }
+        }
+
+        private fun toggleForHoppOverBeslutter(): Boolean {
+            return gatewayProvider.provide<UnleashGateway>()
+                .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
+        }
+    }
+
+    @Nested
+    inner class SøknadMottattIDag : AbstraktFlytOrkestratorSnapshotTest() {
+        override fun unleashGateway() = this@SykdomUungåligAvslagTest.unleashGateway
+
+        private val søknadsdato = LocalDate.now()
+        private lateinit var sak: Sak
+        private lateinit var behandling: Behandling
+
+        @BeforeAll
+        fun settOppSøknad() = snapshotEtterSetup {
+            val person = TestPersoner.STANDARD_PERSON()
+            this.person = person
+            sak = sendInnFørsteSøknad(
+                person = person,
+                mottattTidspunkt = søknadsdato.atStartOfDay()
+            ).first
+        }
+
+        @BeforeEach
+        fun hentBehandlingFraSnapshot() {
+            behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+        }
+
+        @Test
+        fun `Oppfyller ikke 11-5, men vil vurderes for 11-13, men få nei`() {
+            var behandling = this.behandling
+
+            assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+
+            behandling = behandling.løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            // Nei på denne gir mulighet til å innvilge på 11-13
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA_FORBIGÅENDE_PROBLEMER,
+                            yrkesskadeBegrunnelse = null,
+                            fom = sak.rettighetsperiode.fom,
                             tom = null,
                         )
                     )
                 ),
             )
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    løsningerForPerioder = listOf(
-                        BistandLøsningDto(
-                            begrunnelse = "Overgang uføre",
-                            erBehovForAktivBehandling = true,
-                            erBehovForArbeidsrettetTiltak = true,
-                            erBehovForAnnenOppfølging = null,
-                            skalVurdereAapIOvergangTilArbeid = true,
-                            overgangBegrunnelse = "Yep",
-                            fom = periode115.fom,
-                            tom = periode115.tom,
-                        ),
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).describedAs(
+                        "Viss varighet false skal gi avklaringsbehov for sykepengeerstatning"
+                    ).containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+                }
+                .løsSykepengeerstatning(søknadsdato to false)
+                .medKontekst {
+                    assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
+                }
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                        ),
-                ),
-            )
-            .løsAvklaringsBehov(
-                AvklarOvergangArbeidLøsning(
-                    listOf(
-                        OvergangArbeidVurderingLøsningDto(
-                            fom = periode115.tom.plusDays(1),
-                            tom = null,
-                            begrunnelse = "begrunnelse",
-                            brukerRettPåAAP = false
+                    val vedtak = hentVedtak()
+                    assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
+                    val resultat =
+                        ResultatUtleder(repositoryProvider, minimalGatewayProvider(unleashGateway())).utledResultatFørstegangsBehandling(
+                            behandling.id
+                        )
+
+                    assertThat(resultat).isEqualTo(Resultat.AVSLAG)
+                }
+                .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                }
+
+            val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+            val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+            assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1)
+                .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
+
+            behandling.medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
+            }
+        }
+
+        @Test
+        fun `Oppfyller 11-5, ikke oppfyller 11-6,ikke oppfyller 11-18,ikke oppfyller 11-17 - Skal gi avslag`() {
+
+            val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
+
+            val behandling = this.behandling
+            behandling
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .løsAvklaringsBehov(
+                    AvklarSykdomLøsning(
+                        løsningerForPerioder = listOf(
+                            SykdomsvurderingLøsningDto(
+                                begrunnelse = "Er syk nok",
+                                dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                                harSkadeSykdomEllerLyte = true,
+                                erSkadeSykdomEllerLyteVesentligdel = true,
+                                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                                harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                                yrkesskadeBegrunnelse = null,
+                                fom = periode.fom,
+                                tom = null
+                            )
+                        )
+                    ),
+                )// Nei på 11-6
+                .løsAvklaringsBehov(
+                    AvklarBistandsbehovLøsning(
+                        løsningerForPerioder = listOf(
+                            BistandLøsningDto(
+                                begrunnelse = "Overgang uføre",
+                                erBehovForAktivBehandling = false,
+                                erBehovForArbeidsrettetTiltak = false,
+                                erBehovForAnnenOppfølging = false,
+                                skalVurdereAapIOvergangTilArbeid = null,
+                                overgangBegrunnelse = "Yep",
+                                fom = periode.fom,
+                                tom = null
+                            )
+                        ),
+                    ),
+                )
+                .løsOvergangUføre(fom = periode.fom)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .fattVedtak()
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                }
+
+            val vedtak = hentVedtak(behandling.id)
+            assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
+
+            val resultat = dataSource.transaction {
+                ResultatUtleder(
+                    postgresRepositoryRegistry.provider(it),
+                    minimalGatewayProvider(unleashGateway())
+                ).utledResultatFørstegangsBehandling(behandling.id)
+            }
+            assertThat(resultat).isEqualTo(Resultat.AVSLAG)
+        }
+
+        @Test
+        fun `Har periode med oppfylt 11-5 i en kort periode, men ikke etter - oppfyller 11-6 - Oppfyller ikke 11-17 - Skal gi avslag`() {
+            val periode115 = Periode(søknadsdato, søknadsdato.plusMonths(1))
+            val periode = Periode(søknadsdato, søknadsdato.plusYears(3))
+
+            val behandling = this.behandling
+            behandling
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
+                .løsAvklaringsBehov(
+                    AvklarSykdomLøsning(
+                        løsningerForPerioder = listOf(
+                            SykdomsvurderingLøsningDto(
+                                begrunnelse = "Er syk nok",
+                                dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                                harSkadeSykdomEllerLyte = true,
+                                erSkadeSykdomEllerLyteVesentligdel = true,
+                                erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                                harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                                yrkesskadeBegrunnelse = null,
+                                fom = periode115.fom,
+                                tom = periode115.tom
+                            ),
+                            SykdomsvurderingLøsningDto(
+                                begrunnelse = "Er ikke syk nok",
+                                dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
+                                harSkadeSykdomEllerLyte = false,
+                                erSkadeSykdomEllerLyteVesentligdel = null,
+                                erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                                harNedsattArbeidsevne = null,
+                                yrkesskadeBegrunnelse = null,
+                                fom = periode115.tom.plusDays(1),
+                                tom = null,
+                            )
                         )
                     ),
                 )
-            )
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(periode.fom)
-            .løsAndreStatligeYtelser()
-            .foreslåVedtak()
-            .medKontekst {
-                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>()
-                    .hent(this.behandling.id)
+                .løsAvklaringsBehov(
+                    AvklarBistandsbehovLøsning(
+                        løsningerForPerioder = listOf(
+                            BistandLøsningDto(
+                                begrunnelse = "Overgang uføre",
+                                erBehovForAktivBehandling = true,
+                                erBehovForArbeidsrettetTiltak = true,
+                                erBehovForAnnenOppfølging = null,
+                                skalVurdereAapIOvergangTilArbeid = true,
+                                overgangBegrunnelse = "Yep",
+                                fom = periode115.fom,
+                                tom = periode115.tom,
+                            ),
 
-                assertThat(underveisGrunnlag.perioder).isNotEmpty
-                assertThat(underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }.size).isEqualTo(3)
-                assertThat(underveisGrunnlag.perioder.filter { it.utfall == Utfall.IKKE_OPPFYLT }.size).isEqualTo(
-                    underveisGrunnlag.perioder.size.minus(3)
+                            ),
+                    ),
                 )
+                .løsAvklaringsBehov(
+                    AvklarOvergangArbeidLøsning(
+                        listOf(
+                            OvergangArbeidVurderingLøsningDto(
+                                fom = periode115.tom.plusDays(1),
+                                tom = null,
+                                begrunnelse = "begrunnelse",
+                                brukerRettPåAAP = false
 
-            }
+                            )
+                        ),
+                    )
+                )
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsOppholdskrav(periode.fom)
+                .løsAndreStatligeYtelser()
+                .foreslåVedtak()
+                .medKontekst {
+                    val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>()
+                        .hent(this.behandling.id)
+
+                    assertThat(underveisGrunnlag.perioder).isNotEmpty
+                    assertThat(underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }.size).isEqualTo(3)
+                    assertThat(underveisGrunnlag.perioder.filter { it.utfall == Utfall.IKKE_OPPFYLT }.size).isEqualTo(
+                        underveisGrunnlag.perioder.size.minus(3)
+                    )
+
+                }
+        }
 
     }
 
-    private fun toggleForHoppOverBeslutter(): Boolean {
-        return gatewayProvider.provide<UnleashGateway>()
-            .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
-    }
 }

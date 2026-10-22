@@ -150,6 +150,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -1471,6 +1472,18 @@ open class AbstraktFlytOrkestratorTest(
     @JvmName("fattVedtakExt")
     protected fun Behandling.fattVedtak(): Behandling {
         return this.beslutterGodkjennerIkke(underkjennVurderinger = emptyList())
+    }
+
+    protected fun Behandling.fattVedtakEtterAvslagSykdom(): Behandling {
+        val hopperOverBeslutter = gatewayProvider.provide<UnleashGateway>()
+            .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
+        medKontekst {
+            assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                .containsOnly(if (hopperOverBeslutter) Definisjon.SKRIV_VEDTAKSBREV else Definisjon.FATTE_VEDTAK)
+            assertThat(behandling.status())
+                .isEqualTo(if (hopperOverBeslutter) Status.IVERKSETTES else Status.UTREDES)
+        }
+        return if (hopperOverBeslutter) this else fattVedtak()
     }
 
     @JvmName("foreslåVedtakExt")

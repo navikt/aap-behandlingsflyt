@@ -40,6 +40,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
@@ -50,8 +51,12 @@ import kotlin.reflect.KClass
 
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
-    AbstraktFlytOrkestratorTest(unleashGateway) {
+class RettighetsperiodeFlytTest : AbstraktFlytOrkestratorSnapshotTest() {
+
+    @field:Parameter
+    lateinit var unleashGateway: KClass<out UnleashGateway>
+
+    override fun unleashGateway() = unleashGateway
 
     @Test
     fun `Skal kunne overstyre rettighetsperioden på en revurdering - innskrenke perioden`() {

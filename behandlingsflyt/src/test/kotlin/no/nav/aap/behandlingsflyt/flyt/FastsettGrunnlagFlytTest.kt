@@ -25,7 +25,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 
-class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
     @Test
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
         val person = nyPerson(harYrkesskade = false, harUtenlandskOpphold = false, inntekter = mutableListOf())

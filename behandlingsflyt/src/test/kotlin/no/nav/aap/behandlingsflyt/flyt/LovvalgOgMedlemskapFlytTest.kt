@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -35,765 +37,759 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
-    @Test
-    fun `ved førstegangsbehandling med avslag før sykdom ved manglende medlemskap er ikke sykdomsvurdering for brev aktuelt`() {
-        val (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = LocalDate.now().atStartOfDay(),
-            søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
-        )
-
-        val oppdatertBehandling = behandling
-            .løsLovvalg(sak.rettighetsperiode.fom, false)
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
-
-        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
-    }
-
-    @Test
-    fun `automatisk ok førstegangsbehandling og revurderingsøknad med _nei_ på opphold i Norge som avbrytes - skal fortsatt ha automatisk innvilget i neste revurdering`() {
-        val (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = LocalDate.now().atStartOfDay(),
-            søknad = TestSøknader.STANDARD_SØKNAD.copy(medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", emptyList()))
-        )
-
-        val oppdatertBehandling = behandling
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(sak.rettighetsperiode.fom)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
-
-        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        sak.sendInnMeldekort(
-            timerArbeidet = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1)).dager().associateWith { 0.0 },
-            mottattTidspunkt = LocalDate.now().atStartOfDay(),
-            journalpostId = JournalpostId("123901283")
-        )
-
-        val revurdering1 = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD.copy(
-            medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", "NEI", emptyList())),
-        )
-
-        val åpneAvklaringsbehovRevurderingMedSøknad = hentAvklaringsbehovSomMåLøses(revurdering1)
-        assertThat(åpneAvklaringsbehovRevurderingMedSøknad.size).isEqualTo(1)
-        assertThat(åpneAvklaringsbehovRevurderingMedSøknad.first().definisjon).isEqualTo(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
-
-
-        revurdering1.leggTilVurderingsbehov(
-            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
-        )
-            .løsAvklaringsBehov(
-                AvbrytRevurderingLøsning(
-                    vurdering = AvbrytRevurderingVurderingDto(
-                        årsak = AvbrytRevurderingÅrsakDto.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
-                        begrunnelse = "Fordi den ikke er aktuell lenger"
-                    ),
-                )
+class LovvalgOgMedlemskapFlytTest {
+    @Nested
+    inner class FørstegangsbehandlingOgNyeOpplysninger : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        @Test
+        fun `ved førstegangsbehandling med avslag før sykdom ved manglende medlemskap er ikke sykdomsvurdering for brev aktuelt`() {
+            val (sak, behandling) = sendInnFørsteSøknad(
+                mottattTidspunkt = LocalDate.now().atStartOfDay(),
+                søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
             )
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-                assertThat(avklaringsbehovSomMåLøses).isEmpty()
-            }
 
-        // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
-        val revurdering2 = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OPPHOLDSKRAV)
-        )
-            .medKontekst {
-                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
+            val oppdatertBehandling = behandling
+                .løsLovvalg(sak.rettighetsperiode.fom, false)
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
-        assertThat(revurdering2.forrigeBehandlingId).isNotEqualTo(revurdering1.id)
-
-        revurdering2.løsOppholdskrav(sak.rettighetsperiode.fom)
-        val vilkår = hentVilkårsresultat(revurdering2.id)
-        val lovvalgsvilkår = vilkår.finnVilkår(Vilkårtype.LOVVALG)
-        assertThat(lovvalgsvilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
-        assertThat(lovvalgsvilkår.harPerioderSomIkkeErVurdert(setOf(sak.rettighetsperiode))).isFalse
-}
-
-    @Test
-    fun `ved førstegangsbehandling og annet lovvalgsland hopper behandling rett til foreslå vedtak`() {
-        val (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = LocalDateTime.now(),
-            søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
-        )
-
-        val oppdatertBehandling = behandling
-            .løsAvklaringsBehov(
-                AvklarPeriodisertLovvalgMedlemskapLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = sak.rettighetsperiode.fom,
-                            tom = sak.rettighetsperiode.tom,
-                            begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
-                            medlemskap = null,
-                        )
-                    )
-                )
-            )
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.size).isEqualTo(1)
-                assertThat(avklaringsbehovSomMåLøses.first().definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK)
-            }
-
-        assertThat(oppdatertBehandling.status()).isEqualTo(Status.UTREDES)
-    }
-
-    @Test
-    fun `ved revurdering med avslag før sykdom ved manglende medlemskap er ikke sykdomsvurdering for brev aktuelt`() {
-        val sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
-        val revurdering = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
-        )
-
-        val oppdatertBehandling = revurdering
-            .løsLovvalg(sak.rettighetsperiode.fom, false)
-            .løsUtenSamordning()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
-
-        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
-    }
-
-    @Test
-    fun `revurdering skal kreve ny lovvalgsvurdering hvis vurderingen fra forrige behandling ikke lenger er gyldig`() {
-        // Person uten automatiske I_NORGE-kriterier - lovvalg krever manuell avklaring i førstegangsbehandlingen.
-        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
-        val fom = sak.rettighetsperiode.fom
-
-        val fullførtFørstegangsbehandling = førstegangsbehandling
-            .løsLovvalg(fom, true)
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(fom)
-            .løsOppholdskrav(fom)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
-
-        assertThat(fullførtFørstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        // Simulerer at den manuelle vurderingen som gjorde forrige behandling gyldig for lovvalg
-        // ikke lenger finnes/regnes som gyldig (f.eks. på grunn av en kodeendring i hva som gir
-        // automatisk oppfylt, eller fordi grunnlaget den bygde på har blitt fjernet). Behandlingen
-        // var fortsatt relevant for lovvalg, men mangler nå en reell/gyldig vurdering.
-        dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).slett(fullførtFørstegangsbehandling.id)
+            assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
         }
 
-        val revurdering = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
-        )
+        @Test
+        fun `automatisk ok førstegangsbehandling og revurderingsøknad med _nei_ på opphold i Norge som avbrytes - skal fortsatt ha automatisk innvilget i neste revurdering`() {
+            val (sak, behandling) = sendInnFørsteSøknad(
+                mottattTidspunkt = LocalDate.now().atStartOfDay(),
+                søknad = TestSøknader.STANDARD_SØKNAD.copy(medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", emptyList()))
+            )
 
-        val åpentLovvalgsbehov = hentAvklaringsbehovSomMåLøses(revurdering.id)
-            .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+            val oppdatertBehandling = behandling
+                .løsSykdom(sak.rettighetsperiode.fom)
+                .løsBistand(sak.rettighetsperiode.fom)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsOppholdskrav(sak.rettighetsperiode.fom)
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev()
 
-        // For å verifisere periodene den forrige behandlingen var vurdert brukes både
-        // nårVurderingenErRelevant og perioderSomIkkeErTilstrekkeligVurdert
-        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotNull
-        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotEmpty()
-        assertThat(åpentLovvalgsbehov.perioderSomIkkeErTilstrekkeligVurdert()).isNotEmpty()
+            assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
-        val oppdatertRevurdering = revurdering
-            .løsLovvalg(fom, true)
-            .løsUtenSamordning()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+            sak.sendInnMeldekort(
+                timerArbeidet = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1)).dager().associateWith { 0.0 },
+                mottattTidspunkt = LocalDate.now().atStartOfDay(),
+                journalpostId = JournalpostId("123901283")
+            )
 
-        assertThat(oppdatertRevurdering.status()).isEqualTo(Status.AVSLUTTET)
-    }
+            val revurdering1 = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD.copy(
+                medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", "NEI", emptyList())),
+            )
 
-    @Test
-    fun `revurdering skal kreve ny lovvalgsvurdering hvis ny søknad har utenlandsopphold`() {
-        // Person uten automatiske I_NORGE-kriterier - lovvalg krever manuell avklaring i førstegangsbehandlingen.
-        val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
-        val fom = sak.rettighetsperiode.fom
-
-        val fullførtFørstegangsbehandling = førstegangsbehandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
-
-        assertThat(fullførtFørstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+            val åpneAvklaringsbehovRevurderingMedSøknad = hentAvklaringsbehovSomMåLøses(revurdering1)
+            assertThat(åpneAvklaringsbehovRevurderingMedSøknad.size).isEqualTo(1)
+            assertThat(åpneAvklaringsbehovRevurderingMedSøknad.first().definisjon).isEqualTo(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
 
 
-        val revurdering = sak.sendInnSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
-
-        val åpentLovvalgsbehov = hentAvklaringsbehovSomMåLøses(revurdering.id)
-            .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
-
-        // For å verifisere periodene den forrige behandlingen var vurdert brukes både
-        // nårVurderingenErRelevant og perioderSomIkkeErTilstrekkeligVurdert
-        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotNull
-        assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotEmpty()
-        assertThat(åpentLovvalgsbehov.perioderSomIkkeErTilstrekkeligVurdert()).isNotEmpty()
-
-        val oppdatertRevurdering = revurdering
-            .løsLovvalg(fom, true)
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(fom, true)
-            .løsUtenSamordning()
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
-
-        assertThat(oppdatertRevurdering.status()).isEqualTo(Status.AVSLUTTET)
-    }
-
-    @Test
-    fun `skal kunne gjennomføre førstegangsbehandling med periodisert lovvalg og medlemskap`() {
-        var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
-
-        førstegangsbehandling = førstegangsbehandling
-            .løsAvklaringsBehov(
-                AvklarPeriodisertLovvalgMedlemskapLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = sak.rettighetsperiode.fom,
-                            tom = sak.rettighetsperiode.fom.plusMonths(2),
-                            begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapDto("begrunnelse", false)
+            revurdering1.leggTilVurderingsbehov(
+                no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+            )
+                .løsAvklaringsBehov(
+                    AvbrytRevurderingLøsning(
+                        vurdering = AvbrytRevurderingVurderingDto(
+                            årsak = AvbrytRevurderingÅrsakDto.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
+                            begrunnelse = "Fordi den ikke er aktuell lenger"
                         ),
-                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
-                            tom = null,
-                            begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapDto("begrunnelse", true)
+                    )
+                )
+                .medKontekst {
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                    assertThat(avklaringsbehovSomMåLøses).isEmpty()
+                }
+
+            // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
+            val revurdering2 = sak.opprettManuellRevurdering(
+                listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OPPHOLDSKRAV)
+            )
+                .medKontekst {
+                    assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                }
+
+            assertThat(revurdering2.forrigeBehandlingId).isNotEqualTo(revurdering1.id)
+
+            revurdering2.løsOppholdskrav(sak.rettighetsperiode.fom)
+            val vilkår = hentVilkårsresultat(revurdering2.id)
+            val lovvalgsvilkår = vilkår.finnVilkår(Vilkårtype.LOVVALG)
+            assertThat(lovvalgsvilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
+            assertThat(lovvalgsvilkår.harPerioderSomIkkeErVurdert(setOf(sak.rettighetsperiode))).isFalse
+        }
+
+        @Test
+        fun `ved førstegangsbehandling og annet lovvalgsland hopper behandling rett til foreslå vedtak`() {
+            val (sak, behandling) = sendInnFørsteSøknad(
+                mottattTidspunkt = LocalDateTime.now(),
+                søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
+            )
+
+            val oppdatertBehandling = behandling
+                .løsAvklaringsBehov(
+                    AvklarPeriodisertLovvalgMedlemskapLøsning(
+                        løsningerForPerioder = listOf(
+                            PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                                fom = sak.rettighetsperiode.fom,
+                                tom = sak.rettighetsperiode.tom,
+                                begrunnelse = "",
+                                lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
+                                medlemskap = null,
+                            )
                         )
                     )
                 )
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.size).isEqualTo(1)
+                    assertThat(avklaringsbehovSomMåLøses.first().definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK)
+                }
+
+            assertThat(oppdatertBehandling.status()).isEqualTo(Status.UTREDES)
+        }
+
+        @Test
+        fun `ved revurdering med avslag før sykdom ved manglende medlemskap er ikke sykdomsvurdering for brev aktuelt`() {
+            val sak = happyCaseFørstegangsbehandling(LocalDate.now(), sendMeldekort = false)
+            val revurdering = sak.opprettManuellRevurdering(
+                listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
             )
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
-            .løsOppholdskrav(sak.rettighetsperiode.fom)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
 
-        // Virkningstidspunktet skal settes til datoen hvor medlemskap er oppfylt
-        val vedtak = hentVedtak(førstegangsbehandling.id)
-        assertThat(vedtak.virkningstidspunkt).isEqualTo(sak.rettighetsperiode.fom.plusMonths(2).plusDays(1))
+            val oppdatertBehandling = revurdering
+                .løsLovvalg(sak.rettighetsperiode.fom, false)
+                .løsUtenSamordning()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
 
-        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+            assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+        }
+
+        @Test
+        fun `revurdering skal kreve ny lovvalgsvurdering hvis vurderingen fra forrige behandling ikke lenger er gyldig`() {
+            // Person uten automatiske I_NORGE-kriterier - lovvalg krever manuell avklaring i førstegangsbehandlingen.
+            val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+            val fom = sak.rettighetsperiode.fom
+
+            val fullførtFørstegangsbehandling = førstegangsbehandling
+                .løsLovvalg(fom, true)
+                .løsSykdom(fom)
+                .løsBistand(fom)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsForutgåendeMedlemskap(fom)
+                .løsOppholdskrav(fom)
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev()
+
+            assertThat(fullførtFørstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+            // Simulerer at den manuelle vurderingen som gjorde forrige behandling gyldig for lovvalg
+            // ikke lenger finnes/regnes som gyldig (f.eks. på grunn av en kodeendring i hva som gir
+            // automatisk oppfylt, eller fordi grunnlaget den bygde på har blitt fjernet). Behandlingen
+            // var fortsatt relevant for lovvalg, men mangler nå en reell/gyldig vurdering.
+            dataSource.transaction {
+                MedlemskapArbeidInntektRepositoryImpl(it).slett(fullførtFørstegangsbehandling.id)
+            }
+
+            val revurdering = sak.opprettManuellRevurdering(
+                listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
+            )
+
+            val åpentLovvalgsbehov = hentAvklaringsbehovSomMåLøses(revurdering.id)
+                .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+
+            // For å verifisere periodene den forrige behandlingen var vurdert brukes både
+            // nårVurderingenErRelevant og perioderSomIkkeErTilstrekkeligVurdert
+            assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotNull
+            assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotEmpty()
+            assertThat(åpentLovvalgsbehov.perioderSomIkkeErTilstrekkeligVurdert()).isNotEmpty()
+
+            val oppdatertRevurdering = revurdering
+                .løsLovvalg(fom, true)
+                .løsUtenSamordning()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+            assertThat(oppdatertRevurdering.status()).isEqualTo(Status.AVSLUTTET)
+        }
+
+        @Test
+        fun `revurdering skal kreve ny lovvalgsvurdering hvis ny søknad har utenlandsopphold`() {
+            // Person uten automatiske I_NORGE-kriterier - lovvalg krever manuell avklaring i førstegangsbehandlingen.
+            val (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
+            val fom = sak.rettighetsperiode.fom
+
+            val fullførtFørstegangsbehandling = førstegangsbehandling
+                .løsSykdom(fom)
+                .løsBistand(fom)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsOppholdskrav(fom)
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev()
+
+            assertThat(fullførtFørstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+
+            val revurdering = sak.sendInnSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+
+            val åpentLovvalgsbehov = hentAvklaringsbehovSomMåLøses(revurdering.id)
+                .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+
+            // For å verifisere periodene den forrige behandlingen var vurdert brukes både
+            // nårVurderingenErRelevant og perioderSomIkkeErTilstrekkeligVurdert
+            assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotNull
+            assertThat(åpentLovvalgsbehov.perioderVedtaketBehøverVurdering).isNotEmpty()
+            assertThat(åpentLovvalgsbehov.perioderSomIkkeErTilstrekkeligVurdert()).isNotEmpty()
+
+            val oppdatertRevurdering = revurdering
+                .løsLovvalg(fom, true)
+                .løsSykdom(fom)
+                .løsBistand(fom)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .løsBeregningstidspunkt()
+                .løsForutgåendeMedlemskap(fom, true)
+                .løsUtenSamordning()
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+            assertThat(oppdatertRevurdering.status()).isEqualTo(Status.AVSLUTTET)
+        }
+
     }
 
-    @Test
-    fun `skal kunne gjennomføre førstegangsbehandling og revurdering hvor oppfylt lovvalg og medlemskap flyttes en mnd`() {
-        var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
-        val nyttTidspunktForOppfyltMedlemskap = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1)
+    @Nested
+    inner class PeriodisertLovvalgOgMedlemskap : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        private lateinit var sak: Sak
+        private lateinit var førstegangsbehandling: Behandling
 
-        førstegangsbehandling = førstegangsbehandling
-            .løsAvklaringsBehov(
-                AvklarPeriodisertLovvalgMedlemskapLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = sak.rettighetsperiode.fom,
-                            tom = sak.rettighetsperiode.fom.plusMonths(2),
-                            begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapDto("begrunnelse", false)
-                        ),
-                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
-                            tom = null,
-                            begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapDto("begrunnelse", true)
+        @BeforeAll
+        fun settOppGrunnlag() = snapshotEtterSetup {
+            val person = TestPersoner.STANDARD_PERSON()
+            this.person = person
+            val (sak, behandling) = sendInnFørsteSøknad(
+                søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP,
+                person = person,
+            )
+            this@PeriodisertLovvalgOgMedlemskap.sak = sak
+
+            behandling
+                .løsAvklaringsBehov(
+                    AvklarPeriodisertLovvalgMedlemskapLøsning(
+                        løsningerForPerioder = listOf(
+                            PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                                fom = sak.rettighetsperiode.fom,
+                                tom = sak.rettighetsperiode.fom.plusMonths(2),
+                                begrunnelse = "",
+                                lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                                medlemskap = MedlemskapDto("begrunnelse", false)
+                            ),
+                            PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                                fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
+                                tom = null,
+                                begrunnelse = "",
+                                lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                                medlemskap = MedlemskapDto("begrunnelse", true)
+                            )
                         )
                     )
                 )
+                .løsSykdom(sak.rettighetsperiode.fom)
+                .løsBistand(sak.rettighetsperiode.fom)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
+                .løsOppholdskrav(sak.rettighetsperiode.fom)
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev()
+        }
+
+        @BeforeEach
+        fun hentBehandlingFraSnapshot() {
+            førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+        }
+
+        @Test
+        fun `skal kunne gjennomføre førstegangsbehandling med periodisert lovvalg og medlemskap`() {
+            // Virkningstidspunktet skal settes til datoen hvor medlemskap er oppfylt
+            val vedtak = hentVedtak(førstegangsbehandling.id)
+            assertThat(vedtak.virkningstidspunkt).isEqualTo(sak.rettighetsperiode.fom.plusMonths(2).plusDays(1))
+
+            assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+        }
+
+        @Test
+        fun `skal kunne gjennomføre førstegangsbehandling og revurdering hvor oppfylt lovvalg og medlemskap flyttes en mnd`() {
+            val nyttTidspunktForOppfyltMedlemskap = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1)
+
+            assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+            val revurdering = sak.opprettManuellRevurdering(
+                listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP),
             )
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
-            .løsOppholdskrav(sak.rettighetsperiode.fom)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
-
-        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        val revurdering = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP),
-        )
-            .løsAvklaringsBehov(
-                AvklarPeriodisertLovvalgMedlemskapLøsning(
-                    løsningerForPerioder = listOf(
-                        // Skulle oppfylles en mnd tidligere
-                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = nyttTidspunktForOppfyltMedlemskap,
-                            tom = null,
-                            begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapDto("begrunnelse", true)
+                .løsAvklaringsBehov(
+                    AvklarPeriodisertLovvalgMedlemskapLøsning(
+                        løsningerForPerioder = listOf(
+                            // Skulle oppfylles en mnd tidligere
+                            PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                                fom = nyttTidspunktForOppfyltMedlemskap,
+                                tom = null,
+                                begrunnelse = "",
+                                lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                                medlemskap = MedlemskapDto("begrunnelse", true)
+                            )
                         )
                     )
                 )
-            )
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
-            .løsOppholdskrav(nyttTidspunktForOppfyltMedlemskap)
-            .løsUtenSamordning()
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+                .løsSykdom(sak.rettighetsperiode.fom)
+                .løsBistand(sak.rettighetsperiode.fom)
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .løsBeregningstidspunkt()
+                .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
+                .løsOppholdskrav(nyttTidspunktForOppfyltMedlemskap)
+                .løsUtenSamordning()
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
 
-        // Virkningstidspunktet skal settes til datoen hvor medlemskap er oppfylt
-        val vedtak = hentVedtak(revurdering.id)
-        assertThat(vedtak.virkningstidspunkt).isEqualTo(sak.rettighetsperiode.fom.plusMonths(1).plusDays(1))
+            // Virkningstidspunktet skal settes til datoen hvor medlemskap er oppfylt
+            val vedtak = hentVedtak(revurdering.id)
+            assertThat(vedtak.virkningstidspunkt).isEqualTo(sak.rettighetsperiode.fom.plusMonths(1).plusDays(1))
 
-        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+            assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+        }
+
     }
 
-    @Test
-    fun `Lager avklaringsbehov i medlemskap når kravene til manuell avklaring oppfylles`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    @Nested
+    inner class MedlemskapOgOverstyring : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+        @Test
+        fun `Lager avklaringsbehov i medlemskap når kravene til manuell avklaring oppfylles`() {
+            val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        val person = TestPersoner.STANDARD_PERSON()
+            val person = TestPersoner.STANDARD_PERSON()
 
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = periode.fom.atStartOfDay(),
-            søknad = SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("NEI", null, "JA", null, null)
-            )
-        )
-
-        // Validér avklaring
-        val åpenAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
-        assertThat(åpenAvklaringsbehov)
-            .extracting<Definisjon> { it.definisjon }
-            .containsOnly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
-    }
-
-    @Test
-    fun `Går automatisk forbi medlemskap når kravene til manuell avklaring ikke oppfylles`() {
-
-        // Oppretter vanlig søknad
-        val behandling = sendInnFørsteSøknad(
-            SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
-            ), TestPersoner.STANDARD_PERSON(), LocalDate.now().atStartOfDay()
-        ).second
-
-        // Validér avklaring
-        val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
-        assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
-    }
-
-    @Test
-    fun `Gir oppfylt når bruker ikke har lovvalgsland men oppfyller trygdeloven`() {
-        val søknadsdato = LocalDate.now()
-        // Oppretter vanlig søknad
-        var behandling = sendInnFørsteSøknad(
-            SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto(
-                    "JA", null, "JA", null,
-                    listOf(
-                        UtenlandsPeriodeDto(
-                            "SWE",
-                            søknadsdato.plusMonths(1),
-                            søknadsdato.minusMonths(1),
-                            "JA",
-                            null,
-                            søknadsdato.plusMonths(1),
-                            søknadsdato.minusMonths(1),
-                        )
-                    )
+            val (_, behandling) = sendInnFørsteSøknad(
+                person = person,
+                mottattTidspunkt = periode.fom.atStartOfDay(),
+                søknad = SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("NEI", null, "JA", null, null)
                 )
-            ),
-            TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay()
+            )
 
-        ).second
-
-        // Validér avklaring
-        var avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
-        assertTrue(avklaringsbehovSomMåLøses.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
-
-        // Trigger manuell vurdering
-        behandling = behandling.løsLovvalg(søknadsdato)
-
-        // Validér riktig resultat
-        avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertTrue(avklaringsbehovSomMåLøses.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
-        assertTrue(vilkårsResultat.all { it.erOppfylt() })
-    }
-
-    @Test
-    fun `Gir avslag når bruker har annet lovvalgsland`() {
-        val søknadsdato = LocalDate.now()
-        // Oppretter vanlig søknad
-        var behandling = sendInnFørsteSøknad(
-            SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto(
-                    "JA", null, "JA", null,
-                    listOf(
-                        UtenlandsPeriodeDto(
-                            "SWE",
-                            LocalDate.now().plusMonths(1),
-                            LocalDate.now().minusMonths(1),
-                            "JA",
-                            null,
-                            LocalDate.now().plusMonths(1),
-                            LocalDate.now().minusMonths(1),
-                        )
-                    )
-                ),
-            ),
-            TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
-        ).second
             // Validér avklaring
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
-            }
+            val åpenAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
+            assertThat(åpenAvklaringsbehov)
+                .extracting<Definisjon> { it.definisjon }
+                .containsOnly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+        }
 
-        // Trigger manuell vurdering
-        behandling = behandling
-            .løsAvklaringsBehov(
-                AvklarPeriodisertLovvalgMedlemskapLøsning(
-                    løsningerForPerioder = listOf(
-                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = søknadsdato,
-                            tom = null,
-                            begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.DNK),
-                            medlemskap = null
-                        )
-                    )
-                )
-            )
-            .medKontekst {
-                // Validér riktig resultat
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).noneMatch { it == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
-                val vilkårsResultat =
-                    hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-                assertTrue(vilkårsResultat.none { it.erOppfylt() })
-            }
-    }
+        @Test
+        fun `Går automatisk forbi medlemskap når kravene til manuell avklaring ikke oppfylles`() {
 
-    @Test
-    fun `Gir avslag når bruker ikke er medlem i trygden`() {
-        val søknadsdato = LocalDate.now()
+            // Oppretter vanlig søknad
+            val behandling = sendInnFørsteSøknad(
+                SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                ), TestPersoner.STANDARD_PERSON(), LocalDate.now().atStartOfDay()
+            ).second
 
-        // Oppretter vanlig søknad
-        var behandling = sendInnFørsteSøknad(
-            SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto(
-                    "JA", null, "JA", null,
-                    listOf(
-                        UtenlandsPeriodeDto(
-                            "SWE",
-                            LocalDate.now().plusMonths(1),
-                            LocalDate.now().minusMonths(1),
-                            "JA",
-                            null,
-                            LocalDate.now().plusMonths(1),
-                            LocalDate.now().minusMonths(1),
+            // Validér avklaring
+            val åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
+            assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+        }
+
+        @Test
+        fun `Gir oppfylt når bruker ikke har lovvalgsland men oppfyller trygdeloven`() {
+            val søknadsdato = LocalDate.now()
+            // Oppretter vanlig søknad
+            var behandling = sendInnFørsteSøknad(
+                SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto(
+                        "JA", null, "JA", null,
+                        listOf(
+                            UtenlandsPeriodeDto(
+                                "SWE",
+                                søknadsdato.plusMonths(1),
+                                søknadsdato.minusMonths(1),
+                                "JA",
+                                null,
+                                søknadsdato.plusMonths(1),
+                                søknadsdato.minusMonths(1),
+                            )
                         )
                     )
                 ),
-            ),
-            TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
-        ).second
+                TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay()
 
-        // Validér avklaring
-        var åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+            ).second
 
-        // Trigger manuell vurdering
-        behandling = behandling.løsLovvalg(søknadsdato, false)
+            // Validér avklaring
+            var avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
+            assertTrue(avklaringsbehovSomMåLøses.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
-        // Validér avklaring
-        åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
-        assertThat(åpneAvklaringsbehov.none())
+            // Trigger manuell vurdering
+            behandling = behandling.løsLovvalg(søknadsdato)
 
-        // Validér riktig resultat
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertThat(vilkårsResultat).noneMatch { it.erOppfylt() }
-        assertTrue(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
-    }
-
-    @Test
-    fun `Kan løse overstyringsbehov til ikke oppfylt`() {
-        val søknadsdato = LocalDate.now()
-
-        // Oppretter vanlig søknad
-        sendInnFørsteSøknad(
-            SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
-            ),
-            TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
-        ).second
-            .løsLovvalgOverstyrt(søknadsdato, false)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .doesNotContain(Definisjon.MANUELL_OVERSTYRING_LOVVALG)
-
-
-                // Validér riktig resultat
-                val vilkårsResultat =
-                    hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-                assertThat(vilkårsResultat).allMatch { !it.erOppfylt() }
-                assertThat(vilkårsResultat.first().avslagsårsak).isEqualTo(Avslagsårsak.IKKE_MEDLEM)
-            }
-    }
-
-    @Test
-    fun `Kan løse overstyringsbehov til oppfylt`() {
-        val søknadsdato = LocalDate.now()
-
-        val behandling = sendInnFørsteSøknad(
-            SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
-            ), TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay()
-        ).second
-            .løsLovvalgOverstyrt(søknadsdato, true)
-
-        // Validér avklaring
-        val avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
-        assertTrue(avklaringsbehovSomMåLøses.none { Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon })
-
-        // Validér riktig resultat
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        val overstyrtManuellVurdering = dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(behandling.id)?.vurderinger?.firstOrNull()?.overstyrt
-        }
-        assertTrue(vilkårsResultat.all { it.erOppfylt() })
-        assertTrue(overstyrtManuellVurdering == true)
-    }
-
-    @Test
-    fun `lovvalg går fra oppfylt for vurdert periode til oppfylt frem til Tid MAKS når saken går fra manuell til automatisk innvilgelse`() {
-        // Person uten inntekt i Norge og uten MEDL-vedtak -> lovvalg kan ikke avgjøres automatisk
-        val person = FakePersoner.leggTil(
-            TestPerson(
-                fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)),
-                inntekter = emptyList(),
-            )
-        )
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = LocalDateTime.now(),
-            søknad = SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei),
-                yrkesskade = "NEI",
-                oppgitteBarn = null,
-                // Ingen utenlandsopphold i søknad -> ingen "utenfor Norge"-indikasjon fra søknaden
-                medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null),
-            ),
-        )
-
-        val fom = sak.rettighetsperiode.fom
-        val sisteOppfylteDag = fom.plusMonths(2)
-        val ikkeOppfyltFra = sisteOppfylteDag.plusDays(1)
-
-        // Lovvalg krever manuell avklaring (ingen automatiske I_NORGE-kriterier er oppfylt)
-        behandling.medKontekst {
-            assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+            // Validér riktig resultat
+            avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+            assertTrue(avklaringsbehovSomMåLøses.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+            assertTrue(vilkårsResultat.all { it.erOppfylt() })
         }
 
-        // Fase 1: bruker legger inn to perioder - oppfylt frem til sisteOppfylteDag, ikke oppfylt etter
-        val oppdatertBehandling = behandling.løsAvklaringsBehov(
-            AvklarPeriodisertLovvalgMedlemskapLøsning(
-                løsningerForPerioder = listOf(
-                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                        fom = fom,
-                        tom = sisteOppfylteDag,
-                        begrunnelse = "",
-                        lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                        medlemskap = MedlemskapDto("begrunnelse", true)
+        @Test
+        fun `Gir avslag når bruker har annet lovvalgsland`() {
+            val søknadsdato = LocalDate.now()
+            // Oppretter vanlig søknad
+            var behandling = sendInnFørsteSøknad(
+                SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto(
+                        "JA", null, "JA", null,
+                        listOf(
+                            UtenlandsPeriodeDto(
+                                "SWE",
+                                LocalDate.now().plusMonths(1),
+                                LocalDate.now().minusMonths(1),
+                                "JA",
+                                null,
+                                LocalDate.now().plusMonths(1),
+                                LocalDate.now().minusMonths(1),
+                            )
+                        )
                     ),
-                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                        fom = ikkeOppfyltFra,
-                        tom = null,
-                        begrunnelse = "",
-                        lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                        medlemskap = MedlemskapDto("begrunnelse", false)
+                ),
+                TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
+            ).second
+                // Validér avklaring
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+                }
+
+            // Trigger manuell vurdering
+            behandling = behandling
+                .løsAvklaringsBehov(
+                    AvklarPeriodisertLovvalgMedlemskapLøsning(
+                        løsningerForPerioder = listOf(
+                            PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                                fom = søknadsdato,
+                                tom = null,
+                                begrunnelse = "",
+                                lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.DNK),
+                                medlemskap = null
+                            )
+                        )
+                    )
+                )
+                .medKontekst {
+                    // Validér riktig resultat
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).noneMatch { it == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
+                    val vilkårsResultat =
+                        hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+                    assertTrue(vilkårsResultat.none { it.erOppfylt() })
+                }
+        }
+
+        @Test
+        fun `Gir avslag når bruker ikke er medlem i trygden`() {
+            val søknadsdato = LocalDate.now()
+
+            // Oppretter vanlig søknad
+            var behandling = sendInnFørsteSøknad(
+                SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto(
+                        "JA", null, "JA", null,
+                        listOf(
+                            UtenlandsPeriodeDto(
+                                "SWE",
+                                LocalDate.now().plusMonths(1),
+                                LocalDate.now().minusMonths(1),
+                                "JA",
+                                null,
+                                LocalDate.now().plusMonths(1),
+                                LocalDate.now().minusMonths(1),
+                            )
+                        )
+                    ),
+                ),
+                TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
+            ).second
+
+            // Validér avklaring
+            var åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
+            assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
+
+            // Trigger manuell vurdering
+            behandling = behandling.løsLovvalg(søknadsdato, false)
+
+            // Validér avklaring
+            åpneAvklaringsbehov = hentAvklaringsbehovSomMåLøses(behandling.id)
+            assertThat(åpneAvklaringsbehov.none())
+
+            // Validér riktig resultat
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+            assertThat(vilkårsResultat).noneMatch { it.erOppfylt() }
+            assertTrue(Avslagsårsak.IKKE_MEDLEM == vilkårsResultat.first().avslagsårsak)
+        }
+
+        @Test
+        fun `Kan løse overstyringsbehov til ikke oppfylt`() {
+            val søknadsdato = LocalDate.now()
+
+            // Oppretter vanlig søknad
+            sendInnFørsteSøknad(
+                SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                ),
+                TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay(),
+            ).second
+                .løsLovvalgOverstyrt(søknadsdato, false)
+                .medKontekst {
+                    assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                        .doesNotContain(Definisjon.MANUELL_OVERSTYRING_LOVVALG)
+
+
+                    // Validér riktig resultat
+                    val vilkårsResultat =
+                        hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+                    assertThat(vilkårsResultat).allMatch { !it.erOppfylt() }
+                    assertThat(vilkårsResultat.first().avslagsårsak).isEqualTo(Avslagsårsak.IKKE_MEDLEM)
+                }
+        }
+
+        @Test
+        fun `Kan løse overstyringsbehov til oppfylt`() {
+            val søknadsdato = LocalDate.now()
+
+            val behandling = sendInnFørsteSøknad(
+                SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                    medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
+                ), TestPersoner.STANDARD_PERSON(), søknadsdato.atStartOfDay()
+            ).second
+                .løsLovvalgOverstyrt(søknadsdato, true)
+
+            // Validér avklaring
+            val avklaringsbehovSomMåLøses = hentAvklaringsbehovSomMåLøses(behandling.id)
+            assertTrue(avklaringsbehovSomMåLøses.none { Definisjon.MANUELL_OVERSTYRING_LOVVALG == it.definisjon })
+
+            // Validér riktig resultat
+            val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+            val overstyrtManuellVurdering = dataSource.transaction {
+                MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(behandling.id)?.vurderinger?.firstOrNull()?.overstyrt
+            }
+            assertTrue(vilkårsResultat.all { it.erOppfylt() })
+            assertTrue(overstyrtManuellVurdering == true)
+        }
+
+        @Test
+        fun `lovvalg går fra oppfylt for vurdert periode til oppfylt frem til Tid MAKS når saken går fra manuell til automatisk innvilgelse`() {
+            // Person uten inntekt i Norge og uten MEDL-vedtak -> lovvalg kan ikke avgjøres automatisk
+            val person = FakePersoner.leggTil(
+                TestPerson(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(30)),
+                    inntekter = emptyList(),
+                )
+            )
+            val (sak, behandling) = sendInnFørsteSøknad(
+                person = person,
+                mottattTidspunkt = LocalDateTime.now(),
+                søknad = SøknadV0(
+                    student = SøknadStudentDto(StudentStatus.Nei),
+                    yrkesskade = "NEI",
+                    oppgitteBarn = null,
+                    // Ingen utenlandsopphold i søknad -> ingen "utenfor Norge"-indikasjon fra søknaden
+                    medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null),
+                ),
+            )
+
+            val fom = sak.rettighetsperiode.fom
+            val sisteOppfylteDag = fom.plusMonths(2)
+            val ikkeOppfyltFra = sisteOppfylteDag.plusDays(1)
+
+            // Lovvalg krever manuell avklaring (ingen automatiske I_NORGE-kriterier er oppfylt)
+            behandling.medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+            }
+
+            // Fase 1: bruker legger inn to perioder - oppfylt frem til sisteOppfylteDag, ikke oppfylt etter
+            val oppdatertBehandling = behandling.løsAvklaringsBehov(
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = fom,
+                            tom = sisteOppfylteDag,
+                            begrunnelse = "",
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", true)
+                        ),
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = ikkeOppfyltFra,
+                            tom = null,
+                            begrunnelse = "",
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", false)
+                        )
                     )
                 )
             )
-        )
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt(fom)
-            .løsFastsettManuellInntekt()
-            .løsForutgåendeMedlemskap(fom)
-            .løsOppholdskrav(fom)
-            .løsAndreStatligeYtelser()
+                .løsSykdom(fom)
+                .løsBistand(fom)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt(fom)
+                .løsFastsettManuellInntekt()
+                .løsForutgåendeMedlemskap(fom)
+                .løsOppholdskrav(fom)
+                .løsAndreStatligeYtelser()
 
-        // Fase 1: lovvalg er oppfylt KUN for den vurderte perioden (frem til sisteOppfylteDag),
-        // og ikke oppfylt etterpå
-        val lovvalgFase1 = hentVilkårsresultat(oppdatertBehandling.id)
-            .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertThat(lovvalgFase1.filter { it.erOppfylt() }.maxOf { it.periode.tom }).isEqualTo(sisteOppfylteDag)
-        assertThat(lovvalgFase1.any { !it.erOppfylt() }).isTrue()
+            // Fase 1: lovvalg er oppfylt KUN for den vurderte perioden (frem til sisteOppfylteDag),
+            // og ikke oppfylt etterpå
+            val lovvalgFase1 = hentVilkårsresultat(oppdatertBehandling.id)
+                .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+            assertThat(lovvalgFase1.filter { it.erOppfylt() }.maxOf { it.periode.tom }).isEqualTo(sisteOppfylteDag)
+            assertThat(lovvalgFase1.any { !it.erOppfylt() }).isTrue()
 
-        // Fase 2: grunnlaget oppdateres - et MEDL-vedtak om medlemskap i Norge kommer inn,
-        // slik at lovvalg nå kan avgjøres automatisk som oppfylt for hele perioden
-        FakePersoner.leggTil(
-            TestPerson(
-                identer = person.identer,
-                fødselsdato = person.fødselsdato,
-                inntekter = emptyList(),
-                medlStatus = listOf(
-                    MedlemskapDataIntern(
-                        unntakId = 100087727,
-                        ident = person.aktivIdent().identifikator,
-                        fraOgMed = fom.minusYears(1).toString(),
-                        tilOgMed = fom.plusYears(2).toString(),
-                        status = "GYLD",
-                        statusaarsak = null,
-                        medlem = true,
-                        grunnlag = "grunnlag",
-                        lovvalg = "lovvalg",
-                        helsedel = true,
-                        lovvalgsland = "NOR",
-                        kilde = null
+            // Fase 2: grunnlaget oppdateres - et MEDL-vedtak om medlemskap i Norge kommer inn,
+            // slik at lovvalg nå kan avgjøres automatisk som oppfylt for hele perioden
+            FakePersoner.leggTil(
+                TestPerson(
+                    identer = person.identer,
+                    fødselsdato = person.fødselsdato,
+                    inntekter = emptyList(),
+                    medlStatus = listOf(
+                        MedlemskapDataIntern(
+                            unntakId = 100087727,
+                            ident = person.aktivIdent().identifikator,
+                            fraOgMed = fom.minusYears(1).toString(),
+                            tilOgMed = fom.plusYears(2).toString(),
+                            status = "GYLD",
+                            statusaarsak = null,
+                            medlem = true,
+                            grunnlag = "grunnlag",
+                            lovvalg = "lovvalg",
+                            helsedel = true,
+                            lovvalgsland = "NOR",
+                            kilde = null
+                        )
                     )
                 )
             )
-        )
 
-        nullstillInformasjonskravOppdatert(InformasjonskravNavn.LOVVALG, sak.id)
-        val oppdatertBehandlingNyttGrunnlag = prosesserBehandling(oppdatertBehandling)
+            nullstillInformasjonskravOppdatert(InformasjonskravNavn.LOVVALG, sak.id)
+            val oppdatertBehandlingNyttGrunnlag = prosesserBehandling(oppdatertBehandling)
 
-        // Fase 2: lovvalg er nå oppfylt for hele perioden, helt til Tid.MAKS
-        val lovvalgFase2 = hentVilkårsresultat(oppdatertBehandlingNyttGrunnlag.id)
-            .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertThat(lovvalgFase2).allMatch { it.erOppfylt() }
-        assertThat(lovvalgFase2.maxOf { it.periode.tom }).isEqualTo(Tid.MAKS)
+            // Fase 2: lovvalg er nå oppfylt for hele perioden, helt til Tid.MAKS
+            val lovvalgFase2 = hentVilkårsresultat(oppdatertBehandlingNyttGrunnlag.id)
+                .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+            assertThat(lovvalgFase2).allMatch { it.erOppfylt() }
+            assertThat(lovvalgFase2.maxOf { it.periode.tom }).isEqualTo(Tid.MAKS)
+        }
+
+        @Test
+        fun `lovvalg oppfylt manuelt i førstegangsbehandling skal fortsatt være gjeldende i revurdering selv om nye opplysninger i prinsippet kunne gitt automatisk vurdering`() {
+            val (sak, behandling) = sendInnFørsteSøknad(
+                mottattTidspunkt = LocalDate.now().atStartOfDay(),
+                søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
+            )
+
+            // Lovvalg krever manuell avklaring pga. oppgitt utenlandsopphold i søknaden
+            behandling.medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+            }
+
+            val førstegangsbehandling = behandling
+                .løsLovvalg(sak.rettighetsperiode.fom, true)
+                .løsSykdom(sak.rettighetsperiode.fom)
+                .løsBistand(sak.rettighetsperiode.fom)
+                .løsRefusjonskrav()
+                .løsSykdomsvurderingBrev()
+                .bekreftVurderinger()
+                .kvalitetssikre()
+                .løsBeregningstidspunkt()
+                .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
+                .løsOppholdskrav(sak.rettighetsperiode.fom)
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev()
+
+            assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+            val lovvalgFørstegangsbehandling = hentVilkårsresultat(førstegangsbehandling.id)
+                .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+            assertThat(lovvalgFørstegangsbehandling).allMatch { it.erOppfylt() && it.manuellVurdering }
+
+            // Ny søknad uten indikasjon på tilknytning til utlandet - ville i prinsippet
+            // kunnet vurderes automatisk dersom det ikke fantes en manuell vurdering fra før
+            val revurdering = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
+
+            revurdering.medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+            }
+
+            val lovvalgRevurdering = hentVilkårsresultat(revurdering.id)
+                .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+
+            // Den manuelle vurderingen fra førstegangsbehandlingen skal fortsatt gjelde,
+            // selv om den nye søknaden i prinsippet kunne gitt automatisk oppfylt lovvalg
+            assertThat(lovvalgRevurdering).allMatch { it.erOppfylt() && it.manuellVurdering }
+
+            val manuelleVurderingerFørstegangsbehandling = dataSource.transaction {
+                MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(førstegangsbehandling.id)?.vurderinger
+            }
+            val manuelleVurderingerRevurdering = dataSource.transaction {
+                MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(revurdering.id)?.vurderinger
+            }
+            assertThat(manuelleVurderingerRevurdering).isEqualTo(manuelleVurderingerFørstegangsbehandling)
+        }
     }
-
-    @Test
-    fun `lovvalg oppfylt manuelt i førstegangsbehandling skal fortsatt være gjeldende i revurdering selv om nye opplysninger i prinsippet kunne gitt automatisk vurdering`() {
-        val (sak, behandling) = sendInnFørsteSøknad(
-            mottattTidspunkt = LocalDate.now().atStartOfDay(),
-            søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
-        )
-
-        // Lovvalg krever manuell avklaring pga. oppgitt utenlandsopphold i søknaden
-        behandling.medKontekst {
-            assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                .contains(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
-        }
-
-        val førstegangsbehandling = behandling
-            .løsLovvalg(sak.rettighetsperiode.fom, true)
-            .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand(sak.rettighetsperiode.fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
-            .løsOppholdskrav(sak.rettighetsperiode.fom)
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev()
-
-        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        val lovvalgFørstegangsbehandling = hentVilkårsresultat(førstegangsbehandling.id)
-            .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-        assertThat(lovvalgFørstegangsbehandling).allMatch { it.erOppfylt() && it.manuellVurdering }
-
-        // Ny søknad uten indikasjon på tilknytning til utlandet - ville i prinsippet
-        // kunnet vurderes automatisk dersom det ikke fantes en manuell vurdering fra før
-        val revurdering = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
-
-        revurdering.medKontekst {
-            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-        }
-
-        val lovvalgRevurdering = hentVilkårsresultat(revurdering.id)
-            .finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-
-        // Den manuelle vurderingen fra førstegangsbehandlingen skal fortsatt gjelde,
-        // selv om den nye søknaden i prinsippet kunne gitt automatisk oppfylt lovvalg
-        assertThat(lovvalgRevurdering).allMatch { it.erOppfylt() && it.manuellVurdering }
-
-        val manuelleVurderingerFørstegangsbehandling = dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(førstegangsbehandling.id)?.vurderinger
-        }
-        val manuelleVurderingerRevurdering = dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(revurdering.id)?.vurderinger
-        }
-        assertThat(manuelleVurderingerRevurdering).isEqualTo(manuelleVurderingerFørstegangsbehandling)
-    }
-
 }

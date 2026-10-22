@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbtest.DatabaseSnapshot
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
@@ -20,26 +21,49 @@ import kotlin.reflect.KClass
  *
  * Bruk:
  * ```kotlin
- * @TestInstance(PER_CLASS)   // arves fra denne klassen
- * class MinTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
+ * class MinFlytTest {
+ *     @Nested
+ *     inner class InnvilgetFørstegangsbehandling : AbstraktFlytOrkestratorSnapshotTest() {
+ *         private lateinit var sak: Sak
+ *         private lateinit var behandling: Behandling
  *
- *     @BeforeAll
- *     fun settOppFGB() = snapshotEtterSetup {
- *         val (sak, behandling) = sendInnFørsteSøknad(...)
- *         behandling.løsSykdom(fom)...fattVedtak().løsVedtaksbrev()
- *         // dataSource peker nå på den ferdige FGB-databasen
+ *         @BeforeAll
+ *         fun settOppFGB() = snapshotEtterSetup {
+ *             val person = TestPersoner.STANDARD_PERSON()
+ *             this.person = person
+ *             val (sak, behandling) = sendInnFørsteSøknad(person = person)
+ *             this@InnvilgetFørstegangsbehandling.sak = sak
+ *             behandling.løsSykdom(fom)...fattVedtak().løsVedtaksbrev()
+ *         }
+ *
+ *         @BeforeEach
+ *         fun hentBehandlingFraSnapshot() {
+ *             behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+ *         }
+ *
+ *         @Test
+ *         fun `revurdering test 1`() { ... }
+ *
+ *         @Test
+ *         fun `revurdering test 2`() { ... }
  *     }
- *
- *     @Test
- *     fun `revurdering test 1`() { ... }  // starter alltid fra ferdig FGB
- *
- *     @Test
- *     fun `revurdering test 2`() { ... }  // uavhengig kopi av det samme snapshotet
  * }
  * ```
  *
  * Hvert test-metode får sin egen uavhengige database som er en klon av tilstanden etter
  * [snapshotEtterSetup]-blokken. Tests kan derfor endre databasen uten å påvirke hverandre.
+ * Uten et felles oppsett tas et snapshot av den tomme, migrerte databasen før første test,
+ * slik at også tester med forskjellige grunnlag slipper å tømme tabellene mellom hver test.
+ *
+ * Flere felles grunnlag i samme flyttest grupperes i `@Nested inner class`-er som arver
+ * denne klassen. Den ytre testklassen skal ikke arve orkestratortestklassene: bare de
+ * nestede gruppene skal eie database- og snapshot-livssyklusen. Hver gruppe oppretter
+ * sitt grunnlag i `@BeforeAll` og henter mutable behandlingsobjekter på nytt i `@BeforeEach`.
+ *
+ * [TestData.person] lagres med det eksisterende JSON-formatet for testpersoner. Før hver
+ * test gjenskapes personen og barna med samme identiteter, men uten delte mutable objekter.
+ * Bruk [hentPersonFraSnapshot] når en test skal endre personen. `PER_CLASS` beholder andre
+ * Kotlin-felt mellom testene; mutable behandlingsobjekter må fremdeles hentes på nytt.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstraktFlytOrkestratorSnapshotTest(
@@ -51,7 +75,11 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
 
     data class TestData(var person: TestPerson?)
 
-    private var testData: TestData = TestData(person = null)
+    private var personSnapshot: String? = null
+    private var personForTest: TestPerson? = null
+
+    protected fun hentPersonFraSnapshot(): TestPerson =
+        requireNotNull(personForTest) { "Registrer testpersonen med this.person i snapshotEtterSetup." }
 
     /**
      * Kjør oppsettskoden i [block] (f.eks. fullfør en FGB), ta deretter et snapshot av
@@ -60,6 +88,7 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
      */
     protected fun snapshotEtterSetup(block: TestData.() -> Unit) {
         motorForTest = null
+        personForTest = null
         resetGatewayProvider()
         if (::snapshot.isInitialized) {
             snapshot.close()
@@ -68,24 +97,29 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
             (dataSource as AutoCloseable).close()
             dataSource = TestDataSource()
         }
+        val testData = TestData(person = null)
         testData.block()
+        personSnapshot = testData.person?.let { DefaultJsonMapper.toJson(it) }
         snapshot = (dataSource as TestDataSource).createSnapshot()
     }
 
     /**
      * Før hvert test: bytt ut [dataSource] med en fersk klone av snapshotet, nullstill
-     * motoren slik at den bruker den nye databasen, og re-registrer personen som var
-     * aktiv under oppsett (siden FakesExtension.beforeEach() nullstiller FakePersoner).
+     * motoren slik at den bruker den nye databasen, og registrer en fersk person fra
+     * oppsettet (siden FakesExtension.beforeEach() nullstiller FakePersoner).
      */
     @BeforeEach
     override fun beforeEachClearDatabase() {
+        if (!::snapshot.isInitialized) {
+            super.beforeEachClearDatabase()
+            snapshotEtterSetup {}
+        }
         motorForTest = null
+        resetGatewayProvider()
         (dataSource as AutoCloseable).close()
         dataSource = snapshot.newDataSource()
-        // Re-register person that was registered during setup
-        if (testData.person != null) {
-            FakePersoner.leggTil(testData.person!!)
-        }
+        personForTest = personSnapshot?.let { DefaultJsonMapper.fromJson<TestPerson>(it) }
+            ?.also { FakePersoner.leggTil(it) }
     }
 
     /**
@@ -100,5 +134,9 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
         ).also { motorForTest = it }
 
     @AfterAll
-    fun lukkSnapshot() = snapshot.close()
+    fun lukkSnapshot() {
+        if (::snapshot.isInitialized) {
+            snapshot.close()
+        }
+    }
 }

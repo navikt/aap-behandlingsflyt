@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
@@ -25,31 +27,47 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
-    
-    @Test
-    fun `innvilge som student`() {
-        val fom = 24 november 2025
-        val sykestipendPeriode = Periode(fom, fom.plusDays(14))
-        val person = TestPersoner.STANDARD_PERSON()
+class StudentFlytTest : AbstraktFlytOrkestratorSnapshotTest(LokalUnleash::class) {
 
-        var (_, behandling) = sendInnFørsteSøknad(
+    private val fom = 24 november 2025
+    private lateinit var sak: Sak
+    private lateinit var behandling: Behandling
+
+    @BeforeAll
+    fun settOppStudent() = snapshotEtterSetup {
+        val person = TestPersoner.STANDARD_PERSON()
+        this.person = person
+        val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
             søknad = TestSøknader.SØKNAD_STUDENT
         )
-
-        val avbruttStudieDato = 1 oktober 2025
-        val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
-
-        behandling = behandling
+        this@StudentFlytTest.sak = sak
+        behandling
             .løsSykdomSomPotensieltOppfyltStudent(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
+    }
+
+    @BeforeEach
+    fun hentBehandlingFraSnapshot() {
+        behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+    }
+
+    @Test
+    fun `innvilge som student`() {
+        val sykestipendPeriode = Periode(fom, fom.plusDays(14))
+
+        val avbruttStudieDato = 1 oktober 2025
+        val forventetVarighetSluttStudent = avbruttStudieDato.plusMonths(6)
+
+        behandling = behandling
             .medKontekst {
                 assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .describedAs { "AVKLAR_STUDENT_V2 skal opprettes etter sykdom er løst med NEI_MEN_STUDENT og kvalitetssikring er gjort" }
@@ -116,24 +134,10 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
 
     @Test
     fun `revurdering med tom løsningerForPerioder skal ikke kaste NoSuchElementException`() {
-        val fom = 24 november 2025
         val sykestipendPeriode = Periode(fom, fom.plusDays(14))
         val avbruttStudieDato = 1 oktober 2025
 
-        val person = TestPersoner.STANDARD_PERSON()
-
-        val (sak, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            søknad = TestSøknader.SØKNAD_STUDENT
-        )
-
         behandling
-            .løsSykdomSomPotensieltOppfyltStudent(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarStudentLøsningV2(
                     løsningerForPerioder = listOf(
@@ -169,24 +173,11 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
 
     @Test
     fun `Periodisering - skal kunne avslutte student i samme behandling`() {
-        val fom = 24 november 2025
         val sykestipendPeriode = Periode(fom, fom.plusDays(14))
-        val person = TestPersoner.STANDARD_PERSON()
-
-        var (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            søknad = TestSøknader.SØKNAD_STUDENT
-        )
 
         val avbruttStudieDato = 1 oktober 2025
 
         behandling = behandling
-            .løsSykdomSomPotensieltOppfyltStudent(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarStudentLøsningV2(
                     løsningerForPerioder = listOf(
@@ -253,21 +244,7 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
 
     @Test
     fun `UunngåeligAvslag for AVKLAR_STUDENT_V2 inneholder riktig vilkårtype når studentvilkåret ikke er oppfylt`() {
-        val fom = 24 november 2025
-        val person = TestPersoner.STANDARD_PERSON()
-
-        val (_, behandling) = sendInnFørsteSøknad(
-            person = person,
-            mottattTidspunkt = fom.atStartOfDay(),
-            søknad = TestSøknader.SØKNAD_STUDENT
-        )
-
         behandling
-            .løsSykdomSomPotensieltOppfyltStudent(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
             .løsAvklaringsBehov(
                 AvklarStudentLøsningV2(
                     løsningerForPerioder = listOf(

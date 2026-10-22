@@ -16,7 +16,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class LegeerklæringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+class LegeerklæringFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Fjerner legeerklæring ventebehov ved mottak av avvist legeerklæring`() {
         // Oppretter vanlig søknad

@@ -62,6 +62,7 @@ class AktivitetspliktFlytTest :
     @BeforeAll
     fun settOppFGB() = snapshotEtterSetup {
         val person = TestPersoner.STANDARD_PERSON()
+        this.person = person
         sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
         revurdering = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
     }

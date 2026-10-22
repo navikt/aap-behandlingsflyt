@@ -19,6 +19,7 @@ import no.nav.aap.motor.JobbStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.Parameter
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDateTime
@@ -27,7 +28,12 @@ import kotlin.reflect.KClass
 @Tag("motor")
 @ParameterizedClass
 @MethodSource("unleashTestDataSource")
-class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
+class FlytOrkestratorTest : AbstraktFlytOrkestratorSnapshotTest() {
+    @field:Parameter
+    lateinit var unleashGateway: KClass<out UnleashGateway>
+
+    override fun unleashGateway() = unleashGateway
+
     @Test
     fun `hopper over foreslå vedtak-steg når revurdering ikke skal innom NAY`() {
         val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)

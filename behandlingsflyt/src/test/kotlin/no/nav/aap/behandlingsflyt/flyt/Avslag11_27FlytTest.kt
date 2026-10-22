@@ -12,26 +12,35 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnleash::class) {
+class Avslag11_27FlytTest : AbstraktFlytOrkestratorSnapshotTest(Avslag11_27FlytTestUnleash::class) {
 
-    @Test
-    fun `innvilgelse - skalAvslås1127 false gir oppfylt vilkår og avsluttet behandling`() {
-        val fom = LocalDate.now()
+    private val fom = LocalDate.now()
+    private lateinit var sak: Sak
+    private lateinit var behandling: Behandling
 
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+    @BeforeAll
+    fun settOppGrunnlag() = snapshotEtterSetup {
+        val person = TestPersoner.STANDARD_PERSON()
+        this.person = person
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay()
+        )
+        this@Avslag11_27FlytTest.sak = sak
 
         behandling
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
             .løsSykdom(fom)
             .løsBistand(fom)
             .løsRefusjonskrav()
@@ -40,6 +49,19 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
             .kvalitetssikre()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
+    }
+
+    @BeforeEach
+    fun hentBehandlingFraSnapshot() {
+        behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+    }
+
+    @Test
+    fun `innvilgelse - skalAvslås1127 false gir oppfylt vilkår og avsluttet behandling`() {
+        behandling
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
             .leggTilVurderingsbehov(Vurderingsbehov.VURDER_AVSLAG_11_27)
             .medKontekst {
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
@@ -72,19 +94,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
 
     @Test
     fun `avslag - skalAvslås1127 true gir ikke oppfylt vilkår med ANNEN_FULL_YTELSE_AVSLAG`() {
-        val fom = LocalDate.now()
-
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-
         behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .leggTilVurderingsbehov(Vurderingsbehov.VURDER_AVSLAG_11_27)
             .løsAvslag11_27(
                 skalAvslås1127 = true,
@@ -134,19 +144,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
 
     @Test
     fun `steget trigges ikke uten at vurderingsbehov er lagt til manuelt`() {
-        val fom = LocalDate.now()
-
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-
         behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(hentAlleAvklaringsbehov(behandling).map { it.definisjon })
                     .describedAs("§ 11-27 skal aldri trigges automatisk uten at saksbehandler legger til vurderingsbehovet")
@@ -163,19 +161,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
 
     @Test
     fun `harAnnenFullYtelse true men skalAvslås1127 false - gir likevel oppfylt vilkår`() {
-        val fom = LocalDate.now()
-
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-
         behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .leggTilVurderingsbehov(Vurderingsbehov.VURDER_AVSLAG_11_27)
             .løsAvslag11_27(
                 skalAvslås1127 = false,
@@ -206,19 +192,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
 
     @Test
     fun `flere krav i samme behandling - hvert krav får uavhengig utfall`() {
-        val fom = LocalDate.now()
-
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-
         behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .leggTilVurderingsbehov(Vurderingsbehov.VURDER_AVSLAG_11_27)
             .medKontekst {
                 val kravreferanser = dataSource.transaction(readOnly = true) { connection ->
@@ -257,19 +231,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
 
     @Test
     fun `revurdering - tidligere avslag 11-27 videreføres eller kan overstyres`() {
-        val fom = LocalDate.now()
-
-        val (sak, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-
         behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .leggTilVurderingsbehov(Vurderingsbehov.VURDER_AVSLAG_11_27)
             .løsAvslag11_27(skalAvslås1127 = true)
             .løsAndreStatligeYtelser()
@@ -320,19 +282,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
 
     @Test
     fun `avslag 11-27 overstyrer samordning når begge sier ikke oppfylt`() {
-        val fom = LocalDate.now()
-
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-
         behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .leggTilVurderingsbehov(Vurderingsbehov.VURDER_AVSLAG_11_27)
             // 11-27 sier ogsa IKKE_OPPFYLT
             .løsAvslag11_27(skalAvslås1127 = true)
@@ -362,19 +312,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
 
     @Test
     fun `11-27 oppfylt overstyrer ikke samordning når samordning dekker hele vedtaksperioden`() {
-        val fom = LocalDate.now()
-
-        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
-
         val behandlingKlarForSamordning = behandling
-            .løsSykdom(fom)
-            .løsBistand(fom)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .bekreftVurderinger()
-            .kvalitetssikre()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .leggTilVurderingsbehov(Vurderingsbehov.VURDER_AVSLAG_11_27)
             .løsAvslag11_27(skalAvslås1127 = false)
 
