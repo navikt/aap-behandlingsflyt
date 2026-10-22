@@ -206,6 +206,58 @@ class InstitusjonFlytTest {
                 }
         }
 
+        @Test
+        fun `revurdering av institusjonsopphold omgjør fra reduksjon til ingen reduksjon`() {
+            val tidligsteReduksjonsdato = fom.withDayOfMonth(1).plusMonths(4)
+
+            // Fullfør førstegangsbehandling med reduksjon
+            behandling
+                .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .løsVedtaksbrev()
+                .medKontekst {
+                    val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
+                    val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+
+                    assertThat(tidslinje.isNotEmpty()).isTrue()
+
+                    val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom.minusDays(1))
+                    val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedReduksjon)
+                    tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
+                        assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
+                            .`as`("Institusjonsgradering skal være 50% i perioden med institusjonsopphold")
+                            .isEqualTo(Prosent.`50_PROSENT`)
+                    }
+                }
+
+            // Revurder og omgjør til ingen reduksjon
+            val revurdering = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD))
+
+            revurdering
+                .medKontekst {
+                    assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+                }
+                .løsAvklaringsBehov(løsHelseinstitusjonUtenReduksjon(fom, oppholdTom, "Omgjør: forsørger ektefelle"))
+                .løsAndreStatligeYtelser()
+                .løsAvklaringsBehov(ForeslåVedtakLøsning())
+                .fattVedtak()
+                .medKontekst {
+                    val tilkjentYtelse = hentTilkjentYtelse(revurdering.id)
+                    val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+                    val helePerioden = tilkjentYtelse.tilTidslinje().helePerioden()
+
+                    assertTidslinje(
+                        tidslinje.begrensetTil(helePerioden),
+                        helePerioden to {
+                            assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
+                        }
+                    )
+                }
+        }
+
     }
 
     @Nested
@@ -582,75 +634,6 @@ class InstitusjonFlytTest {
         // -------------------------------------------------------------------------
         // Revurdering
         // -------------------------------------------------------------------------
-
-        @Test
-        fun `revurdering av institusjonsopphold omgjør fra reduksjon til ingen reduksjon`() {
-            val fom = LocalDate.now().minusMonths(5)
-            val oppholdTom = LocalDate.now().plusMonths(7)
-            val tidligsteReduksjonsdato = fom.withDayOfMonth(1).plusMonths(4)
-
-            val (sak, behandling) = sendInnFørsteSøknad(
-                person = TestPersoner.STANDARD_PERSON().medInstitusjonsopphold(
-                    listOf(hsOpphold(startdato = fom, sluttdato = oppholdTom))
-                ),
-                mottattTidspunkt = fom.atStartOfDay(),
-            )
-
-            // Fullfør førstegangsbehandling med reduksjon
-            behandling
-                .løsSykdom(fom)
-                .løsBistand(fom)
-                .løsRefusjonskrav()
-                .løsSykdomsvurderingBrev()
-                .bekreftVurderinger()
-                .kvalitetssikre()
-                .løsBeregningstidspunkt()
-                .løsOppholdskrav(fom)
-                .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
-                .løsAndreStatligeYtelser()
-                .løsAvklaringsBehov(ForeslåVedtakLøsning())
-                .fattVedtak()
-                .løsVedtaksbrev()
-                .medKontekst {
-                    val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                    val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                    assertThat(tidslinje.isNotEmpty()).isTrue()
-
-                    val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom.minusDays(1))
-                    val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedReduksjon)
-                    tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
-                        assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
-                            .`as`("Institusjonsgradering skal være 50% i perioden med institusjonsopphold")
-                            .isEqualTo(Prosent.`50_PROSENT`)
-                    }
-                }
-
-            // Revurder og omgjør til ingen reduksjon
-            val revurdering = sak.opprettManuellRevurdering(listOf(Vurderingsbehov.INSTITUSJONSOPPHOLD))
-
-            revurdering
-                .medKontekst {
-                    assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
-                }
-                .løsAvklaringsBehov(løsHelseinstitusjonUtenReduksjon(fom, oppholdTom, "Omgjør: forsørger ektefelle"))
-                .løsAndreStatligeYtelser()
-                .løsAvklaringsBehov(ForeslåVedtakLøsning())
-                .fattVedtak()
-                .medKontekst {
-                    val tilkjentYtelse = hentTilkjentYtelse(revurdering.id)
-                    val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-                    val helePerioden = tilkjentYtelse.tilTidslinje().helePerioden()
-
-                    assertTidslinje(
-                        tidslinje.begrensetTil(helePerioden),
-                        helePerioden to {
-                            assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
-                        }
-                    )
-                }
-        }
 
         @Test
         fun `revurdering med barnetillegg - fjerning av barnetillegg gir reduksjon i samme periode`() {
