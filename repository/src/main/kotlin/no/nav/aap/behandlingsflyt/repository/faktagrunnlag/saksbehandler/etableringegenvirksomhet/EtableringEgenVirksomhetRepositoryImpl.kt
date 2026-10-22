@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtablerEgenVirksomhetMapper
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.LegacyEtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
@@ -83,7 +83,14 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
         """.trimIndent(), etableringEgenvirksomhetVurderinger
         ) {
             setParams {
-                val legacy = EtablerEgenVirksomhetMapper.tilLegacy(it)
+                val gammeltFormat = it.tilGammeltFormat()
+                val utviklingsperioder =
+                    if (it.tom == null) emptyList() else gammeltFormat.utviklingsPerioder
+                val oppstartsperioder =
+                    if (it.tom == null) emptyList() else gammeltFormat.oppstartsPerioder
+
+                setLong(8, lagreUtviklingsperiode(utviklingsperioder))
+                setLong(9, lagreOppstartsperiode(oppstartsperioder))
                 setString(1, it.begrunnelse)
                 setBoolean(2, it.foreliggerFagligVurdering)
                 setBoolean(3, it.virksomhetErNy)
@@ -91,8 +98,8 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setBoolean(5, it.kanFøreTilSelvforsørget)
                 setString(6, it.virksomhetNavn)
                 setString(7, it.orgNr)
-                setLong(8, lagreUtviklingsperiode(legacy.utviklingsPerioder))
-                setLong(9, lagreOppstartsperiode(legacy.oppstartsPerioder))
+                setLong(8, lagreUtviklingsperiode(utviklingsperioder))
+                setLong(9, lagreOppstartsperiode(oppstartsperioder))
                 setLong(10, vurderingerId)
                 setLong(11, it.vurdertIBehandling.id)
                 setString(12, it.vurdertAv.ident)
@@ -152,7 +159,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setLong(1, vurderingerId)
             }
             setRowMapper { row ->
-                val legacy = LegacyEtableringEgenVirksomhetVurdering(
+                EtableringEgenVirksomhetVurdering(
                     begrunnelse = row.getString("BEGRUNNELSE"),
                     virksomhetNavn = row.getString("VIRKSOMHET_NAVN"),
                     orgNr = row.getStringOrNull("ORG_NR"),
@@ -173,9 +180,8 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
                     jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET")
                 )
-                EtablerEgenVirksomhetMapper.fraLegacy(legacy)
             }
-        }
+        }.tilNyttFormat()
     }
 
     private fun hentVirksomhetUtviklingsperioder(utviklingsperioderId: Long?): List<Periode> {

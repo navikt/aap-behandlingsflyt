@@ -226,7 +226,7 @@ class BackfillEtableringVurderinger(
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             val varighetFør = varighet(før)
-            val valideringsresultatFør = service.erVurderingerGyldig(behandlingId, før)
+            val valideringsresultatFør = service.beregnOgValider(behandlingId, før)
             vurderinger.forEach { (vurderingId, vurdering) ->
                 val oppdaterteVurderinger = oppdaterVurdering(vurdering)
 
@@ -254,7 +254,7 @@ class BackfillEtableringVurderinger(
             check(varighetFør == varighet(etter)) {
                 "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
-            check(valideringsresultatFør == service.erVurderingerGyldig(behandlingId, etter)) {
+            check(valideringsresultatFør == service.beregnOgValider(behandlingId, etter)) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
         }

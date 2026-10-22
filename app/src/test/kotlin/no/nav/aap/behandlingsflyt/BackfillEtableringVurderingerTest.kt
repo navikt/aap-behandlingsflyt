@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -210,8 +210,8 @@ class BackfillEtableringVurderingerTest {
                     )
                 )
             )
-            assertThat(EtableringEgenVirksomhetService(provider).erVurderingerGyldig(behandlingId, listOf(legacy)))
-                .isEqualTo(VirksomhetEtableringGyldig)
+            assertThat(EtableringEgenVirksomhetService(provider).beregnOgValider(behandlingId, listOf(legacy)))
+                .isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
         }
         assertThat(varighet(migrert(legacy))).isEqualTo(varighet(listOf(legacy)))
 
@@ -588,11 +588,11 @@ class BackfillEtableringVurderingerTest {
             )
         )
 
-        val gyldigFør = service.erVurderingerGyldig(behandling.id, før)
-        val gyldigEtter = service.erVurderingerGyldig(behandling.id, etter.map { it.tilGammeltFormat() })
+        val gyldigFør = service.beregnOgValider(behandling.id, før)
+        val gyldigEtter = service.beregnOgValider(behandling.id, etter.map { it.tilGammeltFormat() })
 
-        assertThat(gyldigFør).isEqualTo(VirksomhetEtableringGyldig)
-        assertThat(gyldigEtter).isEqualTo(gyldigFør)
+        assertThat(gyldigFør).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+        assertThat(gyldigEtter).isInstanceOf(gyldigFør::class.java)
     }
 
     private fun evalueringer(vurderinger: List<EtableringEgenVirksomhetVurdering>) =

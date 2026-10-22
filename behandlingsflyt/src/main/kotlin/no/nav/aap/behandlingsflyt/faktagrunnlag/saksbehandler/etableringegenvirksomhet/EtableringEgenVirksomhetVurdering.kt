@@ -51,6 +51,8 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
                 fase = EtableringFase.UTVIKLING,
                 fom = utviklingsperiode.fom,
                 tom = utviklingsperiode.tom,
+                erRegistrertINødvendigeOffentligeRegister = null,
+                jobberBrukerAktivMedVirksomheten = true
             )
         }
 
@@ -61,6 +63,8 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
                 fase = EtableringFase.OPPSTART,
                 fom = oppstartsperioder.fom,
                 tom = oppstartsperioder.tom,
+                erRegistrertINødvendigeOffentligeRegister = true,
+                jobberBrukerAktivMedVirksomheten = true
             )
         }
 

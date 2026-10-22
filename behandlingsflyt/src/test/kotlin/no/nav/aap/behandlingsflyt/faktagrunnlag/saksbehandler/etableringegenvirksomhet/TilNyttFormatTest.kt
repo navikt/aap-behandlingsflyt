@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
@@ -120,9 +120,13 @@ class TilNyttFormatTest {
     fun `mapper alle vurderinger når listen har flere elementer`() {
         val gammel = listOf(
             konstruerVurdering {
+                fom = 1 januar 2026
+                tom = 31 januar 2026
                 utviklingsperioder = listOf((1 februar 2026) to (1 mars 2026))
             },
             konstruerVurdering {
+                fom = 1 mars 2026
+                tom = 31 mars 2026
                 oppstartsperioder = listOf((2 mars 2026) to (10 mars 2026))
             },
             konstruerVurdering {
@@ -223,11 +227,11 @@ class TilNyttFormatTest {
             )
         )
 
-        val før = service.erVurderingerGyldig(behandling.id, gammel)
-        val etter = service.erVurderingerGyldig(behandling.id, gammel.tilNyttFormat().map { it.tilGammeltFormat() })
+        val før = service.beregnOgValider(behandling.id, gammel)
+        val etter = service.beregnOgValider(behandling.id, gammel.tilNyttFormat().map { it.tilGammeltFormat() })
 
-        assertThat(før).isEqualTo(VirksomhetEtableringGyldig)
-        assertThat(etter).isEqualTo(før)
+        assertThat(før).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+        assertThat(etter).isInstanceOf(før::class.java)
     }
 
     private class VurderingBuilder(
@@ -260,12 +264,13 @@ class TilNyttFormatTest {
             tom = null,
             fase = null,
             erRegistrertINødvendigeOffentligeRegister = null,
-            jobberBrukerAktivMedVirksomheten = null,
+            jobberBrukerAktivMedVirksomheten = true,
         ).run {
             copy(
                 fom = builder.fom ?: this.fom,
                 tom = builder.tom ?: this.tom,
                 fase = builder.fase ?: this.fase,
+                erRegistrertINødvendigeOffentligeRegister = builder.fase?.let { if (it == EtableringFase.OPPSTART) true else null } ?: this.erRegistrertINødvendigeOffentligeRegister,
                 utviklingsPerioder = builder.utviklingsperioder?.map { Periode(it.first, it.second) }
                     ?: this.utviklingsPerioder,
                 oppstartsPerioder = builder.oppstartsperioder?.map { Periode(it.first, it.second) }
