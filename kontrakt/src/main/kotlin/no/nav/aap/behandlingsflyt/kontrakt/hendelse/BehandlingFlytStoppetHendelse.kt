@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -25,6 +26,8 @@ public data class BehandlingFlytStoppetHendelse(
     val årsakTilOpprettelse: ÅrsakTilOpprettelse,
     val status: Status,
     val aktivtSteg: StegType? = null,
+    /** Avklaringsbehovet (ikke ventebehov) som førte til at flyten stoppet i [aktivtSteg]. */
+    val aktivtAvklaringsbehov: Definisjon? = null,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val erPåVent: Boolean,
     val uføreVedtak: UførevedtakDto?,

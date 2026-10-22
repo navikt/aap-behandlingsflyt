@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
@@ -117,7 +117,7 @@ class EtableringEgenVirksomhetLøserTest {
         )
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
-        assertThat(feil.message).contains("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
+        assertThat(feil.message).contains("Oppstartsperiode kan ikke ligge før en utviklingsperiode.")
     }
 
     @Test
@@ -153,6 +153,9 @@ class EtableringEgenVirksomhetLøserTest {
                     oppstartsPerioder = listOf(
                         Periode(vurderingFom.plusMonths(2).plusDays(1), vurderingFom.plusMonths(3))
                     ),
+                    fase = null,
+                    erRegistrertINødvendigeOffentligeRegister = null,
+                    jobberBrukerAktivMedVirksomheten = null
                 )
             )
         )

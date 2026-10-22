@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.avløp
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
@@ -48,6 +49,7 @@ class BehandlingHendelseServiceImpl(
     private val dokumentRepository: MottattDokumentRepository,
     private val pipService: PipService,
     private val behandlingService: BehandlingService,
+    private val avklaringsbehovService: AvklaringsbehovService,
     private val unleashGateway: UnleashGateway
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -56,6 +58,7 @@ class BehandlingHendelseServiceImpl(
         dokumentRepository = repositoryProvider.provide(),
         pipService = PipService(repositoryProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -70,6 +73,7 @@ class BehandlingHendelseServiceImpl(
         val vurderingsbehov = behandling.vurderingsbehov()
         val mottattDokumenter = hentMottattDokumenter(vurderingsbehov, behandling)
         val uføreVedtak = hentUføreVedtak(behandling)
+        val aktivtAvklaringsbehov = avklaringsbehovService.finnAktivtAvklaringsbehov(behandling)
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -77,6 +81,7 @@ class BehandlingHendelseServiceImpl(
             referanse = behandling.referanse,
             behandlingType = behandling.typeBehandling(),
             aktivtSteg = behandling.aktivtSteg(),
+            aktivtAvklaringsbehov = aktivtAvklaringsbehov?.definisjon,
             status = behandling.status(),
             årsakerTilBehandling = vurderingsbehov.map { it.type.name },
             vurderingsbehov = vurderingsbehov.map { it.type.name },
@@ -90,7 +95,7 @@ class BehandlingHendelseServiceImpl(
             reserverTilPerAvklaringsbehov = finnReserverTilBrukerPerAvklaringsbehov(behandling.id),
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
-            versjon = ApplikasjonsVersjon.versjon
+            versjon = ApplikasjonsVersjon.versjon,
         ).copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")

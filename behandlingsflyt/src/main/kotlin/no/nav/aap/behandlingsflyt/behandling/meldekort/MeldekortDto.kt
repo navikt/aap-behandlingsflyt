@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.meldekort
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakjustertMeldefrist
+import no.nav.aap.meldeplikt.MeldepliktStatus
+import no.nav.aap.meldeplikt.helligdagsunntakjustertMeldefrist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -68,6 +68,21 @@ data class OppdaterMeldekort(
     )
 
     fun meldekortMedTimerRegistrert() = dager.isNotEmpty()
+}
+
+data class RegistrerMeldedato(
+    val saksnummer: Saksnummer,
+    val meldedato: LocalDate,
+    val begrunnelse: String,
+    val bruker: Bruker,
+) {
+    fun tilMeldekort(): MeldekortV0 =
+        MeldekortV0(
+            harDuArbeidet = null,
+            opprettetAv = bruker.ident,
+            begrunnelse = begrunnelse,
+            timerArbeidPerPeriode = emptyList(),
+        )
 }
 
 data class OppdaterMeldekortResponse(

@@ -12,12 +12,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.Prioritet
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class ProsesserBehandlingService(
     private val flytJobbRepository: FlytJobbRepository,
@@ -115,9 +115,16 @@ class ProsesserBehandlingService(
                     )
                     .medCallId()
                     .medPrioritet(Prioritet.LAV)
+                    .medNesteKjøring(utledNesteKjøringPåKveldstid())
             )
         }
     }
+
+    /**
+     * Når det kommer meldekortbehandlinger kan vi utsette å sjekke for endrede informasjonskrav til utenom arbeidstid.
+     */
+    private fun utledNesteKjøringPåKveldstid(): LocalDateTime =
+        maxOf(LocalDateTime.now(), LocalDateTime.now().withHour(19).withMinute(0))
 
     private fun skalInnhenteInformasjon(vurderingsbehov: List<Vurderingsbehov>): Boolean {
         return vurderingsbehov.any {

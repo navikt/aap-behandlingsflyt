@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
+import no.nav.aap.meldeplikt.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.meldeplikt.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.meldeplikt.Fritaksvurdering
+import no.nav.aap.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -72,7 +71,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 val underveisGrunnlag = underveisRepository.hentHvisEksisterer(gjeldendeYtelsesbehandling.id)
                 val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden()
                     ?: error("Skal ha underveisperiode for avsluttet behandling ${gjeldendeYtelsesbehandling.id}")
-                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(gjeldendeYtelsesbehandling.id, underveisperiode)
+                val meldeperioder =
+                    meldeperiodeRepository.hentMeldeperioder(gjeldendeYtelsesbehandling.id, underveisperiode)
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
@@ -148,16 +148,9 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
             meldepliktGrunnlag: MeldepliktGrunnlag?,
             underveisGrunnlag: UnderveisGrunnlag?
         ): MeldeperioderV0 {
-            val underveisperioder = underveisGrunnlag
-                ?.perioder
-                .orEmpty()
-                .map { Segment(it.periode, it) }
-                .let(::Tidslinje)
+            val underveisperioder = underveisGrunnlag?.somTidslinje().orEmpty()
 
-            val fritaksvurderinger: Tidslinje<Fritaksvurdering.FritaksvurderingData> =
-                meldepliktGrunnlag
-                    ?.tilTidslinje()
-                    .orEmpty()
+            val fritaksvurderinger = meldepliktGrunnlag?.tilTidslinje().orEmpty()
 
             return MeldeperioderV0(
                 sakStatus = when (sak.status()) {

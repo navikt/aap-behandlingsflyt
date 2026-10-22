@@ -1,0 +1,87 @@
+package no.nav.aap.meldeplikt
+
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.Factory
+import java.time.DayOfWeek
+import java.time.LocalDate
+
+class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : MeldeperiodeRepository {
+    companion object : Factory<MeldeperiodeRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): MeldeperiodeRepositoryImpl {
+            return MeldeperiodeRepositoryImpl(connection)
+        }
+    }
+
+    override fun hentFastsattDag(behandlingId: BehandlingId): LocalDate? {
+        val query = """
+            SELECT periode FROM MELDEPERIODE 
+            JOIN MELDEPERIODE_GRUNNLAG ON MELDEPERIODE.meldeperiodegrunnlag_id = MELDEPERIODE_GRUNNLAG.id
+            WHERE behandling_id = ? AND aktiv = true
+            order by periode
+        """.trimIndent()
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                it.getPeriode("periode").fom
+            }
+        }
+    }
+
+
+    /**
+     * Lagrer kun ned første meldeperioden - resten kan utledes
+     */
+    override fun lagreFastsattDag(
+        behandlingId: BehandlingId,
+        fastsattDag: LocalDate,
+    ) {
+        check(fastsattDag.dayOfWeek == DayOfWeek.MONDAY) {
+            "Våre meldeperioder starter alltid på en mandag, $fastsattDag er en ${fastsattDag.dayOfWeek}."
+        }
+
+        val disableQuery = """
+            UPDATE MELDEPERIODE_GRUNNLAG SET aktiv = false WHERE behandling_id = ? AND aktiv
+        """.trimIndent()
+        connection.execute(disableQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+        }
+
+        val insertNewMeldeperiode_Grunnlag = """
+            INSERT INTO MELDEPERIODE_GRUNNLAG (behandling_id, aktiv)
+            VALUES (?, true)
+        """.trimIndent()
+        val key = connection.executeReturnKey(insertNewMeldeperiode_Grunnlag) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+        }
+
+        val query = """
+            INSERT INTO MELDEPERIODE (meldeperiodegrunnlag_id, periode)
+            VALUES (?, ?::daterange)
+        """.trimIndent()
+        connection.execute(query) {
+            setParams {
+                setLong(1, key)
+                setPeriode(2, Periode(fastsattDag, fastsattDag.plusDays(13)))
+            }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        // Ikke relevant for trukkede søknader, da man ikke vil ha fått meldeperioder
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        val fastsattDag = hentFastsattDag(fraBehandling)
+        if (fastsattDag != null) {
+            lagreFastsattDag(tilBehandling, fastsattDag)
+        }
+    }
+}

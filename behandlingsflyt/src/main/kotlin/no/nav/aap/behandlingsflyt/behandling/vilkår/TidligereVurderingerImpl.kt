@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -440,6 +440,10 @@ class TidligereVurderingerImpl(
     private fun potensieltOppfyltOvergangArbeid(
         rettighetsperiode: Periode, segmentPeriode: Periode, sykdomstidslinje: Tidslinje<Sykdomsvurdering>
     ): Boolean {
+         // Trukkede søknader satt tilbake til Tid.MIN har ikke potensielt oppfylt overgang arbeid
+        if (segmentPeriode.fom == Tid.MIN) {
+            return false
+        }
         val harTidligereInnvilgetSykdomsvurdering =
             sykdomstidslinje.begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1))).segmenter()
                 .any { it.verdi.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() }

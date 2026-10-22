@@ -180,7 +180,7 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             versjon = 0L
         )
 
-        every { behandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
+        every { behandlingServiceMock.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns fakeBehandling
 
         every { trukketSøknadServiceMock.søknadErTrukket(any()) } returns false
 
@@ -253,7 +253,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             institusjonsOppholdRepository = institusjonsoppholdRepositoryMock,
             behandlingService = behandlingServiceMock,
             trukketSøknadService = trukketSøknadServiceMock,
-            behandlingRepository = behandlingRepositoryMock,
             underveisgrunnlagRepository = underveisgrunnlagRepositoryMock,
         ) to behandlingServiceMock
     }

@@ -17,25 +17,27 @@ enum class BehandlingsflytFeature(
     Under18,
     VisIkkeRelevantPeriode,
     MigrerStansOgOpphor,
-    SamordningFaktagrunnlagBrev,
     GReguleringUtplukkJobb,
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
-    GenererVilkarsvurderingOppsummeringPDF,
-    SaksbehandlerMeldekortKvitteringNyPdfgenerator,
+    SynkroniserArenaMeldeperiodesyklus,
+    DynamiskFrivilligSykestipend,
 
     // --- Krav ---
-    BackfillKrav,
     KravSteg, // Visning
-    LagreVurderRettighetsperiodeSomKrav, // Double write
-    KravAutomatiskVurdering, // Double write
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
 
     // --- Migrering ---
     MigererSykdomFraArenaAutomatisk,
+    MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
+    MigrererOppholdskravFraArenaAutomatisk,
+    MigrererVedtakslengdeFraArenaAutomatisk,
+
+    // --- Utbetaling ---
+    FjerneAvventUtbetalingForSamordningArbeidsgiver,
 
     // ------
     Avslag11_27,
@@ -45,7 +47,10 @@ enum class BehandlingsflytFeature(
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
-    NySoknadTilApiIntern
+    NySoknadTilApiIntern,
+    SammenhengendeInstitusjonsopphold,
+    DatadelingBehandlingVisning,
+    Helseinstitusjon1Manedsregel
     ;
 
     override fun key(): String = name

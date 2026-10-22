@@ -60,6 +60,10 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         return true
     }
 
+    override fun oppdaterMottakere(referanse: BrevbestillingReferanse, mottaker: MottakerDto, kopimottaker: MottakerDto?) {
+        brevbestillingResponse = brevbestillingResponse!!.copy(mottaker = mottaker, kopimottaker = kopimottaker)
+    }
+
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
         brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.AVBRUTT)
     }
@@ -76,6 +80,13 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         val brevKanDistribueres = MottakerDistStatus("1234", true)
         val brevKanIkkeDistribueres = MottakerDistStatus("5678", false)
         return listOf(brevKanDistribueres, brevKanIkkeDistribueres)
+    }
+
+    override fun kanDistribuereBrevV2(
+        brevbestillingReferanse: BrevbestillingReferanse,
+        mottakerId: String
+    ): Boolean {
+        return true
     }
 
     override fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse {

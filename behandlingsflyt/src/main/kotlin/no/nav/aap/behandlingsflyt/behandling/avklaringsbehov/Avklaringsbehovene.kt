@@ -39,8 +39,8 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker) {
-        if (definisjon.erFrivillig() && definisjon in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov) {
+    fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker, legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>) {
+        if (definisjon.erFrivillig() && definisjon in legacyAutomatiskFrivillgeAvklaringsbehov) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
                 leggTil(
@@ -160,7 +160,66 @@ class Avklaringsbehovene(
                 gradBehov = gradBehov
             )
         }
+    }
 
+    fun leggTilVentebehovForBestillLegeerklæring(
+        funnetISteg: StegType,
+        bruker: Bruker = SYSTEMBRUKER,
+        frist: LocalDate? = null,
+    ) {
+        val bestillLegeerklæringBehov = hentBehovForDefinisjon(Definisjon.BESTILL_LEGEERKLÆRING)
+        if (bestillLegeerklæringBehov == null) {
+            repository.opprett(
+                behandlingId = behandlingId,
+                definisjon = Definisjon.BESTILL_LEGEERKLÆRING,
+                funnetISteg = funnetISteg,
+                frist = utledFrist(Definisjon.BESTILL_LEGEERKLÆRING, frist),
+                grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+                endretAv = bruker,
+            )
+        } else {
+            oppdaterEksisterendeBestillLegeerklæringBehov(
+                bestillLegeerklæringBehov = bestillLegeerklæringBehov,
+                bruker = bruker,
+                funnetISteg = funnetISteg,
+                frist = frist
+            )
+        }
+
+    }
+
+    private fun oppdaterEksisterendeBestillLegeerklæringBehov(
+        bestillLegeerklæringBehov: Avklaringsbehov,
+        bruker: Bruker,
+        funnetISteg: StegType,
+        frist: LocalDate?
+    ) {
+        if (bestillLegeerklæringBehov.erAvsluttet()) {
+            bestillLegeerklæringBehov.reåpne(
+                frist = utledFrist(Definisjon.BESTILL_LEGEERKLÆRING, frist),
+                venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+                bruker = bruker,
+            )
+            repository.endreVentepunkt(
+                bestillLegeerklæringBehov.id,
+                bestillLegeerklæringBehov.historikk.last(),
+                funnetISteg
+            )
+        } else {
+            val harEndring = bestillLegeerklæringBehov.oppdaterVentebehovHvisFristEndret(
+                nyFrist = requireNotNull(utledFrist(Definisjon.BESTILL_LEGEERKLÆRING, frist)) {
+                    "Forsøkte å oppdatere ventebehov for bestill legeerklæring uten å angi frist"
+                },
+                bruker = bruker,
+            )
+            if (harEndring) {
+                repository.endreVentepunkt(
+                    bestillLegeerklæringBehov.id,
+                    bestillLegeerklæringBehov.historikk.last(),
+                    funnetISteg
+                )
+            }
+        }
     }
 
     private fun utledFrist(definisjon: Definisjon, frist: LocalDate?): LocalDate? {
@@ -268,13 +327,12 @@ class Avklaringsbehovene(
         return avklaringsbehovene
     }
 
-    fun alleEkskludertAvbruttOgVentebehov(): List<Avklaringsbehov> {
-        return avklaringsbehovene
-            .filterNot { it.status() == Status.AVBRUTT || it.definisjon.erVentebehov() }
-    }
-
-    fun åpne(): List<Avklaringsbehov> {
-        return alle().filter { it.erÅpent() }.toList()
+    /**
+     * Alle åpne avklaringsbehov som må løses.
+     * Inkluderer ikke frivillige behov som kan løses
+     */
+    fun måLøses(): List<Avklaringsbehov> {
+        return alle().filter { it.måLøses() }.toList()
     }
 
     fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
@@ -299,7 +357,7 @@ class Avklaringsbehovene(
     }
 
     fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {
-        return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+        return alle().filter { avklaringsbehov -> avklaringsbehov.harLøsning() }
             .filter { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
             .filterNot { it.erForeslåttVedtak() || it.erForeslåttVedtakVedtakslengde() }
     }
@@ -364,7 +422,8 @@ class Avklaringsbehovene(
         val nesteSteg = behandling.aktivtSteg()
         val behandlingFlyt = behandling.flyt()
         behandlingFlyt.forberedFlyt(nesteSteg)
-        val uhåndterteBehov = alle().filter { it.erÅpent() }
+        val uhåndterteBehov = alle()
+            .filter { it.måLøses() }
             .filter { definisjon ->
                 behandlingFlyt.erStegFør(
                     definisjon.løsesISteg(),
@@ -393,10 +452,16 @@ class Avklaringsbehovene(
         return "Behov[${avklaringsbehovene.joinToString { it.toString() }}. For ID $behandlingId.]"
     }
 
-    fun allePlussFrivillige(behandling: Behandling): List<Avklaringsbehov> {
+    fun allePlussFrivillige(
+        behandling: Behandling,
+        legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>
+    ): List<Avklaringsbehov> {
         val eksisterendeBehov = alle()
         val flyt = behandling.flyt()
-        val list = flyt.frivilligeAvklaringsbehovRelevantForFlyten(behandling.aktivtSteg())
+        val list = flyt.frivilligeAvklaringsbehovRelevantForFlyten(
+            behandling.aktivtSteg(),
+            legacyAutomatiskFrivillgeAvklaringsbehov
+        )
             .filter { definisjon -> eksisterendeBehov.none { behov -> behov.definisjon == definisjon } }
             .map { definisjon ->
                 Avklaringsbehov(

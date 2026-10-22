@@ -66,6 +66,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.FiktivtHelseoppholdNavnGenerator
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.TexasPortHolder
@@ -500,6 +501,7 @@ private fun sendInnSøknad(
             ),
             inntekter = dto.inntekterPerAr.orEmpty().map { inn -> inn.to() },
             aInntekter = dto.aInntekterPerAr?.map { inn -> inn.to() },
+            personStatus = listOf(PdlFolkeregisterPersonStatus(dto.personStatus, null)),
             sykepenger = dto.sykepenger.map {
                 TestPerson.Sykepenger(
                     grad = it.grad,
@@ -750,7 +752,7 @@ private fun hentSisteBehandlingForSak(sakId: SakId, gatewayProvider: GatewayProv
             gatewayProvider
         )
 
-        val behandling = sbService.finnSisteYtelsesbehandlingFor(sakId)
+        val behandling = sbService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
         requireNotNull(behandling) { "Finner ikke behandling for sakId: $sakId" }
         behandling
     }

@@ -69,7 +69,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`9003`,
         løsesISteg = StegType.UDEFINERT,
         type = BehovType.VENTEPUNKT,
-        defaultFrist = Period.ofWeeks(4),
+        defaultFrist = Period.ofWeeks(5),
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
             Rolle.SAKSBEHANDLER_NASJONAL
@@ -679,7 +679,6 @@ public enum class Definisjon(
         public val legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon> = setOf(
             ARBEIDSOPPTRAPPING,
             AVKLAR_SAMORDNING_GRADERING,
-            AVKLAR_SAMORDNING_SYKESTIPEND,
             AVKLAR_SAMORDNING_UFØRE,
             AVKLAR_VEDTAKSLENGDE,
             ETABLERING_EGEN_VIRKSOMHET,

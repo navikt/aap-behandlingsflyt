@@ -5,7 +5,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -32,7 +31,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeDokarkivGateway
 import no.nav.aap.behandlingsflyt.test.FakePdfGeneratorGateway
-import no.nav.aap.behandlingsflyt.test.FakePdfgenGateway
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.april
@@ -51,6 +49,7 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -78,7 +77,6 @@ class MeldekortApiTest : BaseApiTest() {
         register<NorgGateway>()
         register<AlleAvskruddUnleash>()
         register<FakeDokarkivGateway>()
-        register<FakePdfgenGateway>()
         register<FakePdfGeneratorGateway>()
     }
 
@@ -776,6 +774,46 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(journalpost.tittel).startsWith("Meldekort for uke")
             assertThat(journalpost.dokumenter!!.single().tittel).startsWith("Meldekort for uke")
             assertThat(journalpost.dokumenter!!.single().brevkode).isEqualTo("NAV 00-10.02")
+        }
+    }
+
+    @Test
+    fun `registrer-meldedato gir tittel Registrering av meldeplikt`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+
+        val dag1 = 6 januar 2025
+        val dag2 = 7 januar 2025
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, Periode(dag1, dag2))),
+            input = object : Faktagrunnlag {}
+        )
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), 6 januar 2025)
+
+        val request = RegistrerMeldedatoRequest(
+            meldeDato = 20 januar 2025,
+            begrunnelse = "Registrering av meldedato",
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProviderMedDokarkiv(), fixedClock)
+            }
+
+            val response = createClient().post("/api/meldekort/${sak.saksnummer}/registrer-meldedato") {
+                header("Authorization", "Bearer ${getToken().token()}")
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+
+            val journalpost = FakeDokarkivGateway.journalposter.values.single()
+            assertThat(journalpost.tittel).isEqualTo("Registrering av meldeplikt 20.01.2025")
+            assertThat(journalpost.dokumenter!!.single().tittel).isEqualTo("Registrering av meldeplikt 20.01.2025")
         }
     }
 

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.helligdagsunntakFritaksUtbetalingDato
+import no.nav.aap.meldeplikt.MeldepliktStatus
+import no.nav.aap.meldeplikt.helligdagsunntakFritaksUtbetalingDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
@@ -128,7 +128,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
      * - Samordning med uføre (prosent, heltall)
      * - Samordning (annet) (prosent, heltall)
      * - [Samordning ytelser fra arbeidsgiver][no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningArbeidsgiverSteg] (prosent, heltall)
-     * - [Reduksjon på grunn av ikke oppfylt meldeplikt][no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel] (prosent, heltall)
+     * - [Reduksjon på grunn av ikke oppfylt meldeplikt][no.nav.aap.meldeplikt.MeldepliktRegel] (prosent, heltall)
      * - [Gradering på grunn av opphold på helseinstitusjon][no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel] (prosent, heltall)
      *
      * Utregningen gjøres med heltall mellom 0 og 100 (prosenter). Resultatet og delresultater kan aldri bli mindre enn 0%.

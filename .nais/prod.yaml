@@ -126,6 +126,7 @@ spec:
         - application: utbetal
         - application: statistikk
         - application: dokumentinnhenting
+        - application: pdfgenerator-saksbehandling
         - application: spokelse
           namespace: tbd
         - application: pensjon-pen
@@ -142,8 +143,6 @@ spec:
           namespace: team-rocket
         - application: logging
           namespace: nais-system
-        - application: saksbehandling-pdfgen
-        - application: pdfgenerator-saksbehandling
         - application: dp-datadeling
           namespace: teamdagpenger
         - application: tiltakspenger-datadeling
@@ -250,6 +249,8 @@ spec:
       value: 785e7a77-8976-4e4e-b620-d7b3731076aa
     - name: INTEGRASJON_SAKSBEHANDLING_AZP
       value: 10269c6f-313a-44d0-9145-c4ba26177928
+    - name: INTEGRASJON_SAKSBEHANDLING_URL
+      value: https://kelvin.intern.nav.no
     - name: INTEGRASJON_NOM_URL
       value: http://nom-api.nom/graphql
     - name: INTEGRASJON_NOM_SCOPE
@@ -280,10 +281,6 @@ spec:
       value: https://dokarkiv.prod-fss-pub.nais.io
     - name: INTEGRASJON_DOKARKIV_SCOPE
       value: api://prod-fss.teamdokumenthandtering.dokarkiv/.default
-    - name: INTEGRASJON_PDFGEN_URL
-      value: http://saksbehandling-pdfgen
-    - name: INTEGRASJON_PDFGEN_SCOPE
-      value: api://prod-gcp.aap.saksbehandling-pdfgen/.default
     - name: INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_URL
       value: http://pdfgenerator-saksbehandling
     - name: INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_SCOPE

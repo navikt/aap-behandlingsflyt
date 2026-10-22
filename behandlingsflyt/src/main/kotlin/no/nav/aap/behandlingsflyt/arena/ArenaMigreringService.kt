@@ -42,13 +42,30 @@ class ArenaMigreringService(
         return sykdomsvurderingFraArena.tilDomene()
     }
 
+    fun hentOppholdskrav(sakId: SakId): ArenaOppholdskrav {
+        logger.info("Henter oppholdskrav fra Arena for sak $sakId.")
+        val oppholdskrav = arenaOppslagGateway.hentOppholdskrav(hentSaksnummerArena(sakId))
+        return oppholdskrav.tilDomene()
+    }
+
+    fun hentVedtaksperiode(sakId: SakId): ArenaVedtaksperiode {
+        logger.info("Henter vedtaksperiode fra Arena for sak $sakId.")
+        return arenaOppslagGateway.hentVedtaksperiode(hentSaksnummerArena(sakId)).tilDomene()
+    }
+
+    fun hentRefusjonskrav(sakId: SakId): ArenaRefusjonskrav? {
+        logger.info("Henter refusjonskrav fra Arena for sak $sakId.")
+        val refusjonskrav = arenaOppslagGateway.hentRefusjonskrav(hentSaksnummerArena(sakId))
+        return refusjonskrav.tilDomene()
+    }
+
     fun hentKravDataForSak(sakId: SakId): ArenaKrav? {
         return arenaMigreringRepository.hentForSakHvisEksisterer(sakId)?.let {
             arenaOppslagGateway.hentKravDataForSak(it.saksnummerArena).tilDomene()
         }
     }
 
-    fun lagreMigreringsdataForSporing(behandlingId: BehandlingId, steg: StegType, data: Any) {
+    fun lagreMigreringsdataForSporing(behandlingId: BehandlingId, steg: StegType, data: Any?) {
         logger.info("Lagrer migreringsdata for behandling $behandlingId, steg $steg.")
         arenaMigreringsdataRepository.lagre(
             behandlingId = behandlingId,

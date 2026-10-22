@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import kotlin.test.assertFailsWith
 
 class AvklaringsbehoveneTest {
@@ -70,7 +71,11 @@ class AvklaringsbehoveneTest {
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, begrunnelse = "Derfor", endretAv = Bruker("Meg"))
+        avklaringsbehovene.løsAvklaringsbehov(
+            Definisjon.AVKLAR_SYKDOM,
+            begrunnelse = "Derfor",
+            endretAv = Bruker("Meg")
+        )
 
         assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)!!.erÅpent()).isFalse()
     }
@@ -122,11 +127,15 @@ class AvklaringsbehoveneTest {
             avklaringsbehov1.definisjon, avklaringsbehov1.funnetISteg, null, null, null
         )
 
-        assertThat(avklaringsbehovene.åpne()).hasSize(2)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(2)
 
-        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, begrunnelse = "Derfor", endretAv = Bruker("Meg"))
+        avklaringsbehovene.løsAvklaringsbehov(
+            Definisjon.AVKLAR_SYKDOM,
+            begrunnelse = "Derfor",
+            endretAv = Bruker("Meg")
+        )
 
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
     }
 
     @Test
@@ -149,7 +158,7 @@ class AvklaringsbehoveneTest {
             perioderKanVurderes = gamlePerioder
         )
 
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVedtaketBehøverVurdering()
         )
@@ -161,7 +170,7 @@ class AvklaringsbehoveneTest {
         )
         avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder, nyePerioder, nyePerioder, null)
 
-        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.måLøses()).hasSize(1)
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVedtaketBehøverVurdering()
         )
@@ -171,5 +180,27 @@ class AvklaringsbehoveneTest {
         )
             .isEqualTo(nyePerioder)
 
+    }
+
+    @Test
+    fun `skal kunne oppdatere frist på legeerklæring-ventebehov`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(5))
+        avklaringsbehovene.leggTilVentebehovForBestillLegeerklæring(
+            bruker = Bruker("Meg"),
+            funnetISteg = StegType.AVKLAR_SYKDOM,
+            frist = LocalDate.now().plusWeeks(2),
+        )
+        var legeerklæringAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BESTILL_LEGEERKLÆRING)
+        assertThat(legeerklæringAvklaringsbehov?.frist()).isEqualTo(LocalDate.now().plusWeeks(2))
+
+        // ny bestilling med senere frist
+        avklaringsbehovene.leggTilVentebehovForBestillLegeerklæring(
+            bruker = Bruker("Deg"),
+            funnetISteg = StegType.AVKLAR_SYKDOM,
+            frist = LocalDate.now().plusWeeks(4),
+        )
+        legeerklæringAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.BESTILL_LEGEERKLÆRING)
+        assertThat(legeerklæringAvklaringsbehov?.historikk).hasSize(2)
+        assertThat(legeerklæringAvklaringsbehov?.frist()).isEqualTo(LocalDate.now().plusWeeks(4))
     }
 }

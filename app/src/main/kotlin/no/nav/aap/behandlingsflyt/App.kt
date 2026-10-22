@@ -31,10 +31,10 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.bekreftvurderingeroppfølging.bekreftVurderingerOppfølgingApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
+import no.nav.aap.meldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
+import no.nav.aap.bistandsbehov.bistandsgrunnlagApi
+import no.nav.aap.overgangarbeid.overgangArbeidGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
@@ -78,7 +78,7 @@ import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreins
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
-import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
+import no.nav.aap.meldeplikt.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
@@ -96,7 +96,6 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKa
 import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
-import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
@@ -253,7 +252,7 @@ internal fun Application.server(
     TilgangGateway.initialiserPrometheus(prometheus)
 
     BackfillStansOpphør(fellesDataSource, gatewayProvider).kjør()
-    BackfillKrav(fellesDataSource, gatewayProvider).kjør()
+    BackfillEtableringVurderinger(fellesDataSource, dryRun = true).kjør()
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
@@ -451,7 +450,6 @@ private fun Application.startKafkakonsumenter(
                 repositoryRegistry = repositoryRegistry,
                 closeTimeout = AppConfig.stansArbeidTimeout,
                 gatewayProvider = gatewayProvider,
-                institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
             )
         )
         startKonsument(

@@ -16,10 +16,12 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -35,7 +37,13 @@ class SoningRegelTest {
         BarnetilleggRepositoryImpl(mockConnection),
         InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
-        BehandlingRepositoryImpl(mockConnection)
+        BehandlingRepositoryImpl(mockConnection),
+        FakeUnleashBase(
+            mapOf(
+                BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
+                BehandlingsflytFeature.Helseinstitusjon1Manedsregel to false
+            )
+        )
     )
 
     @Test
@@ -86,10 +94,12 @@ class SoningRegelTest {
 
         val delresultat = utlederService.utledBehov(utlederInput)
 
-        val straffegjennomføringVilkårsvurderinger = StraffegjennomføringVilkår.vurder(StraffegjennomføringGrunnlag(
-            institusjonsopphold = MapInstitusjonoppholdTilRegel.map(delresultat),
-            vurderFra = periode.fom,
-        ))
+        val straffegjennomføringVilkårsvurderinger = StraffegjennomføringVilkår.vurder(
+            StraffegjennomføringGrunnlag(
+                institusjonsopphold = MapInstitusjonoppholdTilRegel.map(delresultat),
+                vurderFra = periode.fom,
+            )
+        )
 
         assertTidslinje(
             straffegjennomføringVilkårsvurderinger,

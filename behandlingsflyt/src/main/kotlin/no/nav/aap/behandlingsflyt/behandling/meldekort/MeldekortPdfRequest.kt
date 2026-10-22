@@ -17,7 +17,7 @@ data class MeldekortPdfRequest(
     val utførtAv: String,
     val begrunnelse: String?,
     val sammenlagtArbeidIPerioden: Int,
-    val meldeperiode: MeldekortMeldeperiode,
+    val meldeperiode: MeldekortMeldeperiode?,
     val meldekort: MeldekortPdfData,
     val korrigert: Boolean
 )
@@ -46,7 +46,7 @@ data class MeldekortDag(
 
 fun MeldekortV0.tilPdfRequest(
     ident: String,
-    meldeperiode: Periode,
+    meldeperiode: Periode?,
     utførtAv: String,
     tidspunkt: Instant,
     meldeDato: LocalDate,
@@ -72,9 +72,6 @@ fun MeldekortV0.tilPdfRequest(
             )
         }
 
-    val uke1 = meldeperiode.fom.get(ukeFields.weekOfWeekBasedYear())
-    val uke2 = meldeperiode.tom.get(ukeFields.weekOfWeekBasedYear())
-
     return MeldekortPdfRequest(
         ident = ident,
         sendtInnDato = tidspunkt.atZone(ZoneId.of("Europe/Oslo")).toLocalDate().format(datoFormatter),
@@ -82,11 +79,15 @@ fun MeldekortV0.tilPdfRequest(
         utførtAv = utførtAv,
         korrigert = korrigert,
         sammenlagtArbeidIPerioden = timerArbeidPerPeriode.sumOf { it.timerArbeid }.toInt(),
-        meldeperiode = MeldekortMeldeperiode(
-            fraOgMedDato = meldeperiode.fom.format(datoFormatter),
-            tilOgMedDato = meldeperiode.tom.format(datoFormatter),
-            uker = "uke $uke1 - $uke2"
-        ),
+        meldeperiode = meldeperiode?.let {
+            val uke1 = it.fom.get(ukeFields.weekOfWeekBasedYear())
+            val uke2 = it.tom.get(ukeFields.weekOfWeekBasedYear())
+            MeldekortMeldeperiode(
+                fraOgMedDato = it.fom.format(datoFormatter),
+                tilOgMedDato = it.tom.format(datoFormatter),
+                uker = "uke $uke1 - $uke2"
+            )
+        },
         begrunnelse = this.begrunnelse,
         meldekort = MeldekortPdfData(timerArbeidPerUkeIPerioden = uker)
     )

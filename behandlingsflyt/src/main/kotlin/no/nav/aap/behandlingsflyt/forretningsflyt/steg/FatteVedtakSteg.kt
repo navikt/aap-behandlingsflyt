@@ -51,9 +51,9 @@ class FatteVedtakSteg(
         val skalHoppeOverBeslutter =
             unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
                     && behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId) == TypeBehandling.Førstegangsbehandling
-                    && skalHoppeOverBeslutterPåGrunnAvAvslagSykdom(
-                kontekst
-            )
+                    && (skalHoppeOverBeslutterPåGrunnAvAvslagSykdom(kontekst) && (avklaringsbehovene.hentBehovForDefinisjon(
+                Definisjon.FATTE_VEDTAK
+            )) == null)
 
         val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene, skalHoppeOverBeslutter)
         val erTilstrekkeligVurdert = erTilstrekkeligVurdert(kontekst, avklaringsbehovene, skalHoppeOverBeslutter)

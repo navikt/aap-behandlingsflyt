@@ -32,7 +32,6 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val klokke: Clock = Clock.systemDefaultZone(),
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -46,9 +45,10 @@ class OppdagEndretInformasjonskravJobbUtfører(
             SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
+//            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
-        val sisteBehandling = behandlingService.finnSisteYtelsesbehandlingFor(sakId)
+        val sisteBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
             ?: error("Fant ikke ytelsesbehandling for sak $sakId")
 
 
@@ -75,7 +75,6 @@ class OppdagEndretInformasjonskravJobbUtfører(
                     VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
                 )
                 log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
-                secureLogger.info("" + vurderingsbehov)
                 prosesserBehandlingService.triggProsesserBehandling(revurdering)
             } else {
                 log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")

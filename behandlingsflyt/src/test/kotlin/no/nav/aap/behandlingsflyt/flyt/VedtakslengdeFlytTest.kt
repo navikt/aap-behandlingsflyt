@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
+import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.flyt.TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbUtvidVedtakslengdeJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -494,7 +495,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             val vedtakslengdeRepository = VedtakslengdeRepositoryImpl(connection)
             val behandling = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
-                defaultGatewayProvider { }).finnSisteYtelsesbehandlingFor(sak.id)
+                defaultGatewayProvider { }).finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling!!.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxByOrNull { it.periode.tom }
             assertThat(sisteUnderveisperiode?.periode?.tom).isEqualTo(
@@ -802,7 +803,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             )
 
             val behandlingMedSisteFattedeVedtak = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)!!
-            val manuellRevurdering = behandlingService.finnSisteYtelsesbehandlingFor(sak.id)!!
+            val manuellRevurdering = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)!!
 
             assertThat(behandlingMedSisteFattedeVedtak.id).isNotEqualTo(manuellRevurdering.id)
 
@@ -860,7 +861,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                         ÅrMedHverdager.FØRSTE_ÅR
                     )
                 )
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 
@@ -1072,7 +1073,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.vurdertAutomatisk).isTrue
             }
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
             }
             .løsAvklaringsBehov(
@@ -1125,7 +1126,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             Vurderingsbehov.VEDTAKSLENGDE_MANUELT
         )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
             }
             .løsAvklaringsBehov(
@@ -1281,7 +1282,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             val behandling = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
-            ).finnSisteYtelsesbehandlingFor(sak.id)!!
+            ).finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)!!
 
             assertThat(behandling.vurderingsbehov().map { it.type })
                 .containsExactly(no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.VEDTAKSLENGDE_MANUELT)

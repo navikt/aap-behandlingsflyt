@@ -1,18 +1,36 @@
 package no.nav.aap.behandlingsflyt.arena
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Diagnose
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.bistandsbehov.Bistandsvurdering
+import no.nav.aap.komponenter.type.Periode
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
-private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf("INNTNEDS", "SYKSKADLYT", "AAARBEVNE")
+private const val VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP = "REFKRAVSOS"
+private const val VILKÅRKODE_OPPHOLD_I_NORGE = "AOINORGE3"
+private const val VILKÅRKODE_INNTEKT_NEDSATT = "INNTNEDS"
+private const val VILKÅRKODE_SYKDOM_SKADE_LYTE = "SYKSKADLYT"
+private const val VILKÅRKODE_ARBEIDSEVNE = "AAARBEVNE"
+
+private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf(
+    VILKÅRKODE_INNTEKT_NEDSATT,
+    VILKÅRKODE_SYKDOM_SKADE_LYTE,
+    VILKÅRKODE_ARBEIDSEVNE
+)
 
 /**
  * Migreringsgruppe 1 støtter kun ordinær AAP. Dette er oppfylt når alle disse
@@ -23,6 +41,10 @@ fun ArenaSykdomsvurdering.erOrdinærAap(): Boolean {
     return PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP.all { påkrevdKode ->
         vilkar.any { it.kode == påkrevdKode && it.status == "J" }
     }
+}
+
+fun ArenaOppholdskrav.erOppfyltEllerIkkeVurdert(): Boolean {
+    return vilkar?.kode == VILKÅRKODE_OPPHOLD_I_NORGE && vilkar.status in setOf("J", "V")
 }
 
 /**
@@ -39,7 +61,7 @@ object ArenaMigreringMapper {
     ): MigrertKrav {
         return MigrertKrav(
             referanse = Kravreferanse.ny(),
-            vurdertAv = SYSTEMBRUKER,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
             begrunnelse = "Migrering av sak ${fraArena.arenaSaksnummer} fra Arena",
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
@@ -95,9 +117,44 @@ object ArenaMigreringMapper {
             harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             yrkesskadeBegrunnelse = null,
-            vurdertAv = SYSTEMBRUKER,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
+        )
+    }
+
+    /**
+     * Oppholdskravet er enten oppfylt eller ikke vurdert i Arena. I migrering gjør vi antagelse om at det oppfylles da
+     * det er et krav for å få innvilget AAP i Arena.
+     */
+    fun mapOppfyltOppholdskravVurdering(
+        fraArena: ArenaOppholdskrav,
+        behandlingId: BehandlingId,
+        fom: LocalDate,
+    ): OppholdskravVurdering {
+        require(fraArena.erOppfyltEllerIkkeVurdert()) {
+            "Kan ikke mappe oppholdskrav med vilkårkode ${fraArena.vilkar?.kode} og status ${fraArena.vilkar?.status}"
+        }
+        val status = fraArena.vilkar?.status
+        val begrunnelse = when (status) {
+            "J" -> "Oppholdskravet er oppfylt i Arena"
+            "V" -> "Oppholdskravet er ikke vurdert i Arena, " +
+                    "men oppfylles automatisk fordi det må være oppfylt for at vedtaket skal være innvilget i Arena"
+            else -> error("Uventet status etter validering: $status")
+        }
+
+        return OppholdskravVurdering(
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            vurdertIBehandling = behandlingId,
+            perioder = listOf(
+                OppholdskravPeriode(
+                    fom = fom,
+                    tom = null,
+                    land = null,
+                    oppfylt = true,
+                    begrunnelse = begrunnelse,
+                )
+            ),
         )
     }
 
@@ -121,9 +178,44 @@ object ArenaMigreringMapper {
             erBehovForAnnenOppfølging = null,
             overgangBegrunnelse = null,
             skalVurdereAapIOvergangTilArbeid = null,
-            vurdertAv = SYSTEMBRUKER,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
             vurdertIBehandling = behandlingId,
             opprettet = Instant.now(),
+        )
+    }
+
+    /**
+     * Refusjonskrav av typen REFKRAVSOS støttes ikke i migreringsgruppe 1 og gir feil. Hvis det ikke finnes
+     * refusjonskrav, eller kravet har en annen årsak, svares "nei" på om det finnes refusjonskrav.
+     */
+    fun mapRefusjonskravVurdering(arenaRefusjonskrav: ArenaRefusjonskrav?): RefusjonkravVurdering {
+        require(arenaRefusjonskrav?.aarsak != VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP) {
+            "Kan ikke migrere refusjonskrav fra Arena fordi det finnes refusjonskrav av typen $VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP"
+        }
+        return RefusjonkravVurdering(
+            harKrav = false,
+            navKontor = null,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            opprettetTid = LocalDateTime.now()
+        )
+    }
+
+    fun mapVedtakslengdeVurdering(
+        fraArena: ArenaVedtaksperiode,
+        behandlingId: BehandlingId,
+    ): VedtakslengdeVurdering {
+        val tilDato = requireNotNull(fraArena.tilDato) {
+            "Kan ikke migrere vedtakslengde fra Arena fordi vedtaksperioden mangler tilDato"
+        }
+
+        return VedtakslengdeVurdering(
+            sluttdato = tilDato,
+            utvidetMed = ÅrMedHverdager.FØRSTE_ÅR, // Gyldig for migreringsgruppe 1
+            årsaker = listOf(VedtakslengdeÅrsak.MAKS_ETT_ÅR),  // Gyldig for migreringsgruppe 1
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            begrunnelse = "Sluttdato for vedtaket er migrert fra Arena",
         )
     }
 }

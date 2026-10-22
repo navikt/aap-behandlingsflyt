@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurde
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurderingerReq
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
@@ -41,6 +42,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopply
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -305,7 +307,7 @@ fun NormalOpenAPIRoute.driftApi(
                                 harHattOrdinærSiste52Uker = stønadsperiodeVurdering.harHattOrdinærSiste52Uker,
                                 harGjenværendeKvote = stønadsperiodeVurdering.harGjenværendeKvote,
                                 type = stønadsperiodeVurdering.relevantKravType.toString()
-                                
+
                             )
                         }
 
@@ -414,22 +416,20 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
-        @Suppress("unused")
-        class StansOpphørDTO(
+        data class StansOpphørDTO(
             val fom: LocalDate,
             val stansOpphør: String,
             val årsaker: List<String>,
         )
 
-        @Suppress("unused")
-        class RettighetstypePeriodeDto(
+
+        data class RettighetstypePeriodeDto(
             val periode: Periode,
             val rettighetstypeUnderveis: RettighetsType?,
             val rettighetstypeGrunnlag: RettighetsType?,
         )
 
-        @Suppress("unused")
-        class DriftRettighetsinfoDto(
+        data class DriftRettighetsinfoDto(
             val sisteDagMedRett: LocalDate?,
             val rettighetsperioder: List<RettighetstypePeriodeDto>,
             val stansOpphør: List<StansOpphørDTO>,
@@ -485,7 +485,7 @@ fun NormalOpenAPIRoute.driftApi(
                                         is Opphør -> "OPPHØR"
                                         is Stans -> "STANS"
                                     },
-                                    årsaker = it.vurdering.årsaker.toList().map { it.toString() },
+                                    årsaker = it.vurdering.årsaker.toList().map { årsak -> årsak.name },
                                 )
                             },
                     )
@@ -569,6 +569,7 @@ fun NormalOpenAPIRoute.driftApi(
                                         ForenkletAvklaringsbehov(
                                             definisjon = avklaringsbehov.definisjon,
                                             status = endring.status,
+                                            gradBehov = endring.gradBehov,
                                             årsakTilSettPåVent = endring.grunn,
                                             fristSettPåVent = endring.frist,
                                             perioderUgyldigVurdering = endring.perioderSomIkkeErTilstrekkeligVurdert,
@@ -579,10 +580,12 @@ fun NormalOpenAPIRoute.driftApi(
                                     }
                                 }.sortedByDescending { it.tidsstempel }
 
+                            val vedtakForBehandling = vedtak.find { it.id == behandling.id }
                             BehandlingDriftsinfo.fra(
                                 behandling,
                                 avklaringsbehovene,
-                                vedtak.find { it.id == behandling.id }?.vedtakstidspunkt
+                                vedtakId = vedtakForBehandling?.vedtakId,
+                                vedtatt = vedtakForBehandling?.vedtakstidspunkt
                             )
                         }
                         .sortedByDescending { it.opprettet }
@@ -732,6 +735,7 @@ private data class PersonDriftsinfo(
 
 private data class BehandlingDriftsinfo(
     val referanse: UUID,
+    val vedtakId: VedtakId?,
     val type: String,
     val status: BehandlingStatus,
     val vurderingsbehov: List<Vurderingsbehov>,
@@ -741,9 +745,15 @@ private data class BehandlingDriftsinfo(
     val avklaringsbehov: List<ForenkletAvklaringsbehov>,
 ) {
     companion object {
-        fun fra(behandling: Behandling, avklaringsbehovene: List<ForenkletAvklaringsbehov>, vedtatt: LocalDateTime?) =
+        fun fra(
+            behandling: Behandling,
+            avklaringsbehovene: List<ForenkletAvklaringsbehov>,
+            vedtatt: LocalDateTime?,
+            vedtakId: VedtakId?
+        ) =
             BehandlingDriftsinfo(
                 referanse = behandling.referanse.referanse,
+                vedtakId = vedtakId,
                 type = behandling.typeBehandling().identifikator(),
                 status = behandling.status(),
                 vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type).distinct(),
@@ -758,6 +768,7 @@ private data class BehandlingDriftsinfo(
 private data class ForenkletAvklaringsbehov(
     val definisjon: Definisjon,
     val status: Status,
+    val gradBehov: GradBehov?,
     val perioderUgyldigVurdering: Set<Periode>?,
     val perioderKreverVurdering: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),

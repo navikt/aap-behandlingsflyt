@@ -47,6 +47,7 @@
       <env name="INTEGRASJON_DOKUMENTINNHENTING_SCOPE" value="api://dev-gcp.aap.dokumentinnhenting/.default" />
       <env name="INTEGRASJON_DOKUMENTINNHENTING_AZP" value="4745039f-999c-476d-805f-c4c1f23b8188" />
       <env name="INTEGRASJON_SAKSBEHANDLING_AZP" value="4920ff1d-0f6b-407f-8630-695e3360d3d3" />
+      <env name="INTEGRASJON_SAKSBEHANDLING_URL" value="https://kelvin.intern.dev.nav.no" />
       <env name="INTEGRASJON_AAREG_URL" value="https://aareg-services-q2.dev-fss-pub.nais.io" />
       <env name="INTEGRASJON_AAREG_SCOPE" value="api://dev-fss.arbeidsforhold.aareg-services-nais/.default" />
       <env name="INTEGRASJON_INNTEKTSKOMPONENTEN_URL" value="https://ikomp-q2.dev-fss-pub.nais.io/rs/api/v1" />
@@ -70,8 +71,6 @@
       <env name="INTEGRASJON_DAGPENGER_SCOPE" value="api://dev-gcp.teamdagpenger.dp-datadeling/.default" />
       <env name="INTEGRASJON_TILTAKSPENGER_URL" value="https://tiltakspenger-datadeling.intern.dev.nav.no" />
       <env name="INTEGRASJON_TILTAKSPENGER_SCOPE" value="api://dev-gcp.tpts.tiltakspenger-datadeling/.default" />
-      <env name="INTEGRASJON_PDFGEN_URL" value="https://aap-saksbehandling-pdfgen.intern.dev.nav.no" />
-      <env name="INTEGRASJON_PDFGEN_SCOPE" value="api://dev-gcp.aap.saksbehandling-pdfgen/.default" />
       <env name="INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_URL" value="https://aap-pdfgenerator-saksbehandling.intern.dev.nav.no" />
       <env name="INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_SCOPE" value="api://dev-gcp.aap.pdfgenerator-saksbehandling/.default" />
       <env name="NAIS_TOKEN_ENDPOINT" value="http://host.docker.internal:7164/api/v1/token" />

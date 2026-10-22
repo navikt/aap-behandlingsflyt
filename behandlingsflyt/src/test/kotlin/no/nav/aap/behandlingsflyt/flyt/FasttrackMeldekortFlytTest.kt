@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
+import no.nav.aap.meldeplikt.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -37,7 +37,7 @@ import java.time.LocalDate
 class FasttrackMeldekortFlytTest :
     AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
-    val søknadsdato: LocalDate =  25 august 2025
+    val søknadsdato: LocalDate = 25 august 2025
     lateinit var sak: Sak
 
 
@@ -90,12 +90,12 @@ class FasttrackMeldekortFlytTest :
 
         åpenBehandling = åpenBehandling.løsBistand(revurderingGjelderFra)
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev().bekreftVurderinger()
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
 

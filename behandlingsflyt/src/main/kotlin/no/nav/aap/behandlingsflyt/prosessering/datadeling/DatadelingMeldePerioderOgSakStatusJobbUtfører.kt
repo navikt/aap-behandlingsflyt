@@ -2,14 +2,16 @@ package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.meldeplikt.MeldeperiodeRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
@@ -24,6 +26,8 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
     private val sakstatusDatadelingService: SakstatusDatadelingService,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val behandlingVisningDatadelingService: BehandlingVisningDatadelingService,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -39,6 +43,17 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
             personIdent.identifikator,
             sakstatus,
         )
+
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.DatadelingBehandlingVisning)) {
+            val behandlingVisning = behandlingVisningDatadelingService.utledBehandlingVisning(behandling)
+            if (behandlingVisning != null) {
+                apiInternGateway.sendBehandlingVisning(
+                    ident = personIdent.identifikator,
+                    saksnummer = sak.saksnummer,
+                    behandlingVisning = behandlingVisning,
+                )
+            }
+        }
 
         if (trukketSøknadService.søknadErTrukket(behandling.id)) {
             log.info("Søknad er trukket, sender tom liste til api-intern")
@@ -71,6 +86,11 @@ class DatadelingMeldePerioderOgSakStatusJobbUtfører(
                 sakstatusDatadelingService = SakstatusDatadelingService(repositoryProvider, gatewayProvider),
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+                behandlingVisningDatadelingService = BehandlingVisningDatadelingService(
+                    repositoryProvider,
+                    gatewayProvider
+                ),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
     }
