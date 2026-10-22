@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.justerEtableringPerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -17,7 +17,6 @@ import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -173,7 +172,7 @@ class EtableringEgenVirksomhetService(
             ?: validerInnenforGyldighetsperiode(gyldighetPeriode, beregning.beregnedeVurderinger)
             ?: validerFaseOgPerioderForAlle(beregning)
             ?: validerOppstartEtterUtvikling(alleUtviklingsPerioder, alleOppstartsPerioder)
-            ?: validerDagkvoter(alleUtviklingsPerioder, alleOppstartsPerioder)
+            ?: validerDagkvoter(beregning.gjeldendeVurderinger.toList())
     }
 
     private fun validerGyldighetsperiodeFinnes(gyldighetPeriode: List<Periode>): VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfylt? {
@@ -222,11 +221,9 @@ class EtableringEgenVirksomhetService(
     }
 
     private fun validerDagkvoter(
-        alleUtviklingsPerioder: List<Periode>,
-        alleOppstartsPerioder: List<Periode>
+        alleVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter? {
-        val bruktUtviklingsDager = tellDager(alleUtviklingsPerioder)
-        val bruktOppstartsdager = tellDager(alleOppstartsPerioder)
+        val (bruktUtviklingsDager, bruktOppstartsdager) = alleVurderinger.brukteDager()
 
         if (bruktUtviklingsDager > EtableringFase.UTVIKLING.maksHverdager) {
             return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.UTVIKLING, bruktUtviklingsDager)
@@ -246,11 +243,6 @@ class EtableringEgenVirksomhetService(
                 )
             } else null
         }
-
-    fun tellDager(perioder: List<Periode>): Int {
-        return perioder.somTidslinje { it }.komprimer().segmenter()
-            .sumOf { it.periode.antallHverdager().asInt }
-    }
 
     fun utledPerioderMedSykdomOgBistand(
         behandlingId: BehandlingId

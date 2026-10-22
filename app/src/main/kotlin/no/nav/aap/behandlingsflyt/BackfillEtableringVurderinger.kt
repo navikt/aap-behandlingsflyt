@@ -2,10 +2,8 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -100,27 +98,23 @@ class BackfillEtableringVurderinger(
         return hentAlleGrunnlag(connection, behandlingId)
             .map { grunnlagId ->
                 val vurderinger = vurderinger(connection, grunnlagId)
-                val oppdaterte = vurderinger.map { oppdaterVurdering(it.second) }
-                val splittede = oppdaterte.filter { it.isNotEmpty() }
+                val migreringsplan = lagMigreringsplan(vurderinger)
+                val splittede = migreringsplan.filter { it.skalErstattes }
                 val før = vurderinger.map { it.second }
-                val etter = før.zip(oppdaterte).flatMap { (opprinnelig, nye) ->
-                    nye.ifEmpty { listOf(opprinnelig) }
-                }
+                val etter = migreringsplan.flatMap { it.vurderingerEtterMigrering }
                 Resultat(
                     antallVurderingerSomSplittes = splittede.size,
-                    antallNyeVurderinger = splittede.sumOf { it.size },
+                    antallNyeVurderinger = splittede.sumOf { it.oppdaterteVurderinger.size },
                     antallMedAvvikIVarighet = if (varighet(før) != varighet(etter)) 1 else 0,
                 )
             }
             .fold(Resultat(antallBehandlinger = 1), Resultat::plus)
     }
 
-    private fun varighet(vurderinger: List<EtableringEgenVirksomhetVurdering>): Pair<Int, Int> {
-        val gjeldende = vurderinger
+    private fun varighet(vurderinger: List<EtableringEgenVirksomhetVurdering>): Pair<Int, Int> =
+        vurderinger
             .map { if (it.fase != null) it.tilGammeltFormat() else it }
-            .gjeldendeVurderinger().verdier().toSet()
-        return gjeldende.tellDager { it.utviklingsPerioder } to gjeldende.tellDager { it.oppstartsPerioder }
-    }
+            .brukteDager()
 
     fun hentAlleGrunnlag(connection: DBConnection, behandlingId: BehandlingId): List<Long> {
         val sql = """
@@ -208,13 +202,7 @@ class BackfillEtableringVurderinger(
         }
     }
 
-    fun oppdaterVurdering(vurdering: EtableringEgenVirksomhetVurdering): List<EtableringEgenVirksomhetVurdering> {
-        // Gammelt format har alltid perioder, nytt format har aldri perioder
-        if (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty()) {
-            return emptyList()
-        }
-        return listOf(vurdering).tilNyttFormat()
-    }
+    fun oppdaterVurdering(vurdering: EtableringEgenVirksomhetVurdering) = vurdering.tilMigrerteVurderinger()
 
     fun migrerBehandling(connection: DBConnection, behandlingId: BehandlingId) {
         val alleGrunnlag = hentAlleGrunnlag(connection, behandlingId)
@@ -222,31 +210,18 @@ class BackfillEtableringVurderinger(
 
         alleGrunnlag.forEach { grunnlagId ->
             val vurderinger = this.vurderinger(connection, grunnlagId)
+            val migreringsplan = lagMigreringsplan(vurderinger)
             val før = vurderinger.map { (_, vurdering) ->
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             val varighetFør = varighet(før)
-            val valideringsresultatFør = service.beregnOgValider(behandlingId, før)
-            vurderinger.forEach { (vurderingId, vurdering) ->
-                val oppdaterteVurderinger = oppdaterVurdering(vurdering)
-
-                if (oppdaterteVurderinger.isNotEmpty()) {
-                    val vurderingerGruppeId: Long = connection.queryFirstOrNull(
-                        """
-                            SELECT vurderinger_id
-                            FROM etablering_egen_virksomhet_vurdering
-                            WHERE id = ?
-                        """.trimIndent()
-                    ) {
-                        setParams { setLong(1, vurderingId) }
-                        setRowMapper { it.getLong("vurderinger_id") }
-                    } ?: error("Fant ikke vurderingsgruppe for vurdering $vurderingId")
-
-                    oppdaterteVurderinger.forEach { oppdatertVurdering ->
-                        lagreVurdering(connection, vurderingerGruppeId, oppdatertVurdering)
-                    }
-                    slettVurdering(connection, vurderingId)
+            val valideringsresultatFør = service.erVurderingerGyldig(behandlingId, før)
+            migreringsplan.filter { it.skalErstattes }.forEach { steg ->
+                val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
+                steg.oppdaterteVurderinger.forEach { oppdatertVurdering ->
+                    lagreVurdering(connection, vurderingerGruppeId, oppdatertVurdering)
                 }
+                slettVurdering(connection, steg.vurderingId)
             }
             val etter = this.vurderinger(connection, grunnlagId).map { (_, vurdering) ->
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering

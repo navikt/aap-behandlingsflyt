@@ -8,4 +8,6 @@ data class HelseinstitusjonVurderingDto(
     val faarFriKostOgLosji: Boolean,
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
+    val erHistoriskUtenReduksjonsberegning: Boolean = false,
+    val oppholdId: String? = null,
 )

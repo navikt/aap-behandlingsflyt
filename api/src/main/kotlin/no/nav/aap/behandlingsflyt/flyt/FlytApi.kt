@@ -117,7 +117,7 @@ fun NormalOpenAPIRoute.flytApi(
                     val vurdertStegPair =
                         utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
                     
-                    val legacyFrivillige = if (unleashGateway.isEnabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
+                    val legacyFrivillige = if (unleashGateway.isDisabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
                         Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov + Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND
                     } else {
                         Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov

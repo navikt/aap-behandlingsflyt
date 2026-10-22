@@ -23,10 +23,22 @@ import java.time.LocalDate
 
 class InstitusjonsoppholdUtilTest {
 
-    private fun opphold(fom: LocalDate, tom: LocalDate) = Segment(
+    private fun opphold(fom: LocalDate, tom: LocalDate, navn: String = "Testsykehus") = Segment(
         Periode(fom, tom),
-        Institusjon(Institusjonstype.HS, Oppholdstype.H, "111222333", "Teststykehus")
+        Institusjon(Institusjonstype.HS, Oppholdstype.H, "111222333", navn)
     )
+
+    private val kysthaven = opphold(LocalDate.of(2025, 2, 1), LocalDate.of(2025, 9, 1), "Kysthaven")
+    private val solglottInnenTreMåneder = opphold(LocalDate.of(2025, 11, 1), LocalDate.of(2026, 2, 1), "Solgløtt")
+    private val solglottEtterTreMåneder = opphold(LocalDate.of(2026, 1, 15), LocalDate.of(2026, 4, 1), "Solgløtt")
+
+    private fun datoerSortert(
+        opphold: List<Segment<Institusjon>>,
+        harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { false },
+        enManedsregelEnabled: Boolean = true,
+    ): List<LocalDate> =
+        beregnTidligsteReduksjonsdatoPerKjede(opphold, harInnvilgetReduksjon, enManedsregelEnabled)
+            .entries.sortedBy { it.key.periode.fom }.map { it.value }
 
     // -------------------------------------------------------------------------
     // lagOppholdId
@@ -57,7 +69,7 @@ class InstitusjonsoppholdUtilTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `tom liste gir tomt resultat`() {
+    fun `tom liste gir tomt resultat for beregnTidligsteReduksjonsdatoPerOpphold`() {
         val resultat = beregnTidligsteReduksjonsdatoPerOpphold(emptyList())
         assertThat(resultat).isEmpty()
     }
@@ -245,5 +257,53 @@ class InstitusjonsoppholdUtilTest {
 
         assertThat(sortert[opphold1]).isEqualTo(usortert[opphold1])
         assertThat(sortert[opphold2]).isEqualTo(usortert[opphold2])
+    }
+
+    // -------------------------------------------------------------------------
+    // beregnTidligsteReduksjonsdatoPerKjede - reduksjonsdatoer for kjeder hvor avstand mellom kjeder er kortere eller lengre enn 3 måneder
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `første kjede får alltid fire måneder etter innleggelsesmåneden`() {
+        val datoer = datoerSortert(listOf(kysthaven))
+
+        assertThat(datoer).containsExactly(LocalDate.of(2025, 6, 1))
+    }
+
+    @Test
+    fun `1-månedsregel når neste kjede starter innen tre måneder og forrige kjede har reduksjon`() {
+        val datoer = datoerSortert(listOf(kysthaven, solglottInnenTreMåneder), harInnvilgetReduksjon = { true })
+
+        assertThat(datoer).containsExactly(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 12, 1))
+    }
+
+    @Test
+    fun `3-månedersregel når neste kjede starter innen tre måneder men forrige kjede ikke har reduksjon`() {
+        val datoer = datoerSortert(listOf(kysthaven, solglottInnenTreMåneder), harInnvilgetReduksjon = { false })
+
+        assertThat(datoer).containsExactly(LocalDate.of(2025, 6, 1), LocalDate.of(2026, 3, 1))
+    }
+
+    @Test
+    fun `3-månedersregel når neste kjede starter mer enn tre måneder etter forrige selv med reduksjon`() {
+        val datoer = datoerSortert(listOf(kysthaven, solglottEtterTreMåneder), harInnvilgetReduksjon = { true })
+
+        assertThat(datoer).containsExactly(LocalDate.of(2025, 6, 1), LocalDate.of(2026, 5, 1))
+    }
+
+    @Test
+    fun `toggle av - gammel regel gir innleggelsesdato for opphold innen tre måneder uavhengig av reduksjon`() {
+        val datoer = datoerSortert(
+            listOf(kysthaven, solglottInnenTreMåneder),
+            harInnvilgetReduksjon = { false },
+            enManedsregelEnabled = false,
+        )
+
+        assertThat(datoer).containsExactly(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 11, 1))
+    }
+
+    @Test
+    fun `tom liste gir tomt resultat for beregnTidligsteReduksjonsdatoPerKjede`() {
+        assertThat(beregnTidligsteReduksjonsdatoPerKjede(emptyList(), enManedsregelEnabled = true)).isEmpty()
     }
 }

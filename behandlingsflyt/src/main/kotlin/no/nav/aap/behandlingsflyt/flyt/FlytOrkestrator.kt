@@ -339,7 +339,7 @@ class FlytOrkestrator(
     private fun opprettAvklaringsbehovHvisMangler(behovDefinisjon: Definisjon, kontekst: FlytKontekst, bruker: Bruker) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        val legacyFrivillige = if (unleashGateway.isEnabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
+        val legacyFrivillige = if (unleashGateway.isDisabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
             Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov + Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND
         } else {
             Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov

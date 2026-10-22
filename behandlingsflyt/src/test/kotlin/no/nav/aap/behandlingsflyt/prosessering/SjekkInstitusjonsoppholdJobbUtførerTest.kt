@@ -253,7 +253,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             institusjonsOppholdRepository = institusjonsoppholdRepositoryMock,
             behandlingService = behandlingServiceMock,
             trukketSøknadService = trukketSøknadServiceMock,
-            behandlingRepository = behandlingRepositoryMock,
             underveisgrunnlagRepository = underveisgrunnlagRepositoryMock,
         ) to behandlingServiceMock
     }

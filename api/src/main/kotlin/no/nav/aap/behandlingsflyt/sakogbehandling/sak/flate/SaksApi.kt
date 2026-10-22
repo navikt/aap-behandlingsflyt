@@ -295,6 +295,7 @@ fun NormalOpenAPIRoute.saksApi(
             if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
                 val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
                     repositoryProvider.provide<SakRepository>()
                         .finnSiste(req.antall)
                         .map { sak ->
@@ -302,7 +303,11 @@ fun NormalOpenAPIRoute.saksApi(
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
                                 periode = sak.rettighetsperiode,
-                                ident = sak.person.aktivIdent().identifikator
+                                ident = sak.person.aktivIdent().identifikator,
+                                sisteBehandlingReferanse = behandlingService
+                                    .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)
+                                    ?.referanse
+                                    ?.referanse
                             )
                         }
                 }

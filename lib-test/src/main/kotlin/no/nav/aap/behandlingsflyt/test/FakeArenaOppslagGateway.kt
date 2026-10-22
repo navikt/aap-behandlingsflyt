@@ -6,7 +6,9 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar as ArenaVilkarKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose as ArenaDiagnoseKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
@@ -61,6 +63,26 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
 
     override fun hentRefusjonskrav(saksnummerArena: String): ArenaRefusjonskravResponse {
         return ArenaRefusjonskravResponse(refusjonskrav = null)
+    }
+
+    override fun hentOppholdskrav(saksnummerArena: String): ArenaOppholdskravResponse {
+        return ArenaOppholdskravResponse(
+            vedtakId = 1,
+            vilkar = ArenaVilkarKontrakt(
+                id = 4,
+                kode = "AOINORGE3",
+                status = "V",
+                begrunnelse = null,
+            ),
+        )
+    }
+
+    override fun hentVedtaksperiode(saksnummerArena: String): ArenaVedtaksperiodeResponse {
+        return ArenaVedtaksperiodeResponse(
+            vedtakId = 1,
+            fraDato = LocalDate.now().minusYears(1),
+            tilDato = LocalDate.now().plusYears(1),
+        )
     }
 
     override fun hentSykdomsvurdering(saksnummerArena: String): ArenaSykdomsvurderingResponse {

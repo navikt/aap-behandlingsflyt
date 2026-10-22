@@ -440,6 +440,10 @@ class TidligereVurderingerImpl(
     private fun potensieltOppfyltOvergangArbeid(
         rettighetsperiode: Periode, segmentPeriode: Periode, sykdomstidslinje: Tidslinje<Sykdomsvurdering>
     ): Boolean {
+         // Trukkede søknader satt tilbake til Tid.MIN har ikke potensielt oppfylt overgang arbeid
+        if (segmentPeriode.fom == Tid.MIN) {
+            return false
+        }
         val harTidligereInnvilgetSykdomsvurdering =
             sykdomstidslinje.begrensetTil(Periode(Tid.MIN, segmentPeriode.fom.minusDays(1))).segmenter()
                 .any { it.verdi.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() }

@@ -71,7 +71,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 val underveisGrunnlag = underveisRepository.hentHvisEksisterer(gjeldendeYtelsesbehandling.id)
                 val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden()
                     ?: error("Skal ha underveisperiode for avsluttet behandling ${gjeldendeYtelsesbehandling.id}")
-                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(gjeldendeYtelsesbehandling.id, underveisperiode)
+                val meldeperioder =
+                    meldeperiodeRepository.hentMeldeperioder(gjeldendeYtelsesbehandling.id, underveisperiode)
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
@@ -147,16 +148,9 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
             meldepliktGrunnlag: MeldepliktGrunnlag?,
             underveisGrunnlag: UnderveisGrunnlag?
         ): MeldeperioderV0 {
-            val underveisperioder = underveisGrunnlag
-                ?.perioder
-                .orEmpty()
-                .map { Segment(it.periode, it) }
-                .let(::Tidslinje)
+            val underveisperioder = underveisGrunnlag?.somTidslinje().orEmpty()
 
-            val fritaksvurderinger: Tidslinje<Fritaksvurdering.FritaksvurderingData> =
-                meldepliktGrunnlag
-                    ?.tilTidslinje()
-                    .orEmpty()
+            val fritaksvurderinger = meldepliktGrunnlag?.tilTidslinje().orEmpty()
 
             return MeldeperioderV0(
                 sakStatus = when (sak.status()) {
