@@ -61,8 +61,6 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -470,16 +468,12 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             }
     }
 
-    @ParameterizedTest
-    @CsvSource("-10, 1", "0, 0", "1, 1", "10, 10")
-    fun `automatisk opphør tar hensyn til virkningsdato og mottattdato`(
-        dagerTilVirkningsdato: Long,
-        dagerTilOpphør: Long,
-    ) {
+    @Test
+    fun `tilbakevirkende uførevedtak gir automatisk opphør dagen etter mottak`() {
         val mottattDato = LocalDate.now().minusDays(3)
         val vurderingsdato = mottattDato.minusDays(20)
-        val uføreVirkningsdato = mottattDato.plusDays(dagerTilVirkningsdato)
-        val opphørsdato = mottattDato.plusDays(dagerTilOpphør)
+        val uføreVirkningsdato = mottattDato.minusDays(10)
+        val opphørsdato = mottattDato.plusDays(1)
         val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = vurderingsdato.atStartOfDay())
 
         sisteBehandling

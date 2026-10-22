@@ -6,14 +6,17 @@ import io.mockk.verify
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status.BEHANDLET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
@@ -24,31 +27,54 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOvergangUføreRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.verdityper.dokument.Kanal
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicLong
 
 class HåndterUførevedtakServiceTest {
     private val dato = LocalDate.now()
     private val sakId = SakId(1)
-    private val behandlingId = BehandlingId(2)
-    private val behandling = mockk<Behandling>()
+    private val behandlingId = BehandlingId(idSekvens.incrementAndGet())
+    private val behandling = Behandling(
+        id = behandlingId,
+        forrigeBehandlingId = null,
+        sakId = sakId,
+        typeBehandling = TypeBehandling.Revurdering,
+        status = Status.AVSLUTTET,
+        årsakTilOpprettelse = null,
+        versjon = 1,
+    )
     private val behandlingService = mockk<BehandlingService>()
-    private val trukketSøknadService = mockk<TrukketSøknadService>()
+    private val trukketSøknadService = TrukketSøknadService(InMemoryTrukketSøknadRepository)
     private val rettighetstypeService = mockk<RettighetstypeService>()
-    private val overgangUføreRepository = mockk<OvergangUføreRepository>()
-    private val mottaDokumentService = mockk<MottaDokumentService>(relaxed = true)
-    private val unleashGateway = mockk<UnleashGateway>()
+    private val overgangUføreRepository = InMemoryOvergangUføreRepository
+    private val mottaDokumentService = MottaDokumentService(InMemoryMottattDokumentRepository)
+    private val flags = mutableMapOf(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende to true)
+    private val unleashGateway = FakeUnleashBase(flags)
     private val service = HåndterUførevedtakService(
-        behandlingService, trukketSøknadService, rettighetstypeService, mottaDokumentService,
-        mockk<ProsesserBehandlingService>(relaxed = true), mockk(), unleashGateway, overgangUføreRepository,
+        behandlingService = behandlingService,
+        trukketSøknadService = trukketSøknadService,
+        rettighetstypeService = rettighetstypeService,
+        mottaDokumentService = mottaDokumentService,
+        prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true),
+        flytJobbRepository = InMemoryFlytJobbRepository,
+        unleashGateway = unleashGateway,
+        overgangUføreRepository = overgangUføreRepository,
     )
     private val vedtak = UførevedtakV0(
         personId = "12345678901",
@@ -57,19 +83,30 @@ class HåndterUførevedtakServiceTest {
         avslag12_5 = false,
         kilde = UførevedtakKilde.PENSJON,
     )
-    private val referanse = InnsendingReferanse(UførevedtakReferanse.ny("test"))
+    private val referanse = InnsendingReferanse(UførevedtakReferanse.ny("test-${behandlingId.id}"))
 
     @BeforeEach
     fun setup() {
-        every { behandling.id } returns behandlingId
-        every { behandling.forrigeBehandlingId } returns null
-        every { behandling.status() } returns Status.AVSLUTTET
         every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns behandling
         every { behandlingService.finnEllerOpprettBehandling(sakId, any()) } returns BehandlingService.Ordinær(behandling)
-        every { trukketSøknadService.søknadErTrukket(behandlingId) } returns false
-        every { overgangUføreRepository.hentHvisEksisterer(behandlingId) } returns null
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende) } returns true
+        InMemoryMottattDokumentRepository.lagre(
+            MottattDokument(
+                referanse = referanse,
+                sakId = sakId,
+                behandlingId = behandlingId,
+                mottattTidspunkt = dato.atTime(12, 0),
+                type = InnsendingType.UFØRE_VEDTAK_HENDELSE,
+                kanal = Kanal.DIGITAL,
+                strukturertDokument = StrukturertDokument(vedtak),
+            )
+        )
         rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD)
+    }
+
+    @AfterEach
+    fun ryddOpp() {
+        overgangUføreRepository.slett(behandlingId)
+        InMemoryMottattDokumentRepository.slett(behandlingId)
     }
 
     @Test
@@ -77,7 +114,8 @@ class HåndterUførevedtakServiceTest {
         vurderinger(vurdering(dato.minusDays(5)))
         håndter()
         verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(sakId, any()) }
-        verify { mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse) }
+        assertThat(InMemoryMottattDokumentRepository.hent(sakId, referanse).status)
+            .isEqualTo(BEHANDLET)
     }
 
     @Test
@@ -86,7 +124,6 @@ class HåndterUførevedtakServiceTest {
         håndter()
         verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(sakId, any()) }
     }
-
     @Test
     fun `senere manuell vurdering overstyrer gammelt automatisk opphør`() {
         vurderinger(
@@ -131,7 +168,7 @@ class HåndterUførevedtakServiceTest {
 
     @Test
     fun `tilbakevirkende uførevedtak håndteres manuelt når toggle er av`() {
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende) } returns false
+        flags[BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende] = false
         håndter()
         verify(exactly = 1) {
             behandlingService.finnEllerOpprettBehandling(sakId, match {
@@ -142,7 +179,7 @@ class HåndterUførevedtakServiceTest {
 
     @Test
     fun `fremtidig uførevedtak håndteres automatisk selv om toggle er av`() {
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende) } returns false
+        flags[BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende] = false
         service.håndterMottattUførevedtakHendelse(
             sakId, referanse, vedtak.copy(virkningsdato = dato.plusDays(10)), dato.atTime(12, 0)
         )
@@ -151,7 +188,7 @@ class HåndterUførevedtakServiceTest {
 
     @Test
     fun `uførevedtak med virkningsdato på mottaksdagen håndteres manuelt når toggle er av`() {
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende) } returns false
+        flags[BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende] = false
         service.håndterMottattUførevedtakHendelse(
             sakId, referanse, vedtak.copy(virkningsdato = dato), dato.atTime(12, 0)
         )
@@ -179,8 +216,7 @@ class HåndterUførevedtakServiceTest {
     }
 
     private fun vurderinger(vararg vurderinger: OvergangUføreVurdering) {
-        every { overgangUføreRepository.hentHvisEksisterer(behandlingId) } returns
-                OvergangUføreGrunnlag(vurderinger.toList())
+        overgangUføreRepository.lagre(behandlingId, vurderinger.toList())
     }
 
     private fun vurdering(fom: LocalDate) = OvergangUføreVurdering(
@@ -194,4 +230,8 @@ class HåndterUførevedtakServiceTest {
         vurdertIBehandling = behandlingId,
         opprettet = Instant.now(),
     )
+
+    companion object {
+        private val idSekvens = AtomicLong(100000)
+    }
 }
