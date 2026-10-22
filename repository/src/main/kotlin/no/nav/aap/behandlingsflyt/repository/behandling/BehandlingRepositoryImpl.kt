@@ -95,11 +95,11 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return connection.queryList("""
             SELECT b.id AS behandling_id
             FROM behandling b
-            JOIN tilkjent_ytelse ty ON behandling.id = ty.behandling_id
+            JOIN tilkjent_ytelse ty ON b.id = ty.behandling_id
             JOIN tilkjent_periode tp ON ty.id = tp.tilkjent_ytelse_id
-            WHERE b.saks_id = ?
-            AND ty.dagsats IS NOT NULL
-            AND ty.redusert_dagsat IS NULL
+            WHERE b.sak_id = ?
+            AND tp.dagsats IS NOT NULL
+            AND tp.redusert_dagsats IS NULL
             """.trimIndent()
         ) {
             setParams {
