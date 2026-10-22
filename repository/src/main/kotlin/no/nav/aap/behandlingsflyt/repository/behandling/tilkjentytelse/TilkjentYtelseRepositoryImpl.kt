@@ -89,7 +89,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
     override fun backfillRedusertDagsats (
         tilkjentBackfillKandidater: List<TilkjentForRedusertDagsatsBackfill>
     ) {
-        val sql = "UPDATE TILKJENT_PERIODE SET REDUSERT_DAGSATS = ? WHERE ID = ?"
+        val sql = "UPDATE tilkjent_periode SET redusert_dagsats = ? WHERE id = ?"
         connection.executeBatch(
             sql,
             tilkjentBackfillKandidater
@@ -234,10 +234,11 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         return connection.queryList(
             """
             SELECT tp.*
-            FROM TILKJENT_PERIODE tp
-            JOIN TILKJENT_YTELSE ty ON ty.ID = tp.TILKJENT_YTELSE_ID
-            WHERE ty.BEHANDLING_ID = ?
-              AND tp.REDUSERT_DAGSATS IS NULL
+            FROM tilkjent_periode tp
+            JOIN tilkjent_ytelse ty ON ty.id = tp.tilkjent_ytelse_id
+            WHERE ty.behandling_id = ?
+              AND tp.redusert_dagsats IS NULL
+              AND tp.dagsats IS NOT NULL
             """.trimIndent()
         ) {
             setParams {

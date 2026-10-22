@@ -217,6 +217,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         TODO("Not yet implemented")
     }
 
+    override fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId> {
+        TODO("Not yet implemented")
+    }
+
     override fun markerSavepoint() {
     }
 

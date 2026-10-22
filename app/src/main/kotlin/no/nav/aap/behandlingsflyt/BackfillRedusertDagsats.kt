@@ -170,10 +170,8 @@ class BackfillRedusertDagsats(
             val sakRepository = SakRepositoryImpl(connection)
             val sak = sakRepository.hentSakHvisEksisterer(sakId) ?: return@transaction
 
-            val behandlingService =
-                BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-            // TODO : alleYtelsesbehandlinger dropper avbrutte.. er det greit for backfill varianten vår?
-            val behandlinger = behandlingService.alleYtelsesbehandlinger(sak.id)
+            val behandlingService = BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            val behandlinger = behandlingService.finnBehandlingerSomManglerRedusertDagsats(sak.id)
 
             val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
             val backfillService = BackfillRedusertDagsatsService(postgresRepositoryRegistry.provider(connection))
@@ -181,10 +179,10 @@ class BackfillRedusertDagsats(
             try {
                 log.info("Backfiller redusertDagsats for sak ${sak.id} - ${sak.saksnummer}")
                 var sakenErFerdigBackfilled = false
-                for (behandling in behandlinger) {
+                for (behandlingId in behandlinger) {
                     if (sakenErFerdigBackfilled) break
-                    taSkriveLåsRepository.withLåstBehandling(behandling.id) {
-                        val resultat = backfillService.backfillBehandling(behandling)
+                    taSkriveLåsRepository.withLåstBehandling(behandlingId) {
+                        val resultat = backfillService.backfillBehandling(behandlingId)
                         when (resultat) {
                             BackfillBehandlingResultat.Backfilled -> {
                                 antallBackfillUtført++
