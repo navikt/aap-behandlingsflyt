@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
+import no.nav.aap.behandlingsflyt.behandling.BackfillRedusertDagsatsService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
@@ -602,6 +603,28 @@ internal class BehandlingRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `finn behandlinger som mangler redusert dagsats backfiller alle relevante tilkjente perioder for en behandling`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            lagreTilkjentYtelse(connection, behandling.id, manglerRedusertDagsats = true, antallPerioder = 2)
+            val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
+            val perioderSomMangler = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandling.id)
+            assertThat(perioderSomMangler).hasSize(2)
+
+            val behandlinger = BehandlingRepositoryImpl(connection)
+                .finnBehandlingerSomManglerRedusertDagsats(sak.id)
+            assertThat(behandlinger).containsExactly(behandling.id)
+
+            BackfillRedusertDagsatsService(tilkjentYtelseRepository).backfillBehandling(behandling.id)
+            val lagredeDagsatser = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)!!
+                .map { it.tilkjent.redusertDagsatsOrNull() }
+            assertThat(lagredeDagsatser)
+                .containsExactlyInAnyOrderElementsOf(perioderSomMangler.map { it.beregnRedusertDagsats() })
+        }
+    }
+
     private fun opprettKlagebehandling(connection: DBConnection, sak: Sak): BehandlingId =
         BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId = sak.id,
@@ -613,7 +636,12 @@ internal class BehandlingRepositoryImplTest {
             ),
         ).id
 
-    private fun lagreTilkjentYtelse(connection: DBConnection, behandlingId: BehandlingId, manglerRedusertDagsats: Boolean) {
+    private fun lagreTilkjentYtelse(
+        connection: DBConnection,
+        behandlingId: BehandlingId,
+        manglerRedusertDagsats: Boolean,
+        antallPerioder: Int = 1,
+    ) {
         val periode = TilkjentYtelsePeriode(
             periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1)),
             tilkjent = Tilkjent(
@@ -638,7 +666,13 @@ internal class BehandlingRepositoryImplTest {
                 redusertDagsats = Beløp(63),
             ),
         )
-        TilkjentYtelseRepositoryImpl(connection).lagre(behandlingId, listOf(periode), tomtTilkjentYtelseGrunnlag, "")
+        val perioder = (0 until antallPerioder).map { index ->
+            periode.copy(
+                periode = Periode(LocalDate.now().plusDays(index * 2L), LocalDate.now().plusDays(index * 2L + 1)),
+                tilkjent = periode.tilkjent.copy(dagsats = Beløp(999 + index * 100)),
+            )
+        }
+        TilkjentYtelseRepositoryImpl(connection).lagre(behandlingId, perioder, tomtTilkjentYtelseGrunnlag, "")
         if (manglerRedusertDagsats) {
             connection.execute(
                 """

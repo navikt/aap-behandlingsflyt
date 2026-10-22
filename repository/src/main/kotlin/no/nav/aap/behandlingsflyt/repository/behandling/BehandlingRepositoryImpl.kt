@@ -93,7 +93,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
 
     override fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId> {
         return connection.queryList("""
-            SELECT b.id AS behandling_id
+            SELECT DISTINCT b.id AS behandling_id
             FROM behandling b
             JOIN tilkjent_ytelse ty ON b.id = ty.behandling_id
             JOIN tilkjent_periode tp ON ty.id = tp.tilkjent_ytelse_id
