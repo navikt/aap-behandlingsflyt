@@ -28,6 +28,29 @@ data class VurderesForUføretrygd(
     val tilkjentYtelse: TilkjentYtelse?
 ) : BrevBehov(TypeBrev.VEDTAK_11_18)
 
+data class UføreVurdering(
+    val kravdatoUføretrygd: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+)
+
+data class VanligVurdering(
+    val virkningstidspunkt: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+    val grunnlagBeregning: GrunnlagBeregning?,
+    val tilkjentYtelse: TilkjentYtelse?,
+    val sykdomsvurdering: String?,
+    val forholdTilAndreYtelser: ForholdTilAndreYtelser?,
+    val yrkesskadeBeregning: YrkesskadeBeregningBrev? = null,
+    val foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>? = null,
+    val meldepliktGrunnlag: MeldepliktGrunnlag? = null,
+    val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
+)
+
+data class VurderesForUføretrygdV2(
+    val uføreVurdering: UføreVurdering,
+    val ordinærAAP: VanligVurdering?
+): BrevBehov(TypeBrev.VEDTAK_11_18)
+
 data class Arbeidssøker(
     val datoAvklartForJobbsøk: LocalDate,
     val sisteDagMedYtelse: LocalDate,
