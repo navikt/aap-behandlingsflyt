@@ -64,7 +64,7 @@ class HåndterUførevedtakServiceTest {
         every { behandling.id } returns behandlingId
         every { behandling.forrigeBehandlingId } returns null
         every { behandling.status() } returns Status.AVSLUTTET
-        every { behandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling
+        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId) } returns behandling
         every { behandlingService.finnEllerOpprettBehandling(sakId, any()) } returns BehandlingService.Ordinær(behandling)
         every { trukketSøknadService.søknadErTrukket(behandlingId) } returns false
         every { overgangUføreRepository.hentHvisEksisterer(behandlingId) } returns null
