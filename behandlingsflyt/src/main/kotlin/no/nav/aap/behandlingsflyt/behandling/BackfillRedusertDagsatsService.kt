@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -17,8 +17,8 @@ class BackfillRedusertDagsatsService(
     /**
      * Backfiller redusertDagsats for én behandling.
      */
-    fun backfillBehandling(behandling: Behandling): BackfillBehandlingResultat {
-        val tilkjentBackfillKandidater = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandling.id)
+    fun backfillBehandling(behandlingId: BehandlingId): BackfillBehandlingResultat {
+        val tilkjentBackfillKandidater = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandlingId)
         if (tilkjentBackfillKandidater.isEmpty()) {
             return BackfillBehandlingResultat.Backfilled
         }
@@ -29,7 +29,7 @@ class BackfillRedusertDagsatsService(
         }
         tilkjentYtelseRepository.backfillRedusertDagsats(tilkjentBackfillKandidater)
 
-        val gjenstående = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandling.id)
+        val gjenstående = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandlingId)
         if (gjenstående.isNotEmpty()) {
             log.warn("Backfill av redusertDagsats er gjennomført, men ${gjenstående.size} antall kandidater ble ikke oppdatert.")
         }
