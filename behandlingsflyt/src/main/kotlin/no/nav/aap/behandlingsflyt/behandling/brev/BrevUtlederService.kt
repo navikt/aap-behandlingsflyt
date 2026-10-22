@@ -450,7 +450,7 @@ class BrevUtlederService(
         )
     }
 
-    private fun hentAvslagsårsaker(behandlingId: BehandlingId): Set<Avslagsårsak> {
+    private fun hentAvslagsårsaker(behandlingId: BehandlingId, vedtaksdato: LocalDate): Set<Avslagsårsak> {
         val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(behandlingId)
             ?.somSykdomsvurderingstidslinje()
             .orEmpty()
@@ -471,14 +471,17 @@ class BrevUtlederService(
                                 sykdomsvurdering?.erOppfyltOrdinærMedUtlededeFelter() == true
 
                     if (erFallbackFraBistandsvilkåret) null else avslagsårsak
-                }.segmenter().mapNotNull { it.verdi }
+                }.segmenter().filter { it.periode.inneholder(vedtaksdato) }.mapNotNull { it.verdi }
             }
             .toSet()
     }
 
     private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id)
+        val vedtaksdato = checkNotNull(vedtakRepository.hent(behandling.id)?.vedtakstidspunkt) {
+            "Mangler vedtakstidspunkt for behandling ${behandling.id}"
+        }.toLocalDate()
+        val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id, vedtaksdato)
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
         log.info(
             "Brevvalg avslagsårsak: alleAvslagsårsaker={}, prioritertAvslagsårsak={}",
@@ -497,8 +500,10 @@ class BrevUtlederService(
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
         }
-        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering, avslagsårsak = avslagsårsak,
-            avslagsårsaker = alleAvslagsårsaker)
+        return AvslagBrev.Avslag(
+            sykdomsvurdering = sykdomsvurdering, avslagsårsak = avslagsårsak,
+            avslagsårsaker = alleAvslagsårsaker
+        )
     }
 
     private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
@@ -890,7 +895,9 @@ class BrevUtlederService(
                 val fraOgMed = checkNotNull(vedtak.virkningstidspunkt) {
                     "Vedtak mangler virkningstidspunkt"
                 }
-                val tilOgMed = vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt).coerceAtMost(sisteDagMedYtelse)
+                val tilOgMed =
+                    vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt)
+                        .coerceAtMost(sisteDagMedYtelse)
 
                 RefusjonskravTjenestepensjon(
                     skalEtterbetalingHoldesIgjen = true,
