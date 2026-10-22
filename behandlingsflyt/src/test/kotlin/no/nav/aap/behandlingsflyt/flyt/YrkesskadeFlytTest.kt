@@ -119,7 +119,7 @@ class YrkesskadeFlytTest {
         override fun unleashGateway() = this@YrkesskadeFlytTest.unleashGateway
 
         private val søknadsdato = LocalDate.now()
-        private lateinit var person: TestPerson
+        private val person get() = hentPersonFraSnapshot()
         private lateinit var sak: Sak
         private lateinit var oppdatertBehandling: Behandling
 
@@ -127,7 +127,6 @@ class YrkesskadeFlytTest {
         fun settOppYrkesskade() = snapshotEtterSetup {
             val person = TestPersoner.PERSON_MED_YRKESSKADE()
             this.person = person
-            this@InnvilgetYrkesskadeMedÅrsakssammenheng.person = person
             // Sender inn en søknad
             val (sak, behandling) = sendInnFørsteSøknad(
                 mottattTidspunkt = søknadsdato.atStartOfDay(),

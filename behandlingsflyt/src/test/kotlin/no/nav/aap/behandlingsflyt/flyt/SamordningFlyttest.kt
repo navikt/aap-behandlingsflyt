@@ -237,7 +237,7 @@ class SamordningFlyttest {
         AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
         private val søknadsdato = LocalDate.now().minusYears(1)
         private val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-        private lateinit var person: TestPerson
+        private val person get() = hentPersonFraSnapshot()
         private lateinit var sak: Sak
 
         @BeforeAll
@@ -250,14 +250,12 @@ class SamordningFlyttest {
                 )
             )
             this.person = person
-            this@RevurderingMedSykepenger.person = person
             val behandling = opprettSamordning(person, søknadsdato, sykePengerPeriode)
             sak = hentSak(behandling)
         }
 
         @BeforeEach
         fun hentSakFraSnapshot() {
-            person.medInstitusjonsopphold(emptyList())
             sak = hentSak(hentSisteOpprettedeBehandlingForSak(sak.id))
         }
 

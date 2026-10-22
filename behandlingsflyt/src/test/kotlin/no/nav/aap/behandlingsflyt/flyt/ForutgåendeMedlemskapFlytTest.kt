@@ -151,7 +151,7 @@ class ForutgåendeMedlemskapFlytTest {
 
     @Nested
     inner class ManueltMedlemskap : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
-        private lateinit var person: TestPerson
+        private val person get() = hentPersonFraSnapshot()
         private lateinit var sak: Sak
         private lateinit var behandling: Behandling
 
@@ -159,7 +159,6 @@ class ForutgåendeMedlemskapFlytTest {
         fun settOppGrunnlag() = snapshotEtterSetup {
             val person = TestPersoner.STANDARD_PERSON().medInntekter(emptyList())
             this.person = person
-            this@ManueltMedlemskap.person = person
             val (sak, behandling) = sendInnFørsteSøknad(person = person)
             this@ManueltMedlemskap.sak = sak
             behandling.løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)

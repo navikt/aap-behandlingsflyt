@@ -50,7 +50,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
-import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -375,7 +374,7 @@ class OvergangUføreFlytTest {
         AbstraktFlytOrkestratorSnapshotTest(OvergangUføreFlytTestUnleash::class) {
         private val virkningsdato = LocalDate.now()
         private val overgangUførDato = LocalDate.now().plusMonths(1)
-        private lateinit var person: TestPerson
+        private val person get() = hentPersonFraSnapshot()
         private lateinit var sak: Sak
         private lateinit var sisteBehandling: Behandling
         private val hendelser
@@ -389,7 +388,6 @@ class OvergangUføreFlytTest {
         fun settOppOvergangUføre() = snapshotEtterSetup {
             val person = TestPersoner.STANDARD_PERSON()
             this.person = person
-            this@AutomatiskStansVedUførevedtak.person = person
             val (sak, behandling) = sendInnFørsteSøknad(
                 person = person,
                 mottattTidspunkt = virkningsdato.atStartOfDay()
@@ -417,9 +415,6 @@ class OvergangUføreFlytTest {
 
         @BeforeEach
         fun hentBehandlingFraSnapshot() {
-            person.dødsdato = null
-            person.uføre = null
-            person.uføreHistorikk = emptyList()
             sisteBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
         }
 

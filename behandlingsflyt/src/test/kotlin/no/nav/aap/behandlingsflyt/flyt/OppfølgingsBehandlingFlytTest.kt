@@ -32,7 +32,9 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleA
 
     @BeforeAll
     fun settOppFGB() = snapshotEtterSetup {
-        sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
+        val person = TestPersoner.STANDARD_PERSON()
+        this.person = person
+        sak = happyCaseFørstegangsbehandling(person = person, sendMeldekort = false)
     }
 
     @Test

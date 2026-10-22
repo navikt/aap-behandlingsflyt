@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbtest.DatabaseSnapshot
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
@@ -59,9 +60,10 @@ import kotlin.reflect.KClass
  * nestede gruppene skal eie database- og snapshot-livssyklusen. Hver gruppe oppretter
  * sitt grunnlag i `@BeforeAll` og henter mutable behandlingsobjekter på nytt i `@BeforeEach`.
  *
- * Snapshotet isolerer databasen, ikke Kotlin-objekter. `PER_CLASS` beholder feltene mellom
- * testene, og [TestData.person] re-registrerer samme mutable person. Personendringer må
- * derfor nullstilles mellom tester, eller gjøres på nye testpersonobjekter.
+ * [TestData.person] lagres med det eksisterende JSON-formatet for testpersoner. Før hver
+ * test gjenskapes personen og barna med samme identiteter, men uten delte mutable objekter.
+ * Bruk [hentPersonFraSnapshot] når en test skal endre personen. `PER_CLASS` beholder andre
+ * Kotlin-felt mellom testene; mutable behandlingsobjekter må fremdeles hentes på nytt.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstraktFlytOrkestratorSnapshotTest(
@@ -73,7 +75,11 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
 
     data class TestData(var person: TestPerson?)
 
-    private var testData: TestData = TestData(person = null)
+    private var personSnapshot: String? = null
+    private var personForTest: TestPerson? = null
+
+    protected fun hentPersonFraSnapshot(): TestPerson =
+        requireNotNull(personForTest) { "Registrer testpersonen med this.person i snapshotEtterSetup." }
 
     /**
      * Kjør oppsettskoden i [block] (f.eks. fullfør en FGB), ta deretter et snapshot av
@@ -82,6 +88,7 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
      */
     protected fun snapshotEtterSetup(block: TestData.() -> Unit) {
         motorForTest = null
+        personForTest = null
         resetGatewayProvider()
         if (::snapshot.isInitialized) {
             snapshot.close()
@@ -90,15 +97,16 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
             (dataSource as AutoCloseable).close()
             dataSource = TestDataSource()
         }
-        testData = TestData(person = null)
+        val testData = TestData(person = null)
         testData.block()
+        personSnapshot = testData.person?.let { DefaultJsonMapper.toJson(it) }
         snapshot = (dataSource as TestDataSource).createSnapshot()
     }
 
     /**
      * Før hvert test: bytt ut [dataSource] med en fersk klone av snapshotet, nullstill
-     * motoren slik at den bruker den nye databasen, og re-registrer personen som var
-     * aktiv under oppsett (siden FakesExtension.beforeEach() nullstiller FakePersoner).
+     * motoren slik at den bruker den nye databasen, og registrer en fersk person fra
+     * oppsettet (siden FakesExtension.beforeEach() nullstiller FakePersoner).
      */
     @BeforeEach
     override fun beforeEachClearDatabase() {
@@ -110,10 +118,8 @@ abstract class AbstraktFlytOrkestratorSnapshotTest(
         resetGatewayProvider()
         (dataSource as AutoCloseable).close()
         dataSource = snapshot.newDataSource()
-        // Re-register person that was registered during setup
-        if (testData.person != null) {
-            FakePersoner.leggTil(testData.person!!)
-        }
+        personForTest = personSnapshot?.let { DefaultJsonMapper.fromJson<TestPerson>(it) }
+            ?.also { FakePersoner.leggTil(it) }
     }
 
     /**
