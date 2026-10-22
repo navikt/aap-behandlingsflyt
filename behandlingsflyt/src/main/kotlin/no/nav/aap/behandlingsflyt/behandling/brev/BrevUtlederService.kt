@@ -194,6 +194,8 @@ class BrevUtlederService(
 
                         if (harUføretrygd && !harOrdinærAAP) {
                             brevBehovVurderesForUføretrygd(behandling)
+                        } else if (harUføretrygd) {
+                            brevBehovVurderesForUføretrygdV2(behandling, false)
                         } else {
                             brevBehovInnvilgelse(behandling)
                         }
@@ -210,6 +212,9 @@ class BrevUtlederService(
 
             TypeBehandling.Revurdering -> {
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
+                val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
+                val harUføretrygd =
+                    perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
                 if (resultat == Resultat.AVBRUTT) {
                     return null
                 }
@@ -226,6 +231,10 @@ class BrevUtlederService(
 
                 if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23SjetteLedd
+                }
+
+                if (harUføretrygd) {
+                    return brevBehovVurderesForUføretrygdV2(behandling, true)
                 }
 
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
@@ -529,6 +538,47 @@ class BrevUtlederService(
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse
+        )
+    }
+
+    private fun brevBehovVurderesForUføretrygdV2(behandling: Behandling, erRevurdering: Boolean = false): VurderesForUføretrygdV2 {
+        val overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(behandling.id)
+        checkNotNull(overgangUføreGrunnlag) {
+            "Vedtak vurdert for uføretrygd mangler grunnlag"
+        }
+
+        val kravdatoUføretrygd = overgangUføreGrunnlag.kravdatoUføretrygd()
+        val maksDatoOvergangUføre =
+            overgangUføreGrunnlag.somOvergangUforevurderingstidslinje().segmenter().firstOrNull()?.tom()
+        checkNotNull(kravdatoUføretrygd) {
+            "Vedtak godkjent etter 11-18 mangler kravdato"
+        }
+        checkNotNull(maksDatoOvergangUføre) {
+            "Vedtak godkjent etter 11-18 mangler maksdato"
+        }
+
+        val innvilgelse = brevBehovInnvilgelse(behandling)
+
+        return VurderesForUføretrygdV2(
+            uføreVurdering = UføreVurdering(
+                kravdatoUføretrygd = kravdatoUføretrygd,
+                sisteDagMedYtelse = maksDatoOvergangUføre
+            ),
+            ordinærAAP = when(erRevurdering) {
+                true -> null
+                false -> VanligVurdering(
+                    virkningstidspunkt = innvilgelse.virkningstidspunkt,
+                    sisteDagMedYtelse = innvilgelse.sisteDagMedYtelse,
+                    grunnlagBeregning = innvilgelse.grunnlagBeregning,
+                    tilkjentYtelse = innvilgelse.tilkjentYtelse,
+                    sykdomsvurdering = innvilgelse.sykdomsvurdering,
+                    forholdTilAndreYtelser = innvilgelse.forholdTilAndreYtelser,
+                    yrkesskadeBeregning = innvilgelse.yrkesskadeBeregning,
+                    foreldreansvarVurderinger = innvilgelse.foreldreansvarVurderinger,
+                    meldepliktGrunnlag = innvilgelse.meldepliktGrunnlag,
+                    yrkesSkadeISøknadIkkeIRegister = innvilgelse.yrkesSkadeISøknadIkkeIRegister
+                )
+            }
         )
     }
 
