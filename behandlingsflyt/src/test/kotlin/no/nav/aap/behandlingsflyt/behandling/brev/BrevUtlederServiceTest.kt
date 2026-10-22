@@ -478,6 +478,145 @@ class BrevUtlederServiceTest {
     }
 
     @Nested
+    inner class TestGruppe_Innvilget_11_18 {
+        @Test
+        fun `utleder brevgrunnlag for brukere som får innvilget 11-18 i en førstegangsbehandling`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            val kravdatoUføretrygd = virkningstidspunkt.plusMonths(1)
+            val førsteDagMedYtelse = virkningstidspunkt
+            val sisteDagMedOrdinærYtelse = kravdatoUføretrygd.minusDays(1)
+            gittUnderveisGrunnlag(
+                behandling.id,
+                underveisperiode(
+                    periode = Periode(førsteDagMedYtelse, `sisteDagMedOrdinærYtelse`),
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                    utfall = Utfall.OPPFYLT,
+                ),
+                underveisperiode(
+                    periode = Periode(kravdatoUføretrygd, kravdatoUføretrygd.plusMonths(8)),
+                    rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+
+            beregningsgrunnlagRepository.lagre(
+                behandling.id, Grunnlag11_19(
+                    grunnlaget = GUnit(2),
+                    erGjennomsnitt = false,
+                    gjennomsnittligInntektIG = GUnit(0),
+                    inntekter = listOf(
+                        grunnlagInntekt(2024, 220_000),
+                        grunnlagInntekt(2023, 210_000),
+                        grunnlagInntekt(2022, 200_000),
+                    )
+                )
+            )
+
+            overgangUføreRepository.lagre(
+                behandling.id,
+                listOf(
+                    OvergangUføreVurdering(
+                        begrunnelse = "test",
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                        brukerRettPåAAP = true,
+                        fom = kravdatoUføretrygd,
+                        tom = kravdatoUføretrygd.plusMonths(8),
+                        vurdertAv = Bruker("meg"),
+                        vurdertIBehandling = behandling.id,
+                        opprettet = Instant.now(),
+                    )
+                )
+            )
+
+            val utledBehovForMeldingOmVedtak = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            // sjekk om vi ikke kan løse dette på en litt smoothere måte 🤔
+            val felt = "ordinærAAP.grunnlagBeregning.beregningsgrunnlag"
+            assertThat(utledBehovForMeldingOmVedtak)
+                .extracting(felt)
+                .isNotNull()
+
+            assertThat(utledBehovForMeldingOmVedtak)
+                .usingRecursiveComparison()
+                .ignoringFields(felt)
+                .isEqualTo(
+                VurderesForUføretrygdV2(
+                    uføreVurdering = UføreVurdering(
+                        kravdatoUføretrygd = kravdatoUføretrygd,
+                        sisteDagMedYtelse = kravdatoUføretrygd.plusMonths(8),
+                    ),
+                    ordinærAAP = VanligVurdering(
+                        virkningstidspunkt = førsteDagMedYtelse,
+                        sisteDagMedYtelse = kravdatoUføretrygd.plusMonths(8),
+                        grunnlagBeregning = GrunnlagBeregning(
+                            beregningstidspunkt = null,
+                            inntekterPerÅr = listOf(
+                                InntektPerÅr(Year.of(2024), inntekt = BigDecimal("220000.00")),
+                                InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
+                                InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
+                            ),
+                            beregningsgrunnlag = null,
+                            beregningsutfallKategori = null // kun satt i dev (Miljø.erDev())
+                        ),
+                        tilkjentYtelse = null,
+                        sykdomsvurdering = null,
+                        forholdTilAndreYtelser = null,
+                        yrkesskadeBeregning = null,
+                        foreldreansvarVurderinger = emptyList(),
+                        meldepliktGrunnlag = null,
+                        yrkesSkadeISøknadIkkeIRegister = false
+                    )
+                )
+            )
+        }
+
+        @Test
+        fun `utleder brevgrunnlag for brukere som får innvilget 11-18 i en revurdering`() {
+            val behandling = gittBehandling(TypeBehandling.Revurdering)
+            val kravdatoUføretrygd = virkningstidspunkt.plusMonths(1)
+            gittUnderveisGrunnlag(
+                behandling.id,
+                underveisperiode(
+                    periode = Periode(kravdatoUføretrygd, kravdatoUføretrygd.plusMonths(8)),
+                    rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                    utfall = Utfall.OPPFYLT,
+                )
+            )
+
+            overgangUføreRepository.lagre(
+                behandling.id,
+                listOf(
+                    OvergangUføreVurdering(
+                        begrunnelse = "test",
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                        brukerRettPåAAP = true,
+                        fom = kravdatoUføretrygd,
+                        tom = kravdatoUføretrygd.plusMonths(8),
+                        vurdertAv = Bruker("meg"),
+                        vurdertIBehandling = behandling.id,
+                        opprettet = Instant.now(),
+                    )
+                )
+            )
+
+            val utledBehovForMeldingOmVedtak = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(utledBehovForMeldingOmVedtak)
+                .isEqualTo(
+                VurderesForUføretrygdV2(
+                    uføreVurdering = UføreVurdering(
+                        kravdatoUføretrygd = kravdatoUføretrygd,
+                        sisteDagMedYtelse = kravdatoUføretrygd.plusMonths(8),
+                    ),
+                    ordinærAAP = null
+                )
+            )
+        }
+    }
+
+    @Nested
     @RestoreSystemProperties
     inner class TestGruppe_AutomatiskStans1118 {
         @ParameterizedTest(name = "skal utlede {1} når bruker har fått vedtak om uføretrygd = {0}")
@@ -1098,7 +1237,11 @@ class BrevUtlederServiceTest {
         fun `til og med dato er lik vedtakstidspunkt - 1 dag`() {
             val virkningstidspunktet = 5 september 2026
             val vedtakstidspunkt = virkningstidspunktet.plusDays(8)
-            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling, virkningstidspunkt = virkningstidspunktet, vedtakstidspunkt = vedtakstidspunkt.atStartOfDay())
+            val behandling = gittBehandling(
+                TypeBehandling.Førstegangsbehandling,
+                virkningstidspunkt = virkningstidspunktet,
+                vedtakstidspunkt = vedtakstidspunkt.atStartOfDay()
+            )
             val kravdato = 14 juni 2026
             gittUnderveisGrunnlag(
                 behandling.id,
@@ -1129,7 +1272,11 @@ class BrevUtlederServiceTest {
             // dette betyr egentlig at det ikke er noe å holde tilbake, men tester på det uansett
             val virkningstidspunktet = 5 september 2026
             val vedtakstidspunkt = virkningstidspunktet
-            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling, virkningstidspunkt = virkningstidspunktet, vedtakstidspunkt = vedtakstidspunkt.atStartOfDay())
+            val behandling = gittBehandling(
+                TypeBehandling.Førstegangsbehandling,
+                virkningstidspunkt = virkningstidspunktet,
+                vedtakstidspunkt = vedtakstidspunkt.atStartOfDay()
+            )
             val kravdato = 14 juni 2026
             gittUnderveisGrunnlag(
                 behandling.id,
@@ -1149,7 +1296,9 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
-            assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed).isAfterOrEqualTo(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.fraOgMed)
+            assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed).isAfterOrEqualTo(
+                resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.fraOgMed
+            )
         }
 
         @Test
