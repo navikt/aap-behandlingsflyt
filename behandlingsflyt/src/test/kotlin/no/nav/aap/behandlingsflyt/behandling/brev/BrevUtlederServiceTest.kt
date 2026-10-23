@@ -546,7 +546,7 @@ class BrevUtlederServiceTest {
                         kravdatoUføretrygd = kravdatoUføretrygd,
                         sisteDagMedYtelse = kravdatoUføretrygd.plusMonths(8),
                     ),
-                    ordinærAAP = VanligVurdering(
+                    ordinærAAP = OrdinærInnvilgelse(
                         virkningstidspunkt = førsteDagMedYtelse,
                         sisteDagMedYtelse = kravdatoUføretrygd.plusMonths(8),
                         grunnlagBeregning = GrunnlagBeregning(
