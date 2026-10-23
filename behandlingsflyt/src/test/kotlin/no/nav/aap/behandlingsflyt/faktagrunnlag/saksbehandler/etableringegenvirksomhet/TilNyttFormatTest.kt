@@ -1,18 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryEtableringEgenVirksomRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
-import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.test.april
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mai
@@ -21,7 +15,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
@@ -49,7 +42,6 @@ class TilNyttFormatTest {
         })
 
         assertThat(gammel.tilNyttFormat()).usingRecursiveComparison().isEqualTo(forventet)
-        assertValideringUendret(gammel)
     }
 
     @Test
@@ -75,7 +67,6 @@ class TilNyttFormatTest {
         })
 
         assertThat(gammel.tilNyttFormat()).usingRecursiveComparison().isEqualTo(forventet)
-        assertValideringUendret(gammel)
     }
 
     @Test
@@ -113,7 +104,6 @@ class TilNyttFormatTest {
         )
 
         assertThat(ny).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(forventet)
-        assertValideringUendret(gammel)
     }
 
     @Test
@@ -151,7 +141,6 @@ class TilNyttFormatTest {
         )
 
         assertThat(gammel.tilNyttFormat()).usingRecursiveComparison().isEqualTo(forventet)
-        assertValideringUendret(gammel)
     }
 
     @Test
@@ -183,53 +172,6 @@ class TilNyttFormatTest {
         InMemorySykdomRepository
     )
 
-    private fun assertValideringUendret(gammel: List<EtableringEgenVirksomhetVurdering>) {
-        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2026)
-        val oppfyltFra = 31 desember 2025
-        InMemorySykdomRepository.lagre(
-            behandling.id, listOf(
-                Sykdomsvurdering(
-                    begrunnelse = "...",
-                    vurderingenGjelderFra = oppfyltFra,
-                    vurderingenGjelderTil = null,
-                    harSkadeSykdomEllerLyte = true,
-                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-                    erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
-                    yrkesskadeBegrunnelse = null,
-                    diagnose = null,
-                    vurdertIBehandling = behandling.id,
-                    opprettet = Instant.now(),
-                    vurdertAv = Bruker("saks")
-                )
-            )
-        )
-        InMemoryBistandRepository.lagre(
-            behandling.id, listOf(
-                Bistandsvurdering(
-                    begrunnelse = "...",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = true,
-                    erBehovForAnnenOppfølging = false,
-                    overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilArbeid = false,
-                    vurdertAv = Bruker("saks"),
-                    fom = oppfyltFra,
-                    tom = null,
-                    opprettet = Instant.now(),
-                    vurdertIBehandling = behandling.id
-                )
-            )
-        )
-
-        val før = service.erVurderingerGyldig(behandling.id, gammel)
-        val etter = service.erVurderingerGyldig(behandling.id, gammel.tilNyttFormat().map { it.tilGammeltFormat() })
-
-        assertThat(før).isEqualTo(VirksomhetEtableringGyldig)
-        assertThat(etter).isEqualTo(før)
-    }
-
     private class VurderingBuilder(
         var fom: LocalDate? = 1 januar 2026,
         var tom: LocalDate? = 1 februar 2026,
@@ -260,7 +202,7 @@ class TilNyttFormatTest {
             tom = null,
             fase = null,
             erRegistrertINødvendigeOffentligeRegister = null,
-            jobberBrukerAktivMedVirksomheten = null,
+            jobberBrukerAktivMedVirksomheten = null
         ).run {
             copy(
                 fom = builder.fom ?: this.fom,

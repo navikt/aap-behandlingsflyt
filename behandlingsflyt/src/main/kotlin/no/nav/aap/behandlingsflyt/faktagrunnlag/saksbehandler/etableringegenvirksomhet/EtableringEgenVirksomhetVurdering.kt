@@ -19,22 +19,32 @@ data class EtableringEgenVirksomhetVurdering(
     val virksomhetErNy: Boolean?,
     val brukerEierVirksomheten: EierVirksomhet?,
     val kanFøreTilSelvforsørget: Boolean?,
-    val utviklingsPerioder: List<Periode>,
-    val oppstartsPerioder: List<Periode>,
     override val vurdertAv: Bruker,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
     override val fom: LocalDate,
     override val tom: LocalDate?,
+    val utviklingsPerioder: List<Periode> = emptyList(),
+    val oppstartsPerioder: List<Periode> = emptyList(),
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
-        return this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
-            EierVirksomhet.EIER_MINST_50_PROSENT,
-            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-        )
+        return when (fase) {
+            EtableringFase.UTVIKLING -> jobberBrukerAktivMedVirksomheten == true && virksomhetErNy == true && kanFøreTilSelvforsørget == true && foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
+                EierVirksomhet.EIER_MINST_50_PROSENT,
+                EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+            )
+
+            EtableringFase.OPPSTART -> jobberBrukerAktivMedVirksomheten == true && erRegistrertINødvendigeOffentligeRegister == true && virksomhetErNy == true && kanFøreTilSelvforsørget == true && foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
+                EierVirksomhet.EIER_MINST_50_PROSENT,
+                EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+            )
+
+            null -> false
+        }
+
     }
 }
 
@@ -121,8 +131,6 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.virksomhetErNy == b.virksomhetErNy &&
                 a.brukerEierVirksomheten == b.brukerEierVirksomheten &&
                 a.kanFøreTilSelvforsørget == b.kanFøreTilSelvforsørget &&
-                a.utviklingsPerioder == b.utviklingsPerioder &&
-                a.oppstartsPerioder == b.oppstartsPerioder &&
                 a.fom == b.fom &&
                 a.tom == b.tom &&
                 a.fase == b.fase &&

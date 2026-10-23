@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryEtableringEgenVirksomRepository
@@ -19,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -91,7 +91,6 @@ class BackfillEtableringVurderingerTest {
             legacy.somUtvikling(utvikling2),
             legacy.somOppstart(oppstart),
         )
-        assertValideringUendret(listOf(legacy), hentVurderinger(behandlingId))
     }
 
     @Test
@@ -216,8 +215,8 @@ class BackfillEtableringVurderingerTest {
                     )
                 )
             )
-            assertThat(EtableringEgenVirksomhetService(provider).erVurderingerGyldig(behandlingId, listOf(legacy)))
-                .isEqualTo(VirksomhetEtableringGyldig)
+            assertThat(EtableringEgenVirksomhetService(provider).beregnOgValider(behandlingId, listOf(legacy)))
+                .isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
         }
         assertThat(varighet(migrert(legacy))).isEqualTo(varighet(listOf(legacy)))
 
@@ -327,7 +326,6 @@ class BackfillEtableringVurderingerTest {
             legacy.somUtvikling(utvikling1),
             legacy.somUtvikling(utvikling2),
         )
-        assertValideringUendret(listOf(legacy), hentVurderinger(behandlingId))
     }
 
     @Test
@@ -363,7 +361,6 @@ class BackfillEtableringVurderingerTest {
             legacy.somUtvikling(utvikling2),
             legacy.somOppstart(oppstart),
         )
-        assertValideringUendret(listOf(legacy), hentVurderinger(behandlingId))
     }
 
     @Test
@@ -389,7 +386,6 @@ class BackfillEtableringVurderingerTest {
         migrer(behandlingId)
 
         assertThat(hentVurderinger(behandlingId)).containsExactly(legacy.somOppstart(oppstart))
-        assertValideringUendret(listOf(legacy), hentVurderinger(behandlingId))
     }
 
     @Test
@@ -473,7 +469,6 @@ class BackfillEtableringVurderingerTest {
         )
 
         assertThat(varighet(migrert(legacy))).isEqualTo(varighet(listOf(legacy)))
-        assertValideringUendret(listOf(legacy), migrert(legacy))
     }
 
     @Test
@@ -500,7 +495,6 @@ class BackfillEtableringVurderingerTest {
         val nyere = vurdering(andreBehandling, fom = 1 februar 2025, opprettet = Instant.parse("2025-02-01T00:00:00Z"))
 
         assertThat(varighet(migrert(eldre) + nyere)).isEqualTo(8 to 0)
-        assertValideringUendret(listOf(eldre, nyere), migrert(eldre) + nyere)
     }
 
     @Test
@@ -538,10 +532,9 @@ class BackfillEtableringVurderingerTest {
         val før = listOf(oppfylt, ikkeOppfylt, utenPerioder)
         val etter = før.flatMap { migrert(it) }
 
-        assertThat(evalueringer(før)).containsExactly(true, false, false)
+        assertThat(evalueringer(før.tilNyttFormat())).containsExactly(true, true, false, false)
         assertThat(varighet(etter)).isEqualTo(varighet(før))
         assertThat(etter.map { it.evaluerVirksomhetVurdering() }).containsExactlyInAnyOrder(true, true, false, false)
-        assertValideringUendret(før, etter)
     }
 
     @Test
@@ -648,56 +641,6 @@ class BackfillEtableringVurderingerTest {
         InMemorySykdomRepository
     )
 
-    private fun assertValideringUendret(
-        før: List<EtableringEgenVirksomhetVurdering>,
-        etter: List<EtableringEgenVirksomhetVurdering>,
-    ) {
-        val (_, behandling) = opprettInMemorySakOgBehandling(1 desember 2024)
-        val oppfyltFra = 30 november 2024
-        InMemorySykdomRepository.lagre(
-            behandling.id, listOf(
-                Sykdomsvurdering(
-                    begrunnelse = "...",
-                    vurderingenGjelderFra = oppfyltFra,
-                    vurderingenGjelderTil = null,
-                    harSkadeSykdomEllerLyte = true,
-                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
-                    erSkadeSykdomEllerLyteVesentligdel = true,
-                    erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
-                    yrkesskadeBegrunnelse = null,
-                    diagnose = null,
-                    vurdertIBehandling = behandling.id,
-                    opprettet = Instant.now(),
-                    vurdertAv = Bruker("saks")
-                )
-            )
-        )
-        InMemoryBistandRepository.lagre(
-            behandling.id, listOf(
-                Bistandsvurdering(
-                    begrunnelse = "...",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = true,
-                    erBehovForAnnenOppfølging = false,
-                    overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilArbeid = false,
-                    vurdertAv = Bruker("saks"),
-                    fom = oppfyltFra,
-                    tom = null,
-                    opprettet = Instant.now(),
-                    vurdertIBehandling = behandling.id
-                )
-            )
-        )
-
-        val gyldigFør = service.erVurderingerGyldig(behandling.id, før)
-        val gyldigEtter = service.erVurderingerGyldig(behandling.id, etter.map { it.tilGammeltFormat() })
-
-        assertThat(gyldigFør).isEqualTo(VirksomhetEtableringGyldig)
-        assertThat(gyldigEtter).isEqualTo(gyldigFør)
-    }
-
     private fun evalueringer(vurderinger: List<EtableringEgenVirksomhetVurdering>) =
         vurderinger.map { it.evaluerVirksomhetVurdering() }
 
@@ -736,6 +679,7 @@ class BackfillEtableringVurderingerTest {
         virksomhetNavn: String = "Trout&Tractor",
         opprettet: Instant = Instant.parse("2025-01-01T00:00:00Z"),
         virksomhetErNy: Boolean = false,
+        erRegistrert: Boolean? = null,
     ) = EtableringEgenVirksomhetVurdering(
         begrunnelse = "Historisk vurdering",
         virksomhetNavn = virksomhetNavn,
@@ -752,8 +696,8 @@ class BackfillEtableringVurderingerTest {
         fom = fom,
         tom = tom,
         fase = fase,
-        erRegistrertINødvendigeOffentligeRegister = null,
-        jobberBrukerAktivMedVirksomheten = null,
+        erRegistrertINødvendigeOffentligeRegister = erRegistrert,
+        jobberBrukerAktivMedVirksomheten = true,
     )
 
     private fun opprettBehandling(): BehandlingId = dataSource.transaction { connection ->

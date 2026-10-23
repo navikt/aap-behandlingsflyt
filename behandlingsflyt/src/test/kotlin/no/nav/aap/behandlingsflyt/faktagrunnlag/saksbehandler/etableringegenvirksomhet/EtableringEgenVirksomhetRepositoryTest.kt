@@ -51,11 +51,9 @@ class EtableringEgenVirksomhetRepositoryTest {
                     virksomhetErNy = true,
                     brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                     kanFøreTilSelvforsørget = true,
-                    utviklingsPerioder = emptyList(),
-                    oppstartsPerioder = emptyList(),
-                    fase = null,
-                    erRegistrertINødvendigeOffentligeRegister = null,
-                    jobberBrukerAktivMedVirksomheten = null
+                    fase = EtableringFase.OPPSTART,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    jobberBrukerAktivMedVirksomheten = true
                 )
 
             repository.lagre(behandling.id, listOf(vurdering))
@@ -91,11 +89,9 @@ class EtableringEgenVirksomhetRepositoryTest {
                         virksomhetErNy = true,
                         brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                         kanFøreTilSelvforsørget = true,
-                        utviklingsPerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusMonths(5))),
-                        oppstartsPerioder = listOf(Periode(LocalDate.now().plusMonths(6), LocalDate.now().plusMonths(9))),
-                        fase = null,
-                        erRegistrertINødvendigeOffentligeRegister = null,
-                        jobberBrukerAktivMedVirksomheten = null
+                        fase = EtableringFase.OPPSTART,
+                        erRegistrertINødvendigeOffentligeRegister = true,
+                        jobberBrukerAktivMedVirksomheten = true
                     )
                 )
             )
