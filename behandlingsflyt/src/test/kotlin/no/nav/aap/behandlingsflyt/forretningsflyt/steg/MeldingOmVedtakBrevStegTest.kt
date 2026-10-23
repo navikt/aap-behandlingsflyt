@@ -107,7 +107,6 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            avklaringsbehovOperasjonerRepository = InMemoryAvklaringsbehovRepository,
             unleashGateway = AlleAvskruddUnleash,
             avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
         )
@@ -184,7 +183,6 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            avklaringsbehovOperasjonerRepository = InMemoryAvklaringsbehovRepository,
             unleashGateway = AlleAvskruddUnleash,
             avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
         )
@@ -229,7 +227,6 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            avklaringsbehovOperasjonerRepository = InMemoryAvklaringsbehovRepository,
             unleashGateway = AlleAvskruddUnleash,
             avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
         )

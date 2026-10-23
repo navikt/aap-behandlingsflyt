@@ -17,17 +17,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -39,6 +41,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 class BackfillEtableringVurderingerTest {
     companion object {
@@ -100,7 +103,10 @@ class BackfillEtableringVurderingerTest {
         val legacy = vurdering(
             behandlingId,
             fom = 1 desember 2024,
-            utviklingsPerioder = listOf(Periode(6 januar 2025, 15 januar 2025), Periode(20 januar 2025, 29 januar 2025)),
+            utviklingsPerioder = listOf(
+                Periode(6 januar 2025, 15 januar 2025),
+                Periode(20 januar 2025, 29 januar 2025)
+            ),
             oppstartsPerioder = listOf(Periode(3 februar 2025, 12 februar 2025)),
         )
         lagre(behandlingId, legacy)
@@ -538,6 +544,103 @@ class BackfillEtableringVurderingerTest {
         assertValideringUendret(før, etter)
     }
 
+    @Test
+    fun `reproduser prod 1`() {
+        //                         26.06      03.08 04.08       03.11 04.11       25.12 26.12       25.03
+        // FØR
+        // nyere vurdering        UUUUUUUUUUUUU OOOOOOOOOOOOOOOOOOOO
+        // eldre vurdering        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        //
+        // ETTER MIGRERING
+        // nyere vurdering        UUUUUUUUUUUUU OOOOOOOOOOOOOOOOOOOO
+        // eldre vurdering                                                  UUUUUUUUUUUUU OOOOOOOOOOOOO
+        //
+        // Den eldre vurderingen er overstyrt fra 26.06, men utvikling og oppstart gjenoppstår etter 03.11.
+        // U=utvikling, O=oppstart, x=overstyrt
+        val behandlingId = opprettBehandling()
+        val behandlingId2 = opprettBehandling()
+        val vurderinger = listOf(
+            vurdering(
+                behandlingId = behandlingId,
+                fom = 26 juni 2026,
+                tom = null,
+                utviklingsPerioder = listOf(Periode(26 juni 2026, 25 desember 2026)),
+                oppstartsPerioder = listOf(Periode(26 desember 2026, 25 mars 2027)),
+                fase = null,
+                virksomhetNavn = "....",
+                opprettet = (26 juni 2026).atStartOfDay().toInstant(ZoneOffset.UTC),
+                virksomhetErNy = true
+            ),
+            vurdering(
+                behandlingId = behandlingId2,
+                fom = 26 juni 2026,
+                tom = null,
+                utviklingsPerioder = listOf(Periode(26 juni 2026, 3 august 2026)),
+                oppstartsPerioder = listOf(Periode(4 august 2026, 3 november 2026)),
+                fase = null,
+                virksomhetNavn = "...",
+                opprettet = (14 oktober 2026).atStartOfDay().toInstant(ZoneOffset.UTC),
+                virksomhetErNy = true
+            )
+        )
+
+        lagre(behandlingId2, *vurderinger.toTypedArray())
+        migrer(behandlingId2)
+        val etter = hentVurderinger(behandlingId2)
+
+        assertThat(varighet(etter)).isEqualTo(varighet(vurderinger))
+
+    }
+
+
+    @Test
+    fun `reproduser prod 2`() {
+        //                         26.06      03.08 04.08                       25.12 26.12       25.03
+        // FØR
+        // nyere vurdering        UUUUUUUUUUUUU
+        // eldre vurdering        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        //
+        // ETTER MIGRERING
+        // nyere vurdering        UUUUUUUUUUUUU
+        // eldre vurdering                      UUUUUUUUUUUUUUUUUUUUUUUUUUUUU OOOOOOOOOOOOO
+        //
+        // Den nyere vurderingen har ingen oppstart, men migreringen lar den eldre vurderingen gjenoppstå.
+        // U=utvikling, O=oppstart, x=overstyrt
+        val behandlingId = opprettBehandling()
+        val behandlingId2 = opprettBehandling()
+        val vurderinger = listOf(
+            vurdering(
+                behandlingId = behandlingId,
+                fom = 26 juni 2026,
+                tom = null,
+                utviklingsPerioder = listOf(Periode(26 juni 2026, 25 desember 2026)),
+                oppstartsPerioder = listOf(Periode(26 desember 2026, 25 mars 2027)),
+                fase = null,
+                virksomhetNavn = "....",
+                opprettet = (26 juni 2026).atStartOfDay().toInstant(ZoneOffset.UTC),
+                virksomhetErNy = true
+            ),
+            vurdering(
+                behandlingId = behandlingId2,
+                fom = 26 juni 2026,
+                tom = null,
+                utviklingsPerioder = listOf(Periode(26 juni 2026, 3 august 2026)),
+                oppstartsPerioder = listOf(),
+                fase = null,
+                virksomhetNavn = "...",
+                opprettet = (28 august 2026).atStartOfDay().toInstant(ZoneOffset.UTC),
+                virksomhetErNy = true
+            )
+        )
+
+        lagre(behandlingId2, *vurderinger.toTypedArray())
+        migrer(behandlingId2)
+        val etter = hentVurderinger(behandlingId2)
+
+        assertThat(varighet(etter)).isEqualTo(varighet(vurderinger))
+
+    }
+
     private val service = EtableringEgenVirksomhetService(
         InMemoryEtableringEgenVirksomRepository,
         InMemoryBehandlingRepository,
@@ -602,10 +705,10 @@ class BackfillEtableringVurderingerTest {
         BackfillEtableringVurderinger(dataSource, dryRun = false).oppdaterVurdering(vurdering)
             .ifEmpty { listOf(vurdering) }
 
-    private fun varighet(vurderinger: List<EtableringEgenVirksomhetVurdering>): Pair<Int, Int> {
-        val gjeldende = vurderinger.map { if (it.fase != null) it.tilGammeltFormat() else it }.gjeldendeVurderinger().verdier().toSet()
-        return gjeldende.tellDager { it.utviklingsPerioder } to gjeldende.tellDager { it.oppstartsPerioder }
-    }
+    private fun varighet(vurderinger: List<EtableringEgenVirksomhetVurdering>): Pair<Int, Int> =
+        vurderinger
+            .map { if (it.fase != null) it.tilGammeltFormat() else it }
+            .brukteDager()
 
     private fun EtableringEgenVirksomhetVurdering.somUtvikling(periode: Periode) = copy(
         utviklingsPerioder = emptyList(),

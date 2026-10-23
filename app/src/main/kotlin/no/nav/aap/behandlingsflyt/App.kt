@@ -96,7 +96,6 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKa
 import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
-import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
@@ -451,7 +450,6 @@ private fun Application.startKafkakonsumenter(
                 repositoryRegistry = repositoryRegistry,
                 closeTimeout = AppConfig.stansArbeidTimeout,
                 gatewayProvider = gatewayProvider,
-                institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
             )
         )
         startKonsument(

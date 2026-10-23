@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurde
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurderingerReq
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
@@ -415,22 +416,20 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
-        @Suppress("unused")
-        class StansOpphørDTO(
+        data class StansOpphørDTO(
             val fom: LocalDate,
             val stansOpphør: String,
             val årsaker: List<String>,
         )
 
-        @Suppress("unused")
-        class RettighetstypePeriodeDto(
+
+        data class RettighetstypePeriodeDto(
             val periode: Periode,
             val rettighetstypeUnderveis: RettighetsType?,
             val rettighetstypeGrunnlag: RettighetsType?,
         )
 
-        @Suppress("unused")
-        class DriftRettighetsinfoDto(
+        data class DriftRettighetsinfoDto(
             val sisteDagMedRett: LocalDate?,
             val rettighetsperioder: List<RettighetstypePeriodeDto>,
             val stansOpphør: List<StansOpphørDTO>,
@@ -486,7 +485,7 @@ fun NormalOpenAPIRoute.driftApi(
                                         is Opphør -> "OPPHØR"
                                         is Stans -> "STANS"
                                     },
-                                    årsaker = it.vurdering.årsaker.toList().map { it.toString() },
+                                    årsaker = it.vurdering.årsaker.toList().map { årsak -> årsak.name },
                                 )
                             },
                     )
@@ -581,10 +580,12 @@ fun NormalOpenAPIRoute.driftApi(
                                     }
                                 }.sortedByDescending { it.tidsstempel }
 
+                            val vedtakForBehandling = vedtak.find { it.id == behandling.id }
                             BehandlingDriftsinfo.fra(
                                 behandling,
                                 avklaringsbehovene,
-                                vedtak.find { it.id == behandling.id }?.vedtakstidspunkt
+                                vedtakId = vedtakForBehandling?.vedtakId,
+                                vedtatt = vedtakForBehandling?.vedtakstidspunkt
                             )
                         }
                         .sortedByDescending { it.opprettet }
@@ -734,6 +735,7 @@ private data class PersonDriftsinfo(
 
 private data class BehandlingDriftsinfo(
     val referanse: UUID,
+    val vedtakId: VedtakId?,
     val type: String,
     val status: BehandlingStatus,
     val vurderingsbehov: List<Vurderingsbehov>,
@@ -743,9 +745,15 @@ private data class BehandlingDriftsinfo(
     val avklaringsbehov: List<ForenkletAvklaringsbehov>,
 ) {
     companion object {
-        fun fra(behandling: Behandling, avklaringsbehovene: List<ForenkletAvklaringsbehov>, vedtatt: LocalDateTime?) =
+        fun fra(
+            behandling: Behandling,
+            avklaringsbehovene: List<ForenkletAvklaringsbehov>,
+            vedtatt: LocalDateTime?,
+            vedtakId: VedtakId?
+        ) =
             BehandlingDriftsinfo(
                 referanse = behandling.referanse.referanse,
+                vedtakId = vedtakId,
                 type = behandling.typeBehandling().identifikator(),
                 status = behandling.status(),
                 vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type).distinct(),

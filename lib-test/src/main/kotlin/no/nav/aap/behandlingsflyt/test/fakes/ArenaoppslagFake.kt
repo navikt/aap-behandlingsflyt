@@ -9,8 +9,10 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
@@ -87,6 +89,28 @@ class ArenaoppslagFake : FakeServer() {
                                 opprettet = LocalDate.of(2016, 1, 1),
                             )
                         )
+                    )
+                )
+            }
+            get("/api/migrering/{saksnummerArena}/oppholdskrav") {
+                call.respond(
+                    ArenaOppholdskravResponse(
+                        vedtakId = 1,
+                        vilkar = ArenaVilkar(
+                            id = 4,
+                            kode = "AOINORGE3",
+                            status = "V",
+                            begrunnelse = null,
+                        ),
+                    )
+                )
+            }
+            get("/api/migrering/{saksnummerArena}/vedtaksperiode") {
+                call.respond(
+                    ArenaVedtaksperiodeResponse(
+                        vedtakId = 1,
+                        fraDato = LocalDate.now().minusYears(1),
+                        tilDato = LocalDate.now().plusYears(1),
                     )
                 )
             }

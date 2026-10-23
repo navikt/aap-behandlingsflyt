@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -91,6 +92,7 @@ data class OpprettTestcaseDTO(
     val steg: StegType? = null,
     val harNedsattArbeidsevne: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
+    val personStatus: PersonStatus = PersonStatus.bosatt,
 ) {
     val harYrkesskade: Boolean
         get() = harYrkesskadeFraSøknad || yrkesskader.any { it.kilde == Kilde.REGISTER }
