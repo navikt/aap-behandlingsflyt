@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature.BackfillRedusertDagsats
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -22,6 +21,11 @@ private val teamLogs = LoggerFactory.getLogger("team-logs")
 enum class UnleashVariant(val unleashNavn: String) {
     LISTE("inkluder-sakId-liste"),
     INTERVALL("inkluder-sakId-intervall");
+}
+
+sealed interface SammenlignbartUtvalg {
+    data class Intervall(val start: Long, val stopp: Long) : SammenlignbartUtvalg
+    data class TallListe(val tall: List<Long>) : SammenlignbartUtvalg
 }
 
 class BackfillRedusertDagsats(
@@ -43,14 +47,15 @@ class BackfillRedusertDagsats(
         Thread.ofVirtual()
             .name("backfillRedusertDagsats")
             .start {
-                var forrigeSakIdUtvalg: List<Long>? = null
+                var forrigeUtvalg: SammenlignbartUtvalg? = null
                 while (true) {
                     try {
                         if (erBackfillForutsetningerOppfylt()) {
                             val sakIdUtvalg = hentSakIdUtvalg()
-                            if (erSakIdUtvalgEndret(forrigeSakIdUtvalg, sakIdUtvalg)) {
+                            val aktueltUtvalg = mapTilSammenlignbartUtvalg(sakIdUtvalg)
+                            if (erUtvalgEndret(forrigeUtvalg, aktueltUtvalg)) {
                                 backfillRedusertDagsatsLoop(sakIdUtvalg)
-                                forrigeSakIdUtvalg = sakIdUtvalg
+                                forrigeUtvalg = aktueltUtvalg
                             }
                         }
                     } catch (e: Exception) {
@@ -70,7 +75,16 @@ class BackfillRedusertDagsats(
             }
     }
 
-    private fun hentSakIdUtvalg(): List<Long> {
+    private fun mapTilSammenlignbartUtvalg(sakIdUtvalg: Iterable<Long>): SammenlignbartUtvalg {
+        val aktueltUtvalg = when (sakIdUtvalg) {
+            is LongRange -> SammenlignbartUtvalg.Intervall(sakIdUtvalg.first, sakIdUtvalg.last)
+            is List<Long> -> SammenlignbartUtvalg.TallListe(sakIdUtvalg)
+            else -> SammenlignbartUtvalg.TallListe(sakIdUtvalg.toList())
+        }
+        return aktueltUtvalg
+    }
+
+    private fun hentSakIdUtvalg(): Iterable<Long> {
         for (variant in UnleashVariant.entries) {
             if (erUnleashVariantPå(variant.unleashNavn)) {
                 return when (variant) {
@@ -82,54 +96,50 @@ class BackfillRedusertDagsats(
         return emptyList()
     }
 
-    private fun hentSakIdUtvalgForVariant(variant: UnleashVariant): List<Long> {
+    private fun hentSakIdUtvalgForVariant(variant: UnleashVariant): Iterable<Long> {
         val inkluderSakIder = hentSakIdUtvalgFraUnleashVariant(variant)
-        if (inkluderSakIder.any { it == null }) {
+        if (inkluderSakIder is List<Long> && (inkluderSakIder.isEmpty())) {
             log.warn(
                 "Ugyldig verdi i unleash variant '$variant'. Avbryter backfill av redusertDagsats"
             )
-            return emptyList()
         }
-        return inkluderSakIder.filterNotNull()
+        return inkluderSakIder
     }
 
     private fun erUnleashVariantPå(variantNavn: String): Boolean =
         unleashGateway.isVariantEnabled(BackfillRedusertDagsats, variantNavn)
 
-    private fun hentSakIdUtvalgFraUnleashVariant(variant: UnleashVariant): List<Long?> {
-        val utvalg = unleashGateway.getVariantValue(
+    private fun hentSakIdUtvalgFraUnleashVariant(variant: UnleashVariant): Iterable<Long> {
+        val utvalgInput: List<Long?> = unleashGateway.getVariantValue(
             BackfillRedusertDagsats,
             variant.unleashNavn
         )
             .split(",")
             .map { it.trim() }
             .filter { it.isNotEmpty() }
-            .map(SakId::fromStringOrNull)
-            .map { it?.toLong() }
+            .map { it.toLongOrNull() }
             .toList()
+        val utvalg: List<Long> = if (utvalgInput.any { it == null }) emptyList() else utvalgInput.filterNotNull()
         when(variant) {
             UnleashVariant.LISTE -> return utvalg
             UnleashVariant.INTERVALL -> {
-                if (!erGyldigIntervall(utvalg)) return listOf(null)
-                val (første, siste) = utvalg.filterNotNull()
-                var utvalgFraIntervall = buildList {
-                    for (id in første..siste) {
-                        add(id)
-                    }
+                if (utvalg.isEmpty() || !erGyldigIntervall(utvalg)) {
+                    return emptySet()
                 }
-                return utvalgFraIntervall
+                val (første, siste) = utvalg
+                return første..siste
             }
         }
     }
 
-    private fun erGyldigIntervall(intervallUtvalg: List<Long?>): Boolean {
+    private fun erGyldigIntervall(intervallUtvalg: List<Long>): Boolean {
         if (intervallUtvalg.size != 2) {
             return false
         }
         if (intervallUtvalg.any { it == null }) {
             return false
         }
-        val (første, siste) = intervallUtvalg.filterNotNull()
+        val (første, siste) = intervallUtvalg
         if (første >= siste) {
             return false
         }
@@ -143,14 +153,14 @@ class BackfillRedusertDagsats(
         return isLeader(log) && unleashGateway.isEnabled(BackfillRedusertDagsats)
     }
 
-    private fun erSakIdUtvalgEndret(
-        forrigeSakIdUtvalg: List<Long>?,
-        sakIder: List<Long>
-    ): Boolean = forrigeSakIdUtvalg == null || forrigeSakIdUtvalg != sakIder
+    private fun erUtvalgEndret(
+        forrigeUtvalg: SammenlignbartUtvalg?,
+        aktueltUtvalg: SammenlignbartUtvalg
+    ): Boolean = forrigeUtvalg == null || forrigeUtvalg != aktueltUtvalg
 
     private var antallBackfillUtført = 0
 
-    private fun backfillRedusertDagsatsLoop(sakIder: List<Long>) {
+    private fun backfillRedusertDagsatsLoop(sakIder: Iterable<Long>) {
         log.info("Begynner backfill redusertDagsats for sak-ider $sakIder")
         antallBackfillUtført = 0
 
