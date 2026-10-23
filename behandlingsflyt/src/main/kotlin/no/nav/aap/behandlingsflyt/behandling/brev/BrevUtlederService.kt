@@ -506,8 +506,11 @@ class BrevUtlederService(
                 return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
             }
         }
-        return AvslagBrev.Avslag(sykdomsvurdering = sykdomsvurdering, avslagsårsak = avslagsårsak,
-            avslagsårsaker = alleAvslagsårsaker)
+        return AvslagBrev.Avslag(
+            sykdomsvurdering = sykdomsvurdering,
+            avslagsårsak = avslagsårsak,
+            avslagsårsaker = alleAvslagsårsaker
+        )
     }
 
     private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
@@ -541,7 +544,10 @@ class BrevUtlederService(
         )
     }
 
-    private fun brevBehovVurderesForUføretrygdV2(behandling: Behandling, erRevurdering: Boolean = false): VurderesForUføretrygdV2 {
+    private fun brevBehovVurderesForUføretrygdV2(
+        behandling: Behandling,
+        erRevurdering: Boolean = false
+    ): VurderesForUføretrygdV2 {
         val overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(behandling.id)
         checkNotNull(overgangUføreGrunnlag) {
             "Vedtak vurdert for uføretrygd mangler grunnlag"
@@ -549,7 +555,7 @@ class BrevUtlederService(
 
         val kravdatoUføretrygd = overgangUføreGrunnlag.kravdatoUføretrygd()
         val maksDatoOvergangUføre =
-            overgangUføreGrunnlag.somOvergangUforevurderingstidslinje().segmenter().firstOrNull()?.tom()
+            overgangUføreGrunnlag.somOvergangUforevurderingstidslinje().segmenter().maxOfOrNull() { it.periode.tom }
         checkNotNull(kravdatoUføretrygd) {
             "Vedtak godkjent etter 11-18 mangler kravdato"
         }
@@ -564,9 +570,9 @@ class BrevUtlederService(
                 kravdatoUføretrygd = kravdatoUføretrygd,
                 sisteDagMedYtelse = maksDatoOvergangUføre
             ),
-            ordinærAAP = when(erRevurdering) {
+            ordinærAAP = when (erRevurdering) {
                 true -> null
-                false -> VanligVurdering(
+                false -> OrdinærInnvilgelse(
                     virkningstidspunkt = innvilgelse.virkningstidspunkt,
                     sisteDagMedYtelse = innvilgelse.sisteDagMedYtelse,
                     grunnlagBeregning = innvilgelse.grunnlagBeregning,
@@ -940,7 +946,9 @@ class BrevUtlederService(
                 val fraOgMed = checkNotNull(vedtak.virkningstidspunkt) {
                     "Vedtak mangler virkningstidspunkt"
                 }
-                val tilOgMed = vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt).coerceAtMost(sisteDagMedYtelse)
+                val tilOgMed =
+                    vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt)
+                        .coerceAtMost(sisteDagMedYtelse)
 
                 RefusjonskravTjenestepensjon(
                     skalEtterbetalingHoldesIgjen = true,
