@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
@@ -14,12 +16,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class AvklarSamordningUføreLøserTest {
+    private val gatewayProvider = createGatewayProvider { register<AlleAvskruddUnleash>() }
+
     @Test
     fun `Skal kaste feil dersom man sender inn to vurderinger for samme virkningstidspunkt`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val samordningUføreLøser =
-            AvklarSamordningUføreLøser(inMemoryRepositoryProvider)
+            AvklarSamordningUføreLøser(inMemoryRepositoryProvider, gatewayProvider)
         val feil = assertThrows<UgyldigForespørselException> {
             samordningUføreLøser.løs(
                 avklaringsbehovKontekst { this.behandling = behandling },
@@ -49,7 +53,7 @@ class AvklarSamordningUføreLøserTest {
         val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val samordningUføreRepository = InMemorySamordningUføreRepository
-        val samordningUføreLøser = AvklarSamordningUføreLøser(inMemoryRepositoryProvider)
+        val samordningUføreLøser = AvklarSamordningUføreLøser(inMemoryRepositoryProvider, gatewayProvider)
         samordningUføreLøser.løs(
             avklaringsbehovKontekst { this.behandling = behandling },
             løsning = AvklarSamordningUføreLøsning(
