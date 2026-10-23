@@ -155,6 +155,8 @@ class BackfillRedusertDagsats(
         antallBackfillUtført = 0
 
         for (sakId in sakIder) {
+            // Tillater å avbryte backfill mellom sakIder
+            if (!unleashGateway.isEnabled(BackfillRedusertDagsats)) break
             backfillSak(sakId)
         }
 
