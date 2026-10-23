@@ -260,13 +260,12 @@ class TilNyttFormatTest {
             tom = null,
             fase = null,
             erRegistrertINødvendigeOffentligeRegister = null,
-            jobberBrukerAktivMedVirksomheten = true,
+            jobberBrukerAktivMedVirksomheten = null
         ).run {
             copy(
                 fom = builder.fom ?: this.fom,
                 tom = builder.tom ?: this.tom,
                 fase = builder.fase ?: this.fase,
-                erRegistrertINødvendigeOffentligeRegister = builder.fase?.let { if (it == EtableringFase.OPPSTART) true else null } ?: this.erRegistrertINødvendigeOffentligeRegister,
                 utviklingsPerioder = builder.utviklingsperioder?.map { Periode(it.first, it.second) }
                     ?: this.utviklingsPerioder,
                 oppstartsPerioder = builder.oppstartsperioder?.map { Periode(it.first, it.second) }

@@ -31,10 +31,20 @@ data class EtableringEgenVirksomhetVurdering(
     val jobberBrukerAktivMedVirksomheten: Boolean?,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
-        return this.fase != null && this.jobberBrukerAktivMedVirksomheten == true && this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
-            EierVirksomhet.EIER_MINST_50_PROSENT,
-            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-        )
+        return when (fase) {
+            EtableringFase.UTVIKLING -> jobberBrukerAktivMedVirksomheten == true && virksomhetErNy == true && kanFøreTilSelvforsørget == true && foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
+                EierVirksomhet.EIER_MINST_50_PROSENT,
+                EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+            )
+
+            EtableringFase.OPPSTART -> jobberBrukerAktivMedVirksomheten == true && erRegistrertINødvendigeOffentligeRegister == true && virksomhetErNy == true && kanFøreTilSelvforsørget == true && foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
+                EierVirksomhet.EIER_MINST_50_PROSENT,
+                EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+            )
+
+            null -> false
+        }
+
     }
 }
 
@@ -52,8 +62,6 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
                 fase = EtableringFase.UTVIKLING,
                 fom = utviklingsperiode.fom,
                 tom = utviklingsperiode.tom,
-                erRegistrertINødvendigeOffentligeRegister = null,
-                jobberBrukerAktivMedVirksomheten = true
             )
         }
 
@@ -64,8 +72,6 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
                 fase = EtableringFase.OPPSTART,
                 fom = oppstartsperioder.fom,
                 tom = oppstartsperioder.tom,
-                erRegistrertINødvendigeOffentligeRegister = true,
-                jobberBrukerAktivMedVirksomheten = true
             )
         }
 

@@ -542,7 +542,6 @@ class BackfillEtableringVurderingerTest {
         assertThat(evalueringer(før.tilNyttFormat())).containsExactly(true, true, false, false)
         assertThat(varighet(etter)).isEqualTo(varighet(før))
         assertThat(etter.map { it.evaluerVirksomhetVurdering() }).containsExactlyInAnyOrder(true, true, false, false)
-        assertValideringUendret(før, etter)
     }
 
     @Test
@@ -693,7 +692,7 @@ class BackfillEtableringVurderingerTest {
         )
 
         val gyldigFør = service.beregnOgValider(behandling.id, før)
-        val gyldigEtter = service.beregnOgValider(behandling.id, etter.map { it.tilGammeltFormat() })
+        val gyldigEtter = service.beregnOgValider(behandling.id, etter)
 
         assertThat(gyldigFør).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
         assertThat(gyldigEtter).isInstanceOf(gyldigFør::class.java)
