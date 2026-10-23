@@ -21,6 +21,19 @@ data class Innvilgelse(
     val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 
+data class OrdinærInnvilgelse(
+    val virkningstidspunkt: LocalDate,
+    val sisteDagMedYtelse: LocalDate, // lurer på om jeg kan sløyfe denne siden den vil være lik uansett
+    val grunnlagBeregning: GrunnlagBeregning?,
+    val tilkjentYtelse: TilkjentYtelse?,
+    val sykdomsvurdering: String?,
+    val forholdTilAndreYtelser: ForholdTilAndreYtelser?,
+    val yrkesskadeBeregning: YrkesskadeBeregningBrev? = null,
+    val foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>? = null,
+    val meldepliktGrunnlag: MeldepliktGrunnlag? = null,
+    val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
+)
+
 data class VurderesForUføretrygd(
     val kravdatoUføretrygd: LocalDate,
     val sisteDagMedYtelse: LocalDate,
@@ -33,22 +46,9 @@ data class UføreVurdering(
     val sisteDagMedYtelse: LocalDate,
 )
 
-data class VanligVurdering(
-    val virkningstidspunkt: LocalDate,
-    val sisteDagMedYtelse: LocalDate,
-    val grunnlagBeregning: GrunnlagBeregning?,
-    val tilkjentYtelse: TilkjentYtelse?,
-    val sykdomsvurdering: String?,
-    val forholdTilAndreYtelser: ForholdTilAndreYtelser?,
-    val yrkesskadeBeregning: YrkesskadeBeregningBrev? = null,
-    val foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>? = null,
-    val meldepliktGrunnlag: MeldepliktGrunnlag? = null,
-    val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
-)
-
 data class VurderesForUføretrygdV2(
     val uføreVurdering: UføreVurdering,
-    val ordinærAAP: VanligVurdering?
+    val ordinærAAP: OrdinærInnvilgelse?
 ): BrevBehov(TypeBrev.VEDTAK_11_18)
 
 data class Arbeidssøker(

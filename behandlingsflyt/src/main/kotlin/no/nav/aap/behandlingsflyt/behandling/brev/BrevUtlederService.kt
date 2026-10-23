@@ -561,7 +561,10 @@ class BrevUtlederService(
         )
     }
 
-    private fun brevBehovVurderesForUføretrygdV2(behandling: Behandling, erRevurdering: Boolean = false): VurderesForUføretrygdV2 {
+    private fun brevBehovVurderesForUføretrygdV2(
+        behandling: Behandling,
+        erRevurdering: Boolean = false
+    ): VurderesForUføretrygdV2 {
         val overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(behandling.id)
         checkNotNull(overgangUføreGrunnlag) {
             "Vedtak vurdert for uføretrygd mangler grunnlag"
@@ -569,7 +572,7 @@ class BrevUtlederService(
 
         val kravdatoUføretrygd = overgangUføreGrunnlag.kravdatoUføretrygd()
         val maksDatoOvergangUføre =
-            overgangUføreGrunnlag.somOvergangUforevurderingstidslinje().segmenter().firstOrNull()?.tom()
+            overgangUføreGrunnlag.somOvergangUforevurderingstidslinje().segmenter().maxOfOrNull() { it.periode.tom }
         checkNotNull(kravdatoUføretrygd) {
             "Vedtak godkjent etter 11-18 mangler kravdato"
         }
@@ -584,9 +587,9 @@ class BrevUtlederService(
                 kravdatoUføretrygd = kravdatoUføretrygd,
                 sisteDagMedYtelse = maksDatoOvergangUføre
             ),
-            ordinærAAP = when(erRevurdering) {
+            ordinærAAP = when (erRevurdering) {
                 true -> null
-                false -> VanligVurdering(
+                false -> OrdinærInnvilgelse(
                     virkningstidspunkt = innvilgelse.virkningstidspunkt,
                     sisteDagMedYtelse = innvilgelse.sisteDagMedYtelse,
                     grunnlagBeregning = innvilgelse.grunnlagBeregning,
