@@ -1,9 +1,13 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.Instant
 import java.time.LocalDate
 
@@ -25,7 +29,75 @@ data class EtableringEgenVirksomhetVurdering(
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
-) : PeriodisertVurdering
+) : PeriodisertVurdering {
+    fun evaluerVirksomhetVurdering(): Boolean {
+        return this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
+            EierVirksomhet.EIER_MINST_50_PROSENT,
+            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+        )
+    }
+}
+
+fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgenVirksomhetVurdering> {
+    return this.flatMap { vurdering ->
+
+        if (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty()) return@flatMap listOf(
+            vurdering
+        )
+
+        val utviklingsvurderinger = vurdering.utviklingsPerioder.map { utviklingsperiode ->
+            vurdering.copy(
+                utviklingsPerioder = emptyList(),
+                oppstartsPerioder = emptyList(),
+                fase = EtableringFase.UTVIKLING,
+                fom = utviklingsperiode.fom,
+                tom = utviklingsperiode.tom,
+            )
+        }
+
+        val oppstartsvurderinger = vurdering.oppstartsPerioder.map { oppstartsperioder ->
+            vurdering.copy(
+                utviklingsPerioder = emptyList(),
+                oppstartsPerioder = emptyList(),
+                fase = EtableringFase.OPPSTART,
+                fom = oppstartsperioder.fom,
+                tom = oppstartsperioder.tom,
+            )
+        }
+
+        utviklingsvurderinger + oppstartsvurderinger
+    }
+}
+
+fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomhetVurdering {
+    return this.copy(
+        oppstartsPerioder = if (this.fase == EtableringFase.OPPSTART) listOf(
+            Periode(
+                this.fom,
+                this.tom ?: Tid.MAKS
+            )
+        ) else emptyList(),
+        utviklingsPerioder = if (this.fase == EtableringFase.UTVIKLING) listOf(
+            Periode(
+                this.fom,
+                this.tom ?: Tid.MAKS
+            )
+        ) else emptyList(),
+    )
+}
+
+fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
+    selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
+): Int {
+    return this.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+        .sumOf { it.periode.antallHverdager().asInt }
+}
+
+fun List<EtableringEgenVirksomhetVurdering>.brukteDager(): Pair<Int, Int> {
+    val gjeldendeVurderinger = gjeldendeVurderinger().verdier().toSet()
+    return gjeldendeVurderinger.tellDager { it.utviklingsPerioder } to
+        gjeldendeVurderinger.tellDager { it.oppstartsPerioder }
+}
 
 enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,
@@ -33,9 +105,9 @@ enum class EierVirksomhet {
     NEI
 }
 
-enum class EtableringFase {
-    OPPSTART,
-    UTVIKLING
+enum class EtableringFase(val maksHverdager: Int) {
+    UTVIKLING(maksHverdager = 131),
+    OPPSTART(maksHverdager = 66);
 }
 
 fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<EtableringEgenVirksomhetVurdering>): Boolean {

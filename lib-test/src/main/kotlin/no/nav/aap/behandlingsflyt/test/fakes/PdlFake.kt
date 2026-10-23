@@ -205,7 +205,7 @@ class PdlFake(private val fakePersoner: () -> TestPersonService) : FakeServer() 
                         )
                     ),
                     statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now(), LocalDate.now())),
-                    folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
+                    folkeregisterpersonstatus = testPerson.personStatus.toSet()
                 )
             ),
         )

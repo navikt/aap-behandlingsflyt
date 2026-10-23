@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.test.fakes.MeldekortFake
 import no.nav.aap.behandlingsflyt.test.fakes.NomFake
 import no.nav.aap.behandlingsflyt.test.fakes.NorgFake
 import no.nav.aap.behandlingsflyt.test.fakes.OppgavestyringFake
-import no.nav.aap.behandlingsflyt.test.fakes.PdfgenFake
 import no.nav.aap.behandlingsflyt.test.fakes.PdfGeneratorFake
 import no.nav.aap.behandlingsflyt.test.fakes.PdlFake
 import no.nav.aap.behandlingsflyt.test.fakes.PesysFake
@@ -70,7 +69,6 @@ object FakeServers : AutoCloseable {
     private val nom = NomFake()
     private val norg = NorgFake()
     private val leaderElector = LeaderElectorFake()
-    private val pdfGen = PdfgenFake()
     private val pdfGenerator = PdfGeneratorFake()
 
     // Fakes needing fakePersoner - lazy lambda
@@ -91,7 +89,7 @@ object FakeServers : AutoCloseable {
     private val allFakes: List<FakeServer> = listOf(
         texas, brev, yrkesskade, pdl, popp, oppgavestyring, inst2, sam, medl, tilgang, foreldrepenger, pesys,
         sykepenger, statistikk, dokumentinnhenting, ainntekt, aareg, datadeling, utbetal, meldekort, tjenestePensjon,
-        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv, pdfGen, pdfGenerator,
+        unleash, nom, norg, kabal, ereg, dagpenger, tiltakspenger, gosys, leaderElector, dokarkiv,  pdfGenerator,
         arenaoppslag
     )
 
@@ -229,9 +227,9 @@ object FakeServers : AutoCloseable {
         System.setProperty("UNLEASH_SERVER_API_TOKEN", "token-behandlingsflyt-unleash")
 
         //Azp
-        System.setProperty("INTEGRASJON_TILGANG_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_BREV_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_AZP", java.util.UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_TILGANG_AZP", UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_BREV_AZP", UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_DOKUMENTINNHENTING_AZP", UUID.randomUUID().toString())
 
         // Også hardkodet i aap-postmottak-backend
         System.setProperty(
@@ -239,8 +237,8 @@ object FakeServers : AutoCloseable {
             UUID.fromString("c62cff74-505a-4858-ac15-16061c2e8290").toString()
         )
 
-        System.setProperty("INTEGRASJON_SAKSBEHANDLING_AZP", java.util.UUID.randomUUID().toString())
-        System.setProperty("INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP", java.util.UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_SAKSBEHANDLING_AZP", UUID.randomUUID().toString())
+        System.setProperty("INTEGRASJON_AZURE_TOKEN_GENERATOR_AZP", UUID.randomUUID().toString())
 
         // Norg
         System.setProperty("INTEGRASJON_NORG_URL", "http://localhost:${norg.port()}")
@@ -272,10 +270,6 @@ object FakeServers : AutoCloseable {
 
         // LeaderElector
         System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
-
-        // aap-saksbehandling-pdf
-        System.setProperty("INTEGRASJON_PDFGEN_URL", "http://localhost:${pdfGen.port()}")
-        System.setProperty("INTEGRASJON_PDFGEN_SCOPE", "scope")
 
         // aap-pdfgenerator
         if (System.getenv("INTEGRASJON_PDFGENERATOR_SAKSBEHANDLING_URL").isNullOrEmpty()) {

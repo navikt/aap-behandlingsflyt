@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
@@ -156,6 +157,13 @@ class VedtakslengdeService(
             .toSet()
 
         return avslagsårsakerFørsteDagUtenBistandsbehovRettighet
+    }
+
+    /** Erstatter en tidligere migrert vurdering ved re-kjøring, og bevarer alle andre vurderinger. */
+    fun lagreMigrertVedtakslengde(behandlingId: BehandlingId, vurdering: VedtakslengdeVurdering) {
+        val andreVurderinger = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+            .filterNot { it.vurdertAv == ARENA_MIGRERING_BRUKER }
+        vedtakslengdeRepository.lagre(behandlingId, andreVurderinger + vurdering)
     }
 
     fun lagreAutomatiskVedtakslengde(

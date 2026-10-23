@@ -595,8 +595,6 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 .løsBistand(dødsdato, false)
                 .løsSykdomsvurderingBrev()
                 .bekreftVurderinger()
-                .løsSamordningUføre(dødsdato)
-                .foreslåVedtak()
                 .fattVedtak()
         dataSource.transaction { connection ->
             val oppdatertRevurdering = BehandlingRepositoryImpl(connection).hent(revurderingDødsfall.id)

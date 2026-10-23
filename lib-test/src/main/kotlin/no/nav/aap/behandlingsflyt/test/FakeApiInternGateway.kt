@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.BarnMedBarnetillegg
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.UnderveisperiodeDatadeling
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingVisningDto
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
@@ -80,4 +81,11 @@ class FakeApiInternGateway : ApiInternGateway {
         // No-op
     }
 
+    override fun sendBehandlingVisning(
+        ident: String,
+        saksnummer: Saksnummer,
+        behandlingVisning: BehandlingVisningDto
+    ) {
+        // No-op
+    }
 }

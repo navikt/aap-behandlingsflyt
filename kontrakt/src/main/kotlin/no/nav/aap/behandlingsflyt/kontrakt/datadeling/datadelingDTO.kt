@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import java.math.BigDecimal
 import java.time.Instant
@@ -193,4 +194,62 @@ public data class DetaljertMeldekortDTO(
     val meldeperiodeTom: LocalDate,
     val mottattTidspunkt: LocalDateTime,
     val timerArbeidPerPeriode: List<ArbeidIPeriodeDTO>,
+)
+enum class BehandlingHendelseNavnDto{
+    SØKNAD_MOTTATT,
+    UNDER_BEHANDLING,
+    FERDIG_BEHANDLET,
+    SØKNAD_TRUKKET,
+    VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+    VENTER_PÅ_SVAR_FRA_BRUKER,
+    VENTER_PÅ_OPPLYSNINGER,
+    VENTER_PÅ_SVAR_PÅ_FORHÅNDSVARSEL,
+    VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER,
+}
+enum class BehandlingHendelseTypeDto{
+    SØKNAD,
+    KLAGE
+}
+
+
+enum class BehandlingHendelseNavn{
+    SØKNAD_MOTTATT,
+    UNDER_BEHANDLING,
+    FERDIG_BEHANDLET,
+    SØKNAD_TRUKKET,
+    VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
+    VENTER_PÅ_SVAR_FRA_BRUKER,
+    VENTER_PÅ_OPPLYSNINGER,
+    VENTER_PÅ_SVAR_PÅ_FORHÅNDSVARSEL,
+    VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER,
+}
+
+enum class BehandlingHendelseType{
+    SØKNAD,
+    KLAGE
+}
+
+enum class BehandlingHendelseStatus{
+    AKTIV,
+    FULLFØRT,
+    IKKE_PÅBEGYNT,
+}
+
+public data class BehandlingHendelseDto(
+    val navn: BehandlingHendelseNavn,
+    val tidsstempel: LocalDateTime,
+    val status: BehandlingHendelseStatus,
+)
+
+public data class BehandlingVisningDto(
+    val behandlingReferanse: BehandlingReferanse,
+    val avsluttet: Boolean,
+    val behandlingType: BehandlingHendelseType,
+    val hendelser: List<BehandlingHendelseDto>
+)
+
+public data class BehandlingVisningRequest (
+    val ident: String,
+    val saksnummer: String,
+    val behandling: BehandlingVisningDto
 )

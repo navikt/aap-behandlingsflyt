@@ -75,7 +75,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BackfillStansOpphor to true,
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
-        BehandlingsflytFeature.SaksbehandlerMeldekortKvitteringNyPdfgenerator to true,
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
         BehandlingsflytFeature.DynamiskFrivilligSykestipend to true,
         
@@ -88,6 +87,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigererSykdomFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererKravFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrererOppholdskravFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrererVedtakslengdeFraArenaAutomatisk to true,
 
         // --- Utbetaling ---
         BehandlingsflytFeature.FjerneAvventUtbetalingForSamordningArbeidsgiver to false,
@@ -101,6 +102,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KlagePaaTilbakekreving to true,
         BehandlingsflytFeature.NySoknadTilApiIntern to true,
         BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
+        BehandlingsflytFeature.DatadelingBehandlingVisning to true,
+        BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

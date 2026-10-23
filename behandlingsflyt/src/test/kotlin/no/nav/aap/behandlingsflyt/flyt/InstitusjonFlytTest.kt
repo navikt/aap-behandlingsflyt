@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
@@ -1363,6 +1362,9 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
     }
 
     object SammenhengendeInstitusjonsoppholdUnleash : FakeUnleashBaseWithDefaultDisabled(
-        listOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)
+        listOf(
+            BehandlingsflytFeature.SammenhengendeInstitusjonsopphold,
+            BehandlingsflytFeature.Helseinstitusjon1Manedsregel,
+        )
     )
 }

@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenaVedtaksvariantDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenavedtakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.AvslagsårsakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BarnMedBarnetilleggDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingVisningDto
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingVisningRequest
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.GjeldendeStansEllerOpphørDTO
@@ -267,6 +269,17 @@ class ApiInternGatewayImpl : ApiInternGateway {
         restClient.post(
             uri.resolve("/api/insert/oppdater-identer"),
             PostRequest(body = OppdaterIdenterDto(saksnummer.toString(), identer.map(Ident::identifikator))),
+            mapper = { _, _ -> }
+        )
+    }
+
+
+    override fun sendBehandlingVisning(ident: String, saksnummer: Saksnummer, behandlingVisning: BehandlingVisningDto) {
+        restClient.post(
+            uri = uri.resolve("/api/insert/behandling-visning"),
+            request = PostRequest(
+                body = BehandlingVisningRequest(ident = ident, saksnummer = saksnummer.toString(), behandling = behandlingVisning)
+            ),
             mapper = { _, _ -> }
         )
     }

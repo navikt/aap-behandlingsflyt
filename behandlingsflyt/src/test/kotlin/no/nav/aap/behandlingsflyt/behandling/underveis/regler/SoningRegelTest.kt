@@ -38,7 +38,12 @@ class SoningRegelTest {
         InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
         BehandlingRepositoryImpl(mockConnection),
-        FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
+        FakeUnleashBase(
+            mapOf(
+                BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
+                BehandlingsflytFeature.Helseinstitusjon1Manedsregel to false
+            )
+        )
     )
 
     @Test
@@ -89,10 +94,12 @@ class SoningRegelTest {
 
         val delresultat = utlederService.utledBehov(utlederInput)
 
-        val straffegjennomføringVilkårsvurderinger = StraffegjennomføringVilkår.vurder(StraffegjennomføringGrunnlag(
-            institusjonsopphold = MapInstitusjonoppholdTilRegel.map(delresultat),
-            vurderFra = periode.fom,
-        ))
+        val straffegjennomføringVilkårsvurderinger = StraffegjennomføringVilkår.vurder(
+            StraffegjennomføringGrunnlag(
+                institusjonsopphold = MapInstitusjonoppholdTilRegel.map(delresultat),
+                vurderFra = periode.fom,
+            )
+        )
 
         assertTidslinje(
             straffegjennomføringVilkårsvurderinger,
