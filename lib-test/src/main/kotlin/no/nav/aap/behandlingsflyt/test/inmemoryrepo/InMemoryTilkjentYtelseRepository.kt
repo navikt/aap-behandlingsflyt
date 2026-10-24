@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -19,8 +18,6 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
     override fun lagre(
         behandlingId: BehandlingId,
         tilkjent: List<TilkjentYtelsePeriode>,
-        faktagrunnlag: TilkjentYtelseGrunnlag,
-        versjon: String
     ) {
         synchronized(lock) {
             tilkjentYtelse[behandlingId] = tilkjent

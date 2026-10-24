@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
-import no.nav.aap.meldeplikt.MeldepliktStatus
-import no.nav.aap.meldeplikt.helligdagsunntakFritaksUtbetalingDato
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse.beregnDagsatsTidslinje
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse.gradering
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse.utledBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
@@ -16,6 +17,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
+import no.nav.aap.behandlingsflyt.utils.Diff
+import no.nav.aap.behandlingsflyt.utils.diffTidslinjer
+import no.nav.aap.etterlevelse.sporing.Sporbar
+import no.nav.aap.etterlevelse.sporing.Sporingsnøkkel
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.filterNotNull
@@ -27,6 +32,8 @@ import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.meldeplikt.MeldepliktStatus
+import no.nav.aap.meldeplikt.helligdagsunntakFritaksUtbetalingDato
 import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -43,28 +50,40 @@ class TilkjentYtelseGrunnlag(
     val minsteÅrligeYtelse: Tidslinje<GUnit> = MINSTE_ÅRLIG_YTELSE_TIDSLINJE,
 ) : Faktagrunnlag
 
-class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) {
+object BeregnTilkjentYtelse : Sporbar<TilkjentYtelseGrunnlag, Tilkjent> {
+    override val sporingsnøkkel = Sporingsnøkkel("beregn-tilkjent-ytelse")
+
+    override fun kjørMedSporing(
+        resultatForrigeBehandling: Tidslinje<Tilkjent>,
+        input: TilkjentYtelseGrunnlag
+    ): Tidslinje<Diff<Tilkjent>> {
+        /* Her regner vi ut fra bunnen av hver gang, så kan også argumentere
+         * for at dette er en form for ny vurdering, selv om utfallet ble helt likt.
+         */
+        return diffTidslinjer(
+            resultatForrigeBehandling,
+            beregnTilkjentYtelse(input)
+        )
+    }
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object {
-        internal const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
+    internal const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
 
-        fun redusertDagsats(
-            dagsats: Beløp,
-            barnetillegg: Beløp,
-            barnepensjonDagsats: Beløp,
-            gradering: Prosent,
-        ) = maxOf(
-            Beløp(0),
-            Beløp(
-                dagsats.multiplisert(gradering)
-                    .pluss(barnetillegg.multiplisert(gradering))
-                    .minus(barnepensjonDagsats)
-                    .verdi().setScale(0, RoundingMode.HALF_UP)
-            )
+    fun redusertDagsats(
+        dagsats: Beløp,
+        barnetillegg: Beløp,
+        barnepensjonDagsats: Beløp,
+        gradering: Prosent,
+    ) = maxOf(
+        Beløp(0),
+        Beløp(
+            dagsats.multiplisert(gradering)
+                .pluss(barnetillegg.multiplisert(gradering))
+                .minus(barnepensjonDagsats)
+                .verdi().setScale(0, RoundingMode.HALF_UP)
         )
-    }
+    )
 
     /** Regner ut tilkjent ytelse, per dag. Utregningen er basert på:
      * - [dagsatsen][beregnDagsatsTidslinje]
@@ -76,11 +95,11 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
      * (barnetillegg × gradering) + (dagsats × gradering)
      * ```
      */
-    fun beregnTilkjentYtelse(): Tidslinje<Tilkjent> {
+    fun beregnTilkjentYtelse(grunnlag: TilkjentYtelseGrunnlag): Tidslinje<Tilkjent> {
         return Tidslinje.map7(
             grunnlag.underveisgrunnlag.somTidslinje(),
-            beregnDagsatsTidslinje(),
-            gradering(),
+            beregnDagsatsTidslinje(grunnlag),
+            gradering(grunnlag),
             Grunnbeløp.tilTidslinje(),
             grunnlag.barnepensjonGrunnlag?.tilTidslinje().orEmpty(),
             BARNETILLEGGSATS_TIDSLINJE,
@@ -155,7 +174,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             .multiplisert(institusjonGradering.komplement())
     }
 
-    private fun gradering(): Tidslinje<GraderingGrunnlag> = Tidslinje.map4(
+    private fun gradering(grunnlag: TilkjentYtelseGrunnlag): Tidslinje<GraderingGrunnlag> = Tidslinje.map4(
         grunnlag.underveisgrunnlag.somTidslinje(),
         grunnlag.samordningUføre?.vurdering?.tilTidslinje().orEmpty(),
         grunnlag.samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje),
@@ -194,7 +213,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
      *
      * @return Minstesatsjustert dagsats, per dag, i G (10 desimaler)
      */
-    private fun beregnDagsatsTidslinje(): Tidslinje<Dagsats> {
+    private fun beregnDagsatsTidslinje(grunnlag: TilkjentYtelseGrunnlag): Tidslinje<Dagsats> {
         /** § 11-19 Grunnlaget for beregningen av arbeidsavklaringspenger. */
         val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
 
