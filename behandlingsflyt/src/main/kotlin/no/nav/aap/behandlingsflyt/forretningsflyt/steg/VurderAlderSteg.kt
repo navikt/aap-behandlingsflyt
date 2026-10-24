@@ -75,6 +75,7 @@ class VurderAlderSteg private constructor(
                 kontekst.rettighetsperiode,
                 brukerPersonopplysning.fødselsdato,
                 grenseForAntallMånederFørFylte18,
+                vurderingsdato = kontekst.rettighetsperiode.fom
             )
         vilkårService.vurderVilkår(kontekst.behandlingId, aldersgrunnlag, Aldersvilkåret)
     }

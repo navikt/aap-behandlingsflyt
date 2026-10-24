@@ -24,6 +24,7 @@ class AldersvilkåretTest {
             periode = rettighetsperiode,
             fødselsdato = Fødselsdato(fødselsdato),
             grenseForAntallMånederFørFylte18 = 0,
+            vurderingsdato = dagenFør18årsdagen,
         )
 
         val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
@@ -81,7 +82,8 @@ class AldersvilkåretTest {
         val aldersgrunnlaget = Aldersgrunnlag(
             periode = rettighetsperiode,
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(68)),
-            grenseForAntallMånederFørFylte18 = 3
+            grenseForAntallMånederFørFylte18 = 3,
+            vurderingsdato = søknadsdato
         )
 
         val vilkåret = Aldersvilkåret.vurder(aldersgrunnlaget)
@@ -151,6 +153,7 @@ class AldersvilkåretTest {
             periode = rettighetsperiode,
             fødselsdato = Fødselsdato(fødselsdato),
             grenseForAntallMånederFørFylte18 = 3,
+            vurderingsdato = rettighetsperiode.fom
         )
 
         val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
@@ -167,7 +170,8 @@ class AldersvilkåretTest {
         val aldersgrunnlaget = Aldersgrunnlag(
             periode = rettighetsperiode,
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(45)),
-            grenseForAntallMånederFørFylte18 = 3
+            grenseForAntallMånederFørFylte18 = 3,
+            vurderingsdato = søknadsdato
         )
 
         val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)
@@ -184,7 +188,8 @@ class AldersvilkåretTest {
         val aldersgrunnlaget = Aldersgrunnlag(
             periode = rettighetsperiode,
             fødselsdato = Fødselsdato(LocalDate.now().minusYears(66).minusMonths(6)),
-            grenseForAntallMånederFørFylte18 = 3
+            grenseForAntallMånederFørFylte18 = 3,
+            vurderingsdato = søknadsdato
         )
 
         val resultat = Aldersvilkåret.vurder(aldersgrunnlaget)

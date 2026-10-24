@@ -9,7 +9,7 @@ class Aldersgrunnlag(
     val periode: Periode,
     val fødselsdato: Fødselsdato,
     val grenseForAntallMånederFørFylte18: Long,
-    val vurderingsdato: LocalDate = LocalDate.now(),
+    val vurderingsdato: LocalDate,
 ) : Faktagrunnlag {
     fun fyller(alder: Int): LocalDate {
         return fødselsdato.toLocalDate().plusYears(alder.toLong())
