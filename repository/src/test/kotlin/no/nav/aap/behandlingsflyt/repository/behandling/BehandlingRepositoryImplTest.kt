@@ -1,9 +1,16 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
+import no.nav.aap.behandlingsflyt.behandling.BackfillRedusertDagsatsService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.opprettRevurdering
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
@@ -54,10 +61,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -554,6 +566,127 @@ internal class BehandlingRepositoryImplTest {
             val historikk = repo.hentStegHistorikk(behandling.id)
 
             assertThat(historikk.map { it.steg() }).containsExactly(StegType.START_BEHANDLING, StegType.AVKLAR_SYKDOM)
+        }
+    }
+
+    @Test
+    fun `finn behandlinger som mangler redusert dagsats returnerer korrekt behandling`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandlingUtenRedusertDagsats = opprettKlagebehandling(connection, sak)
+            val behandlingMedRedusertDagsats = finnEllerOpprettBehandling(connection, sak)
+            lagreTilkjentYtelse(connection, behandlingUtenRedusertDagsats, manglerRedusertDagsats = true)
+            lagreTilkjentYtelse(connection, behandlingMedRedusertDagsats.id, manglerRedusertDagsats = false)
+
+            val behandlinger = BehandlingRepositoryImpl(connection)
+                .finnBehandlingerSomManglerRedusertDagsats(sak.id)
+
+            assertThat(behandlinger).containsExactly(behandlingUtenRedusertDagsats)
+        }
+    }
+
+    @Test
+    fun `finn behandlinger som mangler redusert dagsats returnerer alle relevante for gitt sak`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val førsteBehandling = finnEllerOpprettBehandling(connection, sak)
+            val revurdering = opprettRevurdering(connection, sak)
+            val klage = opprettKlagebehandling(connection, sak)
+            lagreTilkjentYtelse(connection, førsteBehandling.id, manglerRedusertDagsats = true)
+            lagreTilkjentYtelse(connection, revurdering.id, manglerRedusertDagsats = true)
+            lagreTilkjentYtelse(connection, klage, manglerRedusertDagsats = false)
+
+            val behandlinger = BehandlingRepositoryImpl(connection)
+                .finnBehandlingerSomManglerRedusertDagsats(sak.id)
+
+            assertThat(behandlinger).containsExactlyInAnyOrder(førsteBehandling.id, revurdering.id)
+        }
+    }
+
+    @Test
+    fun `finn behandlinger som mangler redusert dagsats backfiller alle relevante tilkjente perioder for en behandling`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            lagreTilkjentYtelse(connection, behandling.id, manglerRedusertDagsats = true, antallPerioder = 2)
+            val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
+            val perioderSomMangler = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandling.id)
+            assertThat(perioderSomMangler).hasSize(2)
+
+            val behandlinger = BehandlingRepositoryImpl(connection)
+                .finnBehandlingerSomManglerRedusertDagsats(sak.id)
+            assertThat(behandlinger).containsExactly(behandling.id)
+
+            BackfillRedusertDagsatsService(tilkjentYtelseRepository).backfillBehandling(behandling.id)
+            val lagredeDagsatser = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)!!
+                .map { it.tilkjent.redusertDagsatsOrNull() }
+            assertThat(lagredeDagsatser)
+                .containsExactlyInAnyOrderElementsOf(perioderSomMangler.map { it.beregnRedusertDagsats() })
+        }
+    }
+
+    private fun opprettKlagebehandling(connection: DBConnection, sak: Sak): BehandlingId =
+        BehandlingRepositoryImpl(connection).opprettBehandling(
+            sakId = sak.id,
+            typeBehandling = TypeBehandling.Klage,
+            forrigeBehandlingId = null,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTATT_KLAGE)),
+                årsak = ÅrsakTilOpprettelse.KLAGE,
+            ),
+        ).id
+
+    private fun lagreTilkjentYtelse(
+        connection: DBConnection,
+        behandlingId: BehandlingId,
+        manglerRedusertDagsats: Boolean,
+        antallPerioder: Int = 1,
+    ) {
+        val periode = TilkjentYtelsePeriode(
+            periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1)),
+            tilkjent = Tilkjent(
+                dagsats = Beløp(999),
+                gradering = Prosent.`66_PROSENT`,
+                graderingGrunnlag = GraderingGrunnlag(
+                    Prosent.`0_PROSENT`,
+                    Prosent.`0_PROSENT`,
+                    Prosent.`0_PROSENT`,
+                    Prosent.`0_PROSENT`,
+                    Prosent.`0_PROSENT`,
+                    Prosent.`0_PROSENT`,
+                ),
+                barnetillegg = Beløp(999),
+                grunnlagsfaktor = GUnit("1.0"),
+                antallBarn = 1,
+                barnepensjonDagsats = Beløp(100),
+                barnetilleggsats = Beløp(999),
+                grunnbeløp = Beløp(1000),
+                utbetalingsdato = LocalDate.now().plusDays(14),
+                minsteSats = Minstesats.IKKE_MINSTESATS,
+                redusertDagsats = Beløp(63),
+            ),
+        )
+        val perioder = (0 until antallPerioder).map { index ->
+            periode.copy(
+                periode = Periode(LocalDate.now().plusDays(index * 2L), LocalDate.now().plusDays(index * 2L + 1)),
+                tilkjent = periode.tilkjent.copy(dagsats = Beløp(999 + index * 100)),
+            )
+        }
+        TilkjentYtelseRepositoryImpl(connection).lagre(behandlingId, perioder, tomtTilkjentYtelseGrunnlag, "")
+        if (manglerRedusertDagsats) {
+            connection.execute(
+                """
+                UPDATE tilkjent_periode
+                SET redusert_dagsats = NULL
+                WHERE tilkjent_ytelse_id IN (
+                    SELECT id FROM tilkjent_ytelse WHERE behandling_id = ?
+                )
+                """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, behandlingId.toLong())
+                }
+            }
         }
     }
 }
