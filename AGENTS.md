@@ -107,6 +107,8 @@ Parametertyper må være marker-grensesnittet, aldri `*Impl`. Nytt repository m�
 
 Regler for enkeltområder (steg, avklaringsbehov, informasjonskrav, repository, migrasjoner, kontrakt, api) ligger i
 `.github/instructions/` og gjelder når du lager eller endrer filer i området.
+Oppskrifter for vanlige endringer finnes som skills i `.github/skills/`: `nytt-steg`, `nytt-avklaringsbehov`,
+`nytt-informasjonskrav`, `nytt-grunnlag`, `ny-jobb`. Bruk dem.
 
 ## Testing
 - Nivåer: ren enhetstest (vilkår, tidslinjer), domenetest med `InMemory*`-repos, DB-test mot Postgres
