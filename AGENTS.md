@@ -105,6 +105,9 @@ Alle injiserbare klasser følger samme idiom: `private constructor(avhengigheter
 `constructor(repositoryProvider, gatewayProvider)` + `companion object : FlytSteg | Factory | Informasjonskravkonstruktør | ProvidersJobbSpesifikasjon`.
 Parametertyper må være marker-grensesnittet, aldri `*Impl`. Nytt repository må implementere `kopier` og `slett`.
 
+Regler for enkeltområder (steg, avklaringsbehov, informasjonskrav, repository, migrasjoner, kontrakt, api) ligger i
+`.github/instructions/` og gjelder når du lager eller endrer filer i området.
+
 ## Testing
 - Nivåer: ren enhetstest (vilkår, tidslinjer), domenetest med `InMemory*`-repos, DB-test mot Postgres
   (`TestDataSource`), flyttest (`*FlytOrkestratorTest`, `KlageFlytTest` – asserterer stegsekvens), E2E i `app`
