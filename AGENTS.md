@@ -116,8 +116,9 @@ Regler for enkeltområder (steg, avklaringsbehov, informasjonskrav, repository, 
   Nytt steg → `*StegTest` og oppdater flytsekvenstestene. Ny toggle → `FakeUnleash`; tester kjører med alle
   toggles av, så ny oppførsel bak toggle er utestet til testen skrur den på.
 - Fakes framfor mocks. Ikke "fiks" en test ved å endre forventningen uten å forstå hvorfor den feilet.
-- Før du sier "ferdig": kjør testene i modulene du endret. Har du rørt `forretningsflyt/`, `flyt/` eller
-  `avklaringsbehov/`, kjør også `:behandlingsflyt:test --tests "*FlytOrkestratorTest" --tests "*FlytTest"`.
+- Før du sier "ferdig": kjør testene i modulene du endret (skillen `verifiser` velger dem ut fra endringene).
+  Har du rørt `forretningsflyt/`, `flyt/` eller `avklaringsbehov/`, kjør også
+  `:behandlingsflyt:test --tests "*FlytOrkestratorTest" --tests "*FlytTest"`.
 
 ## Naborepoer
 Les kildekoden i naborepoet i stedet for å pakke ut jar-filer. Finnes ikke mappen, si fra i stedet for å lete i
