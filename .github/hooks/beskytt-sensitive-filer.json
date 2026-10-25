@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "d=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$d/.github/hooks/beskytt-sensitive-filer.sh\" ] && exec bash \"$d/.github/hooks/beskytt-sensitive-filer.sh\"; echo \"beskytt-sensitive-filer.sh ble ikke funnet fra $PWD\" >&2",
+        "powershell": "exit 0",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}
