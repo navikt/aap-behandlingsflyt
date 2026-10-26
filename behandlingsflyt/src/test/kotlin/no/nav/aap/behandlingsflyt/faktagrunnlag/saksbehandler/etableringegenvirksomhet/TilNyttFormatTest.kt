@@ -27,6 +27,34 @@ import java.time.ZoneOffset
 
 class TilNyttFormatTest {
     @Test
+    fun `teller dager likt for gamle migrerte og blandede vurderinger`() {
+        val utvikling = konstruerVurdering {
+            fom = 2 februar 2026
+            tom = 6 februar 2026
+            utviklingsperioder = listOf(2 februar 2026 to (6 februar 2026))
+        }
+        val oppstart = konstruerVurdering {
+            fom = 9 februar 2026
+            tom = 13 februar 2026
+            oppstartsperioder = listOf(9 februar 2026 to (13 februar 2026))
+        }
+        val gammel = listOf(utvikling, oppstart)
+        val migrert = gammel.tilNyttFormat()
+        val blandet = listOf(utvikling) + listOf(oppstart).tilNyttFormat()
+
+        listOf(gammel, migrert, blandet).forEach { vurderinger ->
+            assertThat(vurderinger.brukteDager()).isEqualTo(5 to 5)
+            assertThat(vurderinger.tellDager { it.utviklingsPerioder }).isEqualTo(5)
+            assertThat(vurderinger.tellDager { it.oppstartsPerioder }).isEqualTo(5)
+        }
+        assertThat(migrert).allSatisfy {
+            assertThat(it.utviklingsPerioder).isEmpty()
+            assertThat(it.oppstartsPerioder).isEmpty()
+        }
+        assertValideringUendret(blandet)
+    }
+
+    @Test
     fun `splitter oppstartsfaser i to vurderinger`() {
         val gammel = listOf(
             konstruerVurdering {
@@ -224,7 +252,7 @@ class TilNyttFormatTest {
         )
 
         val før = service.erVurderingerGyldig(behandling.id, gammel)
-        val etter = service.erVurderingerGyldig(behandling.id, gammel.tilNyttFormat().map { it.tilGammeltFormat() })
+        val etter = service.erVurderingerGyldig(behandling.id, gammel.tilNyttFormat())
 
         assertThat(før).isEqualTo(VirksomhetEtableringGyldig)
         assertThat(etter).isEqualTo(før)
