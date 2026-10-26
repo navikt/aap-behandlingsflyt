@@ -39,8 +39,8 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker) {
-        if (definisjon.erFrivillig() && definisjon in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov) {
+    fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker, legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>) {
+        if (definisjon.erFrivillig() && definisjon in legacyAutomatiskFrivillgeAvklaringsbehov) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
                 leggTil(
@@ -327,13 +327,12 @@ class Avklaringsbehovene(
         return avklaringsbehovene
     }
 
-    fun alleEkskludertAvbruttOgVentebehov(): List<Avklaringsbehov> {
-        return avklaringsbehovene
-            .filterNot { it.status() == Status.AVBRUTT || it.definisjon.erVentebehov() }
-    }
-
-    fun åpne(): List<Avklaringsbehov> {
-        return alle().filter { it.erÅpent() }.toList()
+    /**
+     * Alle åpne avklaringsbehov som må løses.
+     * Inkluderer ikke frivillige behov som kan løses
+     */
+    fun måLøses(): List<Avklaringsbehov> {
+        return alle().filter { it.måLøses() }.toList()
     }
 
     fun skalTilbakeføresEtterKvalitetssikring(): Boolean {
@@ -358,7 +357,7 @@ class Avklaringsbehovene(
     }
 
     fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {
-        return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+        return alle().filter { avklaringsbehov -> avklaringsbehov.harLøsning() }
             .filter { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
             .filterNot { it.erForeslåttVedtak() || it.erForeslåttVedtakVedtakslengde() }
     }
@@ -423,7 +422,8 @@ class Avklaringsbehovene(
         val nesteSteg = behandling.aktivtSteg()
         val behandlingFlyt = behandling.flyt()
         behandlingFlyt.forberedFlyt(nesteSteg)
-        val uhåndterteBehov = alle().filter { it.erÅpent() }
+        val uhåndterteBehov = alle()
+            .filter { it.måLøses() }
             .filter { definisjon ->
                 behandlingFlyt.erStegFør(
                     definisjon.løsesISteg(),
@@ -452,10 +452,16 @@ class Avklaringsbehovene(
         return "Behov[${avklaringsbehovene.joinToString { it.toString() }}. For ID $behandlingId.]"
     }
 
-    fun allePlussFrivillige(behandling: Behandling): List<Avklaringsbehov> {
+    fun allePlussFrivillige(
+        behandling: Behandling,
+        legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>
+    ): List<Avklaringsbehov> {
         val eksisterendeBehov = alle()
         val flyt = behandling.flyt()
-        val list = flyt.frivilligeAvklaringsbehovRelevantForFlyten(behandling.aktivtSteg())
+        val list = flyt.frivilligeAvklaringsbehovRelevantForFlyten(
+            behandling.aktivtSteg(),
+            legacyAutomatiskFrivillgeAvklaringsbehov
+        )
             .filter { definisjon -> eksisterendeBehov.none { behov -> behov.definisjon == definisjon } }
             .map { definisjon ->
                 Avklaringsbehov(

@@ -13,5 +13,7 @@ data class HelseinstitusjonVurdering(
     val periode: Periode,
     val vurdertIBehandling: BehandlingId,
     val vurdertAv: Bruker? = null,
-    val vurdertTidspunkt: LocalDateTime?
+    val vurdertTidspunkt: LocalDateTime?,
+    val erHistoriskUtenReduksjonsberegning: Boolean = false,
+    val oppholdId: String? = null,
 )

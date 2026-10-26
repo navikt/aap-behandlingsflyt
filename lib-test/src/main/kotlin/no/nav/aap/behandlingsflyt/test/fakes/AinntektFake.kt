@@ -27,8 +27,10 @@ class AinntektFake(private val fakePersoner: () -> TestPersonService) : FakeServ
         routing {
             post("/hentinntektliste") {
                 val request = call.receive<Map<String, Any>>()
+                val maanedFom = YearMonth.parse(request["maanedFom"].toString())
+                val maanedTom = YearMonth.parse(request["maanedTom"].toString())
                 val person = fakePersoner().hentPerson((request["ident"] as Map<*, *>)["identifikator"] as String)
-
+                
                 val z = (person!!.aInntekter() ?: person.inntekter()).flatMap { inntektPerÅr ->
                     (1..12).map { mnd ->
                         Månedsinntekt(
@@ -41,7 +43,7 @@ class AinntektFake(private val fakePersoner: () -> TestPersonService) : FakeServ
                             )
                         )
                     }
-                }.joinToString(",") {
+                }.filter { it.årMåned in maanedFom..maanedTom }.joinToString(",") {
                     ainntektResponse(it.årMåned, it.beløp.verdi.toDouble())
                 }
                 call.respond(

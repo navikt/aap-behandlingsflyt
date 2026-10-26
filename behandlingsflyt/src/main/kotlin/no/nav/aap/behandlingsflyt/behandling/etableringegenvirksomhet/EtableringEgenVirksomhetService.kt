@@ -1,10 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -12,7 +13,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -47,9 +47,7 @@ class EtableringEgenVirksomhetService(
 
         val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
         if (gyldighetPeriode.isEmpty()) {
-            return VirksomhetEtableringIkkeGyldig(
-                "11-5 & 11-6b må være oppfylt i minst én periode"
-            )
+            return VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfylt
         }
 
         val perioderMedSykdomBistandOppfylt = tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList()
@@ -57,23 +55,17 @@ class EtableringEgenVirksomhetService(
                 perioderMedSykdomBistandOppfylt.none { oppfyltPeriode -> oppfyltPeriode.inneholder(vurdering.fom) }
             }
         ) {
-            return VirksomhetEtableringIkkeGyldig(
-                "Vurderte perioder må falle innen en periode med oppfylt 11-5 & 11-6b"
-            )
+            return VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfyltOverlapp
         }
 
         val førsteMuligeDato = gyldighetPeriode.first().fom
 
         if (nyeVurderinger.any { it.evaluerVirksomhetVurdering() && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
-            return VirksomhetEtableringIkkeGyldig(
-                "Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode"
-            )
+            return VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
         }
 
         if (gjeldendeVurderinger.isNotEmpty() && gjeldendeVurderinger.any { it.fom.isBefore(førsteMuligeDato) }) {
-            return VirksomhetEtableringIkkeGyldig(
-                "Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP"
-            )
+            return VirksomhetEtableringResultat.Ugyldig.FørFørsteMuligeStartdato
         }
 
         val alleUtviklingsPerioder = gjeldendeVurderinger.flatMap { it.utviklingsPerioder }
@@ -81,26 +73,16 @@ class EtableringEgenVirksomhetService(
 
         val sisteUtviklingsPeriodeTom = alleUtviklingsPerioder.maxOfOrNull { it.tom }
         if (sisteUtviklingsPeriodeTom != null && alleOppstartsPerioder.any { it.fom.isBefore(sisteUtviklingsPeriodeTom) }) {
-            return VirksomhetEtableringIkkeGyldig("Oppstartsperioder kan ikke ligge før en utviklingsperiode")
+            return VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling
         }
 
-        val bruktUtviklingsDager =
-            gjeldendeVurderinger.flatMap { it.utviklingsPerioder }.somTidslinje { it }.komprimer().segmenter()
-                .sumOf { it.periode.antallHverdager().asInt }
-        val bruktOppstartsdager =
-            gjeldendeVurderinger.flatMap { it.oppstartsPerioder }.somTidslinje { it }.komprimer().segmenter()
-                .sumOf { it.periode.antallHverdager().asInt }
+        val (bruktUtviklingsDager, bruktOppstartsdager) = (gamleVurderinger + nyeVurderinger).brukteDager()
 
         if (bruktUtviklingsDager > maksUtviklingsdager) {
-            return VirksomhetEtableringIkkeGyldig(
-                "Oppsatte utviklingsdager overstiger gjenværende dager: $bruktUtviklingsDager / $maksUtviklingsdager"
-            )
+            return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.UTVIKLING, bruktUtviklingsDager)
         }
         if (bruktOppstartsdager > maksOppstartsdager)
-            return VirksomhetEtableringIkkeGyldig(
-                "Oppsatte oppstartsdager overstiger gjenværende dager: $bruktOppstartsdager / $maksOppstartsdager"
-            )
-
+            return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.OPPSTART, bruktOppstartsdager)
         return VirksomhetEtableringGyldig
     }
 
@@ -144,8 +126,40 @@ class EtableringEgenVirksomhetService(
     }
 }
 
-sealed interface VirksomhetEtableringResultat
-
-data class VirksomhetEtableringIkkeGyldig(val feilmelding: String) : VirksomhetEtableringResultat
-
 data object VirksomhetEtableringGyldig : VirksomhetEtableringResultat
+
+sealed interface VirksomhetEtableringResultat {
+    sealed interface Ugyldig : VirksomhetEtableringResultat {
+        val melding: String
+
+        data class OverstigerKvoter(val fase: EtableringFase, val brukteDager: Int) : Ugyldig {
+            private val dagerStr = when (fase) {
+                EtableringFase.UTVIKLING -> "utviklingsdager"
+                EtableringFase.OPPSTART -> "oppstartsdager"
+            }
+            override val melding =
+                "Oppsatte $dagerStr overstiger gjenværende dager: $brukteDager / ${fase.maksHverdager}"
+        }
+
+        data object OppstartFørUtvikling : Ugyldig {
+            override val melding: String = "Oppstartsperiode kan ikke ligge før en utviklingsperiode."
+        }
+
+        data object FørFørsteMuligeStartdato : Ugyldig {
+            override val melding: String = "Vurderingen kan tidligst gjelde fra dagen etter første mulige dag med AAP."
+        }
+
+        data object SykdomOgBistandMåVæreOppfylt : Ugyldig {
+            override val melding: String = "11-5 & 11-6b må være oppfylt i minst én periode."
+        }
+
+        data object SykdomOgBistandMåVæreOppfyltOverlapp : Ugyldig {
+            override val melding: String = "Vurderte perioder må falle innen en periode med oppfylt 11-5 & 11-6b."
+        }
+
+        data object KreverPeriodeHvisVilkårOppfylt : Ugyldig {
+            override val melding: String =
+                "Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode"
+        }
+    }
+}

@@ -10,6 +10,10 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhet
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVBRYT_AKTIVITETSPLIKTBEHANDING
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVBRYT_REVURDERING
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VURDER_TREKK_AV_KLAGE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VURDER_TREKK_AV_SØKNAD
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -17,7 +21,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
-import org.slf4j.LoggerFactory
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 import no.nav.aap.brev.kontrakt.Rolle as SignaturRolle
 
@@ -26,6 +29,13 @@ class SignaturService(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
+    private val ekskluderteAvklaringsbehov: Set<Definisjon> = setOf(
+        AVBRYT_REVURDERING,
+        AVBRYT_AKTIVITETSPLIKTBEHANDING,
+        VURDER_TREKK_AV_KLAGE,
+        VURDER_TREKK_AV_SØKNAD,
+    )
+
     constructor(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
@@ -124,13 +134,9 @@ class SignaturService(
      * definisjoner filtrert ut der det har ført til feil i signaturer.
      */
     private fun definisjonerSomLøsesAv(rolle: Rolle): List<Definisjon> {
-        return Definisjon.entries.filter { it.løsesAv.contains(rolle) }
-            .filterNot {
-                listOf(
-                    Definisjon.MANUELT_SATT_PÅ_VENT,
-                    Definisjon.VURDER_TREKK_AV_SØKNAD
-                ).contains(it)
-            }
+        return Definisjon.entries
+            .filter { rolle in it.løsesAv }
+            .filterNot { it.erVentebehov() || it in ekskluderteAvklaringsbehov }
     }
 
     private fun utledSignaturerForVedtak(
@@ -167,7 +173,7 @@ class SignaturService(
     ): SignaturGrunnlag {
         val behandling = behandlingRepository.hent(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        val avklaringsbehov = avklaringsbehovene.åpne().sistEndret()
+        val avklaringsbehov = avklaringsbehovene.måLøses().sistEndret()
         val enhet = if (avklaringsbehov != null) {
             val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
             enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)
@@ -234,7 +240,7 @@ class SignaturService(
         oppgaveEnhetListe: List<OppgaveEnhet>,
         innloggetBruker: Bruker
     ): UtledetSignatur? {
-        return avklaringsbehovForRolle(avklaringsbehovene, rolle).filter { it.erÅpent() }
+        return avklaringsbehovForRolle(avklaringsbehovene, rolle).filter { it.måLøses() }
             .sistEndret()
             ?.let { avklaringsbehov ->
                 val enhet = enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)

@@ -20,8 +20,8 @@ enum class BehandlingsflytFeature(
     BackfillStansOpphor,
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
-    SaksbehandlerMeldekortKvitteringNyPdfgenerator,
     SynkroniserArenaMeldeperiodesyklus,
+    DynamiskFrivilligSykestipend,
 
     // --- Krav ---
     KravSteg, // Visning
@@ -32,6 +32,9 @@ enum class BehandlingsflytFeature(
     MigererSykdomFraArenaAutomatisk,
     MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
+    MigrererOppholdskravFraArenaAutomatisk,
+    MigrererVedtakslengdeFraArenaAutomatisk,
+    MigrererBeregningstidspunktFraArenaAutomatisk,
 
     // --- Utbetaling ---
     FjerneAvventUtbetalingForSamordningArbeidsgiver,
@@ -45,7 +48,9 @@ enum class BehandlingsflytFeature(
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
     NySoknadTilApiIntern,
-    SammenhengendeInstitusjonsopphold
+    SammenhengendeInstitusjonsopphold,
+    DatadelingBehandlingVisning,
+    Helseinstitusjon1Manedsregel
     ;
 
     override fun key(): String = name

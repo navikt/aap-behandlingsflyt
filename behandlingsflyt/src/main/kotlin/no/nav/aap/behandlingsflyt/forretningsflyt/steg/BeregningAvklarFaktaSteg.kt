@@ -1,16 +1,21 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.erSystembruker
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.MigrerVurderingFraArena
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -18,6 +23,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -27,17 +34,28 @@ class BeregningAvklarFaktaSteg private constructor(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-) : BehandlingSteg {
+    private val unleashGateway: UnleashGateway,
+    private val arenaMigreringService: ArenaMigreringService,
+) : BehandlingSteg, MigrerVurderingFraArena {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide(),
+        arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
+
+        if (kontekst.erMigreringFraArena()
+            && unleashGateway.isEnabled(BehandlingsflytFeature.MigrererBeregningstidspunktFraArenaAutomatisk)
+            && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())
+        ) {
+            migrerVurderingFraArena(kontekst)
+        }
 
         // Beregningstidspunkt
         avklaringsbehovService.oppdaterAvklaringsbehov(
@@ -50,6 +68,8 @@ class BeregningAvklarFaktaSteg private constructor(
                     VurderingType.MIGERING_FRA_ARENA -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.erMigreringFraArena() &&
+                                    erVurdertAutomatisk(beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering) -> false
                             !eksistererVedtattVurdering(kontekst.forrigeBehandlingId) -> true
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                             manueltTriggetVurderingsbehovBeregning(kontekst) -> true
@@ -133,6 +153,24 @@ class BeregningAvklarFaktaSteg private constructor(
             },
         )
         return Fullført
+    }
+
+    override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
+        require(kontekst.erMigreringFraArena()) {
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
+        }
+
+        val beregningstidspunkt = arenaMigreringService.hentBeregningstidspunkt(kontekst.sakId)
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, type(), beregningstidspunkt)
+
+        beregningVurderingRepository.lagre(
+            kontekst.behandlingId,
+            ArenaMigreringMapper.mapBeregningstidspunktVurdering(beregningstidspunkt)
+        )
+    }
+
+    private fun erVurdertAutomatisk(vurdering: BeregningstidspunktVurdering?): Boolean {
+        return vurdering?.vurdertAv?.erSystembruker() ?: false
     }
 
     private fun eksistererVedtattVurdering(forrigeBehandlingId: BehandlingId?): Boolean {

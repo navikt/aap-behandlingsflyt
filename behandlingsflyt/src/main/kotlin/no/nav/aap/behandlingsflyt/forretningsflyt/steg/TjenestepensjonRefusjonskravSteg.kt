@@ -27,7 +27,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
         tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         tjenestePensjonRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider)
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -38,6 +38,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                     VurderingType.FØRSTEGANGSBEHANDLING,
                     VurderingType.REVURDERING,
                     VurderingType.MIGERING_FRA_ARENA -> {
+
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
@@ -57,7 +58,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
-            erTilstrekkeligVurdert = { true },
+            erTilstrekkeligVurdert = { tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(kontekst.behandlingId) != null },
             tilbakestillGrunnlag = {
                 kontekst.forrigeBehandlingId
                     ?.let { tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(it) }

@@ -7,7 +7,10 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiodesyklusInformasjonskrav
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
@@ -99,6 +102,16 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
         return response
     }
 
+    override fun hentOppholdskrav(saksnummerArena: String): ArenaOppholdskravResponse {
+        val response: ArenaOppholdskravResponse? = restClient.get(
+            uri.resolve("/api/migrering/$saksnummerArena/oppholdskrav"),
+            GetRequest(timeout = Duration.ofSeconds(5)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$saksnummerArena/oppholdskrav" }
+        return response
+    }
+
     override fun hentRefusjonskrav(saksnummerArena: String): ArenaRefusjonskravResponse {
         val response: ArenaRefusjonskravResponse? = restClient.get(
             uri.resolve("/api/migrering/${saksnummerArena}/refusjonskrav"),
@@ -106,6 +119,26 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/${saksnummerArena}/refusjonskrav" }
+        return response
+    }
+
+    override fun hentVedtaksperiode(saksnummerArena: String): ArenaVedtaksperiodeResponse {
+        val response: ArenaVedtaksperiodeResponse? = restClient.get(
+            uri.resolve("/api/migrering/$saksnummerArena/vedtaksperiode"),
+            GetRequest(timeout = Duration.ofSeconds(5)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$saksnummerArena/vedtaksperiode" }
+        return response
+    }
+
+    override fun hentBeregningstidspunkt(saksnummerArena: String): ArenaBeregningstidspunktResponse {
+        val response: ArenaBeregningstidspunktResponse? = restClient.get(
+            uri.resolve("/api/migrering/$saksnummerArena/beregningstidspunkt"),
+            GetRequest(timeout = Duration.ofSeconds(5)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$saksnummerArena/beregningstidspunkt" }
         return response
     }
 

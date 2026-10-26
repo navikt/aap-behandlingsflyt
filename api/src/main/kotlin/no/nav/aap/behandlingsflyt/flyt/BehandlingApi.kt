@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -30,6 +31,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -41,6 +44,7 @@ import no.nav.aap.tilgang.authorizedGet
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import javax.sql.DataSource
+import kotlin.collections.plus
 
 private val log = LoggerFactory.getLogger("behandlingApi")
 
@@ -68,7 +72,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
                     val virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider)
-
+                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+                    
                     val behandling = behandling(behandlingRepository, req)
                     val sak = sakRepository.hent(behandling.sakId)
                     val virkningstidspunkt =
@@ -95,6 +100,12 @@ fun NormalOpenAPIRoute.behandlingApi(
                         vurderingsbehovOgÅrsaker.map { it.copy(opprettetAv = it.opprettetAv?.let { ident -> navnPerIdent[ident] ?: ident }) }
                     }
 
+                    val legacyFrivillige = if (unleashGateway.isDisabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
+                        Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov + Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND
+                    } else {
+                        Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov
+                    }
+
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
                         type = BehandlingService(repositoryProvider, gatewayProvider).utledFaktiskBehandlingstype(behandling),
@@ -104,7 +115,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                             .erAvsluttet(),
                         avklaringsbehov =
                             avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                                .allePlussFrivillige(behandling)
+                                .allePlussFrivillige(behandling, legacyFrivillige)
                                 .map { avklaringsbehov ->
                                     AvklaringsbehovDTO(
                                         avklaringsbehov = avklaringsbehov,
