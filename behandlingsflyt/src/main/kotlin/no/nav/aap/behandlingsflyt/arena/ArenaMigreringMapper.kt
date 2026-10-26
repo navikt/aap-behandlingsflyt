@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
@@ -24,6 +25,7 @@ import java.time.LocalDateTime
 
 private const val VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP = "REFKRAVSOS"
 private const val VILKÅRKODE_OPPHOLD_I_NORGE = "AOINORGE3"
+private const val VILKÅRKODE_FORUTGÅENDE_MEDLEMSKAP = "MEDLSKAP5"
 private const val VILKÅRKODE_INNTEKT_NEDSATT = "INNTNEDS"
 private const val VILKÅRKODE_SYKDOM_SKADE_LYTE = "SYKSKADLYT"
 private const val VILKÅRKODE_ARBEIDSEVNE = "AAARBEVNE"
@@ -47,6 +49,10 @@ fun ArenaSykdomsvurdering.erOrdinærAap(): Boolean {
 
 fun ArenaOppholdskrav.erOppfyltEllerIkkeVurdert(): Boolean {
     return vilkar?.kode == VILKÅRKODE_OPPHOLD_I_NORGE && vilkar.status in setOf("J", "V")
+}
+
+fun ArenaForutgåendeMedlemskap.erOppfylt(): Boolean {
+    return vilkar?.kode == VILKÅRKODE_FORUTGÅENDE_MEDLEMSKAP && vilkar.status == "J"
 }
 
 /**
@@ -157,6 +163,31 @@ object ArenaMigreringMapper {
                     begrunnelse = begrunnelse,
                 )
             ),
+        )
+    }
+
+    /**
+     * Kun oppfylt forutgående medlemskap (status J) kan migreres. Status V (ikke vurdert) betyr at vilkåret ikke er
+     * oppfylt, i motsetning til oppholdskrav.
+     */
+    fun mapOppfyltForutgåendeMedlemskapVurdering(
+        fraArena: ArenaForutgåendeMedlemskap,
+        behandlingId: BehandlingId,
+        fom: LocalDate,
+    ): ManuellVurderingForForutgåendeMedlemskap {
+        require(fraArena.erOppfylt()) {
+            "Kan ikke mappe forutgående medlemskap med vilkårkode ${fraArena.vilkar?.kode} og status ${fraArena.vilkar?.status}"
+        }
+        return ManuellVurderingForForutgåendeMedlemskap(
+            begrunnelse = "Forutgående medlemskap er oppfylt i Arena",
+            harForutgåendeMedlemskap = true,
+            varMedlemMedNedsattArbeidsevne = null,
+            medlemMedUnntakAvMaksFemAar = null,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            vurdertTidspunkt = LocalDateTime.now(),
+            vurdertIBehandling = behandlingId,
+            fom = fom,
+            tom = null,
         )
     }
 

@@ -8,6 +8,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
@@ -109,6 +110,16 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$saksnummerArena/oppholdskrav" }
+        return response
+    }
+
+    override fun hentForutgaaendeMedlemskap(saksnummerArena: String): ArenaForutgaaendeMedlemskapResponse {
+        val response: ArenaForutgaaendeMedlemskapResponse? = restClient.get(
+            uri.resolve("/api/migrering/$saksnummerArena/forutgaaende-medlemskap"),
+            GetRequest(timeout = Duration.ofSeconds(5)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$saksnummerArena/forutgaaende-medlemskap" }
         return response
     }
 

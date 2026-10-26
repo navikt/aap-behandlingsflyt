@@ -48,6 +48,11 @@ class ArenaMigreringService(
         return oppholdskrav.tilDomene()
     }
 
+    fun hentForutgåendeMedlemskap(sakId: SakId): ArenaForutgåendeMedlemskap {
+        logger.info("Henter forutgående medlemskap fra Arena for sak $sakId.")
+        return arenaOppslagGateway.hentForutgaaendeMedlemskap(hentSaksnummerArena(sakId)).tilDomene()
+    }
+
     fun hentVedtaksperiode(sakId: SakId): ArenaVedtaksperiode {
         logger.info("Henter vedtaksperiode fra Arena for sak $sakId.")
         return arenaOppslagGateway.hentVedtaksperiode(hentSaksnummerArena(sakId)).tilDomene()

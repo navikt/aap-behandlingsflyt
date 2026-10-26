@@ -86,6 +86,66 @@ class ArenaMigreringMapperTest {
         assertThat(ikkeVurdert.perioder.single().begrunnelse).doesNotContain("fritekst fra Arena")
     }
 
+    @Test
+    fun `forutgående medlemskap godtar kun oppfylt fra Arena`() {
+        assertThat(forutgåendeMedlemskap("J").erOppfylt()).isTrue()
+    }
+
+    @Test
+    fun `forutgående medlemskap avviser andre statuser, feil kode og manglende vilkår`() {
+        listOf("V", "N", "U").forEach { status ->
+            assertThat(forutgåendeMedlemskap(status).erOppfylt()).isFalse()
+        }
+        assertThat(forutgåendeMedlemskap("J", kode = "ANNET").erOppfylt()).isFalse()
+        assertThat(ArenaForutgåendeMedlemskap(vedtakId = 1, vilkar = null).erOppfylt()).isFalse()
+    }
+
+    @Test
+    fun `mapOppfyltForutgåendeMedlemskapVurdering mapper oppfylt vilkår`() {
+        val vurdering = ArenaMigreringMapper.mapOppfyltForutgåendeMedlemskapVurdering(
+            fraArena = forutgåendeMedlemskap("J"),
+            behandlingId = behandlingId,
+            fom = fom,
+        )
+
+        assertThat(vurdering.harForutgåendeMedlemskap).isTrue()
+        assertThat(vurdering.varMedlemMedNedsattArbeidsevne).isNull()
+        assertThat(vurdering.medlemMedUnntakAvMaksFemAar).isNull()
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+        assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
+        assertThat(vurdering.fom).isEqualTo(fom)
+        assertThat(vurdering.tom).isNull()
+        assertThat(vurdering.begrunnelse).contains("oppfylt i Arena")
+        assertThat(vurdering.begrunnelse).doesNotContain("fritekst fra Arena")
+    }
+
+    @Test
+    fun `mapOppfyltForutgåendeMedlemskapVurdering feiler når vilkåret ikke er oppfylt`() {
+        listOf("V", "N").forEach { status ->
+            assertThatThrownBy {
+                ArenaMigreringMapper.mapOppfyltForutgåendeMedlemskapVurdering(
+                    fraArena = forutgåendeMedlemskap(status),
+                    behandlingId = behandlingId,
+                    fom = fom,
+                )
+            }.isInstanceOf(IllegalArgumentException::class.java)
+                .hasMessageContaining("MEDLSKAP5")
+        }
+    }
+
+    private fun forutgåendeMedlemskap(
+        status: String,
+        kode: String = "MEDLSKAP5",
+    ) = ArenaForutgåendeMedlemskap(
+        vedtakId = 1,
+        vilkar = ArenaVilkar(
+            id = 1,
+            kode = kode,
+            status = status,
+            begrunnelse = "fritekst fra Arena",
+        ),
+    )
+
     private fun oppholdskrav(
         status: String,
         kode: String = "AOINORGE3",

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.arena
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
@@ -34,6 +35,11 @@ data class ArenaSykdomsvurdering(
 )
 
 data class ArenaOppholdskrav(
+    val vedtakId: Int,
+    val vilkar: ArenaVilkar?,
+)
+
+data class ArenaForutgåendeMedlemskap(
     val vedtakId: Int,
     val vilkar: ArenaVilkar?,
 )
@@ -109,6 +115,18 @@ fun ArenaSykdomsvurderingResponse.tilDomene(): ArenaSykdomsvurdering = ArenaSykd
 )
 
 fun ArenaOppholdskravResponse.tilDomene(): ArenaOppholdskrav = ArenaOppholdskrav(
+    vedtakId = vedtakId,
+    vilkar = vilkar?.let {
+        ArenaVilkar(
+            id = it.id,
+            kode = it.kode,
+            status = it.status,
+            begrunnelse = it.begrunnelse,
+        )
+    },
+)
+
+fun ArenaForutgaaendeMedlemskapResponse.tilDomene(): ArenaForutgåendeMedlemskap = ArenaForutgåendeMedlemskap(
     vedtakId = vedtakId,
     vilkar = vilkar?.let {
         ArenaVilkar(

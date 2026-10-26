@@ -10,6 +10,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
@@ -101,6 +102,19 @@ class ArenaoppslagFake : FakeServer() {
                             id = 4,
                             kode = "AOINORGE3",
                             status = "V",
+                            begrunnelse = null,
+                        ),
+                    )
+                )
+            }
+            get("/api/migrering/{saksnummerArena}/forutgaaende-medlemskap") {
+                call.respond(
+                    ArenaForutgaaendeMedlemskapResponse(
+                        vedtakId = 1,
+                        vilkar = ArenaVilkar(
+                            id = 5,
+                            kode = "MEDLSKAP5",
+                            status = "J",
                             begrunnelse = null,
                         ),
                     )
