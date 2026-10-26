@@ -59,6 +59,59 @@ class BackfillEtableringVurderingerTest {
     }
 
     @Test
+    fun `full migrering konverterer aktive og historiske grunnlag og kan kjøres på nytt`() {
+        TestDataSource().use { isolertDataSource ->
+            val behandlingId = isolertDataSource.transaction { connection ->
+                val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
+                val repository = postgresRepositoryRegistry.provider(connection)
+                    .provide<EtableringEgenVirksomhetRepository>()
+                val gammel = vurdering(
+                    behandlingId,
+                    fom = 1 januar 2025,
+                    utviklingsPerioder = listOf(Periode(6 januar 2025, 10 januar 2025)),
+                    oppstartsPerioder = listOf(Periode(13 januar 2025, 17 januar 2025)),
+                )
+                repository.lagre(behandlingId, listOf(gammel))
+                repository.lagre(behandlingId, listOf(gammel.copy(begrunnelse = "Ny vurdering")))
+                behandlingId
+            }
+            val backfill = BackfillEtableringVurderinger(isolertDataSource, dryRun = false)
+            val resultat = isolertDataSource.transaction { backfill.migrer(it) }
+
+            assertThat(resultat).usingRecursiveComparison().isEqualTo(
+                BackfillEtableringVurderinger.Resultat(
+                    antallBehandlinger = 1,
+                    antallVurderingerSomSplittes = 2,
+                    antallNyeVurderinger = 4,
+                )
+            )
+            val iderEtter = isolertDataSource.transaction { connection ->
+                val grunnlag = backfill.hentAlleGrunnlag(connection, behandlingId)
+                assertThat(grunnlag).hasSize(2)
+                grunnlag.flatMap { grunnlagId ->
+                    val vurderinger = backfill.vurderinger(connection, grunnlagId)
+                    assertThat(vurderinger).hasSize(2)
+                    assertThat(vurderinger.map { it.second }.brukteDager()).isEqualTo(5 to 5)
+                    assertThat(vurderinger.map { it.second }).allSatisfy {
+                        assertThat(it.fase).isNotNull()
+                        assertThat(it.utviklingsPerioder).isEmpty()
+                        assertThat(it.oppstartsPerioder).isEmpty()
+                    }
+                    vurderinger.map { it.first }
+                }
+            }
+            val andreKjøring = isolertDataSource.transaction { backfill.migrer(it) }
+            assertThat(andreKjøring).usingRecursiveComparison()
+                .isEqualTo(BackfillEtableringVurderinger.Resultat(antallBehandlinger = 1))
+            isolertDataSource.transaction { connection ->
+                val ider = backfill.hentAlleGrunnlag(connection, behandlingId)
+                    .flatMap { backfill.vurderinger(connection, it) }.map { it.first }
+                assertThat(ider).containsExactlyInAnyOrderElementsOf(iderEtter)
+            }
+        }
+    }
+
+    @Test
     fun `splitter hver periode i egen vurdering med fase`() {
         //                       |des      |jan      |feb      |mar
         // FØR
@@ -81,6 +134,7 @@ class BackfillEtableringVurderingerTest {
             fom = 1 desember 2024,
             utviklingsPerioder = listOf(utvikling1, utvikling2),
             oppstartsPerioder = listOf(oppstart),
+            virksomhetErNy = true,
         )
         lagre(behandlingId, legacy)
 
@@ -692,7 +746,7 @@ class BackfillEtableringVurderingerTest {
         )
 
         val gyldigFør = service.erVurderingerGyldig(behandling.id, før)
-        val gyldigEtter = service.erVurderingerGyldig(behandling.id, etter.map { it.tilGammeltFormat() })
+        val gyldigEtter = service.erVurderingerGyldig(behandling.id, etter)
 
         assertThat(gyldigFør).isEqualTo(VirksomhetEtableringGyldig)
         assertThat(gyldigEtter).isEqualTo(gyldigFør)

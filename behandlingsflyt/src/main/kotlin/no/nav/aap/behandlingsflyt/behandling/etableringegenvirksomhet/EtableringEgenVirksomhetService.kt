@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -38,10 +39,12 @@ class EtableringEgenVirksomhetService(
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
+        val vurderinger = nyeVurderinger.map { it.somLegacyVisning() }
 
         val gamleVurderinger =
             behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-        val gjeldendeVurderinger = (gamleVurderinger + nyeVurderinger)
+                .map { it.somLegacyVisning() }
+        val gjeldendeVurderinger = (gamleVurderinger + vurderinger)
             .gjeldendeVurderinger()
             .verdier().toSet()
 
@@ -51,7 +54,7 @@ class EtableringEgenVirksomhetService(
         }
 
         val perioderMedSykdomBistandOppfylt = tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList()
-        if (nyeVurderinger.any { vurdering ->
+        if (vurderinger.any { vurdering ->
                 perioderMedSykdomBistandOppfylt.none { oppfyltPeriode -> oppfyltPeriode.inneholder(vurdering.fom) }
             }
         ) {
@@ -60,7 +63,7 @@ class EtableringEgenVirksomhetService(
 
         val førsteMuligeDato = gyldighetPeriode.first().fom
 
-        if (nyeVurderinger.any { it.evaluerVirksomhetVurdering() && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
+        if (vurderinger.any { it.evaluerVirksomhetVurdering() && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
             return VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
         }
 
@@ -76,7 +79,7 @@ class EtableringEgenVirksomhetService(
             return VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling
         }
 
-        val (bruktUtviklingsDager, bruktOppstartsdager) = (gamleVurderinger + nyeVurderinger).brukteDager()
+        val (bruktUtviklingsDager, bruktOppstartsdager) = (gamleVurderinger + vurderinger).brukteDager()
 
         if (bruktUtviklingsDager > maksUtviklingsdager) {
             return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.UTVIKLING, bruktUtviklingsDager)
