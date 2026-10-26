@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -196,7 +198,8 @@ class BackfillEtableringVurderinger(
                     tom = row.getLocalDateOrNull("GJELDER_TIL"),
                     fase = row.getEnumOrNull("FASE"),
                     erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
-                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET")
+                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET"),
+                    regelsett = row.getEnum("REGELSETT"),
                 )
             }
         }
@@ -215,7 +218,8 @@ class BackfillEtableringVurderinger(
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             val varighetFør = varighet(før)
-            val valideringsresultatFør = service.beregnOgValider(behandlingId, før)
+            val valideringsresultatFør = service.validerLagredeVurderinger(behandlingId, før)
+            val semantikkFør = semantikk(før)
             migreringsplan.filter { it.skalErstattes }.forEach { steg ->
                 val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
                 steg.oppdaterteVurderinger.forEach { oppdatertVurdering ->
@@ -229,11 +233,24 @@ class BackfillEtableringVurderinger(
             check(varighetFør == varighet(etter)) {
                 "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
-            check(valideringsresultatFør == service.beregnOgValider(behandlingId, etter)) {
+            val valideringsresultatEtter = service.validerLagredeVurderinger(behandlingId, etter)
+            check(
+                (valideringsresultatFør is VirksomhetEtableringResultat.Gyldig &&
+                        valideringsresultatEtter is VirksomhetEtableringResultat.Gyldig) ||
+                        valideringsresultatFør == valideringsresultatEtter
+            ) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
+            }
+            check(semantikkFør == semantikk(etter)) {
+                "Vurderingsutfall endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
         }
     }
+
+    private fun semantikk(vurderinger: List<EtableringEgenVirksomhetVurdering>) =
+        vurderinger.somFasetidslinje()
+            .mapValue { Triple(it.fase, it.evaluerVirksomhetVurdering(), it.regelsett) }
+            .komprimer().segmenter().map { it.periode to it.verdi }
 
     private fun lagreVurdering(
         connection: DBConnection,
@@ -250,8 +267,8 @@ class BackfillEtableringVurderinger(
                     KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID,
                     EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV,
                     GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID, FASE, ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER,
-                    JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET, REGELSETT
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -273,6 +290,7 @@ class BackfillEtableringVurderinger(
                 setEnumName(16, vurdering.fase)
                 setBoolean(17, vurdering.erRegistrertINødvendigeOffentligeRegister)
                 setBoolean(18, vurdering.jobberBrukerAktivMedVirksomheten)
+                setEnumName(19, vurdering.regelsett)
             }
         }
     }

@@ -82,9 +82,9 @@ class EtableringEgenVirksomhetSteg(
         }
 
         val evaluering = grunnlag.vurderinger.let {
-            etableringEgenVirksomhetService.beregnOgValider(
+            etableringEgenVirksomhetService.validerLagredeVurderinger(
                 behandlingId = kontekst.behandlingId,
-                nyeVurderinger = it
+                vurderinger = it
             )
         }
 

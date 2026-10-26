@@ -43,7 +43,8 @@ class EtableringEgenVirksomhetLøser(
 
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = gamleVurderinger + beregning.beregnedeVurderinger
+            etableringEgenvirksomhetVurderinger = gamleVurderinger +
+                    beregning.beregnedeVurderinger.filter { it.vurdertIBehandling == behandling.id }
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }

@@ -1,6 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
@@ -16,9 +22,38 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.Instant
 import java.time.ZoneOffset
 
 class TilNyttFormatTest {
+    @Test
+    fun `teller dager likt for gamle migrerte og blandede vurderinger`() {
+        val utvikling = konstruerVurdering {
+            fom = 2 februar 2026
+            tom = 6 februar 2026
+            utviklingsperioder = listOf(2 februar 2026 to (6 februar 2026))
+        }
+        val oppstart = konstruerVurdering {
+            fom = 9 februar 2026
+            tom = 13 februar 2026
+            oppstartsperioder = listOf(9 februar 2026 to (13 februar 2026))
+        }
+        val gammel = listOf(utvikling, oppstart)
+        val migrert = gammel.tilNyttFormat()
+        val blandet = listOf(utvikling) + listOf(oppstart).tilNyttFormat()
+
+        listOf(gammel, migrert, blandet).forEach { vurderinger ->
+            assertThat(vurderinger.brukteDager()).isEqualTo(5 to 5)
+            assertThat(vurderinger.tellDager { it.utviklingsPerioder }).isEqualTo(5)
+            assertThat(vurderinger.tellDager { it.oppstartsPerioder }).isEqualTo(5)
+        }
+        assertThat(migrert).allSatisfy {
+            assertThat(it.utviklingsPerioder).isEmpty()
+            assertThat(it.oppstartsPerioder).isEmpty()
+        }
+        assertValideringUendret(blandet)
+    }
+
     @Test
     fun `splitter oppstartsfaser i to vurderinger`() {
         val gammel = listOf(
@@ -171,6 +206,53 @@ class TilNyttFormatTest {
         InMemoryBistandRepository,
         InMemorySykdomRepository
     )
+
+    private fun assertValideringUendret(gammel: List<EtableringEgenVirksomhetVurdering>) {
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2026)
+        val oppfyltFra = 31 desember 2025
+        InMemorySykdomRepository.lagre(
+            behandling.id, listOf(
+                Sykdomsvurdering(
+                    begrunnelse = "...",
+                    vurderingenGjelderFra = oppfyltFra,
+                    vurderingenGjelderTil = null,
+                    harSkadeSykdomEllerLyte = true,
+                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                    erSkadeSykdomEllerLyteVesentligdel = true,
+                    erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                    yrkesskadeBegrunnelse = null,
+                    diagnose = null,
+                    vurdertIBehandling = behandling.id,
+                    opprettet = Instant.now(),
+                    vurdertAv = Bruker("saks")
+                )
+            )
+        )
+        InMemoryBistandRepository.lagre(
+            behandling.id, listOf(
+                Bistandsvurdering(
+                    begrunnelse = "...",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = true,
+                    erBehovForAnnenOppfølging = false,
+                    overgangBegrunnelse = null,
+                    skalVurdereAapIOvergangTilArbeid = false,
+                    vurdertAv = Bruker("saks"),
+                    fom = oppfyltFra,
+                    tom = null,
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = behandling.id
+                )
+            )
+        )
+
+        val før = service.beregnOgValider(behandling.id, gammel)
+        val etter = service.beregnOgValider(behandling.id, gammel.tilNyttFormat())
+
+        assertThat(før).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+        assertThat(etter).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+    }
 
     private class VurderingBuilder(
         var fom: LocalDate? = 1 januar 2026,

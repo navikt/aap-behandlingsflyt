@@ -7,9 +7,11 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class EtableringEgenVirksomhetGrunnlagResponse(
@@ -49,17 +51,13 @@ data class EtableringEgenVirksomhetVurderingResponse(
             tidslinje: Tidslinje<EtableringEgenVirksomhetVurdering>,
             vurdertAvService: VurdertAvService,
         ): List<EtableringEgenVirksomhetVurderingResponse> {
-            val segmenter = tidslinje.segmenter().toList()
-            return segmenter
-                .mapIndexed { index, segment ->
+            return tidslinje.segmenter()
+                .map { segment ->
                     fraDomene(
                         etableringEgenVirksomhetVurdering = segment.verdi,
                         vurdertAvService = vurdertAvService,
-                        fom = segment.verdi.fom,
-                        tom = if (index == segmenter.size - 1)
-                            segment.verdi.tom
-                        else
-                            segment.tom(),
+                        fom = segment.fom(),
+                        tom = segment.tom().takeUnless { it == Tid.MAKS && segment.verdi.tom == null },
                     )
                 }
         }
@@ -69,38 +67,33 @@ data class EtableringEgenVirksomhetVurderingResponse(
             vurdertAvService: VurdertAvService,
             fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
-        ) = EtableringEgenVirksomhetVurderingResponse(
-            utviklingsPeriode = when {
-                etableringEgenVirksomhetVurdering.fase == EtableringFase.UTVIKLING && tom != null ->
-                    listOf(Periode(fom, tom))
-                else -> emptyList()
-            },
-            oppstartsPeriode = when {
-                etableringEgenVirksomhetVurdering.fase == EtableringFase.OPPSTART && tom != null ->
-                    listOf(Periode(fom, tom))
-                else -> emptyList()
-            },
-            begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
-            virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
-            orgNr = etableringEgenVirksomhetVurdering.orgNr,
-            foreliggerFagligVurdering = etableringEgenVirksomhetVurdering.foreliggerFagligVurdering,
-            virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
-            brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
-            kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
-            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-                definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
-                behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
-                vurdertAv = vurdertAvService.medNavnOgEnhet(
-                    etableringEgenVirksomhetVurdering.vurdertAv,
-                    etableringEgenVirksomhetVurdering.opprettet,
+        ): EtableringEgenVirksomhetVurderingResponse {
+            val legacyVisning = etableringEgenVirksomhetVurdering.copy(fom = fom, tom = tom).somLegacyVisning()
+            return EtableringEgenVirksomhetVurderingResponse(
+                begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
+                virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
+                orgNr = etableringEgenVirksomhetVurdering.orgNr,
+                foreliggerFagligVurdering = etableringEgenVirksomhetVurdering.foreliggerFagligVurdering,
+                virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
+                brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
+                kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
+                utviklingsPeriode = legacyVisning.utviklingsPerioder,
+                oppstartsPeriode = legacyVisning.oppstartsPerioder,
+                vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                    definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
+                    behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
+                    vurdertAv = vurdertAvService.medNavnOgEnhet(
+                        etableringEgenVirksomhetVurdering.vurdertAv,
+                        etableringEgenVirksomhetVurdering.opprettet,
+                    ),
                 ),
-            ),
-            fom = fom,
-            tom = tom,
-            oppfylt = etableringEgenVirksomhetVurdering.evaluerVirksomhetVurdering(),
-            fase = etableringEgenVirksomhetVurdering.fase,
-            erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
-            jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten
-        )
+                fom = fom,
+                tom = tom,
+                oppfylt = etableringEgenVirksomhetVurdering.evaluerVirksomhetVurdering(),
+                fase = etableringEgenVirksomhetVurdering.fase,
+                erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
+                jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten
+            )
+        }
     }
 }

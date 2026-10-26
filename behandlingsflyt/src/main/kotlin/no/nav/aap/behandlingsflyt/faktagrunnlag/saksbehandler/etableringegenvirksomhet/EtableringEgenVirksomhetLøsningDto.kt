@@ -40,45 +40,24 @@ data class EtableringEgenVirksomhetLøsningDto(
         )
 
     fun toEtableringEgenVirksomhetVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): EtableringEgenVirksomhetVurdering {
-        val avklartFase = fase ?: when {
-            oppstartsPerioder?.isNotEmpty() == true -> EtableringFase.OPPSTART
-            utviklingsPerioder?.isNotEmpty() == true -> EtableringFase.UTVIKLING
-            else -> null
-        }
-
-        // Legacy-innsending: gammel frontend kjenner ikke til dette feltet, men oppstart
-        // ble alltid registrert i offentlige register i det gamle flytet.
-        val avklartErRegistrert = erRegistrertINødvendigeOffentligeRegister
-            ?: if (fase == null && avklartFase == EtableringFase.OPPSTART) true else erRegistrertINødvendigeOffentligeRegister
-
-        val avklartAktivJobber = jobberBrukerAktivMedVirksomheten ?: true
-
-        val avklartFom = when (avklartFase){
-            EtableringFase.UTVIKLING -> utviklingsPerioder?.firstOrNull()?.fom ?: this.fom
-            EtableringFase.OPPSTART -> oppstartsPerioder?.firstOrNull()?.fom ?: this.fom
-            null -> this.fom
-        }
-
-        val avklartTom = when (avklartFase){
-            EtableringFase.UTVIKLING -> utviklingsPerioder?.firstOrNull()?.tom ?: this.tom
-            EtableringFase.OPPSTART -> oppstartsPerioder?.firstOrNull()?.tom ?: this.tom
-            null -> this.tom
-        }
-
         return EtableringEgenVirksomhetVurdering(
             begrunnelse = begrunnelse,
             foreliggerFagligVurdering = foreliggerFagligVurdering,
             virksomhetErNy = virksomhetErNy,
             brukerEierVirksomheten = brukerEierVirksomheten,
             kanFøreTilSelvforsørget = kanFøreTilSelvforsørget,
-            fase = avklartFase,
-            erRegistrertINødvendigeOffentligeRegister = avklartErRegistrert,
-            jobberBrukerAktivMedVirksomheten = avklartAktivJobber,
+            fase = fase,
+            utviklingsPerioder = if (fase == null) utviklingsPerioder.orEmpty() else emptyList(),
+            oppstartsPerioder = if (fase == null) oppstartsPerioder.orEmpty() else emptyList(),
+            erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
+            jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,
+            regelsett = if (fase == null && (utviklingsPerioder != null || oppstartsPerioder != null))
+                EtableringRegelsett.LEGACY else EtableringRegelsett.FASEBASERT,
             vurdertAv = bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling,
-            fom = avklartFom,
-            tom = avklartTom,
+            fom = fom,
+            tom = tom,
             virksomhetNavn = virksomhetNavn,
             orgNr = orgNr
         )

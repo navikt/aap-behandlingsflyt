@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -65,7 +65,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val alleVurderinger =
                         etableringEgenVirksomhetGrunnlag?.vurderinger ?:  forrigeGrunnlag.vurderinger
 
-                    val gjeldendeTidslinje = alleVurderinger.gjeldendeVurderinger()
+                    val gjeldendeTidslinje = alleVurderinger.somFasetidslinje()
                     val bruktUtviklingsDager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.UTVIKLING)
                     val bruktOppstartsdager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.OPPSTART)
 

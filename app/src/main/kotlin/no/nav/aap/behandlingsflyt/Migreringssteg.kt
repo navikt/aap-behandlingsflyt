@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.utenPerioder
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -54,29 +55,12 @@ internal fun lagMigreringsplan(
                 vurderingId = vurderingId,
                 opprinneligVurdering = vurdering,
                 oppdaterteVurderinger = oppdaterteVurderinger.flatMap { oppdatertVurdering ->
-                    oppdatertVurdering.uten(overstyrendePerioder)
+                    oppdatertVurdering.utenPerioder(overstyrendePerioder)
                 },
                 skalErstattes = true,
             )
         }
     }
-}
-
-private fun EtableringEgenVirksomhetVurdering.uten(
-    overstyrendePerioder: List<Periode>
-): List<EtableringEgenVirksomhetVurdering> {
-    val periode = Periode(fom, requireNotNull(tom))
-    return overstyrendePerioder
-        .fold(listOf(periode)) { perioder, overstyrendePeriode ->
-            perioder.flatMap { it.uten(overstyrendePeriode) }
-        }
-        .map { gjenværendePeriode ->
-            copy(fom = gjenværendePeriode.fom, tom = gjenværendePeriode.tom)
-        }
-}
-
-private fun Periode.uten(overstyrendePeriode: Periode): List<Periode> {
-    return this.minus(overstyrendePeriode).toList()
 }
 
 internal fun DBConnection.hentVurderingerGruppeId(vurderingId: Long): Long =

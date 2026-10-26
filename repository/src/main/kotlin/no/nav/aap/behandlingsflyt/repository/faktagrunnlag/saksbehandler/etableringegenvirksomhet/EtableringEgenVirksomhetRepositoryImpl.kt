@@ -76,8 +76,8 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
 
         connection.executeBatch(
             """
-            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_VURDERING (BEGRUNNELSE, FORELIGGER_FAGLIG_VURDERING, VIRKSOMHET_ER_NY, BRUKER_EIER_VIRKSOMHET, KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID, EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID, FASE, ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER, JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?, ?, ?, ?, ?)
+            INSERT INTO ETABLERING_EGEN_VIRKSOMHET_VURDERING (BEGRUNNELSE, FORELIGGER_FAGLIG_VURDERING, VIRKSOMHET_ER_NY, BRUKER_EIER_VIRKSOMHET, KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID, EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID, FASE, ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER, JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET, REGELSETT)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?, ?, ?, ?, ?, ?)
         """.trimIndent(), etableringEgenvirksomhetVurderinger
         ) {
             setParams {
@@ -99,6 +99,7 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                 setEnumName(16, it.fase)
                 setBoolean(17, it.erRegistrertINødvendigeOffentligeRegister)
                 setBoolean(18, it.jobberBrukerAktivMedVirksomheten)
+                setEnumName(19, it.regelsett)
             }
         }
 
@@ -168,7 +169,8 @@ class EtableringEgenVirksomhetRepositoryImpl(private val connection: DBConnectio
                     tom = row.getLocalDateOrNull("GJELDER_TIL"),
                     fase = row.getEnumOrNull("FASE"),
                     erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
-                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET")
+                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET"),
+                    regelsett = row.getEnum("REGELSETT"),
                 )
             }
         }

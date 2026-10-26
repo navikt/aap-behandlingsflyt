@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvir
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -21,7 +20,7 @@ fun beregnTomForSistePeriode(
 
     val maksHverdager = fase.maksHverdager
     val brukteHverdager = vurderinger
-        .gjeldendeVurderinger()
+        .somFasetidslinje()
         .segmenter()
         .filter {
             it.verdi.fase == fase &&

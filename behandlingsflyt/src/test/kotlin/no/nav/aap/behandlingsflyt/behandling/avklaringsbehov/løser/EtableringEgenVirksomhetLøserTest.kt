@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringRegelsett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -51,15 +53,10 @@ class EtableringEgenVirksomhetLøserTest {
         erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
         tom: LocalDate? = null,
     ): EtableringEgenVirksomhetLøsningDto {
-        val beregnetTom = tom ?: when (fase) {
-            EtableringFase.UTVIKLING -> fom.plusDays(EtableringFase.UTVIKLING.maksHverdager.toLong())
-            EtableringFase.OPPSTART -> fom.plusDays(EtableringFase.OPPSTART.maksHverdager.toLong())
-        }
-
         return EtableringEgenVirksomhetLøsningDto(
             begrunnelse = "meee",
             fom = fom,
-            tom = beregnetTom,
+            tom = tom,
             virksomhetNavn = "peppas peppers",
             orgNr = null,
             foreliggerFagligVurdering = true,
@@ -393,7 +390,8 @@ class EtableringEgenVirksomhetLøserTest {
         val segmenter = vurderinger.gjeldendeVurderinger().segmenter().toList()
         val forventetTom = Hverdager(EtableringFase.UTVIKLING.maksHverdager).fraOgMed(førsteFom)
 
-        assertThat(vurderinger).allSatisfy { assertThat(it.tom).isEqualTo(forventetTom) }
+        assertThat(vurderinger.single { it.fom == førsteFom }.tom).isEqualTo(andreFom.minusDays(1))
+        assertThat(vurderinger.single { it.fom == andreFom }.tom).isEqualTo(forventetTom)
         assertThat(segmenter.map { it.periode }).containsExactly(
             Periode(førsteFom, andreFom.minusDays(1)),
             Periode(andreFom, forventetTom),
@@ -478,8 +476,7 @@ class EtableringEgenVirksomhetLøserTest {
         oppfyllSykdomOgBistand(behandling)
 
         val fom = sak.rettighetsperiode.fom.plusDays(1)
-        val tom = fom.plusMonths(3)
-        val forventetTom = Hverdager(EtableringFase.OPPSTART.maksHverdager).fraOgMed(fom)
+        val tom = fom.plusDays(4)
 
         val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
@@ -510,11 +507,13 @@ class EtableringEgenVirksomhetLøserTest {
             ?.single()
 
         assertThat(lagretVurdering).isNotNull
-        assertThat(lagretVurdering!!.fase).isEqualTo(EtableringFase.OPPSTART)
-        assertThat(lagretVurdering.fom).isEqualTo(fom)
-        assertThat(lagretVurdering.tom).isEqualTo(forventetTom)
-        // Legacy-regel: oppstart ble alltid ansett som registrert i offentlige register i gammelt flyt
-        assertThat(lagretVurdering.erRegistrertINødvendigeOffentligeRegister).isTrue()
+        val fasevurdering = listOf(requireNotNull(lagretVurdering)).tilNyttFormat().single()
+        assertThat(fasevurdering.fase).isEqualTo(EtableringFase.OPPSTART)
+        assertThat(fasevurdering.fom).isEqualTo(fom)
+        assertThat(fasevurdering.tom).isEqualTo(tom)
+        assertThat(fasevurdering.regelsett).isEqualTo(EtableringRegelsett.LEGACY)
+        assertThat(fasevurdering.erRegistrertINødvendigeOffentligeRegister).isNull()
+        assertThat(fasevurdering.jobberBrukerAktivMedVirksomheten).isNull()
     }
 
 }

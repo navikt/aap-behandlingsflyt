@@ -29,22 +29,23 @@ data class EtableringEgenVirksomhetVurdering(
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
+    val regelsett: EtableringRegelsett = EtableringRegelsett.LEGACY,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
-        return when (fase) {
-            EtableringFase.UTVIKLING -> jobberBrukerAktivMedVirksomheten == true && virksomhetErNy == true && kanFøreTilSelvforsørget == true && foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
-                EierVirksomhet.EIER_MINST_50_PROSENT,
-                EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-            )
-
-            EtableringFase.OPPSTART -> jobberBrukerAktivMedVirksomheten == true && erRegistrertINødvendigeOffentligeRegister == true && virksomhetErNy == true && kanFøreTilSelvforsørget == true && foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
-                EierVirksomhet.EIER_MINST_50_PROSENT,
-                EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-            )
-
-            null -> false
+        val grunnvilkårOppfylt = virksomhetErNy == true && kanFøreTilSelvforsørget == true &&
+                foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
+            EierVirksomhet.EIER_MINST_50_PROSENT,
+            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+        )
+        return when (regelsett) {
+            EtableringRegelsett.LEGACY -> grunnvilkårOppfylt
+            EtableringRegelsett.FASEBASERT -> grunnvilkårOppfylt &&
+                    jobberBrukerAktivMedVirksomheten == true && when (fase) {
+                EtableringFase.UTVIKLING -> true
+                EtableringFase.OPPSTART -> erRegistrertINødvendigeOffentligeRegister == true
+                null -> false
+            }
         }
-
     }
 }
 
@@ -79,6 +80,9 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
     }
 }
 
+fun EtableringEgenVirksomhetVurdering.somLegacyVisning(): EtableringEgenVirksomhetVurdering =
+    if (fase != null) tilGammeltFormat() else this
+
 fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomhetVurdering {
     return this.copy(
         oppstartsPerioder = if (this.fase == EtableringFase.OPPSTART) listOf(
@@ -99,7 +103,7 @@ fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomh
 fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
     selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
 ): Int {
-    return this.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+    return this.map { it.somLegacyVisning() }.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
         .sumOf { it.periode.antallHverdager().asInt }
 }
 
@@ -113,6 +117,11 @@ enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,
     EIER_MINST_50_PROSENT_MED_FLER,
     NEI
+}
+
+enum class EtableringRegelsett {
+    LEGACY,
+    FASEBASERT,
 }
 
 enum class EtableringFase(val maksHverdager: Int) {
@@ -131,10 +140,13 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.virksomhetErNy == b.virksomhetErNy &&
                 a.brukerEierVirksomheten == b.brukerEierVirksomheten &&
                 a.kanFøreTilSelvforsørget == b.kanFøreTilSelvforsørget &&
+                a.utviklingsPerioder == b.utviklingsPerioder &&
+                a.oppstartsPerioder == b.oppstartsPerioder &&
                 a.fom == b.fom &&
                 a.tom == b.tom &&
                 a.fase == b.fase &&
                 a.erRegistrertINødvendigeOffentligeRegister == b.erRegistrertINødvendigeOffentligeRegister &&
-                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten
+                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten &&
+                a.regelsett == b.regelsett
     }
 }
