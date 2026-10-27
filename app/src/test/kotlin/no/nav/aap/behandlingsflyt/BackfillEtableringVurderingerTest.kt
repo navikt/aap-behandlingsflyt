@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -39,6 +40,8 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -216,6 +219,54 @@ class BackfillEtableringVurderingerTest {
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("Varighet")
             .hasMessageContaining(behandlingId.id.toString())
+
+        assertThat(hentVurderinger(behandlingId)).containsExactly(legacy)
+        assertThat(hentVurderingIder(behandlingId)).isEqualTo(iderFør)
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "NEW.virksomhet_er_ny = false;",
+            "NEW.gjelder_fra = NEW.gjelder_fra + 7; NEW.gjelder_til = NEW.gjelder_til + 7;",
+        ]
+    )
+    fun `endret utfall eller periode ruller tilbake med samme varighet og valideringsstatus`(endring: String) {
+        val behandlingId = opprettBehandling()
+        val legacy = vurdering(
+            behandlingId,
+            fom = 1 januar 2025,
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 10 januar 2025)),
+            virksomhetErNy = true,
+        )
+        lagre(behandlingId, legacy)
+        val iderFør = hentVurderingIder(behandlingId)
+
+        assertThatThrownBy {
+            dataSource.transaction { connection ->
+                connection.execute(
+                    """
+                    CREATE FUNCTION endre_etableringsutfall() RETURNS trigger AS
+                    'BEGIN
+                        $endring
+                        RETURN NEW;
+                    END;' LANGUAGE plpgsql
+                    """.trimIndent()
+                )
+                connection.execute(
+                    """
+                    CREATE TRIGGER endre_etableringsutfall
+                    BEFORE INSERT ON etablering_egen_virksomhet_vurdering
+                    FOR EACH ROW EXECUTE FUNCTION endre_etableringsutfall()
+                    """.trimIndent()
+                )
+                BackfillEtableringVurderinger(dataSource, dryRun = false)
+                    .migrerBehandling(connection, behandlingId)
+                connection.execute("DROP TRIGGER endre_etableringsutfall ON etablering_egen_virksomhet_vurdering")
+                connection.execute("DROP FUNCTION endre_etableringsutfall()")
+            }
+        }.isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("Vurderingsutfall")
 
         assertThat(hentVurderinger(behandlingId)).containsExactly(legacy)
         assertThat(hentVurderingIder(behandlingId)).isEqualTo(iderFør)
@@ -808,6 +859,7 @@ class BackfillEtableringVurderingerTest {
         fase = fase,
         erRegistrertINødvendigeOffentligeRegister = null,
         jobberBrukerAktivMedVirksomheten = null,
+        versjon = EtableringVersjon.V0,
     )
 
     private fun opprettBehandling(): BehandlingId = dataSource.transaction { connection ->

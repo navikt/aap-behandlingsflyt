@@ -6,6 +6,7 @@ import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -155,7 +156,8 @@ class EtableringEgenVirksomhetLøserTest {
                     ),
                     fase = null,
                     erRegistrertINødvendigeOffentligeRegister = null,
-                    jobberBrukerAktivMedVirksomheten = null
+                    jobberBrukerAktivMedVirksomheten = null,
+                    versjon = EtableringVersjon.V0,
                 )
             )
         )
@@ -182,6 +184,7 @@ class EtableringEgenVirksomhetLøserTest {
         assertThat(lagredeVurderinger).hasSize(2)
         assertThat(gjeldendeVurdering.utviklingsPerioder).isEqualTo(nyeUtviklingsperioder)
         assertThat(gjeldendeVurdering.oppstartsPerioder).isEqualTo(nyeOppstartsperioder)
+        assertThat(gjeldendeVurdering.versjon).isEqualTo(EtableringVersjon.V0)
     }
 
     @Test
