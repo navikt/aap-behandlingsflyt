@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
@@ -44,7 +45,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                inntekterINorgeRegisterGrunnlag = emptySet()
+                inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)),
@@ -91,7 +92,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                inntekterINorgeRegisterGrunnlag = emptySet()
+                inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt,
@@ -139,7 +140,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                inntekterINorgeRegisterGrunnlag = emptySet()
+                inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt, listOf(
@@ -263,7 +264,7 @@ class MedlemskapLovvalgVurderingServiceTest {
             medlemskapGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
             inntekterINorgeGrunnlag = emptyList(),
             arbeiderINorgeGrunnlag = emptyList(),
-            inntekterINorgeRegisterGrunnlag = emptySet()
+            inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
         ),
         personopplysning = Personopplysning(
             fødselsdato = Fødselsdato(LocalDate.of(1990, 1, 1)),
