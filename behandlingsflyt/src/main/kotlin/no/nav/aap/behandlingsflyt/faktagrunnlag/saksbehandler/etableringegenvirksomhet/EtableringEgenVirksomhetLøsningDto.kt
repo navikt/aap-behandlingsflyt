@@ -47,6 +47,8 @@ data class EtableringEgenVirksomhetLøsningDto(
             virksomhetErNy = virksomhetErNy,
             brukerEierVirksomheten = brukerEierVirksomheten,
             kanFøreTilSelvforsørget = kanFøreTilSelvforsørget,
+            utviklingsPerioder = utviklingsPerioder.orEmpty(),
+            oppstartsPerioder = oppstartsPerioder.orEmpty(),
             fase = fase,
             erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
             jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,
