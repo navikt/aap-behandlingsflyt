@@ -30,6 +30,7 @@ data class EtableringEgenVirksomhetVurdering(
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
+    val versjon: EtableringVersjon,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
         return when (fase) {
@@ -80,6 +81,9 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
     }
 }
 
+fun EtableringEgenVirksomhetVurdering.somLegacyVisning(): EtableringEgenVirksomhetVurdering =
+    if (fase != null) tilGammeltFormat() else this
+
 fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomhetVurdering {
     return this.copy(
         oppstartsPerioder = if (this.fase == EtableringFase.OPPSTART) listOf(
@@ -110,7 +114,7 @@ fun Tidslinje<EtableringEgenVirksomhetVurdering>.perioderForFase(fase: Etablerin
 fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
     selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
 ): Int {
-    return this.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+    return this.map { it.somLegacyVisning() }.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
         .sumOf { it.periode.antallHverdager().asInt }
 }
 
@@ -124,6 +128,12 @@ enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,
     EIER_MINST_50_PROSENT_MED_FLER,
     NEI
+}
+
+enum class EtableringVersjon {
+    /** Grunnvilkårene alene avgjør utfallet, også etter oppdeling i faser. */
+    V0,
+    V1
 }
 
 enum class EtableringFase(val maksHverdager: Int) {
@@ -146,6 +156,7 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.tom == b.tom &&
                 a.fase == b.fase &&
                 a.erRegistrertINødvendigeOffentligeRegister == b.erRegistrertINødvendigeOffentligeRegister &&
-                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten
+                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten &&
+                a.versjon == b.versjon
     }
 }

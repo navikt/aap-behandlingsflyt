@@ -20,6 +20,34 @@ import java.time.ZoneOffset
 
 class TilNyttFormatTest {
     @Test
+    fun `teller dager likt for gamle migrerte og blandede vurderinger`() {
+        val utvikling = konstruerVurdering {
+            fom = 2 februar 2026
+            tom = 6 februar 2026
+            utviklingsperioder = listOf(2 februar 2026 to (6 februar 2026))
+        }
+        val oppstart = konstruerVurdering {
+            fom = 9 februar 2026
+            tom = 13 februar 2026
+            oppstartsperioder = listOf(9 februar 2026 to (13 februar 2026))
+        }
+        val gammel = listOf(utvikling, oppstart)
+        val migrert = gammel.tilNyttFormat()
+        val blandet = listOf(utvikling) + listOf(oppstart).tilNyttFormat()
+
+        listOf(gammel, migrert, blandet).forEach { vurderinger ->
+            assertThat(vurderinger.brukteDager()).isEqualTo(5 to 5)
+            assertThat(vurderinger.tellDager { it.utviklingsPerioder }).isEqualTo(5)
+            assertThat(vurderinger.tellDager { it.oppstartsPerioder }).isEqualTo(5)
+        }
+        assertThat(migrert).allSatisfy {
+            assertThat(it.utviklingsPerioder).isEmpty()
+            assertThat(it.oppstartsPerioder).isEmpty()
+        }
+        assertValideringUendret(blandet)
+    }
+
+    @Test
     fun `splitter oppstartsfaser i to vurderinger`() {
         val gammel = listOf(
             konstruerVurdering {
@@ -172,6 +200,53 @@ class TilNyttFormatTest {
         InMemorySykdomRepository
     )
 
+    private fun assertValideringUendret(gammel: List<EtableringEgenVirksomhetVurdering>) {
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 januar 2026)
+        val oppfyltFra = 31 desember 2025
+        InMemorySykdomRepository.lagre(
+            behandling.id, listOf(
+                Sykdomsvurdering(
+                    begrunnelse = "...",
+                    vurderingenGjelderFra = oppfyltFra,
+                    vurderingenGjelderTil = null,
+                    harSkadeSykdomEllerLyte = true,
+                    harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                    erSkadeSykdomEllerLyteVesentligdel = true,
+                    erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                    yrkesskadeBegrunnelse = null,
+                    diagnose = null,
+                    vurdertIBehandling = behandling.id,
+                    opprettet = Instant.now(),
+                    vurdertAv = Bruker("saks")
+                )
+            )
+        )
+        InMemoryBistandRepository.lagre(
+            behandling.id, listOf(
+                Bistandsvurdering(
+                    begrunnelse = "...",
+                    erBehovForAktivBehandling = true,
+                    erBehovForArbeidsrettetTiltak = true,
+                    erBehovForAnnenOppfølging = false,
+                    overgangBegrunnelse = null,
+                    skalVurdereAapIOvergangTilArbeid = false,
+                    vurdertAv = Bruker("saks"),
+                    fom = oppfyltFra,
+                    tom = null,
+                    opprettet = Instant.now(),
+                    vurdertIBehandling = behandling.id
+                )
+            )
+        )
+
+        val før = service.erVurderingerGyldig(behandling.id, gammel)
+        val etter = service.erVurderingerGyldig(behandling.id, gammel.tilNyttFormat())
+
+        assertThat(før).isEqualTo(VirksomhetEtableringGyldig)
+        assertThat(etter).isEqualTo(før)
+    }
+
     private class VurderingBuilder(
         var fom: LocalDate? = 1 januar 2026,
         var tom: LocalDate? = 1 februar 2026,
@@ -202,7 +277,8 @@ class TilNyttFormatTest {
             tom = null,
             fase = null,
             erRegistrertINødvendigeOffentligeRegister = null,
-            jobberBrukerAktivMedVirksomheten = null
+            jobberBrukerAktivMedVirksomheten = null,
+            versjon = EtableringVersjon.V0,
         ).run {
             copy(
                 fom = builder.fom ?: this.fom,

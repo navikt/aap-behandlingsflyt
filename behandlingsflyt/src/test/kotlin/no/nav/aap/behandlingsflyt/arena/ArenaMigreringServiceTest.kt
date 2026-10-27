@@ -61,6 +61,12 @@ class ArenaMigreringServiceTest {
     }
 
     @Test
+    fun `hentBeregningstidspunkt returnerer svaret fra Arena`() {
+        val respons = service.hentBeregningstidspunkt(sakId)
+        assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentBeregningstidspunkt("2018-123456").tilDomene())
+    }
+
+    @Test
     fun `hentVedtaksperiode returnerer svaret fra Arena`() {
         val respons = service.hentVedtaksperiode(sakId)
         assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentVedtaksperiode("2018-123456").tilDomene())
