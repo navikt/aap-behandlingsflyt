@@ -195,7 +195,7 @@ class BrevUtlederService(
                         if (harUføretrygd && !harOrdinærAAP) {
                             brevBehovVurderesForUføretrygd(behandling)
                         } else if (harUføretrygd) {
-                            brevBehovVurderesForUføretrygdV2(behandling, false)
+                            brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = false)
                         } else {
                             brevBehovInnvilgelse(behandling)
                         }
@@ -234,7 +234,7 @@ class BrevUtlederService(
                 }
 
                 if (harUføretrygd) {
-                    return brevBehovVurderesForUføretrygdV2(behandling, true)
+                    return brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = true)
                 }
 
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
