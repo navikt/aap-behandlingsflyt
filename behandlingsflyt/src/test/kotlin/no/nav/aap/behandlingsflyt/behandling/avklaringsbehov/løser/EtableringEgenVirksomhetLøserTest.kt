@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -33,6 +34,38 @@ import java.time.Instant
 import java.time.LocalDate
 
 class EtableringEgenVirksomhetLøserTest {
+
+    @Test
+    fun `legacy innsending bevarer alle utviklingsperioder og oppstartsperioder`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val fom = LocalDate.now().plusDays(1)
+        val utvikling = listOf(
+            Periode(fom, fom.plusDays(4)),
+            Periode(fom.plusDays(14), fom.plusDays(18)),
+        )
+        val oppstart = listOf(Periode(fom.plusDays(28), fom.plusDays(32)))
+        val input = oppfyltVurdering(fom, tom = oppstart.single().tom).copy(
+            fase = null,
+            utviklingsPerioder = utvikling,
+            oppstartsPerioder = oppstart,
+        )
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = behandling },
+            EtableringEgenVirksomhetLøsning(listOf(input)),
+        )
+
+        val lagret = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).vurderinger
+        val faser = lagret.tilNyttFormat()
+        assertThat(faser.map { it.fase }).containsExactlyInAnyOrder(
+            EtableringFase.UTVIKLING, EtableringFase.UTVIKLING, EtableringFase.OPPSTART,
+        )
+        assertThat(faser.map { Periode(it.fom, requireNotNull(it.tom)) })
+            .containsExactlyInAnyOrderElementsOf(utvikling + oppstart)
+    }
 
     private val løser = EtableringEgenVirksomhetLøser(
         InMemoryEtableringEgenVirksomRepository,
