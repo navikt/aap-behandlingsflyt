@@ -70,6 +70,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_M
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
@@ -191,9 +192,10 @@ class BrevUtlederService(
                         val harUføretrygd =
                             perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
 
+                        // Nytt brev takler at bruker kan ha en periode med ordinær aap før overgang jmf 11-18
                         if (harUføretrygd && !harOrdinærAAP) {
                             brevBehovVurderesForUføretrygd(behandling)
-                        } else if (harUføretrygd) {
+                        } else if (harUføretrygd && unleashGateway.isEnabled(BehandlingsflytFeature.OvergangUfoereBrevbygger)) {
                             brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = false)
                         } else {
                             brevBehovInnvilgelse(behandling)
@@ -265,8 +267,7 @@ class BrevUtlederService(
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
                     )
                 ) {
-                    // TODO inn bak en feature-toggle
-                    if (!Miljø.erProd()) {
+                    if (unleashGateway.isEnabled(BehandlingsflytFeature.OvergangUfoereBrevbygger)) {
                         return brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = true)
                     } else {
                         return brevBehovVurderesForUføretrygd(behandling)

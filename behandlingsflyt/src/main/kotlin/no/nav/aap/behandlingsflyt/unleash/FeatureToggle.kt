@@ -50,7 +50,8 @@ enum class BehandlingsflytFeature(
     NySoknadTilApiIntern,
     SammenhengendeInstitusjonsopphold,
     DatadelingBehandlingVisning,
-    Helseinstitusjon1Manedsregel
+    Helseinstitusjon1Manedsregel,
+    OvergangUfoereBrevbygger
     ;
 
     override fun key(): String = name
