@@ -25,6 +25,7 @@ class TilNyttFormatTest {
             utviklingsperioder = listOf((5 januar 2026) to (9 januar 2026))
             oppstartsperioder = listOf((12 januar 2026) to (16 januar 2026))
         }
+        assertThat(historisk.versjon).isEqualTo(EtableringVersjon.V0)
         assertThat(historisk.jobberBrukerAktivMedVirksomheten).isNull()
         assertThat(historisk.erRegistrertINødvendigeOffentligeRegister).isNull()
 
@@ -33,6 +34,7 @@ class TilNyttFormatTest {
         assertThat(konverterte.map { it.fase })
             .containsExactly(EtableringFase.UTVIKLING, EtableringFase.OPPSTART)
         assertThat(konverterte).allSatisfy {
+            assertThat(it.versjon).isEqualTo(EtableringVersjon.V0)
             assertThat(it.jobberBrukerAktivMedVirksomheten).isNull()
             assertThat(it.erRegistrertINødvendigeOffentligeRegister).isNull()
         }
@@ -223,7 +225,8 @@ class TilNyttFormatTest {
             tom = null,
             fase = null,
             erRegistrertINødvendigeOffentligeRegister = null,
-            jobberBrukerAktivMedVirksomheten = null
+            jobberBrukerAktivMedVirksomheten = null,
+            versjon = EtableringVersjon.V0,
         ).run {
             copy(
                 fom = builder.fom ?: this.fom,
