@@ -25,10 +25,13 @@ class TilNyttFormatTest {
             utviklingsperioder = listOf((5 januar 2026) to (9 januar 2026))
             oppstartsperioder = listOf((12 januar 2026) to (16 januar 2026))
         }
+        assertThat(historisk.jobberBrukerAktivMedVirksomheten).isNull()
+        assertThat(historisk.erRegistrertINødvendigeOffentligeRegister).isNull()
 
         val konverterte = listOf(historisk).tilNyttFormat()
 
-        assertThat(konverterte).hasSize(2)
+        assertThat(konverterte.map { it.fase })
+            .containsExactly(EtableringFase.UTVIKLING, EtableringFase.OPPSTART)
         assertThat(konverterte).allSatisfy {
             assertThat(it.jobberBrukerAktivMedVirksomheten).isNull()
             assertThat(it.erRegistrertINødvendigeOffentligeRegister).isNull()
