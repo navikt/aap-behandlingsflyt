@@ -40,30 +40,6 @@ data class EtableringEgenVirksomhetLøsningDto(
         )
 
     fun toEtableringEgenVirksomhetVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): EtableringEgenVirksomhetVurdering {
-        val avklartFase = fase ?: when {
-            oppstartsPerioder?.isNotEmpty() == true -> EtableringFase.OPPSTART
-            utviklingsPerioder?.isNotEmpty() == true -> EtableringFase.UTVIKLING
-            else -> null
-        }
-
-        // Legacy-innsending: gammel frontend kjenner ikke til dette feltet, men oppstart
-        // ble alltid registrert i offentlige register i det gamle flytet.
-        val avklartErRegistrert = erRegistrertINødvendigeOffentligeRegister
-            ?: if (fase == null && avklartFase == EtableringFase.OPPSTART) true else erRegistrertINødvendigeOffentligeRegister
-
-        val avklartAktivJobber = jobberBrukerAktivMedVirksomheten ?: true
-
-        val avklartFom = when (avklartFase){
-            EtableringFase.UTVIKLING -> utviklingsPerioder?.firstOrNull()?.fom ?: this.fom
-            EtableringFase.OPPSTART -> oppstartsPerioder?.firstOrNull()?.fom ?: this.fom
-            null -> this.fom
-        }
-
-        val avklartTom = when (avklartFase){
-            EtableringFase.UTVIKLING -> utviklingsPerioder?.firstOrNull()?.tom ?: this.tom
-            EtableringFase.OPPSTART -> oppstartsPerioder?.firstOrNull()?.tom ?: this.tom
-            null -> this.tom
-        }
 
         return EtableringEgenVirksomhetVurdering(
             begrunnelse = begrunnelse,
@@ -71,16 +47,18 @@ data class EtableringEgenVirksomhetLøsningDto(
             virksomhetErNy = virksomhetErNy,
             brukerEierVirksomheten = brukerEierVirksomheten,
             kanFøreTilSelvforsørget = kanFøreTilSelvforsørget,
-            fase = avklartFase,
-            erRegistrertINødvendigeOffentligeRegister = avklartErRegistrert,
-            jobberBrukerAktivMedVirksomheten = avklartAktivJobber,
+            fase = fase,
+            erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
+            jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,
             vurdertAv = bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling,
-            fom = avklartFom,
-            tom = avklartTom,
+            fom = fom,
+            tom = tom,
             virksomhetNavn = virksomhetNavn,
-            orgNr = orgNr
+            orgNr = orgNr,
+            versjon = if (fase == null && (utviklingsPerioder != null || oppstartsPerioder != null))
+                EtableringVersjon.V0 else EtableringVersjon.V1,
         )
     }
 

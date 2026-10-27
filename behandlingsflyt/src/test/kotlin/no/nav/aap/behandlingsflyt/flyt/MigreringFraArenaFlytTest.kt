@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
+import no.nav.aap.behandlingsflyt.arena.ArenaBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringsdataRepository
 import no.nav.aap.behandlingsflyt.arena.ArenaOppholdskrav
 import no.nav.aap.behandlingsflyt.arena.ArenaVedtaksperiode
@@ -9,6 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKravLøsningDto
@@ -303,6 +306,54 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
             }
     }
 
+    @Test
+    fun `skal automatisk legge inn beregningstidspunkt fra Arena i migreringsbehandlingen`() {
+        unleash = MigreringFraArenaMedAutomatiskBeregningstidspunktFlytTestUnleash::class
+
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+        val beregningstidspunktFraArena = FakeArenaOppslagGateway()
+            .hentBeregningstidspunkt("2016-123456").beregningstidspunkt
+
+        migreringsbehandling
+            .løsAvklaringsBehov(
+                VurderKravLøsning(
+                    kravVurderinger = setOf(
+                        MigrertKravLøsningDto(
+                            begrunnelse = "en begrunnelse",
+                            virkningstidspunktArena = startDato.minusMonths(5),
+                            muligRettFra = startDato,
+                            arenaSaksnummer = "2016-123456",
+                            rettighetstype = MigrertRettighetstype.ORDINÆR,
+                            resterendeKvoteOrdinær = 300,
+                        )
+                    )
+                )
+            )
+            .løsLovvalg(startDato, medlem = true)
+            .løsSykdom(startDato, erOppfylt = true)
+            .løsBistand(startDato, erOppfylt = true)
+            .løsRefusjonskrav()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .medKontekst {
+                val vurdering = repositoryProvider.provide<BeregningVurderingRepository>()
+                    .hentHvisEksisterer(behandling.id)!!.tidspunktVurdering!!
+                assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+                assertThat(vurdering.nedsattArbeidsevneEllerStudieevneDato).isEqualTo(beregningstidspunktFraArena)
+                assertThat(vurdering.årsak).isEqualTo(ÅrsakBeregningstidspunkt.ANNET)
+                assertThat(vurdering.begrunnelse).isEqualTo("Migrert fra Arena")
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .doesNotContain(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+
+                val migreringsdata = repositoryProvider.provide<ArenaMigreringsdataRepository>()
+                    .hentAktivHvisEksisterer(behandlingId = behandling.id, steg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT)
+                assertThat(migreringsdata).isNotNull
+                assertThat(DefaultJsonMapper.fromJson<ArenaBeregningstidspunkt>(migreringsdata!!.data!!).beregningstidspunkt)
+                    .isEqualTo(beregningstidspunktFraArena)
+            }
+    }
+
     private fun migrerFraArena(
         person: TestPerson = TestPersoner.STANDARD_PERSON(),
         mottattTidspunkt: LocalDateTime = LocalDateTime.now(clock),
@@ -358,6 +409,12 @@ object MigreringFraArenaMedAutomatiskOppholdskravFlytTestUnleash : FakeUnleashBa
 object MigreringFraArenaMedAutomatiskVedtakslengdeFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.MigrererVedtakslengdeFraArenaAutomatisk,
+    )
+)
+
+object MigreringFraArenaMedAutomatiskBeregningstidspunktFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.MigrererBeregningstidspunktFraArenaAutomatisk,
     )
 )
 

@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
@@ -197,6 +199,19 @@ object ArenaMigreringMapper {
             navKontor = null,
             vurdertAv = ARENA_MIGRERING_BRUKER,
             opprettetTid = LocalDateTime.now()
+        )
+    }
+
+    fun mapBeregningstidspunktVurdering(fraArena: ArenaBeregningstidspunkt): BeregningstidspunktVurdering {
+        return BeregningstidspunktVurdering(
+            begrunnelse = "Migrert fra Arena",
+            nedsattArbeidsevneEllerStudieevneDato = fraArena.beregningstidspunkt,
+            ytterligereNedsattBegrunnelse = null,
+            ytterligereNedsattArbeidsevneDato = null,
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            vurdertTidspunkt = LocalDateTime.now(),
+            årsak = ÅrsakBeregningstidspunkt.ANNET,
+            ytterligereNedsattÅrsak = null,
         )
     }
 
