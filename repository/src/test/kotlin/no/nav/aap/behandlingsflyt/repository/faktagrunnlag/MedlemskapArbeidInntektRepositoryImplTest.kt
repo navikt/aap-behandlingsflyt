@@ -267,9 +267,9 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             )
             
             val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
-            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag).hasSize(1)
-            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.first().relevantDato).isEqualTo(forventetStartdato)
-            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
+            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag?.inntekterForKrav).hasSize(1)
+            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.inntekterForKrav.first().relevantDato).isEqualTo(forventetStartdato)
+            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.inntekterForKrav.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
 
         }
     }
