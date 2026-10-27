@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -219,9 +220,6 @@ class BrevUtlederService(
 
             TypeBehandling.Revurdering -> {
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
-                val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-                val harUføretrygd =
-                    perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
                 if (resultat == Resultat.AVBRUTT) {
                     return null
                 }
@@ -238,10 +236,6 @@ class BrevUtlederService(
 
                 if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23SjetteLedd
-                }
-
-                if (harUføretrygd) {
-                    return brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = true)
                 }
 
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
@@ -280,7 +274,12 @@ class BrevUtlederService(
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
                     )
                 ) {
-                    return brevBehovVurderesForUføretrygd(behandling)
+                    // TODO inn bak en feature-toggle
+                    if (!Miljø.erProd()) {
+                        return brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = true)
+                    } else {
+                        return brevBehovVurderesForUføretrygd(behandling)
+                    }
                 }
                 if (harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
                     forrigeBehandlingId != null &&
@@ -966,7 +965,7 @@ class BrevUtlederService(
         }
 
         if (Miljø.erDev()) {
-            
+
             log.info(
                 "TP-overlapp for behandling {}: harOverlapp={}, underveisperioder={}, tpPerioder={}",
                 behandlingId,
