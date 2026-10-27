@@ -289,6 +289,7 @@ class TilNyttFormatTest {
             fase = null,
             erRegistrertINødvendigeOffentligeRegister = null,
             jobberBrukerAktivMedVirksomheten = null,
+            versjon = EtableringVersjon.V0,
         ).run {
             copy(
                 fom = builder.fom ?: this.fom,

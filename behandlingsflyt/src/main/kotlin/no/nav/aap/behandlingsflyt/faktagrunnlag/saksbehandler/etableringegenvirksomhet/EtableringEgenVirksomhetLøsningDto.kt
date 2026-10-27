@@ -49,6 +49,7 @@ data class EtableringEgenVirksomhetLøsningDto(
             orgNr = orgNr,
             fase = fase,
             erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
-            jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten
+            jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,
+            versjon = EtableringVersjon.V0,
         )
 }

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.test.FakeAnsattInfoGateway
@@ -46,6 +47,7 @@ class EtableringEgenVirksomhetVurderingResponseTest {
                 fase = null,
                 erRegistrertINødvendigeOffentligeRegister = null,
                 jobberBrukerAktivMedVirksomheten = null,
+                versjon = EtableringVersjon.V0,
             )
             val migrert = listOf(gammel).tilNyttFormat().single()
             val forventet = EtableringEgenVirksomhetVurderingResponse.fraDomene(gammel, vurdertAvService)
