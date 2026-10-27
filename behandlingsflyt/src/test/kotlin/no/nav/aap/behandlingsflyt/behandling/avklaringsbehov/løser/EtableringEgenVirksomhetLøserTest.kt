@@ -34,6 +34,39 @@ import java.time.LocalDate
 
 class EtableringEgenVirksomhetLøserTest {
 
+    @Test
+    fun `utvikling etterfulgt av oppstart trenger ingen kunstig avslagsperiode`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val utviklingFom = LocalDate.now().plusDays(1)
+        val oppstartFom = utviklingFom.plusDays(14)
+        val input = listOf(
+            oppfyltVurdering(utviklingFom).copy(tom = null),
+            oppfyltVurdering(
+                oppstartFom,
+                fase = EtableringFase.OPPSTART,
+                erRegistrertINødvendigeOffentligeRegister = true,
+            ).copy(tom = null),
+        )
+
+        assertDoesNotThrow {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                EtableringEgenVirksomhetLøsning(input),
+            )
+        }
+
+        val segmenter = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).gjeldendeVurderingerSomTidslinje().segmenter().toList()
+        assertThat(segmenter.map { it.verdi.fase })
+            .containsExactly(EtableringFase.UTVIKLING, EtableringFase.OPPSTART)
+        assertThat(segmenter.first().periode)
+            .isEqualTo(Periode(utviklingFom, oppstartFom.minusDays(1)))
+        assertThat(segmenter.last().periode.antallHverdager().asInt)
+            .isEqualTo(EtableringFase.OPPSTART.maksHverdager)
+    }
+
     private val løser = EtableringEgenVirksomhetLøser(
         InMemoryEtableringEgenVirksomRepository,
         InMemoryBehandlingRepository,
