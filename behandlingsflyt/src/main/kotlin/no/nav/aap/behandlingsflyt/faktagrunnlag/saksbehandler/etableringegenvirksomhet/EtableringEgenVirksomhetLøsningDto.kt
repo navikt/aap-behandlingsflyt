@@ -74,6 +74,7 @@ data class EtableringEgenVirksomhetLøsningDto(
             fase = avklartFase,
             erRegistrertINødvendigeOffentligeRegister = avklartErRegistrert,
             jobberBrukerAktivMedVirksomheten = avklartAktivJobber,
+            versjon = EtableringVersjon.V0,
             vurdertAv = bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling,

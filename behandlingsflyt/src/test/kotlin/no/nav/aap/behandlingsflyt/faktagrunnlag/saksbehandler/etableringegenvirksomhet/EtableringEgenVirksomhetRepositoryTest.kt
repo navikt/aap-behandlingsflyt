@@ -31,7 +31,7 @@ class EtableringEgenVirksomhetRepositoryTest {
     }
 
     @Test
-    fun `lagrer og henter vurderinger riktig`() {
+    fun `lagrer henter og kopierer vurderinger med versjon V0`() {
         dataSource.transaction { connection ->
             val repository = EtableringEgenVirksomhetRepositoryImpl(connection)
             val sak = sak(connection)
@@ -51,15 +51,25 @@ class EtableringEgenVirksomhetRepositoryTest {
                     virksomhetErNy = true,
                     brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                     kanFøreTilSelvforsørget = true,
-                    fase = EtableringFase.OPPSTART,
-                    erRegistrertINødvendigeOffentligeRegister = true,
-                    jobberBrukerAktivMedVirksomheten = true
+                    utviklingsPerioder = emptyList(),
+                    oppstartsPerioder = emptyList(),
+                    fase = null,
+                    erRegistrertINødvendigeOffentligeRegister = null,
+                    jobberBrukerAktivMedVirksomheten = null,
+                    versjon = EtableringVersjon.V0,
                 )
 
             repository.lagre(behandling.id, listOf(vurdering))
 
             val actual = repository.hentHvisEksisterer(behandling.id)
             assertThat(actual?.vurderinger)
+                .usingRecursiveComparison()
+                .ignoringFields("opprettet")
+                .isEqualTo(listOf(vurdering))
+
+            val nesteBehandling = finnEllerOpprettBehandling(connection, sak(connection))
+            repository.kopier(behandling.id, nesteBehandling.id)
+            assertThat(repository.hentHvisEksisterer(nesteBehandling.id)?.vurderinger)
                 .usingRecursiveComparison()
                 .ignoringFields("opprettet")
                 .isEqualTo(listOf(vurdering))
@@ -89,9 +99,12 @@ class EtableringEgenVirksomhetRepositoryTest {
                         virksomhetErNy = true,
                         brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                         kanFøreTilSelvforsørget = true,
-                        fase = EtableringFase.OPPSTART,
-                        erRegistrertINødvendigeOffentligeRegister = true,
-                        jobberBrukerAktivMedVirksomheten = true
+                        utviklingsPerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusMonths(5))),
+                        oppstartsPerioder = listOf(Periode(LocalDate.now().plusMonths(6), LocalDate.now().plusMonths(9))),
+                        fase = null,
+                        erRegistrertINødvendigeOffentligeRegister = null,
+                        jobberBrukerAktivMedVirksomheten = null,
+                        versjon = EtableringVersjon.V0,
                     )
                 )
             )
