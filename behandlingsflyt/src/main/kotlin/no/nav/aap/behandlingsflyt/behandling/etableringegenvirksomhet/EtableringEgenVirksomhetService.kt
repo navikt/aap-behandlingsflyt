@@ -86,7 +86,7 @@ class EtableringEgenVirksomhetService(
             .filter { index ->
                 val vurdering = beregnedeVurderinger[index]
                 vurdering.vurdertIBehandling == behandlingId && vurdering.fase != null &&
-                        vurdering.tom == null && vurdering.evaluerVirksomhetVurdering()
+                        vurdering.evaluerVirksomhetVurdering()
             }
             .sortedBy { beregnedeVurderinger[it].fom }
 

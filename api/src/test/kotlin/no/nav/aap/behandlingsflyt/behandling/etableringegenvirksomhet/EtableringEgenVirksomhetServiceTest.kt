@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringRegelsett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -18,11 +19,56 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 
 class EtableringEgenVirksomhetServiceTest {
+    @Test
+    fun `ny fasevurdering beregnes på nytt når startdato endres`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val service = EtableringEgenVirksomhetService(
+            InMemoryEtableringEgenVirksomRepository,
+            InMemoryBehandlingRepository,
+            InMemoryBistandRepository,
+            InMemorySykdomRepository,
+        )
+        val ny = EtableringEgenVirksomhetVurdering(
+            begrunnelse = "Ny utviklingsfase",
+            virksomhetNavn = "Virksomhet",
+            foreliggerFagligVurdering = true,
+            virksomhetErNy = true,
+            brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+            kanFøreTilSelvforsørget = true,
+            jobberBrukerAktivMedVirksomheten = true,
+            erRegistrertINødvendigeOffentligeRegister = null,
+            vurdertAv = Bruker("saks"),
+            opprettet = Instant.now(),
+            vurdertIBehandling = behandling.id,
+            fom = LocalDate.now().plusDays(1),
+            tom = null,
+            fase = EtableringFase.UTVIKLING,
+            regelsett = EtableringRegelsett.FASEBASERT,
+        )
+        val førsteBeregning = assertInstanceOf(
+            VirksomhetEtableringResultat.Gyldig::class.java,
+            service.beregnOgValider(behandling.id, listOf(ny)),
+        ).beregning.beregnedeVurderinger.single()
+        val nyStartdato = førsteBeregning.copy(fom = førsteBeregning.fom.plusDays(14))
+
+        val nyBeregning = assertInstanceOf(
+            VirksomhetEtableringResultat.Gyldig::class.java,
+            service.beregnOgValider(behandling.id, listOf(nyStartdato)),
+        ).beregning.beregnedeVurderinger.single()
+
+        assertThat(nyBeregning).usingRecursiveComparison().isEqualTo(
+            nyStartdato.copy(tom = requireNotNull(førsteBeregning.tom).plusDays(14))
+        )
+        assertThat(InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)).isNull()
+    }
+
     @Test
     fun `kvoter inkluderer migrerte vurderinger fra forrige behandling`() {
         val (_, forrige, behandling) = opprettInMemorySakOgRevurdering()
