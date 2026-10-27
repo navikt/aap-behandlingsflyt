@@ -1,10 +1,11 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -13,11 +14,18 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.LocalDate
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.BackfillEtableringVurderinger")
 private val teamLogs = LoggerFactory.getLogger("team-logs")
+
+private fun List<Migreringssteg>.vurderingsutfall() =
+    flatMap { it.vurderingerEtterMigrering }
+        .gjeldendeVurderinger()
+        .mapValue { Triple(it.fase, it.evaluerVirksomhetVurdering(), it.versjon) }
+        .komprimer().segmenter().map { it.periode to it.verdi }
 
 /** Deler historiske etableringsvurderinger opp i én vurdering per periode. */
 class BackfillEtableringVurderinger(
@@ -44,25 +52,28 @@ class BackfillEtableringVurderinger(
         Thread.ofVirtual()
             .name("backfillEtableringVurderinger")
             .start {
-                if (isLeader(log)) {
-                    log.info("Begynner backfill av etableringsvurderinger, dryRun=$dryRun")
-                    try {
-                        val resultat = dataSource.transaction { connection ->
-                            migrer(connection)
+                while (true) {
+                    if (isLeader(log)) {
+                        log.info("Begynner backfill av etableringsvurderinger, dryRun=$dryRun")
+                        try {
+                            val resultat = dataSource.transaction { connection ->
+                                migrer(connection)
+                            }
+                            log.info("Backfill av etableringsvurderinger fullført, dryRun=$dryRun, $resultat")
+                        } catch (e: Exception) {
+                            log.warn(
+                                "BackfillEtableringVurderinger: uncaughtException {}, se secure / team log",
+                                e.javaClass.name
+                            )
+                            teamLogs.warn(
+                                "BackfillEtableringVurderinger: uncaughtException {}: {}",
+                                e.javaClass.name,
+                                e.message,
+                                e
+                            )
                         }
-                        log.info("Backfill av etableringsvurderinger fullført, dryRun=$dryRun, $resultat")
-                    } catch (e: Exception) {
-                        log.warn(
-                            "BackfillEtableringVurderinger: uncaughtException {}, se secure / team log",
-                            e.javaClass.name
-                        )
-                        teamLogs.warn(
-                            "BackfillEtableringVurderinger: uncaughtException {}: {}",
-                            e.javaClass.name,
-                            e.message,
-                            e
-                        )
                     }
+                    Thread.sleep(Duration.ofMinutes(5))
                 }
             }
     }
@@ -198,7 +209,7 @@ class BackfillEtableringVurderinger(
                     fase = row.getEnumOrNull("FASE"),
                     erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
                     jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET"),
-                    versjon = row.getEnum<EtableringVersjon>("VERSJON"),
+                    versjon = row.getEnum("VERSJON"),
                 )
             }
         }
@@ -217,7 +228,9 @@ class BackfillEtableringVurderinger(
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             val varighetFør = varighet(før)
-            val valideringsresultatFør = service.beregnOgValider(behandlingId, før)
+            val valideringsfeilFør =
+                service.beregnOgValider(behandlingId, før) as? VirksomhetEtableringResultat.Ugyldig
+            val forventetUtfall = migreringsplan.vurderingsutfall()
             migreringsplan.filter { it.skalErstattes }.forEach { steg ->
                 val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
                 steg.oppdaterteVurderinger.forEach { oppdatertVurdering ->
@@ -225,14 +238,20 @@ class BackfillEtableringVurderinger(
                 }
                 slettVurdering(connection, steg.vurderingId)
             }
-            val etter = this.vurderinger(connection, grunnlagId).map { (_, vurdering) ->
+            val vurderingerEtter = this.vurderinger(connection, grunnlagId)
+            val etter = vurderingerEtter.map { (_, vurdering) ->
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             check(varighetFør == varighet(etter)) {
                 "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
-            check(valideringsresultatFør == service.beregnOgValider(behandlingId, etter)) {
+            val valideringsfeilEtter =
+                service.beregnOgValider(behandlingId, etter) as? VirksomhetEtableringResultat.Ugyldig
+            check(valideringsfeilFør == valideringsfeilEtter) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
+            }
+            check(forventetUtfall == lagMigreringsplan(vurderingerEtter).vurderingsutfall()) {
+                "Vurderingsutfall endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
         }
     }

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
@@ -48,6 +49,10 @@ data class ArenaVilkar(
     val kode: String,
     val status: String,
     val begrunnelse: String?,
+)
+
+data class ArenaBeregningstidspunkt(
+    val beregningstidspunkt: LocalDate,
 )
 
 data class ArenaDiagnose(
@@ -129,5 +134,8 @@ fun ArenaRefusjonskravResponse.tilDomene(): ArenaRefusjonskrav? =
             tilDato = it.tilDato
         )
     }
+
+fun ArenaBeregningstidspunktResponse.tilDomene(): ArenaBeregningstidspunkt? =
+    beregningstidspunkt?.let { ArenaBeregningstidspunkt(beregningstidspunkt = it) }
 
 fun HarHistorikkResponse.tilDomene(): ArenaHistorikk = ArenaHistorikk(harHistorikk = harHistorikk)
