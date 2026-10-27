@@ -3,7 +3,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.ident
 
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.IdentVariables
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGateway
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGruppe
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlIdenterDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
@@ -22,7 +22,7 @@ class PdlIdentGateway : IdentGateway {
 
     override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
         val request = PdlRequest(IDENT_QUERY, IdentVariables(ident.identifikator))
-        val response: PdlIdenterDataResponse = PdlGateway.query(request)
+        val response: PdlIdenterDataResponse = PdlGatewayImpl.query(request)
 
         return response.data
             ?.hentIdenter

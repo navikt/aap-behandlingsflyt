@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
@@ -11,16 +12,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.komponenter.gateway.Factory
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import kotlin.text.filter
-import kotlin.text.mapNotNull
-import kotlin.text.orEmpty
 
-class PdlBarnGateway : BarnGateway {
+class PdlBarnGateway(
+    private val pdlGateway: PdlGateway,
+) : BarnGateway {
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<BarnGateway> {
+        private val pdlRelasjonDataResponseTypeRef = jacksonTypeRef<PdlRelasjonDataResponse>()
+
         override fun konstruer(): BarnGateway {
-            return PdlBarnGateway()
+            return PdlBarnGateway(PdlGatewayImpl)
         }
     }
 
@@ -55,7 +57,7 @@ class PdlBarnGateway : BarnGateway {
 
     private fun hentBarnRelasjoner(person: Person): List<BarnIdentifikator> {
         val request = PdlRequest(BARN_RELASJON_QUERY, IdentVariables(person.aktivIdent().identifikator))
-        val response = PdlGateway.query<PdlRelasjonDataResponse>(request)
+        val response = pdlGateway.query(request, pdlRelasjonDataResponseTypeRef)
 
         val relasjoner = response.data?.hentPerson?.forelderBarnRelasjon.orEmpty()
             .filter { it.relatertPersonsRolle == ForelderBarnRelasjonRolle.BARN }
@@ -90,7 +92,7 @@ class PdlBarnGateway : BarnGateway {
         }
 
         val request = PdlRequest(PERSON_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
-        val response: PdlRelasjonDataResponse = PdlGateway.query(request)
+        val response = pdlGateway.query(request, pdlRelasjonDataResponseTypeRef)
 
         val bolk = response.data?.hentPersonBolk ?: return emptyList()
 
