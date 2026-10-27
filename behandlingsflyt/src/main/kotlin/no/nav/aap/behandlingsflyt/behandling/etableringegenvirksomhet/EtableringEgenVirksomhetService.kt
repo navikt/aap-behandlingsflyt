@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.perioderForFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -80,10 +81,13 @@ class EtableringEgenVirksomhetService(
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
-        val gamleVurderinger = behandling.forrigeBehandlingId
-            ?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }
-            ?.vurderinger
-            .orEmpty()
+
+        val gamleVurderinger =
+            behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+                .map { it.somLegacyVisning() }
+        val gjeldendeVurderinger = (gamleVurderinger + nyeVurderinger)
+            .gjeldendeVurderinger()
+            .verdier().toSet()
 
         val gamleVurderingerUtenOverstyrte = gamleVurderinger.filterNot { gammel ->
             nyeVurderinger.any { ny -> ny.fase == gammel.fase && ny.fom == gammel.fom }

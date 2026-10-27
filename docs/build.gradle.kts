@@ -30,6 +30,10 @@ tasks.named("dokkaGenerate") {
 }
 
 dokka {
+    pluginsConfiguration.html {
+        customAssets.from("assets/diff-highlighting.js")
+        customStyleSheets.from("assets/diff-highlighting.css")
+    }
     dokkaSourceSets.configureEach {
         sourceLink {
             remoteUrl("https://github.com/navikt/aap-behandlingsflyt/blob/main")
@@ -40,7 +44,7 @@ dokka {
         configureEach {
             suppressObviousFunctions.set(true)
             suppressInheritedMembers.set(false)
-            includes.from("DocsModule.md")
+            includes.from("DocsModule.md", "playbook.md")
         }
     }
 }
