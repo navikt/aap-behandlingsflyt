@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
@@ -26,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
@@ -69,7 +71,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            lagNyFullVurdering(behandling.id, periode, medlemskapArbeidInntektRepository, "Første begrunnelse")
+            lagNyFullVurdering(behandling.id, sak, periode, medlemskapArbeidInntektRepository, "Første begrunnelse")
 
             val lagretInntekt = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)!!
 
@@ -147,10 +149,10 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
                 behandlingId = behandling.id,
+                hentetIForholdTil = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag(),
+                inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
                 medlId = medlId,
-                enhetGrunnlag = enhetGrunnlags()
             )
 
             val medlemskapArbeidInntektGrunnlagOppdatert =
@@ -188,10 +190,10 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
                 behandlingId = behandling.id,
+                hentetIForholdTil = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag(),
+                inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
                 medlId = medlId,
-                enhetGrunnlag = enhetGrunnlags()
             )
 
             medlemskapArbeidInntektRepository.lagreOppgittUtenlandsOppplysninger(
@@ -247,6 +249,32 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     }
 
     @Test
+    fun `Skal kunne hente ut inntekter per krav`() {
+        dataSource.transaction { connection ->
+            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val sak = opprettSak(connection, LocalDate.now())
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val forventetInntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag())
+            val forventetStartdato = sak.rettighetsperiode.fom
+
+            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+                behandlingId = behandling.id,
+                hentetIForholdTil = forventetStartdato,
+                arbeidGrunnlag = emptyList(),
+                inntektGrunnlag = forventetInntektGrunnlag,
+                medlId = null,
+            )
+            
+            val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+            assertThat(grunnlag?.inntekterINorgePerRelevanteKrav).hasSize(1)
+            assertThat(grunnlag?.inntekterINorgePerRelevanteKrav!!.first().startdato).isEqualTo(forventetStartdato)
+            assertThat(grunnlag?.inntekterINorgePerRelevanteKrav!!.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
+
+        }
+    }
+
+    @Test
     fun `test sletting`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
@@ -281,10 +309,10 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
                 behandlingId = behandling.id,
+                hentetIForholdTil = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag(),
+                inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
                 medlId = medlId,
-                enhetGrunnlag = enhetGrunnlags()
             )
 
             val medlemskapArbeidInntektGrunnlagOppdatert =
@@ -298,16 +326,17 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
     private fun lagNyFullVurdering(
         behandlingId: BehandlingId,
+        sak: Sak,
         periode: Periode,
         repo: MedlemskapArbeidInntektRepositoryImpl,
         begrunnelse: String
     ) {
         repo.lagreArbeidsforholdOgInntektINorge(
             behandlingId = behandlingId,
+            hentetIForholdTil = sak.rettighetsperiode.fom,
             arbeidGrunnlag = emptyList(),
-            inntektGrunnlag = inntektGrunnlag(),
+            inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
             medlId = null,
-            enhetGrunnlag = enhetGrunnlags()
         )
 
         repo.lagreVurderinger(
@@ -394,7 +423,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         ),
     )
 
-    private fun enhetGrunnlags(): List<EnhetGrunnlag> = listOf(
+    private fun enhetsGrunnlag(): List<EnhetGrunnlag> = listOf(
         EnhetGrunnlag("1234", "Bepis AS"),
         EnhetGrunnlag("4321", "Rotte AS")
     )

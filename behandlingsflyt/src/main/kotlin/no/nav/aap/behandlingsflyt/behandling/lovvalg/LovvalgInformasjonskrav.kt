@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.Arbeidsfor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnummer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -34,6 +35,7 @@ import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.*
 
@@ -126,6 +128,7 @@ class LovvalgInformasjonskrav internal constructor(
             behandlingId = kontekst.behandlingId,
             medlemskapGrunnlag = medlemskapPerioder,
             arbeidGrunnlag = arbeidGrunnlag,
+            hentetIForholdTil = input.sak.rettighetsperiode.fom,
             inntektGrunnlag = inntektGrunnlag,
             enhetGrunnlag = enhetGrunnlag
         )
@@ -177,6 +180,7 @@ class LovvalgInformasjonskrav internal constructor(
 
     private fun lagre(
         behandlingId: BehandlingId,
+        hentetIForholdTil: LocalDate, // TODO: Denne vil etterhvert være på registergrunnlagnivå
         medlemskapGrunnlag: List<MedlemskapDataIntern>,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMåned>,
@@ -192,10 +196,10 @@ class LovvalgInformasjonskrav internal constructor(
 
         medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
             behandlingId,
+            hentetIForholdTil,
             arbeidGrunnlag,
-            inntektGrunnlag,
+            inntektGrunnlag.tilDomene(enhetGrunnlag),
             medlId,
-            enhetGrunnlag
         )
     }
 
