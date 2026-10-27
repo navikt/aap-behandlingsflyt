@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringRegelsett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -19,6 +19,12 @@ import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.BackfillEtableringVurderinger")
 private val teamLogs = LoggerFactory.getLogger("team-logs")
+
+private fun List<Migreringssteg>.vurderingsutfall() =
+    flatMap { it.vurderingerEtterMigrering }
+        .gjeldendeVurderinger()
+        .mapValue { Triple(it.fase, it.evaluerVirksomhetVurdering(), it.regelsett) }
+        .komprimer().segmenter().map { it.periode to it.verdi }
 
 /** Deler historiske etableringsvurderinger opp i én vurdering per periode. */
 class BackfillEtableringVurderinger(
@@ -199,7 +205,7 @@ class BackfillEtableringVurderinger(
                     fase = row.getEnumOrNull("FASE"),
                     erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
                     jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET"),
-                    regelsett = row.getEnum("REGELSETT"),
+                    regelsett = row.getEnum<EtableringRegelsett>("REGELSETT"),
                 )
             }
         }
@@ -218,8 +224,8 @@ class BackfillEtableringVurderinger(
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             val varighetFør = varighet(før)
-            val valideringsresultatFør = service.validerLagredeVurderinger(behandlingId, før)
-            val semantikkFør = semantikk(før)
+            val valideringsfeilFør = service.validerVurdering(behandlingId, før)
+            val forventetUtfall = migreringsplan.vurderingsutfall()
             migreringsplan.filter { it.skalErstattes }.forEach { steg ->
                 val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
                 steg.oppdaterteVurderinger.forEach { oppdatertVurdering ->
@@ -227,30 +233,22 @@ class BackfillEtableringVurderinger(
                 }
                 slettVurdering(connection, steg.vurderingId)
             }
-            val etter = this.vurderinger(connection, grunnlagId).map { (_, vurdering) ->
+            val vurderingerEtter = this.vurderinger(connection, grunnlagId)
+            val etter = vurderingerEtter.map { (_, vurdering) ->
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             check(varighetFør == varighet(etter)) {
                 "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
-            val valideringsresultatEtter = service.validerLagredeVurderinger(behandlingId, etter)
-            check(
-                (valideringsresultatFør is VirksomhetEtableringResultat.Gyldig &&
-                        valideringsresultatEtter is VirksomhetEtableringResultat.Gyldig) ||
-                        valideringsresultatFør == valideringsresultatEtter
-            ) {
+            val valideringsfeilEtter = service.validerVurdering(behandlingId, etter)
+            check(valideringsfeilFør == valideringsfeilEtter) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
-            check(semantikkFør == semantikk(etter)) {
+            check(forventetUtfall == lagMigreringsplan(vurderingerEtter).vurderingsutfall()) {
                 "Vurderingsutfall endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
         }
     }
-
-    private fun semantikk(vurderinger: List<EtableringEgenVirksomhetVurdering>) =
-        vurderinger.somFasetidslinje()
-            .mapValue { Triple(it.fase, it.evaluerVirksomhetVurdering(), it.regelsett) }
-            .komprimer().segmenter().map { it.periode to it.verdi }
 
     private fun lagreVurdering(
         connection: DBConnection,

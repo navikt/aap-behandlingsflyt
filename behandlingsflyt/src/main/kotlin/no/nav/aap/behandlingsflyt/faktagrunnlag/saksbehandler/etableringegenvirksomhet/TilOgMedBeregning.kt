@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvir
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 sealed interface TilOgMedBeregning {
@@ -21,17 +21,8 @@ fun beregnTomForSistePeriode(
     val maksHverdager = fase.maksHverdager
     val brukteHverdager = vurderinger
         .somFasetidslinje()
-        .segmenter()
-        .filter {
-            it.verdi.fase == fase &&
-                    it.periode.fom.isBefore(sisteVurdering.fom)
-        }
-        .sumOf {
-            Periode(
-                it.periode.fom,
-                minOf(it.periode.tom, sisteVurdering.fom.minusDays(1))
-            ).antallHverdager().asInt
-        }
+        .begrensetTil(Periode(Tid.MIN, sisteVurdering.fom.minusDays(1)))
+        .antallHverdagerIFase(fase)
 
     val gjenståendeHverdager = maksHverdager - brukteHverdager
     if (gjenståendeHverdager <= 0) {

@@ -41,6 +41,8 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -231,8 +233,14 @@ class BackfillEtableringVurderingerTest {
         assertThat(hentVurderingIder(behandlingId)).isEqualTo(iderFør)
     }
 
-    @Test
-    fun `endret utfall ruller tilbake selv med samme varighet og valideringsstatus`() {
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "NEW.virksomhet_er_ny = false;",
+            "NEW.gjelder_fra = NEW.gjelder_fra + 7; NEW.gjelder_til = NEW.gjelder_til + 7;",
+        ]
+    )
+    fun `endret utfall eller periode ruller tilbake med samme varighet og valideringsstatus`(endring: String) {
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
             behandlingId,
@@ -249,7 +257,7 @@ class BackfillEtableringVurderingerTest {
                     """
                     CREATE FUNCTION endre_etableringsutfall() RETURNS trigger AS
                     'BEGIN
-                        NEW.virksomhet_er_ny = false;
+                        $endring
                         RETURN NEW;
                     END;' LANGUAGE plpgsql
                     """.trimIndent()
@@ -263,6 +271,8 @@ class BackfillEtableringVurderingerTest {
                 )
                 BackfillEtableringVurderinger(dataSource, dryRun = false)
                     .migrerBehandling(connection, behandlingId)
+                connection.execute("DROP TRIGGER endre_etableringsutfall ON etablering_egen_virksomhet_vurdering")
+                connection.execute("DROP FUNCTION endre_etableringsutfall()")
             }
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("Vurderingsutfall")

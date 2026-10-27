@@ -36,6 +36,62 @@ import java.time.LocalDate
 
 class EtableringEgenVirksomhetLøserTest {
 
+    @Test
+    fun `oppstart endrer ikke lagrede datoer i arvet utviklingsvurdering`() {
+        val (_, forrige, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
+        val fom = LocalDate.now().plusDays(1)
+        val tidligere = oppfyltVurdering(fom, tom = fom.plusDays(25))
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), forrige.id)
+        InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, listOf(tidligere))
+        val oppstart = oppfyltVurdering(
+            fom.plusDays(14),
+            fase = EtableringFase.OPPSTART,
+            erRegistrertINødvendigeOffentligeRegister = true,
+        ).copy(tom = null)
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            EtableringEgenVirksomhetLøsning(listOf(oppstart)),
+        )
+
+        val arvetHistorikk = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(revurdering.id)
+        ).vurderinger.filter { it.vurdertIBehandling == forrige.id }
+        assertThat(arvetHistorikk).usingRecursiveComparison().isEqualTo(listOf(tidligere))
+    }
+
+    @Test
+    fun `utvikling etterfulgt av oppstart trenger ingen kunstig avslagsperiode`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val fom = LocalDate.now().plusDays(1)
+        val input = listOf(
+            oppfyltVurdering(fom).copy(tom = null),
+            oppfyltVurdering(
+                fom.plusDays(14),
+                fase = EtableringFase.OPPSTART,
+                erRegistrertINødvendigeOffentligeRegister = true,
+            ).copy(tom = null),
+        )
+
+        assertDoesNotThrow {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                EtableringEgenVirksomhetLøsning(input),
+            )
+        }
+
+        val segmenter = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).gjeldendeVurderingerSomTidslinje().segmenter().toList()
+        assertThat(segmenter.map { it.verdi.fase })
+            .containsExactly(EtableringFase.UTVIKLING, EtableringFase.OPPSTART)
+        assertThat(segmenter.first().periode).isEqualTo(Periode(fom, fom.plusDays(13)))
+        assertThat(segmenter.last().periode.antallHverdager().asInt)
+            .isEqualTo(EtableringFase.OPPSTART.maksHverdager)
+    }
+
     private val løser = EtableringEgenVirksomhetLøser(
         InMemoryEtableringEgenVirksomRepository,
         InMemoryBehandlingRepository,

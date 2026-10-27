@@ -223,7 +223,7 @@ class Pr3599ReviewTest {
         assertThat(resultat).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
         val beregning = (resultat as VirksomhetEtableringResultat.Gyldig).beregning
         assertThat(beregning.beregnedeVurderinger.first().tom).isEqualTo(start.plusDays(13))
-        assertThat(beregning.gjeldendeVurderinger.segmenter().map { it.verdi.fase })
+        assertThat(beregning.beregnedeVurderinger.somFasetidslinje().segmenter().map { it.verdi.fase })
             .containsExactly(EtableringFase.UTVIKLING, EtableringFase.OPPSTART)
     }
 
