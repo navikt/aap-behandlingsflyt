@@ -35,6 +35,31 @@ import java.time.LocalDate
 class EtableringEgenVirksomhetLøserTest {
 
     @Test
+    fun `oppstart endrer ikke lagrede datoer i arvet utviklingsvurdering`() {
+        val (_, forrige, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
+        val fom = LocalDate.now().plusDays(1)
+        val tidligere = oppfyltVurdering(fom, tom = fom.plusDays(25))
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), forrige.id)
+        InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, listOf(tidligere))
+        val oppstart = oppfyltVurdering(
+            fom.plusDays(14),
+            fase = EtableringFase.OPPSTART,
+            erRegistrertINødvendigeOffentligeRegister = true,
+        ).copy(tom = null)
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            EtableringEgenVirksomhetLøsning(listOf(oppstart)),
+        )
+
+        val arvetHistorikk = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(revurdering.id)
+        ).vurderinger.filter { it.vurdertIBehandling == forrige.id }
+        assertThat(arvetHistorikk).usingRecursiveComparison().isEqualTo(listOf(tidligere))
+    }
+
+    @Test
     fun `revurdering uten nye vurderinger viderefører historikken nøyaktig én gang`() {
         val (_, forrige, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
         oppfyllSykdomOgBistand(revurdering)
