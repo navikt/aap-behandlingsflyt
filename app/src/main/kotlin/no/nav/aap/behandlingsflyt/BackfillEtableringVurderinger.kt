@@ -23,7 +23,7 @@ private val teamLogs = LoggerFactory.getLogger("team-logs")
 private fun List<Migreringssteg>.vurderingsutfall() =
     flatMap { it.vurderingerEtterMigrering }
         .gjeldendeVurderinger()
-        .mapValue { it.fase to it.evaluerVirksomhetVurdering() }
+        .mapValue { Triple(it.fase, it.evaluerVirksomhetVurdering(), it.versjon) }
         .komprimer().segmenter().map { it.periode to it.verdi }
 
 /** Deler historiske etableringsvurderinger opp i én vurdering per periode. */
@@ -204,7 +204,8 @@ class BackfillEtableringVurderinger(
                     tom = row.getLocalDateOrNull("GJELDER_TIL"),
                     fase = row.getEnumOrNull("FASE"),
                     erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
-                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET")
+                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET"),
+                    versjon = row.getEnum("VERSJON"),
                 )
             }
         }
@@ -266,8 +267,8 @@ class BackfillEtableringVurderinger(
                     KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID,
                     EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV,
                     GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID, FASE, ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER,
-                    JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET, VERSJON
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -289,6 +290,7 @@ class BackfillEtableringVurderinger(
                 setEnumName(16, vurdering.fase)
                 setBoolean(17, vurdering.erRegistrertINødvendigeOffentligeRegister)
                 setBoolean(18, vurdering.jobberBrukerAktivMedVirksomheten)
+                setEnumName(19, vurdering.versjon)
             }
         }
     }
