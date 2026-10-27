@@ -17,12 +17,13 @@ data class ArbeidsInntektMåned(
     fun tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): List<InntektINorgeGrunnlag> {
         return arbeidsInntektInformasjon.inntektListe.map { inntekt ->
             val orgNavn = enhetGrunnlag.firstOrNull { it.orgnummer == inntekt.virksomhet.identifikator }?.orgNavn
+            val fomFallback = årMåned.atDay(1)
             val tomFallback = inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1)
 
             InntektINorgeGrunnlag(
                 identifikator = inntekt.virksomhet.identifikator,
                 periode = Periode(
-                    inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1),
+                    inntekt.opptjeningsperiodeFom ?: fomFallback,
                     inntekt.opptjeningsperiodeTom ?: tomFallback
                 ),
                 organisasjonsNavn = orgNavn,
