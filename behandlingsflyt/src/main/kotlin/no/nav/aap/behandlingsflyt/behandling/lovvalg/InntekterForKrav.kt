@@ -15,8 +15,10 @@ data class InntekterForKrav(
     fun erRelevant(stønadsperiodeGrunnlag: StønadsperiodeGrunnlag): Boolean {
         return stønadsperiodeGrunnlag.gjeldendeVurderinger()
             .filter {
-                listOf(RelevantKravType.NY_STØNADSPERIODE, RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR)
-                    .contains(it.relevantKravType)
+                it.relevantKravType in listOf(
+                    RelevantKravType.NY_STØNADSPERIODE,
+                    RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR
+                )
             }.any { it.startDato == startdato }
     }
 }
