@@ -35,15 +35,9 @@ class EtableringEgenVirksomhetLøser(
             is VirksomhetEtableringResultat.Ugyldig -> throw UgyldigForespørselException(resultat.melding)
         }
 
-
-        val gamleVurderinger = behandling.forrigeBehandlingId?.let {
-            etableringEgenVirksomhetRepository.hentHvisEksisterer(it)?.vurderinger.orEmpty()
-        }.orEmpty()
-
-
         etableringEgenVirksomhetRepository.lagre(
             behandlingId = behandling.id,
-            etableringEgenvirksomhetVurderinger = gamleVurderinger + beregning.beregnedeVurderinger
+            etableringEgenvirksomhetVurderinger = beregning.beregnedeVurderinger
         )
         return LøsningsResultat(begrunnelse = "Vurdert etablering egen virksomhet")
     }

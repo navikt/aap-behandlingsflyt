@@ -35,6 +35,25 @@ import java.time.LocalDate
 class EtableringEgenVirksomhetLøserTest {
 
     @Test
+    fun `oppgitt sluttdato beholdes i stedet for å erstattes av hele kvoten`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val fom = LocalDate.now().plusDays(1)
+        val tom = fom.plusDays(4)
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = behandling },
+            EtableringEgenVirksomhetLøsning(listOf(oppfyltVurdering(fom, tom = tom))),
+        )
+
+        val lagret = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).vurderinger.single()
+        assertThat(lagret.fom).isEqualTo(fom)
+        assertThat(lagret.tom).isEqualTo(tom)
+    }
+
+    @Test
     fun `utvikling etterfulgt av oppstart trenger ingen kunstig avslagsperiode`() {
         val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
