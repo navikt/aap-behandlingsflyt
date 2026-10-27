@@ -479,7 +479,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         val oppgitteBarn = lagTestPerson("Tone", "Dovendyr", LocalDate.now().minusYears(9))
         val fraDatoOppgitteBarn = periode.fom
         val fraDatoRegisterBarn = LocalDate.now().plusMonths(1).plusDays(12)
-        val fraDatoSaksbehandlerOppgitteBarn = LocalDate.now().plusMonths(2).plusDays(5)
+        val fraDatoSaksbehandlerOppgitteBarn = LocalDate.now().plusMonths(1).plusDays(13)
 
         val søknadMedOppgittBarn = TestSøknader.SØKNAD_MED_BARN(
             listOf(
