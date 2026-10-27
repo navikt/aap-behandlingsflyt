@@ -61,7 +61,7 @@ class EtableringEgenVirksomhetServiceTest {
 
         listOf(listOf(gammel), listOf(gammel).tilNyttFormat()).forEach { vurderinger ->
             InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, vurderinger)
-            assertThat(service.erVurderingerGyldig(behandling.id, emptyList())).isEqualTo(forventet)
+            assertThat(service.beregnOgValider(behandling.id, emptyList())).isEqualTo(forventet)
         }
     }
 

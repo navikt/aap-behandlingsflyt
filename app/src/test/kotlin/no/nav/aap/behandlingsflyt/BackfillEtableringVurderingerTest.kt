@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryEtableringEgenVirksomRepository
@@ -789,11 +790,11 @@ class BackfillEtableringVurderingerTest {
             )
         )
 
-        val gyldigFør = service.erVurderingerGyldig(behandling.id, før)
-        val gyldigEtter = service.erVurderingerGyldig(behandling.id, etter)
+        val gyldigFør = service.beregnOgValider(behandling.id, før)
+        val gyldigEtter = service.beregnOgValider(behandling.id, etter)
 
-        assertThat(gyldigFør).isEqualTo(VirksomhetEtableringGyldig)
-        assertThat(gyldigEtter).isEqualTo(gyldigFør)
+        assertThat(gyldigFør).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+        assertThat(gyldigEtter).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
     }
 
     private fun evalueringer(vurderinger: List<EtableringEgenVirksomhetVurdering>) =

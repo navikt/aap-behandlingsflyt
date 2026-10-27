@@ -1,20 +1,27 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryEtableringEgenVirksomRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
@@ -240,11 +247,11 @@ class TilNyttFormatTest {
             )
         )
 
-        val før = service.erVurderingerGyldig(behandling.id, gammel)
-        val etter = service.erVurderingerGyldig(behandling.id, gammel.tilNyttFormat())
+        val før = service.beregnOgValider(behandling.id, gammel)
+        val etter = service.beregnOgValider(behandling.id, gammel.tilNyttFormat())
 
-        assertThat(før).isEqualTo(VirksomhetEtableringGyldig)
-        assertThat(etter).isEqualTo(før)
+        assertThat(før).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+        assertThat(etter).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
     }
 
     private class VurderingBuilder(
