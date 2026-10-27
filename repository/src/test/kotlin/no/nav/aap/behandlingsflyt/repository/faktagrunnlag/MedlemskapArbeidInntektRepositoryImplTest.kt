@@ -149,7 +149,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
                 behandlingId = behandling.id,
-                hentetIForholdTil = sak.rettighetsperiode.fom,
+                relevantDato = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
                 inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
                 medlId = medlId,
@@ -190,7 +190,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
                 behandlingId = behandling.id,
-                hentetIForholdTil = sak.rettighetsperiode.fom,
+                relevantDato = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
                 inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
                 medlId = medlId,
@@ -260,16 +260,16 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
                 behandlingId = behandling.id,
-                hentetIForholdTil = forventetStartdato,
+                relevantDato = forventetStartdato,
                 arbeidGrunnlag = emptyList(),
                 inntektGrunnlag = forventetInntektGrunnlag,
                 medlId = null,
             )
             
             val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
-            assertThat(grunnlag?.inntekterINorgePerRelevanteKrav).hasSize(1)
-            assertThat(grunnlag?.inntekterINorgePerRelevanteKrav!!.first().startdato).isEqualTo(forventetStartdato)
-            assertThat(grunnlag?.inntekterINorgePerRelevanteKrav!!.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
+            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag).hasSize(1)
+            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.first().relevantDato).isEqualTo(forventetStartdato)
+            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
 
         }
     }
@@ -309,7 +309,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
                 behandlingId = behandling.id,
-                hentetIForholdTil = sak.rettighetsperiode.fom,
+                relevantDato = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
                 inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
                 medlId = medlId,
@@ -333,7 +333,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     ) {
         repo.lagreArbeidsforholdOgInntektINorge(
             behandlingId = behandlingId,
-            hentetIForholdTil = sak.rettighetsperiode.fom,
+            relevantDato = sak.rettighetsperiode.fom,
             arbeidGrunnlag = emptyList(),
             inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
             medlId = null,

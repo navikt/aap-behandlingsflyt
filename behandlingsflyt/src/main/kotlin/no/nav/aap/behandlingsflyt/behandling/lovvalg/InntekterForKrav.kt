@@ -5,8 +5,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.St
 import java.time.LocalDate
 
 data class InntekterForKrav(
-    // Nullable i overgangsperiode. Skal migreres til stønadsperiode.startdato
-    val startdato: LocalDate?,
+    /**
+     * Datoen vi henter inntekter i forhold til
+     */
+    val relevantDato: LocalDate?,     // TODO: Nullable i overgangsperiode. Skal migreres til stønadsperiode.startdato
     val inntekter: Set<InntektINorgeGrunnlag>
 ) {
     /**
@@ -19,7 +21,7 @@ data class InntekterForKrav(
                     RelevantKravType.NY_STØNADSPERIODE,
                     RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR
                 )
-            }.any { it.startDato == startdato }
+            }.any { it.startDato == relevantDato }
     }
 }
 

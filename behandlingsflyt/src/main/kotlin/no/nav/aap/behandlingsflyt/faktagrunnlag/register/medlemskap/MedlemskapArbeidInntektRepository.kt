@@ -15,7 +15,7 @@ interface MedlemskapArbeidInntektRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapArbeidInntektGrunnlag?
     fun hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId: BehandlingId): UtenlandsOppholdData?
     fun hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId: SakId): UtenlandsOppholdData?
-    fun lagreArbeidsforholdOgInntektINorge(behandlingId: BehandlingId, hentetIForholdTil: LocalDate, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<InntektINorgeGrunnlag>, medlId: Long?)
+    fun lagreArbeidsforholdOgInntektINorge(behandlingId: BehandlingId, relevantDato: LocalDate, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<InntektINorgeGrunnlag>, medlId: Long?)
     fun lagreOppgittUtenlandsOppplysninger(behandlingId: BehandlingId, journalpostId: JournalpostId, utenlandsOppholdData: UtenlandsOppholdData)
     fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: List<ManuellVurderingForLovvalgMedlemskap>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

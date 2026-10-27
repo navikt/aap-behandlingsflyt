@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterForKrav
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
@@ -129,7 +130,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     override fun lagreArbeidsforholdOgInntektINorge(
         behandlingId: BehandlingId,
-        hentetIForholdTil: LocalDate,
+        relevantDato: LocalDate,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<InntektINorgeGrunnlag>,
         medlId: Long?,
@@ -141,7 +142,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
 
         val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag)
-        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(hentetIForholdTil, inntektGrunnlag)
+        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(relevantDato, inntektGrunnlag)
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
@@ -184,7 +185,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
     }
 
     private fun lagreArbeidsInntektGrunnlag(
-        hentetIForholdTil: LocalDate,
+        relevantDato: LocalDate,
         inntekter: List<InntektINorgeGrunnlag>,
     ): Long? {
         if (inntekter.isEmpty()) return null
@@ -195,7 +196,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntekterINorgeId = connection.executeReturnKey(inntekterINorgeQuery)
 
         val inntektQuery = """
-            INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn, hentet_i_forhold_til_dato) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?, ?)
+            INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn, relevant_dato) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(
@@ -211,7 +212,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(6, inntekterINorgeId)
                 setPeriode(7, inntekt.periode)
                 setString(8, inntekt.organisasjonsNavn)
-                setLocalDate(9, hentetIForholdTil)
+                setLocalDate(9, relevantDato)
             }
         }
 
@@ -423,7 +424,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     inntektType = it.getStringOrNull("inntekt_type"),
                     periode = it.getPeriode("periode"),
                     organisasjonsNavn = it.getStringOrNull("organisasjonsnavn"),
-                    hentetIForholdTilDato = it.getLocalDateOrNull("hentet_i_forhold_til_dato")
+                    relevantDato = it.getLocalDateOrNull("relevant_dato")
                 )
             }
         }
@@ -437,7 +438,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntektType: String?,
         val periode: Periode,
         val organisasjonsNavn: String?,
-        val hentetIForholdTilDato: LocalDate?,
+        val relevantDato: LocalDate?,
     )
 
     private fun List<InntektINorgeInternal>.tilDomene(): List<InntektINorgeGrunnlag> {
@@ -456,10 +457,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun List<InntektINorgeInternal>.perKrav(): Set<InntekterForKrav> {
         return this
-            .groupBy { it.hentetIForholdTilDato }
-            .map { (hentetIForholdTilDato, inntekter) ->
+            .groupBy { it.relevantDato }
+            .map { (relevantDato, inntekter) ->
                 InntekterForKrav(
-                    startdato = hentetIForholdTilDato,
+                    relevantDato = relevantDato,
                     inntekter = inntekter.tilDomene().toSet()
                 )
             }.toSet()
@@ -651,7 +652,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         return MedlemskapArbeidInntektGrunnlag(
             medlemskapGrunnlag = hentMedlemskapGrunnlag(row.getLongOrNull("medlemskap_unntak_person_id")),
             inntekterINorgeGrunnlag = inntekt.tilDomene(),
-            inntekterINorgePerRelevanteKrav = inntekt.perKrav(),
+            inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(inntekt.perKrav()),
             arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(row.getLongOrNull("arbeider_id")),
             vurderinger = hentVurderinger(row.getLongOrNull("vurderinger_id")),
         )

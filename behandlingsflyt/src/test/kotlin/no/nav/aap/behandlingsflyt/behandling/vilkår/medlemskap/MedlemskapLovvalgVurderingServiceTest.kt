@@ -44,7 +44,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                inntekterINorgePerRelevanteKrav = emptySet()
+                inntekterINorgeRegisterGrunnlag = emptySet()
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)),
@@ -91,7 +91,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                inntekterINorgePerRelevanteKrav = emptySet()
+                inntekterINorgeRegisterGrunnlag = emptySet()
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt,
@@ -139,7 +139,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                inntekterINorgePerRelevanteKrav = emptySet()
+                inntekterINorgeRegisterGrunnlag = emptySet()
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt, listOf(
@@ -263,7 +263,7 @@ class MedlemskapLovvalgVurderingServiceTest {
             medlemskapGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
             inntekterINorgeGrunnlag = emptyList(),
             arbeiderINorgeGrunnlag = emptyList(),
-            inntekterINorgePerRelevanteKrav = emptySet()
+            inntekterINorgeRegisterGrunnlag = emptySet()
         ),
         personopplysning = Personopplysning(
             fødselsdato = Fødselsdato(LocalDate.of(1990, 1, 1)),

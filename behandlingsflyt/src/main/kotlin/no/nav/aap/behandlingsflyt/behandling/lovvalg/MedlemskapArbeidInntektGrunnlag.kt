@@ -22,7 +22,7 @@ data class MedlemskapLovvalgGrunnlag(
 data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
-    val inntekterINorgePerRelevanteKrav: Set<InntekterForKrav>,
+    val inntekterINorgeRegisterGrunnlag: InntekterINorgeRegisterGrunnlag,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
 ) {
@@ -30,6 +30,10 @@ data class MedlemskapArbeidInntektGrunnlag(
         return vurderinger.gjeldendeVurderinger()
     }
 }
+
+data class InntekterINorgeRegisterGrunnlag(
+    val inntekterForKrav: Set<InntekterForKrav>
+)
 
 // TODO: Rename denne
 data class InntektINorgeGrunnlag(

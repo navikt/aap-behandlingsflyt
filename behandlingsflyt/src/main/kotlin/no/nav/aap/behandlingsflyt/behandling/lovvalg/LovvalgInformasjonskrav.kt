@@ -128,7 +128,7 @@ class LovvalgInformasjonskrav internal constructor(
             behandlingId = kontekst.behandlingId,
             medlemskapGrunnlag = medlemskapPerioder,
             arbeidGrunnlag = arbeidGrunnlag,
-            hentetIForholdTil = input.sak.rettighetsperiode.fom,
+            relevantDato = input.sak.rettighetsperiode.fom,
             inntektGrunnlag = inntektGrunnlag,
             enhetGrunnlag = enhetGrunnlag
         )
@@ -190,7 +190,7 @@ class LovvalgInformasjonskrav internal constructor(
 
     private fun lagre(
         behandlingId: BehandlingId,
-        hentetIForholdTil: LocalDate, // TODO: Denne vil etterhvert være på registergrunnlagnivå
+        relevantDato: LocalDate, // TODO: Denne vil etterhvert være på registergrunnlagnivå
         medlemskapGrunnlag: List<MedlemskapDataIntern>,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMåned>,
@@ -206,7 +206,7 @@ class LovvalgInformasjonskrav internal constructor(
 
         medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
             behandlingId,
-            hentetIForholdTil,
+            relevantDato,
             arbeidGrunnlag,
             inntektGrunnlag.tilDomene(enhetGrunnlag),
             medlId,
