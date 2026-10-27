@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import kotlin.collections.emptySet
 
 class MedlemskapLovvalgVurderingServiceTest {
     private val service = MedlemskapLovvalgVurderingService()
@@ -43,6 +44,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
+                inntekterINorgePerRelevanteKrav = emptySet()
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)),
@@ -89,6 +91,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
+                inntekterINorgePerRelevanteKrav = emptySet()
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt,
@@ -136,6 +139,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
+                inntekterINorgePerRelevanteKrav = emptySet()
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt, listOf(
@@ -259,6 +263,7 @@ class MedlemskapLovvalgVurderingServiceTest {
             medlemskapGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
             inntekterINorgeGrunnlag = emptyList(),
             arbeiderINorgeGrunnlag = emptyList(),
+            inntekterINorgePerRelevanteKrav = emptySet()
         ),
         personopplysning = Personopplysning(
             fødselsdato = Fødselsdato(LocalDate.of(1990, 1, 1)),
